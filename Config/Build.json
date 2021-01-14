@@ -1,0 +1,14 @@
+{
+	"name": "Nova",
+	"platforms": ["Win64", "Linux"],
+	"configuration": "Shipping",
+	"pdb": true,
+	"outputDir": "..\\Packaged",
+	"itch": 
+	{
+		"user": "deimos-games",
+		"project": "gaia",
+		"branches": ["windows", "linux"],
+		"directories": ["WindowsNoEditor", "LinuxNoEditor"]
+	}
+}

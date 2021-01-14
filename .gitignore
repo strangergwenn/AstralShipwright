@@ -1,0 +1,14 @@
+Assets/
+Binaries/
+Build/
+Content/
+DerivedDataCache/
+Intermediate/
+Packaged/
+Releases/
+Saved/
+.vs/
+*.sln
+*.fbx
+*.blend1
+desktop.ini
