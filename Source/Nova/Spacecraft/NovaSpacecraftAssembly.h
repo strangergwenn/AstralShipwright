@@ -178,6 +178,17 @@ protected:
 		class UNovaCompartmentAssembly* CompartmentAssembly,
 		const FNovaCompartment& Compartment,
 		FNovaAssemblyCallback Callback);
+	
+
+	/*----------------------------------------------------
+		Components
+	----------------------------------------------------*/
+
+protected:
+
+	// Camera pitch scene container
+	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
+	class UNovaSpacecraftMovementComponent*       MovementComponent;
 
 
 protected:

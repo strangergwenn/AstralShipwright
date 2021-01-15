@@ -1,6 +1,7 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaSpacecraftAssembly.h"
+#include "NovaSpacecraftMovementComponent.h"
 #include "NovaCompartmentAssembly.h"
 
 #include "Nova/Actor/NovaMeshInterface.h"
@@ -27,7 +28,10 @@ ANovaSpacecraftAssembly::ANovaSpacecraftAssembly()
 	, DisplayFilterType(ENovaAssemblyDisplayFilter::All)
 	, DisplayFilterIndex(INDEX_NONE)
 	, ImmediateMode(false)
-{	
+{
+	// Setup movement component
+	MovementComponent = CreateDefaultSubobject<UNovaSpacecraftMovementComponent>(TEXT("MovementComponent"));
+
 	// Settings
 	bAlwaysRelevant = true;
 	PrimaryActorTick.bCanEverTick = true;
@@ -115,7 +119,7 @@ void ANovaSpacecraftAssembly::Tick(float DeltaTime)
 			ProcessCompartment(
 				CompartmentAssemblies[CompartmentIndex],
 				FNovaCompartment(),
-				FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset)
+				FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass)
 					{
 						UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Element.Mesh);
 						if (PrimitiveComponent)
@@ -350,7 +354,7 @@ void ANovaSpacecraftAssembly::StartAssemblyUpdate()
 		ProcessCompartmentIfDifferent(
 		CompartmentAssemblies[CompartmentIndex],
 		CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment(),
-		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset)
+		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass)
 			{
 				if (Element.Mesh)
 				{
@@ -429,7 +433,7 @@ void ANovaSpacecraftAssembly::UpdateAssembly()
 			ProcessCompartmentIfDifferent(
 				CompartmentAssemblies[CompartmentIndex],
 				CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment(),
-				FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset)
+				FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass)
 					{
 						if (Element.Mesh == nullptr)
 						{
@@ -537,7 +541,7 @@ void ANovaSpacecraftAssembly::UpdateDisplayFilter()
 	{
 		ProcessCompartment(CompartmentAssemblies[CompartmentIndex],
 			FNovaCompartment(),
-			FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset)
+			FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass)
 				{
 					if (Element.Mesh)
 					{
@@ -611,11 +615,11 @@ void ANovaSpacecraftAssembly::ProcessCompartmentIfDifferent(
 	FNovaAssemblyCallback Callback)
 {
 	ProcessCompartment(CompartmentAssembly, Compartment,
-		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset)
+		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass)
 		{
 			if (Element.Asset != Asset.ToSoftObjectPath() || CompartmentAssembly->Description != Compartment.Description)
 			{
-				Callback.Execute(Element, Asset);
+				Callback.Execute(Element, Asset, ExplicitComponentClass);
 			}
 		})
 	);

@@ -328,6 +328,3 @@ bool INovaMeshInterface::MoveComponentHierarchy(UPrimitiveComponent* RootCompone
 
 	return Moved;
 }
-
-
-#undef LOCTEXT_NAMESPACE

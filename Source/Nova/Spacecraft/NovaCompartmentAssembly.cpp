@@ -15,7 +15,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 
 
-#define LOCTEXT_NAMESPACE "FNovaCompartment"
+#define LOCTEXT_NAMESPACE "UNovaCompartmentAssembly"
 
 
 /*----------------------------------------------------
@@ -23,7 +23,8 @@
 ----------------------------------------------------*/
 
 UNovaCompartmentAssembly::UNovaCompartmentAssembly()
-	: Description(nullptr)
+	: Super()
+	, Description(nullptr)
 	, RequestedLocation(FVector::ZeroVector)
 	, LastLocation(FVector::ZeroVector)
 	, LocationInitialized(false)
@@ -93,9 +94,9 @@ FVector UNovaCompartmentAssembly::GetCompartmentLength(const struct FNovaCompart
 
 void UNovaCompartmentAssembly::ProcessCompartment(const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
 {
-	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset)
+	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass = nullptr)
 	{
-		Callback.Execute(Element, Asset);
+		Callback.Execute(Element, Asset, ExplicitComponentClass);
 	};
 
 	// Process the structural elements
@@ -122,9 +123,9 @@ void UNovaCompartmentAssembly::ProcessCompartment(const FNovaCompartment& Compar
 
 void UNovaCompartmentAssembly::ProcessModule(FNovaModuleAssembly& Assembly, const FNovaCompartmentModule& Module, const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
 {
-	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset)
+	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass = nullptr)
 	{
-		Callback.Execute(Element, Asset);
+		Callback.Execute(Element, Asset, ExplicitComponentClass);
 	};
 
 	const UNovaCompartmentDescription* CompartmentDescription = Compartment.Description;
@@ -140,13 +141,15 @@ void UNovaCompartmentAssembly::ProcessModule(FNovaModuleAssembly& Assembly, cons
 
 void UNovaCompartmentAssembly::ProcessEquipment(FNovaEquipmentAssembly& Assembly, const UNovaEquipmentDescription* EquipmentDescription, const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
 {
-	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset)
+	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass = nullptr)
 	{
-		Callback.Execute(Element, Asset);
+		Callback.Execute(Element, Asset, ExplicitComponentClass);
 	};
 
 	// Process the equipment elements
-	ProcessElement(Assembly.Equipment, EquipmentDescription ? EquipmentDescription->GetMesh() : EmptyMesh);
+	ProcessElement(Assembly.Equipment,
+		EquipmentDescription ? EquipmentDescription->GetMesh() : EmptyMesh, 
+		EquipmentDescription ? EquipmentDescription->ExplicitComponentClass : nullptr);
 }
 
 
@@ -158,9 +161,9 @@ void UNovaCompartmentAssembly::BuildCompartment(const struct FNovaCompartment& C
 {
 	// Build all elements first for the most general and basic setup
 	ProcessCompartment(Compartment,
-		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset)
+		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass)
 			{
-				BuildElement(Element, Asset);
+				BuildElement(Element, Asset, ExplicitComponentClass);
 			})
 	);
 
@@ -225,38 +228,41 @@ void UNovaCompartmentAssembly::BuildEquipment(FNovaEquipmentAssembly& Assembly, 
 	SetElementAnimation(Assembly.Equipment, EquipmentDescription ? EquipmentDescription->SkeletalAnimation : nullptr);
 }
 
-void UNovaCompartmentAssembly::BuildElement(FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset)
+void UNovaCompartmentAssembly::BuildElement(FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass)
 {
 	NCHECK(Asset.IsValid());
 
+	// Determine the target component class
+	TSubclassOf<UPrimitiveComponent> ComponentClass = nullptr;
+	if (ExplicitComponentClass)
+	{
+		ComponentClass = ExplicitComponentClass;
+	}
+	else if (Asset->IsA(USkeletalMesh::StaticClass()))
+	{
+		ComponentClass = UNovaSkeletalMeshComponent::StaticClass();
+	}
+	else if (Asset->IsA(UStaticMesh::StaticClass()))
+	{
+		ComponentClass = UNovaStaticMeshComponent::StaticClass();
+	}
+	else
+	{
+		ComponentClass = UNovaDecalComponent::StaticClass();
+	}
+
 	// Detect whether we need to construct or re-construct the mesh
 	bool NeedConstructing = Element.Mesh == nullptr;
-	if ((Asset->IsA(USkeletalMesh::StaticClass()) && !Cast<UNovaSkeletalMeshComponent>(Element.Mesh))
-		|| (Asset->IsA(UStaticMesh::StaticClass()) && !Cast<UNovaStaticMeshComponent>(Element.Mesh))
-		|| (Asset->IsA(UMaterialInterface::StaticClass()) && !Cast<UNovaDecalComponent>(Element.Mesh)))
+	if (Element.Mesh && Cast<UPrimitiveComponent>(Element.Mesh)->GetClass() != ComponentClass)
 	{
-		if (Element.Mesh)
-		{
-			Cast<USceneComponent>(Element.Mesh)->DestroyComponent();
-		}
+		Cast<UPrimitiveComponent>(Element.Mesh)->DestroyComponent();
 		NeedConstructing = true;
 	}
 
 	// Create the element mesh
 	if (NeedConstructing)
 	{
-		if (Asset->IsA(USkeletalMesh::StaticClass()))
-		{
-			Element.Mesh = NewObject<UNovaSkeletalMeshComponent>(GetOwner());
-		}
-		else if (Asset->IsA(UStaticMesh::StaticClass()))
-		{
-			Element.Mesh = NewObject<UNovaStaticMeshComponent>(GetOwner());
-		}
-		else
-		{
-			Element.Mesh = NewObject<UNovaDecalComponent>(GetOwner());
-		}
+		Element.Mesh = Cast<INovaMeshInterface>(NewObject<UPrimitiveComponent>(GetOwner(), ComponentClass));
 	}
 
 	// Set the resource

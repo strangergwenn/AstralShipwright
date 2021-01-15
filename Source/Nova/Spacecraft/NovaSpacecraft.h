@@ -3,77 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Nova/Game/NovaGameTypes.h"
+#include "NovaSpacecraftTypes.h"
 #include "NovaSpacecraft.generated.h"
-
-
-/*----------------------------------------------------
-	General spacecraft types
-----------------------------------------------------*/
-
-/** Equipment requirement types */
-UENUM()
-enum class ENovaEquipmentType : uint8
-{
-	Standard,
-	Engine
-};
-
-/** Type of bulkhead to use */
-UENUM()
-enum class ENovaAssemblyBulkheadType : uint8
-{
-	None,
-	Standard,
-	Skirt,
-	Outer,
-};
-
-/** Type of skirt piping to use */
-UENUM()
-enum class ENovaAssemblySkirtPipingType : uint8
-{
-	None,
-	Simple,
-	Connection
-};
-
-/** Possible hull styles */
-UENUM()
-enum class ENovaAssemblyHullType : uint8
-{
-	None,
-	PlasticFabric,
-	MetalFabric
-};
-
-/** Possible construction element types */
-enum class ENovaAssemblyElementType : uint8
-{
-	Module,
-	Structure,
-	Equipment,
-	Wiring,
-	Hull
-};
-
-/** Single construction element */
-struct FNovaAssemblyElement
-{
-	FNovaAssemblyElement()
-	{}
-
-	FNovaAssemblyElement(ENovaAssemblyElementType T)
-		: Type(T)
-	{}
-
-	FSoftObjectPath           Asset;
-	ENovaAssemblyElementType  Type;
-	class INovaMeshInterface* Mesh = nullptr;
-};
-
-/** Compartment processing delegate */
-DECLARE_DELEGATE_TwoParams(FNovaAssemblyCallback, FNovaAssemblyElement&, TSoftObjectPtr<UObject>);
 
 
 /*----------------------------------------------------
@@ -200,6 +131,7 @@ public:
 	// Skirt structural element
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> OuterStructure = EmptyMesh;
+
 	
 	// Main piping element
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
@@ -212,6 +144,7 @@ public:
 	// Tank-connected piping (skirt)
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> ConnectionSkirtPiping = EmptyMesh;
+
 	
 	// Module-connected wiring
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
@@ -220,6 +153,7 @@ public:
 	// Module-connected wiring
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> ConnectionWiring = EmptyMesh;
+
 	
 	// Decorative outer hull
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
@@ -228,6 +162,7 @@ public:
 	// Decorative outer hull (skirt)
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> OuterHull = EmptyMesh;
+
 
 	// Metadata for module slots
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
@@ -337,6 +272,10 @@ public:
 	// Equipment requirement
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	ENovaEquipmentType EquipmentType;
+
+	// Component class to use
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	TSubclassOf<UPrimitiveComponent> ExplicitComponentClass;
 
 };
 
