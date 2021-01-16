@@ -12,6 +12,7 @@ enum class ENovaMainMenuType : uint8
 {
 	Home,
 	Game,
+	Flight,
 	Assembly,
 	Settings
 };
@@ -72,6 +73,12 @@ protected:
 
 	/** Check if we can display the game menus */
 	bool AreGameMenusVisible() const;
+
+	/** Check if we can display the flight menu */
+	bool IsFlightMenuVisible() const;
+
+	/** Check if we can display the assembly menu */
+	bool IsAssemblyMenuVisible() const;
 
 	/** Get the close button text */
 	FText GetCloseText() const;
@@ -135,6 +142,7 @@ protected:
 	TSharedPtr<class SNovaTabView>                TabView;
 	TSharedPtr<class SNovaMainMenuHome>           HomeMenu;
 	TSharedPtr<class SNovaMainMenuGame>           GameMenu;
+	TSharedPtr<class SNovaMainMenuFlight>         FlightMenu;
 	TSharedPtr<class SNovaMainMenuAssembly>       AssemblyMenu;
 	TSharedPtr<class SNovaMainMenuSettings>       SettingsMenu;
 

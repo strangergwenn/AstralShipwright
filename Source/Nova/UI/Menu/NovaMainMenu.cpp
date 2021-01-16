@@ -4,6 +4,7 @@
 
 #include "NovaMainMenuHome.h"
 #include "NovaMainMenuGame.h"
+#include "NovaMainMenuFlight.h"
 #include "NovaMainMenuAssembly.h"
 #include "NovaMainMenuSettings.h"
 
@@ -114,20 +115,31 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		// Game menu
 		+ SNovaTabView::Slot()
 		.Header(GetTitleText(ENovaMainMenuType::Game))
-			.HeaderHelp(LOCTEXT("GameMenuTitleHelp", "Play with your friends"))
-			.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::AreGameMenusVisible))
-			.Blur()
-			[
-				SAssignNew(GameMenu, SNovaMainMenuGame)
-				.Menu(this)
+		.HeaderHelp(LOCTEXT("GameMenuTitleHelp", "Play with your friends"))
+		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::AreGameMenusVisible))
+		.Blur()
+		[
+			SAssignNew(GameMenu, SNovaMainMenuGame)
+			.Menu(this)
 			.MenuManager(MenuManager)
-			]
+		]
+
+		// Flight menu
+		+ SNovaTabView::Slot()
+		.Header(GetTitleText(ENovaMainMenuType::Flight))
+		.HeaderHelp(LOCTEXT("FlightMenuTitleHelp", "Control your ship"))
+		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::IsFlightMenuVisible))
+		[
+			SAssignNew(FlightMenu, SNovaMainMenuFlight)
+			.Menu(this)
+			.MenuManager(MenuManager)
+		]
 
 		// Assembly menu
 		+ SNovaTabView::Slot()
 		.Header(GetTitleText(ENovaMainMenuType::Assembly))
 		.HeaderHelp(LOCTEXT("AssemblyMenuTitleHelp", "Edit spacecraft assembly"))
-		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::AreGameMenusVisible))
+		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::IsAssemblyMenuVisible))
 		[
 			SAssignNew(AssemblyMenu, SNovaMainMenuAssembly)
 			.Menu(this)
@@ -294,7 +306,6 @@ FReply SNovaMainMenu::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, cons
 }
 
 
-
 /*----------------------------------------------------
 	Content callbacks
 ----------------------------------------------------*/
@@ -307,6 +318,16 @@ bool SNovaMainMenu::IsHomeMenuVisible() const
 bool SNovaMainMenu::AreGameMenusVisible() const
 {
 	return !IsHomeMenuVisible();
+}
+
+bool SNovaMainMenu::IsFlightMenuVisible() const
+{
+	return AreGameMenusVisible();
+}
+
+bool SNovaMainMenu::IsAssemblyMenuVisible() const
+{
+	return AreGameMenusVisible();
 }
 
 FText SNovaMainMenu::GetCloseText() const
@@ -369,6 +390,7 @@ FText SNovaMainMenu::GetTitleText(ENovaMainMenuType MenuType) const
 	{
 		case ENovaMainMenuType::Home:      return LOCTEXT("HomeMenuTitle",      "Home");
 		case ENovaMainMenuType::Game:      return LOCTEXT("GameMenuTitle",      "Game");
+		case ENovaMainMenuType::Flight:    return LOCTEXT("FlightMenuTitle",    "Flight");
 		case ENovaMainMenuType::Assembly:  return LOCTEXT("AssemblyMenuTitle",  "Assembly");
 		case ENovaMainMenuType::Settings:  return LOCTEXT("SettingsMenuTitle",  "Settings");
 	}
