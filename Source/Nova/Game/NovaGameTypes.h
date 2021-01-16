@@ -53,12 +53,6 @@ class UNovaAssetDescription : public UDataAsset
 
 public:
 
-	UNovaAssetDescription()
-	{
-		static ConstructorHelpers::FObjectFinder<UStaticMesh> InvisibleMeshRef(TEXT("/Game/Master/Meshes/SM_Invisible"));
-		EmptyMesh = InvisibleMeshRef.Object;
-	}
-
 	/** Procedurally generate a screenshot of this asset */
 	UFUNCTION(Category = Nova, BlueprintCallable, CallInEditor)
 	void UpdateAssetRender();
@@ -94,10 +88,6 @@ public:
 	// Whether this asset is a special hidden one
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	bool Hidden;
-
-	// Special invisible mesh used as an "empty" indicator
-	UPROPERTY()
-	TSoftObjectPtr<class UStaticMesh> EmptyMesh;
 
 	// Generated texture file
 	UPROPERTY()

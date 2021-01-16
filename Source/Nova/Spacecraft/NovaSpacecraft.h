@@ -80,7 +80,7 @@ public:
 	/** Return the appropriate main piping mesh */
 	TSoftObjectPtr<class UStaticMesh> GetMainPiping(bool Enabled) const
 	{
-		return Enabled ? MainPiping : EmptyMesh;
+		return Enabled ? MainPiping : nullptr;
 	}
 
 	/** Return the appropriate skirt piping mesh */
@@ -90,7 +90,7 @@ public:
 		{
 		default:
 		case ENovaAssemblySkirtPipingType::None:
-			return EmptyMesh;
+			return nullptr;
 		case ENovaAssemblySkirtPipingType::Simple:
 			return SimpleSkirtPiping;
 		case ENovaAssemblySkirtPipingType::Connection:
@@ -101,67 +101,67 @@ public:
 	/** Return the appropriate main hull mesh */
 	TSoftObjectPtr<class UStaticMesh> GetMainHull(ENovaAssemblyHullType Type) const
 	{
-		return Type != ENovaAssemblyHullType::None ? MainHull : EmptyMesh;
+		return Type != ENovaAssemblyHullType::None ? MainHull : nullptr;
 	}
 
 	/** Return the appropriate outer hull mesh */
 	TSoftObjectPtr<class UStaticMesh> GetOuterHull(ENovaAssemblyHullType Type) const
 	{
-		return Type != ENovaAssemblyHullType::None ? OuterHull : EmptyMesh;
+		return Type != ENovaAssemblyHullType::None ? OuterHull : nullptr;
 	}
 
 	/** Return the appropriate main wiring mesh */
 	TSoftObjectPtr<class UStaticMesh> GetMainWiring(bool Enabled) const
 	{
-		return Enabled ? MainWiring : EmptyMesh;
+		return Enabled ? MainWiring : nullptr;
 	}
 
 	/** Return the appropriate module-connection wiring mesh */
 	TSoftObjectPtr<class UStaticMesh> GetConnectionWiring(bool Enabled) const
 	{
-		return Enabled ? ConnectionWiring : EmptyMesh;
+		return Enabled ? ConnectionWiring : nullptr;
 	}
 
 public:
 	
 	// Main structural element
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> MainStructure = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> MainStructure = nullptr;
 	
 	// Skirt structural element
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> OuterStructure = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> OuterStructure = nullptr;
 
 	
 	// Main piping element
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> MainPiping = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> MainPiping = nullptr;
 	
 	// Simple direct piping (skirt)
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> SimpleSkirtPiping = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> SimpleSkirtPiping = nullptr;
 	
 	// Tank-connected piping (skirt)
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> ConnectionSkirtPiping = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> ConnectionSkirtPiping = nullptr;
 
 	
 	// Module-connected wiring
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> MainWiring = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> MainWiring = nullptr;
 	
 	// Module-connected wiring
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> ConnectionWiring = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> ConnectionWiring = nullptr;
 
 	
 	// Decorative outer hull
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> MainHull = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> MainHull = nullptr;
 	
 	// Decorative outer hull (skirt)
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> OuterHull = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> OuterHull = nullptr;
 
 
 	// Metadata for module slots
@@ -187,11 +187,11 @@ public:
 		switch (Style)
 		{
 		case ENovaAssemblyBulkheadType::None:
-			return EmptyMesh;
+			return nullptr;
 		case ENovaAssemblyBulkheadType::Standard:
 			return Forward ? ForwardBulkhead : AftBulkhead;
 		case ENovaAssemblyBulkheadType::Skirt:
-			return Forward ? EmptyMesh : SkirtBulkhead;
+			return Forward ? nullptr : SkirtBulkhead;
 		case ENovaAssemblyBulkheadType::Outer:
 			return Forward ? OuterForwardBulkhead : OuterAftBulkhead;
 		default:
@@ -203,27 +203,27 @@ public:
 
 	// Main module segment
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> Segment = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> Segment = nullptr;
 
 	// Standard forward bulkhead
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> ForwardBulkhead = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> ForwardBulkhead = nullptr;
 
 	// Standard aft bulkhead
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> AftBulkhead = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> AftBulkhead = nullptr;
 
 	// Skirt bulkhead - forward side of the module behind will be empty
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> SkirtBulkhead = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> SkirtBulkhead = nullptr;
 
 	// Outer-facing forward bulkhead
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> OuterForwardBulkhead = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> OuterForwardBulkhead = nullptr;
 
 	// Outer-facing aft external bulkhead
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> OuterAftBulkhead = EmptyMesh;
+	TSoftObjectPtr<class UStaticMesh> OuterAftBulkhead = nullptr;
 
 	// Whether the module needs tank piping
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
@@ -251,7 +251,7 @@ public:
 		}
 		else
 		{
-			return EmptyMesh;
+			return nullptr;
 		}
 	}
 

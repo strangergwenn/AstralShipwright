@@ -31,10 +31,6 @@ UNovaCompartmentAssembly::UNovaCompartmentAssembly()
 	, ImmediateMode(false)
 	, CurrentAnimationTime(0)
 {
-	// Get empty mesh
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> InvisibleMeshRef(TEXT("/Game/Master/Meshes/SM_Invisible"));
-	EmptyMesh = InvisibleMeshRef.Object;
-
 	// Settings
 	PrimaryComponentTick.bCanEverTick = true;
 	AnimationDuration = 0.5f;
@@ -102,11 +98,11 @@ void UNovaCompartmentAssembly::ProcessCompartment(const FNovaCompartment& Compar
 	// Process the structural elements
 	const UNovaCompartmentDescription* CompartmentDescription = Compartment.Description;
 	ProcessElement(MainStructure, CompartmentDescription ? CompartmentDescription->MainStructure : nullptr);
-	ProcessElement(OuterStructure, CompartmentDescription ? (Compartment.NeedsOuterSkirt ? CompartmentDescription->OuterStructure : EmptyMesh) : nullptr);
+	ProcessElement(OuterStructure, CompartmentDescription ? (Compartment.NeedsOuterSkirt ? CompartmentDescription->OuterStructure : nullptr) : nullptr);
 	ProcessElement(MainPiping, CompartmentDescription ? CompartmentDescription->GetMainPiping(Compartment.NeedsMainPiping) : nullptr);
 	ProcessElement(MainWiring, CompartmentDescription ? CompartmentDescription->GetMainWiring(Compartment.NeedsMainWiring) : nullptr);
 	ProcessElement(MainHull, CompartmentDescription ? CompartmentDescription->GetMainHull(Compartment.HullType) : nullptr);
-	ProcessElement(OuterHull, CompartmentDescription ? (Compartment.NeedsOuterSkirt ? CompartmentDescription->GetOuterHull(Compartment.HullType) : EmptyMesh) : nullptr);
+	ProcessElement(OuterHull, CompartmentDescription ? (Compartment.NeedsOuterSkirt ? CompartmentDescription->GetOuterHull(Compartment.HullType) : nullptr) : nullptr);
 
 	// Process modules
 	for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
@@ -132,9 +128,9 @@ void UNovaCompartmentAssembly::ProcessModule(FNovaModuleAssembly& Assembly, cons
 	const UNovaModuleDescription* ModuleDescription = Module.Description;
 
 	// Process the module elements
-	ProcessElement(Assembly.Segment, ModuleDescription ? ModuleDescription->Segment : EmptyMesh);
-	ProcessElement(Assembly.ForwardBulkhead, ModuleDescription ? ModuleDescription->GetBulkhead(Module.ForwardBulkheadType, true) : EmptyMesh);
-	ProcessElement(Assembly.AftBulkhead, ModuleDescription ? ModuleDescription->GetBulkhead(Module.AftBulkheadType, false) : EmptyMesh);
+	ProcessElement(Assembly.Segment, ModuleDescription ? ModuleDescription->Segment : nullptr);
+	ProcessElement(Assembly.ForwardBulkhead, ModuleDescription ? ModuleDescription->GetBulkhead(Module.ForwardBulkheadType, true) : nullptr);
+	ProcessElement(Assembly.AftBulkhead, ModuleDescription ? ModuleDescription->GetBulkhead(Module.AftBulkheadType, false) : nullptr);
 	ProcessElement(Assembly.ConnectionPiping, CompartmentDescription ? CompartmentDescription->GetSkirtPiping(Module.SkirtPipingType) : nullptr);
 	ProcessElement(Assembly.ConnectionWiring, CompartmentDescription ? CompartmentDescription->GetConnectionWiring(Module.NeedsWiring) : nullptr);
 }
@@ -148,7 +144,7 @@ void UNovaCompartmentAssembly::ProcessEquipment(FNovaEquipmentAssembly& Assembly
 
 	// Process the equipment elements
 	ProcessElement(Assembly.Equipment,
-		EquipmentDescription ? EquipmentDescription->GetMesh() : EmptyMesh, 
+		EquipmentDescription ? EquipmentDescription->GetMesh() : nullptr, 
 		EquipmentDescription ? EquipmentDescription->AdditionalComponent : FNovaAdditionalComponent());
 }
 
@@ -230,7 +226,6 @@ void UNovaCompartmentAssembly::BuildEquipment(FNovaEquipmentAssembly& Assembly, 
 
 void UNovaCompartmentAssembly::BuildElement(FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 {
-	NCHECK(Asset.IsValid());
 	if (Element.Mesh)
 	{
 		NCHECK(Cast<UPrimitiveComponent>(Element.Mesh));
@@ -239,17 +234,20 @@ void UNovaCompartmentAssembly::BuildElement(FNovaAssemblyElement& Element, TSoft
 
 	// Determine the target component class
 	TSubclassOf<UPrimitiveComponent> ComponentClass = nullptr;
-	if (Asset->IsA(USkeletalMesh::StaticClass()))
+	if (Asset.IsValid())
 	{
-		ComponentClass = UNovaSkeletalMeshComponent::StaticClass();
-	}
-	else if (Asset->IsA(UStaticMesh::StaticClass()))
-	{
-		ComponentClass = UNovaStaticMeshComponent::StaticClass();
-	}
-	else
-	{
-		ComponentClass = UNovaDecalComponent::StaticClass();
+		if (Asset->IsA(USkeletalMesh::StaticClass()))
+		{
+			ComponentClass = UNovaSkeletalMeshComponent::StaticClass();
+		}
+		else if (Asset->IsA(UStaticMesh::StaticClass()))
+		{
+			ComponentClass = UNovaStaticMeshComponent::StaticClass();
+		}
+		else if (Asset->IsA(UMaterialInterface::StaticClass()))
+		{
+			ComponentClass = UNovaDecalComponent::StaticClass();
+		}
 	}
 
 	// Detect whether we need to construct or re-construct the additional component
@@ -293,65 +291,72 @@ void UNovaCompartmentAssembly::BuildElement(FNovaAssemblyElement& Element, TSoft
 		NeedConstructing = true;
 	}
 
-	// Create the element mesh
-	if (NeedConstructing)
+	// Build the component now that the cleanup is done, if the component class is valid
+	if (ComponentClass.Get())
 	{
-		Element.Mesh = Cast<INovaMeshInterface>(NewObject<UPrimitiveComponent>(GetOwner(), ComponentClass));
-		NCHECK(Element.Mesh);
-
-		if (AdditionalComponent.ComponentClass.Get())
+		// Create the element mesh
+		if (NeedConstructing)
 		{
-			NeedConstructingAdditionalElement = true;
+			Element.Mesh = Cast<INovaMeshInterface>(NewObject<UPrimitiveComponent>(GetOwner(), ComponentClass));
+			NCHECK(Element.Mesh);
+
+			if (AdditionalComponent.ComponentClass.Get())
+			{
+				NeedConstructingAdditionalElement = true;
+			}
 		}
-	}
 
-	// Set the resource
-	NCHECK(Element.Mesh);
-	Element.Asset = Asset.ToSoftObjectPath();
-	if (Asset->IsA(USkeletalMesh::StaticClass()))
-	{
-		Cast<UNovaSkeletalMeshComponent>(Element.Mesh)->SetSkeletalMesh(Cast<USkeletalMesh>(Asset.Get()));
-	}
-	else if (Asset->IsA(UStaticMesh::StaticClass()))
-	{
-		Cast<UNovaStaticMeshComponent>(Element.Mesh)->SetStaticMesh(Cast<UStaticMesh>(Asset.Get()));
-	}
-	else
-	{
-		Cast<UNovaDecalComponent>(Element.Mesh)->SetMaterial(0, Cast<UMaterialInterface>(Asset.Get()));
-	}
+		// Set the resource
+		Element.Asset = Asset.ToSoftObjectPath();
+		if (Asset.IsValid())
+		{
+			NCHECK(Element.Mesh);
+			if (Asset->IsA(USkeletalMesh::StaticClass()))
+			{
+				Cast<UNovaSkeletalMeshComponent>(Element.Mesh)->SetSkeletalMesh(Cast<USkeletalMesh>(Asset.Get()));
+			}
+			else if (Asset->IsA(UStaticMesh::StaticClass()))
+			{
+				Cast<UNovaStaticMeshComponent>(Element.Mesh)->SetStaticMesh(Cast<UStaticMesh>(Asset.Get()));
+			}
+			else if (Asset->IsA(UMaterialInterface::StaticClass()))
+			{
+				Cast<UNovaDecalComponent>(Element.Mesh)->SetMaterial(0, Cast<UMaterialInterface>(Asset.Get()));
+			}
+		}
 
-	// Setup the mesh
-	if (NeedConstructing)
-	{
-		UPrimitiveComponent* MeshComponent = Cast<UPrimitiveComponent>(Element.Mesh);
-		MeshComponent->AttachToComponent(this, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
-		MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		MeshComponent->SetCollisionProfileName("Pawn");
-		MeshComponent->SetRenderCustomDepth(true);
-		MeshComponent->bCastShadowAsTwoSided = true;
-		MeshComponent->RegisterComponent();
-	}
+		// Setup the mesh
+		if (NeedConstructing)
+		{
+			UPrimitiveComponent* MeshComponent = Cast<UPrimitiveComponent>(Element.Mesh);
+			MeshComponent->AttachToComponent(this, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
+			MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			MeshComponent->SetCollisionProfileName("Pawn");
+			MeshComponent->SetRenderCustomDepth(true);
+			MeshComponent->bCastShadowAsTwoSided = true;
+			MeshComponent->RegisterComponent();
+		}
 
-	// Setup the additional component
-	if (NeedConstructingAdditionalElement)
-	{
-		USceneComponent* AdditionalMeshComponent = NewObject<USceneComponent>(GetOwner(), AdditionalComponent.ComponentClass);
-		NCHECK(IsValid(AdditionalMeshComponent));
-		AdditionalComponentInterface = Cast<INovaAdditionalComponentInterface>(AdditionalMeshComponent);
-		NCHECK(AdditionalComponentInterface);
-	}
-	if (AdditionalComponentInterface)
-	{
-		AdditionalComponentInterface->SetupComponent(AdditionalComponent.AdditionalAsset);
-	}
-	if (NeedConstructingAdditionalElement)
-	{
-		UPrimitiveComponent* MeshComponent = Cast<UPrimitiveComponent>(Element.Mesh);
-		NCHECK(MeshComponent);
-		USceneComponent* AdditionalMeshComponent = Cast<USceneComponent>(AdditionalComponentInterface);
-		AdditionalMeshComponent->AttachToComponent(MeshComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
-		AdditionalMeshComponent->RegisterComponent();
+		// Setup the additional component
+		if (NeedConstructingAdditionalElement)
+		{
+			USceneComponent* AdditionalMeshComponent = NewObject<USceneComponent>(GetOwner(), AdditionalComponent.ComponentClass);
+			NCHECK(IsValid(AdditionalMeshComponent));
+			AdditionalComponentInterface = Cast<INovaAdditionalComponentInterface>(AdditionalMeshComponent);
+			NCHECK(AdditionalComponentInterface);
+		}
+		if (AdditionalComponentInterface)
+		{
+			AdditionalComponentInterface->SetupComponent(AdditionalComponent.AdditionalAsset);
+		}
+		if (NeedConstructingAdditionalElement)
+		{
+			UPrimitiveComponent* MeshComponent = Cast<UPrimitiveComponent>(Element.Mesh);
+			NCHECK(MeshComponent);
+			USceneComponent* AdditionalMeshComponent = Cast<USceneComponent>(AdditionalComponentInterface);
+			AdditionalMeshComponent->AttachToComponent(MeshComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
+			AdditionalMeshComponent->RegisterComponent();
+		}
 	}
 }
 
@@ -363,47 +368,51 @@ void UNovaCompartmentAssembly::BuildElement(FNovaAssemblyElement& Element, TSoft
 void UNovaCompartmentAssembly::AttachElementToSocket(FNovaAssemblyElement& Element, const FNovaAssemblyElement& AttachElement,
 	FName SocketName, const FVector& Offset)
 {
-	NCHECK(Element.Mesh);
-	NCHECK(AttachElement.Mesh);
-
-	UNovaStaticMeshComponent* StaticAttachMesh = Cast<UNovaStaticMeshComponent>(AttachElement.Mesh);
-	if (StaticAttachMesh)
+	if (Element.Mesh && AttachElement.Mesh)
 	{
-		Cast<USceneComponent>(Element.Mesh)->SetWorldLocation(StaticAttachMesh->GetSocketLocation(SocketName));
-		Cast<USceneComponent>(Element.Mesh)->AddLocalOffset(Offset);
+		UNovaStaticMeshComponent* StaticAttachMesh = Cast<UNovaStaticMeshComponent>(AttachElement.Mesh);
+		if (StaticAttachMesh)
+		{
+			Cast<UPrimitiveComponent>(Element.Mesh)->SetWorldLocation(StaticAttachMesh->GetSocketLocation(SocketName));
+			Cast<UPrimitiveComponent>(Element.Mesh)->AddLocalOffset(Offset);
+		}
 	}
 }
 
 void UNovaCompartmentAssembly::SetElementAnimation(FNovaAssemblyElement& Element, TSoftObjectPtr<UAnimationAsset> Animation)
 {
-	NCHECK(Element.Mesh);
-	UNovaSkeletalMeshComponent* SkeletalComponent = Cast<UNovaSkeletalMeshComponent>(Element.Mesh);
-
-	if (SkeletalComponent && SkeletalComponent->GetAnimInstance() == nullptr)
+	if (Element.Mesh)
 	{
-		SkeletalComponent->SetAnimationMode(EAnimationMode::AnimationSingleNode);
-		SkeletalComponent->SetAnimation(Animation.Get());
-		SkeletalComponent->Play(false);
+		UNovaSkeletalMeshComponent* SkeletalComponent = Cast<UNovaSkeletalMeshComponent>(Element.Mesh);
+
+		if (SkeletalComponent && SkeletalComponent->GetAnimInstance() == nullptr)
+		{
+			SkeletalComponent->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+			SkeletalComponent->SetAnimation(Animation.Get());
+			SkeletalComponent->Play(false);
+		}
 	}
 }
 
 void UNovaCompartmentAssembly::SetElementOffset(FNovaAssemblyElement& Element, const FVector& Offset, const FRotator& Rotation)
 {
-	NCHECK(Element.Mesh);
-
-	Cast<USceneComponent>(Element.Mesh)->SetRelativeLocation(Offset);
-	Cast<USceneComponent>(Element.Mesh)->SetRelativeRotation(Rotation);
+	if (Element.Mesh)
+	{
+		Cast<UPrimitiveComponent>(Element.Mesh)->SetRelativeLocation(Offset);
+		Cast<UPrimitiveComponent>(Element.Mesh)->SetRelativeRotation(Rotation);
+	}
 }
 
 void UNovaCompartmentAssembly::RequestParameter(FNovaAssemblyElement& Element, FName Name, float Value)
 {
-	Element.Mesh->RequestParameter(Name, Value, ImmediateMode);
+	if (Element.Mesh)
+	{
+		Element.Mesh->RequestParameter(Name, Value, ImmediateMode);
+	}
 }
 
 FVector UNovaCompartmentAssembly::GetElementLength(const FNovaAssemblyElement& Element) const
 {
-	NCHECK(Element.Mesh);
-
 	UNovaStaticMeshComponent* StaticMeshComponent = Cast<UNovaStaticMeshComponent>(Element.Mesh);
 	if (StaticMeshComponent)
 	{

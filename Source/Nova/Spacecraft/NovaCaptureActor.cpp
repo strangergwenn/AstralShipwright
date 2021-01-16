@@ -187,7 +187,7 @@ void ANovaCaptureActor::PlaceCamera()
 				const UNovaStaticMeshComponent* StaticPrim = Cast<UNovaStaticMeshComponent>(Prim);
 				const UNovaSkeletalMeshComponent* SkeletalPrim = Cast<UNovaSkeletalMeshComponent>(Prim);
 
-				if ((StaticPrim && StaticPrim->GetStaticMesh() != EmptyCompartmentDescription->EmptyMesh) || SkeletalPrim)
+				if (StaticPrim || SkeletalPrim)
 				{
 					Bounds += Prim->Bounds.GetBox();
 				}

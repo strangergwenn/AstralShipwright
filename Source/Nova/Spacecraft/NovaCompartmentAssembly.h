@@ -153,10 +153,6 @@ public:
 
 protected:
 
-	// Special invisible mesh used as an "empty" indicator
-	UPROPERTY()
-	TSoftObjectPtr<class UStaticMesh>             EmptyMesh;
-
 	// Internal data
 	FVector                                       RequestedLocation;
 	FVector                                       LastLocation;
