@@ -4,43 +4,21 @@
 
 #include "CoreMinimal.h"
 #include "NovaSpacecraftTypes.h"
-#include "Components/SceneComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Nova/Tools/NovaActorTools.h"
 
-#include "NovaSpacecraftThrusterComponent.generated.h"
+#include "NovaSpacecraftDriveComponent.generated.h"
 
 
-/** Exhaust management object */
-USTRUCT()
-struct FNovaThrusterExhaust
-{
-	GENERATED_BODY()
-
-	// Exhaust identifier
-	FName                                         Name;
-
-	// Exhaust mesh
-	UPROPERTY()
-	class UStaticMeshComponent*                   Mesh;
-
-	// Exhaust material
-	UPROPERTY()
-	class UMaterialInstanceDynamic*               Material;
-
-	// Current power
-	TNovaTimedAverage<float>                      Power;
-};
-
-
-/** Thruster component class that attaches to a mesh to add thrusters effects */
+/** Main drive component class that attaches to a mesh to add engine effects */
 UCLASS(ClassGroup = (Nova), meta = (BlueprintSpawnableComponent))
-class UNovaSpacecraftThrusterComponent : public USceneComponent, public INovaAdditionalComponentInterface
+class UNovaSpacecraftDriveComponent : public UStaticMeshComponent, public INovaAdditionalComponentInterface
 {
 	GENERATED_BODY()
 
 public:
 
-	UNovaSpacecraftThrusterComponent();
+	UNovaSpacecraftDriveComponent();
 	
 
 	/*----------------------------------------------------
@@ -64,9 +42,11 @@ protected:
 	UPROPERTY()
 	class UStaticMesh*                            ExhaustMesh;
 
-	// Exhausts
+	// Exhaust material
 	UPROPERTY()
-	TArray<FNovaThrusterExhaust>                  ThrusterExhausts;
+	class UMaterialInstanceDynamic*               ExhaustMaterial;
 
-	
+	// Current power
+	TNovaTimedAverage<float>                      ExhaustPower;
+
 };

@@ -54,14 +54,19 @@ public:
 		return CurrentAngularVelocity;
 	}
 
-	inline const FVector GetMeasuredAcceleration() const
+	inline const FVector GetThrusterAcceleration() const
 	{
 		return CurrentAcceleration;
 	}
 
-	inline const FVector GetMeasuredAngularAcceleration() const
+	inline const FVector GetThrusterAngularAcceleration() const
 	{
 		return CurrentAngularAcceleration;
+	}
+
+	inline const float GetMainDriveAcceleration() const
+	{
+		return 0.0f;
 	}
 
 };

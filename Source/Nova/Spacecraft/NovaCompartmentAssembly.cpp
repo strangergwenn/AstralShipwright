@@ -347,14 +347,14 @@ void UNovaCompartmentAssembly::BuildElement(FNovaAssemblyElement& Element, TSoft
 		}
 		if (AdditionalComponentInterface)
 		{
-			AdditionalComponentInterface->SetupComponent(AdditionalComponent.AdditionalAsset);
+			AdditionalComponentInterface->SetAdditionalAsset(AdditionalComponent.AdditionalAsset);
 		}
 		if (NeedConstructingAdditionalElement)
 		{
 			UPrimitiveComponent* MeshComponent = Cast<UPrimitiveComponent>(Element.Mesh);
 			NCHECK(MeshComponent);
 			USceneComponent* AdditionalMeshComponent = Cast<USceneComponent>(AdditionalComponentInterface);
-			AdditionalMeshComponent->AttachToComponent(MeshComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
+			AdditionalMeshComponent->AttachToComponent(MeshComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), AdditionalComponent.SocketName);
 			AdditionalMeshComponent->RegisterComponent();
 		}
 	}

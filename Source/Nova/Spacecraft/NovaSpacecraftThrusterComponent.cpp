@@ -17,6 +17,7 @@ UNovaSpacecraftThrusterComponent::UNovaSpacecraftThrusterComponent()
 	: Super()
 {
 	// Settings
+	SetAbsolute(false, false, true);
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
@@ -25,7 +26,7 @@ UNovaSpacecraftThrusterComponent::UNovaSpacecraftThrusterComponent()
 	Inherited
 ----------------------------------------------------*/
 
-void UNovaSpacecraftThrusterComponent::SetupComponent(TSoftObjectPtr<UObject> AdditionalAsset)
+void UNovaSpacecraftThrusterComponent::SetAdditionalAsset(TSoftObjectPtr<UObject> AdditionalAsset)
 {
 	ExhaustMesh = Cast<UStaticMesh>(AdditionalAsset.Get());
 }
@@ -97,10 +98,8 @@ void UNovaSpacecraftThrusterComponent::TickComponent(float DeltaTime, ELevelTick
 		NCHECK(ParentMesh);
 
 		// Initialize thrust data
-		FVector LinearVelocity = MovementComponent->GetCurrentVelocity();
-		FVector LinearAcceleration = MovementComponent->GetMeasuredAcceleration();
-		FVector AngularAcceleration = MovementComponent->GetMeasuredAngularAcceleration();
-		UNovaSpacecraftMovementComponent* SpacecraftMovementComponent = Cast<UNovaSpacecraftMovementComponent>(MovementComponent);
+		FVector LinearAcceleration = MovementComponent->GetThrusterAcceleration();
+		FVector AngularAcceleration = MovementComponent->GetThrusterAngularAcceleration();
 
 		// Update all exhaust effects
 		for (FNovaThrusterExhaust& Exhaust : ThrusterExhausts)

@@ -94,6 +94,10 @@ struct FNovaAdditionalComponent
 	UPROPERTY(EditDefaultsOnly)
 	TSoftObjectPtr<class UObject> AdditionalAsset;
 
+	// Name of the socket to attach to
+	UPROPERTY(EditDefaultsOnly)
+	FName SocketName;
+
 	/** Get a list of assets to load before use*/
 	TArray<FSoftObjectPath> GetAsyncAssets() const
 	{
@@ -120,6 +124,6 @@ class INovaAdditionalComponentInterface
 public:
 
 	/** Configure the additional component */
-	virtual void SetupComponent(TSoftObjectPtr<class UObject> AdditionalAsset) = 0;
+	virtual void SetAdditionalAsset(TSoftObjectPtr<class UObject> AdditionalAsset) = 0;
 
 };
