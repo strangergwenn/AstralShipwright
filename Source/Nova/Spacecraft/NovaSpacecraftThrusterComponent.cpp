@@ -2,6 +2,7 @@
 
 #include "NovaSpacecraftThrusterComponent.h"
 #include "NovaSpacecraftMovementComponent.h"
+#include "Nova/Actor/NovaMeshInterface.h"
 #include "Nova/Nova.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
@@ -15,12 +16,6 @@
 UNovaSpacecraftThrusterComponent::UNovaSpacecraftThrusterComponent()
 	: Super()
 {
-	// Get resources
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ExhaustMeshObj(TEXT("/Game/Gameplay/Equipments/SM_Exhaust"));
-
-	// Set resources
-	ExhaustMesh = ExhaustMeshObj.Object;
-
 	// Settings
 	PrimaryComponentTick.bCanEverTick = true;
 }
@@ -30,20 +25,27 @@ UNovaSpacecraftThrusterComponent::UNovaSpacecraftThrusterComponent()
 	Inherited
 ----------------------------------------------------*/
 
+void UNovaSpacecraftThrusterComponent::SetupComponent(TSoftObjectPtr<UObject> AdditionalAsset)
+{
+	ExhaustMesh = Cast<UStaticMesh>(AdditionalAsset.Get());
+}
+
 void UNovaSpacecraftThrusterComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
 	bool HasSocket;
 	int32 CurrentSocketIndex = 0;
-	FAttachmentTransformRules AttachRules(EAttachmentRule::SnapToTarget, false);
+	FAttachmentTransformRules AttachRules(EAttachmentRule::KeepWorld, false);
+	INovaMeshInterface* ParentMesh = Cast<INovaMeshInterface>(GetAttachParent());
+	NCHECK(ParentMesh);
 
 	// Find all exhaust sockets
 	do
 	{
 		// Check for the socket's existence
 		FString SocketName = FString("Exhaust_") + FString::FromInt(CurrentSocketIndex);
-		HasSocket = this->HasSocket(*SocketName);
+		HasSocket = ParentMesh->HasSocket(*SocketName);
 
 		if (HasSocket)
 		{
@@ -60,7 +62,12 @@ void UNovaSpacecraftThrusterComponent::BeginPlay()
 			Exhaust.Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 			// Attach
-			Exhaust.Mesh->AttachToComponent(this, AttachRules, *SocketName);
+			FVector SocketLocation;
+			FRotator SocketRotation;
+			Cast<UPrimitiveComponent>(ParentMesh)->GetSocketWorldLocationAndRotation(Exhaust.Name, SocketLocation, SocketRotation);
+			Exhaust.Mesh->SetWorldLocation(SocketLocation);
+			Exhaust.Mesh->SetWorldRotation(SocketRotation);
+			Exhaust.Mesh->AttachToComponent(this, AttachRules);
 
 			// Create material
 			Exhaust.Material = UMaterialInstanceDynamic::Create(Exhaust.Mesh->GetMaterial(0), GetWorld());
@@ -82,9 +89,13 @@ void UNovaSpacecraftThrusterComponent::TickComponent(float DeltaTime, ELevelTick
 
 	// Get data
 	UNovaSpacecraftMovementComponent* MovementComponent = GetOwner()->FindComponentByClass<UNovaSpacecraftMovementComponent>();
+	NCHECK(MovementComponent);
 
-	if (MovementComponent)
+	if (MovementComponent && IsValid(GetAttachParent()))
 	{
+		INovaMeshInterface* ParentMesh = Cast<INovaMeshInterface>(GetAttachParent());
+		NCHECK(ParentMesh);
+
 		// Initialize thrust data
 		FVector LinearVelocity = MovementComponent->GetCurrentVelocity();
 		FVector LinearAcceleration = MovementComponent->GetMeasuredAcceleration();
@@ -96,7 +107,7 @@ void UNovaSpacecraftThrusterComponent::TickComponent(float DeltaTime, ELevelTick
 		{
 			float EngineIntensity = 0.0f;
 
-			if (IsDematerializing())
+			if (ParentMesh->IsDematerializing())
 			{
 				EngineIntensity = 0.0f;
 			}
@@ -105,7 +116,7 @@ void UNovaSpacecraftThrusterComponent::TickComponent(float DeltaTime, ELevelTick
 				// Get location
 				FVector SocketLocation;
 				FRotator SocketRotation;
-				GetSocketWorldLocationAndRotation(Exhaust.Name, SocketLocation, SocketRotation);
+				Cast<UPrimitiveComponent>(ParentMesh)->GetSocketWorldLocationAndRotation(Exhaust.Name, SocketLocation, SocketRotation);
 				FVector EngineDirection = SocketRotation.RotateVector(FVector(1.0f, 0, 0));
 				FVector EngineOffset = (SocketLocation - GetOwner()->GetActorLocation()) / 100;
 

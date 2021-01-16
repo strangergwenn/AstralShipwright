@@ -94,9 +94,9 @@ FVector UNovaCompartmentAssembly::GetCompartmentLength(const struct FNovaCompart
 
 void UNovaCompartmentAssembly::ProcessCompartment(const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
 {
-	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass = nullptr)
+	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
 	{
-		Callback.Execute(Element, Asset, ExplicitComponentClass);
+		Callback.Execute(Element, Asset, AdditionalComponent);
 	};
 
 	// Process the structural elements
@@ -123,9 +123,9 @@ void UNovaCompartmentAssembly::ProcessCompartment(const FNovaCompartment& Compar
 
 void UNovaCompartmentAssembly::ProcessModule(FNovaModuleAssembly& Assembly, const FNovaCompartmentModule& Module, const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
 {
-	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass = nullptr)
+	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
 	{
-		Callback.Execute(Element, Asset, ExplicitComponentClass);
+		Callback.Execute(Element, Asset, AdditionalComponent);
 	};
 
 	const UNovaCompartmentDescription* CompartmentDescription = Compartment.Description;
@@ -141,15 +141,15 @@ void UNovaCompartmentAssembly::ProcessModule(FNovaModuleAssembly& Assembly, cons
 
 void UNovaCompartmentAssembly::ProcessEquipment(FNovaEquipmentAssembly& Assembly, const UNovaEquipmentDescription* EquipmentDescription, const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
 {
-	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass = nullptr)
+	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
 	{
-		Callback.Execute(Element, Asset, ExplicitComponentClass);
+		Callback.Execute(Element, Asset, AdditionalComponent);
 	};
 
 	// Process the equipment elements
 	ProcessElement(Assembly.Equipment,
 		EquipmentDescription ? EquipmentDescription->GetMesh() : EmptyMesh, 
-		EquipmentDescription ? EquipmentDescription->ExplicitComponentClass : nullptr);
+		EquipmentDescription ? EquipmentDescription->AdditionalComponent : FNovaAdditionalComponent());
 }
 
 
@@ -161,9 +161,9 @@ void UNovaCompartmentAssembly::BuildCompartment(const struct FNovaCompartment& C
 {
 	// Build all elements first for the most general and basic setup
 	ProcessCompartment(Compartment,
-		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass)
+		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 			{
-				BuildElement(Element, Asset, ExplicitComponentClass);
+				BuildElement(Element, Asset, AdditionalComponent);
 			})
 	);
 
@@ -228,17 +228,18 @@ void UNovaCompartmentAssembly::BuildEquipment(FNovaEquipmentAssembly& Assembly, 
 	SetElementAnimation(Assembly.Equipment, EquipmentDescription ? EquipmentDescription->SkeletalAnimation : nullptr);
 }
 
-void UNovaCompartmentAssembly::BuildElement(FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass)
+void UNovaCompartmentAssembly::BuildElement(FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 {
 	NCHECK(Asset.IsValid());
+	if (Element.Mesh)
+	{
+		NCHECK(Cast<UPrimitiveComponent>(Element.Mesh));
+	}
+	UPrimitiveComponent* PrimitiveMesh = Cast<UPrimitiveComponent>(Element.Mesh);
 
 	// Determine the target component class
 	TSubclassOf<UPrimitiveComponent> ComponentClass = nullptr;
-	if (ExplicitComponentClass)
-	{
-		ComponentClass = ExplicitComponentClass;
-	}
-	else if (Asset->IsA(USkeletalMesh::StaticClass()))
+	if (Asset->IsA(USkeletalMesh::StaticClass()))
 	{
 		ComponentClass = UNovaSkeletalMeshComponent::StaticClass();
 	}
@@ -251,11 +252,44 @@ void UNovaCompartmentAssembly::BuildElement(FNovaAssemblyElement& Element, TSoft
 		ComponentClass = UNovaDecalComponent::StaticClass();
 	}
 
+	// Detect whether we need to construct or re-construct the additional component
+	INovaAdditionalComponentInterface* AdditionalComponentInterface = nullptr;
+	bool NeedConstructingAdditionalElement = AdditionalComponent.ComponentClass.Get() != nullptr;
+	if (PrimitiveMesh)
+	{
+		TArray<USceneComponent*> ChildComponents;
+		PrimitiveMesh->GetChildrenComponents(false, ChildComponents);
+		for (USceneComponent* ChildComponent : ChildComponents)
+		{
+			if (ChildComponent->Implements<UNovaAdditionalComponentInterface>())
+			{
+				AdditionalComponentInterface = Cast<INovaAdditionalComponentInterface>(ChildComponent);
+				if (ChildComponent->GetClass() == AdditionalComponent.ComponentClass.Get())
+				{
+					NeedConstructingAdditionalElement = false;
+				}
+				else
+				{
+					TArray<USceneComponent*> AdditionalChildComponents;
+					ChildComponent->GetChildrenComponents(false, AdditionalChildComponents);
+					for (USceneComponent* AdditionalChildComponent : AdditionalChildComponents)
+					{
+						AdditionalChildComponent->DestroyComponent();
+					}
+					ChildComponent->DestroyComponent();
+					AdditionalComponentInterface = nullptr;
+				}
+
+				break;
+			}
+		}
+	}
+
 	// Detect whether we need to construct or re-construct the mesh
 	bool NeedConstructing = Element.Mesh == nullptr;
-	if (Element.Mesh && Cast<UPrimitiveComponent>(Element.Mesh)->GetClass() != ComponentClass)
+	if (PrimitiveMesh && PrimitiveMesh->GetClass() != ComponentClass)
 	{
-		Cast<UPrimitiveComponent>(Element.Mesh)->DestroyComponent();
+		PrimitiveMesh->DestroyComponent();
 		NeedConstructing = true;
 	}
 
@@ -263,6 +297,12 @@ void UNovaCompartmentAssembly::BuildElement(FNovaAssemblyElement& Element, TSoft
 	if (NeedConstructing)
 	{
 		Element.Mesh = Cast<INovaMeshInterface>(NewObject<UPrimitiveComponent>(GetOwner(), ComponentClass));
+		NCHECK(Element.Mesh);
+
+		if (AdditionalComponent.ComponentClass.Get())
+		{
+			NeedConstructingAdditionalElement = true;
+		}
 	}
 
 	// Set the resource
@@ -284,19 +324,34 @@ void UNovaCompartmentAssembly::BuildElement(FNovaAssemblyElement& Element, TSoft
 	// Setup the mesh
 	if (NeedConstructing)
 	{
-		Cast<USceneComponent>(Element.Mesh)->AttachToComponent(this,
-			FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
-
 		UPrimitiveComponent* MeshComponent = Cast<UPrimitiveComponent>(Element.Mesh);
-		if (MeshComponent)
-		{
-			MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-			MeshComponent->SetCollisionProfileName("Pawn");
-			MeshComponent->SetRenderCustomDepth(true);
-			MeshComponent->bCastShadowAsTwoSided = true;
-		}
+		MeshComponent->AttachToComponent(this, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
+		MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		MeshComponent->SetCollisionProfileName("Pawn");
+		MeshComponent->SetRenderCustomDepth(true);
+		MeshComponent->bCastShadowAsTwoSided = true;
+		MeshComponent->RegisterComponent();
+	}
 
-		Cast<USceneComponent>(Element.Mesh)->RegisterComponent();
+	// Setup the additional component
+	if (NeedConstructingAdditionalElement)
+	{
+		USceneComponent* AdditionalMeshComponent = NewObject<USceneComponent>(GetOwner(), AdditionalComponent.ComponentClass);
+		NCHECK(IsValid(AdditionalMeshComponent));
+		AdditionalComponentInterface = Cast<INovaAdditionalComponentInterface>(AdditionalMeshComponent);
+		NCHECK(AdditionalComponentInterface);
+	}
+	if (AdditionalComponentInterface)
+	{
+		AdditionalComponentInterface->SetupComponent(AdditionalComponent.AdditionalAsset);
+	}
+	if (NeedConstructingAdditionalElement)
+	{
+		UPrimitiveComponent* MeshComponent = Cast<UPrimitiveComponent>(Element.Mesh);
+		NCHECK(MeshComponent);
+		USceneComponent* AdditionalMeshComponent = Cast<USceneComponent>(AdditionalComponentInterface);
+		AdditionalMeshComponent->AttachToComponent(MeshComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
+		AdditionalMeshComponent->RegisterComponent();
 	}
 }
 

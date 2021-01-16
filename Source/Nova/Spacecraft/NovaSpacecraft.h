@@ -255,6 +255,13 @@ public:
 		}
 	}
 
+	virtual TArray<FSoftObjectPath> GetAsyncAssets() const override
+	{
+		TArray<FSoftObjectPath> Result = Super::GetAsyncAssets();
+		Result.Append(AdditionalComponent.GetAsyncAssets());
+		return Result;
+	}
+
 public:
 
 	// Animated equipment variant
@@ -269,13 +276,13 @@ public:
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> StaticEquipment;
 
+	// Additional component
+	UPROPERTY(Category = Elements, EditDefaultsOnly)
+	FNovaAdditionalComponent AdditionalComponent;
+
 	// Equipment requirement
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	ENovaEquipmentType EquipmentType;
-
-	// Component class to use
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	TSubclassOf<UPrimitiveComponent> ExplicitComponentClass;
 
 };
 
@@ -288,7 +295,7 @@ public:
 USTRUCT(Atomic)
 struct FNovaCompartmentModule
 {
-	GENERATED_BODY();
+	GENERATED_BODY()
 
 	FNovaCompartmentModule()
 		: Description(nullptr)
@@ -318,7 +325,7 @@ struct FNovaCompartmentModule
 USTRUCT(Atomic)
 struct FNovaCompartment
 {
-	GENERATED_BODY();
+	GENERATED_BODY()
 
 	FNovaCompartment();
 
@@ -388,7 +395,7 @@ struct FNovaCompartment
 USTRUCT(Atomic)
 struct FNovaSpacecraft
 {
-	GENERATED_BODY();
+	GENERATED_BODY()
 
 public:
 

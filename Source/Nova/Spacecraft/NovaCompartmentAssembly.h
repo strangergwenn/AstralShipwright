@@ -101,7 +101,7 @@ protected:
 	void BuildEquipment(FNovaEquipmentAssembly& Assembly, const UNovaEquipmentDescription* Description, const FNovaEquipmentSlot& Slot, const FNovaCompartment& Compartment);
 
 	/** Build a single element of a compartment assembly */
-	void BuildElement(FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass);
+	void BuildElement(FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent);
 
 
 	/*----------------------------------------------------

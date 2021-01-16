@@ -73,4 +73,53 @@ struct FNovaAssemblyElement
 };
 
 /** Compartment processing delegate */
-DECLARE_DELEGATE_ThreeParams(FNovaAssemblyCallback, FNovaAssemblyElement&, TSoftObjectPtr<UObject>, TSubclassOf<UPrimitiveComponent>);
+DECLARE_DELEGATE_ThreeParams(FNovaAssemblyCallback, FNovaAssemblyElement&, TSoftObjectPtr<UObject>, FNovaAdditionalComponent);
+
+
+/*----------------------------------------------------
+	Additional component mechanism
+----------------------------------------------------*/
+
+/** Additional component to spawn alongside a particular object */
+USTRUCT()
+struct FNovaAdditionalComponent
+{
+	GENERATED_BODY();
+
+	// Component class to use
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<USceneComponent> ComponentClass;
+
+	// Additional asset reference
+	UPROPERTY(EditDefaultsOnly)
+	TSoftObjectPtr<class UObject> AdditionalAsset;
+
+	/** Get a list of assets to load before use*/
+	TArray<FSoftObjectPath> GetAsyncAssets() const
+	{
+		TArray<FSoftObjectPath> Result;
+		Result.Add(AdditionalAsset.ToSoftObjectPath());
+		return Result;
+	}
+
+};
+
+/** Interface wrapper */
+UINTERFACE(MinimalAPI, Blueprintable)
+class UNovaAdditionalComponentInterface : public UInterface
+{
+	GENERATED_BODY()
+};
+
+
+/** Base interface for additional components */
+class INovaAdditionalComponentInterface
+{
+	GENERATED_BODY()
+
+public:
+
+	/** Configure the additional component */
+	virtual void SetupComponent(TSoftObjectPtr<class UObject> AdditionalAsset) = 0;
+
+};

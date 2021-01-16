@@ -3,7 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Nova/Actor/NovaStaticMeshComponent.h"
+#include "NovaSpacecraftTypes.h"
+#include "Components/SceneComponent.h"
 #include "Nova/Tools/NovaActorTools.h"
 
 #include "NovaSpacecraftThrusterComponent.generated.h"
@@ -13,7 +14,7 @@
 USTRUCT()
 struct FNovaThrusterExhaust
 {
-	GENERATED_BODY();
+	GENERATED_BODY()
 
 	// Exhaust identifier
 	FName                                         Name;
@@ -33,7 +34,7 @@ struct FNovaThrusterExhaust
 
 /** Thruster component class that attaches to an actor to add thrusters to the root mesh */
 UCLASS(ClassGroup = (Nova), meta = (BlueprintSpawnableComponent))
-class UNovaSpacecraftThrusterComponent : public UNovaStaticMeshComponent
+class UNovaSpacecraftThrusterComponent : public USceneComponent, public INovaAdditionalComponentInterface
 {
 	GENERATED_BODY()
 
@@ -45,6 +46,8 @@ public:
 	/*----------------------------------------------------
 		Inherited
 	----------------------------------------------------*/
+
+	virtual void SetupComponent(TSoftObjectPtr<class UObject> AdditionalAsset) override;
 
 	virtual void BeginPlay() override;
 

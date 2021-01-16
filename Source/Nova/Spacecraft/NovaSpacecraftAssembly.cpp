@@ -119,7 +119,7 @@ void ANovaSpacecraftAssembly::Tick(float DeltaTime)
 			ProcessCompartment(
 				CompartmentAssemblies[CompartmentIndex],
 				FNovaCompartment(),
-				FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass)
+				FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 					{
 						UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Element.Mesh);
 						if (PrimitiveComponent)
@@ -143,7 +143,9 @@ void ANovaSpacecraftAssembly::Tick(float DeltaTime)
 			FBox Bounds(ForceInit);
 			ForEachComponent<UPrimitiveComponent>(false, [&](const UPrimitiveComponent* Prim)
 				{
-					if (Prim->IsRegistered() && Prim->IsVisible() && Prim->IsAttachedTo(CompartmentAssemblies[DisplayFilterIndex]))
+					if (Prim->IsRegistered() && Prim->IsVisible()
+						&& Prim->IsAttachedTo(CompartmentAssemblies[DisplayFilterIndex])
+						&& Prim->Implements<UNovaMeshInterface>())
 					{
 						Bounds += Prim->Bounds.GetBox();
 					}
@@ -354,7 +356,7 @@ void ANovaSpacecraftAssembly::StartAssemblyUpdate()
 		ProcessCompartmentIfDifferent(
 		CompartmentAssemblies[CompartmentIndex],
 		CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment(),
-		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass)
+		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 			{
 				if (Element.Mesh)
 				{
@@ -433,14 +435,24 @@ void ANovaSpacecraftAssembly::UpdateAssembly()
 			ProcessCompartmentIfDifferent(
 				CompartmentAssemblies[CompartmentIndex],
 				CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment(),
-				FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass)
+				FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 					{
 						if (Element.Mesh == nullptr)
 						{
 						}
 						else if (Element.Mesh->IsDematerialized())
 						{
-							Cast<UActorComponent>(Element.Mesh)->DestroyComponent();
+							UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Element.Mesh);
+							NCHECK(PrimitiveComponent);
+
+							TArray<USceneComponent*> ChildComponents;
+							Cast<UPrimitiveComponent>(Element.Mesh)->GetChildrenComponents(false, ChildComponents);
+							for (USceneComponent* ChildComponent : ChildComponents)
+							{
+								ChildComponent->DestroyComponent();
+							}
+							PrimitiveComponent->DestroyComponent();
+
 							Element.Mesh = nullptr;
 						}
 						else
@@ -541,7 +553,7 @@ void ANovaSpacecraftAssembly::UpdateDisplayFilter()
 	{
 		ProcessCompartment(CompartmentAssemblies[CompartmentIndex],
 			FNovaCompartment(),
-			FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass)
+			FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 				{
 					if (Element.Mesh)
 					{
@@ -615,11 +627,11 @@ void ANovaSpacecraftAssembly::ProcessCompartmentIfDifferent(
 	FNovaAssemblyCallback Callback)
 {
 	ProcessCompartment(CompartmentAssembly, Compartment,
-		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, TSubclassOf<UPrimitiveComponent> ExplicitComponentClass)
+		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 		{
 			if (Element.Asset != Asset.ToSoftObjectPath() || CompartmentAssembly->Description != Compartment.Description)
 			{
-				Callback.Execute(Element, Asset, ExplicitComponentClass);
+				Callback.Execute(Element, Asset, AdditionalComponent);
 			}
 		})
 	);

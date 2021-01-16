@@ -64,7 +64,7 @@ public:
 	void UpdateAssetRender();
 
 	/** Get a list of assets to load before use*/
-	TArray<FSoftObjectPath> GetAsyncAssets() const
+	virtual TArray<FSoftObjectPath> GetAsyncAssets() const
 	{
 		TArray<FSoftObjectPath> Result;
 
