@@ -222,7 +222,7 @@ FSlateColor SNovaOverlay::GetTextColor() const
 {
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 
-	FLinearColor Color = Theme.TitleFont.ColorAndOpacity.GetSpecifiedColor();
+	FLinearColor Color = Theme.SubtitleFont.ColorAndOpacity.GetSpecifiedColor();
 	Color.A *= CurrentNotifyAlpha;
 
 	return Color;

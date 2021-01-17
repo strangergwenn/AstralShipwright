@@ -180,10 +180,11 @@ void SNovaTabView::Construct(const FArguments& InArgs)
 							]
 						]
 
-						// User-supplied border
+						// User-supplied header widget
 						+ SVerticalBox::Slot()
 						.AutoHeight()
 						.Padding(0)
+						.HAlign(HAlign_Center)
 						[
 							InArgs._Header.Widget
 						]

@@ -74,12 +74,6 @@ protected:
 	/** Check if we can display the game menus */
 	bool AreGameMenusVisible() const;
 
-	/** Check if we can display the flight menu */
-	bool IsFlightMenuVisible() const;
-
-	/** Check if we can display the assembly menu */
-	bool IsAssemblyMenuVisible() const;
-
 	/** Get the close button text */
 	FText GetCloseText() const;
 
@@ -91,16 +85,6 @@ protected:
 
 	/** Get the tooltip color */
 	FSlateColor GetTooltipColor() const;
-
-	/** Get the title text */
-	FText GetCurrentTitleText() const;
-
-	/** Get the title text */
-	FText GetTitleText(ENovaMainMenuType MenuType) const;
-
-	/** Get the title color */
-	FSlateColor GetCurrentTitleColor() const;
-
 	/** Get the key binding for the previous tab */
 	FKey GetPreviousTabKey() const;
 

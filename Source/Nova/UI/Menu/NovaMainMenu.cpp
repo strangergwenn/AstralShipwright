@@ -77,32 +77,15 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		// Header widget
 		.Header()
 		[
-			SNew(SVerticalBox)
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.HAlign(HAlign_Center)
-			[
-				SNew(STextBlock)
-				.TextStyle(&Theme.TitleFont)
-				.Text(this, &SNovaMainMenu::GetCurrentTitleText)
-				.ColorAndOpacity(this, &SNovaMainMenu::GetCurrentTitleColor)
-			]
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.HAlign(HAlign_Center)
-			[
-				SNew(STextBlock)
-				.TextStyle(&Theme.SubtitleFont)
-				.Text(this, &SNovaMainMenu::GetTooltipText)
-				.ColorAndOpacity(this, &SNovaMainMenu::GetTooltipColor)
-			]
+			SNew(STextBlock)
+			.TextStyle(&Theme.SubtitleFont)
+			.Text(this, &SNovaMainMenu::GetTooltipText)
+			.ColorAndOpacity(this, &SNovaMainMenu::GetTooltipColor)
 		]
 
 		// Home menu
 		+ SNovaTabView::Slot()
-		.Header(GetTitleText(ENovaMainMenuType::Home))
+		.Header(LOCTEXT("HomeMenuTitle", "Home"))
 		.HeaderHelp(LOCTEXT("MainMenuTitleHelp", "Start playing"))
 		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::IsHomeMenuVisible))
 		.Blur()
@@ -114,7 +97,7 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 
 		// Game menu
 		+ SNovaTabView::Slot()
-		.Header(GetTitleText(ENovaMainMenuType::Game))
+		.Header(LOCTEXT("GameMenuTitle", "Game"))
 		.HeaderHelp(LOCTEXT("GameMenuTitleHelp", "Play with your friends"))
 		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::AreGameMenusVisible))
 		.Blur()
@@ -126,9 +109,9 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 
 		// Flight menu
 		+ SNovaTabView::Slot()
-		.Header(GetTitleText(ENovaMainMenuType::Flight))
+		.Header(LOCTEXT("FlightMenuTitle", "Flight"))
 		.HeaderHelp(LOCTEXT("FlightMenuTitleHelp", "Control your ship"))
-		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::IsFlightMenuVisible))
+		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::AreGameMenusVisible))
 		[
 			SAssignNew(FlightMenu, SNovaMainMenuFlight)
 			.Menu(this)
@@ -137,9 +120,9 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 
 		// Assembly menu
 		+ SNovaTabView::Slot()
-		.Header(GetTitleText(ENovaMainMenuType::Assembly))
+		.Header(LOCTEXT("AssemblyMenuTitle", "Assembly"))
 		.HeaderHelp(LOCTEXT("AssemblyMenuTitleHelp", "Edit spacecraft assembly"))
-		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::IsAssemblyMenuVisible))
+		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::AreGameMenusVisible))
 		[
 			SAssignNew(AssemblyMenu, SNovaMainMenuAssembly)
 			.Menu(this)
@@ -148,7 +131,7 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 
 		// Settings
 		+ SNovaTabView::Slot()
-		.Header(GetTitleText(ENovaMainMenuType::Settings))
+		.Header(LOCTEXT("SettingsMenuTitle", "Settings"))
 		.HeaderHelp(LOCTEXT("SettingsMenuTitleHelp", "Setup the game"))
 		.Blur()
 		[
@@ -320,16 +303,6 @@ bool SNovaMainMenu::AreGameMenusVisible() const
 	return !IsHomeMenuVisible();
 }
 
-bool SNovaMainMenu::IsFlightMenuVisible() const
-{
-	return AreGameMenusVisible();
-}
-
-bool SNovaMainMenu::IsAssemblyMenuVisible() const
-{
-	return AreGameMenusVisible();
-}
-
 FText SNovaMainMenu::GetCloseText() const
 {
 	if (MenuManager->GetPC() && MenuManager->GetPC()->IsOnMainMenu())
@@ -374,37 +347,6 @@ FSlateColor SNovaMainMenu::GetTooltipColor() const
 
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 	FLinearColor Color = Theme.MainFont.ColorAndOpacity.GetSpecifiedColor();
-	Color.A *= Alpha;
-
-	return Color;
-}
-
-FText SNovaMainMenu::GetCurrentTitleText() const
-{
-	return GetTitleText(static_cast<ENovaMainMenuType>(TabView->GetCurrentTabIndex()));
-}
-
-FText SNovaMainMenu::GetTitleText(ENovaMainMenuType MenuType) const
-{
-	switch (MenuType)
-	{
-		case ENovaMainMenuType::Home:      return LOCTEXT("HomeMenuTitle",      "Home");
-		case ENovaMainMenuType::Game:      return LOCTEXT("GameMenuTitle",      "Game");
-		case ENovaMainMenuType::Flight:    return LOCTEXT("FlightMenuTitle",    "Flight");
-		case ENovaMainMenuType::Assembly:  return LOCTEXT("AssemblyMenuTitle",  "Assembly");
-		case ENovaMainMenuType::Settings:  return LOCTEXT("SettingsMenuTitle",  "Settings");
-	}
-
-	return FText();
-}
-
-FSlateColor SNovaMainMenu::GetCurrentTitleColor() const
-{
-	float Alpha = TabView->GetCurrentTabAlpha();
-	Alpha = FMath::InterpEaseInOut(0.0f, 1.0f, Alpha, ENovaUIConstants::EaseStandard);
-
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	FLinearColor Color = Theme.TitleFont.ColorAndOpacity.GetSpecifiedColor();
 	Color.A *= Alpha;
 
 	return Color;
