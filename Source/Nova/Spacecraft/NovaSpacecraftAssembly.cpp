@@ -130,34 +130,6 @@ void ANovaSpacecraftAssembly::Tick(float DeltaTime)
 					}
 			));
 		}
-
-		// Update bounds
-		CurrentOrigin = FVector::ZeroVector;
-		CurrentExtent = FVector::ZeroVector;
-
-		// While focusing a compartment, only account for it
-		if (DisplayFilterIndex != INDEX_NONE)
-		{
-			NCHECK(DisplayFilterIndex >= 0 && DisplayFilterIndex < CompartmentAssemblies.Num());
-
-			FBox Bounds(ForceInit);
-			ForEachComponent<UPrimitiveComponent>(false, [&](const UPrimitiveComponent* Prim)
-				{
-					if (Prim->IsRegistered() && Prim->IsVisible()
-						&& Prim->IsAttachedTo(CompartmentAssemblies[DisplayFilterIndex])
-						&& Prim->Implements<UNovaMeshInterface>())
-					{
-						Bounds += Prim->Bounds.GetBox();
-					}
-				});
-			Bounds.GetCenterAndExtents(CurrentOrigin, CurrentExtent);
-		}
-
-		// In other case, use an estimate to avoid animation bounces
-		else
-		{
-			GetActorBounds(true, CurrentOrigin, CurrentExtent);
-		}
 	}
 }
 
@@ -333,6 +305,7 @@ void ANovaSpacecraftAssembly::SetDisplayFilter(ENovaAssemblyDisplayFilter Filter
 	if (AssemblyState == ENovaAssemblyState::Idle)
 	{
 		UpdateDisplayFilter();
+		UpdateBounds();
 	}
 }
 
@@ -467,14 +440,24 @@ void ANovaSpacecraftAssembly::UpdateAssembly()
 		if (!StillWaiting && !WaitingAssetLoading)
 		{
 			AssemblyState = ENovaAssemblyState::Moving;
-
 			FVector BuildOffset = FVector::ZeroVector;
+
+			// Compute the initial build offset
+			for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentAssemblies.Num(); CompartmentIndex++)
+			{
+				const FNovaCompartment& Compartment =
+					CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment();
+				BuildOffset += CompartmentAssemblies[CompartmentIndex]->GetCompartmentLength(Compartment);
+			}
+			BuildOffset /= 2;
+
+			// Apply individual offsets to compartments
 			for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentAssemblies.Num(); CompartmentIndex++)
 			{
 				CompartmentAssemblies[CompartmentIndex]->SetRequestedLocation(BuildOffset);
-				FNovaCompartment CompartmentAssembly =
+				const FNovaCompartment& Compartment =
 					CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment();
-				BuildOffset -= CompartmentAssemblies[CompartmentIndex]->GetCompartmentLength(CompartmentAssembly);
+				BuildOffset -= CompartmentAssemblies[CompartmentIndex]->GetCompartmentLength(Compartment);
 			}
 		}
 	}
@@ -544,6 +527,7 @@ void ANovaSpacecraftAssembly::UpdateAssembly()
 		DisplayFilterIndex = FMath::Min(DisplayFilterIndex, Spacecraft->Compartments.Num() - 1);
 		AssemblyState = ENovaAssemblyState::Idle;
 		UpdateDisplayFilter();
+		UpdateBounds();
 	}
 }
 
@@ -645,6 +629,37 @@ void ANovaSpacecraftAssembly::ProcessCompartment(
 	if (CompartmentAssembly->Description)
 	{
 		CompartmentAssembly->ProcessCompartment(Compartment, Callback);
+	}
+}
+
+void ANovaSpacecraftAssembly::UpdateBounds()
+{
+	CurrentOrigin = FVector::ZeroVector;
+	CurrentExtent = FVector::ZeroVector;
+
+	// While focusing a compartment, only account for it
+	if (DisplayFilterIndex != INDEX_NONE)
+	{
+		NCHECK(DisplayFilterIndex >= 0 && DisplayFilterIndex < CompartmentAssemblies.Num());
+
+		FBox Bounds(ForceInit);
+		ForEachComponent<UPrimitiveComponent>(false, [&](const UPrimitiveComponent* Prim)
+			{
+				if (Prim->IsRegistered() && Prim->IsVisible()
+					&& Prim->IsAttachedTo(CompartmentAssemblies[DisplayFilterIndex])
+					&& Prim->Implements<UNovaMeshInterface>())
+				{
+					Bounds += Prim->Bounds.GetBox();
+				}
+			});
+		Bounds.GetCenterAndExtents(CurrentOrigin, CurrentExtent);
+	}
+
+	// In other case, use an estimate to avoid animation bounces
+	else
+	{
+		FVector Unused;
+		GetActorBounds(true, Unused, CurrentExtent);
 	}
 }
 

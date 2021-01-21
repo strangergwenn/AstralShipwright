@@ -46,7 +46,7 @@ public:
 	/** Check the animation state */
 	bool IsAtRequestedLocation() const
 	{
-		return (RequestedLocation - GetRelativeLocation()).Size() == 0;
+		return CurrentAnimationTime >= AnimationDuration;
 	}
 
 	/** Set this compartment to immediate mode (no transitions on shader parameters) */

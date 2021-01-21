@@ -178,6 +178,9 @@ protected:
 		class UNovaCompartmentAssembly* CompartmentAssembly,
 		const FNovaCompartment& Compartment,
 		FNovaAssemblyCallback Callback);
+
+	/** Update the bounds */
+	void UpdateBounds();
 	
 
 	/*----------------------------------------------------
