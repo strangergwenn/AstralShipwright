@@ -31,6 +31,7 @@ ANovaSpacecraftAssembly::ANovaSpacecraftAssembly()
 {
 	// Setup movement component
 	MovementComponent = CreateDefaultSubobject<UNovaSpacecraftMovementComponent>(TEXT("MovementComponent"));
+	MovementComponent->SetUpdatedComponent(RootComponent);
 
 	// Settings
 	bAlwaysRelevant = true;

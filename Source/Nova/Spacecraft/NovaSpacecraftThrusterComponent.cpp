@@ -130,7 +130,7 @@ void UNovaSpacecraftThrusterComponent::TickComponent(float DeltaTime, ELevelTick
 					AngularAlpha = FVector::DotProduct(TorqueDirection, AngularAcceleration.GetSafeNormal());
 				}
 
-				EngineIntensity = FMath::Max(LinearAlpha + 0.5f * AngularAlpha, 0.0f);
+				EngineIntensity = FMath::Max(LinearAlpha + AngularAlpha, 0.0f);
 			}
 
 			// Apply power
