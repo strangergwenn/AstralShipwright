@@ -30,8 +30,14 @@ public:
 
 protected:
 
+	/** Measure velocities and accelerations */
+	virtual void ProcessMeasurements(float DeltaTime);
+
+	/** Run attitude control on angular velocity */
+	virtual void ProcessAngularAttitude(float DeltaTime);
+
 	/** Process overall movement */
-	virtual void ApplyMovement(float DeltaTime);
+	virtual void ProcessMovement(float DeltaTime);
 
 	/** Apply hit effects */
 	virtual void OnHit(const FHitResult& Hit, const FVector& HitVelocity);
@@ -63,6 +69,14 @@ public:
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float MaxAngularVelocity;
 
+	// How much to underestimate stopping distances
+	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	float AngularOvershootRatio;
+
+	// Dot product value over which we consider vectors to be collinear
+	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	float AngularColinearityThreshold;
+
 	// Base restitution coefficient of hits
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float RestitutionCoefficient;
@@ -78,13 +92,16 @@ public:
 
 protected:
 
-	// Movement state
+	// Attitude input
 	FVector                                       CurrentDesiredAcceleration;
-	FQuat                                         CurrentDesiredRotation;
+	FVector                                       CurrentDesiredDirection;
+	float                                         CurrentDesiredRoll;
+
+	// Movement state
 	FVector                                       CurrentVelocity;
 	FVector                                       CurrentAngularVelocity;
 
-	// Historical data
+	// Measured data
 	FVector                                       PreviousVelocity;
 	FVector                                       PreviousAngularVelocity;
 	FVector                                       MeasuredAcceleration;
