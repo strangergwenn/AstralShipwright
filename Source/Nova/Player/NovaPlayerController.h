@@ -88,8 +88,31 @@ public:
 
 
 	/*----------------------------------------------------
+		Level loading
+	----------------------------------------------------*/
+
+protected:
+	
+	/** Load a streaming level */
+	bool LoadStreamingLevel(FName SectorLevel);
+
+	/** Unload a streaming level */
+	void UnloadStreamingLevel(FName SectorLevel);
+
+	/** Callback for a loaded streaming level */
+	UFUNCTION(BlueprintCallable, Category = GameMode)
+	void OnLevelLoaded();
+
+	/** Callback for an unloaded streaming level */
+	UFUNCTION(BlueprintCallable, Category = GameMode)
+	void OnLevelUnLoaded();
+
+
+	/*----------------------------------------------------
 		Getters
 	----------------------------------------------------*/
+
+public:
 
 	/** Get the menu manager */
 	UFUNCTION(Category = Nova, BlueprintCallable)
@@ -109,6 +132,8 @@ public:
 	/*----------------------------------------------------
 		Travel
 	----------------------------------------------------*/
+
+public:
 
 	/** Travel to a server */
 	UFUNCTION(Exec)
@@ -141,6 +166,8 @@ public:
 		Server-side save
 	----------------------------------------------------*/
 
+public:
+
 	/** Load the player controller before actors can be created on the server */
 	void ClientLoadPlayer();
 
@@ -158,6 +185,8 @@ public:
 	/*----------------------------------------------------
 		Game flow
 	----------------------------------------------------*/
+
+public:
 
 	/** Start or restart the game */
 	void StartGame(FString SaveName, bool Online = true);
@@ -192,17 +221,13 @@ public:
 		Menus
 	----------------------------------------------------*/
 
+public:
+
 	/** Is the player on the main menu */
 	bool IsOnMainMenu() const;
 
 	/** Is the player restricted to menus */
 	bool IsMenuOnly() const;
-
-	/** Menu was opened */
-	virtual void OnOpenMenu();
-
-	/** Menu was closed */
-	virtual void OnCloseMenu();
 
 	/** Show a text notification on the screen */
 	void Notify(FText Text, ENovaNotificationType Type);
@@ -248,11 +273,15 @@ public:
 
 private:
 
-	// General state
+	// Travel state
 	ENovaTravelState                              TravelState;
 	FString                                       TravelURL;
 	ENovaNetworkError                             LastNetworkError;
+
+	// Gameplay state
 	bool                                          IsOnDeathScreen;
+	bool                                          IsLoadingStreamingLevel;
+	int32                                         CurrentStreamingLevelIndex;
 	TMap<ENovaPostProcessPreset, TSharedPtr<FNovaPostProcessSetting>> PostProcessSettings;
 
 	// Local save data

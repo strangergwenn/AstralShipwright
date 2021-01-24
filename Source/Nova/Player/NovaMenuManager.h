@@ -10,8 +10,8 @@
 #include "NovaMenuManager.generated.h"
 
 
-DECLARE_DELEGATE(FNovaFadeAction);
-DECLARE_DELEGATE_RetVal(bool, FNovaFadeCondition);
+DECLARE_DELEGATE(FNovaAsyncAction);
+DECLARE_DELEGATE_RetVal(bool, FNovaAsyncCondition);
 
 
 /** Menu states */
@@ -20,6 +20,26 @@ enum class ENovaFadeState : uint8
 	FadingFromBlack,
 	Black,
 	FadingToBlack
+};
+
+/** Async command data */
+struct FNovaAsyncCommand
+{
+	FNovaAsyncCommand()
+		: Action()
+		, Condition()
+		, FadeDuration(0)
+	{}
+
+	FNovaAsyncCommand(FNovaAsyncAction A, FNovaAsyncCondition C, bool ShortFade)
+		: Action(A)
+		, Condition(C)
+		, FadeDuration(ShortFade ? ENovaUIConstants::FadeDurationShort : ENovaUIConstants::FadeDurationLong)
+	{}
+
+	FNovaAsyncAction Action;
+	FNovaAsyncCondition Condition;
+	float FadeDuration;
 };
 
 
@@ -64,10 +84,10 @@ public:
 	----------------------------------------------------*/
 
 	/** Fade to black with a loading screen, call the action, wait for the condition to return true, then fade back */
-	void RunWaitAction(ENovaLoadingScreen LoadingScreen, FNovaFadeAction Action, FNovaFadeCondition Condition = FNovaFadeCondition());
+	void RunWaitAction(ENovaLoadingScreen LoadingScreen, FNovaAsyncAction Action, FNovaAsyncCondition Condition = FNovaAsyncCondition(), bool ShortFade = false);
 
 	/** Fade to black with a loading screen, call the action, stay black */
-	void RunAction(ENovaLoadingScreen LoadingScreen, FNovaFadeAction Action);
+	void RunAction(ENovaLoadingScreen LoadingScreen, FNovaAsyncAction Action, bool ShortFade = false);
 
 	/** Manually reveal the game image once the action is finished */
 	void CompleteAsyncAction();
@@ -80,10 +100,10 @@ public:
 
 
 	/** Request opening of the main menu */
-	void OpenMenu();
+	void OpenMenu(FNovaAsyncAction Action = FNovaAsyncAction(), FNovaAsyncCondition Condition = FNovaAsyncCondition());
 
 	/** Request closing of the main menu */
-	void CloseMenu();
+	void CloseMenu(FNovaAsyncAction Action = FNovaAsyncAction(), FNovaAsyncCondition Condition = FNovaAsyncCondition());
 
 	/** Check if the main menu is open */
 	bool IsMenuOpen() const;
@@ -152,7 +172,7 @@ public:
 
 	// Time it takes to fade in or out
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float FadingTime;
+	float FadeDuration;
 
 
 protected:
@@ -177,8 +197,8 @@ protected:
 	bool                                          IsPlayerInitialized;
 	bool                                          LoadingScreenFrozen;
 	static bool                                   UsingGamepad;
-	TPair<FNovaFadeAction, FNovaFadeCondition>    CurrentAction;
-	TQueue<TPair<FNovaFadeAction, FNovaFadeCondition>> ActionStack;
+	FNovaAsyncCommand                             CurrentCommand;
+	TQueue<FNovaAsyncCommand>                     CommandStack;
 	ENovaFadeState                                CurrentMenuState;
 	float                                         CurrentFadingTime;
 

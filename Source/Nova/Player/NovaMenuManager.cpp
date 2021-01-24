@@ -33,10 +33,7 @@ UNovaMenuManager::UNovaMenuManager()
 	, CurrentMenuState(ENovaFadeState::FadingFromBlack)
 {
 	// Settings
-	FadingTime = ENovaUIConstants::FadeDurationLong;
-
-	// Initialize 
-	CurrentFadingTime = FadingTime;
+	FadeDuration = ENovaUIConstants::FadeDurationLong;
 }
 
 
@@ -88,13 +85,13 @@ void UNovaMenuManager::BeginPlay(ANovaPlayerController* PC)
 
 	// Initialize
 	CurrentMenuState = ENovaFadeState::FadingFromBlack;
-	CurrentFadingTime = FadingTime;
+	CurrentFadingTime = FadeDuration;
 	LoadingScreenFrozen = false;
 	Menu->UpdateKeyBindings();
 
 	// Open the menu if desired
 	RunWaitAction(ENovaLoadingScreen::Black,
-		FNovaFadeAction::CreateLambda([=]()
+		FNovaAsyncAction::CreateLambda([=]()
 		{
 			NLOG("UNovaMenuManager::BeginPlay : setting up menu");
 
@@ -111,7 +108,7 @@ void UNovaMenuManager::BeginPlay(ANovaPlayerController* PC)
 
 			NLOG("UNovaMenuManager::BeginPlay : waiting for a bit");
 		}),
-		FNovaFadeCondition::CreateLambda([=]()
+		FNovaAsyncCondition::CreateLambda([=]()
 		{
 			// Wait a bit to ensure assets have some time to load
 			if (GetPC() && GetPC()->GetGameTimeSinceCreation() > 1.0f)
@@ -136,10 +133,16 @@ void UNovaMenuManager::Tick(float DeltaTime)
 			// Fade to black, call the provided callback, and move on
 			case ENovaFadeState::FadingToBlack:
 			{
-				CurrentFadingTime += DeltaTime;
-				CurrentFadingTime = FMath::Clamp(CurrentFadingTime, 0.0f, FadingTime);
+				FNovaAsyncCommand* Command = CommandStack.Peek();
+				if (Command)
+				{
+					FadeDuration = Command->FadeDuration;
+				}
 
-				if (CurrentFadingTime >= FadingTime && ActionStack.Dequeue(CurrentAction))
+				CurrentFadingTime += DeltaTime;
+				CurrentFadingTime = FMath::Clamp(CurrentFadingTime, 0.0f, FadeDuration);
+
+				if (CurrentFadingTime >= FadeDuration && CommandStack.Dequeue(CurrentCommand))
 				{
 					CurrentMenuState = ENovaFadeState::Black;
 				}
@@ -151,19 +154,19 @@ void UNovaMenuManager::Tick(float DeltaTime)
 			case ENovaFadeState::Black:
 			{
 				// Processing action
-				if (CurrentAction.Key.IsBound())
+				if (CurrentCommand.Action.IsBound())
 				{
-					CurrentAction.Key.Execute();
-					CurrentAction.Key.Unbind();
+					CurrentCommand.Action.Execute();
+					CurrentCommand.Action.Unbind();
 					NLOG("UNovaMenuManager::Tick : action finished, waiting condition");
 				}
 
 				// Waiting condition
-				if (CurrentAction.Value.IsBound())
+				if (CurrentCommand.Condition.IsBound())
 				{
-					if (CurrentAction.Value.Execute())
+					if (CurrentCommand.Condition.Execute())
 					{
-						CurrentAction.Value.Unbind();
+						CurrentCommand.Condition.Unbind();
 
 						CompleteAsyncAction();
 
@@ -184,7 +187,7 @@ void UNovaMenuManager::Tick(float DeltaTime)
 			case ENovaFadeState::FadingFromBlack:
 			{
 				CurrentFadingTime -= DeltaTime;
-				CurrentFadingTime = FMath::Clamp(CurrentFadingTime, 0.0f, FadingTime);
+				CurrentFadingTime = FMath::Clamp(CurrentFadingTime, 0.0f, FadeDuration);
 
 				break;
 			}
@@ -229,64 +232,67 @@ void UNovaMenuManager::Tick(float DeltaTime)
 	Menu management
 ----------------------------------------------------*/
 
-void UNovaMenuManager::RunWaitAction(ENovaLoadingScreen LoadingScreen, FNovaFadeAction Action, FNovaFadeCondition Condition)
+void UNovaMenuManager::RunWaitAction(ENovaLoadingScreen LoadingScreen, FNovaAsyncAction Action, FNovaAsyncCondition Condition, bool ShortFade)
 {
 	NLOG("UNovaMenuManager::RunWaitAction");
 
 	Cast<UNovaGameViewportClient>(GetWorld()->GetGameViewport())->SetLoadingScreen(LoadingScreen);
 
-	ActionStack.Enqueue(TPair<FNovaFadeAction, FNovaFadeCondition>(Action, Condition));
+	CommandStack.Enqueue(FNovaAsyncCommand(Action, Condition, ShortFade));
 	CurrentMenuState = ENovaFadeState::FadingToBlack;
 }
 
-void UNovaMenuManager::RunAction(ENovaLoadingScreen LoadingScreen, FNovaFadeAction Action)
+void UNovaMenuManager::RunAction(ENovaLoadingScreen LoadingScreen, FNovaAsyncAction Action, bool ShortFade)
 {
-	RunWaitAction(LoadingScreen, Action, FNovaFadeCondition::CreateLambda([=]()
+	RunWaitAction(LoadingScreen, Action, FNovaAsyncCondition::CreateLambda([=]()
 		{
 			return false;
-		})
+		}),
+		ShortFade
 	);
 }
 
 void UNovaMenuManager::CompleteAsyncAction()
 {
-	if (!ActionStack.Dequeue(CurrentAction))
+	if (!CommandStack.Dequeue(CurrentCommand))
 	{
 		CurrentMenuState = ENovaFadeState::FadingFromBlack;
 	}
 }
 
-void UNovaMenuManager::OpenMenu()
+void UNovaMenuManager::OpenMenu(FNovaAsyncAction Action, FNovaAsyncCondition Condition)
 {
 	NLOG("UNovaMenuManager::OpenMenu");
 
 	RunWaitAction(ENovaLoadingScreen::Black,
-		FNovaFadeAction::CreateLambda([=]()
+		FNovaAsyncAction::CreateLambda([=]()
 		{
 			if (Menu.IsValid())
 			{
-				GetPC()->OnOpenMenu();
+				Action.ExecuteIfBound();
 				Menu->Show();
 				SetFocusToMenu();
 			}
-		})
+		}),
+		Condition
 	);
 }
 
-void UNovaMenuManager::CloseMenu()
+void UNovaMenuManager::CloseMenu(FNovaAsyncAction Action, FNovaAsyncCondition Condition)
 {
 	NLOG("UNovaMenuManager::CloseMenu");
 	
 	RunWaitAction(ENovaLoadingScreen::Black,
-		FNovaFadeAction::CreateLambda([=]()
+		FNovaAsyncAction::CreateLambda([=]()
 		{
 			if (Menu.IsValid())
 			{
-				GetPC()->OnCloseMenu();
+				Action.ExecuteIfBound();
 				Menu->Hide();
 				SetFocusToGame();
 			}
-		})
+		}),
+		Condition
 	);
 }
 
@@ -308,7 +314,7 @@ float UNovaMenuManager::GetLoadingScreenAlpha() const
 	}
 	else
 	{
-		return FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadingTime / FadingTime, ENovaUIConstants::EaseStrong);
+		return FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadingTime / FadeDuration, ENovaUIConstants::EaseStrong);
 	}
 }
 

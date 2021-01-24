@@ -42,6 +42,8 @@ ANovaPlayerController::ANovaPlayerController()
 	, TravelState(ENovaTravelState::None)
 	, LastNetworkError(ENovaNetworkError::Success)
 	, IsOnDeathScreen(false)
+	, IsLoadingStreamingLevel(false)
+	, CurrentStreamingLevelIndex(0)
 {
 	// Create the post-processing manager
 	PostProcessComponent = CreateDefaultSubobject<UNovaPostProcessComponent>(TEXT("PostProcessComponent"));
@@ -173,12 +175,16 @@ void ANovaPlayerController::BeginPlay()
 
 	Super::BeginPlay();
 
-	// Load save data
+	// Process client-side player initialization
 	if (IsLocalPlayerController())
 	{
+		// Load save data, process local game startup
 		if (!IsOnMainMenu())
 		{
 			ClientLoadPlayer();
+
+			// TODO : this should be dependent on save data
+			LoadStreamingLevel("Station");
 		}
 
 		GetMenuManager()->BeginPlay(this);
@@ -276,7 +282,7 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 
 			IsOnDeathScreen = true;
 			GetMenuManager()->RunWaitAction(ENovaLoadingScreen::Black,
-				FNovaFadeAction::CreateLambda([=]()
+				FNovaAsyncAction::CreateLambda([=]()
 					{
 						GetMenuManager()->GetOverlay()->ShowDeathScreen(ENovaDamageType::Generic,
 							FSimpleDelegate::CreateUObject(this, &ANovaPlayerController::DeathScreenFinished, ENovaDamageType::Generic));
@@ -297,6 +303,63 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 			Light->GetLightComponent()->SetCastRaytracedShadow(GameUserSettings->EnableRaytracedShadows);
 		}
 	}
+}
+
+
+/*----------------------------------------------------
+	Level loading
+----------------------------------------------------*/
+
+bool ANovaPlayerController::LoadStreamingLevel(FName SectorLevel)
+{
+	if (SectorLevel != NAME_None)
+	{
+		NLOG("ANovaPlayerController::LoadStreamingLevel : Loading streaming level '%s'", *SectorLevel.ToString());
+
+		FLatentActionInfo Info;
+		Info.CallbackTarget = this;
+		Info.ExecutionFunction = "OnLevelLoaded";
+		Info.UUID = CurrentStreamingLevelIndex;
+		Info.Linkage = 0;
+
+		UGameplayStatics::LoadStreamLevel(this, SectorLevel, true, false, Info);
+		CurrentStreamingLevelIndex++;
+		IsLoadingStreamingLevel = true;
+		return false;
+	}
+	return true;
+}
+
+void ANovaPlayerController::UnloadStreamingLevel(FName SectorLevel)
+{
+	if (SectorLevel != NAME_None)
+	{
+		NLOG("ANovaPlayerController::UnloadStreamingLevel : Unloading streaming level '%s'", *SectorLevel.ToString());
+
+		FLatentActionInfo Info;
+		Info.CallbackTarget = this;
+		Info.ExecutionFunction = "OnLevelUnloaded";
+		Info.UUID = CurrentStreamingLevelIndex;
+		Info.Linkage = 0;
+
+		UGameplayStatics::UnloadStreamLevel(this, SectorLevel, Info, false);
+		CurrentStreamingLevelIndex++;
+		IsLoadingStreamingLevel = true;
+	}
+}
+
+void ANovaPlayerController::OnLevelLoaded()
+{
+	NLOG("ANovaPlayerController::OnLevelLoaded");
+
+	IsLoadingStreamingLevel = false;
+}
+
+void ANovaPlayerController::OnLevelUnLoaded()
+{
+	NLOG("ANovaPlayerController::OnLevelUnLoaded");
+
+	IsLoadingStreamingLevel = false;
 }
 
 
@@ -324,14 +387,14 @@ void ANovaPlayerController::ClientPrepareTravel_Implementation()
 	NLOG("ANovaPlayerController::ClientPrepareTravel_Implementation");
 
 	GetMenuManager()->RunWaitAction(ENovaLoadingScreen::Launch,
-		FNovaFadeAction::CreateLambda([=]()
+		FNovaAsyncAction::CreateLambda([=]()
 			{
 				TravelState = ENovaTravelState::Waiting;
 				GetMenuManager()->GetOverlay()->HideDeathScreen();
 				ServerTravelPrepared();
 				NLOG("ANovaPlayerController::ClientTravelInternal_Implementation : done, waiting for travel");
 			}),
-		FNovaFadeCondition::CreateLambda([=]()
+		FNovaAsyncCondition::CreateLambda([=]()
 			{
 				return TravelState != ENovaTravelState::Waiting;
 			})
@@ -360,7 +423,6 @@ void ANovaPlayerController::PreClientTravel(const FString& PendingURL, ETravelTy
 
 	TravelState = ENovaTravelState::Traveling;
 }
-
 
 
 /*----------------------------------------------------
@@ -419,7 +481,7 @@ void ANovaPlayerController::StartGame(FString SaveName, bool Online)
 	NLOG("ANovaPlayerController::StartGame : loading from '%s', online = %d", *SaveName, Online);
 	
 	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,
-		FNovaFadeAction::CreateLambda([=]()
+		FNovaAsyncAction::CreateLambda([=]()
 		{
 			GetGameInstance<UNovaGameInstance>()->StartGame(SaveName, Online);
 		})
@@ -431,7 +493,7 @@ void ANovaPlayerController::SetGameOnline(bool Online)
 	NLOG("ANovaPlayerController::SetGameOnline : online = %d", Online);
 
 	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,
-		FNovaFadeAction::CreateLambda([=]()
+		FNovaAsyncAction::CreateLambda([=]()
 		{
 			GetGameInstance<UNovaGameInstance>()->SetGameOnline(GetWorld()->GetName(), Online);
 		})
@@ -445,7 +507,7 @@ void ANovaPlayerController::GoToMainMenu()
 		NLOG("ANovaPlayerController::GoToMainMenu");
 
 		GetMenuManager()->RunAction(ENovaLoadingScreen::Black,
-			FNovaFadeAction::CreateLambda([=]()
+			FNovaAsyncAction::CreateLambda([=]()
 				{
 					GetGameInstance<UNovaGameInstance>()->SaveGame(true);
 					GetGameInstance<UNovaGameInstance>()->GoToMainMenu();
@@ -461,7 +523,7 @@ void ANovaPlayerController::ExitGame()
 		NLOG("ANovaPlayerController::ExitGame");
 
 		GetMenuManager()->RunAction(ENovaLoadingScreen::Black,
-			FNovaFadeAction::CreateLambda([=]()
+			FNovaAsyncAction::CreateLambda([=]()
 				{
 					FGenericPlatformMisc::RequestExit(false);
 				})
@@ -487,7 +549,7 @@ void ANovaPlayerController::JoinFriend(TSharedRef<FOnlineFriend> Friend)
 	NLOG("ANovaPlayerController::JoinFriend");
 
 	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,
-		FNovaFadeAction::CreateLambda([=]()
+		FNovaAsyncAction::CreateLambda([=]()
 			{
 				Notify(FText::FormatNamed(LOCTEXT("JoiningFriend", "Joining {friend}"),
 					TEXT("friend"), FText::FromString(Friend->GetDisplayName())), ENovaNotificationType::Info);
@@ -501,7 +563,7 @@ void ANovaPlayerController::AcceptInvitation(const FOnlineSessionSearchResult& I
 	NLOG("ANovaPlayerController::AcceptInvitation");
 
 	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,
-		FNovaFadeAction::CreateLambda([=]()
+		FNovaAsyncAction::CreateLambda([=]()
 			{
 				GetGameInstance<UNovaGameInstance>()->JoinSearchResult(InviteResult);
 			})
@@ -510,7 +572,8 @@ void ANovaPlayerController::AcceptInvitation(const FOnlineSessionSearchResult& I
 
 bool ANovaPlayerController::IsReady() const
 {
-	return IsOnMainMenu() || (IsValid(GetSpacecraftAssembly()) && GetSpacecraftAssembly()->GetSpacecraft().IsValid());
+	return !IsLoadingStreamingLevel
+		&& (IsOnMainMenu() || (IsValid(GetSpacecraftAssembly()) && GetSpacecraftAssembly()->GetSpacecraft().IsValid()));
 }
 
 void ANovaPlayerController::DeathScreenFinished(ENovaDamageType Type)
@@ -518,13 +581,13 @@ void ANovaPlayerController::DeathScreenFinished(ENovaDamageType Type)
 	NLOG("ANovaPlayerController::DeathScreenFinished");
 
 	GetMenuManager()->RunWaitAction(ENovaLoadingScreen::Black,
-		FNovaFadeAction::CreateLambda([=]()
+		FNovaAsyncAction::CreateLambda([=]()
 			{
 				GetMenuManager()->GetOverlay()->HideDeathScreen();
 
 				 // TODO : process "respawn", however that works
 			}),
-		FNovaFadeCondition::CreateLambda([=]()
+		FNovaAsyncCondition::CreateLambda([=]()
 			{
 				if (IsReady())
 				{
@@ -552,14 +615,6 @@ bool ANovaPlayerController::IsOnMainMenu() const
 bool ANovaPlayerController::IsMenuOnly() const
 {
 	return Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMenuMap();
-}
-
-void ANovaPlayerController::OnOpenMenu()
-{
-}
-
-void ANovaPlayerController::OnCloseMenu()
-{
 }
 
 void ANovaPlayerController::Notify(FText Text, ENovaNotificationType Type)
@@ -596,7 +651,7 @@ void ANovaPlayerController::SetupInputComponent()
 
 void ANovaPlayerController::ToggleMenuOrQuit()
 {
-	if (!IsOnDeathScreen)
+	if (!IsOnDeathScreen && !Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMenuMap())
 	{
 		if (IsOnMainMenu())
 		{
@@ -648,7 +703,7 @@ void ANovaPlayerController::OnJoinRandomSession(TArray<FOnlineSessionSearchResul
 		if (Result.Session.OwningUserId != GetLocalPlayer()->GetPreferredUniqueNetId())
 		{
 			GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,
-				FNovaFadeAction::CreateLambda([=]()
+				FNovaAsyncAction::CreateLambda([=]()
 					{
 						Notify(FText::FormatNamed(LOCTEXT("JoinFriend", "Joining {session}"),
 							TEXT("session"), FText::FromString(*Result.Session.GetSessionIdStr())),
