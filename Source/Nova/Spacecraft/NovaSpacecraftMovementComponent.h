@@ -33,6 +33,9 @@ protected:
 	/** Measure velocities and accelerations */
 	virtual void ProcessMeasurements(float DeltaTime);
 
+	/** Run attitude control on linear velocity */
+	virtual void ProcessLinearAttitude(float DeltaTime);
+
 	/** Run attitude control on angular velocity */
 	virtual void ProcessAngularAttitude(float DeltaTime);
 
@@ -52,6 +55,11 @@ public:
 	// Maximum linear acceleration rate in m/s²
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float LinearAcceleration;
+
+	// Distance under which we consider stopped
+	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	float LinearDeadDistance;
+
 
 	// Maximum axis turn acceleration rate in °/s²
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
@@ -77,6 +85,7 @@ public:
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float AngularColinearityThreshold;
 
+
 	// Base restitution coefficient of hits
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float RestitutionCoefficient;
@@ -93,7 +102,8 @@ public:
 protected:
 
 	// Attitude input
-	FVector                                       CurrentDesiredAcceleration;
+	FVector                                       CurrentDesiredLocation;
+	FVector                                       CurrentDesiredVelocity;
 	FVector                                       CurrentDesiredDirection;
 	float                                         CurrentDesiredRoll;
 

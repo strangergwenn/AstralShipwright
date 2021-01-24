@@ -18,7 +18,8 @@
 UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	: Super()
 
-	, CurrentDesiredAcceleration(FVector::ZeroVector)
+	, CurrentDesiredLocation(FVector::ZeroVector)
+	, CurrentDesiredVelocity(FVector::ZeroVector)
 	, CurrentDesiredDirection(FVector::ZeroVector)
 	, CurrentDesiredRoll(0)
 
@@ -30,14 +31,19 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	, MeasuredAcceleration(FVector::ZeroVector)
 	, MeasuredAngularAcceleration(FVector::ZeroVector)
 {
-	// Physics settings
+	// Linear defaults
 	LinearAcceleration = 10;
+	LinearDeadDistance = 1;
+
+	// Angular defaults
 	AngularAcceleration = 30;
 	AngularControlIntensity = 2.0f;
 	MaxLinearVelocity = 8;
 	MaxAngularVelocity = 60;
 	AngularOvershootRatio = 1.1f;
 	AngularColinearityThreshold = 0.999999f;
+
+	// Physics defaults
 	RestitutionCoefficient = 0.5f;
 
 	// Settings
@@ -54,8 +60,51 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+#if 0
+	int32 TestStepDuration = 5;
+	int32 TestDuration = 4 * TestStepDuration;
+	CurrentDesiredVelocity = FVector::ZeroVector;
+	if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < TestStepDuration)
+	{
+		CurrentDesiredLocation = FVector(0, 0, 1000);
+	}
+	else if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < 2 * TestStepDuration)
+	{
+		CurrentDesiredLocation = FVector(0, 1000, 0);
+		CurrentDesiredVelocity = FVector(0, 1, 0);
+	}
+	else if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < 3 * TestStepDuration)
+	{
+		CurrentDesiredLocation = FVector(0, -1000, 0);
+	}
+	else
+	{
+		CurrentDesiredLocation = FVector(1000, 1000, 0);
+	}
+#elif 0
+	int32 TestStepDuration = 10;
+	int32 TestDuration = 4 * TestStepDuration;
+	if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < TestStepDuration)
+	{
+		CurrentDesiredDirection = FVector(0, 0, 1).GetSafeNormal();
+	}
+	else if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < 2 * TestStepDuration)
+	{
+		CurrentDesiredDirection = FVector(0, 1, 0).GetSafeNormal();
+	}
+	else if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < 3 * TestStepDuration)
+	{
+		CurrentDesiredDirection = FVector(0, -1, 0).GetSafeNormal();
+	}
+	else
+	{
+		CurrentDesiredDirection = FVector(1, 1, 1).GetSafeNormal();
+	}
+#endif
+
 	// Run all processes
 	ProcessMeasurements(DeltaTime);
+	ProcessLinearAttitude(DeltaTime);
 	ProcessAngularAttitude(DeltaTime);
 	ProcessMovement(DeltaTime);
 }
@@ -73,6 +122,55 @@ void UNovaSpacecraftMovementComponent::ProcessMeasurements(float DeltaTime)
 	PreviousAngularVelocity = CurrentAngularVelocity;
 }
 
+void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
+{
+	// Get the position data
+	const FVector DeltaPosition = (CurrentDesiredLocation - UpdatedComponent->GetComponentLocation()) / 100.0f;
+	const FVector DeltaPositionDirection = DeltaPosition.GetSafeNormal();
+	const float Distance = FMath::Max(0.0f, DeltaPosition.Size() - LinearDeadDistance);
+
+	// Get the velocity data
+	FVector DeltaVelocity = CurrentDesiredVelocity - CurrentVelocity;
+	FVector DeltaVelocityAxis = DeltaVelocity;
+	DeltaVelocityAxis.Normalize();
+
+	// Determine the time left to reach the final desired velocity
+	float TimeToFinalVelocity = 0;
+	if (!FMath::IsNearlyZero(DeltaVelocity.SizeSquared()))
+	{
+		TimeToFinalVelocity = DeltaVelocity.Size() / LinearAcceleration;
+	}
+
+	// Update desired velocity to match location & velocity inputs best
+	FVector RelativeResultSpeed;
+	float DistanceToStop = (DeltaVelocity.Size() / 2) * (TimeToFinalVelocity + DeltaTime);
+	if (DistanceToStop > Distance)
+	{
+		RelativeResultSpeed = CurrentDesiredVelocity;
+	}
+	else
+	{
+		float MaxPreciseSpeed = FMath::Min((Distance - DistanceToStop) / DeltaTime, MaxLinearVelocity);
+		if (DistanceToStop > Distance)
+		{
+			MaxPreciseSpeed = FMath::Min(MaxPreciseSpeed, CurrentVelocity.Size());
+		}
+
+		RelativeResultSpeed = DeltaPositionDirection;
+		RelativeResultSpeed *= MaxPreciseSpeed;
+		RelativeResultSpeed += CurrentDesiredVelocity;
+	}
+
+	// Update the linear velocity based on acceleration
+	auto UpdateVelocity = [](float& Value, float Target, float MaxDelta)
+	{
+		Value = FMath::Clamp(Target, Value - MaxDelta, Value + MaxDelta);
+	};
+	UpdateVelocity(CurrentVelocity.X, RelativeResultSpeed.X, LinearAcceleration * DeltaTime);
+	UpdateVelocity(CurrentVelocity.Y, RelativeResultSpeed.Y, LinearAcceleration * DeltaTime);
+	UpdateVelocity(CurrentVelocity.Z, RelativeResultSpeed.Z, LinearAcceleration * DeltaTime);
+}
+
 void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 {
 	FVector NewAngularVelocity = FVector::ZeroVector;
@@ -86,6 +184,7 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 			FQuat::FindBetweenNormals(ActorAxis, CurrentDesiredDirection) :
 			FRotator(0, 180, 0).Quaternion();
 
+		// While on the horizontal plane, follow desired roll too
 		if (FMath::IsNearlyZero(CurrentDesiredDirection.Z))
 		{
 			// Roll angle of the final resting rotation around the desired direction
@@ -145,22 +244,22 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 	}
 
 	// Update the angular velocity based on acceleration
-	auto UpdateAngularVelocity = [](float& Value, float Target, float MaxDelta)
+	auto UpdateVelocity = [](float& Value, float Target, float MaxDelta)
 	{
 		Value = FMath::Clamp(Target, Value - MaxDelta, Value + MaxDelta);
 	};
-	UpdateAngularVelocity(CurrentAngularVelocity.X, NewAngularVelocity.X, AngularAcceleration * DeltaTime);
-	UpdateAngularVelocity(CurrentAngularVelocity.Y, NewAngularVelocity.Y, AngularAcceleration * DeltaTime);
-	UpdateAngularVelocity(CurrentAngularVelocity.Z, NewAngularVelocity.Z, AngularAcceleration * DeltaTime);
+	UpdateVelocity(CurrentAngularVelocity.X, NewAngularVelocity.X, AngularAcceleration * DeltaTime);
+	UpdateVelocity(CurrentAngularVelocity.Y, NewAngularVelocity.Y, AngularAcceleration * DeltaTime);
+	UpdateVelocity(CurrentAngularVelocity.Z, NewAngularVelocity.Z, AngularAcceleration * DeltaTime);
 }
 
 void UNovaSpacecraftMovementComponent::ProcessMovement(float DeltaTime)
 {
 	if (GetOwner()->GetAttachParentActor() == nullptr)
 	{
-		// Update linear speed
-		CurrentVelocity += CurrentDesiredAcceleration.GetClampedToMaxSize(LinearAcceleration) * DeltaTime;
+		// Apply limits
 		CurrentVelocity = CurrentVelocity.GetClampedToMaxSize(MaxLinearVelocity);
+		CurrentAngularVelocity = CurrentAngularVelocity.GetClampedToMaxSize(MaxAngularVelocity);
 
 		// Update rotation
 		FQuat ActorRotation = UpdatedComponent->GetComponentQuat();
