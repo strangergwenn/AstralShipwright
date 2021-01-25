@@ -39,6 +39,8 @@ public:
 
 	virtual void VerticalAnalogInput(float Value) override;
 
+	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
+
 
 	/*----------------------------------------------------
 		Internals
@@ -46,8 +48,11 @@ public:
 
 protected:
 
-	/** Get the factory presentation pawn */
+	/** Get the spacecraft pawn */
 	class ANovaSpacecraftAssembly* GetSpacecraftAssembly() const;
+
+	/** Get the spacecraft pawn */
+	class UNovaSpacecraftMovementComponent* GetSpacecraftMovement() const;
 
 
 	/*----------------------------------------------------
@@ -56,11 +61,16 @@ protected:
 
 protected:
 
+	bool IsUndockEnabled() const;
+	bool IsDockEnabled() const;
+
 
 	/*----------------------------------------------------
 		Callbacks
 	----------------------------------------------------*/
 
+	void OnUndock();
+	void OnDock();
 
 
 	/*----------------------------------------------------
@@ -71,5 +81,9 @@ protected:
 
 	// Menu manager
 	TWeakObjectPtr<UNovaMenuManager>              MenuManager;
+
+	// Slate widgets
+	TSharedPtr<class SNovaButton>                 UndockButton;
+	TSharedPtr<class SNovaButton>                 DockButton;
 
 };

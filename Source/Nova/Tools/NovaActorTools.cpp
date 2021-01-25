@@ -21,6 +21,16 @@
 	Helper class
 ----------------------------------------------------*/
 
+void UNovaActorTools::SortActorsByClosestDistance(TArray<AActor*>& Actors, const FVector& BaseLocation)
+{
+	Actors.Sort([BaseLocation](AActor& A, AActor& B)
+	{
+		FVector LocationA = FVector(A.GetActorLocation() - BaseLocation);
+		FVector LocationB = FVector(B.GetActorLocation() - BaseLocation);
+		return (LocationA.Size() < LocationB.Size());
+	});
+}
+
 void UNovaActorTools::SortComponentsByClosestDistance(TArray<USceneComponent*>& Components, const FVector& BaseLocation)
 {
 	Components.Sort([BaseLocation](USceneComponent& A, USceneComponent& B)

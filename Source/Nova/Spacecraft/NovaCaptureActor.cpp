@@ -7,7 +7,6 @@
 #include "Nova/Actor/NovaStaticMeshComponent.h"
 #include "Nova/Actor/NovaSkeletalMeshComponent.h"
 
-#include "Nova/Player/NovaPlayerController.h"
 #include "Nova/Game/NovaGameTypes.h"
 #include "Nova/Game/NovaAssetCatalog.h"
 #include "Nova/UI/NovaUI.h"

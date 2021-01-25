@@ -27,6 +27,9 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	/** Reset the view */
+	void ResetView();
+
 	/** Get the current bounds of the actor */
 	virtual TPair<FVector, FVector> GetTurntableBounds() const;
 

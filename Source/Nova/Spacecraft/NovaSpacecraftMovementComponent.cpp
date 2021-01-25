@@ -18,6 +18,12 @@
 UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	: Super()
 
+	, MovementState(ENovaMovementState::Docked)
+	, MovementStateDirty(false)
+	, LinearAttitudeIdle(false)
+	, AngularAttitudeIdle(false)
+	, LinearAttitudeDistance(0)
+
 	, CurrentDesiredLocation(FVector::ZeroVector)
 	, CurrentDesiredVelocity(FVector::ZeroVector)
 	, CurrentDesiredDirection(FVector::ZeroVector)
@@ -102,11 +108,80 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 	}
 #endif
 
-	// Run all processes
+	// Run high-level processing
+	ProcessState();
+
+	// Run movement implementation
 	ProcessMeasurements(DeltaTime);
 	ProcessLinearAttitude(DeltaTime);
 	ProcessAngularAttitude(DeltaTime);
 	ProcessMovement(DeltaTime);
+}
+
+void UNovaSpacecraftMovementComponent::Dock(FNovaMovementCallback Callback, const FVector& Location)
+{
+	NLOG("UNovaSpacecraftMovementComponent::Dock");
+
+	if (MovementState == ENovaMovementState::Idle)
+	{
+		StateCallback = Callback;
+		MovementState = ENovaMovementState::Docking;
+		MovementStateDirty = true;
+		CurrentDesiredLocation = Location;
+		CurrentDesiredDirection = FVector(1, 0, 0);
+	}
+}
+
+void UNovaSpacecraftMovementComponent::Undock(FNovaMovementCallback Callback)
+{
+	NLOG("UNovaSpacecraftMovementComponent::Undock");
+
+	if (MovementState == ENovaMovementState::Docked)
+	{
+		StateCallback = Callback;
+		MovementState = ENovaMovementState::Undocking;
+		MovementStateDirty = true;
+	}
+}
+
+
+/*----------------------------------------------------
+	High level movement
+----------------------------------------------------*/
+
+void UNovaSpacecraftMovementComponent::ProcessState()
+{
+	switch (MovementState)
+	{
+	case ENovaMovementState::Docking:
+		if (!MovementStateDirty && LinearAttitudeIdle && AngularAttitudeIdle)
+		{
+			StateCallback.ExecuteIfBound();
+			MovementState = ENovaMovementState::Docked;
+		}
+		break;
+
+	case ENovaMovementState::Undocking:
+		if (MovementStateDirty)
+		{
+			CurrentDesiredLocation = GetLocation(FVector(100, 0, 0));
+		}
+		else if (LinearAttitudeIdle && AngularAttitudeIdle)
+		{
+			StateCallback.ExecuteIfBound();
+			MovementState = ENovaMovementState::Idle;
+		}
+		else if (LinearAttitudeDistance < 50)
+		{
+			CurrentDesiredDirection = FVector(0, 1, 0);
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	MovementStateDirty = false;
 }
 
 
@@ -127,7 +202,8 @@ void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 	// Get the position data
 	const FVector DeltaPosition = (CurrentDesiredLocation - UpdatedComponent->GetComponentLocation()) / 100.0f;
 	const FVector DeltaPositionDirection = DeltaPosition.GetSafeNormal();
-	const float Distance = FMath::Max(0.0f, DeltaPosition.Size() - LinearDeadDistance);
+	LinearAttitudeDistance = FMath::Max(0.0f, DeltaPosition.Size() - LinearDeadDistance);
+	LinearAttitudeIdle = LinearAttitudeDistance == 0;
 
 	// Get the velocity data
 	FVector DeltaVelocity = CurrentDesiredVelocity - CurrentVelocity;
@@ -144,14 +220,14 @@ void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 	// Update desired velocity to match location & velocity inputs best
 	FVector RelativeResultSpeed;
 	float DistanceToStop = (DeltaVelocity.Size() / 2) * (TimeToFinalVelocity + DeltaTime);
-	if (DistanceToStop > Distance)
+	if (DistanceToStop > LinearAttitudeDistance)
 	{
 		RelativeResultSpeed = CurrentDesiredVelocity;
 	}
 	else
 	{
-		float MaxPreciseSpeed = FMath::Min((Distance - DistanceToStop) / DeltaTime, MaxLinearVelocity);
-		if (DistanceToStop > Distance)
+		float MaxPreciseSpeed = FMath::Min((LinearAttitudeDistance - DistanceToStop) / DeltaTime, MaxLinearVelocity);
+		if (DistanceToStop > LinearAttitudeDistance)
 		{
 			MaxPreciseSpeed = FMath::Min(MaxPreciseSpeed, CurrentVelocity.Size());
 		}
@@ -179,6 +255,8 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 
 	if (DotProduct < AngularColinearityThreshold)
 	{
+		AngularAttitudeIdle = false;
+
 		// Determine a quaternion that represents the desired difference in orientation
 		FQuat TargetRotation = DotProduct > -AngularColinearityThreshold ?
 			FQuat::FindBetweenNormals(ActorAxis, CurrentDesiredDirection) :
@@ -241,6 +319,10 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 			RotationDirection.X, RotationDirection.Y, RotationDirection.Z,
 			RemainingAngle, DotProduct,
 			NewAngularVelocity.X, NewAngularVelocity.Y, NewAngularVelocity.Z);*/
+	}
+	else
+	{
+		AngularAttitudeIdle = true;
 	}
 
 	// Update the angular velocity based on acceleration

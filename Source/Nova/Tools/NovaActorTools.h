@@ -17,6 +17,9 @@ class UNovaActorTools : public UObject
 
 public:
 
+	/** Sort actors from closest to farthest from location */
+	static void SortActorsByClosestDistance(TArray<AActor*>& Actors, const FVector& BaseLocation);
+
 	/** Sort components from closest to farthest from location */
 	static void SortComponentsByClosestDistance(TArray<USceneComponent*>& Components, const FVector& BaseLocation);
 

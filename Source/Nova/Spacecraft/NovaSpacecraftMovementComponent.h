@@ -7,6 +7,19 @@
 #include "NovaSpacecraftMovementComponent.generated.h"
 
 
+DECLARE_DELEGATE(FNovaMovementCallback);
+
+
+/** Movement state */
+UENUM(BlueprintType)
+enum class ENovaMovementState : uint8
+{
+	Docked,
+	Undocking,
+	Docking,
+	Idle
+};
+
 /** Spacecraft movement component */
 UCLASS(ClassGroup = (Nova))
 class UNovaSpacecraftMovementComponent : public UMovementComponent
@@ -22,6 +35,27 @@ public:
 	----------------------------------------------------*/
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	/** Get the current state of the movement system */
+	UFUNCTION(BlueprintCallable)
+	ENovaMovementState GetState() const
+	{
+		return MovementState;
+	}
+
+	/** Dock at a particular location */
+	void Dock(FNovaMovementCallback Callback, const FVector& Location);
+
+	/** Undock from the current dock */
+	void Undock(FNovaMovementCallback Callback);
+
+
+	/*----------------------------------------------------
+		High level movement
+	----------------------------------------------------*/
+
+	/** Run the high level state machine */
+	void ProcessState();
 
 
 	/*----------------------------------------------------
@@ -101,7 +135,15 @@ public:
 
 protected:
 
-	// Attitude input
+	// High-level state
+	ENovaMovementState                            MovementState;
+	FNovaMovementCallback                         StateCallback;
+	bool                                          MovementStateDirty;
+	bool                                          LinearAttitudeIdle;
+	bool                                          AngularAttitudeIdle;
+	float                                         LinearAttitudeDistance;
+
+	// Attitude inputs
 	FVector                                       CurrentDesiredLocation;
 	FVector                                       CurrentDesiredVelocity;
 	FVector                                       CurrentDesiredDirection;
@@ -123,6 +165,11 @@ protected:
 	----------------------------------------------------*/
 
 public:
+
+	inline const FVector GetLocation(const FVector& Offset) const
+	{
+		return UpdatedComponent->GetComponentLocation() + Offset * 100;
+	}
 
 	inline const FVector GetCurrentVelocity() const
 	{

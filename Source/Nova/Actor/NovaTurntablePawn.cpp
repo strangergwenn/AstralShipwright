@@ -91,12 +91,7 @@ void ANovaTurntablePawn::BeginPlay()
 
 	Super::BeginPlay();
 
-	// Initialize
-	CurrentTiltAngle = -45;
-	CurrentPanAngle = 135;
-	CurrentDistance = DefaultDistance;
-	CurrentDistanceFactor = DefaultDistanceFactor;
-	CurrentAnimationTime = AnimationDuration;
+	ResetView();
 }
 
 void ANovaTurntablePawn::Tick(float DeltaTime)
@@ -140,6 +135,15 @@ void ANovaTurntablePawn::Tick(float DeltaTime)
 
 	// Update camera
 	ProcessCamera(DeltaTime);
+}
+
+void ANovaTurntablePawn::ResetView()
+{
+	CurrentTiltAngle = -45;
+	CurrentPanAngle = 135;
+	CurrentDistance = DefaultDistance;
+	CurrentDistanceFactor = DefaultDistanceFactor;
+	CurrentAnimationTime = AnimationDuration;
 }
 
 TPair<FVector, FVector> ANovaTurntablePawn::GetTurntableBounds() const

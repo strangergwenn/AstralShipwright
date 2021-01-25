@@ -54,6 +54,17 @@ struct FNovaPostProcessSetting : public FNovaPostProcessSettingBase
 };
 
 
+/** Camera viewpoint */
+UCLASS(ClassGroup = (Nova))
+class ANovaPlayerViewpoint : public AActor
+{
+	GENERATED_BODY()
+
+public:
+
+	ANovaPlayerViewpoint();
+};
+
 /** Default player controller class */
 UCLASS(ClassGroup = (Nova))
 class ANovaPlayerController : public APlayerController
@@ -85,6 +96,18 @@ public:
 	virtual void PawnLeavingGame() override;
 
 	virtual void PlayerTick(float DeltaSeconds) override;
+
+	virtual void GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const override;
+
+	/*----------------------------------------------------
+		Gameplay
+	----------------------------------------------------*/
+
+	/** Dock the player to a dock with a cutscene */
+	void Dock(const FVector& Location);
+
+	/** Undock the player from the current dock with a cutscene */
+	void Undock();
 
 
 	/*----------------------------------------------------
@@ -280,6 +303,7 @@ private:
 
 	// Gameplay state
 	bool                                          IsOnDeathScreen;
+	bool                                          IsInCutscene;
 	bool                                          IsLoadingStreamingLevel;
 	int32                                         CurrentStreamingLevelIndex;
 	TMap<ENovaPostProcessPreset, TSharedPtr<FNovaPostProcessSetting>> PostProcessSettings;

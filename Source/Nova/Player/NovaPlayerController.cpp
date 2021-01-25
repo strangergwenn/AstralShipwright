@@ -14,12 +14,16 @@
 #include "Nova/Game/NovaSaveManager.h"
 #include "Nova/Game/NovaWorldSettings.h"
 
+#include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
+
+#include "Nova/Tools/NovaActorTools.h"
 #include "Nova/UI/Menu/NovaOverlay.h"
 #include "Nova/Nova.h"
 
 #include "GameFramework/PlayerState.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Components/PostProcessComponent.h"
+#include "Components/BillboardComponent.h"
 #include "Components/SkyLightComponent.h"
 #include "Misc/CommandLine.h"
 
@@ -34,14 +38,21 @@
 
 
 /*----------------------------------------------------
-	Constructor
+	Constructors
 ----------------------------------------------------*/
+
+ANovaPlayerViewpoint::ANovaPlayerViewpoint()
+	: Super()
+{
+	RootComponent = CreateDefaultSubobject<USceneComponent>("Root");
+}
 
 ANovaPlayerController::ANovaPlayerController()
 	: Super()
 	, TravelState(ENovaTravelState::None)
 	, LastNetworkError(ENovaNetworkError::Success)
 	, IsOnDeathScreen(false)
+	, IsInCutscene(false)
 	, IsLoadingStreamingLevel(false)
 	, CurrentStreamingLevelIndex(0)
 {
@@ -303,6 +314,106 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 			Light->GetLightComponent()->SetCastRaytracedShadow(GameUserSettings->EnableRaytracedShadows);
 		}
 	}
+}
+
+void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const
+{
+	// During cutscenes, use the closest camera viewpoint and focus the player ship
+	if (IsInCutscene)
+	{
+		TArray<AActor*> Viewpoints;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaPlayerViewpoint::StaticClass(), Viewpoints);
+
+		FVector ViewpointLocation = FVector::ZeroVector;
+		if (Viewpoints.Num())
+		{
+			UNovaActorTools::SortActorsByClosestDistance(Viewpoints, GetPawn()->GetActorLocation());
+			ViewpointLocation = Viewpoints[0]->GetActorLocation();
+		}
+
+		Location = ViewpointLocation;
+		Rotation = (GetPawn()->GetActorLocation() - ViewpointLocation).Rotation();
+	}
+	else
+	{
+		Super::GetPlayerViewPoint(Location, Rotation);
+	}
+}
+
+
+/*----------------------------------------------------
+	Gameplay
+----------------------------------------------------*/
+
+void ANovaPlayerController::Dock(const FVector& Location)
+{
+	NLOG("ANovaPlayerController::Dock");
+
+	auto EndCutscene = [=]()
+	{
+		GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda([=]()
+			{
+				GetSpacecraftAssembly()->ResetView();
+				IsInCutscene = false;
+			})
+		);
+	};
+
+	GetMenuManager()->CloseMenu(FNovaAsyncAction::CreateLambda([=]()
+		{
+			IsInCutscene = true;
+			LoadStreamingLevel("Station");
+		}),
+		FNovaAsyncCondition::CreateLambda([=]()
+		{
+			if (!IsLoadingStreamingLevel)
+			{
+				UNovaSpacecraftMovementComponent* MovementComponent = Cast<UNovaSpacecraftMovementComponent>(
+					GetSpacecraftAssembly()->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
+				NCHECK(MovementComponent);
+
+				MovementComponent->Dock(FNovaMovementCallback::CreateLambda(EndCutscene), Location);
+
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}));
+}
+
+void ANovaPlayerController::Undock()
+{
+	NLOG("ANovaPlayerController::Undock");
+
+	auto EndCutscene = [=]()
+	{
+		GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda([=]()
+			{
+				IsInCutscene = false;
+				UnloadStreamingLevel("Station");
+				GetSpacecraftAssembly()->ResetView();
+			}),
+			FNovaAsyncCondition::CreateLambda([=]()
+			{
+				return !IsLoadingStreamingLevel;
+			})
+		);
+	};
+
+	auto StartCutscene = [=]()
+	{
+		IsInCutscene = true;
+
+		UNovaSpacecraftMovementComponent* MovementComponent = Cast<UNovaSpacecraftMovementComponent>(
+			GetSpacecraftAssembly()->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
+		NCHECK(MovementComponent);
+
+		MovementComponent->Undock(FNovaMovementCallback::CreateLambda(EndCutscene));
+	};
+
+	GetMenuManager()->CloseMenu(FNovaAsyncAction::CreateLambda(StartCutscene));
 }
 
 
