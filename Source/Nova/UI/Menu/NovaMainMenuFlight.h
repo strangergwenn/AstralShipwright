@@ -49,7 +49,7 @@ public:
 protected:
 
 	/** Get the spacecraft pawn */
-	class ANovaSpacecraftAssembly* GetSpacecraftAssembly() const;
+	class ANovaSpacecraftPawn* GetSpacecraftPawn() const;
 
 	/** Get the spacecraft pawn */
 	class UNovaSpacecraftMovementComponent* GetSpacecraftMovement() const;

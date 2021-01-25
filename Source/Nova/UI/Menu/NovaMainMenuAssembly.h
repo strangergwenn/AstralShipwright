@@ -6,7 +6,7 @@
 #include "Nova/UI/Widget/NovaTabView.h"
 #include "Nova/UI/Widget/NovaModalListView.h"
 
-#include "Nova/Spacecraft/NovaSpacecraftAssembly.h"
+#include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 
 #include "Online.h"
 
@@ -17,7 +17,7 @@ class SNovaMainMenuAssembly : public SNovaTabPanel
 	typedef SNovaModalListView<const class UNovaModuleDescription*> SNovaModuleList;
 	typedef SNovaModalListView<const class UNovaEquipmentDescription*> SNovaEquipmentList;
 	typedef SNovaModalListView<ENovaAssemblyDisplayFilter> SNovaDisplayFilterList;
-	typedef SNovaModalListView<ENovaAssemblyHullType> SNovaHullTypeList;
+	typedef SNovaModalListView<ENovaHullType> SNovaHullTypeList;
 
 
 	/*----------------------------------------------------
@@ -73,8 +73,8 @@ public:
 
 protected:
 
-	/** Get the factory presentation pawn */
-	class ANovaSpacecraftAssembly* GetSpacecraftAssembly() const;
+	/** Get the spacecraft pawn used to display the assembly */
+	class ANovaSpacecraftPawn* GetSpacecraftPawn() const;
 
 	/** Get the index of the next compartment to build */
 	int32 GetNewBuildIndex(bool Forward) const;
@@ -121,9 +121,9 @@ protected:
 	FText GenerateEquipmentTooltip(const class UNovaEquipmentDescription* Equipment) const;
 
 	// Compartment hull types list
-	TSharedRef<SWidget> GenerateHullTypeItem(ENovaAssemblyHullType Type) const;
-	FText GetHullTypeName(ENovaAssemblyHullType Type) const;
-	FText GenerateHullTypeTooltip(ENovaAssemblyHullType Type) const;
+	TSharedRef<SWidget> GenerateHullTypeItem(ENovaHullType Type) const;
+	FText GetHullTypeName(ENovaHullType Type) const;
+	FText GenerateHullTypeTooltip(ENovaHullType Type) const;
 
 	// General callbacks
 	const FSlateBrush* GetCompartmentIcon(int32 Index) const;
@@ -156,7 +156,7 @@ protected:
 	// Modules & equipments
 	void OnSelectedModuleChanged(const class UNovaModuleDescription* Module, int32 Index, int32 SlotIndex);
 	void OnSelectedEquipmentChanged(const class UNovaEquipmentDescription* Equipment, int32 Index, int32 SlotIndex);
-	void OnSelectedHullTypeChanged(ENovaAssemblyHullType Type, int32 Index);
+	void OnSelectedHullTypeChanged(ENovaHullType Type, int32 Index);
 
 	// Save the spacecraft
 	void OnSaveSpacecraft();
@@ -199,7 +199,7 @@ protected:
 	TSharedPtr<SNovaCompartmentList>              CompartmentListView;
 
 	// Compartment hull  list
-	TArray<ENovaAssemblyHullType>                 HullTypeList;
+	TArray<ENovaHullType>                         HullTypeList;
 	TSharedPtr<SNovaHullTypeList>                 HullTypeListView;
 
 	// Compartment module lists

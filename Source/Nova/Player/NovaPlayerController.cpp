@@ -130,9 +130,9 @@ TSharedPtr<FNovaPlayerSave> ANovaPlayerController::Save() const
 	TSharedPtr<FNovaPlayerSave> SaveData = MakeShareable(new FNovaPlayerSave);
 
 	// Save the spacecraft
-	ANovaSpacecraftAssembly* SpacecraftAssembly = GetSpacecraftAssembly();
-	NCHECK(SpacecraftAssembly);
-	SaveData->Spacecraft = SpacecraftAssembly->GetSpacecraft();
+	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+	NCHECK(SpacecraftPawn);
+	SaveData->Spacecraft = SpacecraftPawn->GetSpacecraft();
 
 	return SaveData;
 }
@@ -149,7 +149,7 @@ void ANovaPlayerController::Load(TSharedPtr<FNovaPlayerSave> SaveData)
 	UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
 	NCHECK(GameInstance);
 
-	// Store the save data so that the assembly can fetch it later when it spawns
+	// Store the save data so that the spacecraft pawn can fetch it later when it spawns
 	Spacecraft = SaveData->Spacecraft;
 }
 
@@ -162,7 +162,7 @@ void ANovaPlayerController::SerializeJson(TSharedPtr<FNovaPlayerSave>& SaveData,
 		TSharedPtr<FJsonObject> FactoryJsonData;
 		if (SaveData)
 		{
-			ANovaSpacecraftAssembly::SerializeJson(SaveData->Spacecraft, FactoryJsonData, ENovaSerialize::DataToJson);
+			ANovaSpacecraftPawn::SerializeJson(SaveData->Spacecraft, FactoryJsonData, ENovaSerialize::DataToJson);
 		}
 		JsonData->SetObjectField("Spacecraft", FactoryJsonData);
 	}
@@ -171,7 +171,7 @@ void ANovaPlayerController::SerializeJson(TSharedPtr<FNovaPlayerSave>& SaveData,
 		SaveData = MakeShareable(new FNovaPlayerSave);
 
 		TSharedPtr<FJsonObject> FactoryJsonData = JsonData->GetObjectField("Spacecraft");
-		ANovaSpacecraftAssembly::SerializeJson(SaveData->Spacecraft, FactoryJsonData, ENovaSerialize::JsonToData);
+		ANovaSpacecraftPawn::SerializeJson(SaveData->Spacecraft, FactoryJsonData, ENovaSerialize::JsonToData);
 	}
 }
 
@@ -353,7 +353,7 @@ void ANovaPlayerController::Dock(const FVector& Location)
 	{
 		GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda([=]()
 			{
-				GetSpacecraftAssembly()->ResetView();
+				GetSpacecraftPawn()->ResetView();
 				IsInCutscene = false;
 			})
 		);
@@ -369,7 +369,7 @@ void ANovaPlayerController::Dock(const FVector& Location)
 			if (!IsLoadingStreamingLevel)
 			{
 				UNovaSpacecraftMovementComponent* MovementComponent = Cast<UNovaSpacecraftMovementComponent>(
-					GetSpacecraftAssembly()->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
+					GetSpacecraftPawn()->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
 				NCHECK(MovementComponent);
 
 				MovementComponent->Dock(FNovaMovementCallback::CreateLambda(EndCutscene), Location);
@@ -393,7 +393,7 @@ void ANovaPlayerController::Undock()
 			{
 				IsInCutscene = false;
 				UnloadStreamingLevel("Station");
-				GetSpacecraftAssembly()->ResetView();
+				GetSpacecraftPawn()->ResetView();
 			}),
 			FNovaAsyncCondition::CreateLambda([=]()
 			{
@@ -407,7 +407,7 @@ void ANovaPlayerController::Undock()
 		IsInCutscene = true;
 
 		UNovaSpacecraftMovementComponent* MovementComponent = Cast<UNovaSpacecraftMovementComponent>(
-			GetSpacecraftAssembly()->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
+			GetSpacecraftPawn()->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
 		NCHECK(MovementComponent);
 
 		MovementComponent->Undock(FNovaMovementCallback::CreateLambda(EndCutscene));
@@ -684,7 +684,7 @@ void ANovaPlayerController::AcceptInvitation(const FOnlineSessionSearchResult& I
 bool ANovaPlayerController::IsReady() const
 {
 	return !IsLoadingStreamingLevel
-		&& (IsOnMainMenu() || (IsValid(GetSpacecraftAssembly()) && GetSpacecraftAssembly()->GetSpacecraft().IsValid()));
+		&& (IsOnMainMenu() || (IsValid(GetSpacecraftPawn()) && GetSpacecraftPawn()->GetSpacecraft().IsValid()));
 }
 
 void ANovaPlayerController::DeathScreenFinished(ENovaDamageType Type)

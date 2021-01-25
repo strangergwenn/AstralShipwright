@@ -7,7 +7,7 @@
 #include "Nova/Player/NovaMenuManager.h"
 #include "Nova/Player/NovaPlayerController.h"
 
-#include "Nova/Spacecraft/NovaSpacecraftAssembly.h"
+#include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
 
 #include "Nova/UI/Component/NovaLargeButton.h"
@@ -79,7 +79,7 @@ void SNovaMainMenuFlight::Show()
 {
 	SNovaTabPanel::Show();
 
-	GetSpacecraftAssembly()->SetHighlightCompartment(INDEX_NONE);
+	GetSpacecraftPawn()->SetHighlightCompartment(INDEX_NONE);
 }
 
 void SNovaMainMenuFlight::Hide()
@@ -89,17 +89,17 @@ void SNovaMainMenuFlight::Hide()
 
 void SNovaMainMenuFlight::HorizontalAnalogInput(float Value)
 {
-	if (GetSpacecraftAssembly())
+	if (GetSpacecraftPawn())
 	{
-		GetSpacecraftAssembly()->PanInput(Value);
+		GetSpacecraftPawn()->PanInput(Value);
 	}
 }
 
 void SNovaMainMenuFlight::VerticalAnalogInput(float Value)
 {
-	if (GetSpacecraftAssembly())
+	if (GetSpacecraftPawn())
 	{
-		GetSpacecraftAssembly()->TiltInput(Value);
+		GetSpacecraftPawn()->TiltInput(Value);
 	}
 }
 
@@ -120,18 +120,18 @@ TSharedPtr<SNovaButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 	Internals
 ----------------------------------------------------*/
 
-ANovaSpacecraftAssembly* SNovaMainMenuFlight::GetSpacecraftAssembly() const
+ANovaSpacecraftPawn* SNovaMainMenuFlight::GetSpacecraftPawn() const
 {
-	return MenuManager->GetPC()->GetSpacecraftAssembly();
+	return MenuManager->GetPC()->GetSpacecraftPawn();
 }
 
 UNovaSpacecraftMovementComponent* SNovaMainMenuFlight::GetSpacecraftMovement() const
 {
-	ANovaSpacecraftAssembly* Assembly = GetSpacecraftAssembly();
-	NCHECK(Assembly);
+	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+	NCHECK(SpacecraftPawn);
 
 	UNovaSpacecraftMovementComponent* MovementComponent = Cast<UNovaSpacecraftMovementComponent>(
-		Assembly->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
+		SpacecraftPawn->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
 	
 	NCHECK(MovementComponent);
 

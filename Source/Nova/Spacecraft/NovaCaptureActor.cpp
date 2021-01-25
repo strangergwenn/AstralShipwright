@@ -1,8 +1,7 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaCaptureActor.h"
-#include "NovaSpacecraftAssembly.h"
-#include "NovaCompartmentAssembly.h"
+#include "NovaSpacecraftPawn.h"
 
 #include "Nova/Actor/NovaStaticMeshComponent.h"
 #include "Nova/Actor/NovaSkeletalMeshComponent.h"
@@ -36,7 +35,7 @@
 
 ANovaCaptureActor::ANovaCaptureActor()
 	: Super()
-	, Assembly(nullptr)
+	, SpacecraftPawn(nullptr)
 	, Catalog(nullptr)
 {
 	// Create root component
@@ -80,7 +79,7 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 	NLOG("ANovaCaptureActor::CaptureScreenshot for '%s'", *GetName());
 
 	// Get required objects
-	CreateAssembly();
+	CreateSpacecraftPawn();
 	CreateCatalog();
 	CreateRenderTarget();
 
@@ -101,27 +100,27 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 	}
 
 	// Define the content to load
-	CurrentAssembly = MakeShareable(new FNovaSpacecraft);
+	Spacecraft = MakeShareable(new FNovaSpacecraft);
 	if (Asset->IsA(UNovaCompartmentDescription::StaticClass()))
 	{
-		CurrentAssembly->Compartments.Add(FNovaCompartment(Cast<UNovaCompartmentDescription>(Asset)));
+		Spacecraft->Compartments.Add(FNovaCompartment(Cast<UNovaCompartmentDescription>(Asset)));
 	}
 	else if (Asset->IsA(UNovaModuleDescription::StaticClass()))
 	{
-		FNovaCompartment CompartmentAssembly(EmptyCompartmentDescription);
-		CompartmentAssembly.Modules[0].Description = Cast<UNovaModuleDescription>(Asset);
-		CurrentAssembly->Compartments.Add(CompartmentAssembly);
+		FNovaCompartment Compartment(EmptyCompartmentDescription);
+		Compartment.Modules[0].Description = Cast<UNovaModuleDescription>(Asset);
+		Spacecraft->Compartments.Add(Compartment);
 	}
 	else if (Asset->IsA(UNovaEquipmentDescription::StaticClass()))
 	{
-		FNovaCompartment CompartmentAssembly(EmptyCompartmentDescription);
-		CompartmentAssembly.Equipments[0] = Cast<UNovaEquipmentDescription>(Asset);
-		CurrentAssembly->Compartments.Add(CompartmentAssembly);
+		FNovaCompartment Compartment(EmptyCompartmentDescription);
+		Compartment.Equipments[0] = Cast<UNovaEquipmentDescription>(Asset);
+		Spacecraft->Compartments.Add(Compartment);
 	}
 
 	// Set up the scene
-	Assembly->SetSpacecraft(CurrentAssembly);
-	Assembly->UpdateAssembly();
+	SpacecraftPawn->SetSpacecraft(Spacecraft);
+	SpacecraftPawn->UpdateAssembly();
 	PlaceCamera();
 
 	// Proceed with the screenshot
@@ -132,19 +131,19 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 
 	// Clean up
 	Asset->MarkPackageDirty();
-	Assembly->Destroy();
+	SpacecraftPawn->Destroy();
 
 #endif
 }
 
 #if WITH_EDITOR
 
-void ANovaCaptureActor::CreateAssembly()
+void ANovaCaptureActor::CreateSpacecraftPawn()
 {
-	Assembly = Cast<ANovaSpacecraftAssembly>(GetWorld()->SpawnActor(ANovaSpacecraftAssembly::StaticClass()));
-	NCHECK(Assembly);
-	Assembly->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-	Assembly->SetImmediateMode(true);
+	SpacecraftPawn = Cast<ANovaSpacecraftPawn>(GetWorld()->SpawnActor(ANovaSpacecraftPawn::StaticClass()));
+	NCHECK(SpacecraftPawn);
+	SpacecraftPawn->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
+	SpacecraftPawn->SetImmediateMode(true);
 }
 
 void ANovaCaptureActor::CreateCatalog()
@@ -179,7 +178,7 @@ void ANovaCaptureActor::PlaceCamera()
 
 	// Compute bounds
 	FBox Bounds(ForceInit);
-	Assembly->ForEachComponent<UPrimitiveComponent>(false, [&](const UPrimitiveComponent* Prim)
+	SpacecraftPawn->ForEachComponent<UPrimitiveComponent>(false, [&](const UPrimitiveComponent* Prim)
 		{
 			if (Prim->IsRegistered())
 			{

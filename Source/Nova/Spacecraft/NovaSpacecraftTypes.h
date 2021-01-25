@@ -21,7 +21,7 @@ enum class ENovaEquipmentType : uint8
 
 /** Type of bulkhead to use */
 UENUM()
-enum class ENovaAssemblyBulkheadType : uint8
+enum class ENovaBulkheadType : uint8
 {
 	None,
 	Standard,
@@ -31,7 +31,7 @@ enum class ENovaAssemblyBulkheadType : uint8
 
 /** Type of skirt piping to use */
 UENUM()
-enum class ENovaAssemblySkirtPipingType : uint8
+enum class ENovaSkirtPipingType : uint8
 {
 	None,
 	Simple,
@@ -40,7 +40,7 @@ enum class ENovaAssemblySkirtPipingType : uint8
 
 /** Possible hull styles */
 UENUM()
-enum class ENovaAssemblyHullType : uint8
+enum class ENovaHullType : uint8
 {
 	None,
 	PlasticFabric,

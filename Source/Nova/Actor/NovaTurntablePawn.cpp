@@ -4,7 +4,6 @@
 
 #include "Nova/Player/NovaMenuManager.h"
 #include "Nova/Game/NovaGameInstance.h"
-#include "Nova/Spacecraft/NovaSpacecraftAssembly.h"
 
 #include "Nova/UI/NovaUITypes.h"
 #include "Nova/Nova.h"
@@ -148,16 +147,7 @@ void ANovaTurntablePawn::ResetView()
 
 TPair<FVector, FVector> ANovaTurntablePawn::GetTurntableBounds() const
 {
-	if (TargetActor->IsA<ANovaSpacecraftAssembly>())
-	{
-		return Cast<ANovaSpacecraftAssembly>(TargetActor)->GetTurntableBounds();
-	}
-	else
-	{
-		FVector Origin, Extent;
-		TargetActor->GetActorBounds(false, Origin, Extent);
-		return TPair<FVector, FVector>(Origin, Extent);
-	}
+	return TPair<FVector, FVector>(FVector::ZeroVector, FVector::ZeroVector);
 }
 
 void ANovaTurntablePawn::PanInput(float Val)

@@ -54,13 +54,13 @@ class UNovaCompartmentDescription : public UNovaAssetDescription
 public:
 
 	/** Get a list of hull styles supported by this compartment */
-	TArray<ENovaAssemblyHullType> GetSupportedHullTypes() const
+	TArray<ENovaHullType> GetSupportedHullTypes() const
 	{
-		TArray<ENovaAssemblyHullType> Result;
+		TArray<ENovaHullType> Result;
 
-		Result.Add(ENovaAssemblyHullType::None);
-		Result.Add(ENovaAssemblyHullType::PlasticFabric);
-		Result.Add(ENovaAssemblyHullType::MetalFabric);
+		Result.Add(ENovaHullType::None);
+		Result.Add(ENovaHullType::PlasticFabric);
+		Result.Add(ENovaHullType::MetalFabric);
 
 		return Result;
 	}
@@ -84,30 +84,30 @@ public:
 	}
 
 	/** Return the appropriate skirt piping mesh */
-	TSoftObjectPtr<class UStaticMesh> GetSkirtPiping(ENovaAssemblySkirtPipingType Type) const
+	TSoftObjectPtr<class UStaticMesh> GetSkirtPiping(ENovaSkirtPipingType Type) const
 	{
 		switch (Type)
 		{
 		default:
-		case ENovaAssemblySkirtPipingType::None:
+		case ENovaSkirtPipingType::None:
 			return nullptr;
-		case ENovaAssemblySkirtPipingType::Simple:
+		case ENovaSkirtPipingType::Simple:
 			return SimpleSkirtPiping;
-		case ENovaAssemblySkirtPipingType::Connection:
+		case ENovaSkirtPipingType::Connection:
 			return ConnectionSkirtPiping;
 		}
 	}
 
 	/** Return the appropriate main hull mesh */
-	TSoftObjectPtr<class UStaticMesh> GetMainHull(ENovaAssemblyHullType Type) const
+	TSoftObjectPtr<class UStaticMesh> GetMainHull(ENovaHullType Type) const
 	{
-		return Type != ENovaAssemblyHullType::None ? MainHull : nullptr;
+		return Type != ENovaHullType::None ? MainHull : nullptr;
 	}
 
 	/** Return the appropriate outer hull mesh */
-	TSoftObjectPtr<class UStaticMesh> GetOuterHull(ENovaAssemblyHullType Type) const
+	TSoftObjectPtr<class UStaticMesh> GetOuterHull(ENovaHullType Type) const
 	{
-		return Type != ENovaAssemblyHullType::None ? OuterHull : nullptr;
+		return Type != ENovaHullType::None ? OuterHull : nullptr;
 	}
 
 	/** Return the appropriate main wiring mesh */
@@ -182,17 +182,17 @@ class UNovaModuleDescription : public UNovaAssetDescription
 public:
 
 	/** Get the appropriate bulkhead mesh */
-	TSoftObjectPtr<class UStaticMesh> GetBulkhead(ENovaAssemblyBulkheadType Style, bool Forward) const
+	TSoftObjectPtr<class UStaticMesh> GetBulkhead(ENovaBulkheadType Style, bool Forward) const
 	{
 		switch (Style)
 		{
-		case ENovaAssemblyBulkheadType::None:
+		case ENovaBulkheadType::None:
 			return nullptr;
-		case ENovaAssemblyBulkheadType::Standard:
+		case ENovaBulkheadType::Standard:
 			return Forward ? ForwardBulkhead : AftBulkhead;
-		case ENovaAssemblyBulkheadType::Skirt:
+		case ENovaBulkheadType::Skirt:
 			return Forward ? nullptr : SkirtBulkhead;
-		case ENovaAssemblyBulkheadType::Outer:
+		case ENovaBulkheadType::Outer:
 			return Forward ? OuterForwardBulkhead : OuterAftBulkhead;
 		default:
 			return nullptr;
@@ -291,7 +291,7 @@ public:
 	Spacecraft data types
 ----------------------------------------------------*/
 
-/** Compartment module assembly data */
+/** Compartment module data */
 USTRUCT(Atomic)
 struct FNovaCompartmentModule
 {
@@ -299,9 +299,9 @@ struct FNovaCompartmentModule
 
 	FNovaCompartmentModule()
 		: Description(nullptr)
-		, ForwardBulkheadType(ENovaAssemblyBulkheadType::None)
-		, AftBulkheadType(ENovaAssemblyBulkheadType::None)
-		, SkirtPipingType(ENovaAssemblySkirtPipingType::None)
+		, ForwardBulkheadType(ENovaBulkheadType::None)
+		, AftBulkheadType(ENovaBulkheadType::None)
+		, SkirtPipingType(ENovaSkirtPipingType::None)
 		, NeedsWiring(false)
 	{}
 
@@ -309,19 +309,19 @@ struct FNovaCompartmentModule
 	const class UNovaModuleDescription* Description;
 
 	UPROPERTY()
-	ENovaAssemblyBulkheadType ForwardBulkheadType;
+	ENovaBulkheadType ForwardBulkheadType;
 
 	UPROPERTY()
-	ENovaAssemblyBulkheadType AftBulkheadType;
+	ENovaBulkheadType AftBulkheadType;
 
 	UPROPERTY()
-	ENovaAssemblySkirtPipingType SkirtPipingType;
+	ENovaSkirtPipingType SkirtPipingType;
 
 	UPROPERTY()
 	bool NeedsWiring;
 };
 
-/** Compartment assembly data */
+/** Compartment data */
 USTRUCT(Atomic)
 struct FNovaCompartment
 {
@@ -331,7 +331,7 @@ struct FNovaCompartment
 
 	FNovaCompartment(const class UNovaCompartmentDescription* K);
 
-	/** Check if this assembly represents a non-empty compartment */
+	/** Check if this structure represents a non-empty compartment */
 	bool IsValid() const
 	{
 		return Description != nullptr;
@@ -382,7 +382,7 @@ struct FNovaCompartment
 	bool NeedsMainWiring;
 
 	UPROPERTY()
-	ENovaAssemblyHullType HullType;
+	ENovaHullType HullType;
 
 	UPROPERTY()
 	FNovaCompartmentModule Modules[ENovaConstants::MaxModuleCount];
@@ -391,7 +391,7 @@ struct FNovaCompartment
 	const class UNovaEquipmentDescription* Equipments[ENovaConstants::MaxEquipmentCount];
 };
 
-/** Full spacecraft assembly data */
+/** Full spacecraft data */
 USTRUCT(Atomic)
 struct FNovaSpacecraft
 {

@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Nova/Actor/NovaTurntablePawn.h"
 #include "NovaSpacecraft.h"
-#include "NovaSpacecraftAssembly.generated.h"
+#include "NovaSpacecraftPawn.generated.h"
 
 
 /** Current assembly state */
@@ -30,7 +30,7 @@ enum class ENovaAssemblyDisplayFilter : uint8
 
 /** Main assembly actor that allows building boats */
 UCLASS(Config = Game, ClassGroup = (Nova))
-class ANovaSpacecraftAssembly : public ANovaTurntablePawn
+class ANovaSpacecraftPawn : public ANovaTurntablePawn
 {
 	friend class ANovaCaptureActor;
 
@@ -38,7 +38,7 @@ class ANovaSpacecraftAssembly : public ANovaTurntablePawn
 
 public:
 
-	ANovaSpacecraftAssembly();
+	ANovaSpacecraftPawn();
 
 
 	/*----------------------------------------------------
@@ -164,18 +164,18 @@ protected:
 	void UpdateDisplayFilter();
 
 	/** Create a new compartment component */
-	class UNovaCompartmentAssembly* CreateCompartment(
+	class UNovaSpacecraftCompartmentComponent* CreateCompartment(
 		const FNovaCompartment& Compartment);
 
 	/** Run a difference process on a compartment assembly and call Callback on elements needing updating */
 	void ProcessCompartmentIfDifferent(
-		class UNovaCompartmentAssembly* CompartmentAssembly,
+		class UNovaSpacecraftCompartmentComponent* CompartmentComponent,
 		const FNovaCompartment& Compartment,
 		FNovaAssemblyCallback Callback);
 
 	/** Run a list process on a compartment assembly and call Callback on all elements */
 	void ProcessCompartment(
-		class UNovaCompartmentAssembly* CompartmentAssembly,
+		class UNovaSpacecraftCompartmentComponent* CompartmentComponent,
 		const FNovaCompartment& Compartment,
 		FNovaAssemblyCallback Callback);
 
@@ -191,7 +191,7 @@ protected:
 
 	// Camera pitch scene container
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
-	class UNovaSpacecraftMovementComponent*       MovementComponent;
+	class UNovaSpacecraftMovementComponent* MovementComponent;
 
 
 protected:
@@ -203,7 +203,7 @@ protected:
 	// Assembly data
 	TSharedPtr<FNovaSpacecraft>                   Spacecraft;
 	ENovaAssemblyState                            AssemblyState;
-	TArray<class UNovaCompartmentAssembly*>       CompartmentAssemblies;
+	TArray<class UNovaSpacecraftCompartmentComponent*> CompartmentComponents;
 
 	// Server-side spacecraft
 	UPROPERTY(ReplicatedUsing = OnServerSpacecraftReplicated)

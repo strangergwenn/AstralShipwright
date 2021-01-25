@@ -1,8 +1,8 @@
 // Nova project - Gwennaël Arbona
 
-#include "NovaSpacecraftAssembly.h"
+#include "NovaSpacecraftPawn.h"
 #include "NovaSpacecraftMovementComponent.h"
-#include "NovaCompartmentAssembly.h"
+#include "NovaSpacecraftCompartmentComponent.h"
 
 #include "Nova/Actor/NovaMeshInterface.h"
 
@@ -20,7 +20,7 @@
 	Constructor
 ----------------------------------------------------*/
 
-ANovaSpacecraftAssembly::ANovaSpacecraftAssembly()
+ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 	: Super()
 	, AssemblyState(ENovaAssemblyState::Idle)
 	, WaitingAssetLoading(false)
@@ -43,7 +43,7 @@ ANovaSpacecraftAssembly::ANovaSpacecraftAssembly()
 	Loading & saving
 ----------------------------------------------------*/
 
-void ANovaSpacecraftAssembly::SerializeJson(TSharedPtr<FNovaSpacecraft>& SaveData, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
+void ANovaSpacecraftPawn::SerializeJson(TSharedPtr<FNovaSpacecraft>& SaveData, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
 {
 	FNovaSpacecraft::SerializeJson(SaveData, JsonData, Direction);
 }
@@ -53,32 +53,32 @@ void ANovaSpacecraftAssembly::SerializeJson(TSharedPtr<FNovaSpacecraft>& SaveDat
 	Multiplayer
 ----------------------------------------------------*/
 
-bool ANovaSpacecraftAssembly::ServerSetSpacecraft_Validate(const FNovaSpacecraft& NewSpacecraft)
+bool ANovaSpacecraftPawn::ServerSetSpacecraft_Validate(const FNovaSpacecraft& NewSpacecraft)
 {
 	return true;
 }
 
-void ANovaSpacecraftAssembly::ServerSetSpacecraft_Implementation(const FNovaSpacecraft& NewSpacecraft)
+void ANovaSpacecraftPawn::ServerSetSpacecraft_Implementation(const FNovaSpacecraft& NewSpacecraft)
 {
-	NLOG("ANovaSpacecraftAssembly::ServerSetSpacecraft");
+	NLOG("ANovaSpacecraftPawn::ServerSetSpacecraft");
 
 	ServerSpacecraft = NewSpacecraft;
 
 	SetSpacecraft(NewSpacecraft.GetSharedCopy());
 }
 
-void ANovaSpacecraftAssembly::OnServerSpacecraftReplicated()
+void ANovaSpacecraftPawn::OnServerSpacecraftReplicated()
 {
-	NLOG("ANovaSpacecraftAssembly::OnServerSpacecraftReplicated");
+	NLOG("ANovaSpacecraftPawn::OnServerSpacecraftReplicated");
 
 	SetSpacecraft(ServerSpacecraft.GetSharedCopy());
 }
 
-void ANovaSpacecraftAssembly::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void ANovaSpacecraftPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ANovaSpacecraftAssembly, ServerSpacecraft);
+	DOREPLIFETIME(ANovaSpacecraftPawn, ServerSpacecraft);
 }
 
 
@@ -86,7 +86,7 @@ void ANovaSpacecraftAssembly::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 	Gameplay
 ----------------------------------------------------*/
 
-void ANovaSpacecraftAssembly::Tick(float DeltaTime)
+void ANovaSpacecraftPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
@@ -115,10 +115,10 @@ void ANovaSpacecraftAssembly::Tick(float DeltaTime)
 	else
 	{
 		// Update selection
-		for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentAssemblies.Num(); CompartmentIndex++)
+		for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
 		{
 			ProcessCompartment(
-				CompartmentAssemblies[CompartmentIndex],
+				CompartmentComponents[CompartmentIndex],
 				FNovaCompartment(),
 				FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 					{
@@ -134,7 +134,7 @@ void ANovaSpacecraftAssembly::Tick(float DeltaTime)
 	}
 }
 
-TArray<const UNovaCompartmentDescription*> ANovaSpacecraftAssembly::GetCompatibleCompartments(int32 Index) const
+TArray<const UNovaCompartmentDescription*> ANovaSpacecraftPawn::GetCompatibleCompartments(int32 Index) const
 {
 	TArray<const UNovaCompartmentDescription*> CompartmentDescriptions;
 
@@ -146,14 +146,14 @@ TArray<const UNovaCompartmentDescription*> ANovaSpacecraftAssembly::GetCompatibl
 	return CompartmentDescriptions;
 }
 
-TArray<const class UNovaModuleDescription*> ANovaSpacecraftAssembly::GetCompatibleModules(int32 Index, int32 SlotIndex) const
+TArray<const class UNovaModuleDescription*> ANovaSpacecraftPawn::GetCompatibleModules(int32 Index, int32 SlotIndex) const
 {
 	TArray<const UNovaModuleDescription*> ModuleDescriptions;
 	TArray<const UNovaModuleDescription*> AllModuleDescriptions = UNovaAssetCatalog::Get()->GetAssets<UNovaModuleDescription>();
-	const FNovaCompartment& CompartmentAssembly = Spacecraft->Compartments[Index];
+	const FNovaCompartment& Compartment = Spacecraft->Compartments[Index];
 
 	ModuleDescriptions.Add(nullptr);
-	if (CompartmentAssembly.IsValid() && SlotIndex < CompartmentAssembly.Description->ModuleSlots.Num())
+	if (Compartment.IsValid() && SlotIndex < Compartment.Description->ModuleSlots.Num())
 	{
 		for (const UNovaModuleDescription* ModuleDescription : AllModuleDescriptions)
 		{
@@ -164,18 +164,18 @@ TArray<const class UNovaModuleDescription*> ANovaSpacecraftAssembly::GetCompatib
 	return ModuleDescriptions;
 }
 
-TArray<const UNovaEquipmentDescription*> ANovaSpacecraftAssembly::GetCompatibleEquipments(int32 Index, int32 SlotIndex) const
+TArray<const UNovaEquipmentDescription*> ANovaSpacecraftPawn::GetCompatibleEquipments(int32 Index, int32 SlotIndex) const
 {
 	TArray<const UNovaEquipmentDescription*> EquipmentDescriptions;
 	TArray<const UNovaEquipmentDescription*> AllEquipmentDescriptions = UNovaAssetCatalog::Get()->GetAssets<UNovaEquipmentDescription>();
-	const FNovaCompartment& CompartmentAssembly = Spacecraft->Compartments[Index];
+	const FNovaCompartment& Compartment = Spacecraft->Compartments[Index];
 
 	EquipmentDescriptions.Add(nullptr);
-	if (CompartmentAssembly.IsValid() && SlotIndex < CompartmentAssembly.Description->EquipmentSlots.Num())
+	if (Compartment.IsValid() && SlotIndex < Compartment.Description->EquipmentSlots.Num())
 	{
 		for (const UNovaEquipmentDescription* EquipmentDescription : AllEquipmentDescriptions)
 		{
-			const TArray<ENovaEquipmentType>& SupportedTypes = CompartmentAssembly.Description->EquipmentSlots[SlotIndex].SupportedTypes;
+			const TArray<ENovaEquipmentType>& SupportedTypes = Compartment.Description->EquipmentSlots[SlotIndex].SupportedTypes;
 			if (SupportedTypes.Num() == 0 || SupportedTypes.Contains(EquipmentDescription->EquipmentType))
 			{
 				EquipmentDescriptions.AddUnique(EquipmentDescription);
@@ -186,7 +186,7 @@ TArray<const UNovaEquipmentDescription*> ANovaSpacecraftAssembly::GetCompatibleE
 	return EquipmentDescriptions;
 }
 
-void ANovaSpacecraftAssembly::SaveAssembly()
+void ANovaSpacecraftPawn::SaveAssembly()
 {
 	NCHECK(Spacecraft.IsValid());
 
@@ -195,7 +195,7 @@ void ANovaSpacecraftAssembly::SaveAssembly()
 	GetController<ANovaPlayerController>()->GetGameInstance<UNovaGameInstance>()->SaveGame();
 }
 
-void ANovaSpacecraftAssembly::SetSpacecraft(const TSharedPtr<FNovaSpacecraft> NewSpacecraft)
+void ANovaSpacecraftPawn::SetSpacecraft(const TSharedPtr<FNovaSpacecraft> NewSpacecraft)
 {
 	if (AssemblyState == ENovaAssemblyState::Idle)
 	{
@@ -215,7 +215,7 @@ void ANovaSpacecraftAssembly::SetSpacecraft(const TSharedPtr<FNovaSpacecraft> Ne
 		for (const FNovaCompartment& Assembly : NewSpacecraft->Compartments)
 		{
 			NCHECK(Assembly.Description);
-			CompartmentAssemblies.Add(CreateCompartment(Assembly));
+			CompartmentComponents.Add(CreateCompartment(Assembly));
 		}
 
 		// Start assembling, using a copy of the target assembly data
@@ -224,7 +224,7 @@ void ANovaSpacecraftAssembly::SetSpacecraft(const TSharedPtr<FNovaSpacecraft> Ne
 	}
 }
 
-bool ANovaSpacecraftAssembly::InsertCompartment(FNovaCompartment Compartment, int32 Index)
+bool ANovaSpacecraftPawn::InsertCompartment(FNovaCompartment Compartment, int32 Index)
 {
 	NLOG("ANovaAssembly::InsertCompartment %d", Index);
 
@@ -234,7 +234,7 @@ bool ANovaSpacecraftAssembly::InsertCompartment(FNovaCompartment Compartment, in
 		NCHECK(Compartment.Description);
 
 		Spacecraft->Compartments.Insert(Compartment, Index);
-		CompartmentAssemblies.Insert(CreateCompartment(Compartment), Index);
+		CompartmentComponents.Insert(CreateCompartment(Compartment), Index);
 
 		return true;
 	}
@@ -242,7 +242,7 @@ bool ANovaSpacecraftAssembly::InsertCompartment(FNovaCompartment Compartment, in
 	return false;
 }
 
-bool ANovaSpacecraftAssembly::RemoveCompartment(int32 Index)
+bool ANovaSpacecraftPawn::RemoveCompartment(int32 Index)
 {
 	NLOG("ANovaAssembly::RemoveCompartment %d", Index);
 
@@ -258,14 +258,14 @@ bool ANovaSpacecraftAssembly::RemoveCompartment(int32 Index)
 	return false;
 }
 
-FNovaCompartment& ANovaSpacecraftAssembly::GetCompartment(int32 Index)
+FNovaCompartment& ANovaSpacecraftPawn::GetCompartment(int32 Index)
 {
 	NCHECK(Spacecraft.IsValid());
 	NCHECK(Index >= 0 && Index < Spacecraft->Compartments.Num());
 	return Spacecraft->Compartments[Index];
 }
 
-int32 ANovaSpacecraftAssembly::GetCompartmentCount() const
+int32 ANovaSpacecraftPawn::GetCompartmentCount() const
 {
 	int32 Count = 0;
 
@@ -283,12 +283,12 @@ int32 ANovaSpacecraftAssembly::GetCompartmentCount() const
 	return Count;
 }
 
-int32 ANovaSpacecraftAssembly::GetCompartmentIndexByPrimitive(const class UPrimitiveComponent* Component)
+int32 ANovaSpacecraftPawn::GetCompartmentIndexByPrimitive(const class UPrimitiveComponent* Component)
 {
 	int32 Result = 0;
-	for (UNovaCompartmentAssembly* Compartment : CompartmentAssemblies)
+	for (UNovaSpacecraftCompartmentComponent* CompartmentComponent : CompartmentComponents)
 	{
-		if (Component->IsAttachedTo(Compartment))
+		if (Component->IsAttachedTo(CompartmentComponent))
 		{
 			return Result;
 		}
@@ -298,7 +298,7 @@ int32 ANovaSpacecraftAssembly::GetCompartmentIndexByPrimitive(const class UPrimi
 	return INDEX_NONE;
 }
 
-void ANovaSpacecraftAssembly::SetDisplayFilter(ENovaAssemblyDisplayFilter Filter, int32 CompartmentIndex)
+void ANovaSpacecraftPawn::SetDisplayFilter(ENovaAssemblyDisplayFilter Filter, int32 CompartmentIndex)
 {
 	DisplayFilterType = Filter;
 	DisplayFilterIndex = CompartmentIndex;
@@ -315,7 +315,7 @@ void ANovaSpacecraftAssembly::SetDisplayFilter(ENovaAssemblyDisplayFilter Filter
 	Compartment assembly internals
 ----------------------------------------------------*/
 
-void ANovaSpacecraftAssembly::StartAssemblyUpdate()
+void ANovaSpacecraftPawn::StartAssemblyUpdate()
 {
 	NCHECK(AssemblyState == ENovaAssemblyState::Idle);
 
@@ -325,10 +325,10 @@ void ANovaSpacecraftAssembly::StartAssemblyUpdate()
 	Spacecraft->UpdateProceduralElements();
 
 	// De-materialize unwanted compartments
-	for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentAssemblies.Num(); CompartmentIndex++)
+	for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
 	{
 		ProcessCompartmentIfDifferent(
-		CompartmentAssemblies[CompartmentIndex],
+		CompartmentComponents[CompartmentIndex],
 		CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment(),
 		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 			{
@@ -396,7 +396,7 @@ void ANovaSpacecraftAssembly::StartAssemblyUpdate()
 	}
 }
 
-void ANovaSpacecraftAssembly::UpdateAssembly()
+void ANovaSpacecraftPawn::UpdateAssembly()
 {
 	// Process de-materialization and destruction of previous components, wait asset loading
 	if (AssemblyState == ENovaAssemblyState::LoadingDematerializing)
@@ -404,10 +404,10 @@ void ANovaSpacecraftAssembly::UpdateAssembly()
 		bool StillWaiting = false;
 
 		// Check completion
-		for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentAssemblies.Num(); CompartmentIndex++)
+		for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
 		{
 			ProcessCompartmentIfDifferent(
-				CompartmentAssemblies[CompartmentIndex],
+				CompartmentComponents[CompartmentIndex],
 				CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment(),
 				FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 					{
@@ -444,21 +444,21 @@ void ANovaSpacecraftAssembly::UpdateAssembly()
 			FVector BuildOffset = FVector::ZeroVector;
 
 			// Compute the initial build offset
-			for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentAssemblies.Num(); CompartmentIndex++)
+			for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
 			{
 				const FNovaCompartment& Compartment =
 					CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment();
-				BuildOffset += CompartmentAssemblies[CompartmentIndex]->GetCompartmentLength(Compartment);
+				BuildOffset += CompartmentComponents[CompartmentIndex]->GetCompartmentLength(Compartment);
 			}
 			BuildOffset /= 2;
 
 			// Apply individual offsets to compartments
-			for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentAssemblies.Num(); CompartmentIndex++)
+			for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
 			{
-				CompartmentAssemblies[CompartmentIndex]->SetRequestedLocation(BuildOffset);
+				CompartmentComponents[CompartmentIndex]->SetRequestedLocation(BuildOffset);
 				const FNovaCompartment& Compartment =
 					CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment();
-				BuildOffset -= CompartmentAssemblies[CompartmentIndex]->GetCompartmentLength(Compartment);
+				BuildOffset -= CompartmentComponents[CompartmentIndex]->GetCompartmentLength(Compartment);
 			}
 		}
 	}
@@ -467,9 +467,9 @@ void ANovaSpacecraftAssembly::UpdateAssembly()
 	if (AssemblyState == ENovaAssemblyState::Moving)
 	{
 		bool StillWaiting = false;
-		for (UNovaCompartmentAssembly* Compartment : CompartmentAssemblies)
+		for (UNovaSpacecraftCompartmentComponent* CompartmentComponent : CompartmentComponents)
 		{
-			if (!Compartment->IsAtRequestedLocation())
+			if (!CompartmentComponent->IsAtRequestedLocation())
 			{
 				StillWaiting = true;
 				break;
@@ -501,13 +501,13 @@ void ANovaSpacecraftAssembly::UpdateAssembly()
 		TArray<int32> RemovedCompartments;
 		for (int32 CompartmentIndex = 0; CompartmentIndex < Spacecraft->Compartments.Num(); CompartmentIndex++)
 		{
-			UNovaCompartmentAssembly* PreviousCompartment = CompartmentIndex > 0 ? CompartmentAssemblies[CompartmentIndex - 1] : nullptr;
-			const FNovaCompartment* PreviousAssembly = CompartmentIndex > 0 ? &Spacecraft->Compartments[CompartmentIndex - 1] : nullptr;
-			const FNovaCompartment& Assembly = Spacecraft->Compartments[CompartmentIndex];
+			UNovaSpacecraftCompartmentComponent* PreviousCompartmentComponent = CompartmentIndex > 0 ? CompartmentComponents[CompartmentIndex - 1] : nullptr;
+			const FNovaCompartment* PreviousCompartment = CompartmentIndex > 0 ? &Spacecraft->Compartments[CompartmentIndex - 1] : nullptr;
+			const FNovaCompartment& CurrentCompartment = Spacecraft->Compartments[CompartmentIndex];
 
-			if (Assembly.IsValid())
+			if (CurrentCompartment.IsValid())
 			{
-				CompartmentAssemblies[CompartmentIndex]->BuildCompartment(Assembly, ValidIndex);
+				CompartmentComponents[CompartmentIndex]->BuildCompartment(CurrentCompartment, ValidIndex);
 				ValidIndex++;
 			}
 			else
@@ -520,8 +520,8 @@ void ANovaSpacecraftAssembly::UpdateAssembly()
 		for (int32 Index : RemovedCompartments)
 		{
 			Spacecraft->Compartments.RemoveAt(Index);
-			CompartmentAssemblies[Index]->DestroyComponent();
-			CompartmentAssemblies.RemoveAt(Index);
+			CompartmentComponents[Index]->DestroyComponent();
+			CompartmentComponents.RemoveAt(Index);
 		}
 
 		// Complete the process
@@ -532,11 +532,11 @@ void ANovaSpacecraftAssembly::UpdateAssembly()
 	}
 }
 
-void ANovaSpacecraftAssembly::UpdateDisplayFilter()
+void ANovaSpacecraftPawn::UpdateDisplayFilter()
 {
 	for (int32 CompartmentIndex = 0; CompartmentIndex < Spacecraft->Compartments.Num(); CompartmentIndex++)
 	{
-		ProcessCompartment(CompartmentAssemblies[CompartmentIndex],
+		ProcessCompartment(CompartmentComponents[CompartmentIndex],
 			FNovaCompartment(),
 			FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 				{
@@ -592,29 +592,29 @@ void ANovaSpacecraftAssembly::UpdateDisplayFilter()
 	}
 }
 
-UNovaCompartmentAssembly* ANovaSpacecraftAssembly::CreateCompartment(const FNovaCompartment& Assembly)
+UNovaSpacecraftCompartmentComponent* ANovaSpacecraftPawn::CreateCompartment(const FNovaCompartment& Assembly)
 {
-	UNovaCompartmentAssembly* NewCompartment = NewObject<UNovaCompartmentAssembly>(this);
-	NCHECK(NewCompartment);
+	UNovaSpacecraftCompartmentComponent* CompartmentComponent = NewObject<UNovaSpacecraftCompartmentComponent>(this);
+	NCHECK(CompartmentComponent);
 
 	// Setup the compartment
-	NewCompartment->Description = Assembly.Description;
-	NewCompartment->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
-	NewCompartment->RegisterComponent();
-	NewCompartment->SetImmediateMode(ImmediateMode);
+	CompartmentComponent->Description = Assembly.Description;
+	CompartmentComponent->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
+	CompartmentComponent->RegisterComponent();
+	CompartmentComponent->SetImmediateMode(ImmediateMode);
 
-	return NewCompartment;
+	return CompartmentComponent;
 }
 
-void ANovaSpacecraftAssembly::ProcessCompartmentIfDifferent(
-	UNovaCompartmentAssembly* CompartmentAssembly,
+void ANovaSpacecraftPawn::ProcessCompartmentIfDifferent(
+	UNovaSpacecraftCompartmentComponent* CompartmentComponent,
 	const FNovaCompartment& Compartment,
 	FNovaAssemblyCallback Callback)
 {
-	ProcessCompartment(CompartmentAssembly, Compartment,
+	ProcessCompartment(CompartmentComponent, Compartment,
 		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 		{
-			if (Element.Asset != Asset.ToSoftObjectPath() || CompartmentAssembly->Description != Compartment.Description)
+			if (Element.Asset != Asset.ToSoftObjectPath() || CompartmentComponent->Description != Compartment.Description)
 			{
 				Callback.Execute(Element, Asset, AdditionalComponent);
 			}
@@ -622,18 +622,18 @@ void ANovaSpacecraftAssembly::ProcessCompartmentIfDifferent(
 	);
 }
 
-void ANovaSpacecraftAssembly::ProcessCompartment(
-	UNovaCompartmentAssembly* CompartmentAssembly,
+void ANovaSpacecraftPawn::ProcessCompartment(
+	UNovaSpacecraftCompartmentComponent* CompartmentComponent,
 	const FNovaCompartment& Compartment,
 	FNovaAssemblyCallback Callback)
 {
-	if (CompartmentAssembly->Description)
+	if (CompartmentComponent->Description)
 	{
-		CompartmentAssembly->ProcessCompartment(Compartment, Callback);
+		CompartmentComponent->ProcessCompartment(Compartment, Callback);
 	}
 }
 
-void ANovaSpacecraftAssembly::UpdateBounds()
+void ANovaSpacecraftPawn::UpdateBounds()
 {
 	CurrentOrigin = FVector::ZeroVector;
 	CurrentExtent = FVector::ZeroVector;
@@ -641,13 +641,13 @@ void ANovaSpacecraftAssembly::UpdateBounds()
 	// While focusing a compartment, only account for it
 	if (DisplayFilterIndex != INDEX_NONE)
 	{
-		NCHECK(DisplayFilterIndex >= 0 && DisplayFilterIndex < CompartmentAssemblies.Num());
+		NCHECK(DisplayFilterIndex >= 0 && DisplayFilterIndex < CompartmentComponents.Num());
 
 		FBox Bounds(ForceInit);
 		ForEachComponent<UPrimitiveComponent>(false, [&](const UPrimitiveComponent* Prim)
 			{
 				if (Prim->IsRegistered() && Prim->IsVisible()
-					&& Prim->IsAttachedTo(CompartmentAssemblies[DisplayFilterIndex])
+					&& Prim->IsAttachedTo(CompartmentComponents[DisplayFilterIndex])
 					&& Prim->Implements<UNovaMeshInterface>())
 				{
 					Bounds += Prim->Bounds.GetBox();

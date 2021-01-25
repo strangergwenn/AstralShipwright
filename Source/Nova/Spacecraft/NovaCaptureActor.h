@@ -32,7 +32,7 @@ protected:
 #if WITH_EDITOR
 
 	/** Spawn the assembly */
-	void CreateAssembly();
+	void CreateSpacecraftPawn();
 
 	/** Get a catalog instance if not already existing */
 	void CreateCatalog();
@@ -92,9 +92,9 @@ protected:
 		Data
 	----------------------------------------------------*/
 
-	// Assembly
+	// Spacecraft pawn
 	UPROPERTY()
-	class ANovaSpacecraftAssembly*                          Assembly;
+	class ANovaSpacecraftPawn*                    SpacecraftPawn;
 
 	// Catalog
 	UPROPERTY(Transient)
@@ -105,6 +105,6 @@ protected:
 	class UTextureRenderTarget2D*                 RenderTarget;
 
 	// General data
-	TSharedPtr<struct FNovaSpacecraft>          CurrentAssembly;
+	TSharedPtr<struct FNovaSpacecraft>            Spacecraft;
 
 };

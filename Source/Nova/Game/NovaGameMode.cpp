@@ -3,7 +3,7 @@
 #include "NovaGameMode.h"
 #include "NovaGameInstance.h"
 
-#include "Nova/Spacecraft/NovaSpacecraftAssembly.h"
+#include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Game/NovaWorldSettings.h"
 #include "Nova/Player/NovaPlayerController.h"
 
@@ -24,7 +24,7 @@ ANovaGameMode::ANovaGameMode()
 	: Super()
 {
 	PlayerControllerClass = ANovaPlayerController::StaticClass();
-	DefaultPawnClass = ANovaSpacecraftAssembly::StaticClass();
+	DefaultPawnClass = ANovaSpacecraftPawn::StaticClass();
 
 	bUseSeamlessTravel = true;
 }

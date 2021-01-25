@@ -39,10 +39,10 @@ public:
 	/** Tilt (pitch) input */
 	void TiltInput(float Val);
 
-	/** Zoom into the target actor */
+	/** Zoom into the actor */
 	void ZoomIn();
 
-	/** Zoom out of the target actor */
+	/** Zoom out of the actor */
 	void ZoomOut();
 
 
@@ -140,10 +140,6 @@ protected:
 	/*----------------------------------------------------
 		Data
 	----------------------------------------------------*/
-
-	// Target view actor
-	UPROPERTY()
-	AActor*                                       TargetActor;
 
 	// Input data
 	float                                         CurrentPanTarget;

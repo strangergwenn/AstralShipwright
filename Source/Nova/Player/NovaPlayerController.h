@@ -4,7 +4,7 @@
 
 #include "NovaPostProcessComponent.h"
 #include "Nova/Game/NovaGameInstance.h"
-#include "Nova/Spacecraft/NovaSpacecraftAssembly.h"
+#include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/UI/NovaUITypes.h"
 
 #include "CoreMinimal.h"
@@ -146,9 +146,9 @@ public:
 
 	/** Get a turntable actor **/
 	UFUNCTION(Category = Nova, BlueprintCallable)
-	class ANovaSpacecraftAssembly* GetSpacecraftAssembly() const
+	class ANovaSpacecraftPawn* GetSpacecraftPawn() const
 	{
-		return GetPawn<ANovaSpacecraftAssembly>();
+		return GetPawn<ANovaSpacecraftPawn>();
 	}
 
 

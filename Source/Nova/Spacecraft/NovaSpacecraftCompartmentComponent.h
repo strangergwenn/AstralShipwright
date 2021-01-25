@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "NovaSpacecraft.h"
-#include "NovaCompartmentAssembly.generated.h"
+#include "NovaSpacecraftCompartmentComponent.generated.h"
 
 
 /** Module construction element */
@@ -26,13 +26,13 @@ struct FNovaEquipmentAssembly
 
 /** Spacecraft compartment component */
 UCLASS(ClassGroup = (Nova))
-class UNovaCompartmentAssembly : public USceneComponent
+class UNovaSpacecraftCompartmentComponent : public USceneComponent
 {
 	GENERATED_BODY()
 
 public:
 
-	UNovaCompartmentAssembly();
+	UNovaSpacecraftCompartmentComponent();
 
 	/*----------------------------------------------------
 		Compartment API
@@ -149,7 +149,7 @@ public:
 
 	// Shared data
 	UPROPERTY()
-	const UNovaCompartmentDescription*            Description;
+	const UNovaCompartmentDescription*           Description;
 
 protected:
 
