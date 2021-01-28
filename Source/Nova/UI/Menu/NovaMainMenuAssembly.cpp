@@ -616,7 +616,7 @@ void SNovaMainMenuAssembly::Tick(const FGeometry& AllottedGeometry, const double
 
 ANovaSpacecraftPawn* SNovaMainMenuAssembly::GetSpacecraftPawn() const
 {
-	return MenuManager->GetPC()->GetSpacecraftPawn();
+	return MenuManager->GetPC() ? MenuManager->GetPC()->GetSpacecraftPawn() : nullptr;
 }
 
 int32 SNovaMainMenuAssembly::GetNewBuildIndex(bool Forward) const

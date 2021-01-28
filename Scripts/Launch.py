@@ -62,9 +62,9 @@ subprocess.Popen([
 	projectFile,
 	'-skipcompile',
 	'-game',
-	'-ResX=1920',
-	'-ResY=1040',
-	'-WinX=1920',
+	'-ResX=2560',
+	'-ResY=1440',
+	'-WinX=2560',
 	'-WinY=30',
 	hostArg
 ])

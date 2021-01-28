@@ -305,11 +305,13 @@ bool SNovaMainMenu::AreGameMenusVisible() const
 
 FText SNovaMainMenu::GetCloseText() const
 {
-	if (MenuManager->GetPC() && MenuManager->GetPC()->IsOnMainMenu())
+	ANovaPlayerController* PC = MenuManager->GetPC();
+
+	if (PC && PC->IsOnMainMenu())
 	{
 		return LOCTEXT("Quit", "Quit game");
 	}
-	else if (MenuManager->GetPC()->IsMenuOnly())
+	else if (PC && PC->IsMenuOnly())
 	{
 		return LOCTEXT("Close", "Quit to menu");
 	}
@@ -321,11 +323,13 @@ FText SNovaMainMenu::GetCloseText() const
 
 FText SNovaMainMenu::GetCloseHelpText() const
 {
-	if (MenuManager->GetPC() && MenuManager->GetPC()->IsOnMainMenu())
+	ANovaPlayerController* PC = MenuManager->GetPC();
+
+	if (PC && PC->IsOnMainMenu())
 	{
 		return LOCTEXT("QuitHelp", "Exit the game");
 	}
-	else if (MenuManager->GetPC()->IsMenuOnly())
+	else if (PC && PC->IsMenuOnly())
 	{
 		return LOCTEXT("CloseHelp", "Save and log out of the current game");
 	}
