@@ -34,6 +34,7 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 	MovementComponent->SetUpdatedComponent(RootComponent);
 
 	// Settings
+	SetReplicates(true);
 	bAlwaysRelevant = true;
 	PrimaryActorTick.bCanEverTick = true;
 }
@@ -133,6 +134,25 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 		}
 	}
 }
+
+void ANovaSpacecraftPawn::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	// Set the correct network role
+	if (GetNetMode() != NM_Standalone && Cast<APlayerController>(Controller))
+	{
+		if (Cast<APlayerController>(Controller)->GetRemoteRole() == ROLE_AutonomousProxy)
+		{
+			SetAutonomousProxy(true);
+		}
+		else
+		{
+			SetAutonomousProxy(false);
+		}
+	}
+}
+
 
 TArray<const UNovaCompartmentDescription*> ANovaSpacecraftPawn::GetCompatibleCompartments(int32 Index) const
 {

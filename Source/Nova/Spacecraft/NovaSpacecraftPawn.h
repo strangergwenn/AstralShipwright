@@ -65,6 +65,8 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	virtual void PossessedBy(AController* NewController) override;
+
 	virtual TPair<FVector, FVector> GetTurntableBounds() const override
 	{
 		return TPair<FVector, FVector>(CurrentOrigin, CurrentExtent);

@@ -6,6 +6,8 @@
 
 #include "Components/PrimitiveComponent.h"
 #include "Engine/World.h"
+#include "Net/UnrealNetwork.h"
+
 
 
 #define LOCTEXT_NAMESPACE "UNovaSpacecraftMovementComponent"
@@ -20,18 +22,15 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 
 	, MovementState(ENovaMovementState::Docked)
 	, MovementStateDirty(false)
+
+	, ShouldStoreCommand(false)
+
+	, CurrentLinearVelocity(FVector::ZeroVector)
+	, CurrentAngularVelocity(FVector::ZeroVector)
+
 	, LinearAttitudeIdle(false)
 	, AngularAttitudeIdle(false)
 	, LinearAttitudeDistance(0)
-
-	, CurrentDesiredLocation(FVector::ZeroVector)
-	, CurrentDesiredVelocity(FVector::ZeroVector)
-	, CurrentDesiredDirection(FVector::ZeroVector)
-	, CurrentDesiredRoll(0)
-
-	, CurrentVelocity(FVector::ZeroVector)
-	, CurrentAngularVelocity(FVector::ZeroVector)
-
 	, PreviousVelocity(FVector::ZeroVector)
 	, PreviousAngularVelocity(FVector::ZeroVector)
 	, MeasuredAcceleration(FVector::ZeroVector)
@@ -69,53 +68,61 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 #if 0
 	int32 TestStepDuration = 5;
 	int32 TestDuration = 4 * TestStepDuration;
-	CurrentDesiredVelocity = FVector::ZeroVector;
+	CurrentDesiredAttitude.Velocity = FVector::ZeroVector;
 	if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < TestStepDuration)
 	{
-		CurrentDesiredLocation = FVector(0, 0, 1000);
+		CurrentDesiredAttitude.Location = FVector(0, 0, 1000);
 	}
 	else if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < 2 * TestStepDuration)
 	{
-		CurrentDesiredLocation = FVector(0, 1000, 0);
-		CurrentDesiredVelocity = FVector(0, 1, 0);
+		CurrentDesiredAttitude.Location = FVector(0, 1000, 0);
+		CurrentDesiredAttitude.Velocity = FVector(0, 1, 0);
 	}
 	else if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < 3 * TestStepDuration)
 	{
-		CurrentDesiredLocation = FVector(0, -1000, 0);
+		CurrentDesiredAttitude.Location = FVector(0, -1000, 0);
 	}
 	else
 	{
-		CurrentDesiredLocation = FVector(1000, 1000, 0);
+		CurrentDesiredAttitude.Location = FVector(1000, 1000, 0);
 	}
 #elif 0
 	int32 TestStepDuration = 10;
 	int32 TestDuration = 4 * TestStepDuration;
 	if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < TestStepDuration)
 	{
-		CurrentDesiredDirection = FVector(0, 0, 1).GetSafeNormal();
+		DesiredAttitude.Direction = FVector(0, 0, 1).GetSafeNormal();
 	}
 	else if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < 2 * TestStepDuration)
 	{
-		CurrentDesiredDirection = FVector(0, 1, 0).GetSafeNormal();
+		DesiredAttitude.Direction = FVector(0, 1, 0).GetSafeNormal();
 	}
 	else if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < 3 * TestStepDuration)
 	{
-		CurrentDesiredDirection = FVector(0, -1, 0).GetSafeNormal();
+		DesiredAttitude.Direction = FVector(0, -1, 0).GetSafeNormal();
 	}
 	else
 	{
-		CurrentDesiredDirection = FVector(1, 1, 1).GetSafeNormal();
+		DesiredAttitude.Direction = FVector(1, 1, 1).GetSafeNormal();
 	}
 #endif
 
 	// Run high-level processing
-	ProcessState();
+	if (Cast<APawn>(GetOwner())->IsLocallyControlled())
+	{
+		ProcessState();
+		UpdateServerAttitude();
+	}
 
 	// Run movement implementation
 	ProcessMeasurements(DeltaTime);
 	ProcessLinearAttitude(DeltaTime);
 	ProcessAngularAttitude(DeltaTime);
 	ProcessMovement(DeltaTime);
+	ProcessNetworkCorrection(DeltaTime);
+
+	// Enqueue server commands with the current state
+	UpdateUnacknowledgedCommands();
 }
 
 void UNovaSpacecraftMovementComponent::Dock(FNovaMovementCallback Callback, const FVector& Location)
@@ -127,8 +134,8 @@ void UNovaSpacecraftMovementComponent::Dock(FNovaMovementCallback Callback, cons
 		StateCallback = Callback;
 		MovementState = ENovaMovementState::Docking;
 		MovementStateDirty = true;
-		CurrentDesiredLocation = Location;
-		CurrentDesiredDirection = FVector(1, 0, 0);
+		DesiredAttitude.Location = Location;
+		DesiredAttitude.Direction = FVector(1, 0, 0);
 	}
 }
 
@@ -151,6 +158,7 @@ void UNovaSpacecraftMovementComponent::Undock(FNovaMovementCallback Callback)
 
 void UNovaSpacecraftMovementComponent::ProcessState()
 {
+	// process movement
 	switch (MovementState)
 	{
 	case ENovaMovementState::Docking:
@@ -164,7 +172,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 	case ENovaMovementState::Undocking:
 		if (MovementStateDirty)
 		{
-			CurrentDesiredLocation = GetLocation(FVector(100, 0, 0));
+			DesiredAttitude.Location = GetLocation(FVector(100, 0, 0));
 		}
 		else if (LinearAttitudeIdle && AngularAttitudeIdle)
 		{
@@ -173,7 +181,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 		}
 		else if (LinearAttitudeDistance < 50)
 		{
-			CurrentDesiredDirection = FVector(0, 1, 0);
+			DesiredAttitude.Direction = FVector(0, 1, 0);
 		}
 		break;
 
@@ -186,27 +194,122 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 
 /*----------------------------------------------------
+	Networking
+----------------------------------------------------*/
+
+void UNovaSpacecraftMovementComponent::UpdateServerAttitude()
+{
+	if (DesiredAttitude != PreviousDesiredAttitude)
+	{
+		NLOG("UNovaSpacecraftMovementComponent::UpdateServerAttitude ('%s')", *GetRoleString(this));
+
+		if (GetLocalRole() == ROLE_AutonomousProxy)
+		{
+			DesiredAttitude.Time = GetWorld()->GetTimeSeconds();
+			ServerSetDesiredAttitude(DesiredAttitude);
+			ShouldStoreCommand = true;
+		}
+		else if (GetLocalRole() == ROLE_Authority)
+		{
+			ServerDesiredAttitude = DesiredAttitude;
+		}
+
+		PreviousDesiredAttitude = DesiredAttitude;
+	}
+}
+
+void UNovaSpacecraftMovementComponent::UpdateUnacknowledgedCommands()
+{
+	if (ShouldStoreCommand)
+	{
+		UnacknowledgedAttitudeCommands.Add(FNovaUnacknowledgedAttitudeCommand(
+			DesiredAttitude,
+			UpdatedComponent->GetComponentTransform(),
+			CurrentLinearVelocity,
+			CurrentAngularVelocity,
+			GetWorld()->GetTimeSeconds()));
+	}
+}
+
+void UNovaSpacecraftMovementComponent::ServerSetDesiredAttitude_Implementation(const FNovaAttitudeCommand& Attitude)
+{
+	NLOG("UNovaSpacecraftMovementComponent::ServerSetDesiredAttitude");
+
+	NCHECK(GetLocalRole() == ROLE_Authority);
+
+	ServerDesiredAttitude = Attitude;
+
+	// When receiving an attitude command from an autonomous client, apply it directly
+	if (GetRemoteRole() == ROLE_AutonomousProxy)
+	{
+		DesiredAttitude = ServerDesiredAttitude;
+	}
+}
+
+void UNovaSpacecraftMovementComponent::OnServerDesiredAttitudeReplicated()
+{
+	NLOG("UNovaSpacecraftMovementComponent::OnServerDesiredAttitudeReplicated : L[%.1f, %.1f, %.1f] D[%.1f, %.1f, %.1f] ('%s')",
+		*GetRoleString(this),
+		ServerDesiredAttitude.Location.X, ServerDesiredAttitude.Location.Y, ServerDesiredAttitude.Location.Z, 
+		ServerDesiredAttitude.Direction.X, ServerDesiredAttitude.Direction.Y, ServerDesiredAttitude.Direction.Z);
+
+	// When receiving a server update as an autonomous client, rollback to compute differences
+	if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		const FNovaUnacknowledgedAttitudeCommand* LastValidCommand = nullptr;
+		TArray<FNovaUnacknowledgedAttitudeCommand> ValidCommands;
+
+		for (const FNovaUnacknowledgedAttitudeCommand& Command : UnacknowledgedAttitudeCommands)
+		{
+			if (Command.Time >= ServerDesiredAttitude.Time)
+			{
+				ValidCommands.Add(Command);
+			}
+			else
+			{
+				LastValidCommand = &Command;
+			}
+		}
+
+		if (LastValidCommand)
+		{
+			// TODO : check for major differences against ServerDesiredAttitude
+		}
+
+		DesiredAttitude = ServerDesiredAttitude;
+		UnacknowledgedAttitudeCommands = ValidCommands;
+	}
+
+	// When third-party, just apply the command
+	else
+	{
+		DesiredAttitude = ServerDesiredAttitude;
+	}
+}
+
+
+/*----------------------------------------------------
 	Internal movement implementation
 ----------------------------------------------------*/
 
 void UNovaSpacecraftMovementComponent::ProcessMeasurements(float DeltaTime)
 {
-	MeasuredAcceleration = ((CurrentVelocity - PreviousVelocity) / DeltaTime);
+	MeasuredAcceleration = ((CurrentLinearVelocity - PreviousVelocity) / DeltaTime);
 	MeasuredAngularAcceleration = (CurrentAngularVelocity - PreviousAngularVelocity) * DeltaTime;
-	PreviousVelocity = CurrentVelocity;
+	PreviousVelocity = CurrentLinearVelocity;
 	PreviousAngularVelocity = CurrentAngularVelocity;
 }
 
 void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 {
 	// Get the position data
-	const FVector DeltaPosition = (CurrentDesiredLocation - UpdatedComponent->GetComponentLocation()) / 100.0f;
+	const FVector DeltaPosition = (DesiredAttitude.Location - UpdatedComponent->GetComponentLocation()) / 100.0f;
 	const FVector DeltaPositionDirection = DeltaPosition.GetSafeNormal();
 	LinearAttitudeDistance = FMath::Max(0.0f, DeltaPosition.Size() - LinearDeadDistance);
 	LinearAttitudeIdle = LinearAttitudeDistance == 0;
 
 	// Get the velocity data
-	FVector DeltaVelocity = CurrentDesiredVelocity - CurrentVelocity;
+	FVector DeltaVelocity = DesiredAttitude.Velocity - CurrentLinearVelocity;
 	FVector DeltaVelocityAxis = DeltaVelocity;
 	DeltaVelocityAxis.Normalize();
 
@@ -222,19 +325,19 @@ void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 	float DistanceToStop = (DeltaVelocity.Size() / 2) * (TimeToFinalVelocity + DeltaTime);
 	if (DistanceToStop > LinearAttitudeDistance)
 	{
-		RelativeResultSpeed = CurrentDesiredVelocity;
+		RelativeResultSpeed = DesiredAttitude.Velocity;
 	}
 	else
 	{
 		float MaxPreciseSpeed = FMath::Min((LinearAttitudeDistance - DistanceToStop) / DeltaTime, MaxLinearVelocity);
 		if (DistanceToStop > LinearAttitudeDistance)
 		{
-			MaxPreciseSpeed = FMath::Min(MaxPreciseSpeed, CurrentVelocity.Size());
+			MaxPreciseSpeed = FMath::Min(MaxPreciseSpeed, CurrentLinearVelocity.Size());
 		}
 
 		RelativeResultSpeed = DeltaPositionDirection;
 		RelativeResultSpeed *= MaxPreciseSpeed;
-		RelativeResultSpeed += CurrentDesiredVelocity;
+		RelativeResultSpeed += DesiredAttitude.Velocity;
 	}
 
 	// Update the linear velocity based on acceleration
@@ -242,16 +345,16 @@ void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 	{
 		Value = FMath::Clamp(Target, Value - MaxDelta, Value + MaxDelta);
 	};
-	UpdateVelocity(CurrentVelocity.X, RelativeResultSpeed.X, LinearAcceleration * DeltaTime);
-	UpdateVelocity(CurrentVelocity.Y, RelativeResultSpeed.Y, LinearAcceleration * DeltaTime);
-	UpdateVelocity(CurrentVelocity.Z, RelativeResultSpeed.Z, LinearAcceleration * DeltaTime);
+	UpdateVelocity(CurrentLinearVelocity.X, RelativeResultSpeed.X, LinearAcceleration * DeltaTime);
+	UpdateVelocity(CurrentLinearVelocity.Y, RelativeResultSpeed.Y, LinearAcceleration * DeltaTime);
+	UpdateVelocity(CurrentLinearVelocity.Z, RelativeResultSpeed.Z, LinearAcceleration * DeltaTime);
 }
 
 void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 {
 	FVector NewAngularVelocity = FVector::ZeroVector;
 	const FVector ActorAxis = GetOwner()->GetActorForwardVector();
-	const float DotProduct = FVector::DotProduct(ActorAxis, CurrentDesiredDirection);
+	const float DotProduct = FVector::DotProduct(ActorAxis, DesiredAttitude.Direction);
 
 	if (DotProduct < AngularColinearityThreshold)
 	{
@@ -259,28 +362,28 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 
 		// Determine a quaternion that represents the desired difference in orientation
 		FQuat TargetRotation = DotProduct > -AngularColinearityThreshold ?
-			FQuat::FindBetweenNormals(ActorAxis, CurrentDesiredDirection) :
+			FQuat::FindBetweenNormals(ActorAxis, DesiredAttitude.Direction) :
 			FRotator(0, 180, 0).Quaternion();
 
 		// While on the horizontal plane, follow desired roll too
-		if (FMath::IsNearlyZero(CurrentDesiredDirection.Z))
+		if (FMath::IsNearlyZero(DesiredAttitude.Direction.Z))
 		{
 			// Roll angle of the final resting rotation around the desired direction
 			auto GetRollAngle = [=](const FQuat& Rotation)
 			{
 				FQuat Swing, Twist;
 				const FQuat ResultingOrientation = Rotation.GetNormalized() * UpdatedComponent->GetComponentQuat();
-				ResultingOrientation.ToSwingTwist(CurrentDesiredDirection, Swing, Twist);
+				ResultingOrientation.ToSwingTwist(DesiredAttitude.Direction, Swing, Twist);
 				return Twist.GetAngle();
 			};
 
 			// Extract the roll angle, build a correction, test it and apply the one that works
-			const float DesiredRoll = FMath::DegreesToRadians(CurrentDesiredRoll);
+			const float DesiredRoll = FMath::DegreesToRadians(DesiredAttitude.Roll);
 			const float ActorRollRadians = GetRollAngle(TargetRotation);
-			FQuat FixedTargetRotation = FQuat(CurrentDesiredDirection, DesiredRoll + ActorRollRadians) * TargetRotation;
+			FQuat FixedTargetRotation = FQuat(DesiredAttitude.Direction, DesiredRoll + ActorRollRadians) * TargetRotation;
 			if (GetRollAngle(FixedTargetRotation) > ActorRollRadians)
 			{
-				FixedTargetRotation = FQuat(CurrentDesiredDirection, DesiredRoll - ActorRollRadians) * TargetRotation;
+				FixedTargetRotation = FQuat(DesiredAttitude.Direction, DesiredRoll - ActorRollRadians) * TargetRotation;
 			}
 			TargetRotation = FixedTargetRotation;
 		}
@@ -315,7 +418,7 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 
 		/*NLOG("ActAx = [%.2f %.2f %.2f] -> TrgAx = [%.2f %.2f %.2f] = RotDir = [%.2f %.2f %.2f] / Angle = %.1f, Dot %.4f / NewVel = [%.2f %.2f %.2f]",
 			ActorAxis.X, ActorAxis.Y, ActorAxis.Z,
-			CurrentDesiredDirection.X, CurrentDesiredDirection.Y, CurrentDesiredDirection.Z,
+			CurrentDesiredAttitude.Direction.X, CurrentDesiredAttitude.Direction.Y, CurrentDesiredAttitude.Direction.Z,
 			RotationDirection.X, RotationDirection.Y, RotationDirection.Z,
 			RemainingAngle, DotProduct,
 			NewAngularVelocity.X, NewAngularVelocity.Y, NewAngularVelocity.Z);*/
@@ -340,7 +443,7 @@ void UNovaSpacecraftMovementComponent::ProcessMovement(float DeltaTime)
 	if (GetOwner()->GetAttachParentActor() == nullptr)
 	{
 		// Apply limits
-		CurrentVelocity = CurrentVelocity.GetClampedToMaxSize(MaxLinearVelocity);
+		CurrentLinearVelocity = CurrentLinearVelocity.GetClampedToMaxSize(MaxLinearVelocity);
 		CurrentAngularVelocity = CurrentAngularVelocity.GetClampedToMaxSize(MaxAngularVelocity);
 
 		// Update rotation
@@ -350,29 +453,41 @@ void UNovaSpacecraftMovementComponent::ProcessMovement(float DeltaTime)
 
 		// Move safely and ensure de-penetration if required
 		FHitResult Hit;
-		FVector ActorTranslation = CurrentVelocity * 100 * DeltaTime;
+		FVector ActorTranslation = CurrentLinearVelocity * 100 * DeltaTime;
 		SafeMoveUpdatedComponent(ActorTranslation, ActorRotation, true, Hit);
 
 		// Process invalid location
 		if (Hit.bStartPenetrating)
 		{
-			CurrentVelocity = -CurrentVelocity;
+			CurrentLinearVelocity = -CurrentLinearVelocity;
 		}
 
 		// Process impacts
 		if (Hit.IsValidBlockingHit())
 		{
-			OnHit(Hit, CurrentVelocity);
+			OnHit(Hit, CurrentLinearVelocity);
 
-			CurrentVelocity = -RestitutionCoefficient * CurrentVelocity;
-			ActorTranslation = CurrentVelocity * 100 * DeltaTime;
+			CurrentLinearVelocity = -RestitutionCoefficient * CurrentLinearVelocity;
+			ActorTranslation = CurrentLinearVelocity * 100 * DeltaTime;
 			SlideAlongSurface(ActorTranslation, 1 - Hit.Time, Hit.Normal, Hit);
 		}
 	}
 }
 
+void UNovaSpacecraftMovementComponent::ProcessNetworkCorrection(float DeltaTime)
+{
+	// TODO : apply correction if needed
+}
+
 void UNovaSpacecraftMovementComponent::OnHit(const FHitResult& Hit, const FVector& HitVelocity)
 {
+}
+
+void UNovaSpacecraftMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UNovaSpacecraftMovementComponent, ServerDesiredAttitude);
 }
 
 
