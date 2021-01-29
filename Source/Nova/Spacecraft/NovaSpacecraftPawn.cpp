@@ -34,7 +34,8 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 	MovementComponent->SetUpdatedComponent(RootComponent);
 
 	// Settings
-	SetReplicates(true);
+	bReplicates = true;
+	SetReplicatingMovement(false);
 	bAlwaysRelevant = true;
 	PrimaryActorTick.bCanEverTick = true;
 }

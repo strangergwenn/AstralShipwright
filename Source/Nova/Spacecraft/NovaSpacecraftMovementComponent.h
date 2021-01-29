@@ -8,7 +8,7 @@
 #include "NovaSpacecraftMovementComponent.generated.h"
 
 
-DECLARE_DELEGATE(FNovaMovementCallback);
+DECLARE_DELEGATE(FNovaIdleCallback);
 
 
 /** Movement state */
@@ -19,6 +19,34 @@ enum class ENovaMovementState : uint8
 	Undocking,
 	Docking,
 	Idle
+};
+
+/** High level movement command sent by a player */
+USTRUCT(Atomic)
+struct FNovaMovementCommand
+{
+	GENERATED_BODY()
+
+	FNovaMovementCommand()
+		: State(ENovaMovementState::Idle)
+		, Target(nullptr)
+		, Dirty(false)
+	{}
+
+	FNovaMovementCommand(ENovaMovementState S, const class AActor* A = nullptr)
+		: State(S)
+		, Target(A)
+		, Dirty(true)
+	{}
+
+	UPROPERTY()
+	ENovaMovementState State;
+
+	UPROPERTY()
+	const class AActor* Target;
+
+	UPROPERTY()
+	bool Dirty;
 };
 
 /** Replicated attitude command */
@@ -32,21 +60,7 @@ struct FNovaAttitudeCommand
 		, Velocity(FVector::ZeroVector)
 		, Direction(FVector::ZeroVector)
 		, Roll(0)
-		, Time(0)
 	{}
-
-	bool operator==(const FNovaAttitudeCommand& Other) const
-	{
-		return Location == Other.Location
-			&& Velocity == Other.Velocity
-			&& Direction == Other.Direction
-			&& Roll == Other.Roll;
-	}
-
-	bool operator!=(const FNovaAttitudeCommand& Other) const
-	{
-		return !operator==(Other);
-	}
 
 	UPROPERTY()
 	FVector_NetQuantize10 Location;
@@ -59,34 +73,6 @@ struct FNovaAttitudeCommand
 
 	UPROPERTY()
 	float Roll;
-
-	UPROPERTY()
-	float Time;
-};
-
-/** Data structure for the current state after a command has been sent to the server */
-struct FNovaUnacknowledgedAttitudeCommand
-{
-	FNovaUnacknowledgedAttitudeCommand()
-		: Transform(FTransform::Identity)
-		, LinearVelocity(FVector::ZeroVector)
-		, AngularVelocity(FVector::ZeroVector)
-		, Time(0)
-	{}
-
-	FNovaUnacknowledgedAttitudeCommand(const FNovaAttitudeCommand& Cm, const FTransform& Tr, const FVector& Lv, const FVector& Av, float Time)
-		: Command(Cm)
-		, Transform(Tr)
-		, LinearVelocity(Lv)
-		, AngularVelocity(Av)
-		, Time(Time)
-	{}
-
-	FNovaAttitudeCommand Command;
-	FTransform Transform;
-	FVector LinearVelocity;
-	FVector AngularVelocity;
-	float Time;
 };
 
 
@@ -104,20 +90,22 @@ public:
 		Movement API
 	----------------------------------------------------*/
 
+	virtual void BeginPlay() override;
+
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	/** Get the current state of the movement system */
 	UFUNCTION(BlueprintCallable)
 	ENovaMovementState GetState() const
 	{
-		return MovementState;
+		return MovementCommand.State;
 	}
 
 	/** Dock at a particular location */
-	void Dock(FNovaMovementCallback Callback, const FVector& Location);
+	void Dock(const class AActor* Target, FNovaIdleCallback Callback = FNovaIdleCallback());
 
 	/** Undock from the current dock */
-	void Undock(FNovaMovementCallback Callback);
+	void Undock(FNovaIdleCallback Callback = FNovaIdleCallback());
 
 
 	/*----------------------------------------------------
@@ -136,17 +124,11 @@ protected:
 
 protected:
 
-	/** Update the attitude control on server */
-	void UpdateServerAttitude();
+	/** Signal the flight controller to use this command */
+	void RequestMovement(const FNovaMovementCommand& Command);
 
-	/** Store the latest command and transform if a new local command was issued */
-	void UpdateUnacknowledgedCommands();
-
-	UFUNCTION(Server, Unreliable)
-	void ServerSetDesiredAttitude(const FNovaAttitudeCommand& Attitude);
-
-	UFUNCTION()
-	void OnServerDesiredAttitudeReplicated();
+	UFUNCTION(Server, Reliable)
+	void ServerRequestMovement(const FNovaMovementCommand& Command);
 
 
 	/*----------------------------------------------------
@@ -166,9 +148,6 @@ protected:
 
 	/** Process overall movement */
 	void ProcessMovement(float DeltaTime);
-
-	/** Replicate the desired attitude */
-	void ProcessNetworkCorrection(float DeltaTime);
 
 	/** Apply hit effects */
 	virtual void OnHit(const FHitResult& Hit, const FVector& HitVelocity);
@@ -230,19 +209,13 @@ public:
 protected:
 
 	// High-level state
-	ENovaMovementState                            MovementState;
-	FNovaMovementCallback                         StateCallback;
-	bool                                          MovementStateDirty;
+	UPROPERTY(Replicated)
+	FNovaMovementCommand                          MovementCommand;
+	FNovaIdleCallback                             IdleCallback;
 
-	// Authoritative attitude input
-	UPROPERTY(ReplicatedUsing=OnServerDesiredAttitudeReplicated)
-	FNovaAttitudeCommand                          ServerDesiredAttitude;
-
-	// Client-side attitude input
+	// Authoritative attitude input, produced by the server in real-time
+	UPROPERTY(Replicated)
 	FNovaAttitudeCommand                          DesiredAttitude;
-	FNovaAttitudeCommand                          PreviousDesiredAttitude;
-	bool                                          ShouldStoreCommand;
-	TArray<FNovaUnacknowledgedAttitudeCommand>    UnacknowledgedAttitudeCommands;
 
 	// Movement state
 	FVector                                       CurrentLinearVelocity;

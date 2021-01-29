@@ -104,7 +104,7 @@ public:
 	----------------------------------------------------*/
 
 	/** Dock the player to a dock with a cutscene */
-	void Dock(const FVector& Location);
+	void Dock();
 
 	/** Undock the player from the current dock with a cutscene */
 	void Undock();

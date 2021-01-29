@@ -169,7 +169,7 @@ void SNovaMainMenuFlight::OnDock()
 {
 	NCHECK(IsDockEnabled());
 
-	MenuManager->GetPC()->Dock(FVector::ZeroVector);
+	MenuManager->GetPC()->Dock();
 }
 
 

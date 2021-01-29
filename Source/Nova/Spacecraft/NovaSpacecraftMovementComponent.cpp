@@ -20,11 +20,6 @@
 UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	: Super()
 
-	, MovementState(ENovaMovementState::Docked)
-	, MovementStateDirty(false)
-
-	, ShouldStoreCommand(false)
-
 	, CurrentLinearVelocity(FVector::ZeroVector)
 	, CurrentAngularVelocity(FVector::ZeroVector)
 
@@ -60,6 +55,13 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 /*----------------------------------------------------
 	Movement API
 ----------------------------------------------------*/
+
+void UNovaSpacecraftMovementComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	MovementCommand.State = ENovaMovementState::Docked;
+}
 
 void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -108,10 +110,9 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 #endif
 
 	// Run high-level processing
-	if (Cast<APawn>(GetOwner())->IsLocallyControlled())
+	if (GetLocalRole() == ROLE_Authority)
 	{
 		ProcessState();
-		UpdateServerAttitude();
 	}
 
 	// Run movement implementation
@@ -119,35 +120,34 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 	ProcessLinearAttitude(DeltaTime);
 	ProcessAngularAttitude(DeltaTime);
 	ProcessMovement(DeltaTime);
-	ProcessNetworkCorrection(DeltaTime);
 
-	// Enqueue server commands with the current state
-	UpdateUnacknowledgedCommands();
-}
-
-void UNovaSpacecraftMovementComponent::Dock(FNovaMovementCallback Callback, const FVector& Location)
-{
-	NLOG("UNovaSpacecraftMovementComponent::Dock");
-
-	if (MovementState == ENovaMovementState::Idle)
+	// Check the callback
+	if (MovementCommand.State == ENovaMovementState::Docked || MovementCommand.State == ENovaMovementState::Idle)
 	{
-		StateCallback = Callback;
-		MovementState = ENovaMovementState::Docking;
-		MovementStateDirty = true;
-		DesiredAttitude.Location = Location;
-		DesiredAttitude.Direction = FVector(1, 0, 0);
+		IdleCallback.ExecuteIfBound();
+		IdleCallback.Unbind();
 	}
 }
 
-void UNovaSpacecraftMovementComponent::Undock(FNovaMovementCallback Callback)
+void UNovaSpacecraftMovementComponent::Dock(const class AActor* Target, FNovaIdleCallback Callback)
+{
+	NLOG("UNovaSpacecraftMovementComponent::Dock");
+
+	if (MovementCommand.State == ENovaMovementState::Idle)
+	{
+		IdleCallback = Callback;
+		RequestMovement(FNovaMovementCommand(ENovaMovementState::Docking, Target));
+	}
+}
+
+void UNovaSpacecraftMovementComponent::Undock(FNovaIdleCallback Callback)
 {
 	NLOG("UNovaSpacecraftMovementComponent::Undock");
 
-	if (MovementState == ENovaMovementState::Docked)
+	if (MovementCommand.State == ENovaMovementState::Docked)
 	{
-		StateCallback = Callback;
-		MovementState = ENovaMovementState::Undocking;
-		MovementStateDirty = true;
+		IdleCallback = Callback;
+		RequestMovement(FNovaMovementCommand(ENovaMovementState::Undocking));
 	}
 }
 
@@ -158,26 +158,35 @@ void UNovaSpacecraftMovementComponent::Undock(FNovaMovementCallback Callback)
 
 void UNovaSpacecraftMovementComponent::ProcessState()
 {
-	// process movement
-	switch (MovementState)
+	switch (MovementCommand.State)
 	{
+
+	// Docking procedure
 	case ENovaMovementState::Docking:
-		if (!MovementStateDirty && LinearAttitudeIdle && AngularAttitudeIdle)
+		if (!IsValid(MovementCommand.Target))
 		{
-			StateCallback.ExecuteIfBound();
-			MovementState = ENovaMovementState::Docked;
+			MovementCommand.State = ENovaMovementState::Idle;
+		}
+		else if (MovementCommand.Dirty)
+		{
+			DesiredAttitude.Location = MovementCommand.Target->GetActorLocation();
+			DesiredAttitude.Direction = FVector(1, 0, 0);
+		}
+		else if (LinearAttitudeIdle && AngularAttitudeIdle)
+		{
+			MovementCommand.State = ENovaMovementState::Docked;
 		}
 		break;
 
+	// Undocking procedure
 	case ENovaMovementState::Undocking:
-		if (MovementStateDirty)
+		if (MovementCommand.Dirty)
 		{
 			DesiredAttitude.Location = GetLocation(FVector(100, 0, 0));
 		}
 		else if (LinearAttitudeIdle && AngularAttitudeIdle)
 		{
-			StateCallback.ExecuteIfBound();
-			MovementState = ENovaMovementState::Idle;
+			MovementCommand.State = ENovaMovementState::Idle;
 		}
 		else if (LinearAttitudeDistance < 50)
 		{
@@ -189,7 +198,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 		break;
 	}
 
-	MovementStateDirty = false;
+	MovementCommand.Dirty = false;
 }
 
 
@@ -197,94 +206,23 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 	Networking
 ----------------------------------------------------*/
 
-void UNovaSpacecraftMovementComponent::UpdateServerAttitude()
+void UNovaSpacecraftMovementComponent::RequestMovement(const FNovaMovementCommand& Command)
 {
-	if (DesiredAttitude != PreviousDesiredAttitude)
-	{
-		NLOG("UNovaSpacecraftMovementComponent::UpdateServerAttitude ('%s')", *GetRoleString(this));
+	NLOG("UNovaSpacecraftMovementComponent::RequestMovement ('%s')", *GetRoleString(this));
 
-		if (GetLocalRole() == ROLE_AutonomousProxy)
-		{
-			DesiredAttitude.Time = GetWorld()->GetTimeSeconds();
-			ServerSetDesiredAttitude(DesiredAttitude);
-			ShouldStoreCommand = true;
-		}
-		else if (GetLocalRole() == ROLE_Authority)
-		{
-			ServerDesiredAttitude = DesiredAttitude;
-		}
+	MovementCommand = Command;
 
-		PreviousDesiredAttitude = DesiredAttitude;
-	}
-}
-
-void UNovaSpacecraftMovementComponent::UpdateUnacknowledgedCommands()
-{
-	if (ShouldStoreCommand)
-	{
-		UnacknowledgedAttitudeCommands.Add(FNovaUnacknowledgedAttitudeCommand(
-			DesiredAttitude,
-			UpdatedComponent->GetComponentTransform(),
-			CurrentLinearVelocity,
-			CurrentAngularVelocity,
-			GetWorld()->GetTimeSeconds()));
-	}
-}
-
-void UNovaSpacecraftMovementComponent::ServerSetDesiredAttitude_Implementation(const FNovaAttitudeCommand& Attitude)
-{
-	NLOG("UNovaSpacecraftMovementComponent::ServerSetDesiredAttitude");
-
-	NCHECK(GetLocalRole() == ROLE_Authority);
-
-	ServerDesiredAttitude = Attitude;
-
-	// When receiving an attitude command from an autonomous client, apply it directly
-	if (GetRemoteRole() == ROLE_AutonomousProxy)
-	{
-		DesiredAttitude = ServerDesiredAttitude;
-	}
-}
-
-void UNovaSpacecraftMovementComponent::OnServerDesiredAttitudeReplicated()
-{
-	NLOG("UNovaSpacecraftMovementComponent::OnServerDesiredAttitudeReplicated : L[%.1f, %.1f, %.1f] D[%.1f, %.1f, %.1f] ('%s')",
-		*GetRoleString(this),
-		ServerDesiredAttitude.Location.X, ServerDesiredAttitude.Location.Y, ServerDesiredAttitude.Location.Z, 
-		ServerDesiredAttitude.Direction.X, ServerDesiredAttitude.Direction.Y, ServerDesiredAttitude.Direction.Z);
-
-	// When receiving a server update as an autonomous client, rollback to compute differences
 	if (GetLocalRole() == ROLE_AutonomousProxy)
 	{
-		const FNovaUnacknowledgedAttitudeCommand* LastValidCommand = nullptr;
-		TArray<FNovaUnacknowledgedAttitudeCommand> ValidCommands;
-
-		for (const FNovaUnacknowledgedAttitudeCommand& Command : UnacknowledgedAttitudeCommands)
-		{
-			if (Command.Time >= ServerDesiredAttitude.Time)
-			{
-				ValidCommands.Add(Command);
-			}
-			else
-			{
-				LastValidCommand = &Command;
-			}
-		}
-
-		if (LastValidCommand)
-		{
-			// TODO : check for major differences against ServerDesiredAttitude
-		}
-
-		DesiredAttitude = ServerDesiredAttitude;
-		UnacknowledgedAttitudeCommands = ValidCommands;
+		ServerRequestMovement(Command);
 	}
+}
 
-	// When third-party, just apply the command
-	else
-	{
-		DesiredAttitude = ServerDesiredAttitude;
-	}
+void UNovaSpacecraftMovementComponent::ServerRequestMovement_Implementation(const FNovaMovementCommand& Command)
+{
+	NCHECK(GetLocalRole() == ROLE_Authority);
+
+	RequestMovement(Command);
 }
 
 
@@ -474,11 +412,6 @@ void UNovaSpacecraftMovementComponent::ProcessMovement(float DeltaTime)
 	}
 }
 
-void UNovaSpacecraftMovementComponent::ProcessNetworkCorrection(float DeltaTime)
-{
-	// TODO : apply correction if needed
-}
-
 void UNovaSpacecraftMovementComponent::OnHit(const FHitResult& Hit, const FVector& HitVelocity)
 {
 }
@@ -487,7 +420,8 @@ void UNovaSpacecraftMovementComponent::GetLifetimeReplicatedProps(TArray<FLifeti
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UNovaSpacecraftMovementComponent, ServerDesiredAttitude);
+	DOREPLIFETIME(UNovaSpacecraftMovementComponent, MovementCommand);
+	DOREPLIFETIME(UNovaSpacecraftMovementComponent, DesiredAttitude);
 }
 
 

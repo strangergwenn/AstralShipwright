@@ -20,12 +20,14 @@
 #include "Nova/UI/Menu/NovaOverlay.h"
 #include "Nova/Nova.h"
 
-#include "GameFramework/PlayerState.h"
 #include "Framework/Application/SlateApplication.h"
+#include "Misc/CommandLine.h"
+
+#include "GameFramework/PlayerState.h"
+#include "GameFramework/PlayerStart.h"
 #include "Components/PostProcessComponent.h"
 #include "Components/BillboardComponent.h"
 #include "Components/SkyLightComponent.h"
-#include "Misc/CommandLine.h"
 
 #include "Engine/LocalPlayer.h"
 #include "Engine/SpotLight.h"
@@ -345,7 +347,7 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 	Gameplay
 ----------------------------------------------------*/
 
-void ANovaPlayerController::Dock(const FVector& Location)
+void ANovaPlayerController::Dock()
 {
 	NLOG("ANovaPlayerController::Dock");
 
@@ -372,7 +374,12 @@ void ANovaPlayerController::Dock(const FVector& Location)
 					GetSpacecraftPawn()->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
 				NCHECK(MovementComponent);
 
-				MovementComponent->Dock(FNovaMovementCallback::CreateLambda(EndCutscene), Location);
+				// TODO move elsewhere
+				for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+				{
+					MovementComponent->Dock(*It, FNovaIdleCallback::CreateLambda(EndCutscene));
+					break;
+				}
 
 				return true;
 			}
@@ -410,7 +417,7 @@ void ANovaPlayerController::Undock()
 			GetSpacecraftPawn()->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
 		NCHECK(MovementComponent);
 
-		MovementComponent->Undock(FNovaMovementCallback::CreateLambda(EndCutscene));
+		MovementComponent->Undock(FNovaIdleCallback::CreateLambda(EndCutscene));
 	};
 
 	GetMenuManager()->CloseMenu(FNovaAsyncAction::CreateLambda(StartCutscene));
