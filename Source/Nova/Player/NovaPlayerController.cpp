@@ -272,7 +272,7 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const
 {
 	// During cutscenes, use the closest camera viewpoint and focus the player ship
-	if (!GetMenuManager()->IsMenuOpen())
+	if (IsReady() && !GetMenuManager()->IsMenuOpen())
 	{
 		TArray<AActor*> Viewpoints;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaPlayerViewpoint::StaticClass(), Viewpoints);
