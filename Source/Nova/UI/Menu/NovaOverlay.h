@@ -32,12 +32,6 @@ public:
 	/** Show a text notification on the screen */
 	void Notify(FText Text, ENovaNotificationType Type);
 
-	/** Show the death screen */
-	void ShowDeathScreen(ENovaDamageType Type, FSimpleDelegate Callback);
-
-	/** Hide the death screen */
-	void HideDeathScreen();
-
 	virtual FString GetReferencerName() const override
 	{
 		return FString("SNovaOverlay");
@@ -81,9 +75,6 @@ protected:
 	
 	// Menu reference
 	TWeakObjectPtr<class UNovaMenuManager>        MenuManager;
-
-	// Widgets
-	TSharedPtr<class SNovaDeathScreen>            DeathScreen;
 
 	// Notification icon
 	TSharedPtr<FSlateBrush>                       NotificationIconBrush;

@@ -3,7 +3,6 @@
 #include "NovaOverlay.h"
 #include "NovaMainMenu.h"
 #include "Nova/UI/Widget/NovaModalPanel.h"
-#include "Nova/UI/Component/NovaDeathScreen.h"
 
 #include "Nova/Player/NovaMenuManager.h"
 #include "Nova/Game/NovaGameInstance.h"
@@ -37,13 +36,6 @@ void SNovaOverlay::Construct(const FArguments& InArgs)
 	.VAlign(VAlign_Fill)
 	[
 		SNew(SOverlay)
-
-		// Death screen
-		+ SOverlay::Slot()
-		[
-			SAssignNew(DeathScreen, SNovaDeathScreen)
-			.MenuManager(MenuManager)
-		]
 
 		// Notification box
 		+ SOverlay::Slot()
@@ -129,20 +121,6 @@ void SNovaOverlay::Notify(FText Text, ENovaNotificationType Type)
 	{
 		CurrentNotifyText = FText();
 	}
-}
-
-void SNovaOverlay::ShowDeathScreen(ENovaDamageType Type, FSimpleDelegate Callback)
-{
-	NLOG("SNovaOverlay::ShowDeathScreen");
-
-	DeathScreen->Show(Type, Callback);
-}
-
-void SNovaOverlay::HideDeathScreen()
-{
-	NLOG("SNovaOverlay::HideDeathScreen");
-
-	DeathScreen->Hide();
 }
 
 void SNovaOverlay::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)

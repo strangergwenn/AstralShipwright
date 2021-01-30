@@ -23,16 +23,6 @@ namespace ENovaConstants
 	const FString DefaultLevel = TEXT("Space");
 };
 
-/** Damage type */
-UENUM(BlueprintType)
-enum class ENovaDamageType : uint8
-{
-	None,
-	Generic,
-	OutOfWorld,
-	Wipe
-};
-
 /** Serialization way */
 enum class ENovaSerialize : uint8
 {

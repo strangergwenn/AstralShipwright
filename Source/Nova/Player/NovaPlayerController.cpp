@@ -51,9 +51,7 @@ ANovaPlayerViewpoint::ANovaPlayerViewpoint()
 
 ANovaPlayerController::ANovaPlayerController()
 	: Super()
-	, TravelState(ENovaTravelState::None)
 	, LastNetworkError(ENovaNetworkError::Success)
-	, IsOnDeathScreen(false)
 	, IsInCutscene(false)
 	, IsLoadingStreamingLevel(false)
 	, CurrentStreamingLevelIndex(0)
@@ -64,12 +62,6 @@ ANovaPlayerController::ANovaPlayerController()
 	// Default settings
 	TSharedPtr<FNovaPostProcessSetting> DefaultSettings = MakeShareable(new FNovaPostProcessSetting);
 	PostProcessComponent->RegisterPreset(ENovaPostProcessPreset::Neutral, DefaultSettings);
-
-	// Damage effect preset
-	TSharedPtr<FNovaPostProcessSetting> DangerSettings = MakeShareable(new FNovaPostProcessSetting);
-	DangerSettings->SceneColorTint = FLinearColor(1.0f, 0.3f, 0.2f);
-	DangerSettings->TransitionDuration = 0.1f;
-	PostProcessComponent->RegisterPreset(ENovaPostProcessPreset::Damage, DangerSettings);
 
 	// Initialize post-processing
 	PostProcessComponent->Initialize(
@@ -203,8 +195,6 @@ void ANovaPlayerController::BeginPlay()
 		GetMenuManager()->BeginPlay(this);
 	}
 
-	TravelState = ENovaTravelState::None;
-
 	// Initialize persistent objects
 	GetGameInstance<UNovaGameInstance>()->SetAcceptedInvitationCallback(
 		FOnFriendInviteAccepted::CreateUObject(this, &ANovaPlayerController::AcceptInvitation));
@@ -252,30 +242,6 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 			PlayerCameraManager->SetFOV(GameUserSettings->FOV);
 		}
 
-		// Process the smooth travel system
-		if (TravelURL.Len())
-		{
-			bool CanTravel = true;
-			for (const ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
-			{
-				NCHECK(!OtherPlayer->IsPendingKillPending());
-				if (!OtherPlayer->IsWaitingTravel())
-				{
-					CanTravel = false;
-					break;
-				}
-			}
-
-			if (CanTravel)
-			{
-				NLOG("ANovaPlayerController::PlayerTick : starting travel");
-
-				UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
-				GameInstance->ServerTravel(TravelURL);
-				TravelURL = FString();
-			}
-		}
-
 		// Show network errors
 		UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
 		NCHECK(GameInstance);
@@ -286,21 +252,6 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 			{
 				Notify(GameInstance->GetNetworkErrorString(), ENovaNotificationType::Error);
 			}
-		}
-
-		// Go to the death screen
-		if (/** ded */ false && !IsOnDeathScreen)
-		{
-			NLOG("ANovaPlayerController::PlayerTick : showing death screen");
-
-			IsOnDeathScreen = true;
-			GetMenuManager()->RunWaitAction(ENovaLoadingScreen::Black,
-				FNovaAsyncAction::CreateLambda([=]()
-					{
-						GetMenuManager()->GetOverlay()->ShowDeathScreen(ENovaDamageType::Generic,
-							FSimpleDelegate::CreateUObject(this, &ANovaPlayerController::DeathScreenFinished, ENovaDamageType::Generic));
-					})
-			);
 		}
 
 		// Update contracts
@@ -377,7 +328,7 @@ void ANovaPlayerController::Dock()
 				// TODO move elsewhere
 				for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
 				{
-					MovementComponent->Dock(*It, FNovaIdleCallback::CreateLambda(EndCutscene));
+					MovementComponent->Dock(*It, FSimpleDelegate::CreateLambda(EndCutscene));
 					break;
 				}
 
@@ -417,7 +368,7 @@ void ANovaPlayerController::Undock()
 			GetSpacecraftPawn()->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
 		NCHECK(MovementComponent);
 
-		MovementComponent->Undock(FNovaIdleCallback::CreateLambda(EndCutscene));
+		MovementComponent->Undock(FSimpleDelegate::CreateLambda(EndCutscene));
 	};
 
 	GetMenuManager()->CloseMenu(FNovaAsyncAction::CreateLambda(StartCutscene));
@@ -478,68 +429,6 @@ void ANovaPlayerController::OnLevelUnLoaded()
 	NLOG("ANovaPlayerController::OnLevelUnLoaded");
 
 	IsLoadingStreamingLevel = false;
-}
-
-
-/*----------------------------------------------------
-	Travel
-----------------------------------------------------*/
-
-void ANovaPlayerController::SmoothServerTravel(const FString& URL)
-{
-	NCHECK(GetLocalRole() == ROLE_Authority);
-	NLOG("ANovaPlayerController::SmoothServerTravel");
-
-	TravelState = ENovaTravelState::None;
-
-	for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
-	{
-		OtherPlayer->ClientPrepareTravel();
-	}
-
-	TravelURL = URL;
-}
-
-void ANovaPlayerController::ClientPrepareTravel_Implementation()
-{
-	NLOG("ANovaPlayerController::ClientPrepareTravel_Implementation");
-
-	GetMenuManager()->RunWaitAction(ENovaLoadingScreen::Launch,
-		FNovaAsyncAction::CreateLambda([=]()
-			{
-				TravelState = ENovaTravelState::Waiting;
-				GetMenuManager()->GetOverlay()->HideDeathScreen();
-				ServerTravelPrepared();
-				NLOG("ANovaPlayerController::ClientTravelInternal_Implementation : done, waiting for travel");
-			}),
-		FNovaAsyncCondition::CreateLambda([=]()
-			{
-				return TravelState != ENovaTravelState::Waiting;
-			})
-		);
-}
-
-bool ANovaPlayerController::ServerTravelPrepared_Validate()
-{
-	return true;
-}
-
-void ANovaPlayerController::ServerTravelPrepared_Implementation()
-{
-	NLOG("ANovaPlayerController::ServerTravelPrepared_Implementation");
-
-	TravelState = ENovaTravelState::Waiting;
-}
-
-void ANovaPlayerController::PreClientTravel(const FString& PendingURL, ETravelType TravelType, bool bIsSeamlessTravel)
-{
-	NLOG("ANovaPlayerController::PreClientTravel");
-
-	Super::PreClientTravel(PendingURL, TravelType, bIsSeamlessTravel);
-
-	GetMenuManager()->FreezeLoadingScreen();
-
-	TravelState = ENovaTravelState::Traveling;
 }
 
 
@@ -694,32 +583,6 @@ bool ANovaPlayerController::IsReady() const
 		&& (IsOnMainMenu() || (IsValid(GetSpacecraftPawn()) && GetSpacecraftPawn()->GetSpacecraft().IsValid()));
 }
 
-void ANovaPlayerController::DeathScreenFinished(ENovaDamageType Type)
-{
-	NLOG("ANovaPlayerController::DeathScreenFinished");
-
-	GetMenuManager()->RunWaitAction(ENovaLoadingScreen::Black,
-		FNovaAsyncAction::CreateLambda([=]()
-			{
-				GetMenuManager()->GetOverlay()->HideDeathScreen();
-
-				 // TODO : process "respawn", however that works
-			}),
-		FNovaAsyncCondition::CreateLambda([=]()
-			{
-				if (IsReady())
-				{
-					IsOnDeathScreen = false;
-					return true;
-				}
-				else
-				{
-					return false;
-				}
-			})
-		);
-}
-
 
 /*----------------------------------------------------
 	Menus
@@ -769,7 +632,7 @@ void ANovaPlayerController::SetupInputComponent()
 
 void ANovaPlayerController::ToggleMenuOrQuit()
 {
-	if (!IsOnDeathScreen && !Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMenuMap())
+	if (!Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMenuMap())
 	{
 		if (IsOnMainMenu())
 		{

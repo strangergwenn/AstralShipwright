@@ -483,11 +483,7 @@ FText SNovaMainMenuGame::GetOnlineText() const
 		FText StatusMessage;
 
 		// Get the status message
-		if (PC->IsTravelInProgress())
-		{
-			StatusMessage = LOCTEXT("Connecting", "Connecting to a friend...");
-		}
-		else if (GameInstance->GetNetworkState() == ENovaNetworkState::Offline)
+		if (GameInstance->GetNetworkState() == ENovaNetworkState::Offline)
 		{
 			StatusMessage = LOCTEXT("PlayingOffline", "You are playing offline");
 		}

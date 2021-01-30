@@ -14,19 +14,10 @@
 #include "NovaPlayerController.generated.h"
 
 
-/** Travel state */
-enum class ENovaTravelState : uint8
-{
-	None,
-	Waiting,
-	Traveling
-};
-
 /** High level post processing targets */
 enum class ENovaPostProcessPreset : uint8
 {
-	Neutral,
-	Damage
+	Neutral
 };
 
 /** Post-process settings */
@@ -132,60 +123,6 @@ protected:
 
 
 	/*----------------------------------------------------
-		Getters
-	----------------------------------------------------*/
-
-public:
-
-	/** Get the menu manager */
-	UFUNCTION(Category = Nova, BlueprintCallable)
-	class UNovaMenuManager* GetMenuManager() const
-	{
-		return GetGameInstance<UNovaGameInstance>()->GetMenuManager();
-	}
-
-	/** Get a turntable actor **/
-	UFUNCTION(Category = Nova, BlueprintCallable)
-	class ANovaSpacecraftPawn* GetSpacecraftPawn() const
-	{
-		return GetPawn<ANovaSpacecraftPawn>();
-	}
-
-
-	/*----------------------------------------------------
-		Travel
-	----------------------------------------------------*/
-
-public:
-
-	/** Travel to a server */
-	UFUNCTION(Exec)
-	void SmoothServerTravel(const FString& URL);
-
-	/** Prepare travel on a client */
-	UFUNCTION(Client, Reliable)
-	void ClientPrepareTravel();
-
-	/** Signal the server that travel was prepared */
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerTravelPrepared();
-
-	/** Check if this player is ready to travel */
-	bool IsWaitingTravel() const
-	{
-		return TravelState == ENovaTravelState::Waiting;
-	}
-
-	/** Are we traveling */
-	bool IsTravelInProgress() const
-	{
-		return TravelState == ENovaTravelState::Traveling;
-	}
-
-	virtual void PreClientTravel(const FString& PendingURL, ETravelType TravelType, bool bIsSeamlessTravel) override;
-
-
-	/*----------------------------------------------------
 		Server-side save
 	----------------------------------------------------*/
 
@@ -235,9 +172,6 @@ public:
 	/** Check if the player has a valid pawn */
 	UFUNCTION(Category = Nova, BlueprintCallable)
 	bool IsReady() const;
-
-	/** Complete the death screen */
-	void DeathScreenFinished(ENovaDamageType Type);
 
 
 	/*----------------------------------------------------
@@ -297,12 +231,9 @@ public:
 private:
 
 	// Travel state
-	ENovaTravelState                              TravelState;
-	FString                                       TravelURL;
 	ENovaNetworkError                             LastNetworkError;
 
 	// Gameplay state
-	bool                                          IsOnDeathScreen;
 	bool                                          IsInCutscene;
 	bool                                          IsLoadingStreamingLevel;
 	int32                                         CurrentStreamingLevelIndex;
@@ -310,5 +241,26 @@ private:
 
 	// Local save data
 	TSharedPtr<struct FNovaSpacecraft>            Spacecraft;
+
+
+	/*----------------------------------------------------
+		Getters
+	----------------------------------------------------*/
+
+public:
+
+	/** Get the menu manager */
+	UFUNCTION(Category = Nova, BlueprintCallable)
+	class UNovaMenuManager* GetMenuManager() const
+	{
+		return GetGameInstance<UNovaGameInstance>()->GetMenuManager();
+	}
+
+	/** Get a turntable actor **/
+	UFUNCTION(Category = Nova, BlueprintCallable)
+	class ANovaSpacecraftPawn* GetSpacecraftPawn() const
+	{
+		return GetPawn<ANovaSpacecraftPawn>();
+	}
 
 };

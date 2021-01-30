@@ -129,7 +129,7 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 	}
 }
 
-void UNovaSpacecraftMovementComponent::Dock(const class AActor* Target, FNovaIdleCallback Callback)
+void UNovaSpacecraftMovementComponent::Dock(const class AActor* Target, FSimpleDelegate Callback)
 {
 	NLOG("UNovaSpacecraftMovementComponent::Dock");
 
@@ -140,7 +140,7 @@ void UNovaSpacecraftMovementComponent::Dock(const class AActor* Target, FNovaIdl
 	}
 }
 
-void UNovaSpacecraftMovementComponent::Undock(FNovaIdleCallback Callback)
+void UNovaSpacecraftMovementComponent::Undock(FSimpleDelegate Callback)
 {
 	NLOG("UNovaSpacecraftMovementComponent::Undock");
 

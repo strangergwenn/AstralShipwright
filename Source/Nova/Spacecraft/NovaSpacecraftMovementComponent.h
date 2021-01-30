@@ -8,9 +8,6 @@
 #include "NovaSpacecraftMovementComponent.generated.h"
 
 
-DECLARE_DELEGATE(FNovaIdleCallback);
-
-
 /** Movement state */
 UENUM(BlueprintType)
 enum class ENovaMovementState : uint8
@@ -102,10 +99,10 @@ public:
 	}
 
 	/** Dock at a particular location */
-	void Dock(const class AActor* Target, FNovaIdleCallback Callback = FNovaIdleCallback());
+	void Dock(const class AActor* Target, FSimpleDelegate Callback = FSimpleDelegate());
 
 	/** Undock from the current dock */
-	void Undock(FNovaIdleCallback Callback = FNovaIdleCallback());
+	void Undock(FSimpleDelegate Callback = FSimpleDelegate());
 
 
 	/*----------------------------------------------------
@@ -211,7 +208,7 @@ protected:
 	// High-level state
 	UPROPERTY(Replicated)
 	FNovaMovementCommand                          MovementCommand;
-	FNovaIdleCallback                             IdleCallback;
+	FSimpleDelegate                               IdleCallback;
 
 	// Authoritative attitude input, produced by the server in real-time
 	UPROPERTY(Replicated)
