@@ -94,6 +94,21 @@ public:
 		Gameplay
 	----------------------------------------------------*/
 
+	/** Run a shared transition with a fade to black on all clients */
+	void SharedTransition(FSimpleDelegate Callback, bool CutsceneMode);
+
+	/** Signal a client that a shared transition is starting */
+	UFUNCTION(Client, Reliable)
+	void ClientStartSharedTransition(bool CutsceneMode);
+
+	/** Signal a client that the transition is complete */
+	UFUNCTION(Client, Reliable)
+	void ClientStopSharedTransition();
+
+	/** Signal the server that the transition is ready */
+	UFUNCTION(Server, Reliable)
+	void ServerSharedTransitionReady();
+
 	/** Dock the player to a dock with a cutscene */
 	void Dock();
 
@@ -233,10 +248,13 @@ private:
 	// Travel state
 	ENovaNetworkError                             LastNetworkError;
 
-	// Gameplay state
-	bool                                          IsInCutscene;
+	// Level loading & transitions
+	bool                                          IsInSharedTransition;
+	FSimpleDelegate                               SharedTransitionCallback;
 	bool                                          IsLoadingStreamingLevel;
 	int32                                         CurrentStreamingLevelIndex;
+
+	// Gameplay state
 	TMap<ENovaPostProcessPreset, TSharedPtr<FNovaPostProcessSetting>> PostProcessSettings;
 
 	// Local save data

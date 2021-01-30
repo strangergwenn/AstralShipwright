@@ -33,4 +33,14 @@ public:
 	virtual AActor* ChoosePlayerStart_Implementation(class AController* Player) override;
 
 
+	/*----------------------------------------------------
+		Inherited
+	----------------------------------------------------*/
+
+public:
+
+	/** Get all players to leave a station */
+	void LeaveStation();
+
+
 };

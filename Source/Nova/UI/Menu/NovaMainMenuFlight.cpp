@@ -4,6 +4,8 @@
 
 #include "NovaMainMenu.h"
 
+#include "Nova/Game/NovaGameMode.h"
+
 #include "Nova/Player/NovaMenuManager.h"
 #include "Nova/Player/NovaPlayerController.h"
 
@@ -44,6 +46,34 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		.AutoWidth()
 		[
 			SNew(SVerticalBox)
+			
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SNovaButton)
+				.Text(LOCTEXT("TestJoin", "Join random session"))
+				.HelpText(LOCTEXT("HelpTestJoin", "Join random session"))
+				.OnClicked(FSimpleDelegate::CreateLambda([=]()
+				{
+					MenuManager->GetPC()->TestJoin();
+				}))
+			]
+			
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SNovaButton)
+				.Text(LOCTEXT("LeaveStation", "Leave station"))
+				.HelpText(LOCTEXT("HelpLeaveStation", "Leave station"))
+				.OnClicked(FSimpleDelegate::CreateLambda([=]()
+				{
+					MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->LeaveStation();
+				}))
+				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
+				{
+					return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority;
+				})))
+			]
 			
 			+ SVerticalBox::Slot()
 			.AutoHeight()
@@ -122,20 +152,21 @@ TSharedPtr<SNovaButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 
 ANovaSpacecraftPawn* SNovaMainMenuFlight::GetSpacecraftPawn() const
 {
-	return MenuManager->GetPC()->GetSpacecraftPawn();
+	return MenuManager->GetPC() ? MenuManager->GetPC()->GetSpacecraftPawn() : nullptr;
 }
 
 UNovaSpacecraftMovementComponent* SNovaMainMenuFlight::GetSpacecraftMovement() const
 {
 	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-	NCHECK(SpacecraftPawn);
-
-	UNovaSpacecraftMovementComponent* MovementComponent = Cast<UNovaSpacecraftMovementComponent>(
-		SpacecraftPawn->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
-	
-	NCHECK(MovementComponent);
-
-	return MovementComponent;
+	if (SpacecraftPawn)
+	{
+		return Cast<UNovaSpacecraftMovementComponent>(
+			SpacecraftPawn->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
+	}
+	else
+	{
+		return nullptr;
+	}
 }
 
 
@@ -145,12 +176,12 @@ UNovaSpacecraftMovementComponent* SNovaMainMenuFlight::GetSpacecraftMovement() c
 
 bool SNovaMainMenuFlight::IsUndockEnabled() const
 {
-	return GetSpacecraftMovement()->GetState() == ENovaMovementState::Docked;
+	return GetSpacecraftMovement() && GetSpacecraftMovement()->GetState() == ENovaMovementState::Docked;
 }
 
 bool SNovaMainMenuFlight::IsDockEnabled() const
 {
-	return GetSpacecraftMovement()->GetState() == ENovaMovementState::Idle;
+	return GetSpacecraftMovement() && GetSpacecraftMovement()->GetState() == ENovaMovementState::Idle;
 }
 
 

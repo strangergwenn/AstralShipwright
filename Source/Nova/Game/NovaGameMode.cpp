@@ -3,9 +3,10 @@
 #include "NovaGameMode.h"
 #include "NovaGameInstance.h"
 
-#include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Game/NovaWorldSettings.h"
 #include "Nova/Player/NovaPlayerController.h"
+#include "Nova/Spacecraft/NovaSpacecraftPawn.h"
+#include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
 
 #include "Nova/Nova.h"
 
@@ -114,3 +115,28 @@ AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
 
 	return nullptr;
 }
+
+
+/*----------------------------------------------------
+	Gameplay
+----------------------------------------------------*/
+
+void ANovaGameMode::LeaveStation()
+{
+	NLOG("ANovaGameMode::LeaveStation");
+	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
+	NCHECK(PC);
+
+	FSimpleDelegate Cutscene = FSimpleDelegate::CreateLambda([=]()
+		{
+			for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+			{
+				SpacecraftPawn->GetSpacecraftMovement()->Undock();
+			}
+
+		});
+
+	PC->SharedTransition(Cutscene, true);
+}
+
+

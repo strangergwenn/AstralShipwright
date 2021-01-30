@@ -135,7 +135,10 @@ protected:
 protected:
 
 	/** Measure velocities and accelerations */
-	void ProcessMeasurements(float DeltaTime);
+	void ProcessMeasurementsBeforeAttitude(float DeltaTime);
+
+	/** Process attitude changes */
+	void ProcessMeasurementsAfterAttitude(float DeltaTime);
 
 	/** Run attitude control on linear velocity */
 	void ProcessLinearAttitude(float DeltaTime);
@@ -157,29 +160,46 @@ protected:
 public:
 
 	// Maximum linear acceleration rate in m/s²
+	// TODO move to asset
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float LinearAcceleration;
+
+	// Maximum linear acceleration rate with the main drive on, in m/s²
+	// TODO move to asset
+	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	float LinearMainAcceleration;
+
+	// Maximum axis turn acceleration rate in °/s²
+	// TODO move to asset
+	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	float AngularAcceleration;
+
+	// Max vectoring angle in degrees
+	// TODO move to asset
+	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	float VectoringAngle;
+
 
 	// Distance under which we consider stopped
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float LinearDeadDistance;
 
-
-	// Maximum axis turn acceleration rate in °/s²
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
-	float AngularAcceleration;
-
-	// Slope multiplier on the angular target
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
-	float AngularControlIntensity;
-
 	// Maximum moving velocity in m/s
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float MaxLinearVelocity;
 
+
+	// Distance under which we consider stopped
+	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	float AngularDeadDistance;
+
 	// Maximum turn rate in °/s (pitch & roll)
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float MaxAngularVelocity;
+
+	// Slope multiplier on the angular target
+	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	float AngularControlIntensity;
 
 	// How much to underestimate stopping distances
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
@@ -222,6 +242,7 @@ protected:
 	bool                                          LinearAttitudeIdle;
 	bool                                          AngularAttitudeIdle;
 	float                                         LinearAttitudeDistance;
+	float                                         AngularAttitudeDistance;
 	FVector                                       PreviousVelocity;
 	FVector                                       PreviousAngularVelocity;
 	FVector                                       MeasuredAcceleration;
@@ -233,6 +254,13 @@ protected:
 	----------------------------------------------------*/
 
 public:
+
+	inline bool IsMainDriveRunning() const
+	{
+		return AngularAttitudeDistance < VectoringAngle
+			&& MovementCommand.State != ENovaMovementState::Docking
+			&& MovementCommand.State != ENovaMovementState::Undocking;
+	}
 
 	inline const FVector GetLocation(const FVector& Offset) const
 	{
@@ -261,7 +289,7 @@ public:
 
 	inline const float GetMainDriveAcceleration() const
 	{
-		return 0.0f;
+		return IsMainDriveRunning() ? CurrentLinearVelocity.Size() : 0;
 	}
 
 	inline ENetRole GetLocalRole() const

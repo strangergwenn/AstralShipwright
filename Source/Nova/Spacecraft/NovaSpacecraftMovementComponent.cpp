@@ -32,14 +32,17 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	, MeasuredAngularAcceleration(FVector::ZeroVector)
 {
 	// Linear defaults
-	LinearAcceleration = 10;
-	LinearDeadDistance = 1;
+	LinearAcceleration = 8;
+	LinearMainAcceleration = 50;
+	AngularAcceleration = 30;
+	VectoringAngle = 7.5f;
 
 	// Angular defaults
-	AngularAcceleration = 30;
-	AngularControlIntensity = 2.0f;
-	MaxLinearVelocity = 8;
+	LinearDeadDistance = 1;
+	MaxLinearVelocity = 50;
+	AngularDeadDistance = 0.5f;
 	MaxAngularVelocity = 60;
+	AngularControlIntensity = 2.0f;
 	AngularOvershootRatio = 1.1f;
 	AngularColinearityThreshold = 0.999999f;
 
@@ -116,9 +119,10 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 	}
 
 	// Run movement implementation
-	ProcessMeasurements(DeltaTime);
+	ProcessMeasurementsBeforeAttitude(DeltaTime);
 	ProcessLinearAttitude(DeltaTime);
 	ProcessAngularAttitude(DeltaTime);
+	ProcessMeasurementsAfterAttitude(DeltaTime);
 	ProcessMovement(DeltaTime);
 
 	// Check the callback
@@ -165,15 +169,18 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 	case ENovaMovementState::Docking:
 		if (!IsValid(MovementCommand.Target))
 		{
+			NLOG("UNovaSpacecraftMovementComponent::ProcessState : Docking : aborted");
 			MovementCommand.State = ENovaMovementState::Idle;
 		}
 		else if (MovementCommand.Dirty)
 		{
+			NLOG("UNovaSpacecraftMovementComponent::ProcessState : Docking : starting");
 			DesiredAttitude.Location = MovementCommand.Target->GetActorLocation();
 			DesiredAttitude.Direction = FVector(1, 0, 0);
 		}
 		else if (LinearAttitudeIdle && AngularAttitudeIdle)
 		{
+			NLOG("UNovaSpacecraftMovementComponent::ProcessState : Docking : done");
 			MovementCommand.State = ENovaMovementState::Docked;
 		}
 		break;
@@ -182,10 +189,12 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 	case ENovaMovementState::Undocking:
 		if (MovementCommand.Dirty)
 		{
+			NLOG("UNovaSpacecraftMovementComponent::ProcessState : Undocking : starting");
 			DesiredAttitude.Location = GetLocation(FVector(100, 0, 0));
 		}
 		else if (LinearAttitudeIdle && AngularAttitudeIdle)
 		{
+			NLOG("UNovaSpacecraftMovementComponent::ProcessState : Undocking : done");
 			MovementCommand.State = ENovaMovementState::Idle;
 		}
 		else if (LinearAttitudeDistance < 50)
@@ -230,12 +239,21 @@ void UNovaSpacecraftMovementComponent::ServerRequestMovement_Implementation(cons
 	Internal movement implementation
 ----------------------------------------------------*/
 
-void UNovaSpacecraftMovementComponent::ProcessMeasurements(float DeltaTime)
+void UNovaSpacecraftMovementComponent::ProcessMeasurementsBeforeAttitude(float DeltaTime)
 {
+	LinearAttitudeIdle = LinearAttitudeDistance == 0;
+	AngularAttitudeIdle = AngularAttitudeDistance < AngularDeadDistance;
+
 	MeasuredAcceleration = ((CurrentLinearVelocity - PreviousVelocity) / DeltaTime);
 	MeasuredAngularAcceleration = (CurrentAngularVelocity - PreviousAngularVelocity) * DeltaTime;
 	PreviousVelocity = CurrentLinearVelocity;
 	PreviousAngularVelocity = CurrentAngularVelocity;
+}
+
+void UNovaSpacecraftMovementComponent::ProcessMeasurementsAfterAttitude(float DeltaTime)
+{
+	LinearAttitudeIdle = LinearAttitudeDistance == 0;
+	AngularAttitudeIdle = AngularAttitudeDistance < AngularDeadDistance;
 }
 
 void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
@@ -244,18 +262,19 @@ void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 	const FVector DeltaPosition = (DesiredAttitude.Location - UpdatedComponent->GetComponentLocation()) / 100.0f;
 	const FVector DeltaPositionDirection = DeltaPosition.GetSafeNormal();
 	LinearAttitudeDistance = FMath::Max(0.0f, DeltaPosition.Size() - LinearDeadDistance);
-	LinearAttitudeIdle = LinearAttitudeDistance == 0;
 
 	// Get the velocity data
 	FVector DeltaVelocity = DesiredAttitude.Velocity - CurrentLinearVelocity;
 	FVector DeltaVelocityAxis = DeltaVelocity;
 	DeltaVelocityAxis.Normalize();
 
+	const float CurrentAcceleration = IsMainDriveRunning() ? LinearMainAcceleration : LinearAcceleration;
+
 	// Determine the time left to reach the final desired velocity
 	float TimeToFinalVelocity = 0;
 	if (!FMath::IsNearlyZero(DeltaVelocity.SizeSquared()))
 	{
-		TimeToFinalVelocity = DeltaVelocity.Size() / LinearAcceleration;
+		TimeToFinalVelocity = DeltaVelocity.Size() / CurrentAcceleration;
 	}
 
 	// Update desired velocity to match location & velocity inputs best
@@ -283,9 +302,9 @@ void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 	{
 		Value = FMath::Clamp(Target, Value - MaxDelta, Value + MaxDelta);
 	};
-	UpdateVelocity(CurrentLinearVelocity.X, RelativeResultSpeed.X, LinearAcceleration * DeltaTime);
-	UpdateVelocity(CurrentLinearVelocity.Y, RelativeResultSpeed.Y, LinearAcceleration * DeltaTime);
-	UpdateVelocity(CurrentLinearVelocity.Z, RelativeResultSpeed.Z, LinearAcceleration * DeltaTime);
+	UpdateVelocity(CurrentLinearVelocity.X, RelativeResultSpeed.X, CurrentAcceleration * DeltaTime);
+	UpdateVelocity(CurrentLinearVelocity.Y, RelativeResultSpeed.Y, CurrentAcceleration * DeltaTime);
+	UpdateVelocity(CurrentLinearVelocity.Z, RelativeResultSpeed.Z, CurrentAcceleration * DeltaTime);
 }
 
 void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
@@ -296,8 +315,6 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 
 	if (DotProduct < AngularColinearityThreshold)
 	{
-		AngularAttitudeIdle = false;
-
 		// Determine a quaternion that represents the desired difference in orientation
 		FQuat TargetRotation = DotProduct > -AngularColinearityThreshold ?
 			FQuat::FindBetweenNormals(ActorAxis, DesiredAttitude.Direction) :
@@ -330,7 +347,7 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 		FVector RotationDirection;
 		float RemainingAngleRadians;
 		TargetRotation.ToAxisAndAngle(RotationDirection, RemainingAngleRadians);
-		float RemainingAngle = FMath::RadiansToDegrees(RemainingAngleRadians);
+		AngularAttitudeDistance = FMath::RadiansToDegrees(RemainingAngleRadians);
 
 		// This cannot be explained, but likely fixes inconsistent output by FindBetweenNormals
 		RotationDirection *= FVector(-1, -1, 1);
@@ -347,10 +364,10 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 
 		// Determine the new angular velocity based on the remaining angle and velocity
 		float AngularStoppingDistance = (AngularVelocityDelta.Size() / 2) * (TimeToFinalVelocity + DeltaTime) / AngularOvershootRatio;
-		if (!FMath::IsNearlyZero(RemainingAngle) && !(FMath::Abs(RemainingAngle) < AngularStoppingDistance))
+		if (!FMath::IsNearlyZero(AngularAttitudeDistance) && !(FMath::Abs(AngularAttitudeDistance) < AngularStoppingDistance))
 		{
-			float OvershotRemainingAngle = AngularOvershootRatio * (RemainingAngle - AngularStoppingDistance);
-			float MaxUsefulAngularVelocity = FMath::Min(OvershotRemainingAngle / DeltaTime, MaxAngularVelocity);
+			float OvershotAngularAttitudeDistance = AngularOvershootRatio * (AngularAttitudeDistance - AngularStoppingDistance);
+			float MaxUsefulAngularVelocity = FMath::Min(OvershotAngularAttitudeDistance / DeltaTime, MaxAngularVelocity);
 			NewAngularVelocity = RotationDirection * MaxUsefulAngularVelocity;
 		}
 
@@ -358,12 +375,8 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 			ActorAxis.X, ActorAxis.Y, ActorAxis.Z,
 			CurrentDesiredAttitude.Direction.X, CurrentDesiredAttitude.Direction.Y, CurrentDesiredAttitude.Direction.Z,
 			RotationDirection.X, RotationDirection.Y, RotationDirection.Z,
-			RemainingAngle, DotProduct,
+			AngularAttitudeDistance, DotProduct,
 			NewAngularVelocity.X, NewAngularVelocity.Y, NewAngularVelocity.Z);*/
-	}
-	else
-	{
-		AngularAttitudeIdle = true;
 	}
 
 	// Update the angular velocity based on acceleration

@@ -52,7 +52,7 @@ ANovaPlayerViewpoint::ANovaPlayerViewpoint()
 ANovaPlayerController::ANovaPlayerController()
 	: Super()
 	, LastNetworkError(ENovaNetworkError::Success)
-	, IsInCutscene(false)
+	, IsInSharedTransition(false)
 	, IsLoadingStreamingLevel(false)
 	, CurrentStreamingLevelIndex(0)
 {
@@ -272,7 +272,7 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const
 {
 	// During cutscenes, use the closest camera viewpoint and focus the player ship
-	if (IsInCutscene)
+	if (!GetMenuManager()->IsMenuOpen())
 	{
 		TArray<AActor*> Viewpoints;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaPlayerViewpoint::StaticClass(), Viewpoints);
@@ -298,6 +298,98 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 	Gameplay
 ----------------------------------------------------*/
 
+void ANovaPlayerController::SharedTransition(FSimpleDelegate Callback, bool CutsceneMode)
+{
+	NCHECK(GetLocalRole() == ROLE_Authority);
+	NLOG("ANovaPlayerController::ServerSharedTransition");
+
+	for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
+	{
+		OtherPlayer->ClientStartSharedTransition(CutsceneMode);
+	}
+
+	SharedTransitionCallback = Callback;
+}
+
+void ANovaPlayerController::ClientStartSharedTransition_Implementation(bool CutsceneMode)
+{
+	NLOG("ANovaPlayerController::ClientStartSharedTransition_Implementation");
+
+	// Action : mark as in shared transition locally and remotely
+	FNovaAsyncAction Action =
+		FNovaAsyncAction::CreateLambda([=]()
+			{
+				IsInSharedTransition = true;
+				ServerSharedTransitionReady();
+				NLOG("ANovaPlayerController::ClientStartSharedTransition_Implementation : done, waiting for server");
+			});
+
+	// Condition : on server, when all clients have reported as ready
+	// On client, when the server has signaled to stop
+	FNovaAsyncCondition Condition =
+		FNovaAsyncCondition::CreateLambda([=]()
+			{
+				if (GetLocalRole() == ROLE_Authority)
+				{
+					bool AllPlayersReady = true;
+					for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
+					{
+						if (!OtherPlayer->IsInSharedTransition)
+						{
+							AllPlayersReady = false;
+							break;
+						}
+					}
+
+					if (AllPlayersReady)
+					{
+						for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
+						{
+							OtherPlayer->ClientStopSharedTransition();
+						}
+
+						SharedTransitionCallback.ExecuteIfBound();
+						SharedTransitionCallback.Unbind();
+
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
+				else
+				{
+					return !IsInSharedTransition;
+				}
+			});
+
+	// Run the process
+	if (CutsceneMode)
+	{
+		GetMenuManager()->CloseMenu(Action, Condition);
+	}
+	else
+	{
+		GetMenuManager()->OpenMenu(Action, Condition);
+	}
+}
+
+void ANovaPlayerController::ClientStopSharedTransition_Implementation()
+{
+	NLOG("ANovaPlayerController::ClientStopSharedTransition_Implementation");
+	
+	IsInSharedTransition = false;
+}
+
+void ANovaPlayerController::ServerSharedTransitionReady_Implementation()
+{
+	NCHECK(GetLocalRole() == ROLE_Authority);
+	NLOG("ANovaPlayerController::ServerSharedTransitionReady_Implementation");
+
+	IsInSharedTransition = true;
+}
+
 void ANovaPlayerController::Dock()
 {
 	NLOG("ANovaPlayerController::Dock");
@@ -307,28 +399,22 @@ void ANovaPlayerController::Dock()
 		GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda([=]()
 			{
 				GetSpacecraftPawn()->ResetView();
-				IsInCutscene = false;
 			})
 		);
 	};
 
 	GetMenuManager()->CloseMenu(FNovaAsyncAction::CreateLambda([=]()
 		{
-			IsInCutscene = true;
 			LoadStreamingLevel("Station");
 		}),
 		FNovaAsyncCondition::CreateLambda([=]()
 		{
 			if (!IsLoadingStreamingLevel)
 			{
-				UNovaSpacecraftMovementComponent* MovementComponent = Cast<UNovaSpacecraftMovementComponent>(
-					GetSpacecraftPawn()->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
-				NCHECK(MovementComponent);
-
 				// TODO move elsewhere
 				for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
 				{
-					MovementComponent->Dock(*It, FSimpleDelegate::CreateLambda(EndCutscene));
+					GetSpacecraftPawn()->GetSpacecraftMovement()->Dock(*It, FSimpleDelegate::CreateLambda(EndCutscene));
 					break;
 				}
 
@@ -349,7 +435,6 @@ void ANovaPlayerController::Undock()
 	{
 		GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda([=]()
 			{
-				IsInCutscene = false;
 				UnloadStreamingLevel("Station");
 				GetSpacecraftPawn()->ResetView();
 			}),
@@ -362,13 +447,7 @@ void ANovaPlayerController::Undock()
 
 	auto StartCutscene = [=]()
 	{
-		IsInCutscene = true;
-
-		UNovaSpacecraftMovementComponent* MovementComponent = Cast<UNovaSpacecraftMovementComponent>(
-			GetSpacecraftPawn()->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
-		NCHECK(MovementComponent);
-
-		MovementComponent->Undock(FSimpleDelegate::CreateLambda(EndCutscene));
+		GetSpacecraftPawn()->GetSpacecraftMovement()->Undock(FSimpleDelegate::CreateLambda(EndCutscene));
 	};
 
 	GetMenuManager()->CloseMenu(FNovaAsyncAction::CreateLambda(StartCutscene));

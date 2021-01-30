@@ -99,6 +99,13 @@ public:
 		return Spacecraft;
 	}
 
+	/** Get the spacecraft movement component */
+	UFUNCTION(Category = Nova, BlueprintCallable)
+	class UNovaSpacecraftMovementComponent* GetSpacecraftMovement() const
+	{
+		return MovementComponent;
+	}
+
 	/** Insert a new compartment into the assembly */
 	bool InsertCompartment(FNovaCompartment CompartmentRequest, int32 Index);
 

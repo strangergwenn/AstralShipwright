@@ -16,9 +16,11 @@ import subprocess
 #-------------------------------------------------------------------------------
 
 hostArg = ''
-if len(sys.argv) == 2:
+rightScreen = False
+if len(sys.argv) >= 2:
 	if sys.argv[1] == 'host':
 		hostArg = '-host'
+		rightScreen = True
 
 
 #-------------------------------------------------------------------------------
@@ -64,7 +66,7 @@ subprocess.Popen([
 	'-game',
 	'-ResX=2560',
 	'-ResY=1440',
-	'-WinX=2560',
+	'-WinX=2560' if rightScreen else '-WinX=0',
 	'-WinY=30',
 	hostArg
 ])
