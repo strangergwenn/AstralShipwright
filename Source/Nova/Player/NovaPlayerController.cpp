@@ -53,8 +53,6 @@ ANovaPlayerController::ANovaPlayerController()
 	: Super()
 	, LastNetworkError(ENovaNetworkError::Success)
 	, IsInSharedTransition(false)
-	, IsLoadingStreamingLevel(false)
-	, CurrentStreamingLevelIndex(0)
 {
 	// Create the post-processing manager
 	PostProcessComponent = CreateDefaultSubobject<UNovaPostProcessComponent>(TEXT("PostProcessComponent"));
@@ -106,7 +104,7 @@ ANovaPlayerController::ANovaPlayerController()
 				Volume->Settings.GrainIntensity = FMath::Lerp(MyCurrent->GrainIntensity, MyTarget->GrainIntensity, Alpha);
 				Volume->Settings.SceneColorTint = FMath::Lerp(MyCurrent->SceneColorTint, MyTarget->SceneColorTint, Alpha);
 			})
-	);
+		);
 }
 
 
@@ -187,9 +185,6 @@ void ANovaPlayerController::BeginPlay()
 		if (!IsOnMainMenu())
 		{
 			ClientLoadPlayer();
-
-			// TODO : this should be dependent on save data
-			LoadStreamingLevel("Station");
 		}
 
 		GetMenuManager()->BeginPlay(this);
@@ -331,17 +326,17 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(bool Cuts
 			{
 				if (GetLocalRole() == ROLE_Authority)
 				{
-					bool AllPlayersReady = true;
+					bool CanSignalClientsToResume = !GetWorld()->GetAuthGameMode<ANovaGameMode>()->IsLoadingLevel();
 					for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
 					{
 						if (!OtherPlayer->IsInSharedTransition)
 						{
-							AllPlayersReady = false;
+							CanSignalClientsToResume = false;
 							break;
 						}
 					}
 
-					if (AllPlayersReady)
+					if (CanSignalClientsToResume)
 					{
 						for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
 						{
@@ -378,7 +373,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(bool Cuts
 void ANovaPlayerController::ClientStopSharedTransition_Implementation()
 {
 	NLOG("ANovaPlayerController::ClientStopSharedTransition_Implementation");
-	
+
 	IsInSharedTransition = false;
 }
 
@@ -394,120 +389,47 @@ void ANovaPlayerController::Dock()
 {
 	NLOG("ANovaPlayerController::Dock");
 
-	auto EndCutscene = [=]()
-	{
-		GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda([=]()
-			{
-				GetSpacecraftPawn()->ResetView();
-			})
-		);
-	};
-
-	GetMenuManager()->CloseMenu(FNovaAsyncAction::CreateLambda([=]()
+	FSimpleDelegate EndCutscene = FSimpleDelegate::CreateLambda([=]()
 		{
-			LoadStreamingLevel("Station");
-		}),
-		FNovaAsyncCondition::CreateLambda([=]()
-		{
-			if (!IsLoadingStreamingLevel)
-			{
-				// TODO move elsewhere
-				for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+			GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda([=]()
 				{
-					GetSpacecraftPawn()->GetSpacecraftMovement()->Dock(*It, FSimpleDelegate::CreateLambda(EndCutscene));
-					break;
-				}
+					GetSpacecraftPawn()->ResetView();
+				})
+			);
+		});
 
-				return true;
-			}
-			else
+	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda([=]()
+		{
+			// TODO move elsewhere
+			for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
 			{
-				return false;
+				GetSpacecraftPawn()->GetSpacecraftMovement()->Dock(EndCutscene, *It);
+				break;
 			}
-		}));
+		});
+
+	GetMenuManager()->CloseMenu(StartCutscene);
 }
 
 void ANovaPlayerController::Undock()
 {
 	NLOG("ANovaPlayerController::Undock");
 
-	auto EndCutscene = [=]()
-	{
-		GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda([=]()
-			{
-				UnloadStreamingLevel("Station");
-				GetSpacecraftPawn()->ResetView();
-			}),
-			FNovaAsyncCondition::CreateLambda([=]()
-			{
-				return !IsLoadingStreamingLevel;
-			})
-		);
-	};
+	FSimpleDelegate EndCutscene = FSimpleDelegate::CreateLambda([=]()
+		{
+			GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda([=]()
+				{
+					GetSpacecraftPawn()->ResetView();
+				})
+			);
+		});
 
-	auto StartCutscene = [=]()
-	{
-		GetSpacecraftPawn()->GetSpacecraftMovement()->Undock(FSimpleDelegate::CreateLambda(EndCutscene));
-	};
+	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda([=]()
+		{
+			GetSpacecraftPawn()->GetSpacecraftMovement()->Undock(EndCutscene);
+		});
 
-	GetMenuManager()->CloseMenu(FNovaAsyncAction::CreateLambda(StartCutscene));
-}
-
-
-/*----------------------------------------------------
-	Level loading
-----------------------------------------------------*/
-
-bool ANovaPlayerController::LoadStreamingLevel(FName SectorLevel)
-{
-	if (SectorLevel != NAME_None)
-	{
-		NLOG("ANovaPlayerController::LoadStreamingLevel : Loading streaming level '%s'", *SectorLevel.ToString());
-
-		FLatentActionInfo Info;
-		Info.CallbackTarget = this;
-		Info.ExecutionFunction = "OnLevelLoaded";
-		Info.UUID = CurrentStreamingLevelIndex;
-		Info.Linkage = 0;
-
-		UGameplayStatics::LoadStreamLevel(this, SectorLevel, true, false, Info);
-		CurrentStreamingLevelIndex++;
-		IsLoadingStreamingLevel = true;
-		return false;
-	}
-	return true;
-}
-
-void ANovaPlayerController::UnloadStreamingLevel(FName SectorLevel)
-{
-	if (SectorLevel != NAME_None)
-	{
-		NLOG("ANovaPlayerController::UnloadStreamingLevel : Unloading streaming level '%s'", *SectorLevel.ToString());
-
-		FLatentActionInfo Info;
-		Info.CallbackTarget = this;
-		Info.ExecutionFunction = "OnLevelUnloaded";
-		Info.UUID = CurrentStreamingLevelIndex;
-		Info.Linkage = 0;
-
-		UGameplayStatics::UnloadStreamLevel(this, SectorLevel, Info, false);
-		CurrentStreamingLevelIndex++;
-		IsLoadingStreamingLevel = true;
-	}
-}
-
-void ANovaPlayerController::OnLevelLoaded()
-{
-	NLOG("ANovaPlayerController::OnLevelLoaded");
-
-	IsLoadingStreamingLevel = false;
-}
-
-void ANovaPlayerController::OnLevelUnLoaded()
-{
-	NLOG("ANovaPlayerController::OnLevelUnLoaded");
-
-	IsLoadingStreamingLevel = false;
+	GetMenuManager()->CloseMenu(StartCutscene);
 }
 
 
@@ -565,12 +487,12 @@ void ANovaPlayerController::ServerLoadPlayer_Implementation(const FString& Seria
 void ANovaPlayerController::StartGame(FString SaveName, bool Online)
 {
 	NLOG("ANovaPlayerController::StartGame : loading from '%s', online = %d", *SaveName, Online);
-	
+
 	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,
 		FNovaAsyncAction::CreateLambda([=]()
-		{
-			GetGameInstance<UNovaGameInstance>()->StartGame(SaveName, Online);
-		})
+			{
+				GetGameInstance<UNovaGameInstance>()->StartGame(SaveName, Online);
+			})
 	);
 }
 
@@ -580,9 +502,9 @@ void ANovaPlayerController::SetGameOnline(bool Online)
 
 	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,
 		FNovaAsyncAction::CreateLambda([=]()
-		{
-			GetGameInstance<UNovaGameInstance>()->SetGameOnline(GetWorld()->GetName(), Online);
-		})
+			{
+				GetGameInstance<UNovaGameInstance>()->SetGameOnline(GetWorld()->GetName(), Online);
+			})
 	);
 }
 
@@ -658,8 +580,13 @@ void ANovaPlayerController::AcceptInvitation(const FOnlineSessionSearchResult& I
 
 bool ANovaPlayerController::IsReady() const
 {
-	return !IsLoadingStreamingLevel
-		&& (IsOnMainMenu() || (IsValid(GetSpacecraftPawn()) && GetSpacecraftPawn()->GetSpacecraft().IsValid()));
+	bool IsLoadingLevel = false;
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		IsLoadingLevel = GetWorld()->GetAuthGameMode<ANovaGameMode>()->IsLoadingLevel();
+	}
+
+	return !IsLoadingLevel && (IsOnMainMenu() || (IsValid(GetSpacecraftPawn()) && GetSpacecraftPawn()->GetSpacecraft().IsValid()));
 }
 
 

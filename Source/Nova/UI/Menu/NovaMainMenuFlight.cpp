@@ -63,11 +63,11 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.AutoHeight()
 			[
 				SNew(SNovaButton)
-				.Text(LOCTEXT("LeaveStation", "Leave station"))
-				.HelpText(LOCTEXT("HelpLeaveStation", "Leave station"))
+				.Text(LOCTEXT("LeaveStation", "Leave area"))
+				.HelpText(LOCTEXT("HelpLeaveStation", "Leave area"))
 				.OnClicked(FSimpleDelegate::CreateLambda([=]()
 				{
-					MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->LeaveStation();
+					MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->LeaveArea();
 				}))
 				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
 				{

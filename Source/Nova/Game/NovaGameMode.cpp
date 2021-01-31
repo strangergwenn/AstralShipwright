@@ -23,10 +23,14 @@
 
 ANovaGameMode::ANovaGameMode()
 	: Super()
+	, IsLoadingStreamingLevel(false)
+	, CurrentStreamingLevelIndex(0)
 {
+	// Defaults
 	PlayerControllerClass = ANovaPlayerController::StaticClass();
 	DefaultPawnClass = ANovaSpacecraftPawn::StaticClass();
 
+	// Settings
 	bUseSeamlessTravel = true;
 }
 
@@ -39,6 +43,9 @@ void ANovaGameMode::StartPlay()
 {
 	NLOG("ANovaGameMode::StartPlay");
 	Super::StartPlay();
+
+	// TODO : this should be dependent on save data
+	LoadStreamingLevel("Station");
 }
 
 void ANovaGameMode::PostLogin(APlayerController* Player)
@@ -121,22 +128,97 @@ AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	Gameplay
 ----------------------------------------------------*/
 
-void ANovaGameMode::LeaveStation()
+void ANovaGameMode::LeaveArea()
 {
 	NLOG("ANovaGameMode::LeaveStation");
 	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
 	NCHECK(PC);
+	ANovaSpacecraftPawn* PlayerPawn = PC->GetSpacecraftPawn();
 
-	FSimpleDelegate Cutscene = FSimpleDelegate::CreateLambda([=]()
+	// Cutscene is completed during shared transition : unload level and stop
+	FSimpleDelegate EndCutscene = FSimpleDelegate::CreateLambda([=]()
 		{
 			for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 			{
-				SpacecraftPawn->GetSpacecraftMovement()->Undock();
+				NLOG("ANovaGameMode::LeaveStation : ending cutscene");
+				SpacecraftPawn->GetSpacecraftMovement()->Stop();
+				UnloadStreamingLevel("Station");
 			}
-
 		});
 
-	PC->SharedTransition(Cutscene, true);
+	// Cutscene is ending : start a share transition
+	FSimpleDelegate StopCutscene = FSimpleDelegate::CreateLambda([=]()
+		{
+			NLOG("ANovaGameMode::LeaveStation : stopping cutscene");
+			PC->SharedTransition(EndCutscene, false);
+		});
+
+	// Cutscene is starting : start leaving the area
+	FSimpleDelegate StartCutscene = FSimpleDelegate::CreateLambda([=]()
+		{
+			NLOG("ANovaGameMode::LeaveStation : starting cutscene");
+			for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+			{
+				SpacecraftPawn->GetSpacecraftMovement()->LeaveArea(SpacecraftPawn == PlayerPawn ? StopCutscene : FSimpleDelegate());
+			}
+		});
+
+	PC->SharedTransition(StartCutscene, true);
 }
 
 
+/*----------------------------------------------------
+	Level loading
+----------------------------------------------------*/
+
+bool ANovaGameMode::LoadStreamingLevel(FName SectorLevel)
+{
+	if (SectorLevel != NAME_None)
+	{
+		NLOG("ANovaGameMode::LoadStreamingLevel : Loading streaming level '%s'", *SectorLevel.ToString());
+
+		FLatentActionInfo Info;
+		Info.CallbackTarget = this;
+		Info.ExecutionFunction = "OnLevelLoaded";
+		Info.UUID = CurrentStreamingLevelIndex;
+		Info.Linkage = 0;
+
+		UGameplayStatics::LoadStreamLevel(this, SectorLevel, true, false, Info);
+		CurrentStreamingLevelIndex++;
+		IsLoadingStreamingLevel = true;
+		return false;
+	}
+	return true;
+}
+
+void ANovaGameMode::UnloadStreamingLevel(FName SectorLevel)
+{
+	if (SectorLevel != NAME_None)
+	{
+		NLOG("ANovaGameMode::UnloadStreamingLevel : Unloading streaming level '%s'", *SectorLevel.ToString());
+
+		FLatentActionInfo Info;
+		Info.CallbackTarget = this;
+		Info.ExecutionFunction = "OnLevelUnloaded";
+		Info.UUID = CurrentStreamingLevelIndex;
+		Info.Linkage = 0;
+
+		UGameplayStatics::UnloadStreamLevel(this, SectorLevel, Info, false);
+		CurrentStreamingLevelIndex++;
+		IsLoadingStreamingLevel = true;
+	}
+}
+
+void ANovaGameMode::OnLevelLoaded()
+{
+	NLOG("ANovaGameMode::OnLevelLoaded");
+
+	IsLoadingStreamingLevel = false;
+}
+
+void ANovaGameMode::OnLevelUnLoaded()
+{
+	NLOG("ANovaGameMode::OnLevelUnLoaded");
+
+	IsLoadingStreamingLevel = false;
+}

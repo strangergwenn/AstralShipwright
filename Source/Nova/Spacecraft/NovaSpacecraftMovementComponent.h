@@ -12,10 +12,11 @@
 UENUM(BlueprintType)
 enum class ENovaMovementState : uint8
 {
+	Idle,
 	Docked,
 	Undocking,
 	Docking,
-	Idle
+	LeavingArea
 };
 
 /** High level movement command sent by a player */
@@ -33,7 +34,7 @@ struct FNovaMovementCommand
 	FNovaMovementCommand(ENovaMovementState S, const class AActor* A = nullptr)
 		: State(S)
 		, Target(A)
-		, Dirty(true)
+		, Dirty(false)
 	{}
 
 	UPROPERTY()
@@ -42,7 +43,6 @@ struct FNovaMovementCommand
 	UPROPERTY()
 	const class AActor* Target;
 
-	UPROPERTY()
 	bool Dirty;
 };
 
@@ -57,6 +57,7 @@ struct FNovaAttitudeCommand
 		, Velocity(FVector::ZeroVector)
 		, Direction(FVector::ZeroVector)
 		, Roll(0)
+		, MainDriveEnabled(false)
 	{}
 
 	UPROPERTY()
@@ -70,6 +71,9 @@ struct FNovaAttitudeCommand
 
 	UPROPERTY()
 	float Roll;
+
+	UPROPERTY()
+	bool MainDriveEnabled;
 };
 
 
@@ -99,10 +103,16 @@ public:
 	}
 
 	/** Dock at a particular location */
-	void Dock(const class AActor* Target, FSimpleDelegate Callback = FSimpleDelegate());
+	void Dock(FSimpleDelegate Callback = FSimpleDelegate(), const class AActor* Target = nullptr);
 
 	/** Undock from the current dock */
 	void Undock(FSimpleDelegate Callback = FSimpleDelegate());
+
+	/** Leave the area */
+	void LeaveArea(FSimpleDelegate Callback = FSimpleDelegate());
+
+	/** Stop right there with no particular target */
+	void Stop(FSimpleDelegate Callback = FSimpleDelegate());
 
 
 	/*----------------------------------------------------
@@ -113,6 +123,9 @@ protected:
 
 	/** Run the high level state machine */
 	void ProcessState();
+
+	/** Signal completion to the user */
+	void SignalCompletion();
 
 
 	/*----------------------------------------------------
@@ -228,11 +241,11 @@ protected:
 	// High-level state
 	UPROPERTY(Replicated)
 	FNovaMovementCommand                          MovementCommand;
-	FSimpleDelegate                               IdleCallback;
+	FSimpleDelegate                               CompletionCallback;
 
 	// Authoritative attitude input, produced by the server in real-time
 	UPROPERTY(Replicated)
-	FNovaAttitudeCommand                          DesiredAttitude;
+	FNovaAttitudeCommand                          AttitudeCommand;
 
 	// Movement state
 	FVector                                       CurrentLinearVelocity;
@@ -257,17 +270,20 @@ public:
 
 	inline bool IsMainDriveRunning() const
 	{
-		return AngularAttitudeDistance < VectoringAngle
-			&& MovementCommand.State != ENovaMovementState::Docking
-			&& MovementCommand.State != ENovaMovementState::Undocking;
+		return AttitudeCommand.MainDriveEnabled && AngularAttitudeDistance < VectoringAngle;
 	}
 
-	inline const FVector GetLocation(const FVector& Offset) const
+	inline const FVector GetLocation(const FVector& Offset = FVector::ZeroVector) const
 	{
 		return UpdatedComponent->GetComponentLocation() + Offset * 100;
 	}
 
-	inline const FVector GetCurrentVelocity() const
+	inline bool IsMaxVelocity() const
+	{
+		return CurrentLinearVelocity.Size() >= MaxLinearVelocity;
+	}
+
+	inline const FVector GetCurrentLinearVelocity() const
 	{
 		return CurrentLinearVelocity;
 	}

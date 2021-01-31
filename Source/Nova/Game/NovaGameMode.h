@@ -34,13 +34,57 @@ public:
 
 
 	/*----------------------------------------------------
-		Inherited
+		Gameplay
 	----------------------------------------------------*/
 
 public:
 
-	/** Get all players to leave a station */
-	void LeaveStation();
+	/** Get all players to leave a zone */
+	void LeaveArea();
+
+	
+	/*----------------------------------------------------
+		Level loading
+	----------------------------------------------------*/
+
+protected:
+	
+	/** Load a streaming level */
+	bool LoadStreamingLevel(FName SectorLevel);
+
+	/** Unload a streaming level */
+	void UnloadStreamingLevel(FName SectorLevel);
+
+	/** Callback for a loaded streaming level */
+	UFUNCTION(BlueprintCallable, Category = GameMode)
+	void OnLevelLoaded();
+
+	/** Callback for an unloaded streaming level */
+	UFUNCTION(BlueprintCallable, Category = GameMode)
+	void OnLevelUnLoaded();
 
 
+	/*----------------------------------------------------
+		Data
+	----------------------------------------------------*/
+
+private:
+
+	// Game state
+	bool                                          IsLoadingStreamingLevel;
+	int32                                         CurrentStreamingLevelIndex;
+	
+
+	/*----------------------------------------------------
+		Getters
+	----------------------------------------------------*/
+
+public:
+
+	/** Check if we're loading a level */
+	UFUNCTION(Category = Nova, BlueprintCallable)
+	bool IsLoadingLevel() const
+	{
+		return IsLoadingStreamingLevel;
+	}
 };

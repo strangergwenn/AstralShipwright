@@ -117,27 +117,6 @@ public:
 
 
 	/*----------------------------------------------------
-		Level loading
-	----------------------------------------------------*/
-
-protected:
-	
-	/** Load a streaming level */
-	bool LoadStreamingLevel(FName SectorLevel);
-
-	/** Unload a streaming level */
-	void UnloadStreamingLevel(FName SectorLevel);
-
-	/** Callback for a loaded streaming level */
-	UFUNCTION(BlueprintCallable, Category = GameMode)
-	void OnLevelLoaded();
-
-	/** Callback for an unloaded streaming level */
-	UFUNCTION(BlueprintCallable, Category = GameMode)
-	void OnLevelUnLoaded();
-
-
-	/*----------------------------------------------------
 		Server-side save
 	----------------------------------------------------*/
 
@@ -248,11 +227,9 @@ private:
 	// Travel state
 	ENovaNetworkError                             LastNetworkError;
 
-	// Level loading & transitions
+	// Transitions
 	bool                                          IsInSharedTransition;
 	FSimpleDelegate                               SharedTransitionCallback;
-	bool                                          IsLoadingStreamingLevel;
-	int32                                         CurrentStreamingLevelIndex;
 
 	// Gameplay state
 	TMap<ENovaPostProcessPreset, TSharedPtr<FNovaPostProcessSetting>> PostProcessSettings;
@@ -274,7 +251,7 @@ public:
 		return GetGameInstance<UNovaGameInstance>()->GetMenuManager();
 	}
 
-	/** Get a turntable actor **/
+	/** Get a turntable actor */
 	UFUNCTION(Category = Nova, BlueprintCallable)
 	class ANovaSpacecraftPawn* GetSpacecraftPawn() const
 	{
