@@ -29,7 +29,6 @@ bool UNovaMenuManager::UsingGamepad = false;
 
 UNovaMenuManager::UNovaMenuManager()
 	: Super()
-	, IsPlayerInitialized(false)
 	, CurrentMenuState(ENovaFadeState::FadingFromBlack)
 {
 	// Settings
@@ -126,7 +125,7 @@ void UNovaMenuManager::BeginPlay(ANovaPlayerController* PC)
 
 void UNovaMenuManager::Tick(float DeltaTime)
 {
-	if (IsPlayerInitialized)
+	if (GetPC() && GetPC()->IsReady())
 	{
 		switch (CurrentMenuState)
 		{
@@ -192,13 +191,6 @@ void UNovaMenuManager::Tick(float DeltaTime)
 				break;
 			}
 		}
-	}
-
-	// Waiting initial player player
-	else if (GetPC() && GetPC()->IsReady())
-	{
-		NLOG("UNovaMenuManager::Tick : player initialized");
-		IsPlayerInitialized = true;
 	}
 
 	// Build focus filter

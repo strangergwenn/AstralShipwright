@@ -24,6 +24,7 @@
 ANovaGameMode::ANovaGameMode()
 	: Super()
 	, IsLoadingStreamingLevel(false)
+	, IsUnloadingStreamingLevel(false)
 	, CurrentStreamingLevelIndex(0)
 {
 	// Defaults
@@ -128,9 +129,19 @@ AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	Gameplay
 ----------------------------------------------------*/
 
+void ANovaGameMode::ResetArea()
+{
+	NLOG("ANovaGameMode::ResetArea");
+
+	for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+	{
+		SpacecraftPawn->GetSpacecraftMovement()->Reset();
+	}
+}
+
 void ANovaGameMode::LeaveArea()
 {
-	NLOG("ANovaGameMode::LeaveStation");
+	NLOG("ANovaGameMode::LeaveArea");
 	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
 	NCHECK(PC);
 	ANovaSpacecraftPawn* PlayerPawn = PC->GetSpacecraftPawn();
@@ -140,23 +151,24 @@ void ANovaGameMode::LeaveArea()
 		{
 			for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 			{
-				NLOG("ANovaGameMode::LeaveStation : ending cutscene");
+				NLOG("ANovaGameMode::LeaveArea : ending cutscene");
 				SpacecraftPawn->GetSpacecraftMovement()->Stop();
 				UnloadStreamingLevel("Station");
+				LoadStreamingLevel("Orbit");
 			}
 		});
 
 	// Cutscene is ending : start a share transition
 	FSimpleDelegate StopCutscene = FSimpleDelegate::CreateLambda([=]()
 		{
-			NLOG("ANovaGameMode::LeaveStation : stopping cutscene");
+			NLOG("ANovaGameMode::LeaveArea : stopping cutscene");
 			PC->SharedTransition(EndCutscene, false);
 		});
 
 	// Cutscene is starting : start leaving the area
 	FSimpleDelegate StartCutscene = FSimpleDelegate::CreateLambda([=]()
 		{
-			NLOG("ANovaGameMode::LeaveStation : starting cutscene");
+			NLOG("ANovaGameMode::LeaveArea : starting cutscene");
 			for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 			{
 				SpacecraftPawn->GetSpacecraftMovement()->LeaveArea(SpacecraftPawn == PlayerPawn ? StopCutscene : FSimpleDelegate());
@@ -205,7 +217,7 @@ void ANovaGameMode::UnloadStreamingLevel(FName SectorLevel)
 
 		UGameplayStatics::UnloadStreamLevel(this, SectorLevel, Info, false);
 		CurrentStreamingLevelIndex++;
-		IsLoadingStreamingLevel = true;
+		IsUnloadingStreamingLevel = true;
 	}
 }
 
@@ -214,11 +226,15 @@ void ANovaGameMode::OnLevelLoaded()
 	NLOG("ANovaGameMode::OnLevelLoaded");
 
 	IsLoadingStreamingLevel = false;
+
+	ResetArea();
 }
 
 void ANovaGameMode::OnLevelUnLoaded()
 {
 	NLOG("ANovaGameMode::OnLevelUnLoaded");
 
-	IsLoadingStreamingLevel = false;
+	IsUnloadingStreamingLevel = false;
+
+	ResetArea();
 }

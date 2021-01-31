@@ -95,15 +95,18 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	/** Get the current state of the movement system */
-	UFUNCTION(BlueprintCallable)
-	ENovaMovementState GetState() const
-	{
-		return MovementCommand.State;
-	}
+	/** Initialize the component with a starting point */
+	void Initialize(const class AActor* Start);
+
+	/** Initialize the component with a starting point */
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastInitialize(const class AActor* Start);
+
+	/** Uninitialize the component */
+	void Reset();
 
 	/** Dock at a particular location */
-	void Dock(FSimpleDelegate Callback = FSimpleDelegate(), const class AActor* Target = nullptr);
+	void Dock(FSimpleDelegate Callback = FSimpleDelegate());
 
 	/** Undock from the current dock */
 	void Undock(FSimpleDelegate Callback = FSimpleDelegate());
@@ -247,6 +250,10 @@ protected:
 	UPROPERTY(Replicated)
 	FNovaAttitudeCommand                          AttitudeCommand;
 
+	// Dock we were initialized for
+	UPROPERTY(Replicated)
+	const class AActor*                           StartActor;
+
 	// Movement state
 	FVector                                       CurrentLinearVelocity;
 	FVector                                       CurrentAngularVelocity;
@@ -267,6 +274,18 @@ protected:
 	----------------------------------------------------*/
 
 public:
+
+	/** Get the current state of the movement system */
+	UFUNCTION(BlueprintCallable)
+	ENovaMovementState GetState() const
+	{
+		return MovementCommand.State;
+	}
+
+	inline bool IsReady() const
+	{
+		return StartActor != nullptr;
+	}
 
 	inline bool IsMainDriveRunning() const
 	{

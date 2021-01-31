@@ -194,7 +194,6 @@ protected:
 	TSharedPtr<class SWidget>                     DesiredFocusWidget;
 
 	// Data
-	bool                                          IsPlayerInitialized;
 	bool                                          LoadingScreenFrozen;
 	static bool                                   UsingGamepad;
 	FNovaAsyncCommand                             CurrentCommand;

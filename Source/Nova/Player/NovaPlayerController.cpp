@@ -24,12 +24,12 @@
 #include "Misc/CommandLine.h"
 
 #include "GameFramework/PlayerState.h"
-#include "GameFramework/PlayerStart.h"
 #include "Components/PostProcessComponent.h"
 #include "Components/BillboardComponent.h"
 #include "Components/SkyLightComponent.h"
 
 #include "Engine/LocalPlayer.h"
+#include "Engine/LevelStreaming.h"
 #include "Engine/SpotLight.h"
 #include "Engine/SkyLight.h"
 #include "Engine/Engine.h"
@@ -310,11 +310,19 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(bool Cuts
 {
 	NLOG("ANovaPlayerController::ClientStartSharedTransition_Implementation");
 
+	// Shared transitions work like this :
+	// - Server signals all players to fade to black through this very method
+	// - Once faded, Action is called and all players call ServerSharedTransitionReady to signal they're dark
+	// - Server calls SharedTransitionCallback when all clients have called ServerSharedTransitionReady, and no level is loading/unloading
+	// - Server then calls ClientStopSharedTransition on all players so that they know to resume
+	// - All players then fade back to the game
+
+	IsInSharedTransition = true;
+
 	// Action : mark as in shared transition locally and remotely
 	FNovaAsyncAction Action =
 		FNovaAsyncAction::CreateLambda([=]()
 			{
-				IsInSharedTransition = true;
 				ServerSharedTransitionReady();
 				NLOG("ANovaPlayerController::ClientStartSharedTransition_Implementation : done, waiting for server");
 			});
@@ -326,25 +334,25 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(bool Cuts
 			{
 				if (GetLocalRole() == ROLE_Authority)
 				{
-					bool CanSignalClientsToResume = !GetWorld()->GetAuthGameMode<ANovaGameMode>()->IsLoadingLevel();
+					bool CanSignalClientsToResume = !IsStreamingLevel();
 					for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
 					{
 						if (!OtherPlayer->IsInSharedTransition)
 						{
 							CanSignalClientsToResume = false;
-							break;
+break;
 						}
 					}
 
 					if (CanSignalClientsToResume)
 					{
+						SharedTransitionCallback.ExecuteIfBound();
+						SharedTransitionCallback.Unbind();
+
 						for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
 						{
 							OtherPlayer->ClientStopSharedTransition();
 						}
-
-						SharedTransitionCallback.ExecuteIfBound();
-						SharedTransitionCallback.Unbind();
 
 						return true;
 					}
@@ -355,19 +363,19 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(bool Cuts
 				}
 				else
 				{
-					return !IsInSharedTransition;
+				return !IsInSharedTransition;
 				}
 			});
 
-	// Run the process
-	if (CutsceneMode)
-	{
-		GetMenuManager()->CloseMenu(Action, Condition);
-	}
-	else
-	{
-		GetMenuManager()->OpenMenu(Action, Condition);
-	}
+			// Run the process
+			if (CutsceneMode)
+			{
+				GetMenuManager()->CloseMenu(Action, Condition);
+			}
+			else
+			{
+				GetMenuManager()->OpenMenu(Action, Condition);
+			}
 }
 
 void ANovaPlayerController::ClientStopSharedTransition_Implementation()
@@ -400,12 +408,7 @@ void ANovaPlayerController::Dock()
 
 	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda([=]()
 		{
-			// TODO move elsewhere
-			for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
-			{
-				GetSpacecraftPawn()->GetSpacecraftMovement()->Dock(EndCutscene, *It);
-				break;
-			}
+			GetSpacecraftPawn()->GetSpacecraftMovement()->Dock(EndCutscene);
 		});
 
 	GetMenuManager()->CloseMenu(StartCutscene);
@@ -430,6 +433,19 @@ void ANovaPlayerController::Undock()
 		});
 
 	GetMenuManager()->CloseMenu(StartCutscene);
+}
+
+bool ANovaPlayerController::IsStreamingLevel() const
+{
+	for (const ULevelStreaming* Level : GetWorld()->GetStreamingLevels())
+	{
+		if (Level->IsStreamingStatePending())
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 
@@ -580,13 +596,12 @@ void ANovaPlayerController::AcceptInvitation(const FOnlineSessionSearchResult& I
 
 bool ANovaPlayerController::IsReady() const
 {
-	bool IsLoadingLevel = false;
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		IsLoadingLevel = GetWorld()->GetAuthGameMode<ANovaGameMode>()->IsLoadingLevel();
-	}
+	// Check spacecraft pawn
+	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+	bool IsSpacecraftReady = IsValid(SpacecraftPawn) && SpacecraftPawn->GetSpacecraft().IsValid()
+		&& SpacecraftPawn->GetSpacecraftMovement()->IsReady();
 
-	return !IsLoadingLevel && (IsOnMainMenu() || (IsValid(GetSpacecraftPawn()) && GetSpacecraftPawn()->GetSpacecraft().IsValid()));
+	return !IsStreamingLevel() && (IsOnMainMenu() || IsSpacecraftReady);
 }
 
 

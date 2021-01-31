@@ -39,6 +39,9 @@ public:
 
 public:
 
+	/** Reset the area, moving all ships to player starts */
+	void ResetArea();
+
 	/** Get all players to leave a zone */
 	void LeaveArea();
 
@@ -72,6 +75,7 @@ private:
 
 	// Game state
 	bool                                          IsLoadingStreamingLevel;
+	bool                                          IsUnloadingStreamingLevel;
 	int32                                         CurrentStreamingLevelIndex;
 	
 
@@ -81,10 +85,10 @@ private:
 
 public:
 
-	/** Check if we're loading a level */
+	/** Check if we're loading or unloading a level */
 	UFUNCTION(Category = Nova, BlueprintCallable)
-	bool IsLoadingLevel() const
+	bool IsLoadingUnloadingLevel() const
 	{
-		return IsLoadingStreamingLevel;
+		return IsLoadingStreamingLevel || IsUnloadingStreamingLevel;
 	}
 };

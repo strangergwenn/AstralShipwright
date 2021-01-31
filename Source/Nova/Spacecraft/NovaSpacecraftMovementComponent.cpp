@@ -2,12 +2,16 @@
 
 #include "NovaSpacecraftMovementComponent.h"
 
+#include "Nova/Game/NovaGameMode.h"
+#include "Nova/Player/NovaPlayerController.h"
+#include "Nova/Tools/NovaActorTools.h"
 #include "Nova/Nova.h"
 
+#include "GameFramework/PlayerStart.h"
+#include "Engine/PlayerStartPIE.h"
 #include "Components/PrimitiveComponent.h"
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
-
 
 
 #define LOCTEXT_NAMESPACE "UNovaSpacecraftMovementComponent"
@@ -70,6 +74,18 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// Initialize the movement component
+	if (GetLocalRole() == ROLE_Authority && !IsReady())
+	{
+		ANovaPlayerController* PC = Cast<APawn>(GetOwner())->GetController<ANovaPlayerController>();
+		AActor* Start = GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChoosePlayerStart(PC);
+
+		if (Start)
+		{
+			Initialize(Start);
+		}
+	}
+
 #if 0
 	int32 TestStepDuration = 5;
 	int32 TestDuration = 4 * TestStepDuration;
@@ -127,17 +143,57 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 	ProcessMovement(DeltaTime);
 }
 
-void UNovaSpacecraftMovementComponent::Dock(FSimpleDelegate Callback, const class AActor* Target)
+void UNovaSpacecraftMovementComponent::Initialize(const AActor* Start)
 {
-	NLOG("UNovaSpacecraftMovementComponent::Dock");
+	NLOG("UNovaSpacecraftMovementComponent::Initialize : '%s'", Start ? *Start->GetName() : nullptr);
+
+	NCHECK(GetLocalRole() == ROLE_Authority);
+	NCHECK(IsValid(Start));
+	MulticastInitialize(Start);
+}
+
+void UNovaSpacecraftMovementComponent::MulticastInitialize_Implementation(const class AActor* Start)
+{
+	NLOG("UNovaSpacecraftMovementComponent::MulticastInitialize_Implementation : '%s' ('%s')",
+		Start ? *Start->GetName() : nullptr, *GetRoleString(this));
+
+	// Reset transform
+	UpdatedComponent->SetWorldTransform(Start->GetActorTransform());
+	StartActor = Start;
+
+	// Reset commands
+	MovementCommand = FNovaMovementCommand();
+	AttitudeCommand = FNovaAttitudeCommand();
+	AttitudeCommand.Location = Start->GetActorLocation();
+	AttitudeCommand.Direction = Start->GetActorForwardVector();
+
+	// Reset state
+	CurrentLinearVelocity = FVector::ZeroVector;
+	CurrentAngularVelocity = FVector::ZeroVector;
+	PreviousVelocity = FVector::ZeroVector;
+	PreviousAngularVelocity = FVector::ZeroVector;
+	MeasuredAcceleration = FVector::ZeroVector;
+	MeasuredAngularAcceleration = FVector::ZeroVector;
+}
+
+void UNovaSpacecraftMovementComponent::Reset()
+{
+	NLOG("UNovaSpacecraftMovementComponent::Reset ('%s')", *GetRoleString(this));
+
+	StartActor = nullptr;
+}
+
+void UNovaSpacecraftMovementComponent::Dock(FSimpleDelegate Callback)
+{
+	NLOG("UNovaSpacecraftMovementComponent::Dock ('%s')", *GetRoleString(this));
 
 	CompletionCallback = Callback;
-	RequestMovement(FNovaMovementCommand(ENovaMovementState::Docking, Target));
+	RequestMovement(FNovaMovementCommand(ENovaMovementState::Docking, StartActor));
 }
 
 void UNovaSpacecraftMovementComponent::Undock(FSimpleDelegate Callback)
 {
-	NLOG("UNovaSpacecraftMovementComponent::Undock");
+	NLOG("UNovaSpacecraftMovementComponent::Undock ('%s')", *GetRoleString(this));
 
 	CompletionCallback = Callback;
 	RequestMovement(FNovaMovementCommand(ENovaMovementState::Undocking));
@@ -145,7 +201,7 @@ void UNovaSpacecraftMovementComponent::Undock(FSimpleDelegate Callback)
 
 void UNovaSpacecraftMovementComponent::LeaveArea(FSimpleDelegate Callback)
 {
-	NLOG("UNovaSpacecraftMovementComponent::LeaveArea");
+	NLOG("UNovaSpacecraftMovementComponent::LeaveArea ('%s')", *GetRoleString(this));
 
 	CompletionCallback = Callback;
 	RequestMovement(FNovaMovementCommand(ENovaMovementState::LeavingArea));
@@ -153,7 +209,7 @@ void UNovaSpacecraftMovementComponent::LeaveArea(FSimpleDelegate Callback)
 
 void UNovaSpacecraftMovementComponent::Stop(FSimpleDelegate Callback)
 {
-	NLOG("UNovaSpacecraftMovementComponent::Stop");
+	NLOG("UNovaSpacecraftMovementComponent::Stop ('%s')", *GetRoleString(this));
 
 	CompletionCallback = Callback;
 	RequestMovement(FNovaMovementCommand(ENovaMovementState::Idle));
@@ -413,7 +469,7 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 
 		// Determine the new angular velocity based on the remaining angle and velocity
 		float AngularStoppingDistance = (AngularVelocityDelta.Size() / 2) * (TimeToFinalVelocity + DeltaTime) / AngularOvershootRatio;
-		if (!FMath::IsNearlyZero(AngularAttitudeDistance) && !(FMath::Abs(AngularAttitudeDistance) < AngularStoppingDistance))
+		if (!FMath::IsNearlyZero(AngularAttitudeDistance) || !(FMath::Abs(AngularAttitudeDistance) < AngularStoppingDistance))
 		{
 			float OvershotAngularAttitudeDistance = AngularOvershootRatio * (AngularAttitudeDistance - AngularStoppingDistance);
 			float MaxUsefulAngularVelocity = FMath::Min(OvershotAngularAttitudeDistance / DeltaTime, MaxAngularVelocity);
@@ -484,6 +540,7 @@ void UNovaSpacecraftMovementComponent::GetLifetimeReplicatedProps(TArray<FLifeti
 
 	DOREPLIFETIME(UNovaSpacecraftMovementComponent, MovementCommand);
 	DOREPLIFETIME(UNovaSpacecraftMovementComponent, AttitudeCommand);
+	DOREPLIFETIME(UNovaSpacecraftMovementComponent, StartActor);
 }
 
 
