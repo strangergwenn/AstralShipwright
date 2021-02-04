@@ -42,8 +42,8 @@ public:
 	/** Reset the area, moving all ships to player starts */
 	void ResetArea();
 
-	/** Get all players to leave a zone */
-	void LeaveArea();
+	/** Have all players fade to black, play the exit cutscene and switch sublevel */
+	void ChangeArea(FName NewLevel);
 
 	
 	/*----------------------------------------------------
@@ -53,17 +53,17 @@ public:
 protected:
 	
 	/** Load a streaming level */
-	bool LoadStreamingLevel(FName SectorLevel);
+	bool LoadStreamingLevel(FName LevelName, FSimpleDelegate Callback = FSimpleDelegate());
 
 	/** Unload a streaming level */
-	void UnloadStreamingLevel(FName SectorLevel);
+	void UnloadStreamingLevel(FName LevelName, FSimpleDelegate Callback = FSimpleDelegate());
 
 	/** Callback for a loaded streaming level */
-	UFUNCTION(BlueprintCallable, Category = GameMode)
+	UFUNCTION()
 	void OnLevelLoaded();
 
 	/** Callback for an unloaded streaming level */
-	UFUNCTION(BlueprintCallable, Category = GameMode)
+	UFUNCTION()
 	void OnLevelUnLoaded();
 
 
@@ -74,21 +74,8 @@ protected:
 private:
 
 	// Game state
-	bool                                          IsLoadingStreamingLevel;
-	bool                                          IsUnloadingStreamingLevel;
 	int32                                         CurrentStreamingLevelIndex;
-	
-
-	/*----------------------------------------------------
-		Getters
-	----------------------------------------------------*/
-
-public:
-
-	/** Check if we're loading or unloading a level */
-	UFUNCTION(Category = Nova, BlueprintCallable)
-	bool IsLoadingUnloadingLevel() const
-	{
-		return IsLoadingStreamingLevel || IsUnloadingStreamingLevel;
-	}
+	FName                                         CurrentLevelName;
+	FSimpleDelegate                               OnLevelLoadedCallback;
+	FSimpleDelegate                               OnLevelUnloadedCallback;
 };

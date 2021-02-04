@@ -2,6 +2,7 @@
 
 #include "NovaSpacecraftMovementComponent.h"
 
+#include "Nova/Actor/NovaPlayerStart.h"
 #include "Nova/Game/NovaGameMode.h"
 #include "Nova/Player/NovaPlayerController.h"
 #include "Nova/Tools/NovaActorTools.h"
@@ -63,13 +64,6 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	Movement API
 ----------------------------------------------------*/
 
-void UNovaSpacecraftMovementComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	MovementCommand.State = ENovaMovementState::Docked;
-}
-
 void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -78,11 +72,11 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 	if (GetLocalRole() == ROLE_Authority && !IsReady())
 	{
 		ANovaPlayerController* PC = Cast<APawn>(GetOwner())->GetController<ANovaPlayerController>();
-		AActor* Start = GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChoosePlayerStart(PC);
+		ANovaPlayerStart* Start = Cast<ANovaPlayerStart>(GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChoosePlayerStart(PC));
 
 		if (Start)
 		{
-			Initialize(Start);
+			Initialize(Start, Start->StartDocked);
 		}
 	}
 
@@ -136,33 +130,32 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 
 	// Run movement implementation
 	ProcessMeasurementsBeforeAttitude(DeltaTime);
-	if (MovementCommand.State != ENovaMovementState::Idle)
 	ProcessLinearAttitude(DeltaTime);
 	ProcessAngularAttitude(DeltaTime);
 	ProcessMeasurementsAfterAttitude(DeltaTime);
 	ProcessMovement(DeltaTime);
 }
 
-void UNovaSpacecraftMovementComponent::Initialize(const AActor* Start)
+void UNovaSpacecraftMovementComponent::Initialize(const AActor* Start, bool StartDocked)
 {
 	NLOG("UNovaSpacecraftMovementComponent::Initialize : '%s'", Start ? *Start->GetName() : nullptr);
 
 	NCHECK(GetLocalRole() == ROLE_Authority);
 	NCHECK(IsValid(Start));
-	MulticastInitialize(Start);
+	MulticastInitialize(Start, StartDocked);
 }
 
-void UNovaSpacecraftMovementComponent::MulticastInitialize_Implementation(const class AActor* Start)
+void UNovaSpacecraftMovementComponent::MulticastInitialize_Implementation(const class AActor* Start, bool StartDocked)
 {
-	NLOG("UNovaSpacecraftMovementComponent::MulticastInitialize_Implementation : '%s' ('%s')",
-		Start ? *Start->GetName() : nullptr, *GetRoleString(this));
+	NLOG("UNovaSpacecraftMovementComponent::MulticastInitialize_Implementation : '%s' %d ('%s')",
+		Start ? *Start->GetName() : nullptr, StartDocked, *GetRoleString(this));
 
 	// Reset transform
 	UpdatedComponent->SetWorldTransform(Start->GetActorTransform());
 	StartActor = Start;
 
 	// Reset commands
-	MovementCommand = FNovaMovementCommand();
+	MovementCommand = FNovaMovementCommand(StartDocked ? ENovaMovementState::Docked : ENovaMovementState::Idle);
 	AttitudeCommand = FNovaAttitudeCommand();
 	AttitudeCommand.Location = Start->GetActorLocation();
 	AttitudeCommand.Direction = Start->GetActorForwardVector();
@@ -225,8 +218,9 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 	switch (MovementCommand.State)
 	{
 
-	// Idle
+	// Idle states
 	case ENovaMovementState::Idle:
+	case ENovaMovementState::Docked:
 		AttitudeCommand.MainDriveEnabled = false;
 		break;
 
@@ -469,7 +463,7 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 
 		// Determine the new angular velocity based on the remaining angle and velocity
 		float AngularStoppingDistance = (AngularVelocityDelta.Size() / 2) * (TimeToFinalVelocity + DeltaTime) / AngularOvershootRatio;
-		if (!FMath::IsNearlyZero(AngularAttitudeDistance) || !(FMath::Abs(AngularAttitudeDistance) < AngularStoppingDistance))
+		if (!FMath::IsNearlyZero(AngularAttitudeDistance) && !(FMath::Abs(AngularAttitudeDistance) < AngularStoppingDistance))
 		{
 			float OvershotAngularAttitudeDistance = AngularOvershootRatio * (AngularAttitudeDistance - AngularStoppingDistance);
 			float MaxUsefulAngularVelocity = FMath::Min(OvershotAngularAttitudeDistance / DeltaTime, MaxAngularVelocity);

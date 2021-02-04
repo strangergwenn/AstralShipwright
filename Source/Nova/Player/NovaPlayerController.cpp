@@ -293,7 +293,7 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 	Gameplay
 ----------------------------------------------------*/
 
-void ANovaPlayerController::SharedTransition(FSimpleDelegate Callback, bool CutsceneMode)
+void ANovaPlayerController::SharedTransition(bool CutsceneMode, FSimpleDelegate StartCallback, FSimpleDelegate FinishCallback)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 	NLOG("ANovaPlayerController::ServerSharedTransition");
@@ -303,7 +303,8 @@ void ANovaPlayerController::SharedTransition(FSimpleDelegate Callback, bool Cuts
 		OtherPlayer->ClientStartSharedTransition(CutsceneMode);
 	}
 
-	SharedTransitionCallback = Callback;
+	OnSharedTransitionStarted = StartCallback;
+	OnSharedTransitionFinished = FinishCallback;
 }
 
 void ANovaPlayerController::ClientStartSharedTransition_Implementation(bool CutsceneMode)
@@ -334,48 +335,54 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(bool Cuts
 			{
 				if (GetLocalRole() == ROLE_Authority)
 				{
-					bool CanSignalClientsToResume = !IsStreamingLevel();
+					// Check if all players are in transition
+					bool AllPlayersInTransition = true;
 					for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
 					{
 						if (!OtherPlayer->IsInSharedTransition)
 						{
-							CanSignalClientsToResume = false;
-break;
+							AllPlayersInTransition = false;
+							break;
 						}
 					}
 
-					if (CanSignalClientsToResume)
+					// If all players are ready, fire the start event, and wait for no streaming level operation to be ongoing
+					if (AllPlayersInTransition)
 					{
-						SharedTransitionCallback.ExecuteIfBound();
-						SharedTransitionCallback.Unbind();
+						OnSharedTransitionStarted.ExecuteIfBound();
+						OnSharedTransitionStarted.Unbind();
 
-						for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
+						if (!IsStreamingLevel())
 						{
-							OtherPlayer->ClientStopSharedTransition();
-						}
+							OnSharedTransitionFinished.ExecuteIfBound();
+							OnSharedTransitionFinished.Unbind();
 
-						return true;
+							for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
+							{
+								OtherPlayer->ClientStopSharedTransition();
+							}
+
+							return true;
+						}
 					}
-					else
-					{
-						return false;
-					}
+
+					return false;
 				}
 				else
 				{
-				return !IsInSharedTransition;
+					return !IsInSharedTransition;
 				}
 			});
 
-			// Run the process
-			if (CutsceneMode)
-			{
-				GetMenuManager()->CloseMenu(Action, Condition);
-			}
-			else
-			{
-				GetMenuManager()->OpenMenu(Action, Condition);
-			}
+	// Run the process
+	if (CutsceneMode)
+	{
+		GetMenuManager()->CloseMenu(Action, Condition);
+	}
+	else
+	{
+		GetMenuManager()->OpenMenu(Action, Condition);
+	}
 }
 
 void ANovaPlayerController::ClientStopSharedTransition_Implementation()

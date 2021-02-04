@@ -91,16 +91,14 @@ public:
 		Movement API
 	----------------------------------------------------*/
 
-	virtual void BeginPlay() override;
-
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	/** Initialize the component with a starting point */
-	void Initialize(const class AActor* Start);
+	void Initialize(const class AActor* Start, bool StartDocked);
 
 	/** Initialize the component with a starting point */
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastInitialize(const class AActor* Start);
+	void MulticastInitialize(const class AActor* Start, bool StartDocked);
 
 	/** Uninitialize the component */
 	void Reset();

@@ -67,7 +67,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 				.HelpText(LOCTEXT("HelpLeaveStation", "Leave area"))
 				.OnClicked(FSimpleDelegate::CreateLambda([=]()
 				{
-					MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->LeaveArea();
+					MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChangeArea("Orbit");
 				}))
 				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
 				{

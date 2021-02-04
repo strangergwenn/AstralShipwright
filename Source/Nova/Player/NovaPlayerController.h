@@ -95,7 +95,7 @@ public:
 	----------------------------------------------------*/
 
 	/** Run a shared transition with a fade to black on all clients */
-	void SharedTransition(FSimpleDelegate Callback, bool CutsceneMode);
+	void SharedTransition(bool CutsceneMode, FSimpleDelegate StartCallback, FSimpleDelegate FinishCallback = FSimpleDelegate());
 
 	/** Signal a client that a shared transition is starting */
 	UFUNCTION(Client, Reliable)
@@ -232,7 +232,8 @@ private:
 
 	// Transitions
 	bool                                          IsInSharedTransition;
-	FSimpleDelegate                               SharedTransitionCallback;
+	FSimpleDelegate                               OnSharedTransitionStarted;
+	FSimpleDelegate                               OnSharedTransitionFinished;
 
 	// Gameplay state
 	TMap<ENovaPostProcessPreset, TSharedPtr<FNovaPostProcessSetting>> PostProcessSettings;
