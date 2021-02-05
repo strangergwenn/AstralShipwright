@@ -204,7 +204,7 @@ FReply SNovaMenu::OnAnalogValueChanged(const FGeometry& MyGeometry, const FAnalo
 		}
 	}
 
-	auto InputFilter = [=](float InputValue)
+	auto InputFilter = [&](float InputValue)
 	{
 		return FMath::Sign(InputValue)
 			* FMath::Max(FMath::Abs(InputValue) - AnalogNavThreshold, 0.0f)

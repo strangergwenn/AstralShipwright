@@ -124,7 +124,7 @@ public:
 		if (Moved)
 		{
 			Moved = INovaMeshInterface::MoveComponentHierarchy(this, OriginalLocation, Delta, NewRotationQuat, bSweep, OutHit, Teleport,
-				FInternalSetWorldLocationAndRotation::CreateLambda([=](const FVector& NewLocation, const FQuat& NewQuat, ETeleportType Teleport)
+				FInternalSetWorldLocationAndRotation::CreateLambda([&](const FVector& NewLocation, const FQuat& NewQuat, ETeleportType Teleport)
 					{
 						return InternalSetWorldLocationAndRotation(NewLocation, NewQuat, false, Teleport);
 					}));

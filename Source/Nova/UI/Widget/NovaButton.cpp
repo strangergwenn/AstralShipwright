@@ -220,7 +220,7 @@ void SNovaButton::Tick(const FGeometry& AllottedGeometry, const double CurrentTi
 	}
 
 	// Update function to control an animation state based on a target
-	auto UpdateAlpha = [=](float& CurrentValue, float TargetValue)
+	auto UpdateAlpha = [&](float& CurrentValue, float TargetValue)
 	{
 		float Difference = FMath::Clamp(TargetValue - CurrentValue, -1.0f, 1.0f);
 		if (Difference != 0)

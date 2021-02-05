@@ -90,7 +90,7 @@ FVector UNovaSpacecraftCompartmentComponent::GetCompartmentLength(const struct F
 
 void UNovaSpacecraftCompartmentComponent::ProcessCompartment(const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
 {
-	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
+	auto ProcessElement = [&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
 	{
 		Callback.Execute(Element, Asset, AdditionalComponent);
 	};
@@ -119,7 +119,7 @@ void UNovaSpacecraftCompartmentComponent::ProcessCompartment(const FNovaCompartm
 
 void UNovaSpacecraftCompartmentComponent::ProcessModule(FNovaModuleAssembly& Assembly, const FNovaCompartmentModule& Module, const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
 {
-	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
+	auto ProcessElement = [&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
 	{
 		Callback.Execute(Element, Asset, AdditionalComponent);
 	};
@@ -137,7 +137,7 @@ void UNovaSpacecraftCompartmentComponent::ProcessModule(FNovaModuleAssembly& Ass
 
 void UNovaSpacecraftCompartmentComponent::ProcessEquipment(FNovaEquipmentAssembly& Assembly, const UNovaEquipmentDescription* EquipmentDescription, const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
 {
-	auto ProcessElement = [=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
+	auto ProcessElement = [&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
 	{
 		Callback.Execute(Element, Asset, AdditionalComponent);
 	};
@@ -157,7 +157,7 @@ void UNovaSpacecraftCompartmentComponent::BuildCompartment(const struct FNovaCom
 {
 	// Build all elements first for the most general and basic setup
 	ProcessCompartment(Compartment,
-		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
+		FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 			{
 				BuildElement(Element, Asset, AdditionalComponent);
 			})

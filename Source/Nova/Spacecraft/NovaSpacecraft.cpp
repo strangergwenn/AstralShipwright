@@ -38,7 +38,7 @@ void FNovaSpacecraft::UpdateProceduralElements()
 	{
 		FNovaCompartment& Compartment = Compartments[CompartmentIndex];
 
-		auto IsFirstCompartment = [=]()
+		auto IsFirstCompartment = [&]()
 		{
 			for (int32 Index = 0; Index < CompartmentIndex; Index++)
 			{
@@ -50,7 +50,7 @@ void FNovaSpacecraft::UpdateProceduralElements()
 			return true;
 		};
 
-		auto IsLastCompartment = [=]()
+		auto IsLastCompartment = [&]()
 		{
 			for (int32 Index = CompartmentIndex + 1; Index < Compartments.Num(); Index++)
 			{
@@ -76,7 +76,7 @@ void FNovaSpacecraft::UpdateProceduralElements()
 			{
 				FNovaCompartmentModule& Module = Compartment.Modules[ModuleIndex];
 
-				auto IsSameModuleInPreviousCompartment = [=]()
+				auto IsSameModuleInPreviousCompartment = [&]()
 				{
 					FName CurrentModuleSocketName = Compartment.Description->GetModuleSlot(ModuleIndex).SocketName;
 					for (int32 Index = CompartmentIndex - 1; Index >= 0; Index--)
@@ -90,7 +90,7 @@ void FNovaSpacecraft::UpdateProceduralElements()
 					return false;
 				};
 
-				auto IsSameModuleInNextCompartment = [=]()
+				auto IsSameModuleInNextCompartment = [&]()
 				{
 					FName CurrentModuleSocketName = Compartment.Description->GetModuleSlot(ModuleIndex).SocketName;
 					for (int32 Index = CompartmentIndex + 1; Index < Compartments.Num(); Index++)
@@ -196,7 +196,7 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 		{
 			TSharedPtr<FJsonObject> CompartmentJsonData = MakeShareable(new FJsonObject);
 
-			auto SaveAsset = [=](TSharedPtr<FJsonObject> Save, FString Name, const UNovaAssetDescription* Asset)
+			auto SaveAsset = [](TSharedPtr<FJsonObject> Save, FString Name, const UNovaAssetDescription* Asset)
 			{
 				Save->SetStringField(Name, Asset ? Asset->Identifier.ToString() : FGuid().ToString());
 			};
@@ -234,7 +234,7 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 				FNovaCompartment Compartment;
 				TSharedPtr<FJsonObject> CompartmentJsonData = CompartmentObject->AsObject();
 
-				auto LoadAsset = [=](TSharedPtr<FJsonObject> Save, FString Name)
+				auto LoadAsset = [](TSharedPtr<FJsonObject> Save, FString Name)
 				{
 					const UNovaAssetDescription* Asset = nullptr;
 

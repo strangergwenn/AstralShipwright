@@ -122,7 +122,7 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 			ProcessCompartment(
 				CompartmentComponents[CompartmentIndex],
 				FNovaCompartment(),
-				FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
+				FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 					{
 						UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Element.Mesh);
 						if (PrimitiveComponent)
@@ -351,7 +351,7 @@ void ANovaSpacecraftPawn::StartAssemblyUpdate()
 		ProcessCompartmentIfDifferent(
 		CompartmentComponents[CompartmentIndex],
 		CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment(),
-		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
+		FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 			{
 				if (Element.Mesh)
 				{
@@ -408,7 +408,7 @@ void ANovaSpacecraftPawn::StartAssemblyUpdate()
 			WaitingAssetLoading = true;
 
 			UNovaAssetCatalog::Get()->LoadAssets(RequestedAssets,
-				FStreamableDelegate::CreateLambda([=]()
+				FStreamableDelegate::CreateLambda([&]()
 					{
 						WaitingAssetLoading = false;
 					}
@@ -559,7 +559,7 @@ void ANovaSpacecraftPawn::UpdateDisplayFilter()
 	{
 		ProcessCompartment(CompartmentComponents[CompartmentIndex],
 			FNovaCompartment(),
-			FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
+			FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 				{
 					if (Element.Mesh)
 					{
@@ -633,7 +633,7 @@ void ANovaSpacecraftPawn::ProcessCompartmentIfDifferent(
 	FNovaAssemblyCallback Callback)
 {
 	ProcessCompartment(CompartmentComponent, Compartment,
-		FNovaAssemblyCallback::CreateLambda([=](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
+		FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 		{
 			if (Element.Asset != Asset.ToSoftObjectPath() || CompartmentComponent->Description != Compartment.Description)
 			{

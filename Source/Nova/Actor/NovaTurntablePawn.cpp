@@ -179,7 +179,7 @@ void ANovaTurntablePawn::ZoomOut()
 
 void ANovaTurntablePawn::ProcessCamera(float DeltaTime)
 {
-	auto ApplyInputFilter = [=](float& CurrentAngle, float& CurrentSpeed, float& TargetAngle, const float MaximumSpeed)
+	auto ApplyInputFilter = [&](float& CurrentAngle, float& CurrentSpeed, float& TargetAngle, const float MaximumSpeed)
 	{
 		float Brake = 2.f;
 		float Brake2 = 4.f;

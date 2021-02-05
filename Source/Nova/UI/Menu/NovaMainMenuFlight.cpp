@@ -1,4 +1,4 @@
-﻿// Nova project - Gwennaël Arbona
+// Nova project - Gwennaël Arbona
 
 #include "NovaMainMenuFlight.h"
 
@@ -53,7 +53,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 				SNew(SNovaButton)
 				.Text(LOCTEXT("TestJoin", "Join random session"))
 				.HelpText(LOCTEXT("HelpTestJoin", "Join random session"))
-				.OnClicked(FSimpleDelegate::CreateLambda([=]()
+				.OnClicked(FSimpleDelegate::CreateLambda([&]()
 				{
 					MenuManager->GetPC()->TestJoin();
 				}))

@@ -423,7 +423,7 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 		if (FMath::IsNearlyZero(AttitudeCommand.Direction.Z))
 		{
 			// Roll angle of the final resting rotation around the desired direction
-			auto GetRollAngle = [=](const FQuat& Rotation)
+			auto GetRollAngle = [&](const FQuat& Rotation)
 			{
 				FQuat Swing, Twist;
 				const FQuat ResultingOrientation = Rotation.GetNormalized() * UpdatedComponent->GetComponentQuat();

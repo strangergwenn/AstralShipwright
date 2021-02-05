@@ -7,7 +7,7 @@ float UNovaScalingRule::GetDPIScaleBasedOnSize(FIntPoint Size) const
 	float NominalAspectRatio = (16.0f / 9.0f);
 
 	// Define the axis-independent rule : scaled under 720p, constant under 1080p, scaled above 1440p
-	auto DimensionalRule = [=](float CurrentSize, float SmallSize, float ReferenceSize, float LargeSize)
+	auto DimensionalRule = [](float CurrentSize, float SmallSize, float ReferenceSize, float LargeSize)
 	{
 		if (CurrentSize < SmallSize || CurrentSize > LargeSize)
 		{
