@@ -40,7 +40,7 @@ public:
 public:
 
 	/** Reset the area, moving all ships to player starts */
-	void ResetArea();
+	void ResetArea(bool StartDocked = false);
 
 	/** Have all players fade to black, play the exit cutscene and switch sublevel */
 	void ChangeArea(FName NewLevel);

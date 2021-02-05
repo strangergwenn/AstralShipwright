@@ -25,6 +25,8 @@
 UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	: Super()
 
+	, InitializeDocked(false)
+
 	, CurrentLinearVelocity(FVector::ZeroVector)
 	, CurrentAngularVelocity(FVector::ZeroVector)
 
@@ -76,7 +78,8 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 
 		if (Start)
 		{
-			Initialize(Start, Start->StartDocked);
+			ENovaLevelIntroType Introtype = InitializeDocked ? ENovaLevelIntroType::Docked : Start->IsInSpace ? ENovaLevelIntroType::Idle : ENovaLevelIntroType::Braking;
+			Initialize(Start, Introtype);
 		}
 	}
 
@@ -136,26 +139,39 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 	ProcessMovement(DeltaTime);
 }
 
-void UNovaSpacecraftMovementComponent::Initialize(const AActor* Start, bool StartDocked)
+void UNovaSpacecraftMovementComponent::Initialize(const AActor* Start, ENovaLevelIntroType IntroType)
 {
 	NLOG("UNovaSpacecraftMovementComponent::Initialize : '%s'", Start ? *Start->GetName() : nullptr);
 
 	NCHECK(GetLocalRole() == ROLE_Authority);
 	NCHECK(IsValid(Start));
-	MulticastInitialize(Start, StartDocked);
+	MulticastInitialize(Start, IntroType);
 }
 
-void UNovaSpacecraftMovementComponent::MulticastInitialize_Implementation(const class AActor* Start, bool StartDocked)
+void UNovaSpacecraftMovementComponent::MulticastInitialize_Implementation(const class AActor* Start, ENovaLevelIntroType IntroType)
 {
 	NLOG("UNovaSpacecraftMovementComponent::MulticastInitialize_Implementation : '%s' %d ('%s')",
-		Start ? *Start->GetName() : nullptr, StartDocked, *GetRoleString(this));
+		Start ? *Start->GetName() : nullptr, (int32)IntroType, *GetRoleString(this));
 
 	// Reset transform
 	UpdatedComponent->SetWorldTransform(Start->GetActorTransform());
 	StartActor = Start;
 
 	// Reset commands
-	MovementCommand = FNovaMovementCommand(StartDocked ? ENovaMovementState::Docked : ENovaMovementState::Idle);
+	switch (IntroType)
+	{
+	case ENovaLevelIntroType::Idle:
+		MovementCommand = FNovaMovementCommand(ENovaMovementState::Idle);
+		break;
+
+	case ENovaLevelIntroType::Docked:
+		MovementCommand = FNovaMovementCommand(ENovaMovementState::Docked);
+		break;
+
+	case ENovaLevelIntroType::Braking:
+		MovementCommand = FNovaMovementCommand(ENovaMovementState::Stopping);
+		break;
+	}
 	AttitudeCommand = FNovaAttitudeCommand();
 	AttitudeCommand.Location = Start->GetActorLocation();
 	AttitudeCommand.Direction = Start->GetActorForwardVector();
@@ -169,11 +185,12 @@ void UNovaSpacecraftMovementComponent::MulticastInitialize_Implementation(const 
 	MeasuredAngularAcceleration = FVector::ZeroVector;
 }
 
-void UNovaSpacecraftMovementComponent::Reset()
+void UNovaSpacecraftMovementComponent::Reset(bool StartDocked)
 {
 	NLOG("UNovaSpacecraftMovementComponent::Reset ('%s')", *GetRoleString(this));
 
 	StartActor = nullptr;
+	InitializeDocked = StartDocked;
 }
 
 void UNovaSpacecraftMovementComponent::Dock(FSimpleDelegate Callback)
@@ -205,7 +222,7 @@ void UNovaSpacecraftMovementComponent::Stop(FSimpleDelegate Callback)
 	NLOG("UNovaSpacecraftMovementComponent::Stop ('%s')", *GetRoleString(this));
 
 	CompletionCallback = Callback;
-	RequestMovement(FNovaMovementCommand(ENovaMovementState::Idle));
+	RequestMovement(FNovaMovementCommand(ENovaMovementState::Stopping));
 }
 
 
@@ -290,6 +307,17 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 		else if (LinearAttitudeIdle && AngularAttitudeIdle)
 		{
 			NLOG("UNovaSpacecraftMovementComponent::ProcessState : LeavingArea : done");
+
+			MovementCommand.State = ENovaMovementState::Idle;
+		}
+		break;
+
+	// Braking to zero
+	case ENovaMovementState::Stopping:
+		AttitudeCommand.Velocity = FVector::ZeroVector;
+		if (LinearAttitudeIdle && AngularAttitudeIdle)
+		{
+			NLOG("UNovaSpacecraftMovementComponent::ProcessState : Stopping : done");
 
 			MovementCommand.State = ENovaMovementState::Idle;
 		}

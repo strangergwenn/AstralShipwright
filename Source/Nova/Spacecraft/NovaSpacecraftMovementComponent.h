@@ -5,19 +5,31 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/MovementComponent.h"
+#include "Nova/Game/NovaGameTypes.h"
 #include "NovaSpacecraftMovementComponent.generated.h"
 
 
 /** Movement state */
-UENUM(BlueprintType)
+UENUM()
 enum class ENovaMovementState : uint8
 {
 	Idle,
 	Docked,
 	Undocking,
 	Docking,
-	LeavingArea
+	LeavingArea,
+	Stopping,
 };
+
+/** Type of intro animation to play in a level */
+UENUM()
+enum class ENovaLevelIntroType : uint8
+{
+	Idle,
+	Docked,
+	Braking
+};
+
 
 /** High level movement command sent by a player */
 USTRUCT(Atomic)
@@ -94,14 +106,14 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	/** Initialize the component with a starting point */
-	void Initialize(const class AActor* Start, bool StartDocked);
+	void Initialize(const class AActor* Start, ENovaLevelIntroType IntroType);
 
 	/** Initialize the component with a starting point */
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastInitialize(const class AActor* Start, bool StartDocked);
+	void MulticastInitialize(const class AActor* Start, ENovaLevelIntroType IntroType);
 
 	/** Uninitialize the component */
-	void Reset();
+	void Reset(bool ForceDock);
 
 	/** Dock at a particular location */
 	void Dock(FSimpleDelegate Callback = FSimpleDelegate());
@@ -243,6 +255,7 @@ protected:
 	UPROPERTY(Replicated)
 	FNovaMovementCommand                          MovementCommand;
 	FSimpleDelegate                               CompletionCallback;
+	bool                                          InitializeDocked;
 
 	// Authoritative attitude input, produced by the server in real-time
 	UPROPERTY(Replicated)

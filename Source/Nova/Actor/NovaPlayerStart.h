@@ -20,7 +20,7 @@ public:
 		: Super(ObjectInitializer)
 	{
 		// Defaults
-		StartDocked = true;
+		IsInSpace = false;
 	}
 
 
@@ -30,8 +30,8 @@ public:
 
 public:
 
-	// Whether ships here should start docked
+	// Whether ships here should start idle in space
 	UPROPERTY(Category = Nova, EditAnywhere)
-	bool StartDocked;
+	bool IsInSpace;
 
 };

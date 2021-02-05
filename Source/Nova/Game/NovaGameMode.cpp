@@ -45,7 +45,7 @@ void ANovaGameMode::StartPlay()
 	// TODO : this should be dependent on save data
 	LoadStreamingLevel("Station", FSimpleDelegate::CreateLambda([=]()
 		{
-			ResetArea();
+			ResetArea(true);
 		}));
 }
 
@@ -122,9 +122,9 @@ AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	Gameplay
 ----------------------------------------------------*/
 
-void ANovaGameMode::ResetArea()
+void ANovaGameMode::ResetArea(bool StartDocked)
 {
-	NLOG("ANovaGameMode::ResetArea");
+	NLOG("ANovaGameMode::ResetArea %d", StartDocked);
 
 	for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 	{
@@ -132,7 +132,7 @@ void ANovaGameMode::ResetArea()
 		AActor* Start = ChoosePlayerStart(PC);
 		NCHECK(Start);
 
-		SpacecraftPawn->GetSpacecraftMovement()->Reset();
+		SpacecraftPawn->GetSpacecraftMovement()->Reset(StartDocked);
 	}
 }
 

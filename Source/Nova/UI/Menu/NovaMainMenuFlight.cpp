@@ -1,4 +1,4 @@
-// Nova project - Gwennaël Arbona
+﻿// Nova project - Gwennaël Arbona
 
 #include "NovaMainMenuFlight.h"
 
@@ -50,7 +50,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
-				SNew(SNovaButton)
+				SNovaNew(SNovaButton)
 				.Text(LOCTEXT("TestJoin", "Join random session"))
 				.HelpText(LOCTEXT("HelpTestJoin", "Join random session"))
 				.OnClicked(FSimpleDelegate::CreateLambda([&]()
@@ -62,14 +62,30 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
-				SNew(SNovaButton)
-				.Text(LOCTEXT("LeaveStation", "Leave area"))
-				.HelpText(LOCTEXT("HelpLeaveStation", "Leave area"))
-				.OnClicked(FSimpleDelegate::CreateLambda([=]()
+				SNovaNew(SNovaButton)
+				.Text(LOCTEXT("LeaveStation", "Leave station"))
+				.HelpText(LOCTEXT("HelpLeaveStation", "Leave station"))
+				.OnClicked(FSimpleDelegate::CreateLambda([&]()
 				{
 					MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChangeArea("Orbit");
 				}))
-				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
+				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+				{
+					return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority;
+				})))
+			]
+			
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNovaNew(SNovaButton)
+				.Text(LOCTEXT("GoToStation", "Go to station"))
+				.HelpText(LOCTEXT("HelpGoToStation", "Go to station"))
+				.OnClicked(FSimpleDelegate::CreateLambda([&]()
+				{
+					MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChangeArea("Station");
+				}))
+				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 				{
 					return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority;
 				})))
