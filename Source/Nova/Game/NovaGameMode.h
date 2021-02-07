@@ -42,8 +42,8 @@ public:
 	/** Reset the area, moving all ships to player starts */
 	void ResetArea(bool StartDocked = false);
 
-	/** Have all players fade to black, play the exit cutscene and switch sublevel */
-	void ChangeArea(FName NewLevel);
+	/** Have all players fade to black, play the exit cutscene and switch destination */
+	void ChangeArea(const class UNovaDestination* Destination);
 
 	
 	/*----------------------------------------------------
@@ -53,10 +53,10 @@ public:
 protected:
 	
 	/** Load a streaming level */
-	bool LoadStreamingLevel(FName LevelName, FSimpleDelegate Callback = FSimpleDelegate());
+	bool LoadStreamingLevel(const class UNovaDestination* Destination, FSimpleDelegate Callback = FSimpleDelegate());
 
 	/** Unload a streaming level */
-	void UnloadStreamingLevel(FName LevelName, FSimpleDelegate Callback = FSimpleDelegate());
+	void UnloadStreamingLevel(const class UNovaDestination* Destination, FSimpleDelegate Callback = FSimpleDelegate());
 
 	/** Callback for a loaded streaming level */
 	UFUNCTION()
@@ -75,7 +75,6 @@ private:
 
 	// Game state
 	int32                                         CurrentStreamingLevelIndex;
-	FName                                         CurrentLevelName;
 	FSimpleDelegate                               OnLevelLoadedCallback;
 	FSimpleDelegate                               OnLevelUnloadedCallback;
 };

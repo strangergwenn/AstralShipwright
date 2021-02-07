@@ -10,6 +10,7 @@
 #include "Nova/Game/NovaContractManager.h"
 #include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Game/NovaGameMode.h"
+#include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaGameUserSettings.h"
 #include "Nova/Game/NovaSaveManager.h"
 #include "Nova/Game/NovaWorldSettings.h"
@@ -603,12 +604,23 @@ void ANovaPlayerController::AcceptInvitation(const FOnlineSessionSearchResult& I
 
 bool ANovaPlayerController::IsReady() const
 {
-	// Check spacecraft pawn
-	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-	bool IsSpacecraftReady = IsValid(SpacecraftPawn) && SpacecraftPawn->GetSpacecraft().IsValid()
-		&& SpacecraftPawn->GetSpacecraftMovement()->IsReady();
+	if (IsOnMainMenu())
+	{
+		return true;
+	}
+	else
+	{
+		// Check spacecraft pawn
+		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+		bool IsSpacecraftReady = IsValid(SpacecraftPawn) && SpacecraftPawn->GetSpacecraft().IsValid()
+			&& SpacecraftPawn->GetSpacecraftMovement()->IsReady();
 
-	return !IsStreamingLevel() && (IsOnMainMenu() || IsSpacecraftReady);
+		// Check game state
+		ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+		bool IsGameStateReady = IsValid(GameState) && GameState->GetCurrentArea() != nullptr;
+
+		return !IsStreamingLevel() && IsSpacecraftReady && IsGameStateReady;
+	}
 }
 
 

@@ -3,8 +3,12 @@
 #include "NovaGameMode.h"
 #include "NovaGameInstance.h"
 
-#include "Nova/Actor/NovaPlayerStart.h"
+#include "Nova/Game/NovaAssetCatalog.h"
+#include "Nova/Game/NovaDestination.h"
+#include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaWorldSettings.h"
+
+#include "Nova/Actor/NovaPlayerStart.h"
 #include "Nova/Player/NovaPlayerController.h"
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
@@ -25,6 +29,7 @@ ANovaGameMode::ANovaGameMode()
 	, CurrentStreamingLevelIndex(0)
 {
 	// Defaults
+	GameStateClass = ANovaGameState::StaticClass();
 	PlayerControllerClass = ANovaPlayerController::StaticClass();
 	DefaultPawnClass = ANovaSpacecraftPawn::StaticClass();
 
@@ -43,7 +48,8 @@ void ANovaGameMode::StartPlay()
 	Super::StartPlay();
 
 	// TODO : this should be dependent on save data
-	LoadStreamingLevel("Station", FSimpleDelegate::CreateLambda([=]()
+	const UNovaDestination* Station = GetGameInstance<UNovaGameInstance>()->GetCatalog()->GetAsset<UNovaDestination>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
+	LoadStreamingLevel(Station, FSimpleDelegate::CreateLambda([=]()
 		{
 			ResetArea(true);
 		}));
@@ -136,11 +142,13 @@ void ANovaGameMode::ResetArea(bool StartDocked)
 	}
 }
 
-void ANovaGameMode::ChangeArea(FName LevelName)
+void ANovaGameMode::ChangeArea(const UNovaDestination* Destination)
 {
-	NLOG("ANovaGameMode::ChangeArea : '%s'", *LevelName.ToString());
 	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
 	NCHECK(PC);
+	NCHECK(Destination);
+
+	NLOG("ANovaGameMode::ChangeArea : '%s'", *Destination->LevelName.ToString());
 	ANovaSpacecraftPawn* PlayerPawn = PC->GetSpacecraftPawn();
 
 	// 5 : Cutscene is finished, level has loaded, reinitialize ships
@@ -156,8 +164,8 @@ void ANovaGameMode::ChangeArea(FName LevelName)
 			{
 				NLOG("ANovaGameMode::ChangeArea : ending cutscene");
 				SpacecraftPawn->GetSpacecraftMovement()->Stop();
-				UnloadStreamingLevel(CurrentLevelName);
-				LoadStreamingLevel(LevelName);
+				UnloadStreamingLevel(GetGameState<ANovaGameState>()->GetCurrentArea());
+				LoadStreamingLevel(Destination);
 			}
 		});
 
@@ -187,13 +195,15 @@ void ANovaGameMode::ChangeArea(FName LevelName)
 	Level loading
 ----------------------------------------------------*/
 
-bool ANovaGameMode::LoadStreamingLevel(FName LevelName, FSimpleDelegate Callback)
+bool ANovaGameMode::LoadStreamingLevel(const UNovaDestination* Destination, FSimpleDelegate Callback)
 {
-	if (LevelName != NAME_None)
-	{
-		CurrentLevelName = LevelName;
+	NCHECK(Destination);
 
-		NLOG("ANovaGameMode::LoadStreamingLevel : loading streaming level '%s'", *LevelName.ToString());
+	if (Destination->LevelName != NAME_None)
+	{
+		GetGameState<ANovaGameState>()->SetCurrentArea(Destination);
+
+		NLOG("ANovaGameMode::LoadStreamingLevel : loading streaming level '%s'", *Destination->LevelName.ToString());
 
 		FLatentActionInfo Info;
 		Info.CallbackTarget = this;
@@ -201,7 +211,7 @@ bool ANovaGameMode::LoadStreamingLevel(FName LevelName, FSimpleDelegate Callback
 		Info.UUID = CurrentStreamingLevelIndex;
 		Info.Linkage = 0;
 
-		UGameplayStatics::LoadStreamLevel(this, LevelName, true, false, Info);
+		UGameplayStatics::LoadStreamLevel(this, Destination->LevelName, true, false, Info);
 		CurrentStreamingLevelIndex++;
 		OnLevelLoadedCallback = Callback;
 		return false;
@@ -209,11 +219,13 @@ bool ANovaGameMode::LoadStreamingLevel(FName LevelName, FSimpleDelegate Callback
 	return true;
 }
 
-void ANovaGameMode::UnloadStreamingLevel(FName LevelName, FSimpleDelegate Callback)
+void ANovaGameMode::UnloadStreamingLevel(const UNovaDestination* Destination, FSimpleDelegate Callback)
 {
-	if (LevelName != NAME_None)
+	NCHECK(Destination);
+
+	if (Destination->LevelName != NAME_None)
 	{
-		NLOG("ANovaGameMode::UnloadStreamingLevel : unloading streaming level '%s'", *LevelName.ToString());
+		NLOG("ANovaGameMode::UnloadStreamingLevel : unloading streaming level '%s'", *Destination->LevelName.ToString());
 
 		FLatentActionInfo Info;
 		Info.CallbackTarget = this;
@@ -221,7 +233,7 @@ void ANovaGameMode::UnloadStreamingLevel(FName LevelName, FSimpleDelegate Callba
 		Info.UUID = CurrentStreamingLevelIndex;
 		Info.Linkage = 0;
 
-		UGameplayStatics::UnloadStreamLevel(this, LevelName, Info, false);
+		UGameplayStatics::UnloadStreamLevel(this, Destination->LevelName, Info, false);
 		CurrentStreamingLevelIndex++;
 		OnLevelUnloadedCallback = Callback;
 	}
