@@ -26,6 +26,7 @@ public class Nova : ModuleRules
 
             "Slate",
             "SlateCore",
+            "UMG",
             "MoviePlayer",
             "RHI",
             "RenderCore",

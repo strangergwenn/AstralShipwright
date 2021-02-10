@@ -157,7 +157,7 @@ void SNovaMainMenu::Show()
 	bool IsOnMenu = MenuManager->GetPC()->IsOnMainMenu();
 	if (IsOnMenu != WasOnMainMenu)
 	{
-		ENovaMainMenuType DesiredMenu = IsOnMenu ? ENovaMainMenuType::Home : ENovaMainMenuType::Assembly;
+		ENovaMainMenuType DesiredMenu = IsOnMenu ? ENovaMainMenuType::Home : ENovaMainMenuType::Flight;
 		TabView->SetTabIndex(static_cast<uint8>(DesiredMenu));
 		WasOnMainMenu = IsOnMenu;
 	}

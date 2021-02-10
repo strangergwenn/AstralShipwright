@@ -83,6 +83,7 @@ protected:
 	TWeakObjectPtr<UNovaMenuManager>              MenuManager;
 
 	// Slate widgets
+	TSharedPtr<class SRetainerWidget>             MapRetainer;
 	TSharedPtr<class SNovaButton>                 UndockButton;
 	TSharedPtr<class SNovaButton>                 DockButton;
 

@@ -50,6 +50,7 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = Main) FProgressBarStyle ProgressBarStyle;
 	UPROPERTY(EditDefaultsOnly, Category = Main) float BlurRadius;
 	UPROPERTY(EditDefaultsOnly, Category = Main) float BlurStrength;
+	UPROPERTY(EditDefaultsOnly, Category = Main) class UMaterialInterface* EffectMaterial;
 
 	// Fonts
 	UPROPERTY(EditDefaultsOnly, Category = Font) FTextBlockStyle TitleFont;
