@@ -70,32 +70,34 @@ public:
 			: Origin(Orig)
 			, Width(R)
 			, Height(R)
-			, Angle(0)
+			, Phase(0)
+			, InitialAngle(0)
 			, AngularLength(360)
-			, TransferOffset(0)
+			, OriginOffset(0)
 		{}
 
-		FNovaOrbitGeometry(const FVector2D& Orig, float W, float H, float A)
+		FNovaOrbitGeometry(const FVector2D& Orig, float W, float H, float P)
 			: FNovaOrbitGeometry(Orig, W)
 		{
 			Height = H;
-			Angle = A;
+			Phase = P;
 		}
 
-		FNovaOrbitGeometry(const FVector2D& Orig, float W, float H, float A, float Partial, float Offset)
-			: FNovaOrbitGeometry(Orig, W, H, A)
+		FNovaOrbitGeometry(const FVector2D& Orig, float W, float H, float P, float Initial, float Length, float Offset)
+			: FNovaOrbitGeometry(Orig, W, H, P)
 		{
-			AngularLength = Partial;
-			TransferOffset = Offset;
+			InitialAngle = Initial;
+			AngularLength = Length;
+			OriginOffset = Offset;
 		}
 
 		FVector2D Origin;
 		float Width;
 		float Height;
-		float Angle;
-
+		float Phase;
+		float InitialAngle;
 		float AngularLength;
-		float TransferOffset;
+		float OriginOffset;
 	};
 
 	/** Orbit drawing style */
@@ -148,6 +150,12 @@ public:
 	/** Interpolate a spline, returning the point at Alpha (0-1) over the spline defined by P0..P3 */
 	FVector2D DeCasteljauInterp(const FVector2D& P0, const FVector2D& P1, const FVector2D& P2, const FVector2D& P3, float Alpha) const
 	{
+		return DeCasteljauSplit(P0, P1, P2, P3, Alpha)[3];
+	};
+
+	/** Return the control points for the two splines created when cutting the spline defined by P0..P3 at Alpha (0-1) */
+	TArray<FVector2D> DeCasteljauSplit(const FVector2D& P0, const FVector2D& P1, const FVector2D& P2, const FVector2D& P3, float Alpha) const
+	{
 		const float InvAlpha = 1.0f - Alpha;
 
 		const FVector2D L = InvAlpha * P0 + Alpha * P1;
@@ -157,56 +165,87 @@ public:
 		const FVector2D P = InvAlpha * L + Alpha * M;
 		const FVector2D Q = InvAlpha * M + Alpha * N;
 
-		return InvAlpha * P + Alpha * Q;
+		const FVector2D R = InvAlpha * P + Alpha * Q;
+
+		return { P0, L, P, R, Q, N , P3 };
 	};
 
 	/** Draw an orbit or partial orbit */
 	FNovaSplineResults DrawOrbit(const FNovaSlateArguments& SlateArgs, const FNovaOrbitGeometry& Orbit, const TArray<float>& PointsOfInterest, const FNovaSplineStyle& Style) const
 	{
+		bool FirstRenderedSpline = true;
 		FNovaSplineResults Results;
 
 		for (int32 SplineIndex = 0; SplineIndex < 4; SplineIndex++)
 		{
-			// Compute how much of an angle is left
-			float RemainingAngle = Orbit.AngularLength - SplineIndex * 90.0f;
-			if (RemainingAngle <= 0.0f)
-			{
-				break;
-			}
-			RemainingAngle = FMath::Min(RemainingAngle, 90.0f);
+			// Useful constants
+			const float CurrentStartAngle = SplineIndex * 90.0f;
+			const float CurrentEndAngle = CurrentStartAngle + 90.0f;
+			constexpr float CircleRatio = 0.55228475f;
 
 			// Define the control points for a 90° segment of the orbit
 			FVector2D BezierPoints[4];
-			float CircleRatio = (RemainingAngle / 90.0f) * 0.55228475f;
-			BezierPoints[0] = FVector2D(Orbit.Width, 0);
-			BezierPoints[3] = FVector2D(0, -Orbit.Height).GetRotated(90 - RemainingAngle);
-			BezierPoints[1] = BezierPoints[0] - FVector2D(0, CircleRatio * Orbit.Height);
-			BezierPoints[2] = BezierPoints[3] + FVector2D(0, CircleRatio * Orbit.Width).GetRotated(-RemainingAngle);
+			const float FirstAxis = SplineIndex % 2 == 0 ? Orbit.Width : Orbit.Height;
+			const float SecondAxis = SplineIndex % 2 == 0 ? Orbit.Height : Orbit.Width;
+			BezierPoints[0] = FVector2D(FirstAxis, 0.5f);
+			BezierPoints[3] = FVector2D(-0.5f, -SecondAxis);
+			BezierPoints[1] = BezierPoints[0] - FVector2D(0, CircleRatio * SecondAxis);
+			BezierPoints[2] = BezierPoints[3] + FVector2D(CircleRatio * FirstAxis, 0);
 
-			// Mirror and rotate the spline control points
-			auto Transform = [Orbit, RemainingAngle, SplineIndex](const FVector2D& Point)
+			// Rotate all segments around the orbit
+			auto Transform = [&Orbit, SplineIndex](const FVector2D& ControlPoint)
 			{
-				FVector2D Inversion[4];
-				Inversion[0] = FVector2D(1, 1);
-				Inversion[1] = FVector2D(-1, 1);
-				Inversion[2] = FVector2D(-1, -1);
-				Inversion[3] = FVector2D(1, -1);
-
-				float Angle = -Orbit.Angle;
-				if (RemainingAngle < 90 && SplineIndex % 2 == 1)
-				{
-					Angle += RemainingAngle;
-				}
-
 				return Orbit.Origin
-					+ FVector2D(-Orbit.TransferOffset, 0).GetRotated(Angle)
-					+ (Point * Inversion[SplineIndex]).GetRotated(Angle);
+					+ FVector2D(-Orbit.OriginOffset, 0).GetRotated(-Orbit.Phase)
+					+ ControlPoint.GetRotated(-Orbit.Phase - SplineIndex * 90.0f);
 			};
+			FVector2D P0 = Transform(BezierPoints[0]);
+			FVector2D P1 = Transform(BezierPoints[1]);
+			FVector2D P2 = Transform(BezierPoints[2]);
+			FVector2D P3 = Transform(BezierPoints[3]);
 
-			const FVector2D P0 = Transform(BezierPoints[0]);
-			const FVector2D P1 = Transform(BezierPoints[1]);
-			const FVector2D P2 = Transform(BezierPoints[2]);
-			const FVector2D P3 = Transform(BezierPoints[3]);
+			// Process points of interest
+			for (float Point : PointsOfInterest)
+			{
+				const float ScaledPoint = 4.0f * (Point / 360.0f);
+				if (Point >= Orbit.InitialAngle && Point <= Orbit.AngularLength && ScaledPoint >= SplineIndex && ScaledPoint < SplineIndex + 1)
+				{
+					const float Alpha = FMath::Fmod(Point, 90.0f) / 90.0f;
+					Results.PointsOfInterest.Add(DeCasteljauInterp(P0, P1, P2, P3, Alpha));
+				}
+			}
+
+			// Split the curve to account for initial angle
+			float CurrentSegmentLength = 90.0f;
+			if (Orbit.InitialAngle >= CurrentEndAngle)
+			{
+				continue;
+			}
+			else if (Orbit.InitialAngle > CurrentStartAngle)
+			{
+				const float RelativeInitialAngle = FMath::Fmod(Orbit.InitialAngle, 90.0f);
+				TArray<FVector2D> ControlPoints = DeCasteljauSplit(P0, P1, P2, P3, RelativeInitialAngle / 90.0f);
+				P0 = ControlPoints[3];
+				P1 = ControlPoints[4];
+				P2 = ControlPoints[5];
+				P3 = ControlPoints[6];
+				CurrentSegmentLength = 90.0f - RelativeInitialAngle;
+			}
+
+			// Split the curve to account for angular length
+			if (Orbit.AngularLength <= CurrentStartAngle)
+			{
+				break;
+			}
+			if (Orbit.AngularLength < CurrentEndAngle)
+			{
+				float Alpha = FMath::Fmod(Orbit.AngularLength, 90.0f) / CurrentSegmentLength;
+				TArray<FVector2D> ControlPoints = DeCasteljauSplit(P0, P1, P2, P3, Alpha);
+				P0 = ControlPoints[0];
+				P1 = ControlPoints[1];
+				P2 = ControlPoints[2];
+				P3 = ControlPoints[3];
+			}
 
 			// Draw the spline segment with a shadow
 			FSlateDrawElement::MakeCubicBezierSpline(
@@ -228,27 +267,13 @@ public:
 				Style.ColorInner
 			);
 
-			// Process special points
-			for (float Point : PointsOfInterest)
-			{
-				const float ScaledPoint = 4.0f * (Point / 360.0f);
-				if (ScaledPoint >= SplineIndex && ScaledPoint < SplineIndex + 1)
-				{
-					float CorrectedPoint = FMath::Fmod(ScaledPoint, 1.0f);
-					CorrectedPoint = SplineIndex % 2 ? 1.0f - CorrectedPoint : CorrectedPoint;
-					Results.PointsOfInterest.Add(DeCasteljauInterp(P0, P1, P2, P3, CorrectedPoint));
-				}
-			}
-
 			// Report the initial and final positions
-			if (SplineIndex == 0)
+			if (FirstRenderedSpline)
 			{
 				Results.InitialPosition = P0;
+				FirstRenderedSpline = false;
 			}
-			else
-			{
-				Results.FinalPosition = P0;
-			}
+			Results.FinalPosition = P3;
 		}
 
 		return Results;
@@ -265,25 +290,25 @@ public:
 		}
 	}
 
-	/** Draw a partial circular orbit around Origin of Radius, starting at Angle over AngularLength */
-	void DrawPartialCircularOrbit(const FNovaSlateArguments& SlateArgs, const FVector2D& Origin, float Radius, float Angle, float AngularLength,
+	/** Draw a partial circular orbit around Origin of Radius, starting at Phase over AngularLength */
+	void DrawPartialCircularOrbit(const FNovaSlateArguments& SlateArgs, const FVector2D& Origin, float Radius, float Phase, float InitialAngle, float AngularLength,
 		const TArray<float>& PointsOfInterest, const FNovaSplineStyle& Style) const
 	{
-		FNovaSplineResults Results = DrawOrbit(SlateArgs, FNovaOrbitGeometry(Origin, Radius, Radius, Angle, AngularLength, 0.0f), PointsOfInterest, Style);
+		FNovaSplineResults Results = DrawOrbit(SlateArgs, FNovaOrbitGeometry(Origin, Radius, Radius, Phase, InitialAngle, AngularLength, 0.0f), PointsOfInterest, Style);
 		for (const FVector2D& Point : Results.PointsOfInterest)
 		{
 			DrawPoint(SlateArgs, Point, Style.ColorInner);
 		}
 	}
 
-	/** Draw a Hohmann transfer orbit around Origin from RadiusA to RadiusB, starting at Angle */
-	void DrawTransferOrbit(const FNovaSlateArguments& SlateArgs, const FVector2D& Origin, float RadiusA, float RadiusB, float Angle,
+	/** Draw a Hohmann transfer orbit around Origin from RadiusA to RadiusB, starting at Phase */
+	void DrawTransferOrbit(const FNovaSlateArguments& SlateArgs, const FVector2D& Origin, float RadiusA, float RadiusB, float Phase, float InitialAngle,
 		const TArray<float>& PointsOfInterest, const FNovaSplineStyle& Style) const
 	{
 		float MajorAxis = 0.5f * (RadiusA + RadiusB);
 		float MinorAxis = FMath::Sqrt(RadiusA * RadiusB);
 
-		FNovaSplineResults Results = DrawOrbit(SlateArgs, FNovaOrbitGeometry(Origin, MajorAxis, MinorAxis, Angle, 180, 0.5f * (RadiusB - RadiusA)), PointsOfInterest, Style);
+		FNovaSplineResults Results = DrawOrbit(SlateArgs, FNovaOrbitGeometry(Origin, MajorAxis, MinorAxis, Phase, InitialAngle, 180, 0.5f * (RadiusB - RadiusA)), PointsOfInterest, Style);
 		DrawPoint(SlateArgs, Results.InitialPosition, Style.ColorInner);
 		DrawPoint(SlateArgs, Results.FinalPosition, Style.ColorInner);
 
@@ -300,18 +325,17 @@ public:
 		FVector2D Origin = FVector2D(500, 500);
 
 		TArray<float> PointsOfInterest = { };
-		//TArray<float> PointsOfInterest = { 0, 45, 90, 180 };
 
 		DrawCircularOrbit(SlateArgs, Origin, 300, PointsOfInterest, Style);
 		DrawCircularOrbit(SlateArgs, Origin, 450, PointsOfInterest, Style);
-		DrawTransferOrbit(SlateArgs, Origin, 300, 450, 45, PointsOfInterest, FNovaSplineStyle(FLinearColor::Red));
+		DrawTransferOrbit(SlateArgs, Origin, 300, 450, 45, 0, PointsOfInterest, FNovaSplineStyle(FLinearColor::Red));
 
-		DrawTransferOrbit(SlateArgs, Origin, 300, 500, 90, PointsOfInterest, FNovaSplineStyle(FLinearColor::Green));
-		DrawTransferOrbit(SlateArgs, Origin, 500, 450, 180 + 90, PointsOfInterest, FNovaSplineStyle(FLinearColor::Green));
+		DrawTransferOrbit(SlateArgs, Origin, 300, 500, 90, 0, PointsOfInterest, FNovaSplineStyle(FLinearColor::Green));
+		DrawTransferOrbit(SlateArgs, Origin, 500, 450, 180 + 90, 0, PointsOfInterest, FNovaSplineStyle(FLinearColor::Green));
 
-		DrawTransferOrbit(SlateArgs, Origin, 300, 250, 135, PointsOfInterest, FNovaSplineStyle(FLinearColor::Blue));
-		DrawPartialCircularOrbit(SlateArgs, Origin, 250, 135 + 180, 45, PointsOfInterest, FNovaSplineStyle(FLinearColor::Blue));
-		DrawTransferOrbit(SlateArgs, Origin, 250, 450, 135 + 180 + 45, PointsOfInterest, FNovaSplineStyle(FLinearColor::Blue));
+		DrawTransferOrbit(SlateArgs, Origin, 300, 250, 135, 0, PointsOfInterest, FNovaSplineStyle(FLinearColor::Blue));
+		DrawPartialCircularOrbit(SlateArgs, Origin, 250, 135 + 180, 0, 45, PointsOfInterest, FNovaSplineStyle(FLinearColor::Blue));
+		DrawTransferOrbit(SlateArgs, Origin, 250, 450, 135 + 180 + 45, 0, PointsOfInterest, FNovaSplineStyle(FLinearColor::Blue));
 
 		return SCompoundWidget::OnPaint(PaintArgs, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 	}
