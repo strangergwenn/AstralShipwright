@@ -297,13 +297,14 @@ struct FNovaCompartmentModule
 {
 	GENERATED_BODY()
 
-	FNovaCompartmentModule()
-		: Description(nullptr)
-		, ForwardBulkheadType(ENovaBulkheadType::None)
-		, AftBulkheadType(ENovaBulkheadType::None)
-		, SkirtPipingType(ENovaSkirtPipingType::None)
-		, NeedsWiring(false)
-	{}
+	FNovaCompartmentModule();
+
+	bool operator==(const FNovaCompartmentModule& Other) const;
+
+	bool operator!=(const FNovaCompartmentModule& Other) const
+	{
+		return !operator==(Other);
+	}
 
 	UPROPERTY()
 	const class UNovaModuleDescription* Description;
@@ -330,6 +331,13 @@ struct FNovaCompartment
 	FNovaCompartment();
 
 	FNovaCompartment(const class UNovaCompartmentDescription* K);
+
+	bool operator==(const FNovaCompartment& Other) const;
+
+	bool operator!=(const FNovaCompartment& Other) const
+	{
+		return !operator==(Other);
+	}
 
 	/** Check if this structure represents a non-empty compartment */
 	bool IsValid() const
@@ -399,6 +407,17 @@ struct FNovaSpacecraft
 
 public:
 
+	FNovaSpacecraft()
+		: Identifier(FGuid::NewGuid())
+	{}
+
+	bool operator==(const FNovaSpacecraft& Other) const;
+
+	bool operator!=(const FNovaSpacecraft& Other) const
+	{
+		return !operator==(Other);
+	}
+
 	/** Update bulkheads, pipes, wiring, based on the current state */
 	void UpdateProceduralElements();
 
@@ -417,4 +436,9 @@ public:
 	// Compartment data
 	UPROPERTY()
 	TArray<FNovaCompartment> Compartments;
+
+	// Unique ID
+	UPROPERTY()
+	FGuid Identifier;
+
 };

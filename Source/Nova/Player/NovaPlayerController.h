@@ -129,14 +129,15 @@ public:
 	void ClientLoadPlayer();
 
 	/** Create the main player actors on the server */
-	UFUNCTION(Server, Reliable, WithValidation)
+	UFUNCTION(Server, Reliable)
 	void ServerLoadPlayer(const FString& SerializedSaveData);
 
-	/** Get the spacecraft */
-	const TSharedPtr<struct FNovaSpacecraft>& GetSpacecraft() const
-	{
-		return Spacecraft;
-	}
+	/** Update the player spacecraft */
+	void UpdateSpacecraft(const FNovaSpacecraft& Spacecraft);
+
+	/** Update the player spacecraft */
+	UFUNCTION(Server, Reliable)
+	void ServerUpdateSpacecraft(const FNovaSpacecraft& Spacecraft);
 
 
 	/*----------------------------------------------------
@@ -238,9 +239,6 @@ private:
 	// Gameplay state
 	TMap<ENovaPostProcessPreset, TSharedPtr<FNovaPostProcessSetting>> PostProcessSettings;
 
-	// Local save data
-	TSharedPtr<struct FNovaSpacecraft>            Spacecraft;
-
 
 	/*----------------------------------------------------
 		Getters
@@ -261,5 +259,12 @@ public:
 	{
 		return GetPawn<ANovaSpacecraftPawn>();
 	}
+
+	/** Get the game world actor */
+	UFUNCTION(Category = Nova, BlueprintCallable)
+	class ANovaGameWorld* GetGameWorld() const;
+
+	/** Get the player spacecraft */
+	TSharedPtr<struct FNovaSpacecraft> GetSpacecraft() const;
 
 };

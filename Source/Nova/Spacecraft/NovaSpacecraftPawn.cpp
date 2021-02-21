@@ -8,7 +8,10 @@
 
 #include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Game/NovaAssetCatalog.h"
+#include "Nova/Game/NovaGameState.h"
+#include "Nova/Game/NovaGameWorld.h"
 #include "Nova/Player/NovaPlayerController.h"
+#include "Nova/Player/NovaPlayerState.h"
 
 #include "Nova/Nova.h"
 
@@ -52,39 +55,6 @@ void ANovaSpacecraftPawn::SerializeJson(TSharedPtr<FNovaSpacecraft>& SaveData, T
 
 
 /*----------------------------------------------------
-	Multiplayer
-----------------------------------------------------*/
-
-bool ANovaSpacecraftPawn::ServerSetSpacecraft_Validate(const FNovaSpacecraft& NewSpacecraft)
-{
-	return true;
-}
-
-void ANovaSpacecraftPawn::ServerSetSpacecraft_Implementation(const FNovaSpacecraft& NewSpacecraft)
-{
-	NLOG("ANovaSpacecraftPawn::ServerSetSpacecraft");
-
-	ServerSpacecraft = NewSpacecraft;
-
-	SetSpacecraft(NewSpacecraft.GetSharedCopy());
-}
-
-void ANovaSpacecraftPawn::OnServerSpacecraftReplicated()
-{
-	NLOG("ANovaSpacecraftPawn::OnServerSpacecraftReplicated");
-
-	SetSpacecraft(ServerSpacecraft.GetSharedCopy());
-}
-
-void ANovaSpacecraftPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(ANovaSpacecraftPawn, ServerSpacecraft);
-}
-
-
-/*----------------------------------------------------
 	Gameplay
 ----------------------------------------------------*/
 
@@ -92,23 +62,8 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Fetch the spacecraft from the player save if we don't have one
-	if (!Spacecraft.IsValid())
-	{
-		ANovaPlayerController* PC = GetController<ANovaPlayerController>();
-		if (PC)
-		{
-			const TSharedPtr<FNovaSpacecraft>& PlayerSpacecraft = GetController<ANovaPlayerController>()->GetSpacecraft();
-			if (PlayerSpacecraft.IsValid())
-			{
-				SetSpacecraft(PlayerSpacecraft);
-				ServerSpacecraft = *PlayerSpacecraft;
-			}
-		}
-	}
-
 	// Assembly sequence
-	else if (AssemblyState != ENovaAssemblyState::Idle)
+	if (AssemblyState != ENovaAssemblyState::Idle)
 	{
 		UpdateAssembly();
 	}
@@ -116,6 +71,26 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 	// Idle processing
 	else
 	{
+		// Fetch the spacecraft from the player state when we are remotely controlled OR no spacecraft was ever set
+		if (!Spacecraft.IsValid() || !IsLocallyControlled())
+		{
+			ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+			ANovaPlayerState* OwningPlayerState = GetPlayerState<ANovaPlayerState>();
+			if (IsValid(GameState) && IsValid(OwningPlayerState) && OwningPlayerState->GetSpacecraftIdentifier().IsValid())
+			{
+				ANovaGameWorld* GameWorld = GameState->GetGameWorld();
+				if (IsValid(GameWorld))
+				{
+					const TSharedPtr<FNovaSpacecraft>& NewSpacecraft = GameWorld->GetSpacecraft(OwningPlayerState->GetSpacecraftIdentifier());
+					if (NewSpacecraft.IsValid() && (!Spacecraft.IsValid() || *NewSpacecraft.Get() != *Spacecraft.Get()))
+					{
+						NLOG("ANovaSpacecraftPawn::Tick : updating spacecraft");
+						SetSpacecraft(NewSpacecraft);
+					}
+				}
+			}
+		}
+
 		// Update selection
 		for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
 		{
@@ -211,9 +186,10 @@ void ANovaSpacecraftPawn::SaveAssembly()
 {
 	NCHECK(Spacecraft.IsValid());
 
-	ServerSetSpacecraft(Spacecraft->GetSafeCopy());
-
-	GetController<ANovaPlayerController>()->GetGameInstance<UNovaGameInstance>()->SaveGame();
+	// Update the spacecraft and save
+	ANovaPlayerController* PC = GetController<ANovaPlayerController>();
+	PC->UpdateSpacecraft(*Spacecraft.Get());
+	PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
 }
 
 void ANovaSpacecraftPawn::SetSpacecraft(const TSharedPtr<FNovaSpacecraft> NewSpacecraft)
@@ -240,7 +216,7 @@ void ANovaSpacecraftPawn::SetSpacecraft(const TSharedPtr<FNovaSpacecraft> NewSpa
 		}
 
 		// Start assembling, using a copy of the target assembly data
-		Spacecraft = NewSpacecraft;
+		Spacecraft = NewSpacecraft->GetSharedCopy();
 		StartAssemblyUpdate();
 	}
 }

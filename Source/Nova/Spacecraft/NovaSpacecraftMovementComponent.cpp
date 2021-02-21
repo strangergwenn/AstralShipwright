@@ -4,6 +4,7 @@
 
 #include "Nova/Actor/NovaPlayerStart.h"
 #include "Nova/Game/NovaGameMode.h"
+#include "Nova/Game/NovaGameState.h"
 #include "Nova/Player/NovaPlayerController.h"
 #include "Nova/Tools/NovaActorTools.h"
 #include "Nova/Nova.h"
@@ -24,8 +25,6 @@
 
 UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	: Super()
-
-	, InitializeDocked(false)
 
 	, CurrentLinearVelocity(FVector::ZeroVector)
 	, CurrentAngularVelocity(FVector::ZeroVector)
@@ -75,10 +74,11 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 	{
 		ANovaPlayerController* PC = Cast<APawn>(GetOwner())->GetController<ANovaPlayerController>();
 		ANovaPlayerStart* Start = Cast<ANovaPlayerStart>(GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChoosePlayerStart(PC));
+		ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 
-		if (Start)
+		if (Start && GameState)
 		{
-			ENovaLevelIntroType Introtype = InitializeDocked ? ENovaLevelIntroType::Docked : Start->IsInSpace ? ENovaLevelIntroType::Idle : ENovaLevelIntroType::Braking;
+			ENovaLevelIntroType Introtype = GameState->ShouldStartDocked() ? ENovaLevelIntroType::Docked : Start->IsInSpace ? ENovaLevelIntroType::Idle : ENovaLevelIntroType::Braking;
 			Initialize(Start, Introtype);
 		}
 	}
@@ -185,12 +185,11 @@ void UNovaSpacecraftMovementComponent::MulticastInitialize_Implementation(const 
 	MeasuredAngularAcceleration = FVector::ZeroVector;
 }
 
-void UNovaSpacecraftMovementComponent::Reset(bool StartDocked)
+void UNovaSpacecraftMovementComponent::Reset()
 {
 	NLOG("UNovaSpacecraftMovementComponent::Reset ('%s')", *GetRoleString(this));
 
 	StartActor = nullptr;
-	InitializeDocked = StartDocked;
 }
 
 void UNovaSpacecraftMovementComponent::Dock(FSimpleDelegate Callback)
@@ -334,6 +333,19 @@ void UNovaSpacecraftMovementComponent::SignalCompletion()
 {
 	CompletionCallback.ExecuteIfBound();
 	CompletionCallback.Unbind();
+
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		ClientSignalCompletion();
+	}
+}
+
+void UNovaSpacecraftMovementComponent::ClientSignalCompletion_Implementation()
+{
+	if (GetLocalRole() != ROLE_Authority)
+	{
+		SignalCompletion();
+	}
 }
 
 

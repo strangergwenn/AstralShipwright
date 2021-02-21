@@ -22,6 +22,8 @@ public:
 		Inherited
 	----------------------------------------------------*/
 
+	virtual void InitGameState() override;
+
 	virtual void StartPlay() override;
 
 	virtual void PostLogin(class APlayerController* Player) override;
@@ -40,7 +42,7 @@ public:
 public:
 
 	/** Reset the area, moving all ships to player starts */
-	void ResetArea(bool StartDocked = false);
+	void ResetArea();
 
 	/** Have all players fade to black, play the exit cutscene and switch destination */
 	void ChangeArea(const class UNovaDestination* Destination);
@@ -53,7 +55,7 @@ public:
 protected:
 	
 	/** Load a streaming level */
-	bool LoadStreamingLevel(const class UNovaDestination* Destination, FSimpleDelegate Callback = FSimpleDelegate());
+	bool LoadStreamingLevel(const class UNovaDestination* Destination, bool StartDocked = false, FSimpleDelegate Callback = FSimpleDelegate());
 
 	/** Unload a streaming level */
 	void UnloadStreamingLevel(const class UNovaDestination* Destination, FSimpleDelegate Callback = FSimpleDelegate());

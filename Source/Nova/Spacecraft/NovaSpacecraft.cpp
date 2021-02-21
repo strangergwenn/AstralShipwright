@@ -8,6 +8,24 @@
 
 
 /*----------------------------------------------------
+	Spacecraft module
+----------------------------------------------------*/
+
+FNovaCompartmentModule::FNovaCompartmentModule()
+	: Description(nullptr)
+	, ForwardBulkheadType(ENovaBulkheadType::None)
+	, AftBulkheadType(ENovaBulkheadType::None)
+	, SkirtPipingType(ENovaSkirtPipingType::None)
+	, NeedsWiring(false)
+{}
+
+bool FNovaCompartmentModule::operator==(const FNovaCompartmentModule& Other) const
+{
+	return Description == Other.Description;
+}
+
+
+/*----------------------------------------------------
 	Spacecraft compartment
 ----------------------------------------------------*/
 
@@ -27,10 +45,60 @@ FNovaCompartment::FNovaCompartment(const class UNovaCompartmentDescription* K)
 	Description = K;
 }
 
+bool FNovaCompartment::operator==(const FNovaCompartment& Other) const
+{
+	if (Description != Other.Description || HullType != Other.HullType)
+	{
+		return false;
+	}
+	else
+	{
+		for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+		{
+			if (Modules[ModuleIndex] != Other.Modules[ModuleIndex])
+			{
+				return false;
+			}
+		}
+		for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
+		{
+			if (Equipments[EquipmentIndex] != Other.Equipments[EquipmentIndex])
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+}
 
 /*----------------------------------------------------
 	Spacecraft implementation
 ----------------------------------------------------*/
+
+bool FNovaSpacecraft::operator==(const FNovaSpacecraft& Other) const
+{
+	if (Identifier != Other.Identifier)
+	{
+		return false;
+	}
+	else if (Compartments.Num() != Other.Compartments.Num())
+	{
+		return false;
+	}
+	else
+	{
+		for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
+		{
+			if (Compartments[CompartmentIndex] != Other.Compartments[CompartmentIndex])
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+}
 
 void FNovaSpacecraft::UpdateProceduralElements()
 {
@@ -191,6 +259,8 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 	{
 		JsonData = MakeShareable(new FJsonObject);
 
+		JsonData->SetStringField("Identifier", This->Identifier.ToString());
+
 		TArray<TSharedPtr<FJsonValue>> SavedCompartments;
 		for (const FNovaCompartment& Compartment : This->Compartments)
 		{
@@ -225,6 +295,12 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 	else
 	{
 		This = MakeShareable(new FNovaSpacecraft);
+
+		FGuid Identifier;
+		if (FGuid::Parse(JsonData->GetStringField("Identifier"), Identifier))
+		{
+			This->Identifier = Identifier;
+		}
 
 		const TArray<TSharedPtr<FJsonValue>>* SavedCompartments;
 		if (JsonData->TryGetArrayField("Compartments", SavedCompartments))

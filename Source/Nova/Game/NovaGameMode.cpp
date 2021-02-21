@@ -6,10 +6,12 @@
 #include "Nova/Game/NovaAssetCatalog.h"
 #include "Nova/Game/NovaDestination.h"
 #include "Nova/Game/NovaGameState.h"
+#include "Nova/Game/NovaGameWorld.h"
 #include "Nova/Game/NovaWorldSettings.h"
 
 #include "Nova/Actor/NovaPlayerStart.h"
 #include "Nova/Player/NovaPlayerController.h"
+#include "Nova/Player/NovaPlayerState.h"
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
 
@@ -30,6 +32,7 @@ ANovaGameMode::ANovaGameMode()
 {
 	// Defaults
 	GameStateClass = ANovaGameState::StaticClass();
+	PlayerStateClass = ANovaPlayerState::StaticClass();
 	PlayerControllerClass = ANovaPlayerController::StaticClass();
 	DefaultPawnClass = ANovaSpacecraftPawn::StaticClass();
 
@@ -42,16 +45,40 @@ ANovaGameMode::ANovaGameMode()
 	Inherited
 ----------------------------------------------------*/
 
+void ANovaGameMode::InitGameState()
+{
+	NLOG("ANovaGameMode::InitGameState");
+	Super::InitGameState();
+
+	UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
+	NCHECK(GameInstance);
+
+	// Spawn the game world
+	ANovaGameWorld* GameWorld = GetWorld()->SpawnActor<ANovaGameWorld>();
+	NCHECK(IsValid(GameInstance));
+	GetGameState<ANovaGameState>()->SetGameWorld(GameWorld);
+}
+
 void ANovaGameMode::StartPlay()
 {
 	NLOG("ANovaGameMode::StartPlay");
 	Super::StartPlay();
 
+	// Load the game world
+	UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
+	NCHECK(GameInstance);
+	if (GameInstance->HasSave())
+	{
+		ANovaGameWorld* GameWorld = GetGameState<ANovaGameState>()->GetGameWorld();
+		NCHECK(IsValid(GameInstance));
+		GameWorld->Load(GameInstance->GetWorldSave());
+	}
+
 	// TODO : this should be dependent on save data
-	const UNovaDestination* Station = GetGameInstance<UNovaGameInstance>()->GetCatalog()->GetAsset<UNovaDestination>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
-	LoadStreamingLevel(Station, FSimpleDelegate::CreateLambda([=]()
+	const UNovaDestination* Station = GameInstance->GetCatalog()->GetAsset<UNovaDestination>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
+	LoadStreamingLevel(Station, true, FSimpleDelegate::CreateLambda([=]()
 		{
-			ResetArea(true);
+			ResetArea();
 		}));
 }
 
@@ -101,7 +128,7 @@ AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
 
 			if (DistanceVector.Size() < 500)
 			{
-				NLOG("AVestaANovaGameModeGameMode::ChoosePlayerStart_Implementation : encroaching '%s' invalidated '%s'",
+				NLOG("ANovaGameMode::ChoosePlayerStart_Implementation : encroaching '%s' invalidated '%s'",
 					*Pawn->GetName(), *PlayerStart->GetName());
 
 				Collided = true;
@@ -128,9 +155,9 @@ AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	Gameplay
 ----------------------------------------------------*/
 
-void ANovaGameMode::ResetArea(bool StartDocked)
+void ANovaGameMode::ResetArea()
 {
-	NLOG("ANovaGameMode::ResetArea %d", StartDocked);
+	NLOG("ANovaGameMode::ResetArea");
 
 	for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 	{
@@ -138,7 +165,7 @@ void ANovaGameMode::ResetArea(bool StartDocked)
 		AActor* Start = ChoosePlayerStart(PC);
 		NCHECK(Start);
 
-		SpacecraftPawn->GetSpacecraftMovement()->Reset(StartDocked);
+		SpacecraftPawn->GetSpacecraftMovement()->Reset();
 	}
 }
 
@@ -195,15 +222,15 @@ void ANovaGameMode::ChangeArea(const UNovaDestination* Destination)
 	Level loading
 ----------------------------------------------------*/
 
-bool ANovaGameMode::LoadStreamingLevel(const UNovaDestination* Destination, FSimpleDelegate Callback)
+bool ANovaGameMode::LoadStreamingLevel(const UNovaDestination* Destination, bool StartDocked, FSimpleDelegate Callback)
 {
 	NCHECK(Destination);
 
 	if (Destination->LevelName != NAME_None)
 	{
-		GetGameState<ANovaGameState>()->SetCurrentArea(Destination);
+		GetGameState<ANovaGameState>()->SetCurrentArea(Destination, StartDocked);
 
-		NLOG("ANovaGameMode::LoadStreamingLevel : loading streaming level '%s'", *Destination->LevelName.ToString());
+		NLOG("ANovaGameMode::LoadStreamingLevel : loading streaming level '%s' (%d)", *Destination->LevelName.ToString(), StartDocked);
 
 		FLatentActionInfo Info;
 		Info.CallbackTarget = this;

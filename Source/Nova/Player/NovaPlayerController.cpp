@@ -2,6 +2,7 @@
 
 #include "NovaPlayerController.h"
 #include "NovaMenuManager.h"
+#include "NovaPlayerState.h"
 #include "NovaGameViewportClient.h"
 
 #include "Nova/Actor/NovaTurntablePawn.h"
@@ -11,6 +12,7 @@
 #include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Game/NovaGameMode.h"
 #include "Nova/Game/NovaGameState.h"
+#include "Nova/Game/NovaGameWorld.h"
 #include "Nova/Game/NovaGameUserSettings.h"
 #include "Nova/Game/NovaSaveManager.h"
 #include "Nova/Game/NovaWorldSettings.h"
@@ -125,25 +127,18 @@ TSharedPtr<FNovaPlayerSave> ANovaPlayerController::Save() const
 	// Save the spacecraft
 	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
 	NCHECK(SpacecraftPawn);
-	SaveData->Spacecraft = SpacecraftPawn->GetSpacecraft();
+	SaveData->Spacecraft = GetSpacecraft();
 
 	return SaveData;
 }
 
 void ANovaPlayerController::Load(TSharedPtr<FNovaPlayerSave> SaveData)
 {
+	NCHECK(GetLocalRole() == ROLE_Authority);
 	NLOG("ANovaPlayerController::Load");
 
-	NCHECK(GetLocalRole() == ROLE_Authority);
-
-	// Check out what we need
-	ANovaGameMode* Game = Cast<ANovaGameMode>(GetWorld()->GetAuthGameMode());
-	NCHECK(Game);
-	UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
-	NCHECK(GameInstance);
-
 	// Store the save data so that the spacecraft pawn can fetch it later when it spawns
-	Spacecraft = SaveData->Spacecraft;
+	UpdateSpacecraft(*SaveData->Spacecraft.Get());
 }
 
 void ANovaPlayerController::SerializeJson(TSharedPtr<FNovaPlayerSave>& SaveData, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
@@ -406,18 +401,18 @@ void ANovaPlayerController::Dock()
 	NLOG("ANovaPlayerController::Dock");
 
 	FSimpleDelegate EndCutscene = FSimpleDelegate::CreateLambda([=]()
-		{
-			GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda([=]()
-				{
-					GetSpacecraftPawn()->ResetView();
-				})
-			);
-		});
+	{
+		GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda([=]()
+			{
+				GetSpacecraftPawn()->ResetView();
+			})
+		);
+	});
 
 	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda([=]()
-		{
-			GetSpacecraftPawn()->GetSpacecraftMovement()->Dock(EndCutscene);
-		});
+	{
+		GetSpacecraftPawn()->GetSpacecraftMovement()->Dock(EndCutscene);
+	});
 
 	GetMenuManager()->CloseMenu(StartCutscene);
 }
@@ -427,18 +422,18 @@ void ANovaPlayerController::Undock()
 	NLOG("ANovaPlayerController::Undock");
 
 	FSimpleDelegate EndCutscene = FSimpleDelegate::CreateLambda([=]()
-		{
-			GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda([=]()
-				{
-					GetSpacecraftPawn()->ResetView();
-				})
-			);
-		});
+	{
+		GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda([=]()
+			{
+				GetSpacecraftPawn()->ResetView();
+			})
+		);
+	});
 
 	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda([=]()
-		{
-			GetSpacecraftPawn()->GetSpacecraftMovement()->Undock(EndCutscene);
-		});
+	{
+		GetSpacecraftPawn()->GetSpacecraftMovement()->Undock(EndCutscene);
+	});
 
 	GetMenuManager()->CloseMenu(StartCutscene);
 }
@@ -472,7 +467,7 @@ void ANovaPlayerController::ClientLoadPlayer()
 	// Ensure valid save data exists even if the game was loaded directly
 	if (!IsOnMainMenu() && !GameInstance->HasSave())
 	{
-		GameInstance->LoadGame("1");
+		GameInstance->LoadGame(GetLocalRole() == ROLE_Authority ? "1" : "PIE");
 	}
 
 #endif
@@ -484,15 +479,10 @@ void ANovaPlayerController::ClientLoadPlayer()
 	ServerLoadPlayer(UNovaSaveManager::JsonToString(JsonData));
 }
 
-bool ANovaPlayerController::ServerLoadPlayer_Validate(const FString& SerializedSaveData)
-{
-	return true;
-}
-
 void ANovaPlayerController::ServerLoadPlayer_Implementation(const FString& SerializedSaveData)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
-	NLOG("ANovaPlayerController::ServerLoadPlayer");
+	NLOG("ANovaPlayerController::ServerLoadPlayer_Implementation");
 
 	// Deserialize save data
 	TSharedPtr<FNovaPlayerSave> SaveData;
@@ -501,6 +491,29 @@ void ANovaPlayerController::ServerLoadPlayer_Implementation(const FString& Seria
 
 	// Load
 	Load(SaveData);
+}
+
+void ANovaPlayerController::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft)
+{
+	NLOG("ANovaPlayerController::UpdateSpacecraft ('%s')", *GetRoleString(this));
+
+	// Update the player spacecraft
+	ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	GetPlayerState<ANovaPlayerState>()->SetSpacecraftIdentifier(Spacecraft.Identifier);
+	GetGameWorld()->AddPlayerSpacecraft(Spacecraft);
+
+	if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		ServerUpdateSpacecraft(Spacecraft);
+	}
+}
+
+void ANovaPlayerController::ServerUpdateSpacecraft_Implementation(const FNovaSpacecraft& Spacecraft)
+{
+	NCHECK(GetLocalRole() == ROLE_Authority);
+	NLOG("ANovaPlayerController::ServerUpdateSpacecraft_Implementation");
+
+	UpdateSpacecraft(Spacecraft);
 }
 
 
@@ -541,7 +554,7 @@ void ANovaPlayerController::GoToMainMenu()
 		GetMenuManager()->RunAction(ENovaLoadingScreen::Black,
 			FNovaAsyncAction::CreateLambda([=]()
 				{
-					GetGameInstance<UNovaGameInstance>()->SaveGame(true);
+					GetGameInstance<UNovaGameInstance>()->SaveGame(this, true);
 					GetGameInstance<UNovaGameInstance>()->GoToMainMenu();
 				})
 		);
@@ -612,7 +625,7 @@ bool ANovaPlayerController::IsReady() const
 	{
 		// Check spacecraft pawn
 		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-		bool IsSpacecraftReady = IsValid(SpacecraftPawn) && SpacecraftPawn->GetSpacecraft().IsValid()
+		bool IsSpacecraftReady = IsValid(SpacecraftPawn) && GetSpacecraft().IsValid()
 			&& SpacecraftPawn->GetSpacecraftMovement()->IsReady();
 
 		// Check game state
@@ -697,6 +710,33 @@ void ANovaPlayerController::ToggleMenuOrQuit()
 void ANovaPlayerController::AnyKey(FKey Key)
 {
 	GetMenuManager()->SetUsingGamepad(Key.IsGamepadKey());
+}
+
+
+/*----------------------------------------------------
+	Getters
+----------------------------------------------------*/
+
+ANovaGameWorld* ANovaPlayerController::GetGameWorld() const
+{
+	ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	return GameState ? GameState->GetGameWorld() : nullptr;
+}
+
+TSharedPtr<FNovaSpacecraft> ANovaPlayerController::GetSpacecraft() const
+{
+	ANovaGameWorld* GameWorld = GetGameWorld();
+	ANovaPlayerState* OwnedPlayerState = GetPlayerState<ANovaPlayerState>();
+
+	if (IsValid(GameWorld) && IsValid(OwnedPlayerState))
+	{
+		FGuid PlayerSpacecraftIdentifier = GetPlayerState<ANovaPlayerState>()->GetSpacecraftIdentifier();
+		return GameWorld->GetSpacecraft(PlayerSpacecraftIdentifier);
+	}
+	else
+	{
+		return nullptr;
+	}
 }
 
 

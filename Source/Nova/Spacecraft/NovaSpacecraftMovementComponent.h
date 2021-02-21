@@ -113,7 +113,7 @@ public:
 	void MulticastInitialize(const class AActor* Start, ENovaLevelIntroType IntroType);
 
 	/** Uninitialize the component */
-	void Reset(bool ForceDock);
+	void Reset();
 
 	/** Dock at a particular location */
 	void Dock(FSimpleDelegate Callback = FSimpleDelegate());
@@ -139,6 +139,9 @@ protected:
 
 	/** Signal completion to the user */
 	void SignalCompletion();
+
+	UFUNCTION(Client, Reliable)
+	void ClientSignalCompletion();
 
 
 	/*----------------------------------------------------
@@ -255,7 +258,6 @@ protected:
 	UPROPERTY(Replicated)
 	FNovaMovementCommand                          MovementCommand;
 	FSimpleDelegate                               CompletionCallback;
-	bool                                          InitializeDocked;
 
 	// Authoritative attitude input, produced by the server in real-time
 	UPROPERTY(Replicated)

@@ -4,6 +4,8 @@
 
 #include "NovaAssetCatalog.h"
 #include "NovaGameMode.h"
+#include "NovaGameState.h"
+#include "NovaGameWorld.h"
 #include "NovaGameUserSettings.h"
 #include "NovaContractManager.h"
 #include "NovaSaveManager.h"
@@ -18,6 +20,7 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Engine/NetDriver.h"
+#include "Engine/World.h"
 #include "Engine.h"
 
 
@@ -54,19 +57,28 @@ UNovaGameInstance::UNovaGameInstance()
 struct FNovaGameSave
 {
 	TSharedPtr<struct FNovaPlayerSave> PlayerData;
+	TSharedPtr<struct FNovaWorldSave> WorldData;
 	TSharedPtr<struct FNovaContractManagerSave> ContractManagerData;
 };
 
-TSharedPtr<FNovaGameSave> UNovaGameInstance::Save() const
+TSharedPtr<FNovaGameSave> UNovaGameInstance::Save(const ANovaPlayerController* PC) const
 {
 	TSharedPtr<FNovaGameSave> Save = CurrentSaveData;
 
-	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetFirstLocalPlayerController());
-	if (PC)
-	{
-		Save->PlayerData = PC->Save();
-	}
+	// Save the player
+	Save->PlayerData = PC->Save();
 
+	// Save the world
+	if (PC->GetLocalRole() == ROLE_Authority)
+	{
+		ANovaGameWorld* GameWorld = GetWorld()->GetGameState<ANovaGameState>()->GetGameWorld();
+		if (GameWorld)
+		{
+			Save->WorldData = GameWorld->Save();
+		}
+	}	
+
+	// Save contracts
 	Save->ContractManagerData = ContractManager->Save();
 
 	return Save;
@@ -209,21 +221,18 @@ void UNovaGameInstance::LoadGame(FString SaveName)
 	Load(CurrentSaveData);
 }
 
-void UNovaGameInstance::SaveGame(bool Synchronous)
+void UNovaGameInstance::SaveGame(ANovaPlayerController* PC, bool Synchronous) // TODO PC
 {
 	NLOG("UNovaGameInstance::SaveGame : synchronous %d", Synchronous);
 
-	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetFirstLocalPlayerController());
+	NCHECK(PC);
 
-	if (PC)
-	{
-		// Get an updated save
-		CurrentSaveData = Save();
+	// Get an updated save
+	CurrentSaveData = Save(PC);
 
-		// Write to file
-		SaveGameToFile(Synchronous);
-		PC->Notify(LOCTEXT("SavedGame", "Game saved"), ENovaNotificationType::Saved);
-	}
+	// Write to file
+	SaveGameToFile(Synchronous);
+	PC->Notify(LOCTEXT("SavedGame", "Game saved"), ENovaNotificationType::Saved);
 }
 
 void UNovaGameInstance::SaveGameToFile(bool Synchronous)
@@ -252,6 +261,12 @@ TSharedPtr<FNovaPlayerSave> UNovaGameInstance::GetPlayerSave()
 {
 	NCHECK(CurrentSaveData);
 	return CurrentSaveData->PlayerData;
+}
+
+TSharedPtr<struct FNovaWorldSave> UNovaGameInstance::GetWorldSave()
+{
+	NCHECK(CurrentSaveData);
+	return CurrentSaveData->WorldData;
 }
 
 TSharedPtr<FNovaContractManagerSave> UNovaGameInstance::GetContractManagerSave()

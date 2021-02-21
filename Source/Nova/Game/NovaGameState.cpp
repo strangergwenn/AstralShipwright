@@ -12,9 +12,9 @@
 
 ANovaGameState::ANovaGameState()
 	: Super()
+	, GameWorld(nullptr)
 	, CurrentArea(nullptr)
 {
-
 }
 
 
@@ -22,14 +22,24 @@ ANovaGameState::ANovaGameState()
 	Gameplay
 ----------------------------------------------------*/
 
-void ANovaGameState::SetCurrentArea(const class UNovaDestination* Area)
+void ANovaGameState::SetGameWorld(class ANovaGameWorld* World)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
+
+	GameWorld = World;
+}
+
+void ANovaGameState::SetCurrentArea(const UNovaDestination* Area, bool Docked)
+{
+	NCHECK(GetLocalRole() == ROLE_Authority);
+
 	CurrentArea = Area;
+	StartDocked = Docked;
 }
 
 FName ANovaGameState::GetCurrentLevelName() const
 {
+	NCHECK(CurrentArea);
 	return CurrentArea->LevelName;
 }
 
@@ -42,6 +52,7 @@ void ANovaGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(ANovaGameState, GameWorld);
 	DOREPLIFETIME(ANovaGameState, CurrentArea);
 }
 

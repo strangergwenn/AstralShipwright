@@ -49,17 +49,6 @@ public:
 
 
 	/*----------------------------------------------------
-		Multiplayer
-	----------------------------------------------------*/
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerSetSpacecraft(const struct FNovaSpacecraft& NewSpacecraft);
-
-	UFUNCTION()
-	void OnServerSpacecraftReplicated();
-
-
-	/*----------------------------------------------------
 		Gameplay
 	----------------------------------------------------*/
 
@@ -90,14 +79,8 @@ public:
 	/** Save this assembly **/
 	void SaveAssembly();
 
-	/** Store a copy of this spacecraft and start editing it */
+	/** Store a copy of a spacecraft and start editing it */
 	void SetSpacecraft(const TSharedPtr<FNovaSpacecraft> NewSpacecraft);
-
-	/** Get a shared pointer to the current spacecraft state */
-	const TSharedPtr<FNovaSpacecraft> GetSpacecraft() const
-	{
-		return Spacecraft;
-	}
 
 	/** Get the spacecraft movement component */
 	UFUNCTION(Category = Nova, BlueprintCallable)
@@ -213,10 +196,6 @@ protected:
 	TSharedPtr<FNovaSpacecraft>                   Spacecraft;
 	ENovaAssemblyState                            AssemblyState;
 	TArray<class UNovaSpacecraftCompartmentComponent*> CompartmentComponents;
-
-	// Server-side spacecraft
-	UPROPERTY(ReplicatedUsing = OnServerSpacecraftReplicated)
-	FNovaSpacecraft                               ServerSpacecraft;
 
 	// Asset loading
 	bool                                          WaitingAssetLoading;

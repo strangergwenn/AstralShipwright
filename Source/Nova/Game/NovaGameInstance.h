@@ -112,7 +112,7 @@ public:
 		Loading & saving
 	----------------------------------------------------*/
 
-	TSharedPtr<struct FNovaGameSave> Save() const;
+	TSharedPtr<struct FNovaGameSave> Save(const class ANovaPlayerController* PC) const;
 
 	void Load(TSharedPtr<struct FNovaGameSave> SaveData);
 
@@ -141,7 +141,7 @@ public:
 	void LoadGame(FString SaveName);
 
 	/** Save the game to the currently loaded slot */
-	void SaveGame(bool Synchronous = false);
+	void SaveGame(class ANovaPlayerController* PC, bool Synchronous = false);
 
 	/** Save the current save data to the currently loaded slot */
 	void SaveGameToFile(bool Synchronous = false);
@@ -151,6 +151,9 @@ public:
 
 	/** Get the save data for the player */
 	TSharedPtr<struct FNovaPlayerSave> GetPlayerSave();
+
+	/** Get the save data for the world */
+	TSharedPtr<struct FNovaWorldSave> GetWorldSave();
 
 	/** Get the save data for the contract system*/
 	TSharedPtr<struct FNovaContractManagerSave> GetContractManagerSave();
