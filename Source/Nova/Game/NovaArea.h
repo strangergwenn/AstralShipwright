@@ -4,16 +4,16 @@
 
 #include "EngineMinimal.h"
 #include "NovaGameTypes.h"
-#include "NovaDestination.generated.h"
+#include "NovaArea.generated.h"
 
 
 /*----------------------------------------------------
 	Description types
 ----------------------------------------------------*/
 
-/** Destination description */
+/** World area description */
 UCLASS(ClassGroup = (Nova))
-class UNovaDestination : public UNovaAssetDescription
+class UNovaArea : public UNovaAssetDescription
 {
 	GENERATED_BODY()
 

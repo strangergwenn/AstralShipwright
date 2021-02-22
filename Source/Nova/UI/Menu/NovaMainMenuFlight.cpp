@@ -1,11 +1,11 @@
-﻿// Nova project - Gwennaël Arbona
+// Nova project - Gwennaël Arbona
 
 #include "NovaMainMenuFlight.h"
 
 #include "NovaMainMenu.h"
 
 #include "Nova/Game/NovaAssetCatalog.h"
-#include "Nova/Game/NovaDestination.h"
+#include "Nova/Game/NovaArea.h"
 #include "Nova/Game/NovaGameMode.h"
 #include "Nova/Game/NovaGameInstance.h"
 
@@ -390,7 +390,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 				.HelpText(LOCTEXT("HelpLeaveStation", "Leave station"))
 				.OnClicked(FSimpleDelegate::CreateLambda([&]()
 				{
-					const class UNovaDestination* Orbit = MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaDestination>(FGuid("{D1D46588-494D-E081-ADE6-48AE0B010BBB}"));
+					const class UNovaArea* Orbit = MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{D1D46588-494D-E081-ADE6-48AE0B010BBB}"));
 					MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChangeArea(Orbit);
 				}))
 				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
@@ -407,7 +407,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 				.HelpText(LOCTEXT("HelpGoToStation", "Go to station"))
 				.OnClicked(FSimpleDelegate::CreateLambda([&]()
 				{
-					const class UNovaDestination* Station = MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaDestination>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
+					const class UNovaArea* Station = MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
 					MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChangeArea(Station);
 				}))
 				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()

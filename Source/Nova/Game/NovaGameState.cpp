@@ -1,7 +1,7 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaGameState.h"
-#include "NovaDestination.h"
+#include "NovaArea.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -29,7 +29,7 @@ void ANovaGameState::SetGameWorld(class ANovaGameWorld* World)
 	GameWorld = World;
 }
 
-void ANovaGameState::SetCurrentArea(const UNovaDestination* Area, bool Docked)
+void ANovaGameState::SetCurrentArea(const UNovaArea* Area, bool Docked)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 

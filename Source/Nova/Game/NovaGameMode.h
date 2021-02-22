@@ -44,8 +44,8 @@ public:
 	/** Reset the area, moving all ships to player starts */
 	void ResetArea();
 
-	/** Have all players fade to black, play the exit cutscene and switch destination */
-	void ChangeArea(const class UNovaDestination* Destination);
+	/** Have all players fade to black, play the exit cutscene and switch area */
+	void ChangeArea(const class UNovaArea* Area);
 
 	
 	/*----------------------------------------------------
@@ -55,10 +55,10 @@ public:
 protected:
 	
 	/** Load a streaming level */
-	bool LoadStreamingLevel(const class UNovaDestination* Destination, bool StartDocked = false, FSimpleDelegate Callback = FSimpleDelegate());
+	bool LoadStreamingLevel(const class UNovaArea* Area, bool StartDocked = false, FSimpleDelegate Callback = FSimpleDelegate());
 
 	/** Unload a streaming level */
-	void UnloadStreamingLevel(const class UNovaDestination* Destination, FSimpleDelegate Callback = FSimpleDelegate());
+	void UnloadStreamingLevel(const class UNovaArea* Area, FSimpleDelegate Callback = FSimpleDelegate());
 
 	/** Callback for a loaded streaming level */
 	UFUNCTION()
