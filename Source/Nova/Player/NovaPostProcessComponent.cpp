@@ -48,7 +48,7 @@ void UNovaPostProcessComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	APlayerController* PC = Cast<APlayerController>(GetOwner());
+	APlayerController* PC = GetOwner<APlayerController>();
 	NCHECK(PC);
 
 	if (PC && PC->IsLocalController())
@@ -88,7 +88,7 @@ void UNovaPostProcessComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	APlayerController* PC = Cast<APlayerController>(GetOwner());
+	APlayerController* PC = GetOwner<APlayerController>();
 	NCHECK(PC);
 
 	if (PC->IsLocalController() && PostProcessVolume)

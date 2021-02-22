@@ -72,7 +72,7 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 	// Initialize the movement component
 	if (GetLocalRole() == ROLE_Authority && !IsReady())
 	{
-		ANovaPlayerController* PC = Cast<APawn>(GetOwner())->GetController<ANovaPlayerController>();
+		ANovaPlayerController* PC = GetOwner<APawn>()->GetController<ANovaPlayerController>();
 		ANovaPlayerStart* Start = Cast<ANovaPlayerStart>(GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChoosePlayerStart(PC));
 		ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 
