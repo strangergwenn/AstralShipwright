@@ -32,6 +32,11 @@ struct FNovaSpacecraftDatabase : public FFastArraySerializer
 		return Cache.Get(Identifier, Array);
 	}
 
+	TArray<FNovaSpacecraft>& Get()
+	{
+		return Array;
+	}
+
 	void UpdateCache()
 	{
 		Cache.Update(Array);

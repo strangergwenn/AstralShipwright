@@ -1,4 +1,4 @@
-// Nova project - Gwenna�l Arbona
+﻿// Nova project - Gwennaël Arbona
 
 #include "NovaSaveManager.h"
 
@@ -244,8 +244,9 @@ FString UNovaSaveManager::GetSaveGamePath(const FString SaveName, bool Compresse
 
 FString UNovaSaveManager::JsonToString(const TSharedPtr<FJsonObject>& SaveData)
 {
-	FString                   SerializedSaveData;
-	TSharedRef<TJsonWriter<>> JsonWriter = TJsonWriterFactory<>::Create(&SerializedSaveData);
+	FString SerializedSaveData;
+	auto    JsonWriter = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&SerializedSaveData);
+
 	if (!FJsonSerializer::Serialize(SaveData.ToSharedRef(), JsonWriter))
 	{
 		NCHECK(false);
@@ -260,6 +261,7 @@ TSharedPtr<FJsonObject> UNovaSaveManager::StringToJson(const FString& Serialized
 {
 	TSharedPtr<FJsonObject>   SaveData;
 	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(SerializedSaveData);
+
 	if (!FJsonSerializer::Deserialize(Reader, SaveData) || !SaveData.IsValid())
 	{
 		NCHECK(false);

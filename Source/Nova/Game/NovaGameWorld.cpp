@@ -65,7 +65,12 @@ void ANovaGameWorld::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// Update spacecraft
 	SpacecraftDatabase.UpdateCache();
+	for (FNovaSpacecraft& Spacecraft : SpacecraftDatabase.Get())
+	{
+		Spacecraft.UpdateIfDirty();
+	}
 
 	// Process time
 	double DilatedDeltaTime = static_cast<double>(DeltaTime * ServerTimeDilation / 60.0);

@@ -27,16 +27,12 @@ struct FNovaCompartmentModule
 	UPROPERTY()
 	const class UNovaModuleDescription* Description;
 
-	UPROPERTY()
 	ENovaBulkheadType ForwardBulkheadType;
 
-	UPROPERTY()
 	ENovaBulkheadType AftBulkheadType;
 
-	UPROPERTY()
 	ENovaSkirtPipingType SkirtPipingType;
 
-	UPROPERTY()
 	bool NeedsWiring;
 };
 
@@ -73,15 +69,6 @@ struct FNovaCompartment
 	const class UNovaCompartmentDescription* Description;
 
 	UPROPERTY()
-	bool NeedsOuterSkirt;
-
-	UPROPERTY()
-	bool NeedsMainPiping;
-
-	UPROPERTY()
-	bool NeedsMainWiring;
-
-	UPROPERTY()
 	ENovaHullType HullType;
 
 	UPROPERTY()
@@ -89,6 +76,12 @@ struct FNovaCompartment
 
 	UPROPERTY()
 	const class UNovaEquipmentDescription* Equipments[ENovaConstants::MaxEquipmentCount];
+
+	bool NeedsOuterSkirt;
+
+	bool NeedsMainPiping;
+
+	bool NeedsMainWiring;
 };
 
 /** Metrics of the spacecraft's propulsion system */
@@ -149,7 +142,7 @@ public:
 	    Constructor & operators
 	----------------------------------------------------*/
 
-	FNovaSpacecraft() : Identifier(0, 0, 0, 0)
+	FNovaSpacecraft() : Identifier(0, 0, 0, 0), ServerVersion(0), LocalVersion(0)
 	{}
 
 	bool operator==(const FNovaSpacecraft& Other) const;
@@ -169,11 +162,24 @@ public:
 		Identifier = FGuid::NewGuid();
 	}
 
-	/** Update bulkheads, pipes, wiring, based on the current state */
-	void UpdateProceduralElements();
+	/** Trigger a rebuilding of the local state on all clients */
+	void SetDirty()
+	{
+		ServerVersion++;
 
-	/** Update the spacecraft's metrics */
-	void UpdatePropulsionMetrics();
+		UpdateIfDirty();
+	}
+
+	/** Update this spacecraft */
+	void UpdateIfDirty()
+	{
+		if (LocalVersion < ServerVersion)
+		{
+			UpdateProceduralElements();
+			UpdatePropulsionMetrics();
+			LocalVersion = ServerVersion;
+		}
+	}
 
 	/** Get propulsion characteristics for this spacecraft */
 	const FNovaSpacecraftPropulsionMetrics& GetPropulsionMetrics() const
@@ -214,6 +220,12 @@ public:
 	----------------------------------------------------*/
 
 protected:
+	/** Update bulkheads, pipes, wiring, based on the current state */
+	void UpdateProceduralElements();
+
+	/** Update the spacecraft's metrics */
+	void UpdatePropulsionMetrics();
+
 	/** Check whether the module at CompartmentIndex.ModuleIndex has a matching clone behind it */
 	bool IsSameModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex) const;
 
@@ -229,6 +241,11 @@ public:
 	UPROPERTY()
 	FGuid Identifier;
 
+	// Version index
+	UPROPERTY()
+	int16 ServerVersion;
+
 	// Local state
 	FNovaSpacecraftPropulsionMetrics PropulsionMetrics;
+	int16                            LocalVersion;
 };

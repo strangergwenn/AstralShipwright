@@ -672,14 +672,15 @@ bool SNovaMainMenuAssembly::IsModuleListEnabled(int32 ModuleIndex) const
 {
 	if (IsCompartmentPanelVisible)
 	{
-		ANovaSpacecraftPawn*    SpacecraftPawn = GetSpacecraftPawn();
-		const FNovaCompartment& Compartment    = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
-		return ModuleIndex < Compartment.Description->ModuleSlots.Num();
+		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+		if (IsValid(SpacecraftPawn))
+		{
+			const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
+			return ModuleIndex < Compartment.Description->ModuleSlots.Num();
+		}
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateModuleItem(const UNovaModuleDescription* Module) const
@@ -712,14 +713,16 @@ bool SNovaMainMenuAssembly::IsEquipmentListEnabled(int32 EquipmentIndex) const
 {
 	if (IsCompartmentPanelVisible)
 	{
-		ANovaSpacecraftPawn*    SpacecraftPawn = GetSpacecraftPawn();
-		const FNovaCompartment& Compartment    = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
-		return EquipmentIndex < Compartment.Description->EquipmentSlots.Num();
+		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+
+		if (IsValid(SpacecraftPawn))
+		{
+			const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
+			return EquipmentIndex < Compartment.Description->EquipmentSlots.Num();
+		}
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEquipmentItem(const UNovaEquipmentDescription* Equipment) const

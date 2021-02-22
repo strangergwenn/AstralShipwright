@@ -238,11 +238,11 @@ void UNovaGameInstance::SaveGameToFile(bool Synchronous)
 	{
 		if (Synchronous)
 		{
-			SaveManager->SaveGame(CurrentSaveFileName, CurrentSaveData, false);
+			SaveManager->SaveGame(CurrentSaveFileName, CurrentSaveData);
 		}
 		else
 		{
-			SaveManager->SaveGameAsync(CurrentSaveFileName, CurrentSaveData, false);
+			SaveManager->SaveGameAsync(CurrentSaveFileName, CurrentSaveData);
 		}
 	}
 }

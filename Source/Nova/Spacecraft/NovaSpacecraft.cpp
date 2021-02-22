@@ -20,12 +20,12 @@ FNovaCompartmentModule::FNovaCompartmentModule()
 
 FNovaCompartment::FNovaCompartment()
 	: Description(nullptr)
-	, NeedsOuterSkirt(false)
-	, NeedsMainPiping(false)
-	, NeedsMainWiring(false)
 	, HullType(ENovaHullType::None)
 	, Modules{FNovaCompartmentModule()}
 	, Equipments{nullptr}
+	, NeedsOuterSkirt(false)
+	, NeedsMainPiping(false)
+	, NeedsMainWiring(false)
 {}
 
 FNovaCompartment::FNovaCompartment(const class UNovaCompartmentDescription* K) : FNovaCompartment()
@@ -122,6 +122,125 @@ bool FNovaSpacecraft::operator==(const FNovaSpacecraft& Other) const
     Interface
 ----------------------------------------------------*/
 
+void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
+{
+	// Write an asset description to JSON
+	auto SaveAsset = [](TSharedPtr<FJsonObject> Save, FString Name, const UNovaAssetDescription* Asset)
+	{
+		if (Asset)
+		{
+			Save->SetStringField(Name, Asset->Identifier.ToString(EGuidFormats::Short));
+		}
+	};
+
+	// Get an asset description from JSON
+	auto LoadAsset = [](TSharedPtr<FJsonObject> Save, FString Name)
+	{
+		const UNovaAssetDescription* Asset = nullptr;
+
+		FString IdentifierString;
+		if (Save->TryGetStringField(Name, IdentifierString))
+		{
+			FGuid Identifier;
+			if (FGuid::Parse(IdentifierString, Identifier))
+			{
+				Asset = UNovaAssetCatalog::Get()->GetAsset(Identifier);
+			}
+		}
+
+		return Asset;
+	};
+
+	// Writing to JSON
+	if (Direction == ENovaSerialize::DataToJson)
+	{
+		JsonData = MakeShared<FJsonObject>();
+
+		// Spacecraft
+		JsonData->SetStringField("I", This->Identifier.ToString(EGuidFormats::Short));
+
+		TArray<TSharedPtr<FJsonValue>> SavedCompartments;
+		for (const FNovaCompartment& Compartment : This->Compartments)
+		{
+			TSharedPtr<FJsonObject> CompartmentJsonData = MakeShared<FJsonObject>();
+
+			if (Compartment.Description)
+			{
+				// Compartment
+				SaveAsset(CompartmentJsonData, "D", Compartment.Description);
+				CompartmentJsonData->SetNumberField("H", static_cast<uint8>(Compartment.HullType));
+
+				// Modules
+				for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
+				{
+					SaveAsset(CompartmentJsonData, FString("M") + FString::FromInt(Index), Compartment.Modules[Index].Description);
+				}
+
+				// Equipments
+				for (int32 Index = 0; Index < ENovaConstants::MaxEquipmentCount; Index++)
+				{
+					SaveAsset(CompartmentJsonData, FString("E") + FString::FromInt(Index), Compartment.Equipments[Index]);
+				}
+
+				SavedCompartments.Add(MakeShared<FJsonValueObject>(CompartmentJsonData));
+			}
+		}
+
+		JsonData->SetArrayField("C", SavedCompartments);
+	}
+
+	// Reading from JSON
+	else
+	{
+		This = MakeShared<FNovaSpacecraft>();
+		This->Create();
+
+		// Spacecraft
+		FGuid Identifier;
+		if (FGuid::Parse(JsonData->GetStringField("I"), Identifier))
+		{
+			This->Identifier = Identifier;
+		}
+
+		const TArray<TSharedPtr<FJsonValue>>* SavedCompartments;
+		if (JsonData->TryGetArrayField("C", SavedCompartments))
+		{
+			for (TSharedPtr<FJsonValue> CompartmentObject : *SavedCompartments)
+			{
+				FNovaCompartment        Compartment;
+				TSharedPtr<FJsonObject> CompartmentJsonData = CompartmentObject->AsObject();
+
+				// Compartment
+				Compartment.Description = Cast<UNovaCompartmentDescription>(LoadAsset(CompartmentJsonData, "D"));
+				NCHECK(Compartment.Description);
+				Compartment.HullType = static_cast<ENovaHullType>(CompartmentJsonData->GetNumberField("H"));
+
+				// Modules
+				for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
+				{
+					Compartment.Modules[Index].Description =
+						Cast<UNovaModuleDescription>(LoadAsset(CompartmentJsonData, FString("M") + FString::FromInt(Index)));
+				}
+
+				// Equipments
+				for (int32 Index = 0; Index < ENovaConstants::MaxEquipmentCount; Index++)
+				{
+					Compartment.Equipments[Index] =
+						Cast<UNovaEquipmentDescription>(LoadAsset(CompartmentJsonData, FString("E") + FString::FromInt(Index)));
+				}
+
+				This->Compartments.Add(Compartment);
+			}
+		}
+
+		This->SetDirty();
+	}
+}
+
+/*----------------------------------------------------
+    Internals
+----------------------------------------------------*/
+
 void FNovaSpacecraft::UpdateProceduralElements()
 {
 	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
@@ -181,42 +300,42 @@ void FNovaSpacecraft::UpdateProceduralElements()
 				if (Module.Description)
 				{
 					Module.NeedsWiring = true;
-					NLOG("FNovaSpacecraft::UpdateProceduralElements : compartment %d, module %d", CompartmentIndex, ModuleIndex);
+					// NLOG("FNovaSpacecraft::UpdateProceduralElements : compartment %d, module %d", CompartmentIndex, ModuleIndex);
 
 					// Define bulkheads
 					if (IsFirstCompartment())
 					{
 						Module.ForwardBulkheadType = ENovaBulkheadType::Outer;
-						NLOG("FNovaSpacecraft::UpdateProceduralElements : -> forward is Outer");
+						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> forward is Outer");
 					}
 					else if (IsSameModuleInPreviousCompartment(CompartmentIndex, ModuleIndex))
 					{
 						Module.ForwardBulkheadType = ENovaBulkheadType::Skirt;
 						Module.NeedsWiring         = false;
-						NLOG("FNovaSpacecraft::UpdateProceduralElements : -> forward is Connected");
+						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> forward is Connected");
 					}
 
 					if (IsLastCompartment())
 					{
 						Module.AftBulkheadType = ENovaBulkheadType::Outer;
-						NLOG("FNovaSpacecraft::UpdateProceduralElements : -> aft is Outer");
+						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> aft is Outer");
 					}
 					else if (IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
 					{
 						Module.AftBulkheadType = ENovaBulkheadType::Skirt;
-						NLOG("FNovaSpacecraft::UpdateProceduralElements : -> aft is Connected");
+						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> aft is Connected");
 					}
 
 					// Define piping
 					if (Module.Description->NeedsPiping && !IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
 					{
 						Module.SkirtPipingType = ENovaSkirtPipingType::Connection;
-						NLOG("FNovaSpacecraft::UpdateProceduralElements : -> skirt piping is Connection");
+						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> skirt piping is Connection");
 					}
 					else
 					{
 						Module.SkirtPipingType = ENovaSkirtPipingType::Simple;
-						NLOG("FNovaSpacecraft::UpdateProceduralElements : -> skirt piping is Simple");
+						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> skirt piping is Simple");
 					}
 				}
 			}
@@ -303,7 +422,7 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 		PropulsionMetrics.TotalBurnTime = PropulsionMetrics.FuelMass / PropulsionMetrics.FuelRate;
 	}
 
-#if 1
+#if 0
 	NLOG("--------------------------------------------------------------------------------");
 	NLOG("Mass specifications : dry %.1fT, fuel %.1fT, cargo %.1fT, total %.1fT", PropulsionMetrics.DryMass, PropulsionMetrics.FuelMass,
 		PropulsionMetrics.CargoMass, PropulsionMetrics.TotalMass);
@@ -313,115 +432,6 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 	NLOG("--------------------------------------------------------------------------------");
 #endif
 }
-
-void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
-{
-	// Writing to JSON
-	if (Direction == ENovaSerialize::DataToJson)
-	{
-		JsonData = MakeShared<FJsonObject>();
-
-		JsonData->SetStringField("Identifier", This->Identifier.ToString());
-
-		TArray<TSharedPtr<FJsonValue>> SavedCompartments;
-		for (const FNovaCompartment& Compartment : This->Compartments)
-		{
-			TSharedPtr<FJsonObject> CompartmentJsonData = MakeShared<FJsonObject>();
-
-			auto SaveAsset = [](TSharedPtr<FJsonObject> Save, FString Name, const UNovaAssetDescription* Asset)
-			{
-				Save->SetStringField(Name, Asset ? Asset->Identifier.ToString() : FGuid().ToString());
-			};
-
-			if (Compartment.Description)
-			{
-				SaveAsset(CompartmentJsonData, "Description", Compartment.Description);
-				CompartmentJsonData->SetNumberField("HullType", static_cast<uint8>(Compartment.HullType));
-				for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
-				{
-					SaveAsset(CompartmentJsonData, FString("ModuleDescription") + FString::FromInt(Index),
-						Compartment.Modules[Index].Description);
-					CompartmentJsonData->SetNumberField(FString("ForwardBulkheadType") + FString::FromInt(Index),
-						static_cast<uint8>(Compartment.Modules[Index].ForwardBulkheadType));
-					CompartmentJsonData->SetNumberField(FString("AftBulkheadType") + FString::FromInt(Index),
-						static_cast<uint8>(Compartment.Modules[Index].AftBulkheadType));
-				}
-				for (int32 Index = 0; Index < ENovaConstants::MaxEquipmentCount; Index++)
-				{
-					SaveAsset(CompartmentJsonData, FString("Equipment") + FString::FromInt(Index), Compartment.Equipments[Index]);
-				}
-
-				SavedCompartments.Add(MakeShared<FJsonValueObject>(CompartmentJsonData));
-			}
-		}
-
-		JsonData->SetArrayField("Compartments", SavedCompartments);
-	}
-
-	// Reading from JSON
-	else
-	{
-		This = MakeShared<FNovaSpacecraft>();
-		This->Create();
-
-		FGuid Identifier;
-		if (FGuid::Parse(JsonData->GetStringField("Identifier"), Identifier))
-		{
-			This->Identifier = Identifier;
-		}
-
-		const TArray<TSharedPtr<FJsonValue>>* SavedCompartments;
-		if (JsonData->TryGetArrayField("Compartments", SavedCompartments))
-		{
-			for (TSharedPtr<FJsonValue> CompartmentObject : *SavedCompartments)
-			{
-				FNovaCompartment        Compartment;
-				TSharedPtr<FJsonObject> CompartmentJsonData = CompartmentObject->AsObject();
-
-				auto LoadAsset = [](TSharedPtr<FJsonObject> Save, FString Name)
-				{
-					const UNovaAssetDescription* Asset = nullptr;
-
-					FGuid Identifier;
-					if (FGuid::Parse(Save->GetStringField(Name), Identifier))
-					{
-						Asset = UNovaAssetCatalog::Get()->GetAsset(Identifier);
-					}
-
-					return Asset;
-				};
-
-				Compartment.Description = Cast<UNovaCompartmentDescription>(LoadAsset(CompartmentJsonData, "Description"));
-				NCHECK(Compartment.Description);
-				Compartment.HullType = static_cast<ENovaHullType>(CompartmentJsonData->GetNumberField("HullType"));
-
-				for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
-				{
-					Compartment.Modules[Index].Description = Cast<UNovaModuleDescription>(
-						LoadAsset(CompartmentJsonData, FString("ModuleDescription") + FString::FromInt(Index)));
-					Compartment.Modules[Index].ForwardBulkheadType = static_cast<ENovaBulkheadType>(
-						CompartmentJsonData->GetNumberField(FString("ForwardBulkheadType") + FString::FromInt(Index)));
-					Compartment.Modules[Index].AftBulkheadType = static_cast<ENovaBulkheadType>(
-						CompartmentJsonData->GetNumberField(FString("AftBulkheadType") + FString::FromInt(Index)));
-				}
-				for (int32 Index = 0; Index < ENovaConstants::MaxEquipmentCount; Index++)
-				{
-					Compartment.Equipments[Index] =
-						Cast<UNovaEquipmentDescription>(LoadAsset(CompartmentJsonData, FString("Equipment") + FString::FromInt(Index)));
-				}
-
-				This->Compartments.Add(Compartment);
-			}
-		}
-
-		This->UpdateProceduralElements();
-		This->UpdatePropulsionMetrics();
-	}
-}
-
-/*----------------------------------------------------
-    Internals
-----------------------------------------------------*/
 
 bool FNovaSpacecraft::IsSameModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex) const
 {

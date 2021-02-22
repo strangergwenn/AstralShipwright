@@ -150,12 +150,12 @@ void ANovaPlayerController::SerializeJson(
 	{
 		JsonData = MakeShared<FJsonObject>();
 
-		TSharedPtr<FJsonObject> FactoryJsonData;
+		TSharedPtr<FJsonObject> SpacecraftJsonData;
 		if (SaveData)
 		{
-			FNovaSpacecraft::SerializeJson(SaveData->Spacecraft, FactoryJsonData, ENovaSerialize::DataToJson);
+			FNovaSpacecraft::SerializeJson(SaveData->Spacecraft, SpacecraftJsonData, ENovaSerialize::DataToJson);
 		}
-		JsonData->SetObjectField("Spacecraft", FactoryJsonData);
+		JsonData->SetObjectField("Spacecraft", SpacecraftJsonData);
 	}
 	else
 	{
@@ -502,10 +502,14 @@ void ANovaPlayerController::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft)
 	NLOG("ANovaPlayerController::UpdateSpacecraft ('%s')", *GetRoleString(this));
 
 	// Update the player spacecraft
-	ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
-	GetPlayerState<ANovaPlayerState>()->SetSpacecraftIdentifier(Spacecraft.Identifier);
-	GetGameWorld()->UpdateSpacecraft(Spacecraft, true);
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+		GetPlayerState<ANovaPlayerState>()->SetSpacecraftIdentifier(Spacecraft.Identifier);
+		GetGameWorld()->UpdateSpacecraft(Spacecraft, true);
+	}
 
+	// Tell the server
 	if (GetLocalRole() == ROLE_AutonomousProxy)
 	{
 		ServerUpdateSpacecraft(Spacecraft);

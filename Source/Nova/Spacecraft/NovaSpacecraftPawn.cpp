@@ -303,8 +303,7 @@ void ANovaSpacecraftPawn::StartAssemblyUpdate()
 	AssemblyState = ENovaAssemblyState::Moving;
 
 	// Update the spacecraft
-	Spacecraft->UpdateProceduralElements();
-	Spacecraft->UpdatePropulsionMetrics();
+	Spacecraft->SetDirty();
 
 	// De-materialize unwanted compartments
 	for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
