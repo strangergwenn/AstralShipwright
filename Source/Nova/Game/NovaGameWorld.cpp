@@ -1,6 +1,9 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaGameWorld.h"
+#include "NovaAssetCatalog.h"
+#include "NovaGameInstance.h"
+#include "NovaOrbitalSimulationComponent.h"
 #include "Nova/Nova.h"
 
 #include "EngineUtils.h"
@@ -14,6 +17,9 @@
 ANovaGameWorld::ANovaGameWorld()
 	: Super()
 {
+	// Setup simulation component
+	OrbitalSimulationComponent = CreateDefaultSubobject<UNovaOrbitalSimulationComponent>(TEXT("OrbitalSimulationComponent"));
+
 	// Settings
 	bReplicates = true;
 	SetReplicatingMovement(false);
@@ -71,7 +77,7 @@ TSharedPtr<FNovaSpacecraft> ANovaGameWorld::GetSpacecraft(FGuid Identifier)
 
 
 /*----------------------------------------------------
-	Internal
+	Internals
 ----------------------------------------------------*/
 
 void ANovaGameWorld::OnSpacecraftReplicated()

@@ -54,6 +54,18 @@ public:
 	/** Return a weak pointer for a spacecraft by identifier */
 	TSharedPtr<FNovaSpacecraft> GetSpacecraft(FGuid Identifier);
 
+	/** Get the spacecraft database */
+	TMap<FGuid, FNovaSpacecraftDatabaseEntry>& GetSpacecraftDatabase()
+	{
+		return SpacecraftDatabase;
+	}
+
+	/** Return the orbital simulation class */
+	class UNovaOrbitalSimulationComponent* GetOrbitalSimulation() const
+	{
+		return OrbitalSimulationComponent;
+	}
+
 
 	/*----------------------------------------------------
 		Internals
@@ -70,6 +82,17 @@ protected:
 
 
 	/*----------------------------------------------------
+		Components
+	----------------------------------------------------*/
+
+protected:
+
+	// Global orbital simulation manager
+	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
+	class UNovaOrbitalSimulationComponent* OrbitalSimulationComponent;
+
+
+	/*----------------------------------------------------
 		Data
 	----------------------------------------------------*/
 
@@ -77,13 +100,14 @@ private:
 
 	// Spacecraft array
 	UPROPERTY(ReplicatedUsing=OnSpacecraftReplicated)
-	TArray<FNovaSpacecraft>                AISpacecraft;
+	TArray<FNovaSpacecraft>                       AISpacecraft;
 
 	// Spacecraft array for player ships
 	UPROPERTY(ReplicatedUsing = OnSpacecraftReplicated)
-	TArray<FNovaSpacecraft>                PlayerSpacecraft;
+	TArray<FNovaSpacecraft>                       PlayerSpacecraft;
 
-	// Spacecraft map from ID
-	TMap<FGuid, FNovaSpacecraftDatabaseEntry> SpacecraftDatabase;
+	// Local state
+	TMap<FGuid, FNovaSpacecraftDatabaseEntry>     SpacecraftDatabase;
+	TArray<const class UNovaArea*>                Areas;
 
 };
