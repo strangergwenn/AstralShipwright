@@ -8,24 +8,14 @@
 
 #include "NovaOrbitalSimulationComponent.generated.h"
 
-
 /** Spacecraft trajectory data */
 struct FNovaSpacecraftTrajectory
 {
-	FNovaSpacecraftTrajectory(float SA, float CP)
-		: StartAltitude(SA)
-		, EndAltitude(SA)
-		, StartPhase(0)
-		, EndPhase(360)
-		, CurrentPhase(CP)
+	FNovaSpacecraftTrajectory(float SA, float CP) : StartAltitude(SA), EndAltitude(SA), StartPhase(0), EndPhase(360), CurrentPhase(CP)
 	{}
 
 	FNovaSpacecraftTrajectory(float SA, float EA, float SP, float EP, float CP)
-		: StartAltitude(SA)
-		, EndAltitude(EA)
-		, StartPhase(SP)
-		, EndPhase(EP)
-		, CurrentPhase(CP)
+		: StartAltitude(SA), EndAltitude(EA), StartPhase(SP), EndPhase(EP), CurrentPhase(CP)
 	{}
 
 	float StartAltitude;
@@ -42,16 +32,13 @@ class UNovaOrbitalSimulationComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-
 	UNovaOrbitalSimulationComponent();
 
-
 	/*----------------------------------------------------
-		Gameplay
+	    Gameplay
 	----------------------------------------------------*/
 
 public:
-
 	virtual void BeginPlay() override;
 
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -68,26 +55,21 @@ public:
 		return SpacecraftTrajectories;
 	}
 
-
 	/*----------------------------------------------------
-		Internals
+	    Internals
 	----------------------------------------------------*/
 
 protected:
-
 	/** Update all trajectories based on the current time */
 	void UpdateTrajectories();
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 private:
-
 	// Local state
-	TArray<const class UNovaArea*>                Areas;
-	TMap<const class UNovaArea*, FNovaSpacecraftTrajectory> AreaTrajectories;
+	TArray<const class UNovaArea*>                                    Areas;
+	TMap<const class UNovaArea*, FNovaSpacecraftTrajectory>           AreaTrajectories;
 	TMap<TWeakPtr<struct FNovaSpacecraft>, FNovaSpacecraftTrajectory> SpacecraftTrajectories;
-
 };

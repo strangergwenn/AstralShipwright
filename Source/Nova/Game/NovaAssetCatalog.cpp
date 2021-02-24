@@ -5,23 +5,18 @@
 
 #include "AssetRegistryModule.h"
 
-
 // Statics
 UNovaAssetCatalog* UNovaAssetCatalog::Singleton = nullptr;
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
-UNovaAssetCatalog::UNovaAssetCatalog()
-	: Super()
-{
-}
-
+UNovaAssetCatalog::UNovaAssetCatalog() : Super()
+{}
 
 /*----------------------------------------------------
-	Public methods
+    Public methods
 ----------------------------------------------------*/
 
 void UNovaAssetCatalog::Initialize()
@@ -44,7 +39,7 @@ void UNovaAssetCatalog::Initialize()
 		NCHECK(Entry);
 		if (!Entry->Hidden)
 		{
-			Catalog.Add(TPair<FGuid ,const class UNovaAssetDescription*>(Entry->Identifier, Entry));
+			Catalog.Add(TPair<FGuid, const class UNovaAssetDescription*>(Entry->Identifier, Entry));
 		}
 	}
 }

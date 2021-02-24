@@ -8,11 +8,10 @@
 
 #include "Online.h"
 
-
 class SNovaMainMenuGame : public SNovaTabPanel
 {
 	/*----------------------------------------------------
-		Slate arguments
+	    Slate arguments
 	----------------------------------------------------*/
 
 	SLATE_BEGIN_ARGS(SNovaMainMenuGame)
@@ -24,11 +23,10 @@ class SNovaMainMenuGame : public SNovaTabPanel
 	SLATE_END_ARGS()
 
 public:
-
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
-		Interaction
+	    Interaction
 	----------------------------------------------------*/
 
 	virtual void Show() override;
@@ -39,9 +37,7 @@ public:
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
-
 protected:
-
 	/** Check if we have a valid friend reference available */
 	bool HasSelectedFriend() const;
 
@@ -51,39 +47,36 @@ protected:
 	/** Get the name of a friend */
 	FText GetFriendName(TSharedRef<FOnlineFriend> Friend) const;
 
-
 	/*----------------------------------------------------
-		Content callbacks
+	    Content callbacks
 	----------------------------------------------------*/
 
 protected:
-
-	EVisibility GetContractsTextVisibility() const;
-	FText GetContractTitle(uint32 Index) const;
-	FText GetContractDescription(uint32 Index) const;
-	TOptional<float> GetContractProgress(uint32 Index) const;
-	EVisibility GetContractVisibility(uint32 Index) const;
-	FText GetContractTrackText(uint32 Index) const;
+	EVisibility        GetContractsTextVisibility() const;
+	FText              GetContractTitle(uint32 Index) const;
+	FText              GetContractDescription(uint32 Index) const;
+	TOptional<float>   GetContractProgress(uint32 Index) const;
+	EVisibility        GetContractVisibility(uint32 Index) const;
+	FText              GetContractTrackText(uint32 Index) const;
 	const FSlateBrush* GetContractTrackIcon(uint32 Index) const;
 
-	FText GetOnlineText() const;
-	FText GetOnlineButtonText() const;
-	FText GetOnlineButtonHelpText() const;
+	FText       GetOnlineText() const;
+	FText       GetOnlineButtonText() const;
+	FText       GetOnlineButtonHelpText() const;
 	EVisibility GetQuitGameVisibility() const;
 
 	TSharedRef<SWidget> GenerateFriendItem(TSharedRef<FOnlineFriend> Friend);
-	const FSlateBrush* GetFriendIcon(TSharedRef<FOnlineFriend> Friend) const;
-	FText GenerateFriendTooltip(TSharedRef<FOnlineFriend> Friend);
+	const FSlateBrush*  GetFriendIcon(TSharedRef<FOnlineFriend> Friend) const;
+	FText               GenerateFriendTooltip(TSharedRef<FOnlineFriend> Friend);
 
 	FText GetInviteText() const;
 	FText GetJoinText() const;
 	FText GetOnlineFriendsText() const;
-	bool IsInviteFriendEnabled() const;
-	bool IsJoinFriendEnabled() const;
-
+	bool  IsInviteFriendEnabled() const;
+	bool  IsJoinFriendEnabled() const;
 
 	/*----------------------------------------------------
-		Callbacks
+	    Callbacks
 	----------------------------------------------------*/
 
 	void OnTrackContract(uint32 Index);
@@ -98,24 +91,21 @@ protected:
 	void OnInviteSelectedFriend();
 	void OnJoinSelectedFriend();
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 protected:
-
 	// Menu manager
-	TWeakObjectPtr<UNovaMenuManager>              MenuManager;
+	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 
 	// Widgets
 	TSharedPtr<SNovaListView<TSharedRef<FOnlineFriend>>> FriendListView;
-	TSharedPtr<SVerticalBox>                      ContractBox;
+	TSharedPtr<SVerticalBox>                             ContractBox;
 
 	// Data
-	TArray<TSharedRef<FOnlineFriend>>             FriendList;
-	int32                                         SelectedFriendIndex;
-	float                                         TimeSinceFriendListUpdate;
-	float                                         FriendListUpdatePeriod;
-
+	TArray<TSharedRef<FOnlineFriend>> FriendList;
+	int32                             SelectedFriendIndex;
+	float                             TimeSinceFriendListUpdate;
+	float                             FriendListUpdatePeriod;
 };

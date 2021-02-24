@@ -10,7 +10,6 @@
 #include "Nova/Game/NovaGameTypes.h"
 #include "NovaGameViewportClient.generated.h"
 
-
 /** Loading screen list */
 UCLASS()
 class UNovaLoadingScreenSetup : public UNovaAssetDescription
@@ -18,7 +17,6 @@ class UNovaLoadingScreenSetup : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
-
 	// Width of the loading screen in pixels
 	UPROPERTY(Category = LoadingScreensSetup, EditDefaultsOnly)
 	int32 Width;
@@ -38,23 +36,19 @@ public:
 	// Animated loading screen
 	UPROPERTY(Category = LoadingScreensSetup, EditDefaultsOnly)
 	UTexture2D* LaunchScreen;
-
 };
-
 
 /** Game viewport class */
 UCLASS(ClassGroup = (Nova))
 class UNovaGameViewportClient : public UGameViewportClient
 {
 	GENERATED_BODY()
-	
-public:
 
+public:
 	UNovaGameViewportClient();
 
-
 	/*----------------------------------------------------
-		Public methods
+	    Public methods
 	----------------------------------------------------*/
 
 	virtual void SetViewport(FViewport* InViewport) override;
@@ -69,35 +63,30 @@ public:
 	/** Start playing the loading screen through movie player */
 	void ShowLoadingScreen();
 
-
 protected:
-
 	/*----------------------------------------------------
-		Internals
+	    Internals
 	----------------------------------------------------*/
 
 	/** Set up the material and resources */
 	void Initialize();
 
-
 protected:
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 	// Loading screen setup
 	UPROPERTY()
-	const UNovaLoadingScreenSetup*                LoadingScreenSetup;
+	const UNovaLoadingScreenSetup* LoadingScreenSetup;
 
 	// Dynamic material
 	UPROPERTY()
-	class UMaterialInstanceDynamic*               AnimatedMaterialInstance;
+	class UMaterialInstanceDynamic* AnimatedMaterialInstance;
 
 	// Widget
-	TSharedPtr<class SNovaLoadingScreen>          LoadingScreenWidget;
+	TSharedPtr<class SNovaLoadingScreen> LoadingScreenWidget;
 
 	// Local state
-	ENovaLoadingScreen                            CurrentLoadingScreen;
-
+	ENovaLoadingScreen CurrentLoadingScreen;
 };

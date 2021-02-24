@@ -6,9 +6,8 @@
 #include "Nova/Game/NovaGameTypes.h"
 #include "NovaSpacecraftTypes.generated.h"
 
-
 /*----------------------------------------------------
-	General spacecraft types
+    General spacecraft types
 ----------------------------------------------------*/
 
 /** Equipment requirement types */
@@ -63,8 +62,7 @@ struct FNovaAssemblyElement
 	FNovaAssemblyElement()
 	{}
 
-	FNovaAssemblyElement(ENovaAssemblyElementType T)
-		: Type(T)
+	FNovaAssemblyElement(ENovaAssemblyElementType T) : Type(T)
 	{}
 
 	FSoftObjectPath           Asset;
@@ -75,9 +73,8 @@ struct FNovaAssemblyElement
 /** Compartment processing delegate */
 DECLARE_DELEGATE_ThreeParams(FNovaAssemblyCallback, FNovaAssemblyElement&, TSoftObjectPtr<UObject>, FNovaAdditionalComponent);
 
-
 /*----------------------------------------------------
-	Additional component mechanism
+    Additional component mechanism
 ----------------------------------------------------*/
 
 /** Additional component to spawn alongside a particular object */
@@ -105,7 +102,6 @@ struct FNovaAdditionalComponent
 		Result.Add(AdditionalAsset.ToSoftObjectPath());
 		return Result;
 	}
-
 };
 
 /** Interface wrapper */
@@ -115,15 +111,12 @@ class UNovaAdditionalComponentInterface : public UInterface
 	GENERATED_BODY()
 };
 
-
 /** Base interface for additional components */
 class INovaAdditionalComponentInterface
 {
 	GENERATED_BODY()
 
 public:
-
 	/** Configure the additional component */
 	virtual void SetAdditionalAsset(TSoftObjectPtr<class UObject> AdditionalAsset) = 0;
-
 };

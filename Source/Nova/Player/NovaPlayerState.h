@@ -6,20 +6,17 @@
 #include "GameFramework/PlayerState.h"
 #include "NovaPlayerState.generated.h"
 
-
 /** Replicated player state class */
 UCLASS(ClassGroup = (Nova))
 class ANovaPlayerState : public APlayerState
 {
 	GENERATED_BODY()
-		
-public:
 
+public:
 	ANovaPlayerState();
 
-
 	/*----------------------------------------------------
-		Gameplay
+	    Gameplay
 	----------------------------------------------------*/
 
 	/** Share the identifier for the player spacecraft */
@@ -34,14 +31,12 @@ public:
 		return SpacecraftIdentifier;
 	}
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 private:
-
 	// Player world storing all spacecraft
 	UPROPERTY(Replicated)
-	FGuid                                         SpacecraftIdentifier;
+	FGuid SpacecraftIdentifier;
 };

@@ -8,16 +8,13 @@
 #include "Widgets/SCompoundWidget.h"
 #include "Slate/DeferredCleanupSlateBrush.h"
 
-
 class SNovaLoadingScreen : public SCompoundWidget
 {
 	/*----------------------------------------------------
-		Slate arguments
+	    Slate arguments
 	----------------------------------------------------*/
 
-	SLATE_BEGIN_ARGS(SNovaLoadingScreen)
-		: _Settings(nullptr)
-		, _Material(nullptr)
+	SLATE_BEGIN_ARGS(SNovaLoadingScreen) : _Settings(nullptr), _Material(nullptr)
 	{}
 
 	SLATE_ARGUMENT(TWeakObjectPtr<class UNovaMenuManager>, MenuManager)
@@ -26,27 +23,19 @@ class SNovaLoadingScreen : public SCompoundWidget
 
 	SLATE_END_ARGS()
 
-
 public:
-
 	/*----------------------------------------------------
-		Constructor
+	    Constructor
 	----------------------------------------------------*/
 
-	SNovaLoadingScreen()
-		: SCompoundWidget()
-		, AnimatedMaterialInstance(nullptr)
-		, LoadingScreenTime(0)
-		, CurrentAlpha(0)
+	SNovaLoadingScreen() : SCompoundWidget(), AnimatedMaterialInstance(nullptr), LoadingScreenTime(0), CurrentAlpha(0)
 	{}
 
 	virtual void Construct(const FArguments& InArgs);
 
-
 public:
-
 	/*----------------------------------------------------
-		Public methods
+	    Public methods
 	----------------------------------------------------*/
 
 	/** Set the current rendering alpha */
@@ -69,17 +58,14 @@ public:
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
-
 protected:
-
 	/*----------------------------------------------------
-		Private data
+	    Private data
 	----------------------------------------------------*/
 
 	// Data
-	TSharedPtr<FDeferredCleanupSlateBrush>        LoadingScreenBrush;
-	class UMaterialInstanceDynamic*               AnimatedMaterialInstance;
-	float                                         LoadingScreenTime;
-	float                                         CurrentAlpha;
-
+	TSharedPtr<FDeferredCleanupSlateBrush> LoadingScreenBrush;
+	class UMaterialInstanceDynamic*        AnimatedMaterialInstance;
+	float                                  LoadingScreenTime;
+	float                                  CurrentAlpha;
 };

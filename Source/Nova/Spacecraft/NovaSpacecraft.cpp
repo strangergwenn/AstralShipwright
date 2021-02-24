@@ -6,9 +6,8 @@
 
 #include "Dom/JsonObject.h"
 
-
 /*----------------------------------------------------
-	Spacecraft module
+    Spacecraft module
 ----------------------------------------------------*/
 
 FNovaCompartmentModule::FNovaCompartmentModule()
@@ -24,9 +23,8 @@ bool FNovaCompartmentModule::operator==(const FNovaCompartmentModule& Other) con
 	return Description == Other.Description;
 }
 
-
 /*----------------------------------------------------
-	Spacecraft compartment
+    Spacecraft compartment
 ----------------------------------------------------*/
 
 FNovaCompartment::FNovaCompartment()
@@ -35,12 +33,11 @@ FNovaCompartment::FNovaCompartment()
 	, NeedsMainPiping(false)
 	, NeedsMainWiring(false)
 	, HullType(ENovaHullType::None)
-	, Modules{ FNovaCompartmentModule() }
-	, Equipments{ nullptr }
+	, Modules{FNovaCompartmentModule()}
+	, Equipments{nullptr}
 {}
 
-FNovaCompartment::FNovaCompartment(const class UNovaCompartmentDescription* K)
-	: FNovaCompartment()
+FNovaCompartment::FNovaCompartment(const class UNovaCompartmentDescription* K) : FNovaCompartment()
 {
 	Description = K;
 }
@@ -73,7 +70,7 @@ bool FNovaCompartment::operator==(const FNovaCompartment& Other) const
 }
 
 /*----------------------------------------------------
-	Spacecraft implementation
+    Spacecraft implementation
 ----------------------------------------------------*/
 
 bool FNovaSpacecraft::operator==(const FNovaSpacecraft& Other) const
@@ -174,9 +171,9 @@ void FNovaSpacecraft::UpdateProceduralElements()
 
 				// Reset state
 				Module.ForwardBulkheadType = ENovaBulkheadType::Standard;
-				Module.AftBulkheadType = ENovaBulkheadType::Standard;
-				Module.SkirtPipingType = ENovaSkirtPipingType::None;
-				Module.NeedsWiring = false;
+				Module.AftBulkheadType     = ENovaBulkheadType::Standard;
+				Module.SkirtPipingType     = ENovaSkirtPipingType::None;
+				Module.NeedsWiring         = false;
 
 				// Handle forced piping
 				if (Compartment.Description->GetModuleSlot(ModuleIndex).ForceSkirtPiping)
@@ -198,7 +195,7 @@ void FNovaSpacecraft::UpdateProceduralElements()
 					else if (IsSameModuleInPreviousCompartment())
 					{
 						Module.ForwardBulkheadType = ENovaBulkheadType::Skirt;
-						Module.NeedsWiring = false;
+						Module.NeedsWiring         = false;
 						NLOG("FNovaSpacecraft::UpdateProceduralElements : -> forward is Connected");
 					}
 
@@ -249,7 +246,7 @@ FNovaSpacecraft FNovaSpacecraft::GetSafeCopy() const
 TSharedPtr<FNovaSpacecraft> FNovaSpacecraft::GetSharedCopy() const
 {
 	TSharedPtr<FNovaSpacecraft> NewSpacecraft = MakeShareable(new FNovaSpacecraft);
-	*NewSpacecraft = *this;
+	*NewSpacecraft                            = *this;
 	return NewSpacecraft;
 }
 
@@ -277,9 +274,12 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 				CompartmentJsonData->SetNumberField("HullType", static_cast<uint8>(Compartment.HullType));
 				for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
 				{
-					SaveAsset(CompartmentJsonData, FString("ModuleDescription") + FString::FromInt(Index), Compartment.Modules[Index].Description);
-					CompartmentJsonData->SetNumberField(FString("ForwardBulkheadType") + FString::FromInt(Index), static_cast<uint8>(Compartment.Modules[Index].ForwardBulkheadType));
-					CompartmentJsonData->SetNumberField(FString("AftBulkheadType") + FString::FromInt(Index), static_cast<uint8>(Compartment.Modules[Index].AftBulkheadType));
+					SaveAsset(CompartmentJsonData, FString("ModuleDescription") + FString::FromInt(Index),
+						Compartment.Modules[Index].Description);
+					CompartmentJsonData->SetNumberField(FString("ForwardBulkheadType") + FString::FromInt(Index),
+						static_cast<uint8>(Compartment.Modules[Index].ForwardBulkheadType));
+					CompartmentJsonData->SetNumberField(FString("AftBulkheadType") + FString::FromInt(Index),
+						static_cast<uint8>(Compartment.Modules[Index].AftBulkheadType));
 				}
 				for (int32 Index = 0; Index < ENovaConstants::MaxEquipmentCount; Index++)
 				{
@@ -307,7 +307,7 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 		{
 			for (TSharedPtr<FJsonValue> CompartmentObject : *SavedCompartments)
 			{
-				FNovaCompartment Compartment;
+				FNovaCompartment        Compartment;
 				TSharedPtr<FJsonObject> CompartmentJsonData = CompartmentObject->AsObject();
 
 				auto LoadAsset = [](TSharedPtr<FJsonObject> Save, FString Name)
@@ -329,16 +329,17 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 
 				for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
 				{
-					Compartment.Modules[Index].Description
-						= Cast<UNovaModuleDescription>(LoadAsset(CompartmentJsonData, FString("ModuleDescription") + FString::FromInt(Index)));
-					Compartment.Modules[Index].ForwardBulkheadType
-						= static_cast<ENovaBulkheadType>(CompartmentJsonData->GetNumberField(FString("ForwardBulkheadType") + FString::FromInt(Index)));
-					Compartment.Modules[Index].AftBulkheadType
-						= static_cast<ENovaBulkheadType>(CompartmentJsonData->GetNumberField(FString("AftBulkheadType") + FString::FromInt(Index)));
+					Compartment.Modules[Index].Description = Cast<UNovaModuleDescription>(
+						LoadAsset(CompartmentJsonData, FString("ModuleDescription") + FString::FromInt(Index)));
+					Compartment.Modules[Index].ForwardBulkheadType = static_cast<ENovaBulkheadType>(
+						CompartmentJsonData->GetNumberField(FString("ForwardBulkheadType") + FString::FromInt(Index)));
+					Compartment.Modules[Index].AftBulkheadType = static_cast<ENovaBulkheadType>(
+						CompartmentJsonData->GetNumberField(FString("AftBulkheadType") + FString::FromInt(Index)));
 				}
 				for (int32 Index = 0; Index < ENovaConstants::MaxEquipmentCount; Index++)
 				{
-					Compartment.Equipments[Index] = Cast<UNovaEquipmentDescription>(LoadAsset(CompartmentJsonData, FString("Equipment") + FString::FromInt(Index)));
+					Compartment.Equipments[Index] =
+						Cast<UNovaEquipmentDescription>(LoadAsset(CompartmentJsonData, FString("Equipment") + FString::FromInt(Index)));
 				}
 
 				This->Compartments.Add(Compartment);

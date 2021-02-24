@@ -9,10 +9,8 @@
 #include "SlateBasics.h"
 #include "NovaMenuManager.generated.h"
 
-
 DECLARE_DELEGATE(FNovaAsyncAction);
 DECLARE_DELEGATE_RetVal(bool, FNovaAsyncCondition);
-
 
 /** Menu states */
 enum class ENovaFadeState : uint8
@@ -25,37 +23,31 @@ enum class ENovaFadeState : uint8
 /** Async command data */
 struct FNovaAsyncCommand
 {
-	FNovaAsyncCommand()
-		: Action()
-		, Condition()
-		, FadeDuration(0)
+	FNovaAsyncCommand() : Action(), Condition(), FadeDuration(0)
 	{}
 
 	FNovaAsyncCommand(FNovaAsyncAction A, FNovaAsyncCondition C, bool ShortFade)
-		: Action(A)
-		, Condition(C)
-		, FadeDuration(ShortFade ? ENovaUIConstants::FadeDurationShort : ENovaUIConstants::FadeDurationLong)
+		: Action(A), Condition(C), FadeDuration(ShortFade ? ENovaUIConstants::FadeDurationShort : ENovaUIConstants::FadeDurationLong)
 	{}
 
-	FNovaAsyncAction Action;
+	FNovaAsyncAction    Action;
 	FNovaAsyncCondition Condition;
-	float FadeDuration;
+	float               FadeDuration;
 };
-
 
 /** Menu manager class */
 UCLASS(ClassGroup = (Nova))
-class UNovaMenuManager : public UObject, public TSharedFromThis<UNovaMenuManager>
+class UNovaMenuManager
+	: public UObject
+	, public TSharedFromThis<UNovaMenuManager>
 {
 	GENERATED_BODY()
-	
-public:
 
+public:
 	UNovaMenuManager();
 
-
 	/*----------------------------------------------------
-		Player interface
+	    Player interface
 	----------------------------------------------------*/
 
 	/** Initialize the menu */
@@ -78,13 +70,13 @@ public:
 		LoadingScreenFrozen = true;
 	}
 
-
 	/*----------------------------------------------------
-		Menu management
+	    Menu management
 	----------------------------------------------------*/
 
 	/** Fade to black with a loading screen, call the action, wait for the condition to return true, then fade back */
-	void RunWaitAction(ENovaLoadingScreen LoadingScreen, FNovaAsyncAction Action, FNovaAsyncCondition Condition = FNovaAsyncCondition(), bool ShortFade = false);
+	void RunWaitAction(ENovaLoadingScreen LoadingScreen, FNovaAsyncAction Action, FNovaAsyncCondition Condition = FNovaAsyncCondition(),
+		bool ShortFade = false);
 
 	/** Fade to black with a loading screen, call the action, stay black */
 	void RunAction(ENovaLoadingScreen LoadingScreen, FNovaAsyncAction Action, bool ShortFade = false);
@@ -97,7 +89,6 @@ public:
 	{
 		return CurrentMenuState == ENovaFadeState::FadingFromBlack;
 	}
-
 
 	/** Request opening of the main menu */
 	void OpenMenu(FNovaAsyncAction Action = FNovaAsyncAction(), FNovaAsyncCondition Condition = FNovaAsyncCondition());
@@ -114,18 +105,16 @@ public:
 	/** Get the current loading screen alpha */
 	float GetLoadingScreenAlpha() const;
 
-
 	/** Start displaying the tooltip */
 	void ShowTooltip(SWidget* TargetWidget, FText Content);
 
 	/** Stop displaying the tooltip */
 	void HideTooltip(SWidget* TargetWidget);
 
-
 	/*----------------------------------------------------
-		Menu tools
+	    Menu tools
 	----------------------------------------------------*/
-	
+
 	/** Get the menu manager instance */
 	static UNovaMenuManager* Get();
 
@@ -137,7 +126,6 @@ public:
 
 	/** Get the game overlay */
 	TSharedPtr<class SNovaOverlay> GetOverlay() const;
-
 
 	/** Set the focus to the main menu */
 	void SetFocusToMenu();
@@ -159,49 +147,44 @@ public:
 	UFUNCTION(Category = Nova, BlueprintCallable)
 	bool IsOnConsole() const;
 
-
 	/** Get the first key mapped to a specific action */
 	FKey GetFirstActionKey(FName ActionName) const;
 
-
 	/*----------------------------------------------------
-		Properties
+	    Properties
 	----------------------------------------------------*/
 
 public:
-
 	// Time it takes to fade in or out
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float FadeDuration;
 
-
 protected:
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 	// Singleton pointer
-	static UNovaMenuManager*                      Singleton;
+	static UNovaMenuManager* Singleton;
 
 	// Game instance pointer
 	UPROPERTY()
-	class UNovaGameInstance*                      GameInstance;
+	class UNovaGameInstance* GameInstance;
 
 	// Menu pointers
-	TSharedPtr<class SNovaMainMenu>               Menu;
-	TSharedPtr<class SNovaOverlay>                Overlay;
-	TSharedPtr<class SWidget>                     DesiredFocusWidget;
+	TSharedPtr<class SNovaMainMenu> Menu;
+	TSharedPtr<class SNovaOverlay>  Overlay;
+	TSharedPtr<class SWidget>       DesiredFocusWidget;
 
 	// Data
-	bool                                          LoadingScreenFrozen;
-	static bool                                   UsingGamepad;
-	FNovaAsyncCommand                             CurrentCommand;
-	TQueue<FNovaAsyncCommand>                     CommandStack;
-	ENovaFadeState                                CurrentMenuState;
-	float                                         CurrentFadingTime;
+	bool                      LoadingScreenFrozen;
+	static bool               UsingGamepad;
+	FNovaAsyncCommand         CurrentCommand;
+	TQueue<FNovaAsyncCommand> CommandStack;
+	ENovaFadeState            CurrentMenuState;
+	float                     CurrentFadingTime;
 
 	// Dynamic material pool
 	UPROPERTY()
-	TArray<class UMaterialInterface*>             OwnedMaterials;
+	TArray<class UMaterialInterface*> OwnedMaterials;
 };

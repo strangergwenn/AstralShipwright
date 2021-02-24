@@ -6,15 +6,11 @@
 
 #include "Widgets/Input/SButton.h"
 
-
 /** Animation state used by lists to seamlessly animate on refresh */
 struct FNovaButtonState
 {
 	FNovaButtonState()
-		: CurrentColorAnimationAlpha(0)
-		, CurrentSizeAnimationAlpha(0)
-		, CurrentDisabledAnimationAlpha(0)
-		, CurrentTimeSinceClicked(10000)
+		: CurrentColorAnimationAlpha(0), CurrentSizeAnimationAlpha(0), CurrentDisabledAnimationAlpha(0), CurrentTimeSinceClicked(10000)
 	{}
 
 	float CurrentColorAnimationAlpha;
@@ -24,12 +20,11 @@ struct FNovaButtonState
 	float CurrentTimeSinceClicked;
 };
 
-
 /** Base button class */
 class SNovaButton : public SButton
 {
 	/*----------------------------------------------------
-		Slate arguments
+	    Slate arguments
 	----------------------------------------------------*/
 
 	SLATE_BEGIN_ARGS(SNovaButton)
@@ -54,23 +49,21 @@ class SNovaButton : public SButton
 	SLATE_ATTRIBUTE(bool, Enabled)
 	SLATE_ATTRIBUTE(bool, Focusable)
 	SLATE_ARGUMENT(bool, Toggle)
-	
+
 	SLATE_NAMED_SLOT(FArguments, Header)
 	SLATE_NAMED_SLOT(FArguments, Footer)
 
 	SLATE_EVENT(FSimpleDelegate, OnFocused)
 	SLATE_EVENT(FSimpleDelegate, OnClicked)
 	SLATE_EVENT(FSimpleDelegate, OnDoubleClicked)
-	
+
 	SLATE_END_ARGS()
 
-
 public:
-
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
-		Public methods
+	    Public methods
 	----------------------------------------------------*/
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
@@ -120,13 +113,11 @@ public:
 		return State;
 	}
 
-
 	/*----------------------------------------------------
-		Callbacks
+	    Callbacks
 	----------------------------------------------------*/
 
 protected:
-
 	/** Get the key binding for closing this menu */
 	FKey GetActionKey() const;
 
@@ -151,44 +142,40 @@ protected:
 	/** Get the render transform of the border */
 	TOptional<FSlateRenderTransform> GetBorderRenderTransform() const;
 
-
 protected:
-
 	/*----------------------------------------------------
-		Private data
+	    Private data
 	----------------------------------------------------*/
-	
+
 	// Settings & attributes
-	TAttribute<bool>                              ButtonEnabled;
-	TAttribute<bool>                              ButtonFocusable;
-	TAttribute<FText>                             Text;
-	TAttribute<FText>                             HelpText;
-	TAttribute<FName>                             Action;
-	TAttribute<const struct FSlateBrush*>         Icon;
-	FName                                         ThemeName;
-	FName                                         SizeName;
-	float                                         BorderRotation;
-	bool                                          IsToggle;
-	float                                         AnimationDuration;
-	FSimpleDelegate                               OnFocused;
-	FSimpleDelegate                               OnClicked;
-	FSimpleDelegate                               OnDoubleClicked;
+	TAttribute<bool>                      ButtonEnabled;
+	TAttribute<bool>                      ButtonFocusable;
+	TAttribute<FText>                     Text;
+	TAttribute<FText>                     HelpText;
+	TAttribute<FName>                     Action;
+	TAttribute<const struct FSlateBrush*> Icon;
+	FName                                 ThemeName;
+	FName                                 SizeName;
+	float                                 BorderRotation;
+	bool                                  IsToggle;
+	float                                 AnimationDuration;
+	FSimpleDelegate                       OnFocused;
+	FSimpleDelegate                       OnClicked;
+	FSimpleDelegate                       OnDoubleClicked;
 
 	// State
-	bool                                          Focused;
-	bool                                          Hovered;
-	bool                                          Active;
-	FNovaButtonState                              State;
-	
-	// Slate elements
-	TSharedPtr<class SBorder>                     InnerContainer;
-	TSharedPtr<class STextBlock>                  TextBlock;
+	bool             Focused;
+	bool             Hovered;
+	bool             Active;
+	FNovaButtonState State;
 
+	// Slate elements
+	TSharedPtr<class SBorder>    InnerContainer;
+	TSharedPtr<class STextBlock> TextBlock;
 
 public:
-
 	/*----------------------------------------------------
-		Get & Set
+	    Get & Set
 	----------------------------------------------------*/
 
 	TSharedPtr<SBorder> GetContainer() const

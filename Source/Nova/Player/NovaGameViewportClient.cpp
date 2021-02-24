@@ -11,22 +11,18 @@
 #include "Nova/UI/Component/NovaLoadingScreen.h"
 #include "Nova/Nova.h"
 
-#include "MoviePlayer.h" 
+#include "MoviePlayer.h"
 #include "Engine/Canvas.h"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
-UNovaGameViewportClient::UNovaGameViewportClient()
-	: Super()
-{
-}
-
+UNovaGameViewportClient::UNovaGameViewportClient() : Super()
+{}
 
 /*----------------------------------------------------
-	Public methods
+    Public methods
 ----------------------------------------------------*/
 
 void UNovaGameViewportClient::SetViewport(FViewport* InViewport)
@@ -55,7 +51,7 @@ void UNovaGameViewportClient::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// Get the current loading screen alpha from the menu manager if valid
-	float Alpha = 1;
+	float             Alpha       = 1;
 	UNovaMenuManager* MenuManager = Cast<UNovaGameInstance>(GetGameInstance())->GetMenuManager();
 	if (MenuManager)
 	{
@@ -74,9 +70,8 @@ void UNovaGameViewportClient::SetLoadingScreen(ENovaLoadingScreen LoadingScreen)
 	Initialize();
 
 	// Disallow changes during animation
-	if (CurrentLoadingScreen != ENovaLoadingScreen::None
-		&& LoadingScreen != CurrentLoadingScreen
-		&& LoadingScreenWidget.IsValid() && LoadingScreenWidget->GetFadeAlpha() != 0)
+	if (CurrentLoadingScreen != ENovaLoadingScreen::None && LoadingScreen != CurrentLoadingScreen && LoadingScreenWidget.IsValid() &&
+		LoadingScreenWidget->GetFadeAlpha() != 0)
 	{
 		NERR("UNovaGameViewportClient::SetLoadingScreen : can't switch loading screen here");
 		return;
@@ -102,7 +97,8 @@ void UNovaGameViewportClient::SetLoadingScreen(ENovaLoadingScreen LoadingScreen)
 	NLOG("UNovaGameViewportClient::SetLoadingScreen : setting %d", static_cast<int32>(LoadingScreen));
 
 	// Setup the loading screen widget with the desired resource
-	UTexture2D* LoadingScreenTexture = CurrentLoadingScreen == ENovaLoadingScreen::Launch ? LoadingScreenSetup->LaunchScreen : LoadingScreenSetup->BlackScreen;
+	UTexture2D* LoadingScreenTexture =
+		CurrentLoadingScreen == ENovaLoadingScreen::Launch ? LoadingScreenSetup->LaunchScreen : LoadingScreenSetup->BlackScreen;
 
 	// Set the texture
 	NCHECK(AnimatedMaterialInstance);
@@ -117,13 +113,12 @@ void UNovaGameViewportClient::ShowLoadingScreen()
 	// Start the loading screen
 	FLoadingScreenAttributes LoadingScreen;
 	LoadingScreen.bAutoCompleteWhenLoadingCompletes = false;
-	LoadingScreen.WidgetLoadingScreen = LoadingScreenWidget;
+	LoadingScreen.WidgetLoadingScreen               = LoadingScreenWidget;
 	GetMoviePlayer()->SetupLoadingScreen(LoadingScreen);
 }
 
-
 /*----------------------------------------------------
-	Internals
+    Internals
 ----------------------------------------------------*/
 
 void UNovaGameViewportClient::Initialize()
@@ -133,7 +128,8 @@ void UNovaGameViewportClient::Initialize()
 	if (LoadingScreenSetup == nullptr || AnimatedMaterialInstance == nullptr || !LoadingScreenWidget.IsValid())
 	{
 		// Find the loading screen setup
-		TArray<const UNovaLoadingScreenSetup*> LoadingScreenSetupList = Cast<UNovaGameInstance>(GetGameInstance())->GetCatalog()->GetAssets<UNovaLoadingScreenSetup>();
+		TArray<const UNovaLoadingScreenSetup*> LoadingScreenSetupList =
+			Cast<UNovaGameInstance>(GetGameInstance())->GetCatalog()->GetAssets<UNovaLoadingScreenSetup>();
 		if (LoadingScreenSetupList.Num())
 		{
 			LoadingScreenSetup = LoadingScreenSetupList.Last();
@@ -147,11 +143,8 @@ void UNovaGameViewportClient::Initialize()
 			}
 
 			// Build the loading widget using the material instance
-			LoadingScreenWidget = SNew(SNovaLoadingScreen)
-				.Settings(LoadingScreenSetup)
-				.Material(AnimatedMaterialInstance);
+			LoadingScreenWidget = SNew(SNovaLoadingScreen).Settings(LoadingScreenSetup).Material(AnimatedMaterialInstance);
 			AddViewportWidgetContent(SNew(SWeakWidget).PossiblyNullContent(LoadingScreenWidget), 1000);
 		}
 	}
 }
-

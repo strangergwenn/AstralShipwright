@@ -12,35 +12,31 @@
 
 #include "Nova/Player/NovaMenuManager.h"
 
-#include "Nova/Spacecraft/NovaSpacecraftPawn.h" 
-#include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h" 
+#include "Nova/Spacecraft/NovaSpacecraftPawn.h"
+#include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
 
 #include "Nova/Player/NovaPlayerController.h"
 #include "Nova/UI/Component/NovaOrbitalMap.h"
 #include "Nova/Nova.h"
 
-#include "Slate/SRetainerWidget.h" 
-
+#include "Slate/SRetainerWidget.h"
 
 #define LOCTEXT_NAMESPACE "SNovaMainMenuFlight"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
 void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 {
 	// Data
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	MenuManager = InArgs._MenuManager;
+	MenuManager                 = InArgs._MenuManager;
 
 	// Parent constructor
-	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments()
-		.Menu(InArgs._Menu)
-	);
+	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
 
-	// Structure
+	// clang-format off
 	ChildSlot
 	[
 		SNew(SHorizontalBox)
@@ -128,15 +124,15 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			]
 		]
 	];
+	// clang-format on
 
 	// Setup retainer
 	MapRetainer->SetTextureParameter(TEXT("UI"));
 	MapRetainer->SetEffectMaterial(Theme.EffectMaterial);
 }
 
-
 /*----------------------------------------------------
-	Interaction
+    Interaction
 ----------------------------------------------------*/
 
 void SNovaMainMenuFlight::Show()
@@ -179,9 +175,8 @@ TSharedPtr<SNovaButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 	}
 }
 
-
 /*----------------------------------------------------
-	Internals
+    Internals
 ----------------------------------------------------*/
 
 ANovaSpacecraftPawn* SNovaMainMenuFlight::GetSpacecraftPawn() const
@@ -194,8 +189,7 @@ UNovaSpacecraftMovementComponent* SNovaMainMenuFlight::GetSpacecraftMovement() c
 	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
 	if (SpacecraftPawn)
 	{
-		return Cast<UNovaSpacecraftMovementComponent>(
-			SpacecraftPawn->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
+		return Cast<UNovaSpacecraftMovementComponent>(SpacecraftPawn->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
 	}
 	else
 	{
@@ -203,9 +197,8 @@ UNovaSpacecraftMovementComponent* SNovaMainMenuFlight::GetSpacecraftMovement() c
 	}
 }
 
-
 /*----------------------------------------------------
-	Content callbacks
+    Content callbacks
 ----------------------------------------------------*/
 
 bool SNovaMainMenuFlight::IsUndockEnabled() const
@@ -218,9 +211,8 @@ bool SNovaMainMenuFlight::IsDockEnabled() const
 	return GetSpacecraftMovement() && GetSpacecraftMovement()->GetState() == ENovaMovementState::Idle;
 }
 
-
 /*----------------------------------------------------
-	Callbacks
+    Callbacks
 ----------------------------------------------------*/
 
 void SNovaMainMenuFlight::OnUndock()
@@ -236,6 +228,5 @@ void SNovaMainMenuFlight::OnDock()
 
 	MenuManager->GetPC()->Dock();
 }
-
 
 #undef LOCTEXT_NAMESPACE

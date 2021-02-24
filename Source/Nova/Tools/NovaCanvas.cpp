@@ -6,14 +6,14 @@
 #include "Engine/Canvas.h"
 #include "Kismet/GameplayStatics.h"
 
-
 /*----------------------------------------------------
-	Texture canvas tools
+    Texture canvas tools
 ----------------------------------------------------*/
 
 UCanvasRenderTarget2D* UNovaCanvas::CreateRenderTarget(UObject* Owner, int32 Width, int32 Height)
 {
-	UCanvasRenderTarget2D* Texture = UCanvasRenderTarget2D::CreateCanvasRenderTarget2D(Owner, UCanvasRenderTarget2D::StaticClass(), Width, Height);
+	UCanvasRenderTarget2D* Texture =
+		UCanvasRenderTarget2D::CreateCanvasRenderTarget2D(Owner, UCanvasRenderTarget2D::StaticClass(), Width, Height);
 	NCHECK(Texture);
 
 	Texture->ClearColor = FLinearColor::Black;
@@ -22,19 +22,15 @@ UCanvasRenderTarget2D* UNovaCanvas::CreateRenderTarget(UObject* Owner, int32 Wid
 	return Texture;
 }
 
-void UNovaCanvas::DrawTexture(UCanvas* CurrentCanvas, UTexture* Texture, float ScreenX, float ScreenY, float ScreenW, float ScreenH, FLinearColor Color,
-	EBlendMode BlendMode, float Scale, bool bScalePosition, float Rotation, FVector2D RotPivot)
+void UNovaCanvas::DrawTexture(UCanvas* CurrentCanvas, UTexture* Texture, float ScreenX, float ScreenY, float ScreenW, float ScreenH,
+	FLinearColor Color, EBlendMode BlendMode, float Scale, bool bScalePosition, float Rotation, FVector2D RotPivot)
 {
 	// Setup texture
-	FCanvasTileItem TileItem(FVector2D(ScreenX, ScreenY),
-		Texture->Resource,
-		FVector2D(ScreenW, ScreenH) * Scale,
-		FVector2D(0, 0),
-		FVector2D(1, 1),
-		Color);
+	FCanvasTileItem TileItem(
+		FVector2D(ScreenX, ScreenY), Texture->Resource, FVector2D(ScreenW, ScreenH) * Scale, FVector2D(0, 0), FVector2D(1, 1), Color);
 
 	// More setup
-	TileItem.Rotation = FRotator(0, Rotation, 0);
+	TileItem.Rotation   = FRotator(0, Rotation, 0);
 	TileItem.PivotPoint = RotPivot;
 	if (bScalePosition)
 	{
@@ -47,22 +43,18 @@ void UNovaCanvas::DrawTexture(UCanvas* CurrentCanvas, UTexture* Texture, float S
 	CurrentCanvas->DrawItem(TileItem);
 }
 
-void UNovaCanvas::DrawFlipbook(UCanvas* CurrentCanvas, UTexture* Texture, float ScreenX, float ScreenY, float ScreenW, float ScreenH, int32 Resolution, float Time,
-	FLinearColor Color, EBlendMode BlendMode)
+void UNovaCanvas::DrawFlipbook(UCanvas* CurrentCanvas, UTexture* Texture, float ScreenX, float ScreenY, float ScreenW, float ScreenH,
+	int32 Resolution, float Time, FLinearColor Color, EBlendMode BlendMode)
 {
 	// Compute flipbook UVs
-	FVector2D UVSize = (1.0f / Resolution) * FVector2D::UnitVector;
+	FVector2D UVSize       = (1.0f / Resolution) * FVector2D::UnitVector;
 	FVector2D UVMultiplier = FVector2D(FMath::Square(Resolution), Resolution);
-	FVector2D SourceUV = UVMultiplier * FMath::Frac(Time);
-	SourceUV = FVector2D(FMath::FloorToInt(SourceUV.X), FMath::FloorToInt(SourceUV.Y)) / Resolution;
+	FVector2D SourceUV     = UVMultiplier * FMath::Frac(Time);
+	SourceUV               = FVector2D(FMath::FloorToInt(SourceUV.X), FMath::FloorToInt(SourceUV.Y)) / Resolution;
 
 	// Setup texture
-	FCanvasTileItem TileItem(FVector2D(ScreenX, ScreenY),
-		Texture->Resource,
-		FVector2D(ScreenW, ScreenH),
-		SourceUV,
-		SourceUV + UVSize,
-		Color);
+	FCanvasTileItem TileItem(
+		FVector2D(ScreenX, ScreenY), Texture->Resource, FVector2D(ScreenW, ScreenH), SourceUV, SourceUV + UVSize, Color);
 
 	// More setup
 	TileItem.BlendMode = FCanvas::BlendToSimpleElementBlend(BlendMode);
@@ -72,18 +64,15 @@ void UNovaCanvas::DrawFlipbook(UCanvas* CurrentCanvas, UTexture* Texture, float 
 	CurrentCanvas->DrawItem(TileItem);
 }
 
-void UNovaCanvas::DrawMaterial(UCanvas* CurrentCanvas, const UMaterialInterface* Material, float ScreenX, float ScreenY, float ScreenW, float ScreenH, FLinearColor Color,
-	float Scale, bool bScalePosition, float Rotation, FVector2D RotPivot)
+void UNovaCanvas::DrawMaterial(UCanvas* CurrentCanvas, const UMaterialInterface* Material, float ScreenX, float ScreenY, float ScreenW,
+	float ScreenH, FLinearColor Color, float Scale, bool bScalePosition, float Rotation, FVector2D RotPivot)
 {
 	// Setup material
-	FCanvasTileItem TileItem(FVector2D(ScreenX, ScreenY),
-		Material->GetRenderProxy(),
-		FVector2D(ScreenW, ScreenH) * Scale,
-		FVector2D(0, 0),
-		FVector2D(1, 1));
+	FCanvasTileItem TileItem(
+		FVector2D(ScreenX, ScreenY), Material->GetRenderProxy(), FVector2D(ScreenW, ScreenH) * Scale, FVector2D(0, 0), FVector2D(1, 1));
 
 	// More setup
-	TileItem.Rotation = FRotator(0, Rotation, 0);
+	TileItem.Rotation   = FRotator(0, Rotation, 0);
 	TileItem.PivotPoint = RotPivot;
 	if (bScalePosition)
 	{
@@ -95,7 +84,8 @@ void UNovaCanvas::DrawMaterial(UCanvas* CurrentCanvas, const UMaterialInterface*
 	CurrentCanvas->DrawItem(TileItem);
 }
 
-void UNovaCanvas::DrawText(UCanvas* CurrentCanvas, FText Text, class UFont* Font, FVector2D Position, FLinearColor Color, float Scale, bool Center)
+void UNovaCanvas::DrawText(
+	UCanvas* CurrentCanvas, FText Text, class UFont* Font, FVector2D Position, FLinearColor Color, float Scale, bool Center)
 {
 	float X = Position.X;
 	float Y = Position.Y;
@@ -112,7 +102,7 @@ void UNovaCanvas::DrawText(UCanvas* CurrentCanvas, FText Text, class UFont* Font
 	// Text
 	{
 		FCanvasTextItem TextItem(FVector2D(X, Y), Text, Font, Color);
-		TextItem.Scale = Scale * FVector2D(1, 1);
+		TextItem.Scale     = Scale * FVector2D(1, 1);
 		TextItem.bOutlined = false;
 		CurrentCanvas->DrawItem(TextItem);
 	}
@@ -133,14 +123,14 @@ void UNovaCanvas::DrawSquare(UCanvas* CurrentCanvas, FVector2D Position, FVector
 	CurrentCanvas->DrawItem(SquareItem);
 }
 
-void UNovaCanvas::DrawProgressBar(UCanvas* CurrentCanvas, FVector2D Position, float Value,
-	FLinearColor BarColor, FLinearColor BoxColor, int32 Width, int32 Height, int32 BoundHeight)
+void UNovaCanvas::DrawProgressBar(UCanvas* CurrentCanvas, FVector2D Position, float Value, FLinearColor BarColor, FLinearColor BoxColor,
+	int32 Width, int32 Height, int32 BoundHeight)
 {
 	DrawBoxBar(CurrentCanvas, Position, 0, Value, BarColor, BoxColor, Width, Height, BoundHeight);
 }
 
-void UNovaCanvas::DrawBoxBar(UCanvas* CurrentCanvas, FVector2D Position, float StartValue, float EndValue,
-	FLinearColor BarColor, FLinearColor BoxColor, int32 Width, int32 Height, int32 BoundHeight)
+void UNovaCanvas::DrawBoxBar(UCanvas* CurrentCanvas, FVector2D Position, float StartValue, float EndValue, FLinearColor BarColor,
+	FLinearColor BoxColor, int32 Width, int32 Height, int32 BoundHeight)
 {
 	// Draw upper bound
 	FCanvasTileItem UpperBarItem(Position, FVector2D(Width, BoundHeight), BoxColor);
@@ -153,11 +143,11 @@ void UNovaCanvas::DrawBoxBar(UCanvas* CurrentCanvas, FVector2D Position, float S
 	CurrentCanvas->DrawItem(LowerBarItem);
 
 	// Get values
-	float ClampedDelta = FMath::Clamp(EndValue - StartValue, 0.0f, 1.0f);
-	float ClampedValue = FMath::Clamp(EndValue, 0.0f, 1.0f);
-	int32 ProgressBarHeight = FMath::CeilToInt(ClampedDelta * (Height - (2 * BoundHeight)));
+	float ClampedDelta            = FMath::Clamp(EndValue - StartValue, 0.0f, 1.0f);
+	float ClampedValue            = FMath::Clamp(EndValue, 0.0f, 1.0f);
+	int32 ProgressBarHeight       = FMath::CeilToInt(ClampedDelta * (Height - (2 * BoundHeight)));
 	int32 ProgressBarHeightOffset = FMath::FloorToInt(BoundHeight + (1 - ClampedValue) * (Height - (2 * BoundHeight)));
-	
+
 	// Draw progress bar
 	FCanvasTileItem ProgressBarItem(Position + FVector2D(0, ProgressBarHeightOffset), FVector2D(Width, ProgressBarHeight), BarColor);
 	ProgressBarItem.BlendMode = FCanvas::BlendToSimpleElementBlend(EBlendMode::BLEND_Opaque);

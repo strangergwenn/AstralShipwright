@@ -10,18 +10,16 @@
 
 #include "Online.h"
 
-
 class SNovaMainMenuAssembly : public SNovaTabPanel
 {
 	typedef SNovaModalListView<const class UNovaCompartmentDescription*> SNovaCompartmentList;
-	typedef SNovaModalListView<const class UNovaModuleDescription*> SNovaModuleList;
-	typedef SNovaModalListView<const class UNovaEquipmentDescription*> SNovaEquipmentList;
-	typedef SNovaModalListView<ENovaAssemblyDisplayFilter> SNovaDisplayFilterList;
-	typedef SNovaModalListView<ENovaHullType> SNovaHullTypeList;
-
+	typedef SNovaModalListView<const class UNovaModuleDescription*>      SNovaModuleList;
+	typedef SNovaModalListView<const class UNovaEquipmentDescription*>   SNovaEquipmentList;
+	typedef SNovaModalListView<ENovaAssemblyDisplayFilter>               SNovaDisplayFilterList;
+	typedef SNovaModalListView<ENovaHullType>                            SNovaHullTypeList;
 
 	/*----------------------------------------------------
-		Slate arguments
+	    Slate arguments
 	----------------------------------------------------*/
 
 	SLATE_BEGIN_ARGS(SNovaMainMenuAssembly)
@@ -33,13 +31,12 @@ class SNovaMainMenuAssembly : public SNovaTabPanel
 	SLATE_END_ARGS()
 
 public:
-
 	SNovaMainMenuAssembly();
 
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
-		Inherited
+	    Inherited
 	----------------------------------------------------*/
 
 	virtual void Show() override;
@@ -66,13 +63,11 @@ public:
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
-
 	/*----------------------------------------------------
-		Internals
+	    Internals
 	----------------------------------------------------*/
 
 protected:
-
 	/** Get the spacecraft pawn used to display the assembly */
 	class ANovaSpacecraftPawn* GetSpacecraftPawn() const;
 
@@ -85,20 +80,18 @@ protected:
 	/** Set whether the compartment sub-menu is active */
 	void SetCompartmentPanelVisible(bool Active);
 
-
 	/*----------------------------------------------------
-		Content callbacks
+	    Content callbacks
 	----------------------------------------------------*/
 
 protected:
-
 	// Blur
 	TOptional<int32> GetBlurRadius() const;
-	float GetBlurStrength() const;
+	float            GetBlurStrength() const;
 
 	// Helpers
 	TSharedRef<SWidget> GenerateAssetItem(const UNovaAssetDescription* Asset) const;
-	FText GetAssetName(const class UNovaAssetDescription* Asset) const;
+	FText               GetAssetName(const class UNovaAssetDescription* Asset) const;
 
 	// Panels
 	FLinearColor GetMainColor() const;
@@ -106,43 +99,41 @@ protected:
 
 	// Compartment template list
 	TSharedRef<SWidget> GenerateCompartmentItem(const class UNovaCompartmentDescription* Description) const;
-	FText GenerateCompartmentTooltip(const class UNovaCompartmentDescription* Description) const;
+	FText               GenerateCompartmentTooltip(const class UNovaCompartmentDescription* Description) const;
 
 	// Compartment module list
-	bool IsModuleListEnabled(int32 ModuleIndex) const;
+	bool                IsModuleListEnabled(int32 ModuleIndex) const;
 	TSharedRef<SWidget> GenerateModuleItem(const class UNovaModuleDescription* Module) const;
-	FText GetModuleName(const class UNovaModuleDescription* Module) const;
-	FText GenerateModuleTooltip(const class UNovaModuleDescription* Module) const;
+	FText               GetModuleName(const class UNovaModuleDescription* Module) const;
+	FText               GenerateModuleTooltip(const class UNovaModuleDescription* Module) const;
 
 	// Compartment equipment list
-	bool IsEquipmentListEnabled(int32 EquipmentIndex) const;
+	bool                IsEquipmentListEnabled(int32 EquipmentIndex) const;
 	TSharedRef<SWidget> GenerateEquipmentItem(const class UNovaEquipmentDescription* Equipment) const;
-	FText GetEquipmentName(const class UNovaEquipmentDescription* Equipment) const;
-	FText GenerateEquipmentTooltip(const class UNovaEquipmentDescription* Equipment) const;
+	FText               GetEquipmentName(const class UNovaEquipmentDescription* Equipment) const;
+	FText               GenerateEquipmentTooltip(const class UNovaEquipmentDescription* Equipment) const;
 
 	// Compartment hull types list
 	TSharedRef<SWidget> GenerateHullTypeItem(ENovaHullType Type) const;
-	FText GetHullTypeName(ENovaHullType Type) const;
-	FText GenerateHullTypeTooltip(ENovaHullType Type) const;
+	FText               GetHullTypeName(ENovaHullType Type) const;
+	FText               GenerateHullTypeTooltip(ENovaHullType Type) const;
 
 	// General callbacks
 	const FSlateBrush* GetCompartmentIcon(int32 Index) const;
-	bool IsSelectCompartmentEnabled(int32 Index) const;
-	bool IsAddCompartmentEnabled(bool Forward) const;
-	bool IsEditCompartmentEnabled() const;
-	bool IsToggleHighlightEnabled() const;
+	bool               IsSelectCompartmentEnabled(int32 Index) const;
+	bool               IsAddCompartmentEnabled(bool Forward) const;
+	bool               IsEditCompartmentEnabled() const;
+	bool               IsToggleHighlightEnabled() const;
 
 	// Key bindings
 	FKey GetPreviousCompartmentKey() const;
 	FKey GetNextCompartmentKey() const;
 
-
 	/*----------------------------------------------------
-		Callbacks
+	    Callbacks
 	----------------------------------------------------*/
 
 protected:
-
 	// Compartment edition
 	void OnEditCompartment();
 	void OnRemoveCompartment();
@@ -167,47 +158,44 @@ protected:
 	// Display options
 	void OnToggleHighlight();
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 protected:
-
 	// Menu manager
-	TWeakObjectPtr<UNovaMenuManager>              MenuManager;
+	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 
 	// Widgets
-	TSharedPtr<SHorizontalBox>                    CompartmentBox;
-	TSharedPtr<SVerticalBox>                      ModuleBox;
-	TSharedPtr<SVerticalBox>                      EquipmentBox;
-	TSharedPtr<class SNovaButton>                 HighlightButton;
-	TSharedPtr<class SNovaButton>                 EditCompartmentButton;
-	TSharedPtr<class SNovaModalPanel>             ModalPanel;
-	TSharedPtr<SVerticalBox>                      MenuBox;
+	TSharedPtr<SHorizontalBox>        CompartmentBox;
+	TSharedPtr<SVerticalBox>          ModuleBox;
+	TSharedPtr<SVerticalBox>          EquipmentBox;
+	TSharedPtr<class SNovaButton>     HighlightButton;
+	TSharedPtr<class SNovaButton>     EditCompartmentButton;
+	TSharedPtr<class SNovaModalPanel> ModalPanel;
+	TSharedPtr<SVerticalBox>          MenuBox;
 
 	// Panel fading system
-	float                                         FadeDuration;
-	float                                         CurrentFadeTime;
-	bool                                          IsCompartmentPanelVisible;
+	float FadeDuration;
+	float CurrentFadeTime;
+	bool  IsCompartmentPanelVisible;
 
 	// Assembly data
-	int32                                         SelectedCompartmentIndex;
-	int32                                         EditedCompartmentIndex;
+	int32 SelectedCompartmentIndex;
+	int32 EditedCompartmentIndex;
 
 	// Compartment list
-	TSharedPtr<SNovaCompartmentList>              CompartmentListView;
+	TSharedPtr<SNovaCompartmentList> CompartmentListView;
 
 	// Compartment hull  list
-	TArray<ENovaHullType>                         HullTypeList;
-	TSharedPtr<SNovaHullTypeList>                 HullTypeListView;
+	TArray<ENovaHullType>         HullTypeList;
+	TSharedPtr<SNovaHullTypeList> HullTypeListView;
 
 	// Compartment module lists
-	TArray<const class UNovaModuleDescription*>   ModuleLists[ENovaConstants::MaxModuleCount];
-	TSharedPtr<SNovaModuleList>                   ModuleListViews[ENovaConstants::MaxModuleCount];
+	TArray<const class UNovaModuleDescription*> ModuleLists[ENovaConstants::MaxModuleCount];
+	TSharedPtr<SNovaModuleList>                 ModuleListViews[ENovaConstants::MaxModuleCount];
 
 	// Compartment equipment lists
 	TArray<const class UNovaEquipmentDescription*> EquipmentLists[ENovaConstants::MaxEquipmentCount];
-	TSharedPtr<SNovaEquipmentList>                EquipmentListViews[ENovaConstants::MaxEquipmentCount];
-
+	TSharedPtr<SNovaEquipmentList>                 EquipmentListViews[ENovaConstants::MaxEquipmentCount];
 };

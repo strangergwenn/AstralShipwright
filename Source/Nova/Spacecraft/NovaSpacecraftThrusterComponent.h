@@ -9,7 +9,6 @@
 
 #include "NovaSpacecraftThrusterComponent.generated.h"
 
-
 /** Exhaust management object */
 USTRUCT()
 struct FNovaThrusterExhaust
@@ -17,34 +16,33 @@ struct FNovaThrusterExhaust
 	GENERATED_BODY()
 
 	// Exhaust identifier
-	FName                                         Name;
+	FName Name;
 
 	// Exhaust mesh
 	UPROPERTY()
-	class UStaticMeshComponent*                   Mesh;
+	class UStaticMeshComponent* Mesh;
 
 	// Exhaust material
 	UPROPERTY()
-	class UMaterialInstanceDynamic*               Material;
+	class UMaterialInstanceDynamic* Material;
 
 	// Current power
-	TNovaTimedAverage<float>                      Power;
+	TNovaTimedAverage<float> Power;
 };
-
 
 /** Thruster component class that attaches to a mesh to add thrusters effects */
 UCLASS(ClassGroup = (Nova), meta = (BlueprintSpawnableComponent))
-class UNovaSpacecraftThrusterComponent : public USceneComponent, public INovaAdditionalComponentInterface
+class UNovaSpacecraftThrusterComponent
+	: public USceneComponent
+	, public INovaAdditionalComponentInterface
 {
 	GENERATED_BODY()
 
 public:
-
 	UNovaSpacecraftThrusterComponent();
-	
 
 	/*----------------------------------------------------
-		Inherited
+	    Inherited
 	----------------------------------------------------*/
 
 	virtual void SetAdditionalAsset(TSoftObjectPtr<class UObject> AdditionalAsset) override;
@@ -53,20 +51,16 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	
 protected:
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 	// Exhaust template mesh
 	UPROPERTY()
-	class UStaticMesh*                            ExhaustMesh;
+	class UStaticMesh* ExhaustMesh;
 
 	// Exhausts
 	UPROPERTY()
-	TArray<FNovaThrusterExhaust>                  ThrusterExhausts;
-
-	
+	TArray<FNovaThrusterExhaust> ThrusterExhausts;
 };

@@ -8,12 +8,10 @@
 
 #include "Nova/Nova.h"
 
-
 #define LOCTEXT_NAMESPACE "FNovaContract"
 
-
 /*----------------------------------------------------
-	Base class
+    Base class
 ----------------------------------------------------*/
 
 TSharedPtr<FNovaContract> FNovaContract::New(ENovaContractType Type, UNovaGameInstance* CurrentGameInstance)
@@ -48,12 +46,10 @@ TSharedRef<FJsonObject> FNovaContract::Save() const
 }
 
 void FNovaContract::Load(const TSharedPtr<FJsonObject>& Data)
-{
-}
-
+{}
 
 /*----------------------------------------------------
-	Tutorial contract
+    Tutorial contract
 ----------------------------------------------------*/
 
 FNovaTutorialContract::FNovaTutorialContract()
@@ -68,10 +64,9 @@ void FNovaTutorialContract::Initialize(UNovaGameInstance* CurrentGameInstance)
 	// TODO : actually implement contracts
 
 	// Build the description texts
-	Details.Title = LOCTEXT("TutorialContract", "Tutorial contract");
+	Details.Title       = LOCTEXT("TutorialContract", "Tutorial contract");
 	Details.Description = FText::FormatNamed(LOCTEXT("TutorialContractDescription", "Buy {quantity} containers of {resource}"),
-		TEXT("quantity"), FText::AsNumber(2),
-		TEXT("resource"), LOCTEXT("Test", "Test"));
+		TEXT("quantity"), FText::AsNumber(2), TEXT("resource"), LOCTEXT("Test", "Test"));
 }
 
 TSharedRef<FJsonObject> FNovaTutorialContract::Save() const
@@ -96,11 +91,11 @@ void FNovaTutorialContract::OnEvent(const FNovaContractEvent& Event)
 
 		/*if (false)
 		{
-			UNovaContractManager::Get()->ProgressContract(SharedThis(this));
+		    UNovaContractManager::Get()->ProgressContract(SharedThis(this));
 		}
 		else
 		{
-			UNovaContractManager::Get()->CompleteContract(SharedThis(this));
+		    UNovaContractManager::Get()->CompleteContract(SharedThis(this));
 		}*/
 	}
 }

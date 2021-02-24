@@ -21,28 +21,24 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
-ANovaGameMode::ANovaGameMode()
-	: Super()
-	, CurrentStreamingLevelIndex(0)
+ANovaGameMode::ANovaGameMode() : Super(), CurrentStreamingLevelIndex(0)
 {
 	// Defaults
-	GameStateClass = ANovaGameState::StaticClass();
-	PlayerStateClass = ANovaPlayerState::StaticClass();
+	GameStateClass        = ANovaGameState::StaticClass();
+	PlayerStateClass      = ANovaPlayerState::StaticClass();
 	PlayerControllerClass = ANovaPlayerController::StaticClass();
-	DefaultPawnClass = ANovaSpacecraftPawn::StaticClass();
+	DefaultPawnClass      = ANovaSpacecraftPawn::StaticClass();
 
 	// Settings
 	bUseSeamlessTravel = true;
 }
 
-
 /*----------------------------------------------------
-	Inherited
+    Inherited
 ----------------------------------------------------*/
 
 void ANovaGameMode::InitGameState()
@@ -76,10 +72,12 @@ void ANovaGameMode::StartPlay()
 
 	// TODO : this should be dependent on save data
 	const UNovaArea* Station = GameInstance->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
-	LoadStreamingLevel(Station, true, FSimpleDelegate::CreateLambda([=]()
-		{
-			ResetArea();
-		}));
+	LoadStreamingLevel(Station, true,
+		FSimpleDelegate::CreateLambda(
+			[=]()
+			{
+				ResetArea();
+			}));
 }
 
 void ANovaGameMode::PostLogin(APlayerController* Player)
@@ -108,14 +106,14 @@ UClass* ANovaGameMode::GetDefaultPawnClassForController_Implementation(AControll
 
 AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
 {
-	UClass* PawnClass = GetDefaultPawnClassForController(Player);
-	APawn* PawnToFit = PawnClass ? PawnClass->GetDefaultObject<APawn>() : nullptr;
+	UClass*                   PawnClass = GetDefaultPawnClassForController(Player);
+	APawn*                    PawnToFit = PawnClass ? PawnClass->GetDefaultObject<APawn>() : nullptr;
 	TArray<ANovaPlayerStart*> Candidates;
 
 	// Iterate over player starts
 	for (ANovaPlayerStart* PlayerStart : TActorRange<ANovaPlayerStart>(GetWorld()))
 	{
-		FVector ActorLocation = PlayerStart->GetActorLocation();
+		FVector        ActorLocation = PlayerStart->GetActorLocation();
 		const FRotator ActorRotation = PlayerStart->GetActorRotation();
 
 		// Calculate the horizontal distance with other pawns to avoid colliding
@@ -124,12 +122,12 @@ AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
 		for (APawn* Pawn : TActorRange<APawn>(GetWorld()))
 		{
 			FVector DistanceVector = Pawn->GetActorLocation() - ActorLocation;
-			DistanceVector.Z = 0;
+			DistanceVector.Z       = 0;
 
 			if (DistanceVector.Size() < 500)
 			{
-				NLOG("ANovaGameMode::ChoosePlayerStart_Implementation : encroaching '%s' invalidated '%s'",
-					*Pawn->GetName(), *PlayerStart->GetName());
+				NLOG("ANovaGameMode::ChoosePlayerStart_Implementation : encroaching '%s' invalidated '%s'", *Pawn->GetName(),
+					*PlayerStart->GetName());
 
 				Collided = true;
 				break;
@@ -150,9 +148,8 @@ AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	return nullptr;
 }
 
-
 /*----------------------------------------------------
-	Gameplay
+    Gameplay
 ----------------------------------------------------*/
 
 void ANovaGameMode::ResetArea()
@@ -161,8 +158,8 @@ void ANovaGameMode::ResetArea()
 
 	for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 	{
-		ANovaPlayerController* PC = SpacecraftPawn->GetController<ANovaPlayerController>();
-		AActor* Start = ChoosePlayerStart(PC);
+		ANovaPlayerController* PC    = SpacecraftPawn->GetController<ANovaPlayerController>();
+		AActor*                Start = ChoosePlayerStart(PC);
 		NCHECK(Start);
 
 		SpacecraftPawn->GetSpacecraftMovement()->Reset();
@@ -179,13 +176,15 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 	ANovaSpacecraftPawn* PlayerPawn = PC->GetSpacecraftPawn();
 
 	// 5 : Cutscene is finished, level has loaded, reinitialize ships
-	FSimpleDelegate ResetSpacecraft = FSimpleDelegate::CreateLambda([=]()
+	FSimpleDelegate ResetSpacecraft = FSimpleDelegate::CreateLambda(
+		[=]()
 		{
 			ResetArea();
 		});
 
 	// 4 : Cutscene is completed during shared transition : switch the levels
-	FSimpleDelegate SwitchLevels = FSimpleDelegate::CreateLambda([=]()
+	FSimpleDelegate SwitchLevels = FSimpleDelegate::CreateLambda(
+		[=]()
 		{
 			for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 			{
@@ -197,14 +196,16 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 		});
 
 	// 3: Cutscene is ending : start a shared transition
-	FSimpleDelegate StopCutscene = FSimpleDelegate::CreateLambda([=]()
+	FSimpleDelegate StopCutscene = FSimpleDelegate::CreateLambda(
+		[=]()
 		{
 			NLOG("ANovaGameMode::ChangeArea : stopping cutscene");
 			PC->SharedTransition(false, SwitchLevels, ResetSpacecraft);
 		});
 
 	// 2 : Cutscene is starting : start leaving the area
-	FSimpleDelegate StartCutscene = FSimpleDelegate::CreateLambda([=]()
+	FSimpleDelegate StartCutscene = FSimpleDelegate::CreateLambda(
+		[=]()
 		{
 			NLOG("ANovaGameMode::ChangeArea : starting cutscene");
 			for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
@@ -217,9 +218,8 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 	PC->SharedTransition(true, StartCutscene);
 }
 
-
 /*----------------------------------------------------
-	Level loading
+    Level loading
 ----------------------------------------------------*/
 
 bool ANovaGameMode::LoadStreamingLevel(const UNovaArea* Area, bool StartDocked, FSimpleDelegate Callback)
@@ -233,10 +233,10 @@ bool ANovaGameMode::LoadStreamingLevel(const UNovaArea* Area, bool StartDocked, 
 		NLOG("ANovaGameMode::LoadStreamingLevel : loading streaming level '%s' (%d)", *Area->LevelName.ToString(), StartDocked);
 
 		FLatentActionInfo Info;
-		Info.CallbackTarget = this;
+		Info.CallbackTarget    = this;
 		Info.ExecutionFunction = "OnLevelLoaded";
-		Info.UUID = CurrentStreamingLevelIndex;
-		Info.Linkage = 0;
+		Info.UUID              = CurrentStreamingLevelIndex;
+		Info.Linkage           = 0;
 
 		UGameplayStatics::LoadStreamLevel(this, Area->LevelName, true, false, Info);
 		CurrentStreamingLevelIndex++;
@@ -255,10 +255,10 @@ void ANovaGameMode::UnloadStreamingLevel(const UNovaArea* Area, FSimpleDelegate 
 		NLOG("ANovaGameMode::UnloadStreamingLevel : unloading streaming level '%s'", *Area->LevelName.ToString());
 
 		FLatentActionInfo Info;
-		Info.CallbackTarget = this;
+		Info.CallbackTarget    = this;
 		Info.ExecutionFunction = "OnLevelUnloaded";
-		Info.UUID = CurrentStreamingLevelIndex;
-		Info.Linkage = 0;
+		Info.UUID              = CurrentStreamingLevelIndex;
+		Info.Linkage           = 0;
 
 		UGameplayStatics::UnloadStreamLevel(this, Area->LevelName, Info, false);
 		CurrentStreamingLevelIndex++;

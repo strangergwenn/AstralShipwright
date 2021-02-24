@@ -14,7 +14,7 @@
 struct FNovaSpacecraftDatabaseEntry
 {
 	TSharedPtr<FNovaSpacecraft> Spacecraft;
-	bool IsPlayer;
+	bool                        IsPlayer;
 };
 
 /** World manager class */
@@ -24,27 +24,24 @@ class ANovaGameWorld : public AActor
 	GENERATED_BODY()
 
 public:
-
 	ANovaGameWorld();
 
-
 	/*----------------------------------------------------
-		Loading & saving
+	    Loading & saving
 	----------------------------------------------------*/
 
 	TSharedPtr<struct FNovaWorldSave> Save() const;
 
 	void Load(TSharedPtr<struct FNovaWorldSave> SaveData);
 
-	static void SerializeJson(TSharedPtr<struct FNovaWorldSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
-
+	static void SerializeJson(
+		TSharedPtr<struct FNovaWorldSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
 
 	/*----------------------------------------------------
-		Gameplay
+	    Gameplay
 	----------------------------------------------------*/
 
 public:
-
 	/** Register a new AI spacecraft */
 	void AddAISpacecraft(const FNovaSpacecraft Spacecraft);
 
@@ -66,13 +63,11 @@ public:
 		return OrbitalSimulationComponent;
 	}
 
-
 	/*----------------------------------------------------
-		Internals
+	    Internals
 	----------------------------------------------------*/
 
 protected:
-
 	/** Spacecraft data just replicated */
 	UFUNCTION()
 	void OnSpacecraftReplicated();
@@ -80,34 +75,29 @@ protected:
 	/** Update the local database */
 	void UpdateDatabase();
 
-
 	/*----------------------------------------------------
-		Components
+	    Components
 	----------------------------------------------------*/
 
 protected:
-
 	// Global orbital simulation manager
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	class UNovaOrbitalSimulationComponent* OrbitalSimulationComponent;
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 private:
-
 	// Spacecraft array
-	UPROPERTY(ReplicatedUsing=OnSpacecraftReplicated)
-	TArray<FNovaSpacecraft>                       AISpacecraft;
+	UPROPERTY(ReplicatedUsing = OnSpacecraftReplicated)
+	TArray<FNovaSpacecraft> AISpacecraft;
 
 	// Spacecraft array for player ships
 	UPROPERTY(ReplicatedUsing = OnSpacecraftReplicated)
-	TArray<FNovaSpacecraft>                       PlayerSpacecraft;
+	TArray<FNovaSpacecraft> PlayerSpacecraft;
 
 	// Local state
-	TMap<FGuid, FNovaSpacecraftDatabaseEntry>     SpacecraftDatabase;
-	TArray<const class UNovaArea*>                Areas;
-
+	TMap<FGuid, FNovaSpacecraftDatabaseEntry> SpacecraftDatabase;
+	TArray<const class UNovaArea*>            Areas;
 };

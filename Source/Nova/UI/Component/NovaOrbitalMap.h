@@ -6,60 +6,47 @@
 
 #include "Widgets/SCompoundWidget.h"
 
-
 /*----------------------------------------------------
-	Internal structures
+    Internal structures
 ----------------------------------------------------*/
 
 /** Geometry of an orbit on the map */
 struct FNovaSplineOrbit
 {
 	FNovaSplineOrbit(const FVector2D& Orig, float R)
-		: Origin(Orig)
-		, Width(R)
-		, Height(R)
-		, Phase(0)
-		, InitialAngle(0)
-		, AngularLength(360)
-		, OriginOffset(0)
+		: Origin(Orig), Width(R), Height(R), Phase(0), InitialAngle(0), AngularLength(360), OriginOffset(0)
 	{}
 
-	FNovaSplineOrbit(const FVector2D& Orig, float W, float H, float P)
-		: FNovaSplineOrbit(Orig, W)
+	FNovaSplineOrbit(const FVector2D& Orig, float W, float H, float P) : FNovaSplineOrbit(Orig, W)
 	{
 		Height = H;
-		Phase = P;
+		Phase  = P;
 	}
 
 	FNovaSplineOrbit(const FVector2D& Orig, float W, float H, float P, float Initial, float Length, float Offset)
 		: FNovaSplineOrbit(Orig, W, H, P)
 	{
-		InitialAngle = Initial;
+		InitialAngle  = Initial;
 		AngularLength = Length;
-		OriginOffset = Offset;
+		OriginOffset  = Offset;
 	}
 
 	FVector2D Origin;
-	float Width;
-	float Height;
-	float Phase;
-	float InitialAngle;
-	float AngularLength;
-	float OriginOffset;
+	float     Width;
+	float     Height;
+	float     Phase;
+	float     InitialAngle;
+	float     AngularLength;
+	float     OriginOffset;
 };
 
 /** Orbit drawing style */
 struct FNovaSplineStyle
 {
-	FNovaSplineStyle()
-		: ColorInner(FLinearColor::White)
-		, ColorOuter(FLinearColor::Black)
-		, WidthInner(1.0f)
-		, WidthOuter(2.0f)
+	FNovaSplineStyle() : ColorInner(FLinearColor::White), ColorOuter(FLinearColor::Black), WidthInner(1.0f), WidthOuter(2.0f)
 	{}
 
-	FNovaSplineStyle(const FLinearColor& Color)
-		: FNovaSplineStyle()
+	FNovaSplineStyle(const FLinearColor& Color) : FNovaSplineStyle()
 	{
 		ColorInner = Color;
 		ColorOuter = Color;
@@ -67,49 +54,48 @@ struct FNovaSplineStyle
 
 	FLinearColor ColorInner;
 	FLinearColor ColorOuter;
-	float WidthInner;
-	float WidthOuter;
+	float        WidthInner;
+	float        WidthOuter;
 };
 
 /** Orbit drawing results */
 struct FNovaSplineResults
 {
-	FVector2D InitialPosition;
-	FVector2D FinalPosition;
+	FVector2D         InitialPosition;
+	FVector2D         FinalPosition;
 	TArray<FVector2D> PointsOfInterest;
 };
 
 /** Batched data for drawing a point */
 struct FNovaBatchedPoint
 {
-	FVector2D Pos;
+	FVector2D    Pos;
 	FLinearColor Color;
-	float Radius;
+	float        Radius;
 };
 
 /** Batched data for drawing a spline */
 struct FNovaBatchedSpline
 {
-	FVector2D P0;
-	FVector2D P1;
-	FVector2D P2;
-	FVector2D P3;
+	FVector2D    P0;
+	FVector2D    P1;
+	FVector2D    P2;
+	FVector2D    P3;
 	FLinearColor ColorInner;
 	FLinearColor ColorOuter;
-	float WidthInner;
-	float WidthOuter;
+	float        WidthInner;
+	float        WidthOuter;
 };
 
-
 /*----------------------------------------------------
-	Orbital map
+    Orbital map
 ----------------------------------------------------*/
 
 /** Orbital map drawer */
 class SNovaOrbitalMap : public SCompoundWidget
 {
 	/*----------------------------------------------------
-		Slate arguments
+	    Slate arguments
 	----------------------------------------------------*/
 
 	SLATE_BEGIN_ARGS(SNovaOrbitalMap)
@@ -120,31 +106,26 @@ class SNovaOrbitalMap : public SCompoundWidget
 	SLATE_END_ARGS()
 
 public:
-
 	void Construct(const FArguments& InArgs);
 
-
 	/*----------------------------------------------------
-		Inherited
+	    Inherited
 	----------------------------------------------------*/
 
 public:
-
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
 	virtual int32 OnPaint(const FPaintArgs& PaintArgs, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect,
 		FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 
-
 	/*----------------------------------------------------
-		Internals
+	    Internals
 	----------------------------------------------------*/
 
 protected:
-
 	/** Draw a full circular orbit around Origin of Radius */
-	TArray<FVector2D> AddCircularOrbit(const FVector2D& Origin, float Radius,
-		const TArray<float>& PointsOfInterest, const FNovaSplineStyle& Style);
+	TArray<FVector2D> AddCircularOrbit(
+		const FVector2D& Origin, float Radius, const TArray<float>& PointsOfInterest, const FNovaSplineStyle& Style);
 
 	/** Draw a partial circular orbit around Origin of Radius, starting at Phase over AngularLength */
 	TArray<FVector2D> AddPartialCircularOrbit(const FVector2D& Origin, float Radius, float Phase, float InitialAngle, float AngularLength,
@@ -167,7 +148,8 @@ protected:
 	};
 
 	/** Return the control points for the two splines created when cutting the spline defined by P0..P3 at Alpha (0-1) */
-	static TArray<FVector2D> DeCasteljauSplit(const FVector2D& P0, const FVector2D& P1, const FVector2D& P2, const FVector2D& P3, float Alpha)
+	static TArray<FVector2D> DeCasteljauSplit(
+		const FVector2D& P0, const FVector2D& P1, const FVector2D& P2, const FVector2D& P3, float Alpha)
 	{
 		const float InvAlpha = 1.0f - Alpha;
 
@@ -180,21 +162,18 @@ protected:
 
 		const FVector2D R = InvAlpha * P + Alpha * Q;
 
-		return { P0, L, P, R, Q, N , P3 };
+		return {P0, L, P, R, Q, N, P3};
 	};
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 protected:
-
 	// Menu manager
-	TWeakObjectPtr<UNovaMenuManager>              MenuManager;
+	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 
 	// Batching system
-	TArray<FNovaBatchedPoint>                     BatchedPoints;
-	TArray<FNovaBatchedSpline>                    BatchedSplines;
-
+	TArray<FNovaBatchedPoint>  BatchedPoints;
+	TArray<FNovaBatchedSpline> BatchedSplines;
 };

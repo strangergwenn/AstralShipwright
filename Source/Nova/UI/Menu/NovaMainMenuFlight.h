@@ -8,11 +8,10 @@
 
 #include "Online.h"
 
-
 class SNovaMainMenuFlight : public SNovaTabPanel
 {
 	/*----------------------------------------------------
-		Slate arguments
+	    Slate arguments
 	----------------------------------------------------*/
 
 	SLATE_BEGIN_ARGS(SNovaMainMenuFlight)
@@ -24,11 +23,10 @@ class SNovaMainMenuFlight : public SNovaTabPanel
 	SLATE_END_ARGS()
 
 public:
-
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
-		Interaction
+	    Interaction
 	----------------------------------------------------*/
 
 	virtual void Show() override;
@@ -41,50 +39,42 @@ public:
 
 	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
 
-
 	/*----------------------------------------------------
-		Internals
+	    Internals
 	----------------------------------------------------*/
 
 protected:
-
 	/** Get the spacecraft pawn */
 	class ANovaSpacecraftPawn* GetSpacecraftPawn() const;
 
 	/** Get the spacecraft pawn */
 	class UNovaSpacecraftMovementComponent* GetSpacecraftMovement() const;
 
-
 	/*----------------------------------------------------
-		Content callbacks
+	    Content callbacks
 	----------------------------------------------------*/
 
 protected:
-
 	bool IsUndockEnabled() const;
 	bool IsDockEnabled() const;
 
-
 	/*----------------------------------------------------
-		Callbacks
+	    Callbacks
 	----------------------------------------------------*/
 
 	void OnUndock();
 	void OnDock();
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 protected:
-
 	// Menu manager
-	TWeakObjectPtr<UNovaMenuManager>              MenuManager;
+	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 
 	// Slate widgets
-	TSharedPtr<class SRetainerWidget>             MapRetainer;
-	TSharedPtr<class SNovaButton>                 UndockButton;
-	TSharedPtr<class SNovaButton>                 DockButton;
-
+	TSharedPtr<class SRetainerWidget> MapRetainer;
+	TSharedPtr<class SNovaButton>     UndockButton;
+	TSharedPtr<class SNovaButton>     DockButton;
 };

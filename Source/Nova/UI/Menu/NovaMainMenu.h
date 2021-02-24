@@ -6,7 +6,6 @@
 #include "Nova/UI/Widget/NovaMenu.h"
 #include "Nova/Tools/NovaActorTools.h"
 
-
 // Sub-menu types
 enum class ENovaMainMenuType : uint8
 {
@@ -21,7 +20,7 @@ enum class ENovaMainMenuType : uint8
 class SNovaMainMenu : public SNovaMenu
 {
 	/*----------------------------------------------------
-		Slate arguments
+	    Slate arguments
 	----------------------------------------------------*/
 
 	SLATE_BEGIN_ARGS(SNovaMainMenu)
@@ -32,13 +31,12 @@ class SNovaMainMenu : public SNovaMenu
 	SLATE_END_ARGS()
 
 public:
-
 	SNovaMainMenu();
 
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
-		Interaction
+	    Interaction
 	----------------------------------------------------*/
 
 	/** Show this menu */
@@ -52,7 +50,7 @@ public:
 
 	/** Stop displaying the tooltip */
 	void HideTooltip(SWidget* TargetWidget);
-	
+
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
 	virtual FReply OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent) override;
@@ -61,13 +59,11 @@ public:
 
 	FReply OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
-
 	/*----------------------------------------------------
-		Content callbacks
+	    Content callbacks
 	----------------------------------------------------*/
 
 protected:
-
 	/** Check if we can display the home menu */
 	bool IsHomeMenuVisible() const;
 
@@ -91,44 +87,38 @@ protected:
 	/** Get the key binding for the next tab */
 	FKey GetNextTabKey() const;
 
-
 	/*----------------------------------------------------
-		Action callbacks
+	    Action callbacks
 	----------------------------------------------------*/
 
 protected:
-
 	/** Quit the game */
 	void OnClose();
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 protected:
-
 	// Settings
-	float                                         TooltipDelay;
-	float                                         TooltipFadeDuration;
-	
+	float TooltipDelay;
+	float TooltipFadeDuration;
+
 	// Tooltip state
-	FString                                       DesiredTooltipContent;
-	FString                                       CurrentTooltipContent;
-	SWidget*                                      CurrentTooltipWidget;
-	float                                         CurrentTooltipDelay;
-	float                                         CurrentTooltipTime;
+	FString  DesiredTooltipContent;
+	FString  CurrentTooltipContent;
+	SWidget* CurrentTooltipWidget;
+	float    CurrentTooltipDelay;
+	float    CurrentTooltipTime;
 
 	// General state
-	bool                                          WasOnMainMenu;
+	bool WasOnMainMenu;
 
 	// Widgets
-	TSharedPtr<class SNovaTabView>                TabView;
-	TSharedPtr<class SNovaMainMenuHome>           HomeMenu;
-	TSharedPtr<class SNovaMainMenuGame>           GameMenu;
-	TSharedPtr<class SNovaMainMenuFlight>         FlightMenu;
-	TSharedPtr<class SNovaMainMenuAssembly>       AssemblyMenu;
-	TSharedPtr<class SNovaMainMenuSettings>       SettingsMenu;
-
-
+	TSharedPtr<class SNovaTabView>          TabView;
+	TSharedPtr<class SNovaMainMenuHome>     HomeMenu;
+	TSharedPtr<class SNovaMainMenuGame>     GameMenu;
+	TSharedPtr<class SNovaMainMenuFlight>   FlightMenu;
+	TSharedPtr<class SNovaMainMenuAssembly> AssemblyMenu;
+	TSharedPtr<class SNovaMainMenuSettings> SettingsMenu;
 };

@@ -8,16 +8,15 @@
 #include "Modules/ModuleManager.h"
 #include "Logging/LogMacros.h"
 
-
 /*----------------------------------------------------
-	Debugging tools
+    Debugging tools
 ----------------------------------------------------*/
 
 DECLARE_LOG_CATEGORY_EXTERN(LogNova, Log, All);
 
-#define NDIS(Format, ...)  FNovaModule::DisplayLog(FString::Printf(TEXT(Format), ##__VA_ARGS__))
-#define NLOG(Format, ...)  UE_LOG(LogNova, Display, TEXT(Format), ##__VA_ARGS__)
-#define NERR(Format, ...)  UE_LOG(LogNova, Error, TEXT(Format), ##__VA_ARGS__)
+#define NDIS(Format, ...) FNovaModule::DisplayLog(FString::Printf(TEXT(Format), ##__VA_ARGS__))
+#define NLOG(Format, ...) UE_LOG(LogNova, Display, TEXT(Format), ##__VA_ARGS__)
+#define NERR(Format, ...) UE_LOG(LogNova, Error, TEXT(Format), ##__VA_ARGS__)
 
 FString GetEnumText(ENetMode Mode);
 
@@ -27,31 +26,28 @@ FString GetRoleString(const AActor* Actor);
 
 FString GetRoleString(const UActorComponent* Component);
 
-
 /*----------------------------------------------------
-	Error reporting
+    Error reporting
 ----------------------------------------------------*/
 
 /** Ensure an expression is true */
-#define NCHECK(Expression) do \
-	{ \
-		if (!ensure(Expression)) \
-		{ \
+#define NCHECK(Expression)                          \
+	do                                              \
+	{                                               \
+		if (!ensure(Expression))                    \
+		{                                           \
 			FNovaModule::ReportError(__FUNCTION__); \
-		} \
-	} \
-	while (0)
-
+		}                                           \
+	} while (0)
 
 /*----------------------------------------------------
-	Game module definition
+    Game module definition
 ----------------------------------------------------*/
 
 class FNovaModule : public FDefaultGameModuleImpl
 {
 
 public:
-
 	void StartupModule() override;
 
 	void ShutdownModule() override;
@@ -61,6 +57,4 @@ public:
 
 	/** Send a crash report, display the stack and exit */
 	static void ReportError(FString Function);
-
 };
-

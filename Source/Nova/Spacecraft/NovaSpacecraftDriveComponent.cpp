@@ -8,22 +8,19 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
-UNovaSpacecraftDriveComponent::UNovaSpacecraftDriveComponent()
-	: Super()
+UNovaSpacecraftDriveComponent::UNovaSpacecraftDriveComponent() : Super()
 {
 	// Settings
 	SetAbsolute(false, false, true);
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-
 /*----------------------------------------------------
-	Inherited
+    Inherited
 ----------------------------------------------------*/
 
 void UNovaSpacecraftDriveComponent::SetAdditionalAsset(TSoftObjectPtr<UObject> AdditionalAsset)

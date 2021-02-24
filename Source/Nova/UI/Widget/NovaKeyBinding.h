@@ -1,4 +1,4 @@
-// Nova project - Gwenna�l Arbona
+﻿// Nova project - Gwennaël Arbona
 
 #pragma once
 
@@ -7,20 +7,15 @@
 
 #include "GameFramework/PlayerInput.h"
 
-
 DECLARE_DELEGATE_TwoParams(FNovaOnKeyBindingChanged, FKey, FKey);
-
 
 /** Key-binding storage structure that acts as a helper */
 struct FNovaKeyBinding
 {
-	FNovaKeyBinding()
-		: UserKey(FKey())
+	FNovaKeyBinding() : UserKey(FKey())
 	{}
 
-	FNovaKeyBinding(const FText& InDisplayName)
-		: UserKey(FKey())
-		, DisplayName(InDisplayName)
+	FNovaKeyBinding(const FText& InDisplayName) : UserKey(FKey()), DisplayName(InDisplayName)
 	{}
 
 	/** Add an action binding */
@@ -70,23 +65,18 @@ struct FNovaKeyBinding
 	}
 
 protected:
-
-	FKey                                          UserKey;
-	FKey                                          DefaultKey;
-	FText                                         DisplayName;
-	TArray<FInputActionKeyMapping>                ActionMappings;
-	TArray<FInputAxisKeyMapping>                  AxisMappings;
-
+	FKey                           UserKey;
+	FKey                           DefaultKey;
+	FText                          DisplayName;
+	TArray<FInputActionKeyMapping> ActionMappings;
+	TArray<FInputAxisKeyMapping>   AxisMappings;
 };
-
 
 /** Key binding widget that behaves as a button */
 class SNovaKeyBinding : public SNovaButton
 {
 public:
-
-	SLATE_BEGIN_ARGS(SNovaKeyBinding)
-		: _Theme("DefaultButton")
+	SLATE_BEGIN_ARGS(SNovaKeyBinding) : _Theme("DefaultButton")
 	{}
 
 	SLATE_ARGUMENT(TSharedPtr<FNovaKeyBinding>, Binding)
@@ -97,17 +87,15 @@ public:
 
 	SLATE_END_ARGS()
 
-
 public:
-
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
-		Interaction
+	    Interaction
 	----------------------------------------------------*/
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
-	
+
 	virtual FReply OnButtonClicked() override;
 
 	/** Set the key that we will bind or rebind */
@@ -116,11 +104,9 @@ public:
 	/** Key picking finished or canceled */
 	void FinishWaiting();
 
-
 protected:
-
 	/*----------------------------------------------------
-		Callbacks
+	    Callbacks
 	----------------------------------------------------*/
 
 	FText GetKeyName() const;
@@ -131,18 +117,14 @@ protected:
 
 	virtual FReply OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
-
 private:
-
 	/*----------------------------------------------------
-		Private data
+	    Private data
 	----------------------------------------------------*/
 
 	// Data
-	TSharedPtr<FNovaKeyBinding>                   Binding;
-	FNovaOnKeyBindingChanged                      OnKeyBindingChanged;
-	FVector2D                                     WaitingMousePos;
-	bool                                          WaitingForKey;
-
+	TSharedPtr<FNovaKeyBinding> Binding;
+	FNovaOnKeyBindingChanged    OnKeyBindingChanged;
+	FVector2D                   WaitingMousePos;
+	bool                        WaitingForKey;
 };
-

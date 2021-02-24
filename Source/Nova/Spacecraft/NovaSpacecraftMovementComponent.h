@@ -8,7 +8,6 @@
 #include "Nova/Game/NovaGameTypes.h"
 #include "NovaSpacecraftMovementComponent.generated.h"
 
-
 /** Movement state */
 UENUM()
 enum class ENovaMovementState : uint8
@@ -30,23 +29,16 @@ enum class ENovaLevelIntroType : uint8
 	Braking
 };
 
-
 /** High level movement command sent by a player */
 USTRUCT(Atomic)
 struct FNovaMovementCommand
 {
 	GENERATED_BODY()
 
-	FNovaMovementCommand()
-		: State(ENovaMovementState::Idle)
-		, Target(nullptr)
-		, Dirty(false)
+	FNovaMovementCommand() : State(ENovaMovementState::Idle), Target(nullptr), Dirty(false)
 	{}
 
-	FNovaMovementCommand(ENovaMovementState S, const class AActor* A = nullptr)
-		: State(S)
-		, Target(A)
-		, Dirty(false)
+	FNovaMovementCommand(ENovaMovementState S, const class AActor* A = nullptr) : State(S), Target(A), Dirty(false)
 	{}
 
 	UPROPERTY()
@@ -65,11 +57,7 @@ struct FNovaAttitudeCommand
 	GENERATED_BODY()
 
 	FNovaAttitudeCommand()
-		: Location(FVector::ZeroVector)
-		, Velocity(FVector::ZeroVector)
-		, Direction(FVector::ZeroVector)
-		, Roll(0)
-		, MainDriveEnabled(false)
+		: Location(FVector::ZeroVector), Velocity(FVector::ZeroVector), Direction(FVector::ZeroVector), Roll(0), MainDriveEnabled(false)
 	{}
 
 	UPROPERTY()
@@ -88,7 +76,6 @@ struct FNovaAttitudeCommand
 	bool MainDriveEnabled;
 };
 
-
 /** Spacecraft movement component */
 UCLASS(ClassGroup = (Nova))
 class UNovaSpacecraftMovementComponent : public UMovementComponent
@@ -96,11 +83,10 @@ class UNovaSpacecraftMovementComponent : public UMovementComponent
 	GENERATED_BODY()
 
 public:
-
 	UNovaSpacecraftMovementComponent();
 
 	/*----------------------------------------------------
-		Movement API
+	    Movement API
 	----------------------------------------------------*/
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -127,13 +113,11 @@ public:
 	/** Stop right there with no particular target */
 	void Stop(FSimpleDelegate Callback = FSimpleDelegate());
 
-
 	/*----------------------------------------------------
-		High level movement
+	    High level movement
 	----------------------------------------------------*/
 
 protected:
-
 	/** Run the high level state machine */
 	void ProcessState();
 
@@ -143,26 +127,22 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void ClientSignalCompletion();
 
-
 	/*----------------------------------------------------
-		Networking
+	    Networking
 	----------------------------------------------------*/
 
 protected:
-
 	/** Signal the flight controller to use this command */
 	void RequestMovement(const FNovaMovementCommand& Command);
 
 	UFUNCTION(Server, Reliable)
 	void ServerRequestMovement(const FNovaMovementCommand& Command);
 
-
 	/*----------------------------------------------------
-		Internal movement implementation
+	    Internal movement implementation
 	----------------------------------------------------*/
 
 protected:
-
 	/** Measure velocities and accelerations */
 	void ProcessMeasurementsBeforeAttitude(float DeltaTime);
 
@@ -181,13 +161,11 @@ protected:
 	/** Apply hit effects */
 	virtual void OnHit(const FHitResult& Hit, const FVector& HitVelocity);
 
-
 	/*----------------------------------------------------
-		Properties
+	    Properties
 	----------------------------------------------------*/
-	
-public:
 
+public:
 	// Maximum linear acceleration rate in m/s²
 	// TODO move to asset
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
@@ -208,7 +186,6 @@ public:
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float VectoringAngle;
 
-
 	// Distance under which we consider stopped
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float LinearDeadDistance;
@@ -216,7 +193,6 @@ public:
 	// Maximum moving velocity in m/s
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float MaxLinearVelocity;
-
 
 	// Distance under which we consider stopped
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
@@ -238,7 +214,6 @@ public:
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float AngularColinearityThreshold;
 
-
 	// Base restitution coefficient of hits
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float RestitutionCoefficient;
@@ -247,47 +222,43 @@ public:
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	TSubclassOf<class UCameraShakeBase> HitShake;
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 protected:
-
 	// High-level state
 	UPROPERTY(Replicated)
-	FNovaMovementCommand                          MovementCommand;
-	FSimpleDelegate                               CompletionCallback;
+	FNovaMovementCommand MovementCommand;
+	FSimpleDelegate      CompletionCallback;
 
 	// Authoritative attitude input, produced by the server in real-time
 	UPROPERTY(Replicated)
-	FNovaAttitudeCommand                          AttitudeCommand;
+	FNovaAttitudeCommand AttitudeCommand;
 
 	// Dock we were initialized for
 	UPROPERTY(Replicated)
-	const class AActor*                           StartActor;
+	const class AActor* StartActor;
 
 	// Movement state
-	FVector                                       CurrentLinearVelocity;
-	FVector                                       CurrentAngularVelocity;
+	FVector CurrentLinearVelocity;
+	FVector CurrentAngularVelocity;
 
 	// Measured data
-	bool                                          LinearAttitudeIdle;
-	bool                                          AngularAttitudeIdle;
-	float                                         LinearAttitudeDistance;
-	float                                         AngularAttitudeDistance;
-	FVector                                       PreviousVelocity;
-	FVector                                       PreviousAngularVelocity;
-	FVector                                       MeasuredAcceleration;
-	FVector                                       MeasuredAngularAcceleration;
-
+	bool    LinearAttitudeIdle;
+	bool    AngularAttitudeIdle;
+	float   LinearAttitudeDistance;
+	float   AngularAttitudeDistance;
+	FVector PreviousVelocity;
+	FVector PreviousAngularVelocity;
+	FVector MeasuredAcceleration;
+	FVector MeasuredAngularAcceleration;
 
 	/*----------------------------------------------------
-		Getters
+	    Getters
 	----------------------------------------------------*/
 
 public:
-
 	/** Get the current state of the movement system */
 	UFUNCTION(BlueprintCallable)
 	ENovaMovementState GetState() const
@@ -349,5 +320,4 @@ public:
 	{
 		return GetOwner()->GetRemoteRole();
 	}
-
 };

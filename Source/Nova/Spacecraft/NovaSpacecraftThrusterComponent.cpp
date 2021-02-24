@@ -8,22 +8,19 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
-UNovaSpacecraftThrusterComponent::UNovaSpacecraftThrusterComponent()
-	: Super()
+UNovaSpacecraftThrusterComponent::UNovaSpacecraftThrusterComponent() : Super()
 {
 	// Settings
 	SetAbsolute(false, false, true);
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-
 /*----------------------------------------------------
-	Inherited
+    Inherited
 ----------------------------------------------------*/
 
 void UNovaSpacecraftThrusterComponent::SetAdditionalAsset(TSoftObjectPtr<UObject> AdditionalAsset)
@@ -35,10 +32,10 @@ void UNovaSpacecraftThrusterComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	bool HasSocket;
-	int32 CurrentSocketIndex = 0;
+	bool                      HasSocket;
+	int32                     CurrentSocketIndex = 0;
 	FAttachmentTransformRules AttachRules(EAttachmentRule::KeepWorld, false);
-	INovaMeshInterface* ParentMesh = Cast<INovaMeshInterface>(GetAttachParent());
+	INovaMeshInterface*       ParentMesh = Cast<INovaMeshInterface>(GetAttachParent());
 	NCHECK(ParentMesh);
 
 	// Find all exhaust sockets
@@ -46,7 +43,7 @@ void UNovaSpacecraftThrusterComponent::BeginPlay()
 	{
 		// Check for the socket's existence
 		FString SocketName = FString("Exhaust_") + FString::FromInt(CurrentSocketIndex);
-		HasSocket = ParentMesh->HasSocket(*SocketName);
+		HasSocket          = ParentMesh->HasSocket(*SocketName);
 
 		if (HasSocket)
 		{
@@ -63,7 +60,7 @@ void UNovaSpacecraftThrusterComponent::BeginPlay()
 			Exhaust.Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 			// Attach
-			FVector SocketLocation;
+			FVector  SocketLocation;
 			FRotator SocketRotation;
 			Cast<UPrimitiveComponent>(ParentMesh)->GetSocketWorldLocationAndRotation(Exhaust.Name, SocketLocation, SocketRotation);
 			Exhaust.Mesh->SetWorldLocation(SocketLocation);
@@ -98,7 +95,7 @@ void UNovaSpacecraftThrusterComponent::TickComponent(float DeltaTime, ELevelTick
 		NCHECK(ParentMesh);
 
 		// Initialize thrust data
-		FVector LinearAcceleration = MovementComponent->GetThrusterAcceleration();
+		FVector LinearAcceleration  = MovementComponent->GetThrusterAcceleration();
 		FVector AngularAcceleration = MovementComponent->GetThrusterAngularAcceleration();
 
 		// Update all exhaust effects
@@ -113,18 +110,18 @@ void UNovaSpacecraftThrusterComponent::TickComponent(float DeltaTime, ELevelTick
 			else
 			{
 				// Get location
-				FVector SocketLocation;
+				FVector  SocketLocation;
 				FRotator SocketRotation;
 				Cast<UPrimitiveComponent>(ParentMesh)->GetSocketWorldLocationAndRotation(Exhaust.Name, SocketLocation, SocketRotation);
 				FVector EngineDirection = SocketRotation.RotateVector(FVector(1.0f, 0, 0));
-				FVector EngineOffset = (SocketLocation - GetOwner()->GetActorLocation()) / 100;
+				FVector EngineOffset    = (SocketLocation - GetOwner()->GetActorLocation()) / 100;
 
 				// Get linear alpha
 				float LinearAlpha = -FVector::DotProduct(EngineDirection, LinearAcceleration.GetSafeNormal());
 
 				// Get Angular alpha
 				FVector TorqueDirection = FVector::CrossProduct(EngineOffset, EngineDirection).GetSafeNormal();
-				float AngularAlpha = 0;
+				float   AngularAlpha    = 0;
 				if (!AngularAcceleration.IsNearlyZero())
 				{
 					AngularAlpha = FVector::DotProduct(TorqueDirection, AngularAcceleration.GetSafeNormal());

@@ -20,26 +20,22 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 
-
 #define LOCTEXT_NAMESPACE "SNovaMainMenuGame"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
 void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 {
 	// Data
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	MenuManager = InArgs._MenuManager;
+	MenuManager                 = InArgs._MenuManager;
 
 	// Parent constructor
-	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments()
-		.Menu(InArgs._Menu)
-	);
+	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
 
-	// Structure
+	// clang-format off
 	ChildSlot
 	[
 		SNew(SHorizontalBox)
@@ -292,16 +288,16 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 			]
 		];
 	}
+	// clang-format on
 
 	// Defaults
 	TimeSinceFriendListUpdate = 0;
-	FriendListUpdatePeriod = 5;
-	SelectedFriendIndex = INDEX_NONE;
+	FriendListUpdatePeriod    = 5;
+	SelectedFriendIndex       = INDEX_NONE;
 }
 
-
 /*----------------------------------------------------
-	Interaction
+    Interaction
 ----------------------------------------------------*/
 
 void SNovaMainMenuGame::Show()
@@ -360,7 +356,7 @@ FText SNovaMainMenuGame::GetSelectedFriendName() const
 
 FText SNovaMainMenuGame::GetFriendName(TSharedRef<FOnlineFriend> Friend) const
 {
-	int32 MaxLength = 50;
+	int32   MaxLength  = 50;
 	FString FriendName = Friend->GetDisplayName();
 	if (FriendName.Len() > MaxLength)
 	{
@@ -370,9 +366,8 @@ FText SNovaMainMenuGame::GetFriendName(TSharedRef<FOnlineFriend> Friend) const
 	return FText::FromString(FriendName);
 }
 
-
 /*----------------------------------------------------
-	Content callbacks
+    Content callbacks
 ----------------------------------------------------*/
 
 EVisibility SNovaMainMenuGame::GetContractsTextVisibility() const
@@ -493,8 +488,8 @@ FText SNovaMainMenuGame::GetOnlineText() const
 		}
 		else if (GameInstance->GetNetworkState() == ENovaNetworkState::OnlineClient)
 		{
-			StatusMessage = FText::FormatNamed(LOCTEXT("OnlineClient", "You are playing online as a guest ({ping}ms ping)"),
-				TEXT("ping"), FText::AsNumber(PlayerState->ExactPing));
+			StatusMessage = FText::FormatNamed(LOCTEXT("OnlineClient", "You are playing online as a guest ({ping}ms ping)"), TEXT("ping"),
+				FText::AsNumber(PlayerState->ExactPing));
 		}
 		else
 		{
@@ -538,7 +533,7 @@ EVisibility SNovaMainMenuGame::GetQuitGameVisibility() const
 
 TSharedRef<SWidget> SNovaMainMenuGame::GenerateFriendItem(TSharedRef<FOnlineFriend> Friend)
 {
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
 	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
 
 	// Get the friend status
@@ -566,39 +561,22 @@ TSharedRef<SWidget> SNovaMainMenuGame::GenerateFriendItem(TSharedRef<FOnlineFrie
 
 	// Build widget
 	return SNew(SHorizontalBox)
-	
-	+ SHorizontalBox::Slot()
-	.Padding(ButtonTheme.IconPadding)
-	.AutoWidth()
-	[
-		SNew(SVerticalBox)
 
-		+ SVerticalBox::Slot()
-		.HAlign(HAlign_Left)
-		.VAlign(VAlign_Center)
-		[
-			SNew(SImage)
-			.Image(this, &SNovaMainMenuGame::GetFriendIcon, Friend)
-		]
-	]
+		 + SHorizontalBox::Slot()
+			   .Padding(ButtonTheme.IconPadding)
+			   .AutoWidth()[SNew(SVerticalBox)
 
-	+ SHorizontalBox::Slot()
-	.HAlign(HAlign_Center)
-	.VAlign(VAlign_Center)
-	[
-		SNew(STextBlock)
-		.TextStyle(&Theme.MainFont)
-		.Text(GetFriendName(Friend))
-	]
+							+ SVerticalBox::Slot()
+								  .HAlign(HAlign_Left)
+								  .VAlign(VAlign_Center)[SNew(SImage).Image(this, &SNovaMainMenuGame::GetFriendIcon, Friend)]]
 
-	+ SHorizontalBox::Slot()
-	.HAlign(HAlign_Center)
-	.VAlign(VAlign_Center)
-	[
-		SNew(STextBlock)
-		.TextStyle(&Theme.MainFont)
-		.Text(FriendStatus)
-	];
+		 + SHorizontalBox::Slot()
+			   .HAlign(HAlign_Center)
+			   .VAlign(VAlign_Center)[SNew(STextBlock).TextStyle(&Theme.MainFont).Text(GetFriendName(Friend))]
+
+		 + SHorizontalBox::Slot()
+			   .HAlign(HAlign_Center)
+			   .VAlign(VAlign_Center)[SNew(STextBlock).TextStyle(&Theme.MainFont).Text(FriendStatus)];
 }
 
 const FSlateBrush* SNovaMainMenuGame::GetFriendIcon(TSharedRef<FOnlineFriend> Friend) const
@@ -608,8 +586,7 @@ const FSlateBrush* SNovaMainMenuGame::GetFriendIcon(TSharedRef<FOnlineFriend> Fr
 
 FText SNovaMainMenuGame::GenerateFriendTooltip(TSharedRef<FOnlineFriend> Friend)
 {
-	return FText::FormatNamed(LOCTEXT("FriendTooltip", "Invite or join {friend} to play together"),
-		TEXT("friend"), GetFriendName(Friend));
+	return FText::FormatNamed(LOCTEXT("FriendTooltip", "Invite or join {friend} to play together"), TEXT("friend"), GetFriendName(Friend));
 }
 
 FText SNovaMainMenuGame::GetOnlineFriendsText() const
@@ -631,18 +608,16 @@ FText SNovaMainMenuGame::GetOnlineFriendsText() const
 		// Build message elements
 		if (!IsInviteFriendEnabled())
 		{
-			InviteText = FText::FormatNamed(LOCTEXT("FriendNoInvite", "{friend} can't be invited"),
-				TEXT("friend"), FriendName);
+			InviteText = FText::FormatNamed(LOCTEXT("FriendNoInvite", "{friend} can't be invited"), TEXT("friend"), FriendName);
 		}
 		else if (!IsJoinFriendEnabled())
 		{
-			JoinText = FText::FormatNamed(LOCTEXT("FriendNoJoin", "{friend} can't be joined"),
-				TEXT("friend"), FriendName);
+			JoinText = FText::FormatNamed(LOCTEXT("FriendNoJoin", "{friend} can't be joined"), TEXT("friend"), FriendName);
 		}
 		else
 		{
-			CommonText = FText::FormatNamed(LOCTEXT("FriendTooltip", "Invite or join {friend} to play together"),
-				TEXT("friend"), FriendName);
+			CommonText =
+				FText::FormatNamed(LOCTEXT("FriendTooltip", "Invite or join {friend} to play together"), TEXT("friend"), FriendName);
 		}
 	}
 
@@ -679,8 +654,7 @@ FText SNovaMainMenuGame::GetInviteText() const
 {
 	if (HasSelectedFriend())
 	{
-		 return FText::FormatNamed(LOCTEXT("InviteFriend", "Invite {friend}"),
-			TEXT("friend"), GetSelectedFriendName());
+		return FText::FormatNamed(LOCTEXT("InviteFriend", "Invite {friend}"), TEXT("friend"), GetSelectedFriendName());
 	}
 	else
 	{
@@ -692,8 +666,7 @@ FText SNovaMainMenuGame::GetJoinText() const
 {
 	if (HasSelectedFriend())
 	{
-		return FText::FormatNamed(LOCTEXT("JoinFriend", "Join {friend}"),
-			TEXT("friend"), GetSelectedFriendName());
+		return FText::FormatNamed(LOCTEXT("JoinFriend", "Join {friend}"), TEXT("friend"), GetSelectedFriendName());
 	}
 	else
 	{
@@ -707,9 +680,8 @@ bool SNovaMainMenuGame::IsInviteFriendEnabled() const
 	{
 		TSharedRef<FOnlineFriend> SelectedFriend = FriendList[SelectedFriendIndex];
 
-		return MenuManager->GetGameInstance()->IsOnline()
-			&& SelectedFriend->GetInviteStatus() != EInviteStatus::Blocked
-			&& SelectedFriend->GetInviteStatus() != EInviteStatus::PendingOutbound;
+		return MenuManager->GetGameInstance()->IsOnline() && SelectedFriend->GetInviteStatus() != EInviteStatus::Blocked &&
+			   SelectedFriend->GetInviteStatus() != EInviteStatus::PendingOutbound;
 	}
 
 	return false;
@@ -728,9 +700,8 @@ bool SNovaMainMenuGame::IsJoinFriendEnabled() const
 	return false;
 }
 
-
 /*----------------------------------------------------
-	Callbacks
+    Callbacks
 ----------------------------------------------------*/
 
 void SNovaMainMenuGame::OnTrackContract(uint32 Index)
@@ -778,7 +749,7 @@ void SNovaMainMenuGame::OnFriendListReady(TArray<TSharedRef<FOnlineFriend>> NewF
 				IsHere = true;
 			}
 		}
-		
+
 		// Add the friend
 		FOnlineUserPresence FriendPresence = Friend->GetPresence();
 		if (FriendPresence.bIsOnline && !IsHere)
@@ -817,6 +788,5 @@ void SNovaMainMenuGame::OnJoinSelectedFriend()
 		MenuManager->GetPC()->JoinFriend(FriendList[SelectedFriendIndex]);
 	}
 }
-
 
 #undef LOCTEXT_NAMESPACE

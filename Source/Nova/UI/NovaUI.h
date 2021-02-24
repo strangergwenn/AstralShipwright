@@ -1,4 +1,4 @@
-// Nova project - Gwenna�l Arbona
+﻿// Nova project - Gwennaël Arbona
 
 #pragma once
 

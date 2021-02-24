@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "NovaSaveManager.generated.h"
 
-
 /** Game interface to load and write saves */
 UCLASS(ClassGroup = (Nova))
 class UNovaSaveManager : public UObject
@@ -13,17 +12,15 @@ class UNovaSaveManager : public UObject
 	GENERATED_BODY()
 
 public:
-
 	UNovaSaveManager();
 
-
 	/*----------------------------------------------------
-		Interface
+	    Interface
 	----------------------------------------------------*/
 
 	/** Confirm if a save slot does exist */
 	bool DoesSaveExist(const FString SaveName);
-	
+
 	/** Start an asynchronous process to save data */
 	void SaveGameAsync(const FString SaveName, TSharedPtr<struct FNovaGameSave> SaveData, bool Compress = true);
 
@@ -36,11 +33,9 @@ public:
 	/** Delete a game save */
 	bool DeleteGame(const FString SaveName);
 
-
 public:
-
 	/*----------------------------------------------------
-		Helpers
+	    Helpers
 	----------------------------------------------------*/
 
 	/** Get the path to save game file for the given name */
@@ -55,18 +50,15 @@ public:
 	/** De-serialize an FGuid description into an asset pointer */
 	static FGuid DeserializeGuid(const TSharedPtr<class FJsonObject>& SaveData, const FString& FieldName);
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 protected:
-
 	// Prepared game save data
-	TArray<TSharedPtr<struct FNovaGameSave>>      SaveList;
+	TArray<TSharedPtr<struct FNovaGameSave>> SaveList;
 
 	// Critical sections
-	FCriticalSection                              SaveLock;
-	FCriticalSection                              SaveListLock;
-
+	FCriticalSection SaveLock;
+	FCriticalSection SaveListLock;
 };

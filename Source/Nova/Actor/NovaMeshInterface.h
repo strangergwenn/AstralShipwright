@@ -7,32 +7,21 @@
 
 #include "NovaMeshInterface.generated.h"
 
-
 DECLARE_DELEGATE_RetVal_ThreeParams(bool, FInternalSetWorldLocationAndRotation, const FVector&, const FQuat&, ETeleportType);
-
 
 /** CMaterial parameter change request */
 struct FNovaMaterialParameterRequest
 {
-	FNovaMaterialParameterRequest(FName N, float V)
-		: Name(N)
-		, Time(0)
-		, IsColor(false)
-		, FloatValue(V)
-		, ColorValue()
+	FNovaMaterialParameterRequest(FName N, float V) : Name(N), Time(0), IsColor(false), FloatValue(V), ColorValue()
 	{}
 
-	FNovaMaterialParameterRequest(FName N, FLinearColor V)
-		: Name(N)
-		, Time(0)
-		, IsColor(true)
-		, FloatValue()
-		, ColorValue(V)
+	FNovaMaterialParameterRequest(FName N, FLinearColor V) : Name(N), Time(0), IsColor(true), FloatValue(), ColorValue(V)
 	{}
 
 	bool operator==(const FNovaMaterialParameterRequest& Other) const
 	{
-		return Name == Other.Name && IsColor == Other.IsColor && (IsColor ? ColorValue == Other.ColorValue : FloatValue == Other.FloatValue);
+		return Name == Other.Name && IsColor == Other.IsColor &&
+			   (IsColor ? ColorValue == Other.ColorValue : FloatValue == Other.FloatValue);
 	}
 
 	bool operator!=(const FNovaMaterialParameterRequest& Other) const
@@ -40,13 +29,12 @@ struct FNovaMaterialParameterRequest
 		return !operator==(Other);
 	}
 
-	FName Name;
-	float Time;
-	bool IsColor;
-	float FloatValue;
+	FName        Name;
+	float        Time;
+	bool         IsColor;
+	float        FloatValue;
 	FLinearColor ColorValue;
 };
-
 
 /** Shared behavior structure for mesh objects */
 USTRUCT()
@@ -55,15 +43,13 @@ struct FNovaMeshInterfaceBehavior
 	GENERATED_BODY()
 
 public:
-
 	FNovaMeshInterfaceBehavior();
 
 	/*----------------------------------------------------
-		Mesh interface
+	    Mesh interface
 	----------------------------------------------------*/
 
 public:
-
 	/** Setup this behavior */
 	void SetupMaterial(class UPrimitiveComponent* Mesh, class UMaterialInterface* Material);
 
@@ -79,7 +65,6 @@ public:
 	/** Update this behavior */
 	void TickMaterial(float DeltaTime);
 
-
 	/** Start materializing the mesh, or force it visible entirely */
 	void Materialize(bool Force);
 
@@ -89,47 +74,41 @@ public:
 	/** Get the materialization alpha */
 	float GetMaterializationAlpha() const;
 
-
 	/** Asynchronously set a float parameter */
 	void RequestParameter(FName Name, float Value, bool Immediate = false);
 
 	/** Asynchronously set a color parameter */
 	void RequestParameter(FName Name, FLinearColor Value, bool Immediate = false);
 
-
 	/*----------------------------------------------------
-		Properties
+	    Properties
 	----------------------------------------------------*/
 
 public:
-
 	// Time in seconds for the materialization effect
-	UPROPERTY(Category = Nova, EditDefaultsOnly) 
-	float MaterializationDuration; 
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float MaterializationDuration;
 
 	// Time in seconds for a parameter change request to be processed
-	UPROPERTY(Category = Nova, EditDefaultsOnly) 
-	float ParameterFadeDuration; 
-
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float ParameterFadeDuration;
 
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 protected:
-	
 	// Dynamic material
 	UPROPERTY()
-	class UMaterialInstanceDynamic*               ComponentMaterial;
+	class UMaterialInstanceDynamic* ComponentMaterial;
 
 	// Materialization state
-	bool                                          CurrentMaterializationState;
-	float                                         CurrentMaterializationTime;
-	TArray<FNovaMaterialParameterRequest>         CurrentRequests;
-	TMap<FName, float>                            PreviousParameterFloatValues;
-	TMap<FName, FLinearColor>                     PreviousParameterColorValues;
+	bool                                  CurrentMaterializationState;
+	float                                 CurrentMaterializationTime;
+	TArray<FNovaMaterialParameterRequest> CurrentRequests;
+	TMap<FName, float>                    PreviousParameterFloatValues;
+	TMap<FName, FLinearColor>             PreviousParameterColorValues;
 };
-
 
 /** Interface wrapper */
 UINTERFACE(MinimalAPI, Blueprintable)
@@ -138,16 +117,14 @@ class UNovaMeshInterface : public UInterface
 	GENERATED_BODY()
 };
 
-
 /** Base mesh interface for static and skeletal components */
 class INovaMeshInterface
 {
 	GENERATED_BODY()
 
 public:
-
 	/*----------------------------------------------------
-		Mesh interface
+	    Mesh interface
 	----------------------------------------------------*/
 
 	/** Start materializing the mesh, or force it visible entirely */
@@ -184,10 +161,8 @@ public:
 	virtual FVector GetExtent() const;
 
 	/** Move a component and test for collision on the entire actor
-		Taken from UPrimitiveComponent - check for updates when updating UE ! */
-	static bool MoveComponentHierarchy(UPrimitiveComponent* RootComponent, const FVector& OriginalLocation,
-		const FVector& Delta, const FQuat& NewRotationQuat,
-		bool bSweep, FHitResult* OutHit, ETeleportType Teleport,
+	    Taken from UPrimitiveComponent - check for updates when updating UE ! */
+	static bool MoveComponentHierarchy(UPrimitiveComponent* RootComponent, const FVector& OriginalLocation, const FVector& Delta,
+		const FQuat& NewRotationQuat, bool bSweep, FHitResult* OutHit, ETeleportType Teleport,
 		FInternalSetWorldLocationAndRotation MovementCallback);
-
 };

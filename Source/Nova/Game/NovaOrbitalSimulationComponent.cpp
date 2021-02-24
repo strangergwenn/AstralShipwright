@@ -10,22 +10,19 @@
 #include "EngineUtils.h"
 #include "Net/UnrealNetwork.h"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
-UNovaOrbitalSimulationComponent::UNovaOrbitalSimulationComponent()
-	: Super()
+UNovaOrbitalSimulationComponent::UNovaOrbitalSimulationComponent() : Super()
 {
 	// Settings
 	PrimaryComponentTick.bCanEverTick = true;
 	SetIsReplicatedByDefault(false);
 }
 
-
 /*----------------------------------------------------
-	Gameplay
+    Gameplay
 ----------------------------------------------------*/
 
 void UNovaOrbitalSimulationComponent::BeginPlay()
@@ -35,16 +32,16 @@ void UNovaOrbitalSimulationComponent::BeginPlay()
 	Areas = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetCatalog()->GetAssets<UNovaArea>();
 }
 
-void UNovaOrbitalSimulationComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UNovaOrbitalSimulationComponent::TickComponent(
+	float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	UpdateTrajectories();
 }
 
-
 /*----------------------------------------------------
-	Internals
+    Internals
 ----------------------------------------------------*/
 
 void UNovaOrbitalSimulationComponent::UpdateTrajectories()
@@ -57,5 +54,4 @@ void UNovaOrbitalSimulationComponent::UpdateTrajectories()
 	{
 		AreaTrajectories.Add(Area, FNovaSpacecraftTrajectory(400, 0));
 	}
-
 }

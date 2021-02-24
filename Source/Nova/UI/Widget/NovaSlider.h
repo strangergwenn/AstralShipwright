@@ -7,12 +7,11 @@
 
 #include "Widgets/SCompoundWidget.h"
 
-
 /** Slider control class */
 class SNovaSlider : public SCompoundWidget
 {
 	/*----------------------------------------------------
-		Slate arguments
+	    Slate arguments
 	----------------------------------------------------*/
 
 	SLATE_BEGIN_ARGS(SNovaSlider)
@@ -31,7 +30,7 @@ class SNovaSlider : public SCompoundWidget
 	SLATE_ARGUMENT(FName, Theme)
 	SLATE_ARGUMENT(FName, ControlsTheme)
 	SLATE_ARGUMENT(FName, ControlsSize)
-		
+
 	SLATE_ATTRIBUTE(bool, Enabled)
 	SLATE_ARGUMENT(float, Value)
 	SLATE_ARGUMENT(float, MinValue)
@@ -39,16 +38,14 @@ class SNovaSlider : public SCompoundWidget
 	SLATE_ARGUMENT(float, ValueStep)
 
 	SLATE_EVENT(FOnFloatValueChanged, OnValueChanged)
-	
+
 	SLATE_END_ARGS()
 
-
 public:
-
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
-		Public methods
+	    Public methods
 	----------------------------------------------------*/
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
@@ -59,13 +56,11 @@ public:
 	/** Set the current value */
 	void SetCurrentValue(float Value);
 
-
 	/*----------------------------------------------------
-		Callbacks
+	    Callbacks
 	----------------------------------------------------*/
 
 protected:
-
 	/** Brush callback*/
 	const FSlateBrush* GetBackgroundBrush() const;
 
@@ -84,24 +79,21 @@ protected:
 	/** Subtract ValueStep from the current value */
 	void OnDecrement();
 
-
 protected:
-
 	/*----------------------------------------------------
-		Private data
+	    Private data
 	----------------------------------------------------*/
-	
+
 	// Settings & attributes
-	FName                                         ThemeName;
-	float                                         SliderSpeed;
+	FName ThemeName;
+	float SliderSpeed;
 
 	// State
-	float                                         ValueStep;
-	float                                         CurrentValue;
-	bool                                          IsMouseCaptured;
-	FOnFloatValueChanged                          ValueChanged;
-	
-	// Slate elements
-	TSharedPtr<SSlider>                           Slider;
+	float                ValueStep;
+	float                CurrentValue;
+	bool                 IsMouseCaptured;
+	FOnFloatValueChanged ValueChanged;
 
+	// Slate elements
+	TSharedPtr<SSlider> Slider;
 };

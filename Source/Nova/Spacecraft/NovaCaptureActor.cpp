@@ -25,21 +25,16 @@
 
 #endif
 
-
 #define LOCTEXT_NAMESPACE "ANovaCaptureActor"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
-ANovaCaptureActor::ANovaCaptureActor()
-	: Super()
-	, SpacecraftPawn(nullptr)
-	, Catalog(nullptr)
+ANovaCaptureActor::ANovaCaptureActor() : Super(), SpacecraftPawn(nullptr), Catalog(nullptr)
 {
 	// Create root component
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	RootComponent                = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 	RootComponent->bIsEditorOnly = true;
 
 	// Create camera arm
@@ -51,24 +46,24 @@ ANovaCaptureActor::ANovaCaptureActor()
 	CameraCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("CameraCapture"));
 	CameraCapture->SetupAttachment(CameraArmComponent, USpringArmComponent::SocketName);
 	CameraCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
-	CameraCapture->CaptureSource = ESceneCaptureSource::SCS_FinalToneCurveHDR;
-	CameraCapture->bCaptureEveryFrame = false;
-	CameraCapture->bCaptureOnMovement = false;
+	CameraCapture->CaptureSource       = ESceneCaptureSource::SCS_FinalToneCurveHDR;
+	CameraCapture->bCaptureEveryFrame  = false;
+	CameraCapture->bCaptureOnMovement  = false;
 	CameraCapture->ShowFlags.EnableAdvancedFeatures();
 	CameraCapture->ShowFlags.SetFog(false);
-	CameraCapture->FOVAngle = 70;
-	CameraCapture->bIsEditorOnly = true;
+	CameraCapture->FOVAngle                     = 70;
+	CameraCapture->bIsEditorOnly                = true;
 	CameraCapture->bAlwaysPersistRenderingState = true;
-	CameraCapture->bUseRayTracingIfEnabled = true;
+	CameraCapture->bUseRayTracingIfEnabled      = true;
 
 	// Defaults
-	bIsEditorOnlyActor = true;
+	bIsEditorOnlyActor  = true;
 	RenderUpscaleFactor = 4;
 	ResultUpscaleFactor = 2;
 }
 
 /*----------------------------------------------------
-	Asset screenshot system
+    Asset screenshot system
 ----------------------------------------------------*/
 
 void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& AssetRender)
@@ -92,7 +87,7 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 	}
 
 	// Build path
-	int32 SeparatorIndex;
+	int32   SeparatorIndex;
 	FString ScreenshotPath = Asset->GetOuter()->GetFName().ToString();
 	if (ScreenshotPath.FindLastChar('/', SeparatorIndex))
 	{
@@ -163,8 +158,7 @@ void ANovaCaptureActor::CreateRenderTarget()
 	NCHECK(RenderTarget);
 
 	FVector2D DesiredSize = GetDesiredSize();
-	RenderTarget->InitAutoFormat(
-		FGenericPlatformMath::RoundUpToPowerOfTwo(RenderUpscaleFactor * DesiredSize.X),
+	RenderTarget->InitAutoFormat(FGenericPlatformMath::RoundUpToPowerOfTwo(RenderUpscaleFactor * DesiredSize.X),
 		FGenericPlatformMath::RoundUpToPowerOfTwo(RenderUpscaleFactor * DesiredSize.Y));
 	RenderTarget->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
 
@@ -178,11 +172,12 @@ void ANovaCaptureActor::PlaceCamera()
 
 	// Compute bounds
 	FBox Bounds(ForceInit);
-	SpacecraftPawn->ForEachComponent<UPrimitiveComponent>(false, [&](const UPrimitiveComponent* Prim)
+	SpacecraftPawn->ForEachComponent<UPrimitiveComponent>(false,
+		[&](const UPrimitiveComponent* Prim)
 		{
 			if (Prim->IsRegistered())
 			{
-				const UNovaStaticMeshComponent* StaticPrim = Cast<UNovaStaticMeshComponent>(Prim);
+				const UNovaStaticMeshComponent*   StaticPrim   = Cast<UNovaStaticMeshComponent>(Prim);
 				const UNovaSkeletalMeshComponent* SkeletalPrim = Cast<UNovaSkeletalMeshComponent>(Prim);
 
 				if (StaticPrim || SkeletalPrim)
@@ -194,9 +189,9 @@ void ANovaCaptureActor::PlaceCamera()
 	Bounds.GetCenterAndExtents(CurrentOrigin, CurrentExtent);
 
 	// Compute camera offset
-	const float HalfFOVRadians = FMath::DegreesToRadians(CameraCapture->FOVAngle / 2.0f);
+	const float HalfFOVRadians     = FMath::DegreesToRadians(CameraCapture->FOVAngle / 2.0f);
 	const float DistanceFromSphere = FMath::Max(CurrentExtent.Size(), 2.0f * CurrentExtent.Z) / FMath::Tan(HalfFOVRadians);
-	FVector ProjectedOffset = FVector(-3.0f * DistanceFromSphere, 0, 0);
+	FVector     ProjectedOffset    = FVector(-3.0f * DistanceFromSphere, 0, 0);
 
 	// Apply offset
 	CameraArmComponent->SetRelativeLocation(FVector(CurrentOrigin.X, 0, 0));
@@ -205,13 +200,14 @@ void ANovaCaptureActor::PlaceCamera()
 
 UTexture2D* ANovaCaptureActor::SaveTexture(FString TextureName)
 {
-	FString NewTextureName = TextureName;
-	UTexture2D* Texture = UKismetRenderingLibrary::RenderTargetCreateStaticTexture2DEditorOnly(RenderTarget, NewTextureName, TC_EditorIcon, TMGS_Sharpen5);
-	Texture->LODGroup = TEXTUREGROUP_UI;
+	FString     NewTextureName = TextureName;
+	UTexture2D* Texture =
+		UKismetRenderingLibrary::RenderTargetCreateStaticTexture2DEditorOnly(RenderTarget, NewTextureName, TC_EditorIcon, TMGS_Sharpen5);
+	Texture->LODGroup        = TEXTUREGROUP_UI;
 	Texture->bPreserveBorder = true;
-	Texture->NeverStream = true;
-	Texture->SRGB = true;
-	Texture->MaxTextureSize = (ResultUpscaleFactor * RenderTarget->SizeX) / RenderUpscaleFactor;
+	Texture->NeverStream     = true;
+	Texture->SRGB            = true;
+	Texture->MaxTextureSize  = (ResultUpscaleFactor * RenderTarget->SizeX) / RenderUpscaleFactor;
 	Texture->PostEditChange();
 
 	return Texture;

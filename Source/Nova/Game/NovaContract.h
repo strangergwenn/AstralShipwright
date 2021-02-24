@@ -6,9 +6,8 @@
 #include "Dom/JsonObject.h"
 #include "NovaContractManager.h"
 
-
 /*----------------------------------------------------
-	Base contract definitions
+    Base contract definitions
 ----------------------------------------------------*/
 
 /** Contract types */
@@ -21,9 +20,7 @@ enum class ENovaContractType : uint8
 class FNovaContract : public TSharedFromThis<FNovaContract>
 {
 public:
-
-	FNovaContract()
-		: GameInstance(nullptr)
+	FNovaContract() : GameInstance(nullptr)
 	{}
 
 	virtual ~FNovaContract()
@@ -57,24 +54,20 @@ public:
 	virtual void OnEvent(const FNovaContractEvent& Event) = 0;
 
 protected:
-
 	// Local state
-	ENovaContractType                             Type;
-	FNovaContractDetails                          Details;
-	class UNovaGameInstance*                      GameInstance;
-
+	ENovaContractType        Type;
+	FNovaContractDetails     Details;
+	class UNovaGameInstance* GameInstance;
 };
 
-
 /*----------------------------------------------------
-	Contracts implementations
+    Contracts implementations
 ----------------------------------------------------*/
 
 /** Test class for contracts */
 class FNovaTutorialContract : public FNovaContract
 {
 public:
-
 	FNovaTutorialContract();
 
 	virtual void Initialize(class UNovaGameInstance* CurrentGameInstance) override;
@@ -84,6 +77,4 @@ public:
 	virtual void Load(const TSharedPtr<FJsonObject>& Data) override;
 
 	virtual void OnEvent(const FNovaContractEvent& Event) override;
-
 };
-

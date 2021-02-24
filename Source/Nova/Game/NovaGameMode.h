@@ -6,7 +6,6 @@
 #include "GameFramework/GameModeBase.h"
 #include "NovaGameMode.generated.h"
 
-
 /** Default game mode class */
 UCLASS(ClassGroup = (Nova))
 class ANovaGameMode : public AGameModeBase
@@ -14,12 +13,10 @@ class ANovaGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
-
 	ANovaGameMode();
 
-
 	/*----------------------------------------------------
-		Inherited
+	    Inherited
 	----------------------------------------------------*/
 
 	virtual void InitGameState() override;
@@ -34,26 +31,22 @@ public:
 
 	virtual AActor* ChoosePlayerStart_Implementation(class AController* Player) override;
 
-
 	/*----------------------------------------------------
-		Gameplay
+	    Gameplay
 	----------------------------------------------------*/
 
 public:
-
 	/** Reset the area, moving all ships to player starts */
 	void ResetArea();
 
 	/** Have all players fade to black, play the exit cutscene and switch area */
 	void ChangeArea(const class UNovaArea* Area);
 
-	
 	/*----------------------------------------------------
-		Level loading
+	    Level loading
 	----------------------------------------------------*/
 
 protected:
-	
 	/** Load a streaming level */
 	bool LoadStreamingLevel(const class UNovaArea* Area, bool StartDocked = false, FSimpleDelegate Callback = FSimpleDelegate());
 
@@ -68,15 +61,13 @@ protected:
 	UFUNCTION()
 	void OnLevelUnLoaded();
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 private:
-
 	// Game state
-	int32                                         CurrentStreamingLevelIndex;
-	FSimpleDelegate                               OnLevelLoadedCallback;
-	FSimpleDelegate                               OnLevelUnloadedCallback;
+	int32           CurrentStreamingLevelIndex;
+	FSimpleDelegate OnLevelLoadedCallback;
+	FSimpleDelegate OnLevelUnloadedCallback;
 };

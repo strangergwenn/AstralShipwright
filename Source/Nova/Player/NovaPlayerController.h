@@ -13,7 +13,6 @@
 
 #include "NovaPlayerController.generated.h"
 
-
 /** High level post processing targets */
 enum class ENovaPostProcessPreset : uint8
 {
@@ -27,7 +26,7 @@ struct FNovaPostProcessSetting : public FNovaPostProcessSettingBase
 		: FNovaPostProcessSettingBase()
 
 		// Custom
-		//, ChromaIntensity(1)
+	    //, ChromaIntensity(1)
 
 		// Built-in
 		, AutoExposureBrightness(1)
@@ -36,14 +35,13 @@ struct FNovaPostProcessSetting : public FNovaPostProcessSettingBase
 	{}
 
 	// Custom effects
-	//float ChromaIntensity;
+	// float ChromaIntensity;
 
 	// Built-in effects
-	float AutoExposureBrightness;
-	float GrainIntensity;
+	float        AutoExposureBrightness;
+	float        GrainIntensity;
 	FLinearColor SceneColorTint;
 };
-
 
 /** Camera viewpoint */
 UCLASS(ClassGroup = (Nova))
@@ -52,7 +50,6 @@ class ANovaPlayerViewpoint : public AActor
 	GENERATED_BODY()
 
 public:
-
 	ANovaPlayerViewpoint();
 };
 
@@ -63,23 +60,21 @@ class ANovaPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
-
 	ANovaPlayerController();
 
-
 	/*----------------------------------------------------
-		Loading & saving
+	    Loading & saving
 	----------------------------------------------------*/
 
 	TSharedPtr<struct FNovaPlayerSave> Save() const;
 
 	void Load(TSharedPtr<struct FNovaPlayerSave> SaveData);
 
-	static void SerializeJson(TSharedPtr<struct FNovaPlayerSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
-
+	static void SerializeJson(
+		TSharedPtr<struct FNovaPlayerSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
 
 	/*----------------------------------------------------
-		Inherited
+	    Inherited
 	----------------------------------------------------*/
 
 	virtual void BeginPlay() override;
@@ -91,7 +86,7 @@ public:
 	virtual void GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const override;
 
 	/*----------------------------------------------------
-		Gameplay
+	    Gameplay
 	----------------------------------------------------*/
 
 	/** Run a shared transition with a fade to black on all clients */
@@ -118,13 +113,11 @@ public:
 	/** Undock the player from the current dock with a cutscene */
 	void Undock();
 
-
 	/*----------------------------------------------------
-		Server-side save
+	    Server-side save
 	----------------------------------------------------*/
 
 public:
-
 	/** Load the player controller before actors can be created on the server */
 	void ClientLoadPlayer();
 
@@ -139,13 +132,11 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerUpdateSpacecraft(const FNovaSpacecraft& Spacecraft);
 
-
 	/*----------------------------------------------------
-		Game flow
+	    Game flow
 	----------------------------------------------------*/
 
 public:
-
 	/** Start or restart the game */
 	void StartGame(FString SaveName, bool Online = true);
 
@@ -171,13 +162,11 @@ public:
 	UFUNCTION(Category = Nova, BlueprintCallable)
 	bool IsReady() const;
 
-
 	/*----------------------------------------------------
-		Menus
+	    Menus
 	----------------------------------------------------*/
 
 public:
-
 	/** Is the player on the main menu */
 	bool IsOnMainMenu() const;
 
@@ -187,13 +176,11 @@ public:
 	/** Show a text notification on the screen */
 	void Notify(FText Text, ENovaNotificationType Type);
 
-
 	/*----------------------------------------------------
-		Input
+	    Input
 	----------------------------------------------------*/
 
 public:
-
 	virtual void SetupInputComponent() override;
 
 	/** Any key pressed */
@@ -212,40 +199,35 @@ public:
 
 #endif
 
-
 	/*----------------------------------------------------
-		Components
+	    Components
 	----------------------------------------------------*/
 
 	// Post-processing manager
 	UPROPERTY()
 	class UNovaPostProcessComponent* PostProcessComponent;
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 private:
-
 	// Travel state
-	ENovaNetworkError                             LastNetworkError;
+	ENovaNetworkError LastNetworkError;
 
 	// Transitions
-	bool                                          IsInSharedTransition;
-	FSimpleDelegate                               OnSharedTransitionStarted;
-	FSimpleDelegate                               OnSharedTransitionFinished;
+	bool            IsInSharedTransition;
+	FSimpleDelegate OnSharedTransitionStarted;
+	FSimpleDelegate OnSharedTransitionFinished;
 
 	// Gameplay state
 	TMap<ENovaPostProcessPreset, TSharedPtr<FNovaPostProcessSetting>> PostProcessSettings;
 
-
 	/*----------------------------------------------------
-		Getters
+	    Getters
 	----------------------------------------------------*/
 
 public:
-
 	/** Get the menu manager */
 	UFUNCTION(Category = Nova, BlueprintCallable)
 	class UNovaMenuManager* GetMenuManager() const
@@ -266,5 +248,4 @@ public:
 
 	/** Get the player spacecraft */
 	TSharedPtr<struct FNovaSpacecraft> GetSpacecraft() const;
-
 };

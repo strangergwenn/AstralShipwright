@@ -6,18 +6,17 @@
 #include "Slate/SlateGameResources.h"
 #include "NovaMainTheme.generated.h"
 
-
 USTRUCT()
 struct FNovaMainTheme : public FSlateWidgetStyle
 {
 	GENERATED_BODY()
 
 	/*----------------------------------------------------
-		Interface
+	    Interface
 	----------------------------------------------------*/
 
 	static const FName TypeName;
-	const FName GetTypeName() const override
+	const FName        GetTypeName() const override
 	{
 		return TypeName;
 	}
@@ -35,9 +34,8 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 		OutBrushes.Add(&MainMenuGenericBorder);
 	}
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 	// Main
@@ -67,12 +65,10 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 
 	// Notifications
 	UPROPERTY(EditDefaultsOnly, Category = Notification) int32 NotificationDisplayHeight;
-
 };
 
-
 /*----------------------------------------------------
-	Wrapper class
+    Wrapper class
 ----------------------------------------------------*/
 
 UCLASS()
@@ -81,7 +77,6 @@ class UNovaMainThemeContainer : public USlateWidgetStyleContainerBase
 	GENERATED_BODY()
 
 public:
-
 	virtual const struct FSlateWidgetStyle* const GetStyle() const override
 	{
 		return static_cast<const struct FSlateWidgetStyle*>(&Style);
@@ -89,5 +84,4 @@ public:
 
 	UPROPERTY(Category = Nova, EditDefaultsOnly, meta = (ShowOnlyInnerProperties))
 	FNovaMainTheme Style;
-
 };

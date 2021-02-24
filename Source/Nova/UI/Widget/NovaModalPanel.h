@@ -8,17 +8,14 @@
 
 #include "Widgets/SCompoundWidget.h"
 
-
 /** Modal panel that blocks input, steals focus and blurs the background */
 class SNovaModalPanel : public SNovaNavigationPanel
 {
 	/*----------------------------------------------------
-		Slate arguments
+	    Slate arguments
 	----------------------------------------------------*/
 
-	SLATE_BEGIN_ARGS(SNovaModalPanel)
-		: _Menu(nullptr)
-		, _ParentPanel(nullptr)
+	SLATE_BEGIN_ARGS(SNovaModalPanel) : _Menu(nullptr), _ParentPanel(nullptr)
 	{}
 
 	SLATE_ARGUMENT(class SNovaMenu*, Menu)
@@ -33,14 +30,11 @@ class SNovaModalPanel : public SNovaNavigationPanel
 
 	SLATE_END_ARGS()
 
-
 public:
-
 	void Construct(const FArguments& InArgs);
 
-
 	/*----------------------------------------------------
-		Interaction
+	    Interaction
 	----------------------------------------------------*/
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
@@ -52,11 +46,8 @@ public:
 	virtual bool Cancel() override;
 
 	/** Show the panel and take focus, with optional callbacks and an optional content block */
-	void Show(FText Title, FText Text,
-		FSimpleDelegate NewOnConfirmed,
-		FSimpleDelegate NewOnIgnore = FSimpleDelegate(),
-		FSimpleDelegate NewOnCancel = FSimpleDelegate(),
-		TSharedPtr<SWidget> Content = TSharedPtr<SWidget>());
+	void Show(FText Title, FText Text, FSimpleDelegate NewOnConfirmed, FSimpleDelegate NewOnIgnore = FSimpleDelegate(),
+		FSimpleDelegate NewOnCancel = FSimpleDelegate(), TSharedPtr<SWidget> Content = TSharedPtr<SWidget>());
 
 	/** Hide the panel, set focus back to the parent */
 	void Hide();
@@ -67,26 +58,22 @@ public:
 		return CurrentAlpha > 0;
 	}
 
-
 	/*----------------------------------------------------
-		Content callbacks
+	    Content callbacks
 	----------------------------------------------------*/
 
 protected:
-
 	EVisibility GetDismissVisibility() const;
 
 	FLinearColor GetColor() const;
 
 	FSlateColor GetBackgroundColor() const;
 
-
 	/*----------------------------------------------------
-		Callbacks
+	    Callbacks
 	----------------------------------------------------*/
 
 protected:
-
 	/** The panel has been asked by the user to close by confirming */
 	void OnConfirmPanel();
 
@@ -96,31 +83,28 @@ protected:
 	/** The panel has been asked by the user to close by canceling */
 	void OnCancelPanel();
 
-
 	/*----------------------------------------------------
-		Private data
+	    Private data
 	----------------------------------------------------*/
 
 protected:
-
 	// Parent menu reference
-	SNovaNavigationPanel*                         ParentPanel;
+	SNovaNavigationPanel* ParentPanel;
 
 	// Settings
-	float                                         FadeDuration;
-	FSimpleDelegate                               OnConfirmed;
-	FSimpleDelegate                               OnDismissed;
-	FSimpleDelegate                               OnCancelled;
+	float           FadeDuration;
+	FSimpleDelegate OnConfirmed;
+	FSimpleDelegate OnDismissed;
+	FSimpleDelegate OnCancelled;
 
 	// Widgets
-	TSharedPtr<STextBlock>                        TitleText;
-	TSharedPtr<STextBlock>                        InformationText;
-	TSharedPtr<SBox>                              ContentBox;
-	TSharedPtr<SWidget>                           EmptyWidget;
+	TSharedPtr<STextBlock> TitleText;
+	TSharedPtr<STextBlock> InformationText;
+	TSharedPtr<SBox>       ContentBox;
+	TSharedPtr<SWidget>    EmptyWidget;
 
 	// Data
-	bool                                          ShouldShow;
-	float                                         CurrentFadeTime;
-	float                                         CurrentAlpha;
-
+	bool  ShouldShow;
+	float CurrentFadeTime;
+	float CurrentAlpha;
 };

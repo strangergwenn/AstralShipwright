@@ -7,23 +7,19 @@
 #include "Components/DecalComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
 FNovaMeshInterfaceBehavior::FNovaMeshInterfaceBehavior()
-	: ComponentMaterial(nullptr)
-	, CurrentMaterializationState(true)
-	, CurrentMaterializationTime(0)
+	: ComponentMaterial(nullptr), CurrentMaterializationState(true), CurrentMaterializationTime(0)
 {
 	MaterializationDuration = 0.75f;
-	ParameterFadeDuration = 0.5f;
+	ParameterFadeDuration   = 0.5f;
 }
 
-
 /*----------------------------------------------------
-	Implementation
+    Implementation
 ----------------------------------------------------*/
 
 void FNovaMeshInterfaceBehavior::SetupMaterial(UPrimitiveComponent* Mesh, UMaterialInterface* Material)
@@ -44,7 +40,8 @@ void FNovaMeshInterfaceBehavior::TickMaterial(float DeltaTime)
 	CurrentMaterializationTime = FMath::Clamp(CurrentMaterializationTime, 0.0f, MaterializationDuration);
 	if (ComponentMaterial)
 	{
-		float Alpha = FMath::InterpEaseInOut(0.0f, 1.0f, CurrentMaterializationTime / MaterializationDuration, ENovaUIConstants::EaseStandard);
+		float Alpha =
+			FMath::InterpEaseInOut(0.0f, 1.0f, CurrentMaterializationTime / MaterializationDuration, ENovaUIConstants::EaseStandard);
 		ComponentMaterial->SetScalarParameterValue("MaterializeAlpha", Alpha);
 	}
 
@@ -56,7 +53,8 @@ void FNovaMeshInterfaceBehavior::TickMaterial(float DeltaTime)
 
 		if (Request.IsColor)
 		{
-			FLinearColor Value = FMath::InterpEaseInOut(PreviousParameterColorValues[Request.Name], Request.ColorValue, Request.Time / ParameterFadeDuration, ENovaUIConstants::EaseStandard);
+			FLinearColor Value = FMath::InterpEaseInOut(PreviousParameterColorValues[Request.Name], Request.ColorValue,
+				Request.Time / ParameterFadeDuration, ENovaUIConstants::EaseStandard);
 			ComponentMaterial->SetVectorParameterValue(Request.Name, Value);
 
 			if (Request.Time >= ParameterFadeDuration)
@@ -66,7 +64,8 @@ void FNovaMeshInterfaceBehavior::TickMaterial(float DeltaTime)
 		}
 		else
 		{
-			float Value = FMath::InterpEaseInOut(PreviousParameterFloatValues[Request.Name], Request.FloatValue, Request.Time / ParameterFadeDuration, ENovaUIConstants::EaseStandard);
+			float Value = FMath::InterpEaseInOut(PreviousParameterFloatValues[Request.Name], Request.FloatValue,
+				Request.Time / ParameterFadeDuration, ENovaUIConstants::EaseStandard);
 			ComponentMaterial->SetScalarParameterValue(Request.Name, Value);
 
 			if (Request.Time >= ParameterFadeDuration)
@@ -114,14 +113,13 @@ void FNovaMeshInterfaceBehavior::RequestParameter(FName Name, float Value, bool 
 	{
 		ComponentMaterial->SetScalarParameterValue(Name, Value);
 
-		NLOG("FNovaMeshInterfaceBehavior::RequestParameter : immediate value %.2f for '%s'",
-			Value, *Name.ToString());
+		NLOG("FNovaMeshInterfaceBehavior::RequestParameter : immediate value %.2f for '%s'", Value, *Name.ToString());
 	}
 	else
 	{
 		FNovaMaterialParameterRequest Request(Name, Value);
-		int32 RequestIndex = CurrentRequests.Find(Request);
-		float PreviousValue = Value;
+		int32                         RequestIndex  = CurrentRequests.Find(Request);
+		float                         PreviousValue = Value;
 		ComponentMaterial->GetScalarParameterValue(FHashedMaterialParameterInfo(Name), PreviousValue);
 
 		if (RequestIndex != INDEX_NONE)
@@ -134,8 +132,8 @@ void FNovaMeshInterfaceBehavior::RequestParameter(FName Name, float Value, bool 
 			PreviousParameterFloatValues.Add(Name, PreviousValue);
 		}
 
-		NLOG("FNovaMeshInterfaceBehavior::RequestParameter : new value %.2f for '%s' (previously %.2f)",
-			Value, *Name.ToString(), PreviousValue);
+		NLOG("FNovaMeshInterfaceBehavior::RequestParameter : new value %.2f for '%s' (previously %.2f)", Value, *Name.ToString(),
+			PreviousValue);
 
 		CurrentRequests.Add(Request);
 	}
@@ -147,20 +145,20 @@ void FNovaMeshInterfaceBehavior::RequestParameter(FName Name, FLinearColor Value
 	{
 		ComponentMaterial->SetVectorParameterValue(Name, Value);
 
-		NLOG("FNovaMeshInterfaceBehavior::RequestParameter : immediate value %.2f, %.2f, %.2f, %.2f for '%s'",
-			Value.R, Value.G, Value.B, Value.A, *Name.ToString());
+		NLOG("FNovaMeshInterfaceBehavior::RequestParameter : immediate value %.2f, %.2f, %.2f, %.2f for '%s'", Value.R, Value.G, Value.B,
+			Value.A, *Name.ToString());
 	}
 	else
 	{
 		FNovaMaterialParameterRequest Request(Name, Value);
-		int32 RequestIndex = CurrentRequests.Find(Request);
-		FLinearColor PreviousValue = Value;
+		int32                         RequestIndex  = CurrentRequests.Find(Request);
+		FLinearColor                  PreviousValue = Value;
 		ComponentMaterial->GetVectorParameterValue(FHashedMaterialParameterInfo(Name), PreviousValue);
 
 		if (RequestIndex != INDEX_NONE)
 		{
-			NLOG("FNovaMeshInterfaceBehavior::RequestParameter : ignoring value %.2f, %.2f, %.2f, %.2f for '%s'",
-				Value.R, Value.G, Value.B, Value.A, *Name.ToString());
+			NLOG("FNovaMeshInterfaceBehavior::RequestParameter : ignoring value %.2f, %.2f, %.2f, %.2f for '%s'", Value.R, Value.G, Value.B,
+				Value.A, *Name.ToString());
 
 			return;
 		}
@@ -189,15 +187,14 @@ FVector INovaMeshInterface::GetExtent() const
 	return FVector::ZeroVector;
 }
 
-
 /*----------------------------------------------------
-	Full-collision component movement
+    Full-collision component movement
 ----------------------------------------------------*/
 
 static void PullBackHit(FHitResult& Hit, const FVector& Start, const FVector& End, const float Dist)
 {
 	const float DesiredTimeBack = FMath::Clamp(0.1f, 0.1f / Dist, 1.f / Dist) + 0.001f;
-	Hit.Time = FMath::Clamp(Hit.Time - DesiredTimeBack, 0.f, 1.f);
+	Hit.Time                    = FMath::Clamp(Hit.Time - DesiredTimeBack, 0.f, 1.f);
 }
 
 static bool IsValidHitResult(const UWorld* InWorld, FHitResult const& TestHit, FVector const& MovementDirDenormalized)
@@ -212,9 +209,8 @@ static bool IsValidHitResult(const UWorld* InWorld, FHitResult const& TestHit, F
 	}
 }
 
-bool INovaMeshInterface::MoveComponentHierarchy(UPrimitiveComponent* RootComponent, const FVector& OriginalLocation,
-	const FVector& Delta, const FQuat& NewRotationQuat,
-	bool bSweep, FHitResult* OutHit, ETeleportType Teleport,
+bool INovaMeshInterface::MoveComponentHierarchy(UPrimitiveComponent* RootComponent, const FVector& OriginalLocation, const FVector& Delta,
+	const FQuat& NewRotationQuat, bool bSweep, FHitResult* OutHit, ETeleportType Teleport,
 	FInternalSetWorldLocationAndRotation MovementCallback)
 {
 	bool Moved = false;
@@ -229,7 +225,7 @@ bool INovaMeshInterface::MoveComponentHierarchy(UPrimitiveComponent* RootCompone
 		TArray<UPrimitiveComponent*> ChildComponents;
 		RootComponent->GetOwner()->GetComponents<UPrimitiveComponent>(ChildComponents);
 
-		// Add attached components 
+		// Add attached components
 		TArray<AActor*> AttachedActors;
 		RootComponent->GetOwner()->GetAttachedActors(AttachedActors);
 		for (AActor* Actor : AttachedActors)
@@ -251,13 +247,13 @@ bool INovaMeshInterface::MoveComponentHierarchy(UPrimitiveComponent* RootCompone
 
 			// Build trace parameters
 			UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Component);
-			const FVector ChildTraceStart = PrimitiveComponent->GetComponentLocation();
-			const FVector ChildTraceEnd = ChildTraceStart + Delta;
+			const FVector        ChildTraceStart    = PrimitiveComponent->GetComponentLocation();
+			const FVector        ChildTraceEnd      = ChildTraceStart + Delta;
 
 			// Trace
 			PrimitiveComponent->InitSweepCollisionParams(Params, ResponseParam);
-			RootComponent->GetWorld()->ComponentSweepMulti(ChildComponentHits, PrimitiveComponent,
-				ChildTraceStart, ChildTraceEnd, PrimitiveComponent->GetComponentRotation(), Params);
+			RootComponent->GetWorld()->ComponentSweepMulti(
+				ChildComponentHits, PrimitiveComponent, ChildTraceStart, ChildTraceEnd, PrimitiveComponent->GetComponentRotation(), Params);
 
 			// Handle hit results
 			if (ChildComponentHits.Num())
@@ -268,7 +264,7 @@ bool INovaMeshInterface::MoveComponentHierarchy(UPrimitiveComponent* RootCompone
 				}
 
 				// Look for the most movement opposing hit normal
-				int32 BlockingHitIndex = INDEX_NONE;
+				int32 BlockingHitIndex          = INDEX_NONE;
 				float BlockingHitNormalDotDelta = BIG_NUMBER;
 				for (int32 HitIdx = 0; HitIdx < ChildComponentHits.Num(); HitIdx++)
 				{
@@ -284,7 +280,7 @@ bool INovaMeshInterface::MoveComponentHierarchy(UPrimitiveComponent* RootCompone
 								if (NormalDotDelta < BlockingHitNormalDotDelta)
 								{
 									BlockingHitNormalDotDelta = NormalDotDelta;
-									BlockingHitIndex = HitIdx;
+									BlockingHitIndex          = HitIdx;
 								}
 							}
 							else if (BlockingHitIndex == INDEX_NONE)
@@ -305,18 +301,18 @@ bool INovaMeshInterface::MoveComponentHierarchy(UPrimitiveComponent* RootCompone
 				if (OutHit->bBlockingHit)
 				{
 					/*VLOG("Actor '%s' with component '%s' collided with actor '%s' on component '%s'",
-						*Component->GetOwner()->GetName(),
-						*Component->GetName(),
-						*OutHit->GetActor()->GetName(),
-						*OutHit->GetComponent()->GetName());*/
+					 *Component->GetOwner()->GetName(),
+					 *Component->GetName(),
+					 *OutHit->GetActor()->GetName(),
+					 *OutHit->GetComponent()->GetName());*/
 
-					FVector NewLocation = OriginalLocation + (OutHit->Time * Delta);
+					FVector     NewLocation       = OriginalLocation + (OutHit->Time * Delta);
 					const float MinMovementDistSq = (bSweep ? FMath::Square(4.f * KINDA_SMALL_NUMBER) : 0.f);
 
 					const FVector ToNewLocation = (NewLocation - OriginalLocation);
 					if (ToNewLocation.SizeSquared() <= MinMovementDistSq)
 					{
-						NewLocation = OriginalLocation;
+						NewLocation  = OriginalLocation;
 						OutHit->Time = 0.f;
 					}
 

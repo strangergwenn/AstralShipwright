@@ -14,12 +14,10 @@
 #include "Components/DecalComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
-
 #define LOCTEXT_NAMESPACE "UNovaSpacecraftCompartmentComponent"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
 UNovaSpacecraftCompartmentComponent::UNovaSpacecraftCompartmentComponent()
@@ -33,12 +31,11 @@ UNovaSpacecraftCompartmentComponent::UNovaSpacecraftCompartmentComponent()
 {
 	// Settings
 	PrimaryComponentTick.bCanEverTick = true;
-	AnimationDuration = 0.5f;
+	AnimationDuration                 = 0.5f;
 }
 
-
 /*----------------------------------------------------
-	Compartment API
+    Compartment API
 ----------------------------------------------------*/
 
 void UNovaSpacecraftCompartmentComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -49,8 +46,8 @@ void UNovaSpacecraftCompartmentComponent::TickComponent(float DeltaTime, ELevelT
 	if (!IsAtRequestedLocation())
 	{
 		CurrentAnimationTime += DeltaTime;
-		float AnimationAlpha = FMath::Clamp(CurrentAnimationTime / AnimationDuration, 0.0f, 1.0f);
-		FVector Location = FMath::InterpEaseInOut(LastLocation, RequestedLocation, AnimationAlpha, ENovaUIConstants::EaseStandard);
+		float   AnimationAlpha = FMath::Clamp(CurrentAnimationTime / AnimationDuration, 0.0f, 1.0f);
+		FVector Location       = FMath::InterpEaseInOut(LastLocation, RequestedLocation, AnimationAlpha, ENovaUIConstants::EaseStandard);
 		SetRelativeLocation(Location);
 	}
 }
@@ -61,7 +58,7 @@ void UNovaSpacecraftCompartmentComponent::SetRequestedLocation(const FVector& Lo
 
 	if (LocationInitialized && !ImmediateMode)
 	{
-		LastLocation = GetRelativeLocation();
+		LastLocation         = GetRelativeLocation();
 		CurrentAnimationTime = 0;
 	}
 	else
@@ -83,14 +80,14 @@ FVector UNovaSpacecraftCompartmentComponent::GetCompartmentLength(const struct F
 	}
 }
 
-
 /*----------------------------------------------------
-	Processing methods
+    Processing methods
 ----------------------------------------------------*/
 
 void UNovaSpacecraftCompartmentComponent::ProcessCompartment(const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
 {
-	auto ProcessElement = [&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
+	auto ProcessElement = [&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset,
+							  FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
 	{
 		Callback.Execute(Element, Asset, AdditionalComponent);
 	};
@@ -98,11 +95,14 @@ void UNovaSpacecraftCompartmentComponent::ProcessCompartment(const FNovaCompartm
 	// Process the structural elements
 	const UNovaCompartmentDescription* CompartmentDescription = Compartment.Description;
 	ProcessElement(MainStructure, CompartmentDescription ? CompartmentDescription->MainStructure : nullptr);
-	ProcessElement(OuterStructure, CompartmentDescription ? (Compartment.NeedsOuterSkirt ? CompartmentDescription->OuterStructure : nullptr) : nullptr);
+	ProcessElement(OuterStructure,
+		CompartmentDescription ? (Compartment.NeedsOuterSkirt ? CompartmentDescription->OuterStructure : nullptr) : nullptr);
 	ProcessElement(MainPiping, CompartmentDescription ? CompartmentDescription->GetMainPiping(Compartment.NeedsMainPiping) : nullptr);
 	ProcessElement(MainWiring, CompartmentDescription ? CompartmentDescription->GetMainWiring(Compartment.NeedsMainWiring) : nullptr);
 	ProcessElement(MainHull, CompartmentDescription ? CompartmentDescription->GetMainHull(Compartment.HullType) : nullptr);
-	ProcessElement(OuterHull, CompartmentDescription ? (Compartment.NeedsOuterSkirt ? CompartmentDescription->GetOuterHull(Compartment.HullType) : nullptr) : nullptr);
+	ProcessElement(OuterHull, CompartmentDescription
+								  ? (Compartment.NeedsOuterSkirt ? CompartmentDescription->GetOuterHull(Compartment.HullType) : nullptr)
+								  : nullptr);
 
 	// Process modules
 	for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
@@ -117,51 +117,56 @@ void UNovaSpacecraftCompartmentComponent::ProcessCompartment(const FNovaCompartm
 	}
 }
 
-void UNovaSpacecraftCompartmentComponent::ProcessModule(FNovaModuleAssembly& Assembly, const FNovaCompartmentModule& Module, const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
+void UNovaSpacecraftCompartmentComponent::ProcessModule(FNovaModuleAssembly& Assembly, const FNovaCompartmentModule& Module,
+	const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
 {
-	auto ProcessElement = [&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
+	auto ProcessElement = [&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset,
+							  FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
 	{
 		Callback.Execute(Element, Asset, AdditionalComponent);
 	};
 
 	const UNovaCompartmentDescription* CompartmentDescription = Compartment.Description;
-	const UNovaModuleDescription* ModuleDescription = Module.Description;
+	const UNovaModuleDescription*      ModuleDescription      = Module.Description;
 
 	// Process the module elements
 	ProcessElement(Assembly.Segment, ModuleDescription ? ModuleDescription->Segment : nullptr);
-	ProcessElement(Assembly.ForwardBulkhead, ModuleDescription ? ModuleDescription->GetBulkhead(Module.ForwardBulkheadType, true) : nullptr);
+	ProcessElement(
+		Assembly.ForwardBulkhead, ModuleDescription ? ModuleDescription->GetBulkhead(Module.ForwardBulkheadType, true) : nullptr);
 	ProcessElement(Assembly.AftBulkhead, ModuleDescription ? ModuleDescription->GetBulkhead(Module.AftBulkheadType, false) : nullptr);
-	ProcessElement(Assembly.ConnectionPiping, CompartmentDescription ? CompartmentDescription->GetSkirtPiping(Module.SkirtPipingType) : nullptr);
-	ProcessElement(Assembly.ConnectionWiring, CompartmentDescription ? CompartmentDescription->GetConnectionWiring(Module.NeedsWiring) : nullptr);
+	ProcessElement(
+		Assembly.ConnectionPiping, CompartmentDescription ? CompartmentDescription->GetSkirtPiping(Module.SkirtPipingType) : nullptr);
+	ProcessElement(
+		Assembly.ConnectionWiring, CompartmentDescription ? CompartmentDescription->GetConnectionWiring(Module.NeedsWiring) : nullptr);
 }
 
-void UNovaSpacecraftCompartmentComponent::ProcessEquipment(FNovaEquipmentAssembly& Assembly, const UNovaEquipmentDescription* EquipmentDescription, const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
+void UNovaSpacecraftCompartmentComponent::ProcessEquipment(FNovaEquipmentAssembly& Assembly,
+	const UNovaEquipmentDescription* EquipmentDescription, const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
 {
-	auto ProcessElement = [&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
+	auto ProcessElement = [&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset,
+							  FNovaAdditionalComponent AdditionalComponent = FNovaAdditionalComponent())
 	{
 		Callback.Execute(Element, Asset, AdditionalComponent);
 	};
 
 	// Process the equipment elements
-	ProcessElement(Assembly.Equipment,
-		EquipmentDescription ? EquipmentDescription->GetMesh() : nullptr, 
+	ProcessElement(Assembly.Equipment, EquipmentDescription ? EquipmentDescription->GetMesh() : nullptr,
 		EquipmentDescription ? EquipmentDescription->AdditionalComponent : FNovaAdditionalComponent());
 }
 
-
 /*----------------------------------------------------
-	Construction methods
+    Construction methods
 ----------------------------------------------------*/
 
 void UNovaSpacecraftCompartmentComponent::BuildCompartment(const struct FNovaCompartment& Compartment, int32 Index)
 {
 	// Build all elements first for the most general and basic setup
-	ProcessCompartment(Compartment,
-		FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
-			{
-				BuildElement(Element, Asset, AdditionalComponent);
-			})
-	);
+	ProcessCompartment(
+		Compartment, FNovaAssemblyCallback::CreateLambda(
+						 [&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
+						 {
+							 BuildElement(Element, Asset, AdditionalComponent);
+						 }));
 
 	// Build structure & hull
 	FVector StructureOffset = -0.5f * GetElementLength(MainStructure);
@@ -185,19 +190,21 @@ void UNovaSpacecraftCompartmentComponent::BuildCompartment(const struct FNovaCom
 	// Build equipments
 	for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
 	{
-		BuildEquipment(Equipments[EquipmentIndex], Compartment.Equipments[EquipmentIndex], Compartment.Description->GetEquipmentSlot(EquipmentIndex), Compartment);
+		BuildEquipment(Equipments[EquipmentIndex], Compartment.Equipments[EquipmentIndex],
+			Compartment.Description->GetEquipmentSlot(EquipmentIndex), Compartment);
 	}
 }
 
-void UNovaSpacecraftCompartmentComponent::BuildModule(FNovaModuleAssembly& Assembly, const FNovaModuleSlot& Slot, const FNovaCompartment& Compartment)
+void UNovaSpacecraftCompartmentComponent::BuildModule(
+	FNovaModuleAssembly& Assembly, const FNovaModuleSlot& Slot, const FNovaCompartment& Compartment)
 {
 	NCHECK(MainStructure.Mesh != nullptr);
 
 	// Get offsets
-	FTransform BaseTransform = MainStructure.Mesh->GetRelativeSocketTransform(Slot.SocketName);
-	FVector StructureOffset = -0.5f * GetElementLength(MainStructure);
-	FVector BulkheadOffset = BaseTransform.GetRotation().RotateVector(0.5f * GetElementLength(Assembly.Segment));
-	FRotator Rotation = BaseTransform.GetRotation().Rotator();
+	FTransform BaseTransform   = MainStructure.Mesh->GetRelativeSocketTransform(Slot.SocketName);
+	FVector    StructureOffset = -0.5f * GetElementLength(MainStructure);
+	FVector    BulkheadOffset  = BaseTransform.GetRotation().RotateVector(0.5f * GetElementLength(Assembly.Segment));
+	FRotator   Rotation        = BaseTransform.GetRotation().Rotator();
 
 	// Offset the module elements
 	SetElementOffset(Assembly.Segment, BaseTransform.GetLocation() + StructureOffset, Rotation);
@@ -207,7 +214,8 @@ void UNovaSpacecraftCompartmentComponent::BuildModule(FNovaModuleAssembly& Assem
 	SetElementOffset(Assembly.ConnectionWiring, BaseTransform.GetLocation() + StructureOffset, Rotation);
 }
 
-void UNovaSpacecraftCompartmentComponent::BuildEquipment(FNovaEquipmentAssembly& Assembly, const UNovaEquipmentDescription* EquipmentDescription, const FNovaEquipmentSlot& Slot, const FNovaCompartment& Compartment)
+void UNovaSpacecraftCompartmentComponent::BuildEquipment(FNovaEquipmentAssembly& Assembly,
+	const UNovaEquipmentDescription* EquipmentDescription, const FNovaEquipmentSlot& Slot, const FNovaCompartment& Compartment)
 {
 	if (EquipmentDescription)
 	{
@@ -216,15 +224,16 @@ void UNovaSpacecraftCompartmentComponent::BuildEquipment(FNovaEquipmentAssembly&
 	NCHECK(MainStructure.Mesh != nullptr);
 
 	// Get offsets
-	FTransform BaseTransform = MainStructure.Mesh->GetRelativeSocketTransform(Slot.SocketName);
-	FVector StructureOffset = -0.5f * GetElementLength(MainStructure);
+	FTransform BaseTransform   = MainStructure.Mesh->GetRelativeSocketTransform(Slot.SocketName);
+	FVector    StructureOffset = -0.5f * GetElementLength(MainStructure);
 
 	// Offset the equipment and set the animation if any
 	SetElementOffset(Assembly.Equipment, BaseTransform.GetLocation() + StructureOffset, BaseTransform.GetRotation().Rotator());
 	SetElementAnimation(Assembly.Equipment, EquipmentDescription ? EquipmentDescription->SkeletalAnimation : nullptr);
 }
 
-void UNovaSpacecraftCompartmentComponent::BuildElement(FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
+void UNovaSpacecraftCompartmentComponent::BuildElement(
+	FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 {
 	if (Element.Mesh)
 	{
@@ -251,8 +260,8 @@ void UNovaSpacecraftCompartmentComponent::BuildElement(FNovaAssemblyElement& Ele
 	}
 
 	// Detect whether we need to construct or re-construct the additional component
-	INovaAdditionalComponentInterface* AdditionalComponentInterface = nullptr;
-	bool NeedConstructingAdditionalElement = AdditionalComponent.ComponentClass.Get() != nullptr;
+	INovaAdditionalComponentInterface* AdditionalComponentInterface      = nullptr;
+	bool                               NeedConstructingAdditionalElement = AdditionalComponent.ComponentClass.Get() != nullptr;
 	if (PrimitiveMesh)
 	{
 		TArray<USceneComponent*> ChildComponents;
@@ -354,19 +363,19 @@ void UNovaSpacecraftCompartmentComponent::BuildElement(FNovaAssemblyElement& Ele
 			UPrimitiveComponent* MeshComponent = Cast<UPrimitiveComponent>(Element.Mesh);
 			NCHECK(MeshComponent);
 			USceneComponent* AdditionalMeshComponent = Cast<USceneComponent>(AdditionalComponentInterface);
-			AdditionalMeshComponent->AttachToComponent(MeshComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), AdditionalComponent.SocketName);
+			AdditionalMeshComponent->AttachToComponent(
+				MeshComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), AdditionalComponent.SocketName);
 			AdditionalMeshComponent->RegisterComponent();
 		}
 	}
 }
 
-
 /*----------------------------------------------------
-	Helpers
+    Helpers
 ----------------------------------------------------*/
 
-void UNovaSpacecraftCompartmentComponent::AttachElementToSocket(FNovaAssemblyElement& Element, const FNovaAssemblyElement& AttachElement,
-	FName SocketName, const FVector& Offset)
+void UNovaSpacecraftCompartmentComponent::AttachElementToSocket(
+	FNovaAssemblyElement& Element, const FNovaAssemblyElement& AttachElement, FName SocketName, const FVector& Offset)
 {
 	if (Element.Mesh && AttachElement.Mesh)
 	{
@@ -433,8 +442,8 @@ FVector UNovaSpacecraftCompartmentComponent::GetElementLength(TSoftObjectPtr<UOb
 	if (Asset->IsA(UStaticMesh::StaticClass()))
 	{
 		FBoxSphereBounds MeshBounds = Cast<UStaticMesh>(Asset.Get())->GetBounds();
-		FVector Min = MeshBounds.Origin - MeshBounds.BoxExtent;
-		FVector Max = MeshBounds.Origin + MeshBounds.BoxExtent;
+		FVector          Min        = MeshBounds.Origin - MeshBounds.BoxExtent;
+		FVector          Max        = MeshBounds.Origin + MeshBounds.BoxExtent;
 
 		return FVector((Max - Min).X, 0, 0);
 	}
@@ -443,6 +452,5 @@ FVector UNovaSpacecraftCompartmentComponent::GetElementLength(TSoftObjectPtr<UOb
 		return FVector::ZeroVector;
 	}
 }
-
 
 #undef LOCTEXT_NAMESPACE

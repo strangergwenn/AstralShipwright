@@ -12,47 +12,45 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Layout/SBorder.h"
 
-
 /*----------------------------------------------------
-	Construct
+    Construct
 ----------------------------------------------------*/
 
 void SNovaButton::Construct(const FArguments& InArgs)
 {
 	// Arguments
-	Text = InArgs._Text;
-	HelpText = InArgs._HelpText;
-	Action = InArgs._Action;
-	ThemeName = InArgs._Theme;
-	SizeName = InArgs._Size;
-	Icon = InArgs._Icon;
-	ButtonEnabled = InArgs._Enabled;
+	Text            = InArgs._Text;
+	HelpText        = InArgs._HelpText;
+	Action          = InArgs._Action;
+	ThemeName       = InArgs._Theme;
+	SizeName        = InArgs._Size;
+	Icon            = InArgs._Icon;
+	ButtonEnabled   = InArgs._Enabled;
 	ButtonFocusable = InArgs._Focusable;
-	BorderRotation = InArgs._BorderRotation;
-	IsToggle = InArgs._Toggle;
-	OnFocused = InArgs._OnFocused;
-	OnClicked = InArgs._OnClicked;
+	BorderRotation  = InArgs._BorderRotation;
+	IsToggle        = InArgs._Toggle;
+	OnFocused       = InArgs._OnFocused;
+	OnClicked       = InArgs._OnClicked;
 	OnDoubleClicked = InArgs._OnDoubleClicked;
 
 	// Setup
-	Focused = false;
-	Hovered = false;
-	Active = false;
+	Focused                       = false;
+	Hovered                       = false;
+	Active                        = false;
 	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
-	const FNovaButtonSize& Size = FNovaStyleSet::GetButtonSize(SizeName);
+	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
 
 	// Settings
 	AnimationDuration = 0.2f;
 
 	// Parent constructor
 	SButton::Construct(SButton::FArguments()
-		.ButtonStyle(FNovaStyleSet::GetStyle(), "Nova.Button")
-		.ButtonColorAndOpacity(FLinearColor(0, 0, 0, 0))
-		.ContentPadding(0)
-		.OnClicked(this, &SNovaButton::OnButtonClicked)
-	);
+						   .ButtonStyle(FNovaStyleSet::GetStyle(), "Nova.Button")
+						   .ButtonColorAndOpacity(FLinearColor(0, 0, 0, 0))
+						   .ContentPadding(0)
+						   .OnClicked(this, &SNovaButton::OnButtonClicked));
 
-	// Structure
+	// clang-format off
 	ChildSlot
 	.VAlign(VAlign_Center)
 	.HAlign(HAlign_Center)
@@ -178,14 +176,14 @@ void SNovaButton::Construct(const FArguments& InArgs)
 		InnerContainer->SetHAlign(HAlign_Fill);
 		InnerContainer->SetVAlign(VAlign_Fill);
 	}
+	// clang-format on
 
 	// Set opacity
 	ColorAndOpacity.BindRaw(this, &SNovaButton::GetMainColor);
 }
 
-
 /*----------------------------------------------------
-	Interaction
+    Interaction
 ----------------------------------------------------*/
 
 void SNovaButton::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
@@ -195,15 +193,15 @@ void SNovaButton::Tick(const FGeometry& AllottedGeometry, const double CurrentTi
 	bIsFocusable = ButtonFocusable.Get();
 
 	// Decide how animations should evolve
-	float TargetColorAnim = 0;
-	float TargetSizeAnim = 0;
+	float TargetColorAnim    = 0;
+	float TargetSizeAnim     = 0;
 	float TargetDisabledAnim = 0;
 	if (IsButtonEnabled())
 	{
 		if (IsFocused())
 		{
 			TargetColorAnim = 1.0f;
-			TargetSizeAnim = 0.5f;
+			TargetSizeAnim  = 0.5f;
 		}
 		if (IsHovered())
 		{
@@ -320,9 +318,8 @@ FText SNovaButton::GetHelpText()
 	return HelpText.Get();
 }
 
-
 /*----------------------------------------------------
-	Callbacks
+    Callbacks
 ----------------------------------------------------*/
 
 FKey SNovaButton::GetActionKey() const
@@ -351,8 +348,7 @@ FSlateColor SNovaButton::GetBackgroundBrushColor() const
 	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
 
 	FLinearColor Color = FLinearColor::White;
-	Color.A = FMath::InterpEaseInOut(0.0f, 1.0f,
-		State.CurrentColorAnimationAlpha, ENovaUIConstants::EaseStandard);
+	Color.A            = FMath::InterpEaseInOut(0.0f, 1.0f, State.CurrentColorAnimationAlpha, ENovaUIConstants::EaseStandard);
 
 	return Color;
 }
@@ -361,17 +357,17 @@ FLinearColor SNovaButton::GetMainColor() const
 {
 	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
 
-	return FMath::InterpEaseInOut(FLinearColor::White, Theme.DisabledColor,
-		State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+	return FMath::InterpEaseInOut(
+		FLinearColor::White, Theme.DisabledColor, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
 }
 
 FOptionalSize SNovaButton::GetWidth() const
 {
 	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
-	const FNovaButtonSize& Size = FNovaStyleSet::GetButtonSize(SizeName);
+	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
 
-	float Offset = FMath::InterpEaseInOut(Theme.AnimationPadding.Left + Theme.AnimationPadding.Right, 0.0f,
-		State.CurrentSizeAnimationAlpha, ENovaUIConstants::EaseLight);
+	float Offset = FMath::InterpEaseInOut(
+		Theme.AnimationPadding.Left + Theme.AnimationPadding.Right, 0.0f, State.CurrentSizeAnimationAlpha, ENovaUIConstants::EaseLight);
 
 	float RotationFactor = FMath::Abs(FMath::Cos(FMath::DegreesToRadians(BorderRotation)));
 
@@ -381,10 +377,10 @@ FOptionalSize SNovaButton::GetWidth() const
 FOptionalSize SNovaButton::GetHeight() const
 {
 	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
-	const FNovaButtonSize& Size = FNovaStyleSet::GetButtonSize(SizeName);
+	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
 
-	float Offset = FMath::InterpEaseInOut(Theme.AnimationPadding.Top + Theme.AnimationPadding.Bottom, 0.0f,
-		State.CurrentSizeAnimationAlpha, ENovaUIConstants::EaseLight);
+	float Offset = FMath::InterpEaseInOut(
+		Theme.AnimationPadding.Top + Theme.AnimationPadding.Bottom, 0.0f, State.CurrentSizeAnimationAlpha, ENovaUIConstants::EaseLight);
 
 	float RotationFactor = FMath::Abs(FMath::Cos(FMath::DegreesToRadians(BorderRotation)));
 
@@ -397,7 +393,7 @@ FSlateFontInfo SNovaButton::GetFont() const
 
 	if (Text.IsSet() || Text.IsBound())
 	{
-		float TextLength = Text.Get().ToString().Len();
+		float TextLength  = Text.Get().ToString().Len();
 		float ButtonWidth = GetDesiredSize().X;
 
 		if (TextLength > 0.09 * ButtonWidth)

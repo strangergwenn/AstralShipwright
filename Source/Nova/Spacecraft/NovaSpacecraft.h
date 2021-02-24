@@ -6,9 +6,8 @@
 #include "NovaSpacecraftTypes.h"
 #include "NovaSpacecraft.generated.h"
 
-
 /*----------------------------------------------------
-	Spacecraft description types
+    Spacecraft description types
 ----------------------------------------------------*/
 
 /** Module slot metadata */
@@ -18,7 +17,6 @@ struct FNovaModuleSlot
 	GENERATED_BODY()
 
 public:
-
 	// Socket to attach to on the structure mesh
 	UPROPERTY(Category = Compartment, EditDefaultsOnly)
 	FName SocketName;
@@ -35,7 +33,6 @@ struct FNovaEquipmentSlot
 	GENERATED_BODY()
 
 public:
-
 	// Socket to attach to on the structure mesh
 	UPROPERTY(Category = Compartment, EditDefaultsOnly)
 	FName SocketName;
@@ -52,7 +49,6 @@ class UNovaCompartmentDescription : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
-
 	/** Get a list of hull styles supported by this compartment */
 	TArray<ENovaHullType> GetSupportedHullTypes() const
 	{
@@ -88,13 +84,13 @@ public:
 	{
 		switch (Type)
 		{
-		default:
-		case ENovaSkirtPipingType::None:
-			return nullptr;
-		case ENovaSkirtPipingType::Simple:
-			return SimpleSkirtPiping;
-		case ENovaSkirtPipingType::Connection:
-			return ConnectionSkirtPiping;
+			default:
+			case ENovaSkirtPipingType::None:
+				return nullptr;
+			case ENovaSkirtPipingType::Simple:
+				return SimpleSkirtPiping;
+			case ENovaSkirtPipingType::Connection:
+				return ConnectionSkirtPiping;
 		}
 	}
 
@@ -123,46 +119,41 @@ public:
 	}
 
 public:
-	
 	// Main structural element
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> MainStructure = nullptr;
-	
+
 	// Skirt structural element
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> OuterStructure = nullptr;
 
-	
 	// Main piping element
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> MainPiping = nullptr;
-	
+
 	// Simple direct piping (skirt)
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> SimpleSkirtPiping = nullptr;
-	
+
 	// Tank-connected piping (skirt)
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> ConnectionSkirtPiping = nullptr;
 
-	
 	// Module-connected wiring
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> MainWiring = nullptr;
-	
+
 	// Module-connected wiring
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> ConnectionWiring = nullptr;
 
-	
 	// Decorative outer hull
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> MainHull = nullptr;
-	
+
 	// Decorative outer hull (skirt)
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> OuterHull = nullptr;
-
 
 	// Metadata for module slots
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
@@ -180,27 +171,25 @@ class UNovaModuleDescription : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
-
 	/** Get the appropriate bulkhead mesh */
 	TSoftObjectPtr<class UStaticMesh> GetBulkhead(ENovaBulkheadType Style, bool Forward) const
 	{
 		switch (Style)
 		{
-		case ENovaBulkheadType::None:
-			return nullptr;
-		case ENovaBulkheadType::Standard:
-			return Forward ? ForwardBulkhead : AftBulkhead;
-		case ENovaBulkheadType::Skirt:
-			return Forward ? nullptr : SkirtBulkhead;
-		case ENovaBulkheadType::Outer:
-			return Forward ? OuterForwardBulkhead : OuterAftBulkhead;
-		default:
-			return nullptr;
+			case ENovaBulkheadType::None:
+				return nullptr;
+			case ENovaBulkheadType::Standard:
+				return Forward ? ForwardBulkhead : AftBulkhead;
+			case ENovaBulkheadType::Skirt:
+				return Forward ? nullptr : SkirtBulkhead;
+			case ENovaBulkheadType::Outer:
+				return Forward ? OuterForwardBulkhead : OuterAftBulkhead;
+			default:
+				return nullptr;
 		}
 	}
 
 public:
-
 	// Main module segment
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> Segment = nullptr;
@@ -228,7 +217,6 @@ public:
 	// Whether the module needs tank piping
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	bool NeedsPiping = false;
-
 };
 
 /** Description of an optional compartment equipment */
@@ -238,7 +226,6 @@ class UNovaEquipmentDescription : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
-
 	TSoftObjectPtr<class UObject> GetMesh() const
 	{
 		if (!SkeletalEquipment.IsNull())
@@ -263,7 +250,6 @@ public:
 	}
 
 public:
-
 	// Animated equipment variant
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class USkeletalMesh> SkeletalEquipment;
@@ -283,12 +269,10 @@ public:
 	// Equipment requirement
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	ENovaEquipmentType EquipmentType;
-
 };
 
-
 /*----------------------------------------------------
-	Spacecraft data types
+    Spacecraft data types
 ----------------------------------------------------*/
 
 /** Compartment module data */
@@ -406,9 +390,7 @@ struct FNovaSpacecraft
 	GENERATED_BODY()
 
 public:
-
-	FNovaSpacecraft()
-		: Identifier(FGuid::NewGuid())
+	FNovaSpacecraft() : Identifier(FGuid::NewGuid())
 	{}
 
 	bool operator==(const FNovaSpacecraft& Other) const;
@@ -430,9 +412,7 @@ public:
 	/** Serialize the spacecraft */
 	static void SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
 
-
 public:
-
 	// Compartment data
 	UPROPERTY()
 	TArray<FNovaCompartment> Compartments;
@@ -440,5 +420,4 @@ public:
 	// Unique ID
 	UPROPERTY()
 	FGuid Identifier;
-
 };

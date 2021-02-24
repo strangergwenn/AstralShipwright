@@ -7,11 +7,12 @@
 #include "Nova/Game/NovaGameTypes.h"
 #include "Widgets/SCompoundWidget.h"
 
-
-class SNovaOverlay : public SCompoundWidget, public FGCObject
+class SNovaOverlay
+	: public SCompoundWidget
+	, public FGCObject
 {
 	/*----------------------------------------------------
-		Slate arguments
+	    Slate arguments
 	----------------------------------------------------*/
 
 	SLATE_BEGIN_ARGS(SNovaOverlay)
@@ -22,11 +23,10 @@ class SNovaOverlay : public SCompoundWidget, public FGCObject
 	SLATE_END_ARGS()
 
 public:
-
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
-		Interaction
+	    Interaction
 	----------------------------------------------------*/
 
 	/** Show a text notification on the screen */
@@ -41,16 +41,14 @@ public:
 	{
 		Collector.AddReferencedObject(NotificationIconMaterial);
 	}
-	
+
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
-
 	/*----------------------------------------------------
-		Content callbacks
+	    Content callbacks
 	----------------------------------------------------*/
 
 protected:
-
 	FText GetNotifyText() const;
 
 	FLinearColor GetColor() const;
@@ -59,37 +57,32 @@ protected:
 
 	FSlateColor GetTextColor() const;
 
-
 	/*----------------------------------------------------
-		Callbacks
+	    Callbacks
 	----------------------------------------------------*/
 
 protected:
-
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 protected:
-	
 	// Menu reference
-	TWeakObjectPtr<class UNovaMenuManager>        MenuManager;
+	TWeakObjectPtr<class UNovaMenuManager> MenuManager;
 
 	// Notification icon
-	TSharedPtr<FSlateBrush>                       NotificationIconBrush;
-	class UMaterialInstanceDynamic*               NotificationIconMaterial;
+	TSharedPtr<FSlateBrush>         NotificationIconBrush;
+	class UMaterialInstanceDynamic* NotificationIconMaterial;
 
 	// Settings
-	float                                         NotifyFadeDuration;
-	float                                         NotifyDisplayDuration;
+	float NotifyFadeDuration;
+	float NotifyDisplayDuration;
 
 	// Notification state
-	FText                                         DesiredNotifyText;
-	ENovaNotificationType                         DesiredNotifyType;
-	FText                                         CurrentNotifyText;
-	float                                         CurrentNotifyFadeTime;
-	float                                         CurrentNotifyDisplayTime;
-	float                                         CurrentNotifyAlpha;
-
+	FText                 DesiredNotifyText;
+	ENovaNotificationType DesiredNotifyType;
+	FText                 CurrentNotifyText;
+	float                 CurrentNotifyFadeTime;
+	float                 CurrentNotifyDisplayTime;
+	float                 CurrentNotifyAlpha;
 };

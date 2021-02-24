@@ -9,20 +9,19 @@
 
 #include "NovaSpacecraftDriveComponent.generated.h"
 
-
 /** Main drive component class that attaches to a mesh to add engine effects */
 UCLASS(ClassGroup = (Nova), meta = (BlueprintSpawnableComponent))
-class UNovaSpacecraftDriveComponent : public UStaticMeshComponent, public INovaAdditionalComponentInterface
+class UNovaSpacecraftDriveComponent
+	: public UStaticMeshComponent
+	, public INovaAdditionalComponentInterface
 {
 	GENERATED_BODY()
 
 public:
-
 	UNovaSpacecraftDriveComponent();
-	
 
 	/*----------------------------------------------------
-		Inherited
+	    Inherited
 	----------------------------------------------------*/
 
 	virtual void SetAdditionalAsset(TSoftObjectPtr<class UObject> AdditionalAsset) override;
@@ -31,22 +30,19 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	
 protected:
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 	// Exhaust template mesh
 	UPROPERTY()
-	class UStaticMesh*                            ExhaustMesh;
+	class UStaticMesh* ExhaustMesh;
 
 	// Exhaust material
 	UPROPERTY()
-	class UMaterialInstanceDynamic*               ExhaustMaterial;
+	class UMaterialInstanceDynamic* ExhaustMaterial;
 
 	// Current power
-	TNovaTimedAverage<float>                      ExhaustPower;
-
+	TNovaTimedAverage<float> ExhaustPower;
 };

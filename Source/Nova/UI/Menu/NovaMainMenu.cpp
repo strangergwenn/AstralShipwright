@@ -18,19 +18,14 @@
 
 #include "Nova/Nova.h"
 
-
 #define LOCTEXT_NAMESPACE "SNovaMainMenu"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
 SNovaMainMenu::SNovaMainMenu()
-	: TooltipDelay(0.5f)
-	, TooltipFadeDuration(ENovaUIConstants::FadeDurationShort)
-	, CurrentTooltipDelay(0)
-	, CurrentTooltipTime(0)
+	: TooltipDelay(0.5f), TooltipFadeDuration(ENovaUIConstants::FadeDurationShort), CurrentTooltipDelay(0), CurrentTooltipTime(0)
 {}
 
 void SNovaMainMenu::Construct(const FArguments& InArgs)
@@ -39,11 +34,9 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 
 	// Parent constructor
-	SNovaMenu::Construct(SNovaMenu::FArguments()
-		.MenuManager(InArgs._MenuManager)
-	);
+	SNovaMenu::Construct(SNovaMenu::FArguments().MenuManager(InArgs._MenuManager));
 
-	// Structure
+	// clang-format off
 	MainContainer->SetContent(
 		SAssignNew(TabView, SNovaTabView)
 
@@ -140,15 +133,15 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 			.MenuManager(MenuManager)
 		]
 	);
+	// clang-format on
 
 	// Set the default menu
 	WasOnMainMenu = true;
 	TabView->SetTabIndex(static_cast<uint8>(ENovaMainMenuType::Home));
 }
 
-
 /*----------------------------------------------------
-	Interaction
+    Interaction
 ----------------------------------------------------*/
 
 void SNovaMainMenu::Show()
@@ -176,7 +169,7 @@ void SNovaMainMenu::ShowTooltip(SWidget* TargetWidget, FText Content)
 {
 	if (TargetWidget != CurrentTooltipWidget)
 	{
-		CurrentTooltipWidget = TargetWidget;
+		CurrentTooltipWidget  = TargetWidget;
 		DesiredTooltipContent = Content.ToString();
 	}
 }
@@ -185,7 +178,7 @@ void SNovaMainMenu::HideTooltip(SWidget* TargetWidget)
 {
 	if (TargetWidget == CurrentTooltipWidget)
 	{
-		CurrentTooltipWidget = nullptr;
+		CurrentTooltipWidget  = nullptr;
 		DesiredTooltipContent = FString();
 	}
 
@@ -288,9 +281,8 @@ FReply SNovaMainMenu::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, cons
 	return Result;
 }
 
-
 /*----------------------------------------------------
-	Content callbacks
+    Content callbacks
 ----------------------------------------------------*/
 
 bool SNovaMainMenu::IsHomeMenuVisible() const
@@ -347,10 +339,10 @@ FText SNovaMainMenu::GetTooltipText() const
 FSlateColor SNovaMainMenu::GetTooltipColor() const
 {
 	float Alpha = (CurrentTooltipTime / TooltipFadeDuration);
-	Alpha = FMath::InterpEaseInOut(0.0f, 1.0f, Alpha, ENovaUIConstants::EaseStandard);
+	Alpha       = FMath::InterpEaseInOut(0.0f, 1.0f, Alpha, ENovaUIConstants::EaseStandard);
 
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	FLinearColor Color = Theme.MainFont.ColorAndOpacity.GetSpecifiedColor();
+	FLinearColor          Color = Theme.MainFont.ColorAndOpacity.GetSpecifiedColor();
 	Color.A *= Alpha;
 
 	return Color;
@@ -366,9 +358,8 @@ FKey SNovaMainMenu::GetNextTabKey() const
 	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuNextTab);
 }
 
-
 /*----------------------------------------------------
-	Action callbacks
+    Action callbacks
 ----------------------------------------------------*/
 
 void SNovaMainMenu::OnClose()
@@ -386,6 +377,5 @@ void SNovaMainMenu::OnClose()
 		MenuManager->GetPC()->ToggleMenuOrQuit();
 	}
 }
-
 
 #undef LOCTEXT_NAMESPACE

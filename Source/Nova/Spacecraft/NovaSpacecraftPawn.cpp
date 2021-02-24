@@ -15,12 +15,10 @@
 
 #include "Nova/Nova.h"
 
-
 #define LOCTEXT_NAMESPACE "ANovaAssembly"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
 ANovaSpacecraftPawn::ANovaSpacecraftPawn()
@@ -39,13 +37,12 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 	// Settings
 	bReplicates = true;
 	SetReplicatingMovement(false);
-	bAlwaysRelevant = true;
+	bAlwaysRelevant               = true;
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-
 /*----------------------------------------------------
-	Loading & saving
+    Loading & saving
 ----------------------------------------------------*/
 
 void ANovaSpacecraftPawn::SerializeJson(TSharedPtr<FNovaSpacecraft>& SaveData, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
@@ -53,9 +50,8 @@ void ANovaSpacecraftPawn::SerializeJson(TSharedPtr<FNovaSpacecraft>& SaveData, T
 	FNovaSpacecraft::SerializeJson(SaveData, JsonData, Direction);
 }
 
-
 /*----------------------------------------------------
-	Gameplay
+    Gameplay
 ----------------------------------------------------*/
 
 void ANovaSpacecraftPawn::Tick(float DeltaTime)
@@ -74,14 +70,15 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 		// Fetch the spacecraft from the player state when we are remotely controlled OR no spacecraft was ever set
 		if (!Spacecraft.IsValid() || !IsLocallyControlled())
 		{
-			ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+			ANovaGameState*   GameState         = GetWorld()->GetGameState<ANovaGameState>();
 			ANovaPlayerState* OwningPlayerState = GetPlayerState<ANovaPlayerState>();
 			if (IsValid(GameState) && IsValid(OwningPlayerState) && OwningPlayerState->GetSpacecraftIdentifier().IsValid())
 			{
 				ANovaGameWorld* GameWorld = GameState->GetGameWorld();
 				if (IsValid(GameWorld))
 				{
-					const TSharedPtr<FNovaSpacecraft>& NewSpacecraft = GameWorld->GetSpacecraft(OwningPlayerState->GetSpacecraftIdentifier());
+					const TSharedPtr<FNovaSpacecraft>& NewSpacecraft =
+						GameWorld->GetSpacecraft(OwningPlayerState->GetSpacecraftIdentifier());
 					if (NewSpacecraft.IsValid() && (!Spacecraft.IsValid() || *NewSpacecraft.Get() != *Spacecraft.Get()))
 					{
 						NLOG("ANovaSpacecraftPawn::Tick : updating spacecraft");
@@ -94,10 +91,9 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 		// Update selection
 		for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
 		{
-			ProcessCompartment(
-				CompartmentComponents[CompartmentIndex],
-				FNovaCompartment(),
-				FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
+			ProcessCompartment(CompartmentComponents[CompartmentIndex], FNovaCompartment(),
+				FNovaAssemblyCallback::CreateLambda(
+					[&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 					{
 						UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Element.Mesh);
 						if (PrimitiveComponent)
@@ -105,8 +101,7 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 							int32 Value = CompartmentIndex == CurrentHighlightCompartment ? 1 : 0;
 							PrimitiveComponent->SetCustomDepthStencilValue(Value);
 						}
-					}
-			));
+					}));
 		}
 	}
 }
@@ -129,7 +124,6 @@ void ANovaSpacecraftPawn::PossessedBy(AController* NewController)
 	}
 }
 
-
 TArray<const UNovaCompartmentDescription*> ANovaSpacecraftPawn::GetCompatibleCompartments(int32 Index) const
 {
 	TArray<const UNovaCompartmentDescription*> CompartmentDescriptions;
@@ -146,7 +140,7 @@ TArray<const class UNovaModuleDescription*> ANovaSpacecraftPawn::GetCompatibleMo
 {
 	TArray<const UNovaModuleDescription*> ModuleDescriptions;
 	TArray<const UNovaModuleDescription*> AllModuleDescriptions = UNovaAssetCatalog::Get()->GetAssets<UNovaModuleDescription>();
-	const FNovaCompartment& Compartment = Spacecraft->Compartments[Index];
+	const FNovaCompartment&               Compartment           = Spacecraft->Compartments[Index];
 
 	ModuleDescriptions.Add(nullptr);
 	if (Compartment.IsValid() && SlotIndex < Compartment.Description->ModuleSlots.Num())
@@ -164,7 +158,7 @@ TArray<const UNovaEquipmentDescription*> ANovaSpacecraftPawn::GetCompatibleEquip
 {
 	TArray<const UNovaEquipmentDescription*> EquipmentDescriptions;
 	TArray<const UNovaEquipmentDescription*> AllEquipmentDescriptions = UNovaAssetCatalog::Get()->GetAssets<UNovaEquipmentDescription>();
-	const FNovaCompartment& Compartment = Spacecraft->Compartments[Index];
+	const FNovaCompartment&                  Compartment              = Spacecraft->Compartments[Index];
 
 	EquipmentDescriptions.Add(nullptr);
 	if (Compartment.IsValid() && SlotIndex < Compartment.Description->EquipmentSlots.Num())
@@ -297,7 +291,7 @@ int32 ANovaSpacecraftPawn::GetCompartmentIndexByPrimitive(const class UPrimitive
 
 void ANovaSpacecraftPawn::SetDisplayFilter(ENovaAssemblyDisplayFilter Filter, int32 CompartmentIndex)
 {
-	DisplayFilterType = Filter;
+	DisplayFilterType  = Filter;
 	DisplayFilterIndex = CompartmentIndex;
 
 	if (AssemblyState == ENovaAssemblyState::Idle)
@@ -307,9 +301,8 @@ void ANovaSpacecraftPawn::SetDisplayFilter(ENovaAssemblyDisplayFilter Filter, in
 	}
 }
 
-
 /*----------------------------------------------------
-	Compartment assembly internals
+    Compartment assembly internals
 ----------------------------------------------------*/
 
 void ANovaSpacecraftPawn::StartAssemblyUpdate()
@@ -324,18 +317,17 @@ void ANovaSpacecraftPawn::StartAssemblyUpdate()
 	// De-materialize unwanted compartments
 	for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
 	{
-		ProcessCompartmentIfDifferent(
-		CompartmentComponents[CompartmentIndex],
-		CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment(),
-		FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
-			{
-				if (Element.Mesh)
+		ProcessCompartmentIfDifferent(CompartmentComponents[CompartmentIndex],
+			CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment(),
+			FNovaAssemblyCallback::CreateLambda(
+				[&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 				{
-					Element.Mesh->Dematerialize(ImmediateMode);
-					AssemblyState = ENovaAssemblyState::LoadingDematerializing;
-				}
-			}
-		));
+					if (Element.Mesh)
+					{
+						Element.Mesh->Dematerialize(ImmediateMode);
+						AssemblyState = ENovaAssemblyState::LoadingDematerializing;
+					}
+				}));
 	}
 
 	// Find new assets to load
@@ -380,15 +372,14 @@ void ANovaSpacecraftPawn::StartAssemblyUpdate()
 		}
 		else
 		{
-			AssemblyState = ENovaAssemblyState::LoadingDematerializing;
+			AssemblyState       = ENovaAssemblyState::LoadingDematerializing;
 			WaitingAssetLoading = true;
 
-			UNovaAssetCatalog::Get()->LoadAssets(RequestedAssets,
-				FStreamableDelegate::CreateLambda([&]()
-					{
-						WaitingAssetLoading = false;
-					}
-			));
+			UNovaAssetCatalog::Get()->LoadAssets(RequestedAssets, FStreamableDelegate::CreateLambda(
+																	  [&]()
+																	  {
+																		  WaitingAssetLoading = false;
+																	  }));
 		}
 	}
 }
@@ -403,10 +394,10 @@ void ANovaSpacecraftPawn::UpdateAssembly()
 		// Check completion
 		for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
 		{
-			ProcessCompartmentIfDifferent(
-				CompartmentComponents[CompartmentIndex],
+			ProcessCompartmentIfDifferent(CompartmentComponents[CompartmentIndex],
 				CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment(),
-				FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
+				FNovaAssemblyCallback::CreateLambda(
+					[&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 					{
 						if (Element.Mesh == nullptr)
 						{
@@ -430,14 +421,13 @@ void ANovaSpacecraftPawn::UpdateAssembly()
 						{
 							StillWaiting = true;
 						}
-					}
-			));
+					}));
 		}
 
 		// Start the animation
 		if (!StillWaiting && !WaitingAssetLoading)
 		{
-			AssemblyState = ENovaAssemblyState::Moving;
+			AssemblyState       = ENovaAssemblyState::Moving;
 			FVector BuildOffset = FVector::ZeroVector;
 
 			// Compute the initial build offset
@@ -494,13 +484,14 @@ void ANovaSpacecraftPawn::UpdateAssembly()
 		RequestedAssets.Empty();
 
 		// Build the assembly
-		int32 ValidIndex = 0;
+		int32         ValidIndex = 0;
 		TArray<int32> RemovedCompartments;
 		for (int32 CompartmentIndex = 0; CompartmentIndex < Spacecraft->Compartments.Num(); CompartmentIndex++)
 		{
-			UNovaSpacecraftCompartmentComponent* PreviousCompartmentComponent = CompartmentIndex > 0 ? CompartmentComponents[CompartmentIndex - 1] : nullptr;
+			UNovaSpacecraftCompartmentComponent* PreviousCompartmentComponent =
+				CompartmentIndex > 0 ? CompartmentComponents[CompartmentIndex - 1] : nullptr;
 			const FNovaCompartment* PreviousCompartment = CompartmentIndex > 0 ? &Spacecraft->Compartments[CompartmentIndex - 1] : nullptr;
-			const FNovaCompartment& CurrentCompartment = Spacecraft->Compartments[CompartmentIndex];
+			const FNovaCompartment& CurrentCompartment  = Spacecraft->Compartments[CompartmentIndex];
 
 			if (CurrentCompartment.IsValid())
 			{
@@ -523,7 +514,7 @@ void ANovaSpacecraftPawn::UpdateAssembly()
 
 		// Complete the process
 		DisplayFilterIndex = FMath::Min(DisplayFilterIndex, Spacecraft->Compartments.Num() - 1);
-		AssemblyState = ENovaAssemblyState::Idle;
+		AssemblyState      = ENovaAssemblyState::Idle;
 		UpdateDisplayFilter();
 		UpdateBounds();
 	}
@@ -533,40 +524,40 @@ void ANovaSpacecraftPawn::UpdateDisplayFilter()
 {
 	for (int32 CompartmentIndex = 0; CompartmentIndex < Spacecraft->Compartments.Num(); CompartmentIndex++)
 	{
-		ProcessCompartment(CompartmentComponents[CompartmentIndex],
-			FNovaCompartment(),
-			FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
+		ProcessCompartment(CompartmentComponents[CompartmentIndex], FNovaCompartment(),
+			FNovaAssemblyCallback::CreateLambda(
+				[&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 				{
 					if (Element.Mesh)
 					{
-						bool DisplayState = false;
+						bool DisplayState          = false;
 						bool IsFocusingCompartment = DisplayFilterIndex != INDEX_NONE;
 
 						// Process the filter type
 						switch (Element.Type)
 						{
-						case ENovaAssemblyElementType::Module:
-							DisplayState = true;
-							break;
+							case ENovaAssemblyElementType::Module:
+								DisplayState = true;
+								break;
 
-						case ENovaAssemblyElementType::Structure:
-							DisplayState = DisplayFilterType >= ENovaAssemblyDisplayFilter::ModulesStructure;
-							break;
+							case ENovaAssemblyElementType::Structure:
+								DisplayState = DisplayFilterType >= ENovaAssemblyDisplayFilter::ModulesStructure;
+								break;
 
-						case ENovaAssemblyElementType::Equipment:
-							DisplayState = DisplayFilterType >= ENovaAssemblyDisplayFilter::ModulesStructureEquipments;
-							break;
+							case ENovaAssemblyElementType::Equipment:
+								DisplayState = DisplayFilterType >= ENovaAssemblyDisplayFilter::ModulesStructureEquipments;
+								break;
 
-						case ENovaAssemblyElementType::Wiring:
-							DisplayState = DisplayFilterType >= ENovaAssemblyDisplayFilter::ModulesStructureEquipmentsWiring;
-							break;
+							case ENovaAssemblyElementType::Wiring:
+								DisplayState = DisplayFilterType >= ENovaAssemblyDisplayFilter::ModulesStructureEquipmentsWiring;
+								break;
 
-						case ENovaAssemblyElementType::Hull:
-							DisplayState = DisplayFilterType == ENovaAssemblyDisplayFilter::All;
-							break;
+							case ENovaAssemblyElementType::Hull:
+								DisplayState = DisplayFilterType == ENovaAssemblyDisplayFilter::All;
+								break;
 
-						default:
-							NCHECK(false);
+							default:
+								NCHECK(false);
 						}
 
 						// Process the filter index : include the current compartment
@@ -584,8 +575,7 @@ void ANovaSpacecraftPawn::UpdateDisplayFilter()
 							Element.Mesh->Dematerialize(ImmediateMode);
 						}
 					}
-				})
-		);
+				}));
 	}
 }
 
@@ -604,25 +594,21 @@ UNovaSpacecraftCompartmentComponent* ANovaSpacecraftPawn::CreateCompartment(cons
 }
 
 void ANovaSpacecraftPawn::ProcessCompartmentIfDifferent(
-	UNovaSpacecraftCompartmentComponent* CompartmentComponent,
-	const FNovaCompartment& Compartment,
-	FNovaAssemblyCallback Callback)
+	UNovaSpacecraftCompartmentComponent* CompartmentComponent, const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
 {
 	ProcessCompartment(CompartmentComponent, Compartment,
-		FNovaAssemblyCallback::CreateLambda([&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
-		{
-			if (Element.Asset != Asset.ToSoftObjectPath() || CompartmentComponent->Description != Compartment.Description)
+		FNovaAssemblyCallback::CreateLambda(
+			[&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 			{
-				Callback.Execute(Element, Asset, AdditionalComponent);
-			}
-		})
-	);
+				if (Element.Asset != Asset.ToSoftObjectPath() || CompartmentComponent->Description != Compartment.Description)
+				{
+					Callback.Execute(Element, Asset, AdditionalComponent);
+				}
+			}));
 }
 
 void ANovaSpacecraftPawn::ProcessCompartment(
-	UNovaSpacecraftCompartmentComponent* CompartmentComponent,
-	const FNovaCompartment& Compartment,
-	FNovaAssemblyCallback Callback)
+	UNovaSpacecraftCompartmentComponent* CompartmentComponent, const FNovaCompartment& Compartment, FNovaAssemblyCallback Callback)
 {
 	if (CompartmentComponent->Description)
 	{
@@ -641,11 +627,11 @@ void ANovaSpacecraftPawn::UpdateBounds()
 		NCHECK(DisplayFilterIndex >= 0 && DisplayFilterIndex < CompartmentComponents.Num());
 
 		FBox Bounds(ForceInit);
-		ForEachComponent<UPrimitiveComponent>(false, [&](const UPrimitiveComponent* Prim)
+		ForEachComponent<UPrimitiveComponent>(false,
+			[&](const UPrimitiveComponent* Prim)
 			{
-				if (Prim->IsRegistered() && Prim->IsVisible()
-					&& Prim->IsAttachedTo(CompartmentComponents[DisplayFilterIndex])
-					&& Prim->Implements<UNovaMeshInterface>())
+				if (Prim->IsRegistered() && Prim->IsVisible() && Prim->IsAttachedTo(CompartmentComponents[DisplayFilterIndex]) &&
+					Prim->Implements<UNovaMeshInterface>())
 				{
 					Bounds += Prim->Bounds.GetBox();
 				}
@@ -660,6 +646,5 @@ void ANovaSpacecraftPawn::UpdateBounds()
 		GetActorBounds(true, Unused, CurrentExtent);
 	}
 }
-
 
 #undef LOCTEXT_NAMESPACE

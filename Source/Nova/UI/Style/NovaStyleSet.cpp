@@ -6,13 +6,11 @@
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
-
 #define GAIA_STYLE_INSTANCE_NAME "NovaStyle"
-#define GAIA_STYLE_PATH          "/Game/UI"
-
+#define GAIA_STYLE_PATH "/Game/UI"
 
 /*----------------------------------------------------
-	Singleton
+    Singleton
 ----------------------------------------------------*/
 
 TSharedPtr<FSlateStyleSet> FNovaStyleSet::Instance = NULL;
@@ -20,7 +18,7 @@ TSharedPtr<FSlateStyleSet> FNovaStyleSet::Instance = NULL;
 void FNovaStyleSet::Initialize()
 {
 	FSlateStyleRegistry::UnRegisterSlateStyle(GAIA_STYLE_INSTANCE_NAME);
-	
+
 	if (!Instance.IsValid())
 	{
 		Instance = Create();
@@ -41,7 +39,7 @@ TPair<FText, const FSlateBrush*> FNovaStyleSet::GetKeyDisplay(const FKey& Key)
 	if (Key.IsValid())
 	{
 		FString DisplayBrushName;
-		FText DisplayName;
+		FText   DisplayName;
 
 		// Special keyboard keys
 		if (Key == EKeys::LeftShift)
@@ -215,7 +213,7 @@ TPair<FText, const FSlateBrush*> FNovaStyleSet::GetKeyDisplay(const FKey& Key)
 TPair<TSharedPtr<FSlateBrush>, UMaterialInstanceDynamic*> FNovaStyleSet::GetDynamicBrush(const FString& BrushName)
 {
 	TSharedPtr<FSlateBrush> ResultBrush = MakeShareable(new FSlateBrush());
-	const FSlateBrush* BaseBrush = FNovaStyleSet::GetBrush(BrushName);
+	const FSlateBrush*      BaseBrush   = FNovaStyleSet::GetBrush(BrushName);
 
 	// Create material
 	UMaterialInterface* BaseMaterial = Cast<UMaterialInterface>(BaseBrush->GetResourceObject());
@@ -231,24 +229,22 @@ TPair<TSharedPtr<FSlateBrush>, UMaterialInstanceDynamic*> FNovaStyleSet::GetDyna
 	return TPair<TSharedPtr<FSlateBrush>, UMaterialInstanceDynamic*>(ResultBrush, DynamicMaterial);
 }
 
-
 /*----------------------------------------------------
-	Internal
+    Internal
 ----------------------------------------------------*/
 
-TSharedRef< FSlateStyleSet > FNovaStyleSet::Create()
+TSharedRef<FSlateStyleSet> FNovaStyleSet::Create()
 {
 	TSharedRef<FSlateStyleSet> StyleRef = FSlateGameResources::New(FName(GAIA_STYLE_INSTANCE_NAME), GAIA_STYLE_PATH, GAIA_STYLE_PATH);
-	FSlateStyleSet& Style = StyleRef.Get();
+	FSlateStyleSet&            Style    = StyleRef.Get();
 
 	Style.Set("Nova.Button", FButtonStyle()
-		.SetNormal(FSlateNoResource())
-		.SetHovered(FSlateNoResource())
-		.SetPressed(FSlateNoResource())
-		.SetDisabled(FSlateNoResource())
-		.SetNormalPadding(0)
-		.SetPressedPadding(0)
-	);
-	
+								 .SetNormal(FSlateNoResource())
+								 .SetHovered(FSlateNoResource())
+								 .SetPressed(FSlateNoResource())
+								 .SetDisabled(FSlateNoResource())
+								 .SetNormalPadding(0)
+								 .SetPressedPadding(0));
+
 	return StyleRef;
 }

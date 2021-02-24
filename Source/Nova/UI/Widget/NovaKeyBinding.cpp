@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "NovaKeyBinding.h"
 #include "Nova/Player/NovaPlayerController.h"
@@ -6,18 +6,16 @@
 
 #include "GameFramework/InputSettings.h"
 
-
 #define LOCTEXT_NAMESPACE "SNovaKeyBind"
 
-
 /*----------------------------------------------------
-	Key binding structure
+    Key binding structure
 ----------------------------------------------------*/
 
 FNovaKeyBinding* FNovaKeyBinding::Action(const FName& Mapping)
 {
 	UInputSettings* InputSettings = UInputSettings::StaticClass()->GetDefaultObject<UInputSettings>();
-	bool Found = false;
+	bool            Found         = false;
 
 	// Find the binding
 	for (const FInputActionKeyMapping& Action : InputSettings->GetActionMappings())
@@ -48,7 +46,7 @@ FNovaKeyBinding* FNovaKeyBinding::Action(const FName& Mapping)
 FNovaKeyBinding* FNovaKeyBinding::Axis(const FName& Mapping, float Scale)
 {
 	UInputSettings* InputSettings = UInputSettings::StaticClass()->GetDefaultObject<UInputSettings>();
-	bool Found = false;
+	bool            Found         = false;
 
 	// Find the binding
 	for (const FInputAxisKeyMapping& Axis : InputSettings->GetAxisMappings())
@@ -70,7 +68,7 @@ FNovaKeyBinding* FNovaKeyBinding::Axis(const FName& Mapping, float Scale)
 	{
 		FInputAxisKeyMapping Action;
 		Action.AxisName = Mapping;
-		Action.Scale = Scale;
+		Action.Scale    = Scale;
 		AxisMappings.Add(Action);
 	}
 
@@ -127,33 +125,30 @@ void FNovaKeyBinding::Save()
 	}
 }
 
-
 /*----------------------------------------------------
-	Construct
+    Construct
 ----------------------------------------------------*/
 
 void SNovaKeyBinding::Construct(const FArguments& InArgs)
 {
 	// Arguments
-	Binding = InArgs._Binding;
-	ThemeName = InArgs._Theme;
+	Binding             = InArgs._Binding;
+	ThemeName           = InArgs._Theme;
 	OnKeyBindingChanged = InArgs._OnKeyBindingChanged;
 
 	// Parent constructor
 	SNovaButton::Construct(SNovaButton::FArguments()
-		.Theme(InArgs._Theme)
-		.Icon(FNovaStyleSet::GetBrush("Icon/SB_Edit"))
-		.Text(this, &SNovaKeyBinding::GetKeyName)
-		.HelpText(LOCTEXT("EditBinding", "Change this key binding"))
-	);
+							   .Theme(InArgs._Theme)
+							   .Icon(FNovaStyleSet::GetBrush("Icon/SB_Edit"))
+							   .Text(this, &SNovaKeyBinding::GetKeyName)
+							   .HelpText(LOCTEXT("EditBinding", "Change this key binding")));
 
 	// Initialize
 	WaitingForKey = false;
 }
 
-
 /*----------------------------------------------------
-	Interaction
+    Interaction
 ----------------------------------------------------*/
 
 void SNovaKeyBinding::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
@@ -177,7 +172,7 @@ void SNovaKeyBinding::Tick(const FGeometry& AllottedGeometry, const double Curre
 FReply SNovaKeyBinding::OnButtonClicked()
 {
 	// Get the center of the widget so we can lock our mouse there
-	FSlateRect Rect = GetCachedGeometry().GetLayoutBoundingRect();
+	FSlateRect Rect   = GetCachedGeometry().GetLayoutBoundingRect();
 	WaitingMousePos.X = (Rect.Left + Rect.Right) * 0.5f;
 	WaitingMousePos.Y = (Rect.Top + Rect.Bottom) * 0.5f;
 	FSlateApplication::Get().GetPlatformApplication()->Cursor->SetPosition(WaitingMousePos.X, WaitingMousePos.Y);
@@ -218,9 +213,8 @@ void SNovaKeyBinding::FinishWaiting()
 	FSlateApplication::Get().GetPlatformApplication()->Cursor->Show(true);
 }
 
-
 /*----------------------------------------------------
-	Callbacks
+    Callbacks
 ----------------------------------------------------*/
 
 FText SNovaKeyBinding::GetKeyName() const
@@ -275,6 +269,5 @@ FReply SNovaKeyBinding::OnMouseWheel(const FGeometry& MyGeometry, const FPointer
 		return FReply::Unhandled();
 	}
 }
-
 
 #undef LOCTEXT_NAMESPACE

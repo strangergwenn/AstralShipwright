@@ -9,13 +9,11 @@
 #include "EngineUtils.h"
 #include "Net/UnrealNetwork.h"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
-ANovaGameWorld::ANovaGameWorld()
-	: Super()
+ANovaGameWorld::ANovaGameWorld() : Super()
 {
 	// Setup simulation component
 	OrbitalSimulationComponent = CreateDefaultSubobject<UNovaOrbitalSimulationComponent>(TEXT("OrbitalSimulationComponent"));
@@ -23,13 +21,12 @@ ANovaGameWorld::ANovaGameWorld()
 	// Settings
 	bReplicates = true;
 	SetReplicatingMovement(false);
-	bAlwaysRelevant = true;
+	bAlwaysRelevant               = true;
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-
 /*----------------------------------------------------
-	Loading & saving
+    Loading & saving
 ----------------------------------------------------*/
 
 struct FNovaWorldSave
@@ -44,17 +41,14 @@ TSharedPtr<struct FNovaWorldSave> ANovaGameWorld::Save() const
 }
 
 void ANovaGameWorld::Load(TSharedPtr<struct FNovaWorldSave> SaveData)
-{
-}
+{}
 
-
-void ANovaGameWorld::SerializeJson(TSharedPtr<struct FNovaWorldSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction)
-{
-}
-
+void ANovaGameWorld::SerializeJson(
+	TSharedPtr<struct FNovaWorldSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction)
+{}
 
 /*----------------------------------------------------
-	Gameplay
+    Gameplay
 ----------------------------------------------------*/
 
 void ANovaGameWorld::AddAISpacecraft(const FNovaSpacecraft Spacecraft)
@@ -75,9 +69,8 @@ TSharedPtr<FNovaSpacecraft> ANovaGameWorld::GetSpacecraft(FGuid Identifier)
 	return Entry ? Entry->Spacecraft : nullptr;
 }
 
-
 /*----------------------------------------------------
-	Internals
+    Internals
 ----------------------------------------------------*/
 
 void ANovaGameWorld::OnSpacecraftReplicated()
@@ -113,7 +106,7 @@ void ANovaGameWorld::UpdateDatabase()
 			else
 			{
 				FNovaSpacecraftDatabaseEntry NewEntry;
-				NewEntry.IsPlayer = IsPlayer;
+				NewEntry.IsPlayer   = IsPlayer;
 				NewEntry.Spacecraft = Spacecraft.GetSharedCopy();
 				SpacecraftDatabase.Add(Spacecraft.Identifier, NewEntry);
 			}
@@ -125,7 +118,7 @@ void ANovaGameWorld::UpdateDatabase()
 	// Database garbage collection
 	auto PruneDatabase = [this, &KnownIdentifiers]()
 	{
-		for(auto Iterator = SpacecraftDatabase.CreateIterator(); Iterator; ++Iterator)
+		for (auto Iterator = SpacecraftDatabase.CreateIterator(); Iterator; ++Iterator)
 		{
 			if (!KnownIdentifiers.Contains(Iterator.Key()))
 			{
@@ -146,5 +139,4 @@ void ANovaGameWorld::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	DOREPLIFETIME(ANovaGameWorld, AISpacecraft);
 	DOREPLIFETIME(ANovaGameWorld, PlayerSpacecraft);
-}
-;
+};

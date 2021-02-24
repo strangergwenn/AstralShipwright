@@ -7,43 +7,36 @@
 
 #include "Widgets/SCompoundWidget.h"
 
-
 /** Key label to show which keys are bound to an action */
 class SNovaKeyLabel : public SCompoundWidget
 {
 	/*----------------------------------------------------
-		Slate arguments
+	    Slate arguments
 	----------------------------------------------------*/
 
-	SLATE_BEGIN_ARGS(SNovaKeyLabel)
-		: _Alpha(1)
+	SLATE_BEGIN_ARGS(SNovaKeyLabel) : _Alpha(1)
 	{}
-	
+
 	SLATE_ATTRIBUTE(FKey, Key)
 	SLATE_ATTRIBUTE(float, Alpha)
 
 	SLATE_END_ARGS()
 
-
 public:
-
 	/*----------------------------------------------------
-		Constructor
+	    Constructor
 	----------------------------------------------------*/
 
-	SNovaKeyLabel()
-		: SCompoundWidget()
+	SNovaKeyLabel() : SCompoundWidget()
 	{}
 
 	void Construct(const FArguments& InArgs);
 
-
 	/*----------------------------------------------------
-		Callbacks
+	    Callbacks
 	----------------------------------------------------*/
 
 protected:
-
 	FText GetKeyText() const;
 
 	const FSlateBrush* GetKeyIcon() const;
@@ -52,15 +45,12 @@ protected:
 
 	FSlateColor GetKeyTextColor() const;
 
-
 	/*----------------------------------------------------
-		Private data
+	    Private data
 	----------------------------------------------------*/
 
 protected:
-
 	// Attributes
-	TAttribute<FKey>                              KeyName;
-	TAttribute<float>                             CurrentAlpha;
-
+	TAttribute<FKey>  KeyName;
+	TAttribute<float> CurrentAlpha;
 };

@@ -10,7 +10,6 @@
 
 #include "Widgets/SCompoundWidget.h"
 
-
 /** Templatized list class to display elements from a TArray */
 template <typename ItemType>
 class SNovaListView : public SCompoundWidget
@@ -19,14 +18,11 @@ class SNovaListView : public SCompoundWidget
 	DECLARE_DELEGATE_RetVal_OneParam(FText, FNovaOnGenerateTooltip, ItemType);
 	DECLARE_DELEGATE_TwoParams(FNovaListSelectionChanged, ItemType, int32);
 
-
 	/*----------------------------------------------------
-		Slate arguments
+	    Slate arguments
 	----------------------------------------------------*/
 
-	SLATE_BEGIN_ARGS(SNovaListView<ItemType>)
-		: _ButtonTheme("DefaultButton")
-		, _ButtonSize("ListButtonSize")
+	SLATE_BEGIN_ARGS(SNovaListView<ItemType>) : _ButtonTheme("DefaultButton"), _ButtonSize("ListButtonSize")
 	{}
 
 	SLATE_ARGUMENT(SNovaNavigationPanel*, Panel)
@@ -36,34 +32,32 @@ class SNovaListView : public SCompoundWidget
 	SLATE_EVENT(FNovaOnGenerateTooltip, OnGenerateTooltip)
 	SLATE_EVENT(FNovaListSelectionChanged, OnSelectionChanged)
 	SLATE_EVENT(FSimpleDelegate, OnSelectionDoubleClicked)
-		
+
 	SLATE_ARGUMENT(FName, ButtonTheme)
 	SLATE_ARGUMENT(FName, ButtonSize)
-	
+
 	SLATE_END_ARGS()
 
-
 	/*----------------------------------------------------
-		Constructor
+	    Constructor
 	----------------------------------------------------*/
 
 public:
-
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 
 		// Setup
-		Panel = InArgs._Panel;
-		ItemsSource = InArgs._ItemsSource;
-		OnGenerateItem = InArgs._OnGenerateItem;
-		OnGenerateTooltip = InArgs._OnGenerateTooltip;
-		OnSelectionChanged = InArgs._OnSelectionChanged;
+		Panel                    = InArgs._Panel;
+		ItemsSource              = InArgs._ItemsSource;
+		OnGenerateItem           = InArgs._OnGenerateItem;
+		OnGenerateTooltip        = InArgs._OnGenerateTooltip;
+		OnSelectionChanged       = InArgs._OnSelectionChanged;
 		OnSelectionDoubleClicked = InArgs._OnSelectionDoubleClicked;
-		ButtonTheme = InArgs._ButtonTheme;
-		ButtonSize = InArgs._ButtonSize;
+		ButtonTheme              = InArgs._ButtonTheme;
+		ButtonSize               = InArgs._ButtonSize;
 
-		// Structure
+		// clang-format off
 		ChildSlot
 		.VAlign(VAlign_Fill)
 		.HAlign(HAlign_Center)
@@ -73,33 +67,32 @@ public:
 			.Style(&Theme.ScrollBoxStyle)
 			.ScrollBarVisibility(EVisibility::Collapsed)
 		];
+		// clang-format on
 
 		// Initialize
 		CurrentSelectedIndex = 0;
 	}
 
-
 	/*----------------------------------------------------
-		Public methods
+	    Public methods
 	----------------------------------------------------*/
 
 public:
-
 	/** Refresh the list based on the items source */
 	void Refresh(int32 SelectedIndex = INDEX_NONE)
 	{
 		SelectedIndex = FMath::Min(SelectedIndex, ItemsSource->Num() - 1);
 
 		// Get the state of the focused button
-		int32 PreviousSelectedIndex = INDEX_NONE;
-		int32 FocusButtonIndex = 0;
+		int32            PreviousSelectedIndex       = INDEX_NONE;
+		int32            FocusButtonIndex            = 0;
 		FNovaButtonState PreviousSelectedButtonState = FNovaButtonState();
 		for (TSharedPtr<SNovaButton> Button : ListButtons)
 		{
 			if (Button->IsFocused())
 			{
 				PreviousSelectedButtonState = Button->GetState();
-				PreviousSelectedIndex = FocusButtonIndex;
+				PreviousSelectedIndex       = FocusButtonIndex;
 				break;
 			}
 
@@ -120,18 +113,20 @@ public:
 		{
 			// Add buttons
 			TSharedPtr<SNovaButton> Button;
+			// clang-format off
 			Container->AddSlot()
-				[
-					Panel->SNovaAssignNew(Button, SNovaButton)
-					.Theme(ButtonTheme)
-					.Size(ButtonSize)
-					.OnFocused(this, &SNovaListView<ItemType>::OnElementSelected, Item, BuildIndex)
-					.OnClicked(this, &SNovaListView<ItemType>::OnElementSelected, Item, BuildIndex)
-					.OnDoubleClicked(FSimpleDelegate::CreateLambda([=]()
-					{
-						OnSelectionDoubleClicked.ExecuteIfBound();
-					}))
+			[
+				Panel->SNovaAssignNew(Button, SNovaButton)
+				.Theme(ButtonTheme)
+				.Size(ButtonSize)
+				.OnFocused(this, &SNovaListView<ItemType>::OnElementSelected, Item, BuildIndex)
+				.OnClicked(this, &SNovaListView<ItemType>::OnElementSelected, Item, BuildIndex)
+				.OnDoubleClicked(FSimpleDelegate::CreateLambda([=]()
+				{
+					OnSelectionDoubleClicked.ExecuteIfBound();
+				}))
 			];
+			// clang-format on
 
 			// Fill tooltip
 			if (OnGenerateTooltip.IsBound())
@@ -180,13 +175,11 @@ public:
 		return (*ItemsSource)[CurrentSelectedIndex];
 	}
 
-
 	/*----------------------------------------------------
-		Callbacks
+	    Callbacks
 	----------------------------------------------------*/
 
 protected:
-
 	/** New list item was selected */
 	void OnElementSelected(ItemType Selected, int32 Index)
 	{
@@ -196,28 +189,25 @@ protected:
 		Container->ScrollDescendantIntoView(ListButtons[Index], true, EDescendantScrollDestination::IntoView);
 	}
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 protected:
-
 	// Settings
-	SNovaNavigationPanel*                         Panel;
-	const TArray<ItemType>*                       ItemsSource;
-	FNovaOnGenerateItem                           OnGenerateItem;
-	FNovaOnGenerateTooltip                        OnGenerateTooltip;
-	FNovaListSelectionChanged                     OnSelectionChanged;
-	FSimpleDelegate                               OnSelectionDoubleClicked;
-	FName                                         ButtonTheme;
-	FName                                         ButtonSize;
+	SNovaNavigationPanel*     Panel;
+	const TArray<ItemType>*   ItemsSource;
+	FNovaOnGenerateItem       OnGenerateItem;
+	FNovaOnGenerateTooltip    OnGenerateTooltip;
+	FNovaListSelectionChanged OnSelectionChanged;
+	FSimpleDelegate           OnSelectionDoubleClicked;
+	FName                     ButtonTheme;
+	FName                     ButtonSize;
 
 	// State
-	int32                                         CurrentSelectedIndex;
-	
-	// Widgets
-	TSharedPtr<SScrollBox>                        Container;
-	TArray<TSharedPtr<SNovaButton>>               ListButtons;
+	int32 CurrentSelectedIndex;
 
+	// Widgets
+	TSharedPtr<SScrollBox>          Container;
+	TArray<TSharedPtr<SNovaButton>> ListButtons;
 };

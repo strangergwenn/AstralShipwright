@@ -4,19 +4,15 @@
 
 #include "Net/UnrealNetwork.h"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
-ANovaPlayerState::ANovaPlayerState()
-	: Super()
-{
-}
-
+ANovaPlayerState::ANovaPlayerState() : Super()
+{}
 
 /*----------------------------------------------------
-	Networking
+    Networking
 ----------------------------------------------------*/
 
 void ANovaPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -25,4 +21,3 @@ void ANovaPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(ANovaPlayerState, SpacecraftIdentifier);
 }
-

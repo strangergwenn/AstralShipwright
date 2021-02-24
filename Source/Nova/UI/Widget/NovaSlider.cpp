@@ -8,25 +8,24 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Layout/SBorder.h"
 
-
 /*----------------------------------------------------
-	Construct
+    Construct
 ----------------------------------------------------*/
 
 void SNovaSlider::Construct(const FArguments& InArgs)
 {
 	// Arguments
-	ThemeName = InArgs._Theme;
+	ThemeName    = InArgs._Theme;
 	EnabledState = InArgs._Enabled;
-	ValueStep = InArgs._ValueStep;
+	ValueStep    = InArgs._ValueStep;
 	CurrentValue = InArgs._Value;
 	ValueChanged = InArgs._OnValueChanged;
 
 	// Setup
 	const FNovaSliderTheme& Theme = FNovaStyleSet::GetTheme<FNovaSliderTheme>(ThemeName);
-	SliderSpeed = 5.0f;
+	SliderSpeed                   = 5.0f;
 
-	// Structure
+	// clang-format off
 	ChildSlot
 	.VAlign(VAlign_Center)
 	.HAlign(HAlign_Center)
@@ -91,11 +90,11 @@ void SNovaSlider::Construct(const FArguments& InArgs)
 			]
 		]
 	];
+	// clang-format on
 }
 
-
 /*----------------------------------------------------
-	Interaction
+    Interaction
 ----------------------------------------------------*/
 
 void SNovaSlider::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
@@ -105,7 +104,7 @@ void SNovaSlider::Tick(const FGeometry& AllottedGeometry, const double CurrentTi
 	if (Slider->GetValue() != CurrentValue)
 	{
 		float Delta = CurrentValue - Slider->GetValue();
-		Delta = FMath::Clamp(Delta, -SliderSpeed * DeltaTime, SliderSpeed * DeltaTime);
+		Delta       = FMath::Clamp(Delta, -SliderSpeed * DeltaTime, SliderSpeed * DeltaTime);
 
 		Slider->SetValue(Slider->GetValue() + Delta);
 	}
@@ -122,9 +121,8 @@ void SNovaSlider::SetCurrentValue(float Value)
 	Slider->SetValue(CurrentValue);
 }
 
-
 /*----------------------------------------------------
-	Callbacks
+    Callbacks
 ----------------------------------------------------*/
 
 const FSlateBrush* SNovaSlider::GetBackgroundBrush() const
@@ -148,23 +146,23 @@ const FSlateBrush* SNovaSlider::GetBackgroundBrush() const
 void SNovaSlider::OnIncrement()
 {
 	float NewValue = Slider->GetValue() + ValueStep;
-	NewValue = FMath::Clamp(NewValue, Slider->GetMinValue(), Slider->GetMaxValue());
-	CurrentValue = NewValue;
+	NewValue       = FMath::Clamp(NewValue, Slider->GetMinValue(), Slider->GetMaxValue());
+	CurrentValue   = NewValue;
 	ValueChanged.ExecuteIfBound(CurrentValue);
 }
 
 void SNovaSlider::OnDecrement()
 {
 	float NewValue = Slider->GetValue() - ValueStep;
-	NewValue = FMath::Clamp(NewValue, Slider->GetMinValue(), Slider->GetMaxValue());
-	CurrentValue = NewValue;
+	NewValue       = FMath::Clamp(NewValue, Slider->GetMinValue(), Slider->GetMaxValue());
+	CurrentValue   = NewValue;
 	ValueChanged.ExecuteIfBound(CurrentValue);
 }
 
 void SNovaSlider::OnSliderValueChanged(float Value)
 {
-	float StepCount = 1.0f / ValueStep;
-	float StepValue = FMath::RoundToInt(StepCount * Value);
+	float StepCount    = 1.0f / ValueStep;
+	float StepValue    = FMath::RoundToInt(StepCount * Value);
 	float RoundedValue = StepValue / StepCount;
 
 	if (RoundedValue != CurrentValue)

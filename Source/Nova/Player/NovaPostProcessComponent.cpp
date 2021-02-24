@@ -13,16 +13,11 @@
 #include "EngineUtils.h"
 #include "Engine.h"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
-UNovaPostProcessComponent::UNovaPostProcessComponent()
-	: Super()
-	, CurrentPreset(0)
-	, TargetPreset(0)
-	, CurrentPresetAlpha(0.0f)
+UNovaPostProcessComponent::UNovaPostProcessComponent() : Super(), CurrentPreset(0), TargetPreset(0), CurrentPresetAlpha(0.0f)
 {
 	// Resources
 	static ConstructorHelpers::FClassFinder<AActor> PostProcessActorClassRef(TEXT("/Game/Gameplay/Common/BP_PostProcess"));
@@ -33,15 +28,14 @@ UNovaPostProcessComponent::UNovaPostProcessComponent()
 	SetIsReplicatedByDefault(false);
 }
 
-
 /*----------------------------------------------------
-	Gameplay
+    Gameplay
 ----------------------------------------------------*/
 
 void UNovaPostProcessComponent::Initialize(FNovaPostProcessControl Control, FNovaPostProcessUpdate Update)
 {
 	ControlFunction = Control;
-	UpdateFunction = Update;
+	UpdateFunction  = Update;
 }
 
 void UNovaPostProcessComponent::BeginPlay()
@@ -59,7 +53,8 @@ void UNovaPostProcessComponent::BeginPlay()
 		// Set the post process
 		if (PostProcessActors.Num())
 		{
-			PostProcessVolume = Cast<UPostProcessComponent>(PostProcessActors[0]->GetComponentByClass(UPostProcessComponent::StaticClass()));
+			PostProcessVolume =
+				Cast<UPostProcessComponent>(PostProcessActors[0]->GetComponentByClass(UPostProcessComponent::StaticClass()));
 
 			// Replace the material by a dynamic variant
 			if (PostProcessVolume)
@@ -120,7 +115,7 @@ void UNovaPostProcessComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		// Get post process targets and apply the new settings
 		float InterpolatedAlpha = FMath::InterpEaseInOut(0.0f, 1.0f, CurrentPresetAlpha, ENovaUIConstants::EaseStandard);
 		TSharedPtr<FNovaPostProcessSettingBase>& CurrentPostProcess = PostProcessSettings[0];
-		TSharedPtr<FNovaPostProcessSettingBase>& TargetPostProcess = PostProcessSettings[CurrentPreset];
+		TSharedPtr<FNovaPostProcessSettingBase>& TargetPostProcess  = PostProcessSettings[CurrentPreset];
 		UpdateFunction.ExecuteIfBound(PostProcessVolume, PostProcessMaterial, CurrentPostProcess, TargetPostProcess, CurrentPresetAlpha);
 	}
 }

@@ -8,11 +8,10 @@
 
 #include "Online.h"
 
-
 class SNovaMainMenuHome : public SNovaTabPanel
 {
 	/*----------------------------------------------------
-		Slate arguments
+	    Slate arguments
 	----------------------------------------------------*/
 
 	SLATE_BEGIN_ARGS(SNovaMainMenuHome)
@@ -24,39 +23,32 @@ class SNovaMainMenuHome : public SNovaTabPanel
 	SLATE_END_ARGS()
 
 public:
-
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
-		Interaction
+	    Interaction
 	----------------------------------------------------*/
 
 	virtual void Show() override;
 
 	virtual void Hide() override;
 
-
 	/*----------------------------------------------------
-		Content callbacks
+	    Content callbacks
 	----------------------------------------------------*/
 
 protected:
-
-
 	/*----------------------------------------------------
-		Callbacks
+	    Callbacks
 	----------------------------------------------------*/
 
 	void OnLaunchGame();
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 protected:
-
 	// Menu manager
-	TWeakObjectPtr<UNovaMenuManager>              MenuManager;
-
+	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 };

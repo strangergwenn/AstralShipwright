@@ -16,29 +16,30 @@
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
 
-
 /*----------------------------------------------------
-	Helper class
+    Helper class
 ----------------------------------------------------*/
 
 void UNovaActorTools::SortActorsByClosestDistance(TArray<AActor*>& Actors, const FVector& BaseLocation)
 {
-	Actors.Sort([BaseLocation](AActor& A, AActor& B)
-	{
-		FVector LocationA = FVector(A.GetActorLocation() - BaseLocation);
-		FVector LocationB = FVector(B.GetActorLocation() - BaseLocation);
-		return (LocationA.Size() < LocationB.Size());
-	});
+	Actors.Sort(
+		[BaseLocation](AActor& A, AActor& B)
+		{
+			FVector LocationA = FVector(A.GetActorLocation() - BaseLocation);
+			FVector LocationB = FVector(B.GetActorLocation() - BaseLocation);
+			return (LocationA.Size() < LocationB.Size());
+		});
 }
 
 void UNovaActorTools::SortComponentsByClosestDistance(TArray<USceneComponent*>& Components, const FVector& BaseLocation)
 {
-	Components.Sort([BaseLocation](USceneComponent& A, USceneComponent& B)
-	{
-		FVector LocationA = FVector(A.GetComponentLocation() - BaseLocation);
-		FVector LocationB = FVector(B.GetComponentLocation() - BaseLocation);
-		return (LocationA.Size() < LocationB.Size());
-	});
+	Components.Sort(
+		[BaseLocation](USceneComponent& A, USceneComponent& B)
+		{
+			FVector LocationA = FVector(A.GetComponentLocation() - BaseLocation);
+			FVector LocationB = FVector(B.GetComponentLocation() - BaseLocation);
+			return (LocationA.Size() < LocationB.Size());
+		});
 }
 
 float UNovaActorTools::GetPlayerLatency(class APlayerController* PC)
@@ -65,7 +66,8 @@ float UNovaActorTools::GetPlayerLatency(class APlayerState* PlayerState)
 	}
 }
 
-FVector UNovaActorTools::GetVelocityCollisionResponse(const FVector& Velocity, const FHitResult& Hit, float BaseRestitution, const FVector& WorldUp)
+FVector UNovaActorTools::GetVelocityCollisionResponse(
+	const FVector& Velocity, const FHitResult& Hit, float BaseRestitution, const FVector& WorldUp)
 {
 	FVector Result = Velocity.MirrorByVector(Hit.Normal);
 
@@ -82,61 +84,67 @@ FVector UNovaActorTools::GetVelocityCollisionResponse(const FVector& Velocity, c
 	return Result;
 }
 
-void UNovaActorTools::PlayCameraShake(TSubclassOf<UCameraShakeBase> Shake, AActor* Owner, float Scale,
-	float AttenuationStartDistance, float AttenuationEndDistance)
+void UNovaActorTools::PlayCameraShake(
+	TSubclassOf<UCameraShakeBase> Shake, AActor* Owner, float Scale, float AttenuationStartDistance, float AttenuationEndDistance)
 {
 	ANovaPlayerController* PC = Cast<ANovaPlayerController>(Owner->GetGameInstance<UNovaGameInstance>()->GetFirstLocalPlayerController());
 
-	FVector CameraLocation;
+	FVector  CameraLocation;
 	FRotator CameraRotation;
 	PC->GetPlayerViewPoint(CameraLocation, CameraRotation);
 
 	float SourceDistance = (CameraLocation - Owner->GetActorLocation()).Size();
-	float Alpha = 1 - FMath::Clamp((SourceDistance - AttenuationStartDistance) / (AttenuationEndDistance - AttenuationStartDistance), 0.0f, 1.0f);
+	float Alpha =
+		1 - FMath::Clamp((SourceDistance - AttenuationStartDistance) / (AttenuationEndDistance - AttenuationStartDistance), 0.0f, 1.0f);
 
 	PC->ClientStartCameraShake(Shake, Alpha * Scale);
 }
 
-
 /*----------------------------------------------------
-	Location interpolator
+    Location interpolator
 ----------------------------------------------------*/
 
-FNovaMovementInterpolator::FNovaMovementInterpolator(const FTransform& StartTransform, const FVector& StartVelocity, const FVector& StartAngularVelocity,
-	const FTransform& EndTransform, const FVector& EndVelocity, const FVector& EndAngularVelocity, float Duration)
+FNovaMovementInterpolator::FNovaMovementInterpolator(const FTransform& StartTransform, const FVector& StartVelocity,
+	const FVector& StartAngularVelocity, const FTransform& EndTransform, const FVector& EndVelocity, const FVector& EndAngularVelocity,
+	float Duration)
 {
-	InterpolationDuration = Duration;
-	float VelocityToDerivative = InterpolationDuration * 100;
+	InterpolationDuration             = Duration;
+	float VelocityToDerivative        = InterpolationDuration * 100;
 	float AngularVelocityToDerivative = InterpolationDuration;
 
-	StartLocation = StartTransform.GetLocation();
-	StartRotation = StartTransform.GetRotation();
+	StartLocation          = StartTransform.GetLocation();
+	StartRotation          = StartTransform.GetRotation();
 	StartAngularDerivative = StartAngularVelocity * AngularVelocityToDerivative;
-	StartDerivative = StartVelocity * VelocityToDerivative;
+	StartDerivative        = StartVelocity * VelocityToDerivative;
 
-	TargetLocation = EndTransform.GetLocation();
-	TargetRotation = EndTransform.GetRotation();
-	TargetDerivative = EndVelocity * VelocityToDerivative;
+	TargetLocation          = EndTransform.GetLocation();
+	TargetRotation          = EndTransform.GetRotation();
+	TargetDerivative        = EndVelocity * VelocityToDerivative;
 	TargetAngularDerivative = EndAngularVelocity * AngularVelocityToDerivative;
 }
 
-void FNovaMovementInterpolator::Get(FVector& OutLocation, FQuat& OutRotation, FVector& OutVelocity, FVector& OutAngularVelocity, float Time) const
+void FNovaMovementInterpolator::Get(
+	FVector& OutLocation, FQuat& OutRotation, FVector& OutVelocity, FVector& OutAngularVelocity, float Time) const
 {
-	float LerpRatio = Time / InterpolationDuration;
-	float VelocityToDerivative = InterpolationDuration * 100;
+	float LerpRatio                   = Time / InterpolationDuration;
+	float VelocityToDerivative        = InterpolationDuration * 100;
 	float AngularVelocityToDerivative = InterpolationDuration;
 
 	OutLocation = FMath::CubicInterp(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
 	OutRotation = FQuat::Slerp(StartRotation, TargetRotation, LerpRatio);
-	OutVelocity = FMath::CubicInterpDerivative(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio) / VelocityToDerivative;
-	OutAngularVelocity = FMath::CubicInterpDerivative(StartRotation.Vector(), StartAngularDerivative, TargetRotation.Vector(), TargetAngularDerivative, LerpRatio) / AngularVelocityToDerivative;
+	OutVelocity =
+		FMath::CubicInterpDerivative(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio) / VelocityToDerivative;
+	OutAngularVelocity = FMath::CubicInterpDerivative(
+							 StartRotation.Vector(), StartAngularDerivative, TargetRotation.Vector(), TargetAngularDerivative, LerpRatio) /
+						 AngularVelocityToDerivative;
 }
 
 void FNovaMovementInterpolator::Get(FVector& OutLocation, FVector& OutVelocity, float Time) const
 {
-	float LerpRatio = Time / InterpolationDuration;
+	float LerpRatio            = Time / InterpolationDuration;
 	float VelocityToDerivative = InterpolationDuration * 100;
 
 	OutLocation = FMath::CubicInterp(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
-	OutVelocity = FMath::CubicInterpDerivative(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio) / VelocityToDerivative;
+	OutVelocity =
+		FMath::CubicInterpDerivative(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio) / VelocityToDerivative;
 }

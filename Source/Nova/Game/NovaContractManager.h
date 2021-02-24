@@ -7,7 +7,6 @@
 #include "Nova/Game/NovaGameTypes.h"
 #include "NovaContractManager.generated.h"
 
-
 /** Contracts presentation details */
 struct FNovaContractDetails
 {
@@ -25,13 +24,11 @@ enum ENovaContratEventType
 /** Contract event data */
 struct FNovaContractEvent
 {
-	FNovaContractEvent(ENovaContratEventType T)
-		: Type(T)
+	FNovaContractEvent(ENovaContratEventType T) : Type(T)
 	{}
 
 	ENovaContratEventType Type;
 };
-
 
 /** Contract manager to interact with contract objects */
 UCLASS(ClassGroup = (Nova))
@@ -40,23 +37,21 @@ class UNovaContractManager : public UObject
 	GENERATED_BODY()
 
 public:
-
 	UNovaContractManager();
 
-
 	/*----------------------------------------------------
-		Loading & saving
+	    Loading & saving
 	----------------------------------------------------*/
 
 	TSharedPtr<struct FNovaContractManagerSave> Save() const;
 
 	void Load(TSharedPtr<struct FNovaContractManagerSave> SaveData);
 
-	static void SerializeJson(TSharedPtr<struct FNovaContractManagerSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
-
+	static void SerializeJson(
+		TSharedPtr<struct FNovaContractManagerSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
 
 	/*----------------------------------------------------
-		System interface
+	    System interface
 	----------------------------------------------------*/
 
 	/** Get the singleton instance */
@@ -71,9 +66,8 @@ public:
 	/** Update all contracts */
 	void OnEvent(FNovaContractEvent Event);
 
-
 	/*----------------------------------------------------
-		Game interface
+	    Game interface
 	----------------------------------------------------*/
 
 	/** Is it still possible to generate new contracts */
@@ -94,7 +88,6 @@ public:
 	/** Complete a contract and destroy it */
 	void CompleteContract(TSharedPtr<class FNovaContract> Contract);
 
-
 	/** Fetch the number of active contracts */
 	uint32 GetContractCount() const;
 
@@ -110,23 +103,20 @@ public:
 	/** Get the tracked contract, or INDEX_NONE if none */
 	int32 GetTrackedContract();
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 protected:
-
 	// Singleton pointer
-	static UNovaContractManager*                  Singleton;
+	static UNovaContractManager* Singleton;
 
 	// Game instance pointer
 	UPROPERTY()
-	class UNovaGameInstance*                      GameInstance;
+	class UNovaGameInstance* GameInstance;
 
 	// State
-	TSharedPtr<class FNovaContract>               GeneratedContract;
-	TArray<TSharedPtr<class FNovaContract>>       CurrentContracts;
-	int32                                         CurrentTrackedContract;
-
+	TSharedPtr<class FNovaContract>         GeneratedContract;
+	TArray<TSharedPtr<class FNovaContract>> CurrentContracts;
+	int32                                   CurrentTrackedContract;
 };

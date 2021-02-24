@@ -6,9 +6,8 @@
 #include "NovaGameTypes.h"
 #include "NovaArea.generated.h"
 
-
 /*----------------------------------------------------
-	Description types
+    Description types
 ----------------------------------------------------*/
 
 /** World area description */
@@ -18,9 +17,7 @@ class UNovaArea : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
-	
 	// Sub-level to load
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	FName LevelName;
-
 };

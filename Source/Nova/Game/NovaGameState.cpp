@@ -5,21 +5,15 @@
 
 #include "Net/UnrealNetwork.h"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
-ANovaGameState::ANovaGameState()
-	: Super()
-	, GameWorld(nullptr)
-	, CurrentArea(nullptr)
-{
-}
-
+ANovaGameState::ANovaGameState() : Super(), GameWorld(nullptr), CurrentArea(nullptr)
+{}
 
 /*----------------------------------------------------
-	Gameplay
+    Gameplay
 ----------------------------------------------------*/
 
 void ANovaGameState::SetGameWorld(class ANovaGameWorld* World)
@@ -43,9 +37,8 @@ FName ANovaGameState::GetCurrentLevelName() const
 	return CurrentArea->LevelName;
 }
 
-
 /*----------------------------------------------------
-	Networking
+    Networking
 ----------------------------------------------------*/
 
 void ANovaGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -55,4 +48,3 @@ void ANovaGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME(ANovaGameState, GameWorld);
 	DOREPLIFETIME(ANovaGameState, CurrentArea);
 }
-

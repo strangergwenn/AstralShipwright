@@ -5,7 +5,6 @@
 #include "Nova/UI/Widget/NovaButton.h"
 #include "Nova/UI/Widget/NovaKeyLabel.h"
 
-
 /** Heavyweight button class */
 class SNovaLargeButton : public SNovaButton
 {
@@ -17,16 +16,15 @@ class SNovaLargeButton : public SNovaButton
 	SLATE_ATTRIBUTE(FName, Action)
 	SLATE_ATTRIBUTE(const FSlateBrush*, Icon)
 	SLATE_EVENT(FSimpleDelegate, OnClicked)
-	
+
 	SLATE_END_ARGS()
 
-
 public:
-
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme();
 
+		// clang-format off
 		SNovaButton::Construct(SNovaButton::FArguments()
 			.Size("LargeButtonSize")
 			.HelpText(InArgs._HelpText)
@@ -68,6 +66,7 @@ public:
 				.Image(InArgs._Icon)
 			]
 		);
+		// clang-format on
 	}
 
 	FKey GetActionKey() const
@@ -77,5 +76,4 @@ public:
 
 		return MenuManager->GetFirstActionKey(Action.Get());
 	}
-
 };

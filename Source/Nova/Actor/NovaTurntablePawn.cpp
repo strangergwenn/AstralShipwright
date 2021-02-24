@@ -13,12 +13,10 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 
-
 #define LOCTEXT_NAMESPACE "ANovaTurntablePawn"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
 ANovaTurntablePawn::ANovaTurntablePawn()
@@ -50,7 +48,7 @@ ANovaTurntablePawn::ANovaTurntablePawn()
 	// Create camera spring arm
 	CameraArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraArmComponent"));
 	CameraArmComponent->SetupAttachment(CameraPitchComponent);
-	CameraArmComponent->TargetArmLength = 2000;
+	CameraArmComponent->TargetArmLength  = 2000;
 	CameraArmComponent->bDoCollisionTest = false;
 
 	// Create camera component
@@ -61,27 +59,26 @@ ANovaTurntablePawn::ANovaTurntablePawn()
 	// Settings
 	bAlwaysRelevant = true;
 	SetActorTickEnabled(true);
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick          = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
 
 	// Default camera parameters
-	AnimationDuration = 0.5f;
-	DefaultDistance = 500.0f;
-	DefaultDistanceFactor = 2.0f;
-	MinDistanceFactor = 0.15f;
+	AnimationDuration       = 0.5f;
+	DefaultDistance         = 500.0f;
+	DefaultDistanceFactor   = 2.0f;
+	MinDistanceFactor       = 0.15f;
 	DistanceFactorIncrement = 0.15f;
-	CameraMinTilt = -80.0f;
-	CameraMaxTilt = 20.0f;
-	CameraVelocity = 200.0f;
-	CameraGamepadVelocity = 100.0f;
-	CameraAcceleration = 300.0f;
-	CameraResistance = 1 / 360.0f;
-	CameraInputPower = 3.0f;
+	CameraMinTilt           = -80.0f;
+	CameraMaxTilt           = 20.0f;
+	CameraVelocity          = 200.0f;
+	CameraGamepadVelocity   = 100.0f;
+	CameraAcceleration      = 300.0f;
+	CameraResistance        = 1 / 360.0f;
+	CameraInputPower        = 3.0f;
 }
 
-
 /*----------------------------------------------------
-	Gameplay
+    Gameplay
 ----------------------------------------------------*/
 
 void ANovaTurntablePawn::BeginPlay()
@@ -99,8 +96,8 @@ void ANovaTurntablePawn::Tick(float DeltaTime)
 
 	// Extract coordinates
 	const TPair<FVector, FVector> OriginExtent = GetTurntableBounds();
-	const FVector Origin = OriginExtent.Key;
-	const FVector Extent = OriginExtent.Value;
+	const FVector                 Origin       = OriginExtent.Key;
+	const FVector                 Extent       = OriginExtent.Value;
 
 	// Extract distance
 	float Distance = CurrentDistanceFactor * Extent.Size();
@@ -113,19 +110,19 @@ void ANovaTurntablePawn::Tick(float DeltaTime)
 	if (CurrentAnimationTime >= AnimationDuration && (Origin.X != CurrentOffset || Distance != CurrentDistance))
 	{
 		PreviousOffset = CurrentOffset;
-		CurrentOffset = Origin.X;
+		CurrentOffset  = Origin.X;
 
 		PreviousDistance = CurrentDistance;
-		CurrentDistance = Distance;
+		CurrentDistance  = Distance;
 
 		CurrentAnimationTime = 0;
 	}
 
 	// Process interpolation
 	CurrentAnimationTime += DeltaTime;
-	CurrentAnimationTime = FMath::Clamp(CurrentAnimationTime, 0.0f, AnimationDuration);
-	float Alpha = CurrentAnimationTime / AnimationDuration;
-	float InterpolatedOffset = FMath::InterpEaseInOut(PreviousOffset, CurrentOffset, Alpha, ENovaUIConstants::EaseStandard);
+	CurrentAnimationTime       = FMath::Clamp(CurrentAnimationTime, 0.0f, AnimationDuration);
+	float Alpha                = CurrentAnimationTime / AnimationDuration;
+	float InterpolatedOffset   = FMath::InterpEaseInOut(PreviousOffset, CurrentOffset, Alpha, ENovaUIConstants::EaseStandard);
 	float InterpolatedDistance = FMath::InterpEaseInOut(PreviousDistance, CurrentDistance, Alpha, ENovaUIConstants::EaseStandard);
 
 	// Apply values
@@ -138,11 +135,11 @@ void ANovaTurntablePawn::Tick(float DeltaTime)
 
 void ANovaTurntablePawn::ResetView()
 {
-	CurrentTiltAngle = -45;
-	CurrentPanAngle = 135;
-	CurrentDistance = DefaultDistance;
+	CurrentTiltAngle      = -45;
+	CurrentPanAngle       = 135;
+	CurrentDistance       = DefaultDistance;
 	CurrentDistanceFactor = DefaultDistanceFactor;
-	CurrentAnimationTime = AnimationDuration;
+	CurrentAnimationTime  = AnimationDuration;
 }
 
 TPair<FVector, FVector> ANovaTurntablePawn::GetTurntableBounds() const
@@ -172,37 +169,36 @@ void ANovaTurntablePawn::ZoomOut()
 	CurrentDistanceFactor = FMath::Clamp(CurrentDistanceFactor, MinDistanceFactor, DefaultDistanceFactor);
 }
 
-
 /*----------------------------------------------------
-	Internals
+    Internals
 ----------------------------------------------------*/
 
 void ANovaTurntablePawn::ProcessCamera(float DeltaTime)
 {
 	auto ApplyInputFilter = [&](float& CurrentAngle, float& CurrentSpeed, float& TargetAngle, const float MaximumSpeed)
 	{
-		float Brake = 2.f;
+		float Brake  = 2.f;
 		float Brake2 = 4.f;
 
 		// Compute acceleration and resistance
 		float Acc = FMath::Pow(TargetAngle, CameraInputPower) * CameraAcceleration;
-		float Res = FMath::Sign(CurrentSpeed) * (CameraResistance * FMath::Square(CurrentSpeed)
-			+ (Acc == 0 ? Brake2 + Brake * FMath::Abs(CurrentSpeed) : 0));
+		float Res = FMath::Sign(CurrentSpeed) *
+					(CameraResistance * FMath::Square(CurrentSpeed) + (Acc == 0 ? Brake2 + Brake * FMath::Abs(CurrentSpeed) : 0));
 		float MaxResDeltaSpeed = CurrentSpeed;
-		float AccDeltaSpeed = Acc * DeltaTime;
-		float ResDeltaSpeed = -(FMath::Abs(Res * DeltaTime) > FMath::Abs(MaxResDeltaSpeed) ? MaxResDeltaSpeed : Res * DeltaTime);
+		float AccDeltaSpeed    = Acc * DeltaTime;
+		float ResDeltaSpeed    = -(FMath::Abs(Res * DeltaTime) > FMath::Abs(MaxResDeltaSpeed) ? MaxResDeltaSpeed : Res * DeltaTime);
 
 		// Update velocity, integrate the current angle and consume the input
 		CurrentSpeed += AccDeltaSpeed + ResDeltaSpeed;
 		CurrentSpeed = FMath::Clamp(CurrentSpeed, -MaximumSpeed, MaximumSpeed);
 		CurrentAngle += CurrentSpeed * DeltaTime;
 		CurrentAngle = FMath::UnwindDegrees(CurrentAngle);
-		TargetAngle = 0;
+		TargetAngle  = 0;
 	};
 
 	// Regularize framerate
 	float FramerateMultiplier = 1.0f;
-	bool IsGamepad = GetGameInstance<UNovaGameInstance>()->GetMenuManager()->IsUsingGamepad();
+	bool  IsGamepad           = GetGameInstance<UNovaGameInstance>()->GetMenuManager()->IsUsingGamepad();
 	if (IsGamepad)
 	{
 		FramerateMultiplier = DeltaTime / (1.0f / 60.0f);
@@ -224,6 +220,5 @@ void ANovaTurntablePawn::ProcessCamera(float DeltaTime)
 	CameraYawComponent->SetRelativeRotation(FRotator(0, CurrentPanAngle, 0));
 	CameraPitchComponent->SetRelativeRotation(FRotator(CurrentTiltAngle, 0, 0));
 }
-
 
 #undef LOCTEXT_NAMESPACE

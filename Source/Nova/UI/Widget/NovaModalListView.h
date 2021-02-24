@@ -9,13 +9,11 @@
 #include "Nova/UI/NovaUI.h"
 #include "Nova/Nova.h"
 
-
 /** Templatized, modal, list class to display elements from a TArray */
 template <typename ItemType>
 class SNovaModalListView : public SNovaButton
 {
 public:
-
 	typedef TPair<int32, TArray<ItemType>> SelfRefreshType;
 
 	DECLARE_DELEGATE_RetVal(SelfRefreshType, FNovaOnSelfRefresh);
@@ -25,9 +23,8 @@ public:
 	DECLARE_DELEGATE_TwoParams(FNovaListSelectionChanged, ItemType, int32);
 
 private:
-
 	/*----------------------------------------------------
-		Slate arguments
+	    Slate arguments
 	----------------------------------------------------*/
 
 	SLATE_BEGIN_ARGS(SNovaModalListView<ItemType>)
@@ -53,40 +50,38 @@ private:
 	SLATE_EVENT(FNovaOnGenerateName, OnGenerateName)
 	SLATE_EVENT(FNovaOnGenerateTooltip, OnGenerateTooltip)
 	SLATE_EVENT(FNovaListSelectionChanged, OnSelectionChanged)
-		
+
 	SLATE_ARGUMENT(FName, ButtonTheme)
 	SLATE_ARGUMENT(FName, ButtonSize)
 	SLATE_ARGUMENT(FName, ListButtonTheme)
 	SLATE_ARGUMENT(FName, ListButtonSize)
-	
+
 	SLATE_END_ARGS()
 
-
 	/*----------------------------------------------------
-		Constructor
+	    Constructor
 	----------------------------------------------------*/
 
 public:
-
 	void Construct(const FArguments& InArgs)
 	{
-		TitleText = InArgs._TitleText;
-		HelpText = InArgs._HelpText;
-		OnSelfRefresh = InArgs._OnSelfRefresh;
-		OnGenerateName = InArgs._OnGenerateName;
+		TitleText          = InArgs._TitleText;
+		HelpText           = InArgs._HelpText;
+		OnSelfRefresh      = InArgs._OnSelfRefresh;
+		OnGenerateName     = InArgs._OnGenerateName;
 		OnSelectionChanged = InArgs._OnSelectionChanged;
 
 		ListPanel = InArgs._Panel->GetMenu()->CreateModalPanel(InArgs._Panel);
 
 		SNovaButton::Construct(SNovaButton::FArguments()
-			.Text(this, &SNovaModalListView::GetButtonText)
-			.HelpText(HelpText)
-			.Action(InArgs._Action)
-			.Theme(InArgs._ButtonTheme)
-			.Size(InArgs._ButtonSize)
-			.Enabled(InArgs._Enabled)
-			.Focusable(InArgs._Focusable)
-			.OnClicked(this, &SNovaModalListView::OnOpenList));
+								   .Text(this, &SNovaModalListView::GetButtonText)
+								   .HelpText(HelpText)
+								   .Action(InArgs._Action)
+								   .Theme(InArgs._ButtonTheme)
+								   .Size(InArgs._ButtonSize)
+								   .Enabled(InArgs._Enabled)
+								   .Focusable(InArgs._Focusable)
+								   .OnClicked(this, &SNovaModalListView::OnOpenList));
 
 		SAssignNew(ListView, SNovaListView<ItemType>)
 			.Panel(ListPanel.Get())
@@ -99,13 +94,11 @@ public:
 			.ButtonSize(InArgs._ListButtonSize);
 	}
 
-
 	/*----------------------------------------------------
-		Public methods
+	    Public methods
 	----------------------------------------------------*/
 
 public:
-
 	/** Refresh the list based on the items source */
 	void Refresh(int32 SelectedIndex = INDEX_NONE)
 	{
@@ -113,13 +106,11 @@ public:
 		CurrentConfirmed = ListView->GetSelectedItem();
 	}
 
-
 	/*----------------------------------------------------
-		Callbacks
+	    Callbacks
 	----------------------------------------------------*/
 
 protected:
-
 	FText GetButtonText() const
 	{
 		if (OnGenerateName.IsBound())
@@ -135,7 +126,7 @@ protected:
 	void OnOpenList()
 	{
 		CurrentUserSelectedIndex = INDEX_NONE;
-		int32 CurrentListIndex = ListView->GetSelectedIndex();
+		int32 CurrentListIndex   = ListView->GetSelectedIndex();
 
 		if (OnSelfRefresh.IsBound())
 		{
@@ -148,11 +139,8 @@ protected:
 			InternalItemsSource = RefreshResult.Value;
 		}
 
-		ListPanel->Show(TitleText.Get(), HelpText.Get(),
-			FSimpleDelegate::CreateSP(this, &SNovaModalListView::OnListConfirmed),
-			FSimpleDelegate(),
-			FSimpleDelegate(),
-			ListView);
+		ListPanel->Show(TitleText.Get(), HelpText.Get(), FSimpleDelegate::CreateSP(this, &SNovaModalListView::OnListConfirmed),
+			FSimpleDelegate(), FSimpleDelegate(), ListView);
 
 		ListView->Refresh(CurrentListIndex);
 	}
@@ -170,33 +158,30 @@ protected:
 
 	void OnListSelectionChanged(ItemType Selected, int32 Index)
 	{
-		CurrentSelected = Selected;
+		CurrentSelected          = Selected;
 		CurrentUserSelectedIndex = Index;
 	}
 
-
 	/*----------------------------------------------------
-		Data
+	    Data
 	----------------------------------------------------*/
 
 protected:
-
 	// State
-	TAttribute<FText>                             TitleText;
-	TAttribute<FText>                             HelpText;
-	ItemType                                      CurrentSelected;
-	ItemType                                      CurrentConfirmed;
-	int32                                         CurrentUserSelectedIndex;
-	FSimpleDelegate                               OnOpen;
-	FNovaOnSelfRefresh                            OnSelfRefresh;
-	FNovaOnGenerateName                           OnGenerateName;
-	FNovaListSelectionChanged                     OnSelectionChanged;
+	TAttribute<FText>         TitleText;
+	TAttribute<FText>         HelpText;
+	ItemType                  CurrentSelected;
+	ItemType                  CurrentConfirmed;
+	int32                     CurrentUserSelectedIndex;
+	FSimpleDelegate           OnOpen;
+	FNovaOnSelfRefresh        OnSelfRefresh;
+	FNovaOnGenerateName       OnGenerateName;
+	FNovaListSelectionChanged OnSelectionChanged;
 
 	// Internal list
-	TArray<ItemType>                              InternalItemsSource;
-	
-	// Widgets
-	TSharedPtr<SNovaModalPanel>                   ListPanel;
-	TSharedPtr<SNovaListView<ItemType>>           ListView;
+	TArray<ItemType> InternalItemsSource;
 
+	// Widgets
+	TSharedPtr<SNovaModalPanel>         ListPanel;
+	TSharedPtr<SNovaListView<ItemType>> ListView;
 };

@@ -23,41 +23,37 @@
 #include "Engine/World.h"
 #include "Engine.h"
 
-
 #define LOCTEXT_NAMESPACE "UNovaGameInstance"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
-UNovaGameInstance::UNovaGameInstance()
-	: Super()
-	, CurrentSaveData(nullptr)
-	, NetworkState(ENovaNetworkState::Offline)
+UNovaGameInstance::UNovaGameInstance() : Super(), CurrentSaveData(nullptr), NetworkState(ENovaNetworkState::Offline)
 {
 	// Session callbacks
-	OnCreateSessionCompleteDelegate = FOnCreateSessionCompleteDelegate::CreateUObject(this, &UNovaGameInstance::OnCreateSessionComplete);
-	OnStartSessionCompleteDelegate = FOnStartSessionCompleteDelegate::CreateUObject(this, &UNovaGameInstance::OnStartOnlineGameComplete);
-	OnFindSessionsCompleteDelegate = FOnFindSessionsCompleteDelegate::CreateUObject(this, &UNovaGameInstance::OnFindSessionsComplete);
-	OnJoinSessionCompleteDelegate = FOnJoinSessionCompleteDelegate::CreateUObject(this, &UNovaGameInstance::OnJoinSessionComplete);
+	OnCreateSessionCompleteDelegate  = FOnCreateSessionCompleteDelegate::CreateUObject(this, &UNovaGameInstance::OnCreateSessionComplete);
+	OnStartSessionCompleteDelegate   = FOnStartSessionCompleteDelegate::CreateUObject(this, &UNovaGameInstance::OnStartOnlineGameComplete);
+	OnFindSessionsCompleteDelegate   = FOnFindSessionsCompleteDelegate::CreateUObject(this, &UNovaGameInstance::OnFindSessionsComplete);
+	OnJoinSessionCompleteDelegate    = FOnJoinSessionCompleteDelegate::CreateUObject(this, &UNovaGameInstance::OnJoinSessionComplete);
 	OnDestroySessionCompleteDelegate = FOnDestroySessionCompleteDelegate::CreateUObject(this, &UNovaGameInstance::OnDestroySessionComplete);
 
 	// Friends callbacks
 	OnReadFriendsListCompleteDelegate = FOnReadFriendsListComplete::CreateUObject(this, &UNovaGameInstance::OnReadFriendsComplete);
-	OnSessionUserInviteAcceptedDelegate = FOnSessionUserInviteAcceptedDelegate::CreateUObject(this, &UNovaGameInstance::OnSessionUserInviteAccepted);
-	OnFindFriendSessionCompleteDelegate = FOnFindFriendSessionCompleteDelegate::CreateUObject(this, &UNovaGameInstance::OnFindFriendSessionComplete);
+	OnSessionUserInviteAcceptedDelegate =
+		FOnSessionUserInviteAcceptedDelegate::CreateUObject(this, &UNovaGameInstance::OnSessionUserInviteAccepted);
+	OnFindFriendSessionCompleteDelegate =
+		FOnFindFriendSessionCompleteDelegate::CreateUObject(this, &UNovaGameInstance::OnFindFriendSessionComplete);
 }
 
-
 /*----------------------------------------------------
-	Loading & saving
+    Loading & saving
 ----------------------------------------------------*/
 
 struct FNovaGameSave
 {
-	TSharedPtr<struct FNovaPlayerSave> PlayerData;
-	TSharedPtr<struct FNovaWorldSave> WorldData;
+	TSharedPtr<struct FNovaPlayerSave>          PlayerData;
+	TSharedPtr<struct FNovaWorldSave>           WorldData;
 	TSharedPtr<struct FNovaContractManagerSave> ContractManagerData;
 };
 
@@ -76,7 +72,7 @@ TSharedPtr<FNovaGameSave> UNovaGameInstance::Save(const ANovaPlayerController* P
 		{
 			Save->WorldData = GameWorld->Save();
 		}
-	}	
+	}
 
 	// Save contracts
 	Save->ContractManagerData = ContractManager->Save();
@@ -110,16 +106,15 @@ void UNovaGameInstance::SerializeJson(TSharedPtr<FNovaGameSave>& SaveData, TShar
 	{
 		SaveData = MakeShareable(new FNovaGameSave);
 
-		TSharedPtr<FJsonObject> PlayerJsonData = JsonData->GetObjectField("Player");
+		TSharedPtr<FJsonObject> PlayerJsonData          = JsonData->GetObjectField("Player");
 		TSharedPtr<FJsonObject> ContractManagerJsonData = JsonData->GetObjectField("ContractManager");
 		ANovaPlayerController::SerializeJson(SaveData->PlayerData, PlayerJsonData, ENovaSerialize::JsonToData);
 		UNovaContractManager::SerializeJson(SaveData->ContractManagerData, ContractManagerJsonData, ENovaSerialize::JsonToData);
 	}
 }
 
-
 /*----------------------------------------------------
-	Inherited
+    Inherited
 ----------------------------------------------------*/
 
 void UNovaGameInstance::Init()
@@ -141,7 +136,8 @@ void UNovaGameInstance::Init()
 	if (OnlineSub)
 	{
 		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
-		OnSessionUserInviteAcceptedDelegateHandle = Sessions->AddOnSessionUserInviteAcceptedDelegate_Handle(OnSessionUserInviteAcceptedDelegate);
+		OnSessionUserInviteAcceptedDelegateHandle =
+			Sessions->AddOnSessionUserInviteAcceptedDelegate_Handle(OnSessionUserInviteAcceptedDelegate);
 	}
 
 	// Get asset inventory
@@ -186,9 +182,8 @@ void UNovaGameInstance::PreLoadMap(const FString& InMapName)
 	}
 }
 
-
 /*----------------------------------------------------
-	Game save handling
+    Game save handling
 ----------------------------------------------------*/
 
 void UNovaGameInstance::StartGame(FString SaveName, bool Online)
@@ -204,7 +199,7 @@ void UNovaGameInstance::LoadGame(FString SaveName)
 {
 	NLOG("UNovaGameInstance::LoadGame : loading from '%s'", *SaveName);
 
-	CurrentSaveData = nullptr;
+	CurrentSaveData     = nullptr;
 	CurrentSaveFileName = SaveName;
 
 	// Read and de-serialize all data, without actually loading objects
@@ -221,7 +216,7 @@ void UNovaGameInstance::LoadGame(FString SaveName)
 	Load(CurrentSaveData);
 }
 
-void UNovaGameInstance::SaveGame(ANovaPlayerController* PC, bool Synchronous) // TODO PC
+void UNovaGameInstance::SaveGame(ANovaPlayerController* PC, bool Synchronous)    // TODO PC
 {
 	NLOG("UNovaGameInstance::SaveGame : synchronous %d", Synchronous);
 
@@ -275,9 +270,8 @@ TSharedPtr<FNovaContractManagerSave> UNovaGameInstance::GetContractManagerSave()
 	return CurrentSaveData->ContractManagerData;
 }
 
-
 /*----------------------------------------------------
-	Game flow
+    Game flow
 ----------------------------------------------------*/
 
 UNovaContractManager* UNovaGameInstance::GetContractManager() const
@@ -330,9 +324,8 @@ void UNovaGameInstance::ServerTravel(FString URL)
 	GetWorld()->ServerTravel(URL + TEXT("?listen"), true);
 }
 
-
 /*----------------------------------------------------
-	Session
+    Session
 ----------------------------------------------------*/
 
 FString UNovaGameInstance::GetOnlineSubsystemName() const
@@ -353,9 +346,9 @@ bool UNovaGameInstance::IsOnline() const
 
 	if (OnlineSub)
 	{
-		ULocalPlayer* Player = GetFirstGamePlayer();
+		ULocalPlayer*     Player   = GetFirstGamePlayer();
 		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
-		FUniqueNetIdRepl UserId = Player->GetPreferredUniqueNetId();
+		FUniqueNetIdRepl  UserId   = Player->GetPreferredUniqueNetId();
 
 		if (Sessions.IsValid() && UserId.IsValid())
 		{
@@ -368,9 +361,8 @@ bool UNovaGameInstance::IsOnline() const
 
 bool UNovaGameInstance::IsActive() const
 {
-	return (NetworkState != ENovaNetworkState::Offline
-		&&  NetworkState != ENovaNetworkState::OnlineClient
-		&&  NetworkState != ENovaNetworkState::OnlineHost);
+	return (NetworkState != ENovaNetworkState::Offline && NetworkState != ENovaNetworkState::OnlineClient &&
+			NetworkState != ENovaNetworkState::OnlineHost);
 }
 
 bool UNovaGameInstance::StartSession(FString URL, int32 MaxNumPlayers, bool Public)
@@ -381,9 +373,9 @@ bool UNovaGameInstance::StartSession(FString URL, int32 MaxNumPlayers, bool Publ
 
 	if (OnlineSub)
 	{
-		ULocalPlayer* Player = GetFirstGamePlayer();
+		ULocalPlayer*     Player   = GetFirstGamePlayer();
 		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
-		FUniqueNetIdRepl UserId = Player->GetPreferredUniqueNetId();
+		FUniqueNetIdRepl  UserId   = Player->GetPreferredUniqueNetId();
 
 		if (Sessions.IsValid() && UserId.IsValid())
 		{
@@ -393,9 +385,10 @@ bool UNovaGameInstance::StartSession(FString URL, int32 MaxNumPlayers, bool Publ
 			if (Sessions->IsPlayerInSession(GameSessionName, *UserId))
 			{
 				ActionAfterDestroy = FNovaSessionAction(URL, MaxNumPlayers, Public);
-				NetworkState = ENovaNetworkState::JoiningDestroying;
+				NetworkState       = ENovaNetworkState::JoiningDestroying;
 
-				OnDestroySessionCompleteDelegateHandle = Sessions->AddOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegate);
+				OnDestroySessionCompleteDelegateHandle =
+					Sessions->AddOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegate);
 				return Sessions->DestroySession(GameSessionName);
 			}
 
@@ -404,14 +397,14 @@ bool UNovaGameInstance::StartSession(FString URL, int32 MaxNumPlayers, bool Publ
 			{
 				SessionSettings = MakeShareable(new FOnlineSessionSettings());
 
-				SessionSettings->NumPublicConnections = MaxNumPlayers;
-				SessionSettings->NumPrivateConnections = 0;
-				SessionSettings->bIsLANMatch = false;
-				SessionSettings->bUsesPresence = true;
-				SessionSettings->bAllowInvites = true;
-				SessionSettings->bAllowJoinInProgress = true;
-				SessionSettings->bShouldAdvertise = Public;
-				SessionSettings->bAllowJoinViaPresence = true;
+				SessionSettings->NumPublicConnections             = MaxNumPlayers;
+				SessionSettings->NumPrivateConnections            = 0;
+				SessionSettings->bIsLANMatch                      = false;
+				SessionSettings->bUsesPresence                    = true;
+				SessionSettings->bAllowInvites                    = true;
+				SessionSettings->bAllowJoinInProgress             = true;
+				SessionSettings->bShouldAdvertise                 = Public;
+				SessionSettings->bAllowJoinViaPresence            = true;
 				SessionSettings->bAllowJoinViaPresenceFriendsOnly = false;
 
 				NextURL = URL;
@@ -420,7 +413,8 @@ bool UNovaGameInstance::StartSession(FString URL, int32 MaxNumPlayers, bool Publ
 				NetworkState = ENovaNetworkState::Starting;
 
 				// Start
-				OnCreateSessionCompleteDelegateHandle = Sessions->AddOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegate);
+				OnCreateSessionCompleteDelegateHandle =
+					Sessions->AddOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegate);
 				return Sessions->CreateSession(*UserId, GameSessionName, *SessionSettings);
 			}
 		}
@@ -442,9 +436,9 @@ bool UNovaGameInstance::EndSession(FString URL)
 		// Destroy
 		if (Sessions.IsValid())
 		{
-			ActionAfterError = FNovaSessionAction(GetWorld()->GetName());
+			ActionAfterError   = FNovaSessionAction(GetWorld()->GetName());
 			ActionAfterDestroy = FNovaSessionAction(URL);
-			NetworkState = ENovaNetworkState::Ending;
+			NetworkState       = ENovaNetworkState::Ending;
 
 			OnDestroySessionCompleteDelegateHandle = Sessions->AddOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegate);
 			return Sessions->DestroySession(GameSessionName);
@@ -464,18 +458,18 @@ bool UNovaGameInstance::SearchSessions(bool OnLan, FOnSessionSearchComplete Call
 
 	if (OnlineSub)
 	{
-		ULocalPlayer* Player = GetFirstGamePlayer();
+		ULocalPlayer*     Player   = GetFirstGamePlayer();
 		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
-		FUniqueNetIdRepl UserId = Player->GetPreferredUniqueNetId();
+		FUniqueNetIdRepl  UserId   = Player->GetPreferredUniqueNetId();
 
 		// Start searching
 		if (Sessions.IsValid() && UserId.IsValid())
 		{
 			SessionSearch = MakeShareable(new FOnlineSessionSearch());
 
-			SessionSearch->bIsLanQuery = OnLan;
+			SessionSearch->bIsLanQuery      = OnLan;
 			SessionSearch->MaxSearchResults = 10;
-			SessionSearch->PingBucketSize = 100;
+			SessionSearch->PingBucketSize   = 100;
 			SessionSearch->TimeoutInSeconds = 3;
 
 			SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
@@ -500,9 +494,9 @@ bool UNovaGameInstance::JoinSearchResult(const FOnlineSessionSearchResult& Searc
 
 	if (OnlineSub)
 	{
-		ULocalPlayer* Player = GetFirstGamePlayer();
+		ULocalPlayer*     Player   = GetFirstGamePlayer();
 		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
-		FUniqueNetIdRepl UserId = Player->GetPreferredUniqueNetId();
+		FUniqueNetIdRepl  UserId   = Player->GetPreferredUniqueNetId();
 
 		// Start joining
 		if (Sessions.IsValid() && UserId.IsValid())
@@ -510,9 +504,10 @@ bool UNovaGameInstance::JoinSearchResult(const FOnlineSessionSearchResult& Searc
 			// Player is already in session, leave it
 			if (Sessions->IsPlayerInSession(GameSessionName, *UserId))
 			{
-				OnDestroySessionCompleteDelegateHandle = Sessions->AddOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegate);
+				OnDestroySessionCompleteDelegateHandle =
+					Sessions->AddOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegate);
 
-				ActionAfterError = FNovaSessionAction(GetWorld()->GetName());
+				ActionAfterError   = FNovaSessionAction(GetWorld()->GetName());
 				ActionAfterDestroy = FNovaSessionAction(SearchResult);
 
 				NetworkState = ENovaNetworkState::JoiningDestroying;
@@ -540,9 +535,8 @@ void UNovaGameInstance::ClearError()
 	LastNetworkError = ENovaNetworkError::Success;
 }
 
-
 /*----------------------------------------------------
-	Friends API
+    Friends API
 ----------------------------------------------------*/
 
 void UNovaGameInstance::SetAcceptedInvitationCallback(FOnFriendInviteAccepted Callback)
@@ -560,7 +554,8 @@ bool UNovaGameInstance::SearchFriends(FOnFriendSearchComplete Callback)
 	{
 		ULocalPlayer* Player = GetFirstGamePlayer();
 
-		return OnlineSub->GetFriendsInterface()->ReadFriendsList(Player->GetControllerId(), EFriendsLists::ToString(EFriendsLists::Default), OnReadFriendsListCompleteDelegate);
+		return OnlineSub->GetFriendsInterface()->ReadFriendsList(
+			Player->GetControllerId(), EFriendsLists::ToString(EFriendsLists::Default), OnReadFriendsListCompleteDelegate);
 	}
 
 	return false;
@@ -574,9 +569,9 @@ bool UNovaGameInstance::InviteFriend(FUniqueNetIdRepl FriendUserId)
 
 	if (OnlineSub)
 	{
-		ULocalPlayer* Player = GetFirstGamePlayer();
+		ULocalPlayer*     Player   = GetFirstGamePlayer();
 		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
-		FUniqueNetIdRepl UserId = Player->GetPreferredUniqueNetId();
+		FUniqueNetIdRepl  UserId   = Player->GetPreferredUniqueNetId();
 
 		// Send invite
 		return Sessions->SendSessionInviteToFriend(*UserId, GameSessionName, *FriendUserId);
@@ -593,22 +588,22 @@ bool UNovaGameInstance::JoinFriend(FUniqueNetIdRepl FriendUserId)
 
 	if (OnlineSub)
 	{
-		ULocalPlayer* Player = GetFirstGamePlayer();
+		ULocalPlayer*     Player   = GetFirstGamePlayer();
 		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
-		FUniqueNetIdRepl UserId = Player->GetPreferredUniqueNetId();
+		FUniqueNetIdRepl  UserId   = Player->GetPreferredUniqueNetId();
 
 		// Find the session and join
 		ActionAfterError = FNovaSessionAction(GetWorld()->GetName());
-		OnFindFriendSessionCompleteDelegateHandle = Sessions->AddOnFindFriendSessionCompleteDelegate_Handle(Player->GetControllerId(), OnFindFriendSessionCompleteDelegate);
+		OnFindFriendSessionCompleteDelegateHandle =
+			Sessions->AddOnFindFriendSessionCompleteDelegate_Handle(Player->GetControllerId(), OnFindFriendSessionCompleteDelegate);
 		return Sessions->FindFriendSession(*UserId, *FriendUserId);
 	}
 
 	return false;
 }
 
-
 /*----------------------------------------------------
-	Session internals
+    Session internals
 ----------------------------------------------------*/
 
 void UNovaGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
@@ -722,7 +717,7 @@ void UNovaGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionC
 
 	IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
 	NCHECK(OnlineSub);
-	
+
 	IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
 	if (Sessions.IsValid())
 	{
@@ -753,7 +748,7 @@ void UNovaGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionC
 			{
 				NetworkState = ENovaNetworkState::OnlineHost;
 			}
-			
+
 			switch (Result)
 			{
 				case EOnJoinSessionCompleteResult::SessionIsFull:
@@ -773,9 +768,8 @@ void UNovaGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionC
 	}
 }
 
-
 /*----------------------------------------------------
-	Friends internals
+    Friends internals
 ----------------------------------------------------*/
 
 void UNovaGameInstance::OnReadFriendsComplete(int32 LocalPlayer, bool bWasSuccessful, const FString& ListName, const FString& ErrorStr)
@@ -785,16 +779,18 @@ void UNovaGameInstance::OnReadFriendsComplete(int32 LocalPlayer, bool bWasSucces
 	IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
 	if (OnlineSub && OnlineSub->GetFriendsInterface().IsValid() && bWasSuccessful)
 	{
-		ULocalPlayer* Player = GetFirstGamePlayer();
+		ULocalPlayer*     Player   = GetFirstGamePlayer();
 		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
 
-		OnlineSub->GetFriendsInterface()->GetFriendsList(Player->GetControllerId(), EFriendsLists::ToString(EFriendsLists::Default), Friends);
+		OnlineSub->GetFriendsInterface()->GetFriendsList(
+			Player->GetControllerId(), EFriendsLists::ToString(EFriendsLists::Default), Friends);
 	}
 
 	OnFriendListReady.ExecuteIfBound(Friends);
 }
 
-void UNovaGameInstance::OnSessionUserInviteAccepted(bool bWasSuccess, const int32 ControllerId, TSharedPtr<const FUniqueNetId> UserId, const FOnlineSessionSearchResult& InviteResult)
+void UNovaGameInstance::OnSessionUserInviteAccepted(
+	bool bWasSuccess, const int32 ControllerId, TSharedPtr<const FUniqueNetId> UserId, const FOnlineSessionSearchResult& InviteResult)
 {
 	if (bWasSuccess)
 	{
@@ -802,7 +798,8 @@ void UNovaGameInstance::OnSessionUserInviteAccepted(bool bWasSuccess, const int3
 	}
 }
 
-void UNovaGameInstance::OnFindFriendSessionComplete(int32 LocalPlayer, bool bWasSuccessful, const TArray<FOnlineSessionSearchResult>& SearchResult)
+void UNovaGameInstance::OnFindFriendSessionComplete(
+	int32 LocalPlayer, bool bWasSuccessful, const TArray<FOnlineSessionSearchResult>& SearchResult)
 {
 	IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
 	NCHECK(OnlineSub);
@@ -813,10 +810,8 @@ void UNovaGameInstance::OnFindFriendSessionComplete(int32 LocalPlayer, bool bWas
 		Sessions->ClearOnFindFriendSessionCompleteDelegate_Handle(LocalPlayer, OnFindFriendSessionCompleteDelegateHandle);
 
 		// Join session
-		if (bWasSuccessful
-			&& SearchResult.Num() > 0
-			&& SearchResult[0].Session.OwningUserId.IsValid()
-			&& SearchResult[0].Session.SessionInfo.IsValid())
+		if (bWasSuccessful && SearchResult.Num() > 0 && SearchResult[0].Session.OwningUserId.IsValid() &&
+			SearchResult[0].Session.SessionInfo.IsValid())
 		{
 			JoinSearchResult(SearchResult[0]);
 		}
@@ -839,9 +834,8 @@ void UNovaGameInstance::OnFindFriendSessionComplete(int32 LocalPlayer, bool bWas
 	}
 }
 
-
 /*----------------------------------------------------
-	Internals
+    Internals
 ----------------------------------------------------*/
 
 void UNovaGameInstance::OnNetworkError(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString)
@@ -907,7 +901,7 @@ void UNovaGameInstance::ProcessAction(FNovaSessionAction Action)
 		{
 			NetworkState = ENovaNetworkState::Joining;
 
-			ULocalPlayer* Player = GetFirstGamePlayer();
+			ULocalPlayer* Player                = GetFirstGamePlayer();
 			OnJoinSessionCompleteDelegateHandle = Sessions->AddOnJoinSessionCompleteDelegate_Handle(OnJoinSessionCompleteDelegate);
 
 			Sessions->JoinSession(*Player->GetPreferredUniqueNetId(), GameSessionName, Action.SessionToJoin);
@@ -933,23 +927,30 @@ void UNovaGameInstance::ProcessAction(FNovaSessionAction Action)
 	}
 }
 
-
 /*----------------------------------------------------
-	Getters
+    Getters
 ----------------------------------------------------*/
 
 FText UNovaGameInstance::GetNetworkStateString() const
 {
 	switch (NetworkState)
 	{
-		case ENovaNetworkState::Starting:             return LOCTEXT("Starting", "Starting");
-		case ENovaNetworkState::OnlineHost:           return LOCTEXT("OnlineHost", "Hosting");
-		case ENovaNetworkState::OnlineClient:         return LOCTEXT("OnlineClient", "Connected");
-		case ENovaNetworkState::Searching:            return LOCTEXT("Searching", "Searching");
-		case ENovaNetworkState::Joining:              return LOCTEXT("Joining", "Joining");
-		case ENovaNetworkState::JoiningDestroying:    return LOCTEXT("JoiningDestroying", "Joining");
-		case ENovaNetworkState::Ending:               return LOCTEXT("Ending", "Ending");
-		default:                                        return LOCTEXT("Offline", "Offline");
+		case ENovaNetworkState::Starting:
+			return LOCTEXT("Starting", "Starting");
+		case ENovaNetworkState::OnlineHost:
+			return LOCTEXT("OnlineHost", "Hosting");
+		case ENovaNetworkState::OnlineClient:
+			return LOCTEXT("OnlineClient", "Connected");
+		case ENovaNetworkState::Searching:
+			return LOCTEXT("Searching", "Searching");
+		case ENovaNetworkState::Joining:
+			return LOCTEXT("Joining", "Joining");
+		case ENovaNetworkState::JoiningDestroying:
+			return LOCTEXT("JoiningDestroying", "Joining");
+		case ENovaNetworkState::Ending:
+			return LOCTEXT("Ending", "Ending");
+		default:
+			return LOCTEXT("Offline", "Offline");
 	}
 }
 
@@ -957,25 +958,39 @@ FText UNovaGameInstance::GetNetworkErrorString() const
 {
 	switch (LastNetworkError)
 	{
-		case ENovaNetworkError::Success:                        return LOCTEXT("Success", "Success");
-		case ENovaNetworkError::CreateFailed:                   return LOCTEXT("CreateFailed", "Failed to create");
-		case ENovaNetworkError::StartFailed:                    return LOCTEXT("StartFailed", "Failed to start session");
-		case ENovaNetworkError::DestroyFailed:                  return LOCTEXT("DestroyFailed", "Failed to leave session");
-		case ENovaNetworkError::ReadFriendsFailed:              return LOCTEXT("ReadFriendsFailed", "Couldn't read the friend list");
-		case ENovaNetworkError::JoinFriendFailed:               return LOCTEXT("JoinFriendFailed", "Failed to join friend");
-		case ENovaNetworkError::JoinSessionIsFull:              return LOCTEXT("JoinSessionIsFull", "Session is full");
-		case ENovaNetworkError::JoinSessionDoesNotExist:        return LOCTEXT("JoinSessionDoesNotExist", "Session does not exist anymore");
-		case ENovaNetworkError::JoinSessionConnectionError:     return LOCTEXT("JoinSessionConnectionError", "Failed to join session");
-			
-		case ENovaNetworkError::NetDriverError:                 return LOCTEXT("NetDriverError", "Net driver error");
-		case ENovaNetworkError::ConnectionLost:                 return LOCTEXT("ConnectionLost", "Connection lost");
-		case ENovaNetworkError::ConnectionTimeout:              return LOCTEXT("ConnectionTimeout", "Connection timed out");
-		case ENovaNetworkError::ConnectionFailed:               return LOCTEXT("ConnectionFailed", "Disconnected");
-		case ENovaNetworkError::VersionMismatch:                return LOCTEXT("VersionMismatch", "Game version mismatch");
+		case ENovaNetworkError::Success:
+			return LOCTEXT("Success", "Success");
+		case ENovaNetworkError::CreateFailed:
+			return LOCTEXT("CreateFailed", "Failed to create");
+		case ENovaNetworkError::StartFailed:
+			return LOCTEXT("StartFailed", "Failed to start session");
+		case ENovaNetworkError::DestroyFailed:
+			return LOCTEXT("DestroyFailed", "Failed to leave session");
+		case ENovaNetworkError::ReadFriendsFailed:
+			return LOCTEXT("ReadFriendsFailed", "Couldn't read the friend list");
+		case ENovaNetworkError::JoinFriendFailed:
+			return LOCTEXT("JoinFriendFailed", "Failed to join friend");
+		case ENovaNetworkError::JoinSessionIsFull:
+			return LOCTEXT("JoinSessionIsFull", "Session is full");
+		case ENovaNetworkError::JoinSessionDoesNotExist:
+			return LOCTEXT("JoinSessionDoesNotExist", "Session does not exist anymore");
+		case ENovaNetworkError::JoinSessionConnectionError:
+			return LOCTEXT("JoinSessionConnectionError", "Failed to join session");
 
-		default:                                                  return LOCTEXT("Unknown", "UnknownError");
+		case ENovaNetworkError::NetDriverError:
+			return LOCTEXT("NetDriverError", "Net driver error");
+		case ENovaNetworkError::ConnectionLost:
+			return LOCTEXT("ConnectionLost", "Connection lost");
+		case ENovaNetworkError::ConnectionTimeout:
+			return LOCTEXT("ConnectionTimeout", "Connection timed out");
+		case ENovaNetworkError::ConnectionFailed:
+			return LOCTEXT("ConnectionFailed", "Disconnected");
+		case ENovaNetworkError::VersionMismatch:
+			return LOCTEXT("VersionMismatch", "Game version mismatch");
+
+		default:
+			return LOCTEXT("Unknown", "UnknownError");
 	}
 }
-
 
 #undef LOCTEXT_NAMESPACE

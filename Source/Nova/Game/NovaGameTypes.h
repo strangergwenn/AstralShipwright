@@ -6,22 +6,21 @@
 #include "Engine/DataAsset.h"
 #include "NovaGameTypes.generated.h"
 
-
 /*----------------------------------------------------
-	General purpose types
+    General purpose types
 ----------------------------------------------------*/
 
 /** Gameplay constants */
 namespace ENovaConstants
 {
-	constexpr int32 MaxContractsCount = 5;
-	constexpr int32 MaxPlayerCount = 3;
-	constexpr int32 MaxCompartmentCount = 10;
-	constexpr int32 MaxModuleCount = 4;
-	constexpr int32 MaxEquipmentCount = 4;
+constexpr int32 MaxContractsCount   = 5;
+constexpr int32 MaxPlayerCount      = 3;
+constexpr int32 MaxCompartmentCount = 10;
+constexpr int32 MaxModuleCount      = 4;
+constexpr int32 MaxEquipmentCount   = 4;
 
-	const FString DefaultLevel = TEXT("Space");
-};
+const FString DefaultLevel = TEXT("Space");
+};    // namespace ENovaConstants
 
 /** Serialization way */
 enum class ENovaSerialize : uint8
@@ -30,9 +29,8 @@ enum class ENovaSerialize : uint8
 	DataToJson
 };
 
-
 /*----------------------------------------------------
-	Description types
+    Description types
 ----------------------------------------------------*/
 
 /** Component description */
@@ -42,7 +40,6 @@ class UNovaAssetDescription : public UDataAsset
 	GENERATED_BODY()
 
 public:
-
 	/** Procedurally generate a screenshot of this asset */
 	UFUNCTION(Category = Nova, BlueprintCallable, CallInEditor)
 	void UpdateAssetRender();
@@ -55,7 +52,7 @@ public:
 		for (TFieldIterator<FSoftObjectProperty> PropIt(GetClass()); PropIt; ++PropIt)
 		{
 			FSoftObjectProperty* Property = *PropIt;
-			FSoftObjectPtr Ptr = Property->GetPropertyValue(Property->ContainerPtrToValuePtr<int32>(this));
+			FSoftObjectPtr       Ptr      = Property->GetPropertyValue(Property->ContainerPtrToValuePtr<int32>(this));
 			if (!Ptr.IsNull())
 			{
 				Result.AddUnique(Ptr.ToSoftObjectPath());
@@ -66,15 +63,14 @@ public:
 	}
 
 public:
-	
 	// Identifier
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	FGuid Identifier;
-	
+
 	// Display name
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	FText Name;
-	
+
 	// Whether this asset is a special hidden one
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	bool Hidden;

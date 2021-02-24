@@ -3,13 +3,11 @@
 #include "NovaWorldSettings.h"
 #include "Nova/Nova.h"
 
-
 /*----------------------------------------------------
-	Constructor
+    Constructor
 ----------------------------------------------------*/
 
-ANovaWorldSettings::ANovaWorldSettings()
-	: Super()
+ANovaWorldSettings::ANovaWorldSettings() : Super()
 {
 	MenuOnly = false;
 	MainMenu = false;
