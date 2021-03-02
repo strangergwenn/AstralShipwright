@@ -45,6 +45,17 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 {
 	TSharedPtr<FNovaTrajectory> Trajectory = MakeShared<FNovaTrajectory>(FNovaOrbit(Source->Altitude, Source->Phase));
 
+	float PhasingAltitude = 200;
+	float PhasingAngle    = 90;
+	float InitialAngle    = Source->Phase;
+
+	Trajectory->TransferOrbits.Add(FNovaOrbit(Source->Altitude, PhasingAltitude, InitialAngle, InitialAngle + 180));
+	Trajectory->TransferOrbits.Add(FNovaOrbit(PhasingAltitude, PhasingAltitude, InitialAngle + 180, InitialAngle + 180 + PhasingAngle));
+	Trajectory->TransferOrbits.Add(
+		FNovaOrbit(PhasingAltitude, Destination->Altitude, InitialAngle + 180 + PhasingAngle, InitialAngle + 360 + PhasingAngle));
+
+	Trajectory->FinalOrbit = FNovaOrbit(Destination->Altitude, Destination->Phase);
+
 	return Trajectory;
 }
 

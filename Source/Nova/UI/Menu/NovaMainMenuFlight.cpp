@@ -118,7 +118,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
 					NCHECK(OrbitalSimulation);
 
-					OrbitalMap->PreviewTrajectory(OrbitalSimulation->ComputeTrajectory(StationA, StationB));
+					OrbitalMap->PreviewTrajectory(OrbitalSimulation->ComputeTrajectory(StationA, StationC));
 				}))
 			]
 			

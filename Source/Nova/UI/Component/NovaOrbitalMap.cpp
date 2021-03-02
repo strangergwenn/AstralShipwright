@@ -89,6 +89,11 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	BatchedSplines.Empty();
 	BatchedPoints.Empty();
 
+	FNovaSplineStyle Style(FLinearColor::White);
+	FVector2D        Origin = FVector2D(500, 500);
+
+#if 0
+
 	//// DEBUG - get trajectories
 
 	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
@@ -100,6 +105,8 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	TMap<const class UNovaArea*, FNovaTrajectory> AreaTrajectories = OrbitalSimulation->GetAreaTrajectories();
 
 	//// DEBUG - merge orbits
+
+	// TODO : CurrentPhase is gone, introduce location instead
 
 	struct FNovaMergedSpacecraftOrbit : FNovaOrbit
 	{
@@ -135,8 +142,6 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 
 	//// DEBUG - draw
 
-	FNovaSplineStyle Style(FLinearColor::White);
-	FVector2D        Origin = FVector2D(500, 500);
 
 	for (const FNovaMergedSpacecraftOrbit& Trajectory : MergedTrajectories)
 	{
@@ -163,7 +168,15 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 		}
 	}
 
-	// TODO : trajectory preview
+#endif
+
+	CurrentPreviewProgress += DeltaTime / 2.0f;
+	CurrentPreviewProgress = FMath::Min(CurrentPreviewProgress, 1.0f);
+
+	if (CurrentPreviewTrajectory.IsValid())
+	{
+		AddTrajectory(Origin, *CurrentPreviewTrajectory, Style, CurrentPreviewProgress);
+	}
 
 #if 0
 
@@ -215,16 +228,68 @@ int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& All
 void SNovaOrbitalMap::PreviewTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory)
 {
 	CurrentPreviewTrajectory = Trajectory;
+	CurrentPreviewProgress   = 0;
 }
 
 /*----------------------------------------------------
     Internals
 ----------------------------------------------------*/
 
+TArray<FVector2D> SNovaOrbitalMap::AddTrajectory(
+	const FVector2D& Origin, const FNovaTrajectory& Trajectory, const FNovaSplineStyle& Style, float Progress)
+{
+	const TArray<FNovaOrbit>& TransferOrbits = Trajectory.TransferOrbits;
+	float CurrentPhase = FMath::Lerp(TransferOrbits[0].StartPhase, TransferOrbits[TransferOrbits.Num() - 1].EndPhase, Progress);
+
+	TArray<FVector2D> Maneuvers;
+
+	FNovaSplineResults Results = AddOrbit(Origin, Trajectory.CurrentOrbit, {}, Style);
+	Maneuvers.Add(Results.FinalPosition);
+	AddPoint(Results.FinalPosition, Style.ColorOuter);
+
+	for (FNovaOrbit Orbit : TransferOrbits)
+	{
+		bool SkipRemainingTransfers = false;
+		if (CurrentPhase < Orbit.EndPhase)
+		{
+			Orbit.EndPhase         = CurrentPhase;
+			SkipRemainingTransfers = true;
+		}
+
+		Results = AddOrbit(Origin, Orbit, {}, Style);
+		Maneuvers.Add(Results.FinalPosition);
+		AddPoint(Results.FinalPosition, Style.ColorOuter);
+
+		if (SkipRemainingTransfers)
+		{
+			break;
+		}
+	}
+
+	return Maneuvers;
+}
+
+FNovaSplineResults SNovaOrbitalMap::AddOrbit(
+	const FVector2D& Origin, const FNovaOrbit& Orbit, const TArray<float>& PointsOfInterest, const FNovaSplineStyle& Style)
+{
+	const float  RadiusA       = Orbit.StartAltitude;
+	const float  RadiusB       = Orbit.OppositeAltitude;
+	const float  MajorAxis     = 0.5f * (RadiusA + RadiusB);
+	const float  MinorAxis     = FMath::Sqrt(RadiusA * RadiusB);
+	const float& Phase         = Orbit.StartPhase;
+	const float& InitialAngle  = 0;
+	const float  AngularLength = Orbit.EndPhase - Orbit.StartPhase;
+	const float  Offset        = 0.5f * (RadiusB - RadiusA);
+
+	FNovaSplineResults Results = AddOrbitInternal(
+		FNovaSplineOrbit(Origin, MajorAxis, MinorAxis, Phase, InitialAngle, AngularLength, Offset), PointsOfInterest, Style);
+	return Results;
+}
+
 TArray<FVector2D> SNovaOrbitalMap::AddCircularOrbit(
 	const FVector2D& Origin, float Radius, const TArray<float>& PointsOfInterest, const FNovaSplineStyle& Style)
 {
-	FNovaSplineResults Results = AddOrbit(FNovaSplineOrbit(Origin, Radius), PointsOfInterest, Style);
+	FNovaSplineResults Results = AddOrbitInternal(FNovaSplineOrbit(Origin, Radius), PointsOfInterest, Style);
 	return Results.PointsOfInterest;
 }
 
@@ -232,7 +297,7 @@ TArray<FVector2D> SNovaOrbitalMap::AddPartialCircularOrbit(const FVector2D& Orig
 	float AngularLength, const TArray<float>& PointsOfInterest, const FNovaSplineStyle& Style)
 {
 	FNovaSplineResults Results =
-		AddOrbit(FNovaSplineOrbit(Origin, Radius, Radius, Phase, InitialAngle, AngularLength, 0.0f), PointsOfInterest, Style);
+		AddOrbitInternal(FNovaSplineOrbit(Origin, Radius, Radius, Phase, InitialAngle, AngularLength, 0.0f), PointsOfInterest, Style);
 	return Results.PointsOfInterest;
 }
 
@@ -242,7 +307,7 @@ TArray<FVector2D> SNovaOrbitalMap::AddTransferOrbit(const FVector2D& Origin, flo
 	float MajorAxis = 0.5f * (RadiusA + RadiusB);
 	float MinorAxis = FMath::Sqrt(RadiusA * RadiusB);
 
-	FNovaSplineResults Results = AddOrbit(
+	FNovaSplineResults Results = AddOrbitInternal(
 		FNovaSplineOrbit(Origin, MajorAxis, MinorAxis, Phase, InitialAngle, 180, 0.5f * (RadiusB - RadiusA)), PointsOfInterest, Style);
 	AddPoint(Results.InitialPosition, Style.ColorInner);
 	AddPoint(Results.FinalPosition, Style.ColorInner);
@@ -260,7 +325,7 @@ void SNovaOrbitalMap::AddPoint(const FVector2D& Pos, const FLinearColor& Color, 
 	BatchedPoints.Add(Point);
 }
 
-FNovaSplineResults SNovaOrbitalMap::AddOrbit(
+FNovaSplineResults SNovaOrbitalMap::AddOrbitInternal(
 	const FNovaSplineOrbit& Orbit, const TArray<float>& PointsOfInterest, const FNovaSplineStyle& Style)
 {
 	bool               FirstRenderedSpline = true;

@@ -59,6 +59,9 @@ class SNovaOrbitalMap : public SCompoundWidget
 	SLATE_END_ARGS()
 
 public:
+	SNovaOrbitalMap() : CurrentPreviewProgress(0)
+	{}
+
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
@@ -83,6 +86,14 @@ public:
 	----------------------------------------------------*/
 
 protected:
+	/** Draw a trajectory */
+	TArray<FVector2D> AddTrajectory(
+		const FVector2D& Origin, const FNovaTrajectory& Trajectory, const struct FNovaSplineStyle& Style, float Progress = 1.0f);
+
+	/** Draw an orbit */
+	FNovaSplineResults AddOrbit(
+		const FVector2D& Origin, const FNovaOrbit& Orbit, const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
+
 	/** Draw a full circular orbit around Origin of Radius */
 	TArray<FVector2D> AddCircularOrbit(
 		const FVector2D& Origin, float Radius, const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
@@ -96,7 +107,7 @@ protected:
 		const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
 
 	/** Draw an orbit or partial orbit */
-	FNovaSplineResults AddOrbit(
+	FNovaSplineResults AddOrbitInternal(
 		const struct FNovaSplineOrbit& Orbit, const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
 
 	/** Draw a single point on the map */
@@ -136,6 +147,7 @@ protected:
 
 	// Local state
 	TSharedPtr<FNovaTrajectory> CurrentPreviewTrajectory;
+	float                       CurrentPreviewProgress;
 
 	// Batching system
 	TArray<FNovaBatchedPoint>  BatchedPoints;

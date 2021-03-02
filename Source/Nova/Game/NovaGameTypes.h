@@ -36,21 +36,19 @@ enum class ENovaSerialize : uint8
 /** Data for a stable orbit that might be a circular, elliptical or Hohmann transfer orbit */
 struct FNovaOrbit
 {
-	FNovaOrbit() : StartAltitude(0), EndAltitude(0), StartPhase(0), EndPhase(0), CurrentPhase(0)
+	FNovaOrbit() : StartAltitude(0), OppositeAltitude(0), StartPhase(0), EndPhase(0)
 	{}
 
-	FNovaOrbit(float SA, float CP) : StartAltitude(SA), EndAltitude(SA), StartPhase(0), EndPhase(360), CurrentPhase(CP)
+	FNovaOrbit(float SA, float CP) : StartAltitude(SA), OppositeAltitude(SA), StartPhase(0), EndPhase(360)
 	{}
 
-	FNovaOrbit(float SA, float EA, float SP, float EP, float CP)
-		: StartAltitude(SA), EndAltitude(EA), StartPhase(SP), EndPhase(EP), CurrentPhase(CP)
+	FNovaOrbit(float SA, float EA, float SP, float EP) : StartAltitude(SA), OppositeAltitude(EA), StartPhase(SP), EndPhase(EP)
 	{}
 
 	float StartAltitude;
-	float EndAltitude;
+	float OppositeAltitude;
 	float StartPhase;
 	float EndPhase;
-	float CurrentPhase;
 };
 
 /*** Orbit-altering maneuver */
