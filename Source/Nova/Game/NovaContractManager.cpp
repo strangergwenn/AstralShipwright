@@ -34,7 +34,7 @@ struct FNovaContractManagerSave
 
 TSharedPtr<FNovaContractManagerSave> UNovaContractManager::Save() const
 {
-	TSharedPtr<FNovaContractManagerSave> SaveData = MakeShareable(new FNovaContractManagerSave);
+	TSharedPtr<FNovaContractManagerSave> SaveData = MakeShared<FNovaContractManagerSave>();
 
 	// Save contracts
 	for (TSharedPtr<FNovaContract> Contract : CurrentContracts)
@@ -89,17 +89,17 @@ void UNovaContractManager::SerializeJson(
 {
 	if (Direction == ENovaSerialize::DataToJson)
 	{
-		JsonData = MakeShareable(new FJsonObject);
+		JsonData = MakeShared<FJsonObject>();
 
 		TArray<TSharedPtr<FJsonValue>> SavedContracts;
 		for (TPair<ENovaContractType, TSharedPtr<FJsonObject>> ContractData : SaveData->CurrentContracts)
 		{
-			TSharedPtr<FJsonObject> ContractJsonData = MakeShareable(new FJsonObject);
+			TSharedPtr<FJsonObject> ContractJsonData = MakeShared<FJsonObject>();
 
 			ContractJsonData->SetNumberField("Type", static_cast<uint8>(ContractData.Key));
 			ContractJsonData->SetObjectField("Object", ContractJsonData);
 
-			SavedContracts.Add(MakeShareable(new FJsonValueObject(ContractJsonData)));
+			SavedContracts.Add(MakeShared<FJsonValueObject>(ContractJsonData));
 		}
 
 		JsonData->SetArrayField("Contracts", SavedContracts);
@@ -107,7 +107,7 @@ void UNovaContractManager::SerializeJson(
 	}
 	else
 	{
-		SaveData = MakeShareable(new FNovaContractManagerSave);
+		SaveData = MakeShared<FNovaContractManagerSave>();
 
 		const TArray<TSharedPtr<FJsonValue>>* SavedContracts;
 		if (JsonData->TryGetArrayField("Contracts", SavedContracts))

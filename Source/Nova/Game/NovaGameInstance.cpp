@@ -92,19 +92,19 @@ void UNovaGameInstance::SerializeJson(TSharedPtr<FNovaGameSave>& SaveData, TShar
 {
 	if (Direction == ENovaSerialize::DataToJson)
 	{
-		JsonData = MakeShareable(new FJsonObject);
+		JsonData = MakeShared<FJsonObject>();
 
-		TSharedPtr<FJsonObject> PlayerJsonData = MakeShareable(new FJsonObject);
+		TSharedPtr<FJsonObject> PlayerJsonData = MakeShared<FJsonObject>();
 		ANovaPlayerController::SerializeJson(SaveData->PlayerData, PlayerJsonData, ENovaSerialize::DataToJson);
 		JsonData->SetObjectField("Player", PlayerJsonData);
 
-		TSharedPtr<FJsonObject> ContractManagerJsonData = MakeShareable(new FJsonObject);
+		TSharedPtr<FJsonObject> ContractManagerJsonData = MakeShared<FJsonObject>();
 		UNovaContractManager::SerializeJson(SaveData->ContractManagerData, ContractManagerJsonData, ENovaSerialize::DataToJson);
 		JsonData->SetObjectField("ContractManager", ContractManagerJsonData);
 	}
 	else
 	{
-		SaveData = MakeShareable(new FNovaGameSave);
+		SaveData = MakeShared<FNovaGameSave>();
 
 		TSharedPtr<FJsonObject> PlayerJsonData          = JsonData->GetObjectField("Player");
 		TSharedPtr<FJsonObject> ContractManagerJsonData = JsonData->GetObjectField("ContractManager");
@@ -209,7 +209,7 @@ void UNovaGameInstance::LoadGame(FString SaveName)
 	}
 	else
 	{
-		CurrentSaveData = MakeShareable(new FNovaGameSave);
+		CurrentSaveData = MakeShared<FNovaGameSave>();
 	}
 	NCHECK(CurrentSaveData);
 
@@ -395,7 +395,7 @@ bool UNovaGameInstance::StartSession(FString URL, int32 MaxNumPlayers, bool Publ
 			// Player isn't in a session, create it
 			else
 			{
-				SessionSettings = MakeShareable(new FOnlineSessionSettings());
+				SessionSettings = MakeShared<FOnlineSessionSettings>();
 
 				SessionSettings->NumPublicConnections             = MaxNumPlayers;
 				SessionSettings->NumPrivateConnections            = 0;
@@ -465,7 +465,7 @@ bool UNovaGameInstance::SearchSessions(bool OnLan, FOnSessionSearchComplete Call
 		// Start searching
 		if (Sessions.IsValid() && UserId.IsValid())
 		{
-			SessionSearch = MakeShareable(new FOnlineSessionSearch());
+			SessionSearch = MakeShared<FOnlineSessionSearch>();
 
 			SessionSearch->bIsLanQuery      = OnLan;
 			SessionSearch->MaxSearchResults = 10;

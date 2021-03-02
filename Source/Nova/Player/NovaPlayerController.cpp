@@ -55,7 +55,7 @@ ANovaPlayerController::ANovaPlayerController() : Super(), LastNetworkError(ENova
 	PostProcessComponent = CreateDefaultSubobject<UNovaPostProcessComponent>(TEXT("PostProcessComponent"));
 
 	// Default settings
-	TSharedPtr<FNovaPostProcessSetting> DefaultSettings = MakeShareable(new FNovaPostProcessSetting);
+	TSharedPtr<FNovaPostProcessSetting> DefaultSettings = MakeShared<FNovaPostProcessSetting>();
 	PostProcessComponent->RegisterPreset(ENovaPostProcessPreset::Neutral, DefaultSettings);
 
 	// Initialize post-processing
@@ -120,7 +120,7 @@ struct FNovaPlayerSave
 
 TSharedPtr<FNovaPlayerSave> ANovaPlayerController::Save() const
 {
-	TSharedPtr<FNovaPlayerSave> SaveData = MakeShareable(new FNovaPlayerSave);
+	TSharedPtr<FNovaPlayerSave> SaveData = MakeShared<FNovaPlayerSave>();
 
 	// Save the spacecraft
 	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
@@ -144,7 +144,7 @@ void ANovaPlayerController::SerializeJson(
 {
 	if (Direction == ENovaSerialize::DataToJson)
 	{
-		JsonData = MakeShareable(new FJsonObject);
+		JsonData = MakeShared<FJsonObject>();
 
 		TSharedPtr<FJsonObject> FactoryJsonData;
 		if (SaveData)
@@ -155,7 +155,7 @@ void ANovaPlayerController::SerializeJson(
 	}
 	else
 	{
-		SaveData = MakeShareable(new FNovaPlayerSave);
+		SaveData = MakeShared<FNovaPlayerSave>();
 
 		TSharedPtr<FJsonObject> FactoryJsonData = JsonData->GetObjectField("Spacecraft");
 		ANovaSpacecraftPawn::SerializeJson(SaveData->Spacecraft, FactoryJsonData, ENovaSerialize::JsonToData);

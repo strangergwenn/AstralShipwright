@@ -212,7 +212,7 @@ TPair<FText, const FSlateBrush*> FNovaStyleSet::GetKeyDisplay(const FKey& Key)
 
 TPair<TSharedPtr<FSlateBrush>, UMaterialInstanceDynamic*> FNovaStyleSet::GetDynamicBrush(const FString& BrushName)
 {
-	TSharedPtr<FSlateBrush> ResultBrush = MakeShareable(new FSlateBrush());
+	TSharedPtr<FSlateBrush> ResultBrush = MakeShared<FSlateBrush>();
 	const FSlateBrush*      BaseBrush   = FNovaStyleSet::GetBrush(BrushName);
 
 	// Create material

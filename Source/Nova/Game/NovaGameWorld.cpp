@@ -35,7 +35,7 @@ struct FNovaWorldSave
 
 TSharedPtr<struct FNovaWorldSave> ANovaGameWorld::Save() const
 {
-	TSharedPtr<FNovaWorldSave> SaveData = MakeShareable(new FNovaWorldSave);
+	TSharedPtr<FNovaWorldSave> SaveData = MakeShared<FNovaWorldSave>();
 
 	return SaveData;
 }

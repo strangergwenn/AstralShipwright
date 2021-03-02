@@ -1,4 +1,4 @@
-// Nova project - Gwenna�l Arbona
+﻿// Nova project - Gwennaël Arbona
 
 #include "NovaContract.h"
 
@@ -20,7 +20,7 @@ TSharedPtr<FNovaContract> FNovaContract::New(ENovaContractType Type, UNovaGameIn
 	TSharedPtr<FNovaContract> Contract;
 	if (Type == ENovaContractType::Tutorial)
 	{
-		Contract = MakeShareable(new FNovaTutorialContract());
+		Contract = MakeShared<FNovaTutorialContract>();
 	}
 	else
 	{
@@ -40,7 +40,7 @@ void FNovaContract::Initialize(UNovaGameInstance* CurrentGameInstance)
 
 TSharedRef<FJsonObject> FNovaContract::Save() const
 {
-	TSharedRef<FJsonObject> Data = MakeShareable(new FJsonObject());
+	TSharedRef<FJsonObject> Data = MakeShared<FJsonObject>();
 
 	return Data;
 }

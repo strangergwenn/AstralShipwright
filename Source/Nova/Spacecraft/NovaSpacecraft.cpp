@@ -245,7 +245,7 @@ FNovaSpacecraft FNovaSpacecraft::GetSafeCopy() const
 
 TSharedPtr<FNovaSpacecraft> FNovaSpacecraft::GetSharedCopy() const
 {
-	TSharedPtr<FNovaSpacecraft> NewSpacecraft = MakeShareable(new FNovaSpacecraft);
+	TSharedPtr<FNovaSpacecraft> NewSpacecraft = MakeShared<FNovaSpacecraft>();
 	*NewSpacecraft                            = *this;
 	return NewSpacecraft;
 }
@@ -254,14 +254,14 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 {
 	if (Direction == ENovaSerialize::DataToJson)
 	{
-		JsonData = MakeShareable(new FJsonObject);
+		JsonData = MakeShared<FJsonObject>();
 
 		JsonData->SetStringField("Identifier", This->Identifier.ToString());
 
 		TArray<TSharedPtr<FJsonValue>> SavedCompartments;
 		for (const FNovaCompartment& Compartment : This->Compartments)
 		{
-			TSharedPtr<FJsonObject> CompartmentJsonData = MakeShareable(new FJsonObject);
+			TSharedPtr<FJsonObject> CompartmentJsonData = MakeShared<FJsonObject>();
 
 			auto SaveAsset = [](TSharedPtr<FJsonObject> Save, FString Name, const UNovaAssetDescription* Asset)
 			{
@@ -286,7 +286,7 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 					SaveAsset(CompartmentJsonData, FString("Equipment") + FString::FromInt(Index), Compartment.Equipments[Index]);
 				}
 
-				SavedCompartments.Add(MakeShareable(new FJsonValueObject(CompartmentJsonData)));
+				SavedCompartments.Add(MakeShared<FJsonValueObject>(CompartmentJsonData));
 			}
 		}
 
@@ -294,7 +294,7 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 	}
 	else
 	{
-		This = MakeShareable(new FNovaSpacecraft);
+		This = MakeShared<FNovaSpacecraft>();
 
 		FGuid Identifier;
 		if (FGuid::Parse(JsonData->GetStringField("Identifier"), Identifier))

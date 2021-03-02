@@ -95,7 +95,7 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 	}
 
 	// Define the content to load
-	Spacecraft = MakeShareable(new FNovaSpacecraft);
+	Spacecraft = MakeShared<FNovaSpacecraft>();
 	if (Asset->IsA(UNovaCompartmentDescription::StaticClass()))
 	{
 		Spacecraft->Compartments.Add(FNovaCompartment(Cast<UNovaCompartmentDescription>(Asset)));

@@ -59,7 +59,7 @@ void UNovaMenuManager::Initialize(UNovaGameInstance* NewGameInstance)
 
 	Singleton    = this;
 	GameInstance = NewGameInstance;
-	FSlateApplication::Get().SetNavigationConfig(MakeShareable(new FNovaNavigationConfig()));
+	FSlateApplication::Get().SetNavigationConfig(MakeShared<FNovaNavigationConfig>());
 }
 
 void UNovaMenuManager::BeginPlay(ANovaPlayerController* PC)

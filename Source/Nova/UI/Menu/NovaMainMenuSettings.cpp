@@ -317,7 +317,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 	TArray<FCultureRef> CultureRefList = FInternationalization::Get().GetAvailableCultures(CultureNames, false);
 	for (FCultureRef Culture : CultureRefList)
 	{
-		CultureList.Add(MakeShareable(new FString(Culture->GetName())));
+		CultureList.Add(MakeShared<FString>(Culture->GetName()));
 	}
 
 	// Build gameplay options
@@ -669,7 +669,7 @@ void SNovaMainMenuSettings::UpdateResolutionList()
 		FScreenResolutionRHI Resolution;
 		Resolution.Width   = CurrentResolution.X;
 		Resolution.Height  = CurrentResolution.Y;
-		SelectedResolution = MakeShareable(new FScreenResolutionRHI(Resolution));
+		SelectedResolution = MakeShared<FScreenResolutionRHI>(Resolution);
 		ResolutionList.AddUnique(SelectedResolution);
 	}
 
