@@ -75,6 +75,7 @@ protected:
 
 	// Slate widgets
 	TSharedPtr<class SRetainerWidget> MapRetainer;
+	TSharedPtr<class SNovaOrbitalMap> OrbitalMap;
 	TSharedPtr<class SNovaButton>     UndockButton;
 	TSharedPtr<class SNovaButton>     DockButton;
 };

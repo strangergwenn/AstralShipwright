@@ -3,60 +3,13 @@
 #pragma once
 
 #include "Nova/UI/NovaUI.h"
+#include "Nova/Game/NovaGameTypes.h"
 
 #include "Widgets/SCompoundWidget.h"
 
 /*----------------------------------------------------
     Internal structures
 ----------------------------------------------------*/
-
-/** Geometry of an orbit on the map */
-struct FNovaSplineOrbit
-{
-	FNovaSplineOrbit(const FVector2D& Orig, float R)
-		: Origin(Orig), Width(R), Height(R), Phase(0), InitialAngle(0), AngularLength(360), OriginOffset(0)
-	{}
-
-	FNovaSplineOrbit(const FVector2D& Orig, float W, float H, float P) : FNovaSplineOrbit(Orig, W)
-	{
-		Height = H;
-		Phase  = P;
-	}
-
-	FNovaSplineOrbit(const FVector2D& Orig, float W, float H, float P, float Initial, float Length, float Offset)
-		: FNovaSplineOrbit(Orig, W, H, P)
-	{
-		InitialAngle  = Initial;
-		AngularLength = Length;
-		OriginOffset  = Offset;
-	}
-
-	FVector2D Origin;
-	float     Width;
-	float     Height;
-	float     Phase;
-	float     InitialAngle;
-	float     AngularLength;
-	float     OriginOffset;
-};
-
-/** Orbit drawing style */
-struct FNovaSplineStyle
-{
-	FNovaSplineStyle() : ColorInner(FLinearColor::White), ColorOuter(FLinearColor::Black), WidthInner(1.0f), WidthOuter(2.0f)
-	{}
-
-	FNovaSplineStyle(const FLinearColor& Color) : FNovaSplineStyle()
-	{
-		ColorInner = Color;
-		ColorOuter = Color;
-	}
-
-	FLinearColor ColorInner;
-	FLinearColor ColorOuter;
-	float        WidthInner;
-	float        WidthOuter;
-};
 
 /** Orbit drawing results */
 struct FNovaSplineResults
@@ -119,24 +72,32 @@ public:
 		FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 
 	/*----------------------------------------------------
+	    Interface
+	----------------------------------------------------*/
+
+	/** Preview a spacecraft trajectory */
+	void PreviewTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory);
+
+	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
 
 protected:
 	/** Draw a full circular orbit around Origin of Radius */
 	TArray<FVector2D> AddCircularOrbit(
-		const FVector2D& Origin, float Radius, const TArray<float>& PointsOfInterest, const FNovaSplineStyle& Style);
+		const FVector2D& Origin, float Radius, const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
 
 	/** Draw a partial circular orbit around Origin of Radius, starting at Phase over AngularLength */
 	TArray<FVector2D> AddPartialCircularOrbit(const FVector2D& Origin, float Radius, float Phase, float InitialAngle, float AngularLength,
-		const TArray<float>& PointsOfInterest, const FNovaSplineStyle& Style);
+		const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
 
 	/** Draw a Hohmann transfer orbit around Origin from RadiusA to RadiusB, starting at Phase */
 	TArray<FVector2D> AddTransferOrbit(const FVector2D& Origin, float RadiusA, float RadiusB, float Phase, float InitialAngle,
-		const TArray<float>& PointsOfInterest, const FNovaSplineStyle& Style);
+		const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
 
 	/** Draw an orbit or partial orbit */
-	FNovaSplineResults AddOrbit(const FNovaSplineOrbit& Orbit, const TArray<float>& PointsOfInterest, const FNovaSplineStyle& Style);
+	FNovaSplineResults AddOrbit(
+		const struct FNovaSplineOrbit& Orbit, const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
 
 	/** Draw a single point on the map */
 	void AddPoint(const FVector2D& Pos, const FLinearColor& Color, float Radius = 4.0f);
@@ -172,6 +133,9 @@ protected:
 protected:
 	// Menu manager
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
+
+	// Local state
+	TSharedPtr<FNovaTrajectory> CurrentPreviewTrajectory;
 
 	// Batching system
 	TArray<FNovaBatchedPoint>  BatchedPoints;

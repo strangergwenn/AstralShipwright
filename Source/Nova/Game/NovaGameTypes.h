@@ -30,6 +30,47 @@ enum class ENovaSerialize : uint8
 };
 
 /*----------------------------------------------------
+    SImulation types
+----------------------------------------------------*/
+
+/** Data for a stable orbit that might be a circular, elliptical or Hohmann transfer orbit */
+struct FNovaOrbit
+{
+	FNovaOrbit() : StartAltitude(0), EndAltitude(0), StartPhase(0), EndPhase(0), CurrentPhase(0)
+	{}
+
+	FNovaOrbit(float SA, float CP) : StartAltitude(SA), EndAltitude(SA), StartPhase(0), EndPhase(360), CurrentPhase(CP)
+	{}
+
+	FNovaOrbit(float SA, float EA, float SP, float EP, float CP)
+		: StartAltitude(SA), EndAltitude(EA), StartPhase(SP), EndPhase(EP), CurrentPhase(CP)
+	{}
+
+	float StartAltitude;
+	float EndAltitude;
+	float StartPhase;
+	float EndPhase;
+	float CurrentPhase;
+};
+
+/*** Orbit-altering maneuver */
+struct FNovaManeuver
+{
+};
+
+/** Full trajectory data including the last stable orbit */
+struct FNovaTrajectory
+{
+	FNovaTrajectory(const FNovaOrbit& Orbit) : CurrentOrbit(Orbit)
+	{}
+
+	FNovaOrbit            CurrentOrbit;
+	TArray<FNovaOrbit>    TransferOrbits;
+	TArray<FNovaManeuver> Maneuvers;
+	FNovaOrbit            FinalOrbit;
+};
+
+/*----------------------------------------------------
     Description types
 ----------------------------------------------------*/
 

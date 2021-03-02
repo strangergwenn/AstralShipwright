@@ -40,6 +40,14 @@ void UNovaOrbitalSimulationComponent::TickComponent(
 	UpdateTrajectories();
 }
 
+TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
+	const class UNovaArea* Source, const class UNovaArea* Destination)
+{
+	TSharedPtr<FNovaTrajectory> Trajectory = MakeShared<FNovaTrajectory>(FNovaOrbit(Source->Altitude, Source->Phase));
+
+	return Trajectory;
+}
+
 /*----------------------------------------------------
     Internals
 ----------------------------------------------------*/
@@ -52,6 +60,6 @@ void UNovaOrbitalSimulationComponent::UpdateTrajectories()
 
 	for (const UNovaArea* Area : Areas)
 	{
-		AreaTrajectories.Add(Area, FNovaSpacecraftTrajectory(400, 0));
+		AreaTrajectories.Add(Area, FNovaOrbit(Area->Altitude, Area->Phase));
 	}
 }

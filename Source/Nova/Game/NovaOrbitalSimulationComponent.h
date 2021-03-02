@@ -4,26 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Nova/Game/NovaGameTypes.h"
 #include "Nova/Spacecraft/NovaSpacecraft.h"
 
 #include "NovaOrbitalSimulationComponent.generated.h"
-
-/** Spacecraft trajectory data */
-struct FNovaSpacecraftTrajectory
-{
-	FNovaSpacecraftTrajectory(float SA, float CP) : StartAltitude(SA), EndAltitude(SA), StartPhase(0), EndPhase(360), CurrentPhase(CP)
-	{}
-
-	FNovaSpacecraftTrajectory(float SA, float EA, float SP, float EP, float CP)
-		: StartAltitude(SA), EndAltitude(EA), StartPhase(SP), EndPhase(EP), CurrentPhase(CP)
-	{}
-
-	float StartAltitude;
-	float EndAltitude;
-	float StartPhase;
-	float EndPhase;
-	float CurrentPhase;
-};
 
 /** Orbital simulation component that ticks orbiting spacecraft */
 UCLASS(ClassGroup = (Nova))
@@ -43,14 +27,17 @@ public:
 
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	/** Compute a trajectory */
+	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const class UNovaArea* Source, const class UNovaArea* Destination);
+
 	/** Get the trajectory map for all areas */
-	TMap<const class UNovaArea*, FNovaSpacecraftTrajectory> GetAreaTrajectories() const
+	TMap<const class UNovaArea*, FNovaTrajectory> GetAreaTrajectories() const
 	{
 		return AreaTrajectories;
 	}
 
 	/** Get the trajectory map for all spacecraft */
-	TMap<TWeakPtr<struct FNovaSpacecraft>, FNovaSpacecraftTrajectory> GetSpacecraftTrajectories() const
+	TMap<TWeakPtr<struct FNovaSpacecraft>, FNovaTrajectory> GetSpacecraftTrajectories() const
 	{
 		return SpacecraftTrajectories;
 	}
@@ -69,7 +56,7 @@ protected:
 
 private:
 	// Local state
-	TArray<const class UNovaArea*>                                    Areas;
-	TMap<const class UNovaArea*, FNovaSpacecraftTrajectory>           AreaTrajectories;
-	TMap<TWeakPtr<struct FNovaSpacecraft>, FNovaSpacecraftTrajectory> SpacecraftTrajectories;
+	TArray<const class UNovaArea*>                          Areas;
+	TMap<const class UNovaArea*, FNovaTrajectory>           AreaTrajectories;
+	TMap<TWeakPtr<struct FNovaSpacecraft>, FNovaTrajectory> SpacecraftTrajectories;
 };

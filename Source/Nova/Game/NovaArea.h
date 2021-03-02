@@ -20,4 +20,12 @@ public:
 	// Sub-level to load
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	FName LevelName;
+
+	// Altitude in kilometers
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float Altitude;
+
+	// Initial phase on the orbit in degrees
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float Phase;
 };

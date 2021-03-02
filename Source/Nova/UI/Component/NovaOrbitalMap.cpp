@@ -17,6 +17,58 @@
 #define LOCTEXT_NAMESPACE "SNovaOrbitalMap"
 
 /*----------------------------------------------------
+    Internal structures
+----------------------------------------------------*/
+
+/** Geometry of an orbit on the map */
+struct FNovaSplineOrbit
+{
+	FNovaSplineOrbit(const FVector2D& Orig, float R)
+		: Origin(Orig), Width(R), Height(R), Phase(0), InitialAngle(0), AngularLength(360), OriginOffset(0)
+	{}
+
+	FNovaSplineOrbit(const FVector2D& Orig, float W, float H, float P) : FNovaSplineOrbit(Orig, W)
+	{
+		Height = H;
+		Phase  = P;
+	}
+
+	FNovaSplineOrbit(const FVector2D& Orig, float W, float H, float P, float Initial, float Length, float Offset)
+		: FNovaSplineOrbit(Orig, W, H, P)
+	{
+		InitialAngle  = Initial;
+		AngularLength = Length;
+		OriginOffset  = Offset;
+	}
+
+	FVector2D Origin;
+	float     Width;
+	float     Height;
+	float     Phase;
+	float     InitialAngle;
+	float     AngularLength;
+	float     OriginOffset;
+};
+
+/** Orbit drawing style */
+struct FNovaSplineStyle
+{
+	FNovaSplineStyle() : ColorInner(FLinearColor::White), ColorOuter(FLinearColor::Black), WidthInner(1.0f), WidthOuter(2.0f)
+	{}
+
+	FNovaSplineStyle(const FLinearColor& Color) : FNovaSplineStyle()
+	{
+		ColorInner = Color;
+		ColorOuter = Color;
+	}
+
+	FLinearColor ColorInner;
+	FLinearColor ColorOuter;
+	float        WidthInner;
+	float        WidthOuter;
+};
+
+/*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
@@ -45,37 +97,39 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	NCHECK(GameWorld);
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
 	NCHECK(OrbitalSimulation);
-	TMap<const class UNovaArea*, FNovaSpacecraftTrajectory> AreaTrajectories = OrbitalSimulation->GetAreaTrajectories();
+	TMap<const class UNovaArea*, FNovaTrajectory> AreaTrajectories = OrbitalSimulation->GetAreaTrajectories();
 
 	//// DEBUG - merge orbits
 
-	struct FNovaMergedSpacecraftTrajectory : FNovaSpacecraftTrajectory
+	struct FNovaMergedSpacecraftOrbit : FNovaOrbit
 	{
-		FNovaMergedSpacecraftTrajectory(const FNovaSpacecraftTrajectory& Base) : FNovaSpacecraftTrajectory(Base)
-		{}
+		FNovaMergedSpacecraftOrbit(const FNovaOrbit& Base) : FNovaOrbit(Base)
+		{
+			Spacecraft.Add(Base.CurrentPhase);
+		}
 
 		TArray<float> Spacecraft;
 	};
 
-	TArray<FNovaMergedSpacecraftTrajectory> MergedTrajectories;
+	TArray<FNovaMergedSpacecraftOrbit> MergedTrajectories;
 	for (const auto AreaAndTrajectory : AreaTrajectories)
 	{
-		FNovaMergedSpacecraftTrajectory* ExistingTrajectory = MergedTrajectories.FindByPredicate(
-			[&](const FNovaMergedSpacecraftTrajectory& OtherTrajectory)
+		FNovaMergedSpacecraftOrbit* ExistingTrajectory = MergedTrajectories.FindByPredicate(
+			[&](const FNovaMergedSpacecraftOrbit& OtherTrajectory)
 			{
-				return OtherTrajectory.StartAltitude == AreaAndTrajectory.Value.StartAltitude &&
-					   OtherTrajectory.EndAltitude == AreaAndTrajectory.Value.EndAltitude &&
-					   OtherTrajectory.StartPhase == AreaAndTrajectory.Value.StartPhase &&
-					   OtherTrajectory.EndPhase == AreaAndTrajectory.Value.EndPhase;
+				const FNovaOrbit& Orbit = AreaAndTrajectory.Value.CurrentOrbit;
+
+				return OtherTrajectory.StartAltitude == Orbit.StartAltitude && OtherTrajectory.EndAltitude == Orbit.EndAltitude &&
+					   OtherTrajectory.StartPhase == Orbit.StartPhase && OtherTrajectory.EndPhase == Orbit.EndPhase;
 			});
 
 		if (ExistingTrajectory)
 		{
-			ExistingTrajectory->Spacecraft.Add(AreaAndTrajectory.Value.CurrentPhase);
+			ExistingTrajectory->Spacecraft.Add(AreaAndTrajectory.Value.CurrentOrbit.CurrentPhase);
 		}
 		else
 		{
-			MergedTrajectories.Add(AreaAndTrajectory.Value);
+			MergedTrajectories.Add(AreaAndTrajectory.Value.CurrentOrbit);
 		}
 	}
 
@@ -84,7 +138,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	FNovaSplineStyle Style(FLinearColor::White);
 	FVector2D        Origin = FVector2D(500, 500);
 
-	for (const FNovaMergedSpacecraftTrajectory& Trajectory : MergedTrajectories)
+	for (const FNovaMergedSpacecraftOrbit& Trajectory : MergedTrajectories)
 	{
 		TArray<FVector2D> SpacecraftLocations;
 
@@ -108,6 +162,8 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 			AddPoint(SpacecraftLocation, Style.ColorInner);
 		}
 	}
+
+	// TODO : trajectory preview
 
 #if 0
 
@@ -150,6 +206,15 @@ int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& All
 	}
 
 	return SCompoundWidget::OnPaint(PaintArgs, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+}
+
+/*----------------------------------------------------
+    Interface
+----------------------------------------------------*/
+
+void SNovaOrbitalMap::PreviewTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory)
+{
+	CurrentPreviewTrajectory = Trajectory;
 }
 
 /*----------------------------------------------------
