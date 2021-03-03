@@ -253,34 +253,6 @@ FReply SNovaMainMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& Ke
 	return Result;
 }
 
-FReply SNovaMainMenu::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
-{
-	FReply Result = SNovaMenu::OnMouseButtonDown(MyGeometry, MouseEvent);
-
-	// This could be yet another virtual method to inherit, but it seems quite specific
-	if (static_cast<ENovaMainMenuType>(TabView->GetCurrentTabIndex()) == ENovaMainMenuType::Assembly)
-	{
-		FVector2D Position = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
-		static_cast<SNovaMainMenuAssembly&>(TabView->GetCurrentTabContent().Get()).Clicked(Position);
-	}
-
-	return Result;
-}
-
-FReply SNovaMainMenu::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
-{
-	FReply Result = SNovaMenu::OnMouseButtonDoubleClick(MyGeometry, MouseEvent);
-
-	// This could be yet another virtual method to inherit, but it seems quite specific
-	if (static_cast<ENovaMainMenuType>(TabView->GetCurrentTabIndex()) == ENovaMainMenuType::Assembly)
-	{
-		FVector2D Position = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
-		static_cast<SNovaMainMenuAssembly&>(TabView->GetCurrentTabContent().Get()).DoubleClicked(Position);
-	}
-
-	return Result;
-}
-
 /*----------------------------------------------------
     Content callbacks
 ----------------------------------------------------*/

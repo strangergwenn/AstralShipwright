@@ -91,6 +91,14 @@ public:
 	/** Pass the cancel input to this menu, return true if used */
 	virtual bool Cancel();
 
+	/** Clicked */
+	virtual void OnClicked(const FVector2D& Position)
+	{}
+
+	/** Clicked */
+	virtual void OnDoubleClicked(const FVector2D& Position)
+	{}
+
 	/** Pass horizontal right-stick or mouse drag input to this widget */
 	virtual void HorizontalAnalogInput(float Value)
 	{}

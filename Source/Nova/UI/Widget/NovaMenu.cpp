@@ -118,6 +118,12 @@ FReply SNovaMenu::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerE
 
 	MenuManager->SetUsingGamepad(false);
 
+	if (CurrentNavigationPanel)
+	{
+		FVector2D Position = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
+		CurrentNavigationPanel->OnClicked(Position);
+	}
+
 	return FReply::Handled().SetUserFocus(SharedThis(this), EFocusCause::SetDirectly);
 }
 
@@ -128,6 +134,19 @@ FReply SNovaMenu::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEve
 	MousePressed = false;
 
 	return FReply::Handled().SetUserFocus(SharedThis(this), EFocusCause::SetDirectly);
+}
+
+FReply SNovaMenu::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	FReply Result = SCompoundWidget::OnMouseButtonDoubleClick(MyGeometry, MouseEvent);
+
+	if (CurrentNavigationPanel)
+	{
+		FVector2D Position = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
+		CurrentNavigationPanel->OnDoubleClicked(Position);
+	}
+
+	return Result;
 }
 
 void SNovaMenu::OnMouseLeave(const FPointerEvent& MouseEvent)

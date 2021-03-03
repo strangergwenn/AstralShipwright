@@ -51,9 +51,9 @@ public:
 
 	virtual bool Cancel() override;
 
-	void Clicked(const FVector2D& Position);
+	virtual void OnClicked(const FVector2D& Position) override;
 
-	void DoubleClicked(const FVector2D& Position);
+	virtual void OnDoubleClicked(const FVector2D& Position) override;
 
 	virtual void HorizontalAnalogInput(float Value) override;
 

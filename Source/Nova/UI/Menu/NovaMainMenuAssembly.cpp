@@ -519,7 +519,7 @@ int32 GetCompartmentIndexAtPosition(ANovaPlayerController* PC, ANovaSpacecraftPa
 	return INDEX_NONE;
 }
 
-void SNovaMainMenuAssembly::Clicked(const FVector2D& Position)
+void SNovaMainMenuAssembly::OnClicked(const FVector2D& Position)
 {
 	if (!IsCompartmentPanelVisible && Menu->IsActiveNavigationPanel(this))
 	{
@@ -531,7 +531,7 @@ void SNovaMainMenuAssembly::Clicked(const FVector2D& Position)
 	}
 }
 
-void SNovaMainMenuAssembly::DoubleClicked(const FVector2D& Position)
+void SNovaMainMenuAssembly::OnDoubleClicked(const FVector2D& Position)
 {
 	if (!IsCompartmentPanelVisible && Menu->IsActiveNavigationPanel(this) && SelectedCompartmentIndex != INDEX_NONE)
 	{
