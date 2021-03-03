@@ -76,6 +76,9 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 			.ColorAndOpacity(this, &SNovaMainMenu::GetTooltipColor)
 		]
 
+		// Manipulator
+		.ManipulatorBrush(&Theme.MainMenuManipulator)
+
 		// Home menu
 		+ SNovaTabView::Slot()
 		.Header(LOCTEXT("HomeMenuTitle", "Home"))

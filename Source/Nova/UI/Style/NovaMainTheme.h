@@ -32,6 +32,7 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 		OutBrushes.Add(&MainMenuBackground);
 		OutBrushes.Add(&MainMenuGenericBackground);
 		OutBrushes.Add(&MainMenuGenericBorder);
+		OutBrushes.Add(&MainMenuManipulator);
 	}
 
 	/*----------------------------------------------------
@@ -42,6 +43,7 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = Main) FSlateBrush MainMenuBackground;
 	UPROPERTY(EditDefaultsOnly, Category = Main) FSlateBrush MainMenuGenericBackground;
 	UPROPERTY(EditDefaultsOnly, Category = Main) FSlateBrush MainMenuGenericBorder;
+	UPROPERTY(EditDefaultsOnly, Category = Main) FSlateBrush MainMenuManipulator;
 	UPROPERTY(EditDefaultsOnly, Category = Main) FMargin ContentPadding;
 	UPROPERTY(EditDefaultsOnly, Category = Main) FMargin VerticalContentPadding;
 	UPROPERTY(EditDefaultsOnly, Category = Main) FScrollBoxStyle ScrollBoxStyle;

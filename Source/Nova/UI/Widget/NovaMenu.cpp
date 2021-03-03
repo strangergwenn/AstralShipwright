@@ -35,10 +35,17 @@ void SNovaMenu::Construct(const FArguments& InArgs)
 	MenuManager                 = InArgs._MenuManager;
 	NCHECK(MenuManager.IsValid());
 
-	// Structure
-	ChildSlot[SAssignNew(MainOverlay, SOverlay)
+	// clang-format off
+	ChildSlot
+	[
+		SAssignNew(MainOverlay, SOverlay)
 
-			  + SOverlay::Slot()[SAssignNew(MainContainer, SBox)]];
+		+ SOverlay::Slot()
+		[
+			SAssignNew(MainContainer, SBox)
+		]
+	];
+	// clang-format on
 }
 
 /*----------------------------------------------------

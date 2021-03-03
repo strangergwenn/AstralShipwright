@@ -131,6 +131,8 @@ public:
 
 	SLATE_NAMED_SLOT(FArguments, Header)
 
+	SLATE_ARGUMENT(const FSlateBrush*, ManipulatorBrush)
+
 	SLATE_END_ARGS()
 
 public:
