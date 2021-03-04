@@ -123,5 +123,5 @@ AllowShortLambdasOnASingleLine: false
 Standard:        Auto
 TabWidth:        4
 UseTab:          AlignWithSpaces
-DeriveLineEnding: true
+DeriveLineEnding: false
 ...
