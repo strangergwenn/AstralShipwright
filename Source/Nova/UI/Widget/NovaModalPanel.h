@@ -58,6 +58,11 @@ public:
 		return CurrentAlpha > 0;
 	}
 
+	virtual bool IsModal() const override
+	{
+		return true;
+	}
+
 	/*----------------------------------------------------
 	    Content callbacks
 	----------------------------------------------------*/

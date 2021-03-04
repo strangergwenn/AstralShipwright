@@ -4,6 +4,7 @@
 #include "NovaMenu.h"
 
 #include "Nova/UI/NovaUITypes.h"
+#include "Nova/Player/NovaMenuManager.h"
 #include "Nova/Nova.h"
 
 #include "Engine/Engine.h"
@@ -64,17 +65,7 @@ public:
 	{
 		SImage::OnMouseButtonDoubleClick(MyGeometry, MouseEvent);
 
-		TSharedPtr<SWindow> Window = FSlateApplication::Get().GetTopLevelWindows()[0];
-		NCHECK(Window);
-
-		if (!Window->IsWindowMaximized())
-		{
-			Window->Maximize();
-		}
-		else
-		{
-			Window->Restore();
-		}
+		UNovaMenuManager::Get()->MaximizeOrRestore();
 
 		return FReply::Handled();
 	}

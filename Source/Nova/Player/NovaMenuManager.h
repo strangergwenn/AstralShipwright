@@ -150,6 +150,9 @@ public:
 	/** Get the first key mapped to a specific action */
 	FKey GetFirstActionKey(FName ActionName) const;
 
+	/** Maximize the current window or restore it */
+	void MaximizeOrRestore();
+
 	/*----------------------------------------------------
 	    Properties
 	----------------------------------------------------*/

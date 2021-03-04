@@ -111,6 +111,12 @@ public:
 	virtual void OnFocusChanged(TSharedPtr<class SNovaButton> FocusButton)
 	{}
 
+	/** Check whether this panel is modal */
+	virtual bool IsModal() const
+	{
+		return false;
+	}
+
 	/** Get the ideal default focus button */
 	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const;
 

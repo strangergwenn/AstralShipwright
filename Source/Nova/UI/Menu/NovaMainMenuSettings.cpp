@@ -663,16 +663,6 @@ void SNovaMainMenuSettings::UpdateResolutionList()
 		NERR("SNovaMainMenuSettings::Show : screen resolutions could not be obtained");
 	}
 
-	// Fallback
-	if (!SelectedResolution.IsValid())
-	{
-		FScreenResolutionRHI Resolution;
-		Resolution.Width   = CurrentResolution.X;
-		Resolution.Height  = CurrentResolution.Y;
-		SelectedResolution = MakeShared<FScreenResolutionRHI>(Resolution);
-		ResolutionList.AddUnique(SelectedResolution);
-	}
-
 	// Update list
 	ResolutionListView->Refresh(ResolutionList.Find(SelectedResolution));
 }

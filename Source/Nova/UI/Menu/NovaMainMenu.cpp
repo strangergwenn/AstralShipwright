@@ -234,15 +234,18 @@ FReply SNovaMainMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& Ke
 		const FKey Key = KeyEvent.GetKey();
 
 		// Move between tabs
-		if (IsActionKey(FNovaPlayerInput::MenuPreviousTab, Key))
+		if (!CurrentNavigationPanel->IsModal())
 		{
-			TabView->ShowPreviousTab();
-			Result = FReply::Handled();
-		}
-		else if (IsActionKey(FNovaPlayerInput::MenuNextTab, Key))
-		{
-			TabView->ShowNextTab();
-			Result = FReply::Handled();
+			if (IsActionKey(FNovaPlayerInput::MenuPreviousTab, Key))
+			{
+				TabView->ShowPreviousTab();
+				Result = FReply::Handled();
+			}
+			else if (IsActionKey(FNovaPlayerInput::MenuNextTab, Key))
+			{
+				TabView->ShowNextTab();
+				Result = FReply::Handled();
+			}
 		}
 
 		// Exit

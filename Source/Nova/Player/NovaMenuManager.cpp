@@ -77,6 +77,16 @@ void UNovaMenuManager::BeginPlay(ANovaPlayerController* PC)
 		GameViewportClient->AddViewportWidgetContent(SNew(SWeakWidget).PossiblyNullContent(Overlay.ToSharedRef()), 100);
 	}
 
+	// Check for maximized state at boot
+	TSharedPtr<SWindow> Window = FSlateApplication::Get().GetTopLevelWindows()[0];
+	NCHECK(Window);
+	FVector2D ViewportResolution = Window->GetViewportSize();
+	FIntPoint DesktopResolution  = GEngine->GetGameUserSettings()->GetDesktopResolution();
+	if (!Window->IsWindowMaximized() && ViewportResolution.X == DesktopResolution.X && ViewportResolution.Y != DesktopResolution.Y)
+	{
+		Window->Maximize();
+	}
+
 	// Initialize
 	CurrentMenuState    = ENovaFadeState::FadingFromBlack;
 	CurrentFadingTime   = FadeDuration;
@@ -106,22 +116,14 @@ void UNovaMenuManager::BeginPlay(ANovaPlayerController* PC)
 		FNovaAsyncCondition::CreateLambda(
 			[=]()
 			{
-				// Wait a bit to ensure assets have some time to load
-				if (GetPC() && GetPC()->GetGameTimeSinceCreation() > 1.0f)
-				{
-					NLOG("UNovaMenuManager::BeginPlay : done");
-					return true;
-				}
-				else
-				{
-					return false;
-				}
+				NLOG("UNovaMenuManager::BeginPlay : done");
+				return true;
 			}));
 }
 
 void UNovaMenuManager::Tick(float DeltaTime)
 {
-	if (GetPC() && GetPC()->IsReady())
+	if (GetPC() && GetPC()->IsReady() && GetPC()->GetGameTimeSinceCreation() > 1.0f)
 	{
 		switch (CurrentMenuState)
 		{
@@ -426,4 +428,19 @@ FKey UNovaMenuManager::GetFirstActionKey(FName ActionName) const
 	}
 
 	return FKey(NAME_None);
+}
+
+void UNovaMenuManager::MaximizeOrRestore()
+{
+	TSharedPtr<SWindow> Window = FSlateApplication::Get().GetTopLevelWindows()[0];
+	NCHECK(Window);
+
+	if (!Window->IsWindowMaximized())
+	{
+		Window->Maximize();
+	}
+	else
+	{
+		Window->Restore();
+	}
 }
