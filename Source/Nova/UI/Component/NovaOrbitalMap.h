@@ -19,14 +19,6 @@ struct FNovaSplineResults
 	TArray<FVector2D> PointsOfInterest;
 };
 
-/** Batched data for drawing a point */
-struct FNovaBatchedPoint
-{
-	FVector2D    Pos;
-	FLinearColor Color;
-	float        Radius;
-};
-
 /** Batched data for drawing a spline */
 struct FNovaBatchedSpline
 {
@@ -38,6 +30,22 @@ struct FNovaBatchedSpline
 	FLinearColor ColorOuter;
 	float        WidthInner;
 	float        WidthOuter;
+};
+
+/** Batched data for drawing a point */
+struct FNovaBatchedPoint
+{
+	FVector2D    Pos;
+	FLinearColor Color;
+	float        Radius;
+};
+
+/** Batched data for drawing a quad */
+struct FNovaBatchedBrush
+{
+	FVector2D          Pos;
+	const FSlateBrush* Brush;
+	float              Scale;
 };
 
 /*----------------------------------------------------
@@ -86,6 +94,9 @@ public:
 	----------------------------------------------------*/
 
 protected:
+	/** Draw a planet */
+	void AddPlanet(const FVector2D& Pos, const class UNovaPlanet* Planet);
+
 	/** Draw a trajectory */
 	TArray<FVector2D> AddTrajectory(
 		const FVector2D& Origin, const FNovaTrajectory& Trajectory, const struct FNovaSplineStyle& Style, float Progress = 1.0f);
@@ -93,6 +104,8 @@ protected:
 	/** Draw an orbit */
 	FNovaSplineResults AddOrbit(
 		const FVector2D& Origin, const FNovaOrbit& Orbit, const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
+
+	// TODO : test code, remove
 
 	/** Draw a full circular orbit around Origin of Radius */
 	TArray<FVector2D> AddCircularOrbit(
@@ -105,6 +118,8 @@ protected:
 	/** Draw a Hohmann transfer orbit around Origin from RadiusA to RadiusB, starting at Phase */
 	TArray<FVector2D> AddTransferOrbit(const FVector2D& Origin, float RadiusA, float RadiusB, float Phase, float InitialAngle,
 		const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
+
+	// END TODO
 
 	/** Draw an orbit or partial orbit */
 	FNovaSplineResults AddOrbitInternal(
@@ -150,6 +165,7 @@ protected:
 	float                       CurrentPreviewProgress;
 
 	// Batching system
-	TArray<FNovaBatchedPoint>  BatchedPoints;
 	TArray<FNovaBatchedSpline> BatchedSplines;
+	TArray<FNovaBatchedPoint>  BatchedPoints;
+	TArray<FNovaBatchedBrush>  BatchedBrushes;
 };

@@ -38,6 +38,7 @@ void UNovaOrbitalSimulationComponent::TickComponent(
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	UpdateTrajectories();
+	UpdatePositions();
 }
 
 TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
@@ -67,10 +68,22 @@ void UNovaOrbitalSimulationComponent::UpdateTrajectories()
 {
 	ANovaGameWorld* GameWorld = GetOwner<ANovaGameWorld>();
 
-	AreaTrajectories.Empty();
+	Trajectories.Empty();
 
 	for (const UNovaArea* Area : Areas)
 	{
-		AreaTrajectories.Add(Area, FNovaOrbit(Area->Altitude, Area->Phase));
+		Trajectories.Add(Area, FNovaOrbit(Area->Altitude, Area->Phase));
+	}
+}
+
+void UNovaOrbitalSimulationComponent::UpdatePositions()
+{
+	ANovaGameWorld* GameWorld = GetOwner<ANovaGameWorld>();
+
+	Positions.Empty();
+
+	for (const UNovaArea* Area : Areas)
+	{
+		Positions.Add(Area, Area->Phase);
 	}
 }

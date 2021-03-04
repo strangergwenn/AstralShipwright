@@ -30,16 +30,16 @@ public:
 	/** Compute a trajectory */
 	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const class UNovaArea* Source, const class UNovaArea* Destination);
 
-	/** Get the trajectory map for all areas */
-	TMap<const class UNovaArea*, FNovaTrajectory> GetAreaTrajectories() const
+	/** Get the trajectory data */
+	TMap<const class UNovaArea*, FNovaTrajectory> GetTrajectories() const
 	{
-		return AreaTrajectories;
+		return Trajectories;
 	}
 
-	/** Get the trajectory map for all spacecraft */
-	TMap<TWeakPtr<struct FNovaSpacecraft>, FNovaTrajectory> GetSpacecraftTrajectories() const
+	/** Get the position data */
+	TMap<const class UNovaArea*, float> GetPositions() const
 	{
-		return SpacecraftTrajectories;
+		return Positions;
 	}
 
 	/*----------------------------------------------------
@@ -47,8 +47,11 @@ public:
 	----------------------------------------------------*/
 
 protected:
-	/** Update all trajectories based on the current time */
+	/** Update all trajectories */
 	void UpdateTrajectories();
+
+	/** Update all positions based on the current time */
+	void UpdatePositions();
 
 	/*----------------------------------------------------
 	    Data
@@ -56,7 +59,7 @@ protected:
 
 private:
 	// Local state
-	TArray<const class UNovaArea*>                          Areas;
-	TMap<const class UNovaArea*, FNovaTrajectory>           AreaTrajectories;
-	TMap<TWeakPtr<struct FNovaSpacecraft>, FNovaTrajectory> SpacecraftTrajectories;
+	TArray<const class UNovaArea*>                Areas;
+	TMap<const class UNovaArea*, FNovaTrajectory> Trajectories;
+	TMap<const class UNovaArea*, float>           Positions;
 };

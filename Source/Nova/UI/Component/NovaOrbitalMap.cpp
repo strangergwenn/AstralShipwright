@@ -3,6 +3,7 @@
 #include "NovaOrbitalMap.h"
 
 #include "Nova/Game/NovaArea.h"
+#include "Nova/Game/NovaAssetCatalog.h"
 #include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaGameWorld.h"
@@ -89,10 +90,14 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	BatchedSplines.Empty();
 	BatchedPoints.Empty();
 
-	FNovaSplineStyle Style(FLinearColor::White);
-	FVector2D        Origin = FVector2D(500, 500);
+	FNovaSplineStyle         Style(FLinearColor::White);
+	FVector2D                Origin = FVector2D(500, 500);
+	const class UNovaPlanet* DefaultPlanet =
+		MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaPlanet>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
 
-#if 0
+	AddPlanet(Origin, DefaultPlanet);
+
+#if 1
 
 	//// DEBUG - get trajectories
 
@@ -102,67 +107,50 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	NCHECK(GameWorld);
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
 	NCHECK(OrbitalSimulation);
-	TMap<const class UNovaArea*, FNovaTrajectory> AreaTrajectories = OrbitalSimulation->GetAreaTrajectories();
+	const auto Trajectories = OrbitalSimulation->GetTrajectories();
+	const auto Positions    = OrbitalSimulation->GetPositions();
 
 	//// DEBUG - merge orbits
 
-	// TODO : CurrentPhase is gone, introduce location instead
-
-	struct FNovaMergedSpacecraftOrbit : FNovaOrbit
+	struct FNovaMergedOrbit : FNovaOrbit
 	{
-		FNovaMergedSpacecraftOrbit(const FNovaOrbit& Base) : FNovaOrbit(Base)
+		FNovaMergedOrbit(const FNovaOrbit& Base, float CurrentPhase) : FNovaOrbit(Base)
 		{
-			Spacecraft.Add(Base.CurrentPhase);
+			SpacecraftPhases.Add(CurrentPhase);
 		}
 
-		TArray<float> Spacecraft;
+		TArray<float> SpacecraftPhases;
 	};
 
-	TArray<FNovaMergedSpacecraftOrbit> MergedTrajectories;
-	for (const auto AreaAndTrajectory : AreaTrajectories)
+	TArray<FNovaMergedOrbit> MergedOrbits;
+	for (const auto ObjectAndTrajectory : Trajectories)
 	{
-		FNovaMergedSpacecraftOrbit* ExistingTrajectory = MergedTrajectories.FindByPredicate(
-			[&](const FNovaMergedSpacecraftOrbit& OtherTrajectory)
+		FNovaMergedOrbit* ExistingTrajectory = MergedOrbits.FindByPredicate(
+			[&](const FNovaMergedOrbit& OtherOrbit)
 			{
-				const FNovaOrbit& Orbit = AreaAndTrajectory.Value.CurrentOrbit;
+				const FNovaOrbit& Orbit = ObjectAndTrajectory.Value.CurrentOrbit;
 
-				return OtherTrajectory.StartAltitude == Orbit.StartAltitude && OtherTrajectory.EndAltitude == Orbit.EndAltitude &&
-					   OtherTrajectory.StartPhase == Orbit.StartPhase && OtherTrajectory.EndPhase == Orbit.EndPhase;
+				return OtherOrbit.StartAltitude == Orbit.StartAltitude && OtherOrbit.OppositeAltitude == Orbit.OppositeAltitude &&
+					   OtherOrbit.StartPhase == Orbit.StartPhase && OtherOrbit.EndPhase == Orbit.EndPhase;
 			});
 
+		auto Position = Positions[ObjectAndTrajectory.Key];
 		if (ExistingTrajectory)
 		{
-			ExistingTrajectory->Spacecraft.Add(AreaAndTrajectory.Value.CurrentOrbit.CurrentPhase);
+			ExistingTrajectory->SpacecraftPhases.Add(Position);
 		}
 		else
 		{
-			MergedTrajectories.Add(AreaAndTrajectory.Value.CurrentOrbit);
+			MergedOrbits.Add(FNovaMergedOrbit(ObjectAndTrajectory.Value.CurrentOrbit, Position));
 		}
 	}
 
 	//// DEBUG - draw
 
-
-	for (const FNovaMergedSpacecraftOrbit& Trajectory : MergedTrajectories)
+	for (const FNovaMergedOrbit& Orbit : MergedOrbits)
 	{
-		TArray<FVector2D> SpacecraftLocations;
-
-		if (Trajectory.StartAltitude == Trajectory.EndAltitude && Trajectory.StartPhase == 0 && Trajectory.EndPhase == 360)
-		{
-			SpacecraftLocations = AddCircularOrbit(Origin, Trajectory.StartAltitude, Trajectory.Spacecraft, Style);
-		}
-		else if (Trajectory.StartAltitude == Trajectory.EndAltitude)
-		{
-			SpacecraftLocations = AddPartialCircularOrbit(Origin, Trajectory.StartAltitude, Trajectory.StartPhase, 0,
-				Trajectory.EndPhase - Trajectory.StartPhase, Trajectory.Spacecraft, Style);
-		}
-		else
-		{
-			SpacecraftLocations = AddTransferOrbit(
-				Origin, Trajectory.StartAltitude, Trajectory.EndAltitude, Trajectory.StartPhase, 0, Trajectory.Spacecraft, Style);
-		}
-
-		for (const FVector2D& SpacecraftLocation : SpacecraftLocations)
+		FNovaSplineResults Results = AddOrbit(Origin, Orbit, Orbit.SpacecraftPhases, Style);
+		for (const FVector2D& SpacecraftLocation : Results.PointsOfInterest)
 		{
 			AddPoint(SpacecraftLocation, Style.ColorInner);
 		}
@@ -197,6 +185,17 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect,
 	FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
+	// Draw batched brushes
+	for (const FNovaBatchedBrush& Brush : BatchedBrushes)
+	{
+		NCHECK(Brush.Brush);
+		FVector2D BrushSize = Brush.Brush->GetImageSize();
+
+		FSlateDrawElement::MakeBox(OutDrawElements, LayerId,
+			AllottedGeometry.ToPaintGeometry(Brush.Pos - BrushSize / 2, BrushSize, Brush.Scale), Brush.Brush, ESlateDrawEffect::None,
+			FLinearColor::White);
+	}
+
 	// Draw batched splines
 	for (const FNovaBatchedSpline& Spline : BatchedSplines)
 	{
@@ -234,6 +233,17 @@ void SNovaOrbitalMap::PreviewTrajectory(const TSharedPtr<FNovaTrajectory>& Traje
 /*----------------------------------------------------
     Internals
 ----------------------------------------------------*/
+
+void SNovaOrbitalMap::AddPlanet(const FVector2D& Pos, const class UNovaPlanet* Planet)
+{
+	FNovaBatchedBrush Brush;
+
+	Brush.Brush = &Planet->Image;
+	Brush.Pos   = Pos;
+	Brush.Scale = 1.0f;
+
+	BatchedBrushes.Add(Brush);
+}
 
 TArray<FVector2D> SNovaOrbitalMap::AddTrajectory(
 	const FVector2D& Origin, const FNovaTrajectory& Trajectory, const FNovaSplineStyle& Style, float Progress)
