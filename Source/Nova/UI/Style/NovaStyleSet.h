@@ -36,6 +36,12 @@ public:
 	/** Get a new dynamic Slate brush material based on a static one - use FGCObject */
 	static TPair<TSharedPtr<struct FSlateBrush>, class UMaterialInstanceDynamic*> GetDynamicBrush(const FString& Name);
 
+	/** Get a color along a gradient using the Plasma palette */
+	static FLinearColor GetPlasmaColor(float Alpha);
+
+	/** Get a color along a gradient using the Viridis palette */
+	static FLinearColor GetViridisColor(float Alpha);
+
 	/** Get the main theme */
 	static const FNovaMainTheme& GetMainTheme(const FName& Name = TEXT("DefaultTheme"))
 	{

@@ -42,20 +42,76 @@ void UNovaOrbitalSimulationComponent::TickComponent(
 }
 
 TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
-	const class UNovaArea* Source, const class UNovaArea* Destination)
+	const class UNovaArea* Source, const class UNovaArea* Destination, float PhasingAltitude)
 {
+	// Basic parameters
+	const UNovaPlanet* Planet = Source->Planet;
+	const double       µ      = Planet->GetGravitationalParameter();
+	const double       R1     = Planet->GetRadius(Source->Altitude);
+	const double       R2     = Planet->GetRadius(PhasingAltitude);
+	const double       R3     = Planet->GetRadius(Destination->Altitude);
+
+	// Compute both Hohmann transfers as well as the orbital periods
+	const FNovaHohmannTransfer TransferA              = ComputeHohmannTransfer(µ, R1, R2);
+	const FNovaHohmannTransfer TransferB              = ComputeHohmannTransfer(µ, R2, R3);
+	const double               PhasingOrbitPeriod     = GetCircularOrbitPeriod(µ, R2);
+	const double               DestinationOrbitPeriod = GetCircularOrbitPeriod(µ, R3);
+
+	// Compute the new destination parameters after both transfers, ignoring the phasing orbit
+	const double TotalTransferDuration                = TransferA.Duration + TransferB.Duration;
+	const double DestinationPhaseChangeDuringTransfer = (DestinationOrbitPeriod / TotalTransferDuration) * 360.0;
+	const double NewDestinationPhaseAfterTransfers    = fmod(Destination->Phase + DestinationPhaseChangeDuringTransfer, 360.0);
+	double       PhaseDelta                           = fmod(NewDestinationPhaseAfterTransfers - Source->Phase + 360.0, 360.0);
+	if (PhasingOrbitPeriod > DestinationOrbitPeriod)
+	{
+		PhaseDelta = PhaseDelta - 360.0;
+	}
+
+	// Compute the time spent waiting
+	const double PhasingDuration = PhaseDelta / (360.0 * (1.0 / PhasingOrbitPeriod - 1.0 / DestinationOrbitPeriod));
+	float        PhasingAngle    = (PhasingDuration / PhasingOrbitPeriod) * 360.0;
+
+#if 0
+
+	float DestinationPhasingAngle = (PhasingDuration / DestinationOrbitPeriod) * 360.0;
+	float FinalDestinationPhase   = fmod(NewDestinationPhaseAfterTransfers + DestinationPhasingAngle, 360.0);
+	float FinalSpacecraftPhase    = fmod(Source->Phase + PhasingAngle, 360.0);
+
+	NLOG("UNovaOrbitalSimulationComponent::ComputeTrajectory : (%f, %f) --> (%f, %f)", Source->Altitude, Source->Phase,
+		Destination->Altitude, Destination->Phase);
+	NLOG("Transfer A : DVS %f, DVE %f, DV %f, T %f", TransferA.StartDeltaV, TransferA.EndDeltaV, TransferA.TotalDeltaV, TransferA.Duration);
+	NLOG("Transfer B : DVS %f, DVE %f, DV %f, T %f", TransferB.StartDeltaV, TransferB.EndDeltaV, TransferB.TotalDeltaV, TransferB.Duration);
+	NLOG("DestinationPhaseChangeDuringTransfer %f, NewDestinationPhaseAfterTransfers %f, PhaseDelta %f",
+		DestinationPhaseChangeDuringTransfer, NewDestinationPhaseAfterTransfers, PhaseDelta);
+	NLOG("PhasingOrbitPeriod = %f, DestinationOrbitPeriod = %f", PhasingOrbitPeriod, DestinationOrbitPeriod);
+	NLOG("PhasingDuration = %f, PhasingAngle = %f", PhasingDuration, PhasingAngle);
+	NLOG("FinalDestinationPhase = %f, FinalSpacecraftPhase = %f", FinalDestinationPhase, FinalSpacecraftPhase);
+
+#endif
+
+	// Initial orbit
 	TSharedPtr<FNovaTrajectory> Trajectory = MakeShared<FNovaTrajectory>(FNovaOrbit(Source->Altitude, Source->Phase));
 
-	float PhasingAltitude = 200;
-	float PhasingAngle    = 90;
-	float InitialAngle    = Source->Phase;
+	// First transfer
+	Trajectory->Maneuvers.Add(FNovaManeuver(TransferA.StartDeltaV, 0));
+	Trajectory->TransferOrbits.Add(FNovaOrbit(Source->Altitude, PhasingAltitude, Source->Phase, Source->Phase + 180));
+	Trajectory->Maneuvers.Add(FNovaManeuver(TransferA.EndDeltaV, TransferA.Duration));
 
-	Trajectory->TransferOrbits.Add(FNovaOrbit(Source->Altitude, PhasingAltitude, InitialAngle, InitialAngle + 180));
-	Trajectory->TransferOrbits.Add(FNovaOrbit(PhasingAltitude, PhasingAltitude, InitialAngle + 180, InitialAngle + 180 + PhasingAngle));
+	// Phasing orbit
+	Trajectory->TransferOrbits.Add(FNovaOrbit(PhasingAltitude, PhasingAltitude, Source->Phase + 180, Source->Phase + 180 + PhasingAngle));
+
+	// Second transfer
+	Trajectory->Maneuvers.Add(FNovaManeuver(TransferB.StartDeltaV, TransferA.Duration + PhasingDuration));
 	Trajectory->TransferOrbits.Add(
-		FNovaOrbit(PhasingAltitude, Destination->Altitude, InitialAngle + 180 + PhasingAngle, InitialAngle + 360 + PhasingAngle));
+		FNovaOrbit(PhasingAltitude, Destination->Altitude, Source->Phase + 180 + PhasingAngle, Source->Phase + 360 + PhasingAngle));
+	Trajectory->Maneuvers.Add(FNovaManeuver(TransferB.EndDeltaV, TransferA.Duration + PhasingDuration + TransferB.Duration));
 
+	// Final orbit
 	Trajectory->FinalOrbit = FNovaOrbit(Destination->Altitude, Destination->Phase);
+
+	// Metadata
+	Trajectory->TotalTransferDuration = TransferA.Duration + PhasingDuration + TransferB.Duration;
+	Trajectory->TotalDeltaV           = TransferA.TotalDeltaV + TransferB.TotalDeltaV;
 
 	return Trajectory;
 }

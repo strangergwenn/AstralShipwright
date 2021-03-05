@@ -220,6 +220,11 @@ int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& All
 	return SCompoundWidget::OnPaint(PaintArgs, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 }
 
+FVector2D SNovaOrbitalMap::ComputeDesiredSize(float Scale) const
+{
+	return FVector2D(1000, 1000);
+}
+
 /*----------------------------------------------------
     Interface
 ----------------------------------------------------*/

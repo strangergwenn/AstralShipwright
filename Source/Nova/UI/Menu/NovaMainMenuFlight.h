@@ -1,4 +1,4 @@
-﻿// Nova project - Gwennaël Arbona
+// Nova project - Gwennaël Arbona
 
 #pragma once
 
@@ -8,6 +8,15 @@
 
 #include "Online.h"
 
+/** High-level orbit characteristics */
+struct FNovaTrajectoryCharacteristics
+{
+	float  IntermediateAltitude;
+	double Duration;
+	double DeltaV;
+};
+
+/** Flight menu */
 class SNovaMainMenuFlight : public SNovaTabPanel
 {
 	/*----------------------------------------------------
@@ -23,11 +32,16 @@ class SNovaMainMenuFlight : public SNovaTabPanel
 	SLATE_END_ARGS()
 
 public:
+	SNovaMainMenuFlight() : CurrentTrajectoryDisplayTime(0), NeedTrajectoryDisplayUpdate(false)
+	{}
+
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
 	    Interaction
 	----------------------------------------------------*/
+
+	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
 	virtual void Show() override;
 
@@ -47,8 +61,11 @@ protected:
 	/** Get the spacecraft pawn */
 	class ANovaSpacecraftPawn* GetSpacecraftPawn() const;
 
-	/** Get the spacecraft pawn */
+	/** Get the spacecraft movement component */
 	class UNovaSpacecraftMovementComponent* GetSpacecraftMovement() const;
+
+	/** Simulate trajectories to go between areas */
+	void SimulateTrajectories(const class UNovaArea* Source, const class UNovaArea* Destination);
 
 	/*----------------------------------------------------
 	    Content callbacks
@@ -58,6 +75,16 @@ protected:
 	bool IsUndockEnabled() const;
 	bool IsDockEnabled() const;
 
+	TArray<FLinearColor> GetDeltaVGradient() const
+	{
+		return TrajectoryDeltaVGradientData;
+	}
+
+	TArray<FLinearColor> GetDurationGradient() const
+	{
+		return TrajectoryDurationGradientData;
+	}
+
 	/*----------------------------------------------------
 	    Callbacks
 	----------------------------------------------------*/
@@ -65,13 +92,23 @@ protected:
 	void OnUndock();
 	void OnDock();
 
+	void OnAltitudeSliderChanged(float Altitude);
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
 
 protected:
-	// Menu manager
+	// Settings
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
+	float                            TrajectoryDisplayFadeTime;
+
+	// Trajectory data
+	TArray<FNovaTrajectoryCharacteristics> SimulatedTrajectories;
+	TArray<FLinearColor>                   TrajectoryDeltaVGradientData;
+	TArray<FLinearColor>                   TrajectoryDurationGradientData;
+	float                                  CurrentTrajectoryDisplayTime;
+	bool                                   NeedTrajectoryDisplayUpdate;
 
 	// Slate widgets
 	TSharedPtr<class SRetainerWidget> MapRetainer;
