@@ -104,6 +104,18 @@ public:
 	/** Force a new help text */
 	void SetHelpText(FText NewText);
 
+	/** Pass horizontal input through the widget, return true if consumed */
+	virtual bool HorizontalAnalogInput(float Value)
+	{
+		return false;
+	}
+
+	/** Pass vertical input through the widget, return true if consumed */
+	virtual bool VerticalAnalogInput(float Value)
+	{
+		return false;
+	}
+
 	/** Get the current help text */
 	FText GetHelpText();
 

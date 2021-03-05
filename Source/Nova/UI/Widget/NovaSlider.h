@@ -16,9 +16,11 @@ class SNovaSlider : public SCompoundWidget
 
 	SLATE_BEGIN_ARGS(SNovaSlider)
 		: _Theme("DefaultSlider")
+		, _Size("DefaultSliderSize")
 		, _ControlsTheme("DefaultButton")
 		, _ControlsSize("SmallButtonSize")
 		, _Enabled(true)
+		, _Analog(false)
 		, _Value(0)
 		, _MinValue(0)
 		, _MaxValue(1)
@@ -28,10 +30,15 @@ class SNovaSlider : public SCompoundWidget
 	SLATE_ARGUMENT(class SNovaNavigationPanel*, Panel)
 	SLATE_ATTRIBUTE(FText, HelpText)
 	SLATE_ARGUMENT(FName, Theme)
+	SLATE_ARGUMENT(FName, Size)
 	SLATE_ARGUMENT(FName, ControlsTheme)
 	SLATE_ARGUMENT(FName, ControlsSize)
 
+	SLATE_NAMED_SLOT(FArguments, Header)
+	SLATE_NAMED_SLOT(FArguments, Footer)
+
 	SLATE_ATTRIBUTE(bool, Enabled)
+	SLATE_ARGUMENT(bool, Analog)
 	SLATE_ARGUMENT(float, Value)
 	SLATE_ARGUMENT(float, MinValue)
 	SLATE_ARGUMENT(float, MaxValue)
@@ -55,6 +62,9 @@ public:
 
 	/** Set the current value */
 	void SetCurrentValue(float Value);
+
+	/** Analog input from a joystick */
+	void HorizontalAnalogInput(float Value);
 
 	/*----------------------------------------------------
 	    Callbacks
@@ -87,6 +97,8 @@ protected:
 	// Settings & attributes
 	FName ThemeName;
 	float SliderSpeed;
+	float SliderAnalogSpeed;
+	bool  Analog;
 
 	// State
 	float                ValueStep;
