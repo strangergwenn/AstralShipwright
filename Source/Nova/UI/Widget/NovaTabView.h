@@ -39,6 +39,12 @@ public:
 		return CurrentAlpha;
 	}
 
+	/** Get the current blur radius */
+	TOptional<int32> GetBlurRadius() const;
+
+	/** Get the current blur strength */
+	float GetBlurStrength() const;
+
 	/** Check if this tab should have a blur and darkened background */
 	bool IsBlurred() const
 	{

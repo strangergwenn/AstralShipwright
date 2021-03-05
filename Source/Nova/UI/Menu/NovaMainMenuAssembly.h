@@ -85,10 +85,6 @@ protected:
 	----------------------------------------------------*/
 
 protected:
-	// Blur
-	TOptional<int32> GetBlurRadius() const;
-	float            GetBlurStrength() const;
-
 	// Helpers
 	TSharedRef<SWidget> GenerateAssetItem(const UNovaAssetDescription* Asset) const;
 	FText               GetAssetName(const class UNovaAssetDescription* Asset) const;

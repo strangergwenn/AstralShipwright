@@ -84,6 +84,22 @@ bool SNovaTabPanel::IsHidden() const
 	return (CurrentAlpha == 0);
 }
 
+TOptional<int32> SNovaTabPanel::GetBlurRadius() const
+{
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+	float Alpha = FMath::InterpEaseInOut(0.0f, 1.0f, CurrentAlpha, ENovaUIConstants::EaseStandard);
+	return static_cast<int32>(Theme.BlurRadius * Alpha);
+}
+
+float SNovaTabPanel::GetBlurStrength() const
+{
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+	float Alpha = FMath::InterpEaseInOut(0.0f, 1.0f, CurrentAlpha, ENovaUIConstants::EaseStandard);
+	return Theme.BlurStrength * Alpha;
+}
+
 /*----------------------------------------------------
     Construct
 ----------------------------------------------------*/

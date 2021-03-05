@@ -71,10 +71,14 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		// Header widget
 		.Header()
 		[
-			SNew(STextBlock)
-			.TextStyle(&Theme.SubtitleFont)
-			.Text(this, &SNovaMainMenu::GetTooltipText)
-			.ColorAndOpacity(this, &SNovaMainMenu::GetTooltipColor)
+			SNew(SBox)
+			.Padding(Theme.ContentPadding)
+			[
+				SNew(STextBlock)
+				.TextStyle(&Theme.SubtitleFont)
+				.Text(this, &SNovaMainMenu::GetTooltipText)
+				.ColorAndOpacity(this, &SNovaMainMenu::GetTooltipColor)
+			]
 		]
 
 		// Manipulator

@@ -48,8 +48,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 	.VAlign(VAlign_Bottom)
 	[
 		SNew(SBackgroundBlur)
-		.BlurRadius(this, &SNovaMainMenuAssembly::GetBlurRadius)
-		.BlurStrength(this, &SNovaMainMenuAssembly::GetBlurStrength)
+		.BlurRadius(this, &SNovaTabPanel::GetBlurRadius)
+		.BlurStrength(this, &SNovaTabPanel::GetBlurStrength)
 		.bApplyAlphaToBlur(true)
 		.Padding(0)
 		[
@@ -801,22 +801,6 @@ FText SNovaMainMenuAssembly::GenerateHullTypeTooltip(ENovaHullType Type) const
 /*----------------------------------------------------
     Content callbacks
 ----------------------------------------------------*/
-
-TOptional<int32> SNovaMainMenuAssembly::GetBlurRadius() const
-{
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-
-	float Alpha = FMath::InterpEaseInOut(0.0f, 1.0f, CurrentAlpha, ENovaUIConstants::EaseStandard);
-	return static_cast<int32>(Theme.BlurRadius * Alpha);
-}
-
-float SNovaMainMenuAssembly::GetBlurStrength() const
-{
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-
-	float Alpha = FMath::InterpEaseInOut(0.0f, 1.0f, CurrentAlpha, ENovaUIConstants::EaseStandard);
-	return Theme.BlurStrength * Alpha;
-}
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateAssetItem(const UNovaAssetDescription* Asset) const
 {
