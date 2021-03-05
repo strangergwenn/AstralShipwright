@@ -4,94 +4,11 @@
 #include "NovaMenu.h"
 
 #include "Nova/UI/NovaUITypes.h"
-#include "Nova/Player/NovaMenuManager.h"
 #include "Nova/Nova.h"
 
 #include "Engine/Engine.h"
-#include "GameFramework/GameUserSettings.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
-
-/*----------------------------------------------------
-    Window manipulator
-----------------------------------------------------*/
-
-class SNovaMenuManipulator : public SImage
-{
-	SLATE_BEGIN_ARGS(SNovaMenuManipulator)
-	{}
-
-	SLATE_ARGUMENT(const FSlateBrush*, Image)
-
-	SLATE_END_ARGS()
-
-public:
-	SNovaMenuManipulator() : Moving(false)
-	{
-		SetCanTick(true);
-	}
-
-	void Construct(const FArguments& InArgs)
-	{
-		SImage::Construct(SImage::FArguments().Image(InArgs._Image));
-	}
-
-	virtual FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
-	{
-		SImage::OnMouseButtonDown(MyGeometry, MouseEvent);
-
-		TSharedPtr<SWindow> Window = FSlateApplication::Get().GetTopLevelWindows()[0];
-		NCHECK(Window);
-
-		if (!Window->IsWindowMaximized() && GEngine->GetGameUserSettings()->GetFullscreenMode() == EWindowMode::Windowed)
-		{
-			Moving = true;
-			Origin = FSlateApplication::Get().GetCursorPos() - Window->GetPositionInScreen();
-		}
-
-		return FReply::Handled();
-	}
-
-	virtual FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
-	{
-		SImage::OnMouseButtonUp(MyGeometry, MouseEvent);
-
-		Moving = false;
-
-		return FReply::Handled();
-	}
-
-	virtual FReply OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
-	{
-		SImage::OnMouseButtonDoubleClick(MyGeometry, MouseEvent);
-
-		UNovaMenuManager::Get()->MaximizeOrRestore();
-
-		return FReply::Handled();
-	}
-
-	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override
-	{
-		SImage::Tick(AllottedGeometry, CurrentTime, DeltaTime);
-
-		TSharedPtr<SWindow> Window = FSlateApplication::Get().GetTopLevelWindows()[0];
-		NCHECK(Window);
-
-		if (Moving && !Window->IsWindowMaximized())
-		{
-			if (!Window->GetNativeWindow()->IsForegroundWindow())
-			{
-				Moving = false;
-			}
-
-			Window->MoveWindowTo(FSlateApplication::Get().GetCursorPos() - Origin);
-		}
-	}
-
-protected:
-	bool      Moving;
-	FVector2D Origin;
-};
 
 /*----------------------------------------------------
     Tab view content widget
@@ -224,8 +141,7 @@ void SNovaTabView::Construct(const FArguments& InArgs)
 						+ SVerticalBox::Slot()
 						.AutoHeight()
 						[
-							SNew(SNovaMenuManipulator)
-							.Image(InArgs._ManipulatorBrush)
+							InArgs._BackgroundWidget.Widget
 						]
 
 						+ SVerticalBox::Slot()

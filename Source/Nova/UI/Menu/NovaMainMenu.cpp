@@ -8,9 +8,10 @@
 #include "NovaMainMenuAssembly.h"
 #include "NovaMainMenuSettings.h"
 
+#include "Nova/UI/Widget/NovaButton.h"
 #include "Nova/UI/Widget/NovaKeyLabel.h"
 #include "Nova/UI/Widget/NovaTabView.h"
-#include "Nova/UI/Widget/NovaButton.h"
+#include "Nova/UI/Widget/NovaWindowManipulator.h"
 #include "Nova/UI/NovaUITypes.h"
 
 #include "Nova/Player/NovaMenuManager.h"
@@ -77,7 +78,11 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		]
 
 		// Manipulator
-		.ManipulatorBrush(&Theme.MainMenuManipulator)
+		.BackgroundWidget()
+		[
+			SNew(SNovaMenuManipulator)
+			.Image(&Theme.MainMenuManipulator)
+		]
 
 		// Home menu
 		+ SNovaTabView::Slot()
