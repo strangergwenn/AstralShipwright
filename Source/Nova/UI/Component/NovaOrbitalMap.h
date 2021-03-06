@@ -35,6 +35,8 @@ struct FNovaOrbitalObject
 		Phase    = M.Phase;
 	}
 
+	FText GetText() const;
+
 	// Object data
 	const class UNovaArea*             Area;
 	TSharedPtr<struct FNovaSpacecraft> Spacecraft;

@@ -21,6 +21,39 @@
     Internal structures
 ----------------------------------------------------*/
 
+FText FNovaOrbitalObject::GetText() const
+{
+	if (Area)
+	{
+		return Area->Name;
+	}
+	else if (Spacecraft.IsValid())
+	{
+		FString IDentifier = Spacecraft->Identifier.ToString(EGuidFormats::DigitsWithHyphens);
+		int32   Index;
+		if (IDentifier.FindLastChar('-', Index))
+		{
+			return FText::FromString(IDentifier.RightChop(Index));
+		}
+		else
+		{
+			return FText();
+		}
+	}
+	else if (Maneuver)
+	{
+		FNumberFormattingOptions NumberOptions;
+		NumberOptions.SetMaximumFractionalDigits(1);
+
+		return FText::FormatNamed(LOCTEXT("ManeuverFormat", "Maneuver at {phase}° / {deltav} m/s"), TEXT("phase"),
+			FText::AsNumber(Maneuver->Phase, &NumberOptions), TEXT("deltav"), FText::AsNumber(Maneuver->DeltaV, &NumberOptions));
+	}
+	else
+	{
+		return FText();
+	}
+}
+
 /** Geometry of an orbit on the map */
 struct FNovaSplineOrbit
 {
@@ -161,6 +194,8 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect,
 	FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
 	// Draw batched brushes
 	for (const FNovaBatchedBrush& Brush : BatchedBrushes)
 	{
@@ -191,6 +226,10 @@ int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& All
 		FSlateDrawElement::MakeBox(OutDrawElements, LayerId,
 			AllottedGeometry.ToPaintGeometry(2 * BezierPointRadius, FSlateLayoutTransform(Point.Pos - BezierPointRadius)), &WhiteBox,
 			ESlateDrawEffect::None, Point.Color);
+
+		FVector2D TextSize(100, 20);
+		FSlateDrawElement::MakeText(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(Point.Pos - TextSize / 2, TextSize),
+			Point.Object.GetText(), Theme.MainFont.Font);
 	}
 
 	return SCompoundWidget::OnPaint(PaintArgs, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);

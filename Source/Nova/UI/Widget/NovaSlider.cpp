@@ -73,10 +73,11 @@ void SNovaSlider::Construct(const FArguments& InArgs)
 	ValueChanged = InArgs._OnValueChanged;
 
 	// Setup
-	const FNovaSliderTheme& Theme = FNovaStyleSet::GetTheme<FNovaSliderTheme>(ThemeName);
-	const FNovaSliderSize&  Size  = FNovaStyleSet::GetTheme<FNovaSliderSize>(InArgs._Size);
-	SliderSpeed                   = 1.0f;
-	SliderAnalogSpeed             = 0.01f;
+	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
+	const FNovaSliderTheme& Theme       = FNovaStyleSet::GetTheme<FNovaSliderTheme>(ThemeName);
+	const FNovaSliderSize&  Size        = FNovaStyleSet::GetTheme<FNovaSliderSize>(InArgs._Size);
+	SliderSpeed                         = 1.0f;
+	SliderAnalogSpeed                   = 0.01f;
 
 	// clang-format off
 	ChildSlot
@@ -113,7 +114,7 @@ void SNovaSlider::Construct(const FArguments& InArgs)
 
 				+ SVerticalBox::Slot()
 				.AutoHeight()
-				.Padding(0)
+				.Padding(FMargin(Theme.SliderStyle.NormalThumbImage.GetImageSize().X, 0))
 				[
 					InArgs._Header.Widget
 				]
@@ -146,7 +147,7 @@ void SNovaSlider::Construct(const FArguments& InArgs)
 
 				+ SVerticalBox::Slot()
 				.AutoHeight()
-				.Padding(0)
+				.Padding(FMargin(Theme.SliderStyle.NormalThumbImage.GetImageSize().X, 0))
 				[
 					InArgs._Footer.Widget
 				]
