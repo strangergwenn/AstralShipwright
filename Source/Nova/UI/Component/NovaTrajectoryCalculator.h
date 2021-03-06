@@ -20,13 +20,20 @@ class SNovaTrajectoryCalculator : public SCompoundWidget
 	----------------------------------------------------*/
 
 	SLATE_BEGIN_ARGS(SNovaTrajectoryCalculator)
-		: _MenuManager(nullptr), _Panel(nullptr), _DeltaVActionName(NAME_None), _DurationActionName(NAME_None)
+		: _MenuManager(nullptr)
+		, _Panel(nullptr)
+		, _MinAltitude(200)
+		, _MaxAltitude(1000)
+		, _DeltaVActionName(NAME_None)
+		, _DurationActionName(NAME_None)
 	{}
 
 	SLATE_ARGUMENT(TWeakObjectPtr<class UNovaMenuManager>, MenuManager)
 	SLATE_ARGUMENT(class SNovaNavigationPanel*, Panel)
 	SLATE_ATTRIBUTE(float, CurrentAlpha)
 
+	SLATE_ARGUMENT(float, MinAltitude)
+	SLATE_ARGUMENT(float, MaxAltitude)
 	SLATE_ARGUMENT(FName, DeltaVActionName)
 	SLATE_ARGUMENT(FName, DurationActionName)
 
@@ -56,8 +63,14 @@ public:
 	/** Simulate trajectories to go between areas */
 	void SimulateTrajectories(const class UNovaArea* Source, const class UNovaArea* Destination);
 
+	/** Optimize for Delta-V */
+	void OptimizeForDeltaV();
+
+	/** Optimize for travel time */
+	void OptimizeForDuration();
+
 	/*----------------------------------------------------
-	    Callbacks
+	    Content callbacks
 	----------------------------------------------------*/
 
 protected:
@@ -71,6 +84,9 @@ protected:
 		return TrajectoryDurationGradientData;
 	}
 
+	FText GetDeltaVText() const;
+	FText GetDurationText() const;
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
@@ -79,11 +95,23 @@ protected:
 	// Settings
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 	TAttribute<float>                CurrentAlpha;
+	FOnFloatValueChanged             OnAltitudeChanged;
 
 	// Trajectory data
-	TArray<FNovaTrajectoryCharacteristics> SimulatedTrajectories;
-	TArray<FLinearColor>                   TrajectoryDeltaVGradientData;
-	TArray<FLinearColor>                   TrajectoryDurationGradientData;
-	float                                  CurrentTrajectoryDisplayTime;
-	bool                                   NeedTrajectoryDisplayUpdate;
+	TArray<FNovaTrajectoryCharacteristics> SimulatedTrajectoriesCharacteristics;
+	float                                  MinDeltaV;
+	float                                  MaxDeltaV;
+	float                                  MinDuration;
+	float                                  MaxDuration;
+	FNovaTrajectoryCharacteristics         MinDeltaVTrajectoryCharacteristics;
+	FNovaTrajectoryCharacteristics         MinDurationTrajectoryCharacteristics;
+
+	// Display data
+	TArray<FLinearColor> TrajectoryDeltaVGradientData;
+	TArray<FLinearColor> TrajectoryDurationGradientData;
+	float                CurrentTrajectoryDisplayTime;
+	bool                 NeedTrajectoryDisplayUpdate;
+
+	// Slate widgets
+	TSharedPtr<class SNovaSlider> Slider;
 };

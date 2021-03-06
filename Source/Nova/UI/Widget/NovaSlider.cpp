@@ -195,6 +195,16 @@ float SNovaSlider::GetCurrentValue() const
 	return CurrentValue;
 }
 
+float SNovaSlider::GetMinValue() const
+{
+	return Slider->GetMinValue();
+}
+
+float SNovaSlider::GetMaxValue() const
+{
+	return Slider->GetMaxValue();
+}
+
 void SNovaSlider::SetCurrentValue(float Value)
 {
 	CurrentValue = Value;

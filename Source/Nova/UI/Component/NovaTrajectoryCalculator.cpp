@@ -31,6 +31,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 	const FSlateBrush*      BackgroundBrush = FNovaStyleSet::GetBrush("Game/SB_TrajectoryCalculator");
 	MenuManager                             = InArgs._MenuManager;
 	CurrentAlpha                            = InArgs._CurrentAlpha;
+	OnAltitudeChanged                       = InArgs._OnAltitudeChanged;
 
 	// clang-format off
 	ChildSlot
@@ -55,12 +56,12 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 
 		+ SOverlay::Slot()
 		[
-			SNew(SNovaSlider)
+			SAssignNew(Slider, SNovaSlider)
 			.Panel(InArgs._Panel)
 			.Size("LargeSliderSize")
-			.Value(500)
-			.MinValue(200)
-			.MaxValue(1000)
+			.Value((InArgs._MaxAltitude - InArgs._MinAltitude) / 2)
+			.MinValue(InArgs._MinAltitude)
+			.MaxValue(InArgs._MaxAltitude)
 			.ValueStep(50)
 			.Analog(true)
 			.HelpText(LOCTEXT("AltitudeSliderHelp", "Change the intermediate altitude used to synchronize orbits"))
@@ -74,7 +75,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 				[
 					SNew(STextBlock)
 					.TextStyle(&Theme.SubtitleFont)
-					.Text(LOCTEXT("TestA", "24,2 m/s"))
+					.Text(this, &SNovaTrajectoryCalculator::GetDeltaVText)
 				]
 
 				+ SVerticalBox::Slot()
@@ -83,8 +84,10 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 				[
 					SNew(SNovaButton) // No navigation
 					.Text(LOCTEXT("MinimizeDeltaV", "Minimize Delta-V"))
+					.HelpText(LOCTEXT("MinimizeDeltaVHelp", "Configure the trajectory to minimize the Delta-V cost"))
 					.Focusable(false)
 					.Action(InArgs._DeltaVActionName)
+					.OnClicked(this, &SNovaTrajectoryCalculator::OptimizeForDeltaV)
 				]
 
 				+ SVerticalBox::Slot()
@@ -129,8 +132,10 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 				[
 					SNew(SNovaButton) // No navigation
 					.Text(LOCTEXT("MinimizeTravelTime", "Minimize travel time"))
+					.HelpText(LOCTEXT("MinimizeTravelTimeHelp", "Configure the trajectory to minimize the travel tile"))
 					.Focusable(false)
 					.Action(InArgs._DurationActionName)
+					.OnClicked(this, &SNovaTrajectoryCalculator::OptimizeForDuration)
 				]
 
 				+ SVerticalBox::Slot()
@@ -139,7 +144,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 				[
 					SNew(STextBlock)
 					.TextStyle(&Theme.SubtitleFont)
-					.Text(LOCTEXT("TestB", "56,2 hours"))
+					.Text(this, &SNovaTrajectoryCalculator::GetDurationText)
 				]
 			]
 			.OnValueChanged(InArgs._OnAltitudeChanged)
@@ -164,35 +169,10 @@ void SNovaTrajectoryCalculator::Tick(const FGeometry& AllottedGeometry, const do
 		{
 			NLOG("SNovaTrajectoryCalculator::Tick : updating trajectories");
 
-			// Pre-process the trajectory data
-			float MinDeltaV = FLT_MAX, MaxDeltaV = 0, MinDuration = FLT_MAX, MaxDuration = 0;
-			for (FNovaTrajectoryCharacteristics& Res : SimulatedTrajectories)
-			{
-				Res.DeltaV   = FMath::LogX(10, Res.DeltaV);
-				Res.Duration = FMath::LogX(10, Res.Duration);
-
-				if (Res.DeltaV < MinDeltaV)
-				{
-					MinDeltaV = Res.DeltaV;
-				}
-				if (Res.DeltaV > MaxDeltaV && FMath::IsFinite(Res.DeltaV))
-				{
-					MaxDeltaV = Res.DeltaV;
-				}
-				if (Res.Duration < MinDuration)
-				{
-					MinDuration = Res.Duration;
-				}
-				if (Res.Duration > MaxDuration && FMath::IsFinite(Res.Duration))
-				{
-					MaxDuration = Res.Duration;
-				}
-			}
-
 			// Generate the gradients
 			TrajectoryDeltaVGradientData.Empty();
 			TrajectoryDurationGradientData.Empty();
-			for (const FNovaTrajectoryCharacteristics& Res : SimulatedTrajectories)
+			for (const FNovaTrajectoryCharacteristics& Res : SimulatedTrajectoriesCharacteristics)
 			{
 				double DeltaVAlpha   = FMath::Clamp((Res.DeltaV - MinDeltaV) / (MaxDeltaV - MinDeltaV), 0.0, 1.0);
 				double DurationAlpha = FMath::Clamp((Res.Duration - MinDuration) / (MaxDuration - MinDuration), 0.0, 1.0);
@@ -229,9 +209,14 @@ void SNovaTrajectoryCalculator::Tick(const FGeometry& AllottedGeometry, const do
 
 void SNovaTrajectoryCalculator::Reset()
 {
-	SimulatedTrajectories          = {};
-	TrajectoryDeltaVGradientData   = {FLinearColor::Black, FLinearColor::Black};
-	TrajectoryDurationGradientData = {FLinearColor::Black, FLinearColor::Black};
+	SimulatedTrajectoriesCharacteristics = {};
+	TrajectoryDeltaVGradientData         = {FLinearColor::Black, FLinearColor::Black};
+	TrajectoryDurationGradientData       = {FLinearColor::Black, FLinearColor::Black};
+
+	MinDeltaV   = FLT_MAX;
+	MaxDeltaV   = 0;
+	MinDuration = FLT_MAX;
+	MaxDuration = 0;
 }
 
 void SNovaTrajectoryCalculator::SimulateTrajectories(const class UNovaArea* Source, const class UNovaArea* Destination)
@@ -240,6 +225,7 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const class UNovaArea* Sour
 	NCHECK(Destination);
 	NLOG("SNovaTrajectoryCalculator::SimulateTrajectories : %s -> %s", *Source->Name.ToString(), *Destination->Name.ToString());
 
+	// Get the game state
 	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	NCHECK(GameState);
 	ANovaGameWorld* GameWorld = GameState->GetGameWorld();
@@ -247,19 +233,81 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const class UNovaArea* Sour
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
 	NCHECK(OrbitalSimulation);
 
+	Reset();
+
 	// Run trajectory calculations over a range of altitudes
-	SimulatedTrajectories.Empty();
-	for (float Altitude = 200; Altitude <= 1000; Altitude += 5)
+	for (float Altitude = Slider->GetMinValue(); Altitude <= Slider->GetMaxValue(); Altitude += 5)
 	{
-		TSharedPtr<FNovaTrajectory>    Trajectory = OrbitalSimulation->ComputeTrajectory(Source, Destination, Altitude);
+		TSharedPtr<FNovaTrajectory> Trajectory = OrbitalSimulation->ComputeTrajectory(Source, Destination, Altitude);
+
 		FNovaTrajectoryCharacteristics TrajectoryCharacteristics;
 		TrajectoryCharacteristics.IntermediateAltitude = Altitude;
 		TrajectoryCharacteristics.Duration             = Trajectory->TotalTransferDuration;
 		TrajectoryCharacteristics.DeltaV               = Trajectory->TotalDeltaV;
-		SimulatedTrajectories.Add(TrajectoryCharacteristics);
+		SimulatedTrajectoriesCharacteristics.Add(TrajectoryCharacteristics);
+	}
+
+	// Pre-process the trajectory data
+	for (FNovaTrajectoryCharacteristics& Characteristics : SimulatedTrajectoriesCharacteristics)
+	{
+		Characteristics.DeltaV   = FMath::LogX(10, Characteristics.DeltaV);
+		Characteristics.Duration = FMath::LogX(10, Characteristics.Duration);
+
+		if (Characteristics.DeltaV < MinDeltaV)
+		{
+			MinDeltaV                          = Characteristics.DeltaV;
+			MinDeltaVTrajectoryCharacteristics = Characteristics;
+		}
+		if (Characteristics.DeltaV > MaxDeltaV && FMath::IsFinite(Characteristics.DeltaV))
+		{
+			MaxDeltaV = Characteristics.DeltaV;
+		}
+		if (Characteristics.Duration < MinDuration)
+		{
+			MinDuration                          = Characteristics.Duration;
+			MinDurationTrajectoryCharacteristics = Characteristics;
+		}
+		if (Characteristics.Duration > MaxDuration && FMath::IsFinite(Characteristics.Duration))
+		{
+			MaxDuration = Characteristics.Duration;
+		}
 	}
 
 	NeedTrajectoryDisplayUpdate = true;
+}
+
+void SNovaTrajectoryCalculator::OptimizeForDeltaV()
+{
+	NLOG("SNovaTrajectoryCalculator::OptimizeForDeltaV");
+	Slider->SetCurrentValue(MinDeltaVTrajectoryCharacteristics.IntermediateAltitude);
+	OnAltitudeChanged.ExecuteIfBound(MinDeltaVTrajectoryCharacteristics.IntermediateAltitude);
+}
+
+void SNovaTrajectoryCalculator::OptimizeForDuration()
+{
+	NLOG("SNovaTrajectoryCalculator::OptimizeForDuration");
+	Slider->SetCurrentValue(MinDurationTrajectoryCharacteristics.IntermediateAltitude);
+	OnAltitudeChanged.ExecuteIfBound(MinDurationTrajectoryCharacteristics.IntermediateAltitude);
+}
+
+/*----------------------------------------------------
+    Content callbacks
+----------------------------------------------------*/
+
+FText SNovaTrajectoryCalculator::GetDeltaVText() const
+{
+	FNumberFormattingOptions NumberOptions;
+	NumberOptions.SetMaximumFractionalDigits(1);
+
+	return FText::FormatNamed(LOCTEXT("DeltaVFormat", "{deltav} m/s"), TEXT("deltav"), FText::AsNumber(42, &NumberOptions));
+}
+
+FText SNovaTrajectoryCalculator::GetDurationText() const
+{
+	FNumberFormattingOptions NumberOptions;
+	NumberOptions.SetMaximumFractionalDigits(1);
+
+	return FText::FormatNamed(LOCTEXT("DurationFormat", "{hours} hours"), TEXT("hours"), FText::AsNumber(57.2, &NumberOptions));
 }
 
 #undef LOCTEXT_NAMESPACE

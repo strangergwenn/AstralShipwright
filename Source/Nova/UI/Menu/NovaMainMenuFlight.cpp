@@ -218,6 +218,16 @@ void SNovaMainMenuFlight::Hide()
 	SNovaTabPanel::Hide();
 }
 
+void SNovaMainMenuFlight::AbilityPrimary()
+{
+	TrajectoryCalculator->OptimizeForDeltaV();
+}
+
+void SNovaMainMenuFlight::AbilitySecondary()
+{
+	TrajectoryCalculator->OptimizeForDuration();
+}
+
 void SNovaMainMenuFlight::HorizontalAnalogInput(float Value)
 {
 	if (GetSpacecraftPawn())

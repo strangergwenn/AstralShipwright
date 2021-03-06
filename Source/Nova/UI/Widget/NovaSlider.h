@@ -60,6 +60,12 @@ public:
 	/** Get the current value */
 	float GetCurrentValue() const;
 
+	/** Get the minimum value */
+	float GetMinValue() const;
+
+	/** Get the maximum value */
+	float GetMaxValue() const;
+
 	/** Set the current value */
 	void SetCurrentValue(float Value);
 
