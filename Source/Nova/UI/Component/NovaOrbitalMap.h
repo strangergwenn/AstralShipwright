@@ -11,12 +11,38 @@
     Internal structures
 ----------------------------------------------------*/
 
-/** Orbit drawing results */
-struct FNovaSplineResults
+/** Point of interest on the map */
+struct FNovaOrbitalObject
 {
-	FVector2D         InitialPosition;
-	FVector2D         FinalPosition;
-	TArray<FVector2D> PointsOfInterest;
+	FNovaOrbitalObject() : Area(nullptr), Spacecraft(nullptr), Maneuver(nullptr)
+	{}
+
+	FNovaOrbitalObject(const class UNovaArea* A, float P) : FNovaOrbitalObject()
+	{
+		Area  = A;
+		Phase = P;
+	}
+
+	FNovaOrbitalObject(const TSharedPtr<struct FNovaSpacecraft>& S, float P) : FNovaOrbitalObject()
+	{
+		Spacecraft = S;
+		Phase      = P;
+	}
+
+	FNovaOrbitalObject(const FNovaManeuver& M) : FNovaOrbitalObject()
+	{
+		Maneuver = MakeShared<FNovaManeuver>(M);
+		Phase    = M.Phase;
+	}
+
+	// Object data
+	const class UNovaArea*             Area;
+	TSharedPtr<struct FNovaSpacecraft> Spacecraft;
+	TSharedPtr<struct FNovaManeuver>   Maneuver;
+
+	// Positioning
+	float     Phase;
+	FVector2D Position;
 };
 
 /** Batched data for drawing a spline */
@@ -35,9 +61,10 @@ struct FNovaBatchedSpline
 /** Batched data for drawing a point */
 struct FNovaBatchedPoint
 {
-	FVector2D    Pos;
-	FLinearColor Color;
-	float        Radius;
+	FVector2D          Pos;
+	FLinearColor       Color;
+	float              Radius;
+	FNovaOrbitalObject Object;
 };
 
 /** Batched data for drawing a quad */
@@ -89,7 +116,7 @@ public:
 	----------------------------------------------------*/
 
 	/** Preview a spacecraft trajectory */
-	void PreviewTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory);
+	void PreviewTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, bool Immediate = false);
 
 	/*----------------------------------------------------
 	    Internals
@@ -100,35 +127,22 @@ protected:
 	void AddPlanet(const FVector2D& Pos, const class UNovaPlanet* Planet);
 
 	/** Draw a trajectory */
-	TArray<FVector2D> AddTrajectory(
-		const FVector2D& Origin, const FNovaTrajectory& Trajectory, const struct FNovaSplineStyle& Style, float Progress = 1.0f);
+	void AddTrajectory(const FVector2D& Origin, const FNovaTrajectory& Trajectory, const struct FNovaSplineStyle& Style,
+		bool IncludeCurrent = true, float Progress = 1.0f);
 
 	/** Draw an orbit */
-	FNovaSplineResults AddOrbit(
-		const FVector2D& Origin, const FNovaOrbit& Orbit, const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
+	TPair<FVector2D, FVector2D> AddOrbit(
+		const FVector2D& Origin, const FNovaOrbit& Orbit, const TArray<FNovaOrbitalObject>& Objects, const struct FNovaSplineStyle& Style);
 
-	// TODO : test code, remove
+	/** Draw an orbit based on processed 2D parameters */
+	TPair<FVector2D, FVector2D> AddOrbitInternal(
+		const struct FNovaSplineOrbit& Orbit, TArray<FNovaOrbitalObject> Objects, const struct FNovaSplineStyle& Style);
 
-	/** Draw a full circular orbit around Origin of Radius */
-	TArray<FVector2D> AddCircularOrbit(
-		const FVector2D& Origin, float Radius, const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
+	/** Draw an interactive orbital object on the map */
+	void AddOrbitalObject(const FNovaOrbitalObject& Object, const FLinearColor& Color);
 
-	/** Draw a partial circular orbit around Origin of Radius, starting at Phase over AngularLength */
-	TArray<FVector2D> AddPartialCircularOrbit(const FVector2D& Origin, float Radius, float Phase, float InitialAngle, float AngularLength,
-		const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
-
-	/** Draw a Hohmann transfer orbit around Origin from RadiusA to RadiusB, starting at Phase */
-	TArray<FVector2D> AddTransferOrbit(const FVector2D& Origin, float RadiusA, float RadiusB, float Phase, float InitialAngle,
-		const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
-
-	// END TODO
-
-	/** Draw an orbit or partial orbit */
-	FNovaSplineResults AddOrbitInternal(
-		const struct FNovaSplineOrbit& Orbit, const TArray<float>& PointsOfInterest, const struct FNovaSplineStyle& Style);
-
-	/** Draw a single point on the map */
-	void AddPoint(const FVector2D& Pos, const FLinearColor& Color, float Radius = 4.0f);
+	/** Add test orbits */
+	void AddTestOrbits();
 
 	/** Interpolate a spline, returning the point at Alpha (0-1) over the spline defined by P0..P3 */
 	static FVector2D DeCasteljauInterp(const FVector2D& P0, const FVector2D& P1, const FVector2D& P2, const FVector2D& P3, float Alpha)
@@ -159,8 +173,9 @@ protected:
 	----------------------------------------------------*/
 
 protected:
-	// Menu manager
+	// Settings
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
+	float                            TrajectoryPreviewDuration;
 
 	// Local state
 	TSharedPtr<FNovaTrajectory> CurrentPreviewTrajectory;

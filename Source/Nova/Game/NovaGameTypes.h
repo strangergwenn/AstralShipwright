@@ -54,11 +54,12 @@ struct FNovaOrbit
 /*** Orbit-altering maneuver */
 struct FNovaManeuver
 {
-	FNovaManeuver(double DV, double T) : DeltaV(DV), Time(T)
+	FNovaManeuver(double DV, double T, double P) : DeltaV(DV), Time(T), Phase(P)
 	{}
 
 	double DeltaV;
 	double Time;
+	double Phase;
 };
 
 /** Full trajectory data including the last stable orbit */

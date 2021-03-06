@@ -93,18 +93,20 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	TSharedPtr<FNovaTrajectory> Trajectory = MakeShared<FNovaTrajectory>(FNovaOrbit(Source->Altitude, Source->Phase));
 
 	// First transfer
-	Trajectory->Maneuvers.Add(FNovaManeuver(TransferA.StartDeltaV, 0));
+	Trajectory->Maneuvers.Add(FNovaManeuver(TransferA.StartDeltaV, 0, Source->Phase));
 	Trajectory->TransferOrbits.Add(FNovaOrbit(Source->Altitude, PhasingAltitude, Source->Phase, Source->Phase + 180));
-	Trajectory->Maneuvers.Add(FNovaManeuver(TransferA.EndDeltaV, TransferA.Duration));
+	Trajectory->Maneuvers.Add(FNovaManeuver(TransferA.EndDeltaV, TransferA.Duration, Source->Phase + 180));
 
 	// Phasing orbit
 	Trajectory->TransferOrbits.Add(FNovaOrbit(PhasingAltitude, PhasingAltitude, Source->Phase + 180, Source->Phase + 180 + PhasingAngle));
 
 	// Second transfer
-	Trajectory->Maneuvers.Add(FNovaManeuver(TransferB.StartDeltaV, TransferA.Duration + PhasingDuration));
+	Trajectory->Maneuvers.Add(
+		FNovaManeuver(TransferB.StartDeltaV, TransferA.Duration + PhasingDuration, Source->Phase + 180 + PhasingAngle));
 	Trajectory->TransferOrbits.Add(
 		FNovaOrbit(PhasingAltitude, Destination->Altitude, Source->Phase + 180 + PhasingAngle, Source->Phase + 360 + PhasingAngle));
-	Trajectory->Maneuvers.Add(FNovaManeuver(TransferB.EndDeltaV, TransferA.Duration + PhasingDuration + TransferB.Duration));
+	Trajectory->Maneuvers.Add(
+		FNovaManeuver(TransferB.EndDeltaV, TransferA.Duration + PhasingDuration + TransferB.Duration, Source->Phase + 360 + PhasingAngle));
 
 	// Final orbit
 	Trajectory->FinalOrbit = FNovaOrbit(Destination->Altitude, Destination->Phase);
