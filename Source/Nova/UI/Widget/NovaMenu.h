@@ -91,6 +91,27 @@ public:
 	/** Get the currently focused button */
 	TSharedPtr<SNovaButton> GetFocusedButton();
 
+protected:
+	/** Create a new button that can be triggered by actions */
+	template <typename WidgetType, typename RequiredArgsPayloadType>
+	TDecl<WidgetType, RequiredArgsPayloadType> NewNovaButton(
+		const ANSICHAR* InType, const ANSICHAR* InFile, int32 OnLine, RequiredArgsPayloadType&& InRequiredArgs, bool DefaultFocus)
+	{
+		auto Button = TDecl<WidgetType, RequiredArgsPayloadType>(InType, InFile, OnLine, Forward<RequiredArgsPayloadType>(InRequiredArgs));
+
+		AdditionalActionButtons.Add(Button._Widget);
+
+		return Button;
+	}
+
+	/** Get all action buttons */
+	TArray<TSharedPtr<class SNovaButton>> GetActionButtons() const
+	{
+		TArray<TSharedPtr<class SNovaButton>> Result = CurrentNavigationButtons;
+		Result.Append(AdditionalActionButtons);
+		return Result;
+	}
+
 	/** Get the next button to focus in a specific direction */
 	static TSharedPtr<class SNovaButton> GetNextButton(TSharedRef<class SWidget> Widget, TSharedPtr<const class SWidget> Current,
 		TArray<TSharedPtr<class SNovaButton>> Candidates, EUINavigation Direction);
@@ -127,6 +148,7 @@ protected:
 	// Focus data
 	class SNovaNavigationPanel*           CurrentNavigationPanel;
 	TArray<TSharedPtr<class SNovaButton>> CurrentNavigationButtons;
+	TArray<TSharedPtr<class SNovaButton>> AdditionalActionButtons;
 	EUINavigation                         CurrentAnalogNavigation;
 	float                                 CurrentAnalogNavigationTime;
 };

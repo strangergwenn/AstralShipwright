@@ -6,28 +6,6 @@
 
 #include "Widgets/SCompoundWidget.h"
 
-/** Equivalent to SNew, automatically store the button into FocusableButtons */
-#define SNovaNew(WidgetType, ...)                                                                                           \
-	NewFocusableButton<WidgetType>(#WidgetType, __FILE__, __LINE__, RequiredArgs::MakeRequiredArgs(__VA_ARGS__), false) <<= \
-		TYPENAME_OUTSIDE_TEMPLATE WidgetType::FArguments()
-
-/** Equivalent to SNew, automatically store the button into FocusableButtons and set as default focus */
-#define SNovaDefaultNew(WidgetType, ...)                                                                                   \
-	NewFocusableButton<WidgetType>(#WidgetType, __FILE__, __LINE__, RequiredArgs::MakeRequiredArgs(__VA_ARGS__), true) <<= \
-		TYPENAME_OUTSIDE_TEMPLATE WidgetType::FArguments()
-
-/** Equivalent to SAssignNew, automatically store the button into FocusableButtons */
-#define SNovaAssignNew(ExposeAs, WidgetType, ...)                                                                       \
-	NewFocusableButton<WidgetType>(#WidgetType, __FILE__, __LINE__, RequiredArgs::MakeRequiredArgs(__VA_ARGS__), false) \
-		.Expose(ExposeAs) <<=                                                                                           \
-		TYPENAME_OUTSIDE_TEMPLATE WidgetType::FArguments()
-
-/** Equivalent to SAssignNew, automatically store the button into FocusableButtons and set as default focus */
-#define SNovaDefaultAssignNew(ExposeAs, WidgetType, ...)                                                               \
-	NewFocusableButton<WidgetType>(#WidgetType, __FILE__, __LINE__, RequiredArgs::MakeRequiredArgs(__VA_ARGS__), true) \
-		.Expose(ExposeAs) <<=                                                                                          \
-		TYPENAME_OUTSIDE_TEMPLATE WidgetType::FArguments()
-
 /** Inherit this class for focus support, set DefaultNavigationButton for default focus (optional) */
 class SNovaNavigationPanel : public SCompoundWidget
 {
@@ -53,7 +31,7 @@ class SNovaNavigationPanel : public SCompoundWidget
 public:
 	/** Create a new focusable button */
 	template <typename WidgetType, typename RequiredArgsPayloadType>
-	TDecl<WidgetType, RequiredArgsPayloadType> NewFocusableButton(
+	TDecl<WidgetType, RequiredArgsPayloadType> NewNovaButton(
 		const ANSICHAR* InType, const ANSICHAR* InFile, int32 OnLine, RequiredArgsPayloadType&& InRequiredArgs, bool DefaultFocus)
 	{
 		auto Button = TDecl<WidgetType, RequiredArgsPayloadType>(InType, InFile, OnLine, Forward<RequiredArgsPayloadType>(InRequiredArgs));
@@ -72,12 +50,6 @@ public:
 	{
 		NavigationButtons.Remove(Button);
 	}
-
-	/** Pass the primary ability input to this menu */
-	virtual void AbilityPrimary();
-
-	/** Pass the secondary ability input to this menu */
-	virtual void AbilitySecondary();
 
 	/** Zoom in */
 	virtual void ZoomIn();

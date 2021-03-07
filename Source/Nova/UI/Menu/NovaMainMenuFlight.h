@@ -36,10 +36,6 @@ public:
 
 	virtual void Hide() override;
 
-	virtual void AbilityPrimary() override;
-
-	virtual void AbilitySecondary() override;
-
 	virtual void HorizontalAnalogInput(float Value) override;
 
 	virtual void VerticalAnalogInput(float Value) override;

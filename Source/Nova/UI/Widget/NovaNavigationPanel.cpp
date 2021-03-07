@@ -19,16 +19,6 @@ void SNovaNavigationPanel::Construct(const FArguments& InArgs)
     Interaction
 ----------------------------------------------------*/
 
-void SNovaNavigationPanel::AbilityPrimary()
-{
-	NLOG("SNovaNavigationPanel::AbilityPrimary");
-}
-
-void SNovaNavigationPanel::AbilitySecondary()
-{
-	NLOG("SNovaNavigationPanel::AbilitySecondary");
-}
-
 void SNovaNavigationPanel::ZoomIn()
 {
 	NLOG("SNovaNavigationPanel::ZoomIn");
@@ -77,7 +67,7 @@ TArray<TSharedPtr<SNovaButton>>& SNovaNavigationPanel::GetNavigationButtons()
 void SNovaNavigationPanel::ResetNavigation()
 {
 	TSharedPtr<SNovaButton> FocusButton = GetDefaultFocusButton();
-	if (Menu && FocusButton)
+	if (Menu && FocusButton && FocusButton->SupportsKeyboardFocus())
 	{
 		NLOG("SNovaNavigationPanel::ResetNavigation : reset to '%s'", *FocusButton->ToString());
 		Menu->SetFocusedButton(FocusButton, true);

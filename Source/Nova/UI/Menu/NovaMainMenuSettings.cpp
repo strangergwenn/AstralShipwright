@@ -114,14 +114,13 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNew(SNovaButton) // No navigation
+					SNovaNew(SNovaButton)
 					.Text(LOCTEXT("ApplyResolution", "Apply video settings"))
 					.HelpText(LOCTEXT("ApplyResolutionHelp", "Apply the currently selected resolution & screen mode"))
 					.Action(FNovaPlayerInput::MenuPrimary)
 					.OnClicked(this, &SNovaMainMenuSettings::OnApplyVideoSettings)
 					.Enabled(this, &SNovaMainMenuSettings::IsApplyVideoSettingsEnabled)
 					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
-					.Focusable(false)
 				]
 
 				+ SVerticalBox::Slot()
@@ -466,14 +465,6 @@ TSharedPtr<SNovaButton> SNovaMainMenuSettings::GetDefaultFocusButton() const
 	else
 	{
 		return ResolutionListView;
-	}
-}
-
-void SNovaMainMenuSettings::AbilityPrimary()
-{
-	if (IsApplyVideoSettingsEnabled())
-	{
-		OnApplyVideoSettings();
 	}
 }
 

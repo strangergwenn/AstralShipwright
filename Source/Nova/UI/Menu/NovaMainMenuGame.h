@@ -31,10 +31,6 @@ public:
 
 	virtual void Show() override;
 
-	virtual void AbilityPrimary() override;
-
-	virtual void AbilitySecondary() override;
-
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
 protected:

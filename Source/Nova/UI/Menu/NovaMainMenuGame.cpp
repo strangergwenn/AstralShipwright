@@ -79,25 +79,23 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					SNew(SNovaButton) // No navigation
+					SNovaNew(SNovaButton)
 					.Text(this, &SNovaMainMenuGame::GetInviteText)
 					.HelpText(LOCTEXT("InviteHelp", "Invite the selected player"))
 					.Action(FNovaPlayerInput::MenuPrimary)
 					.OnClicked(this, &SNovaMainMenuGame::OnInviteSelectedFriend)
 					.Enabled(this, &SNovaMainMenuGame::IsInviteFriendEnabled)
-					.Focusable(false)
 				]
 		
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					SNew(SNovaButton) // No navigation
+					SNovaNew(SNovaButton)
 					.Text(this, &SNovaMainMenuGame::GetJoinText)
 					.HelpText(LOCTEXT("JoinHelp", "Join the selected player"))
 					.Action(FNovaPlayerInput::MenuSecondary)
 					.OnClicked(this, &SNovaMainMenuGame::OnJoinSelectedFriend)
 					.Enabled(this, &SNovaMainMenuGame::IsJoinFriendEnabled)
-					.Focusable(false)
 				]
 			]
 
@@ -305,16 +303,6 @@ void SNovaMainMenuGame::Show()
 	SNovaTabPanel::Show();
 
 	TimeSinceFriendListUpdate = FriendListUpdatePeriod;
-}
-
-void SNovaMainMenuGame::AbilityPrimary()
-{
-	OnInviteSelectedFriend();
-}
-
-void SNovaMainMenuGame::AbilitySecondary()
-{
-	OnJoinSelectedFriend();
 }
 
 void SNovaMainMenuGame::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)

@@ -39,8 +39,6 @@ public:
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
-	virtual void AbilitySecondary() override;
-
 	virtual bool Confirm() override;
 
 	virtual bool Cancel() override;

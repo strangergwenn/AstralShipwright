@@ -41,10 +41,6 @@ public:
 
 	virtual void Show() override;
 
-	virtual void AbilityPrimary() override;
-
-	virtual void AbilitySecondary() override;
-
 	virtual void ZoomIn() override;
 
 	virtual void ZoomOut() override;

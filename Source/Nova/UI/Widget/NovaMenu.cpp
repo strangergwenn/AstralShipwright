@@ -301,16 +301,6 @@ FReply SNovaMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEve
 		}
 
 		// Handle menu actions
-		else if (IsActionKey(FNovaPlayerInput::MenuPrimary, Key))
-		{
-			CurrentNavigationPanel->AbilityPrimary();
-			Result = FReply::Handled();
-		}
-		else if (IsActionKey(FNovaPlayerInput::MenuSecondary, Key))
-		{
-			CurrentNavigationPanel->AbilitySecondary();
-			Result = FReply::Handled();
-		}
 		else if (IsActionKey(FNovaPlayerInput::MenuZoomIn, Key))
 		{
 			CurrentNavigationPanel->ZoomIn();
@@ -337,6 +327,17 @@ FReply SNovaMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEve
 		{
 			Result = FReply::Handled();
 			return Result;
+		}
+	}
+
+	// Trigger action buttons
+	for (TSharedPtr<SNovaButton>& Button : GetActionButtons())
+	{
+		if (Button->GetActionKey() == Key)
+		{
+			Button->OnButtonClicked();
+			Result = FReply::Handled();
+			break;
 		}
 	}
 

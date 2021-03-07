@@ -84,7 +84,7 @@ void SNovaModalPanel::Construct(const FArguments& InArgs)
 
 							+ SHorizontalBox::Slot()
 							[
-								SNew(SNovaButton) // No navigation
+								SNovaNew(SNovaButton)
 								.Action(FNovaPlayerInput::MenuConfirm)
 								.Text(InArgs._ConfirmText.IsBound() ?
 									InArgs._ConfirmText : InArgs._ConfirmText.IsSet() ?
@@ -97,7 +97,7 @@ void SNovaModalPanel::Construct(const FArguments& InArgs)
 
 							+ SHorizontalBox::Slot()
 							[
-								SNew(SNovaButton) // No navigation
+								SNovaNew(SNovaButton)
 								.Action(FNovaPlayerInput::MenuSecondary)
 								.Text(InArgs._DismissText.IsBound() ?
 									InArgs._DismissText : InArgs._DismissText.IsSet()
@@ -111,7 +111,7 @@ void SNovaModalPanel::Construct(const FArguments& InArgs)
 
 							+ SHorizontalBox::Slot()
 							[
-								SNew(SNovaButton) // No navigation
+								SNovaNew(SNovaButton)
 								.Action(FNovaPlayerInput::MenuCancel)
 								.Text(InArgs._CancelText.IsBound() ?
 									InArgs._CancelText : InArgs._CancelText.IsSet() ?
@@ -176,14 +176,6 @@ void SNovaModalPanel::Tick(const FGeometry& AllottedGeometry, const double Curre
 	else
 	{
 		SetVisibility(EVisibility::HitTestInvisible);
-	}
-}
-
-void SNovaModalPanel::AbilitySecondary()
-{
-	if (OnDismissed.IsBound())
-	{
-		OnDismissPanel();
 	}
 }
 

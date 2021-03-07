@@ -103,13 +103,12 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
-						SAssignNew(HighlightButton, SNovaButton) // No navigation
+						SNovaAssignNew(HighlightButton, SNovaButton)
 						.Action(FNovaPlayerInput::MenuSecondary)
 						.Text(LOCTEXT("Highlight", "Highlight selection"))
 						.HelpText(LOCTEXT("HighlightHelp", "Toggle the highlighting of the current selection"))
 						.OnClicked(this, &SNovaMainMenuAssembly::OnToggleHighlight)
 						.Enabled(this, &SNovaMainMenuAssembly::IsToggleHighlightEnabled)
-						.Focusable(false)
 						.Toggle(true)
 					]
 				]
@@ -334,7 +333,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
-						SNew(SNovaButton) // No navigation
+						SNovaNew(SNovaButton)
 						.Action(FNovaPlayerInput::MenuCancel)
 						.Text(LOCTEXT("CompartmentBack", "Back to assembly"))
 						.HelpText(LOCTEXT("CompartmentBackHelp", "Go back to the main assembly"))
@@ -442,16 +441,6 @@ void SNovaMainMenuAssembly::Show()
 	// Reset compartment data
 	SetSelectedCompartment(GetSpacecraftPawn()->GetCompartmentCount() > 0 ? 0 : INDEX_NONE);
 	SetCompartmentPanelVisible(false);
-}
-
-void SNovaMainMenuAssembly::AbilityPrimary()
-{
-	EditCompartmentButton->OnButtonClicked();
-}
-
-void SNovaMainMenuAssembly::AbilitySecondary()
-{
-	HighlightButton->OnButtonClicked();
 }
 
 void SNovaMainMenuAssembly::ZoomIn()

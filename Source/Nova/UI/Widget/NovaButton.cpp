@@ -26,7 +26,7 @@ void SNovaButton::Construct(const FArguments& InArgs)
 	SizeName        = InArgs._Size;
 	Icon            = InArgs._Icon;
 	ButtonEnabled   = InArgs._Enabled;
-	ButtonFocusable = InArgs._Focusable;
+	ButtonFocusable = InArgs._Action.Get() != NAME_None ? false : InArgs._Focusable;
 	BorderRotation  = InArgs._BorderRotation;
 	IsToggle        = InArgs._Toggle;
 	OnFocused       = InArgs._OnFocused;
@@ -318,14 +318,14 @@ FText SNovaButton::GetHelpText()
 	return HelpText.Get();
 }
 
-/*----------------------------------------------------
-    Callbacks
-----------------------------------------------------*/
-
 FKey SNovaButton::GetActionKey() const
 {
 	return UNovaMenuManager::Get()->GetFirstActionKey(Action.Get());
 }
+
+/*----------------------------------------------------
+    Callbacks
+----------------------------------------------------*/
 
 const FSlateBrush* SNovaButton::GetIconBrush() const
 {

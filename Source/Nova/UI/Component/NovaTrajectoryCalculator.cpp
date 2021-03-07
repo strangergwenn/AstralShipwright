@@ -9,6 +9,7 @@
 #include "Nova/Game/NovaGameWorld.h"
 #include "Nova/Game/NovaOrbitalSimulationComponent.h"
 
+#include "Nova/UI/Widget/NovaNavigationPanel.h"
 #include "Nova/UI/Widget/NovaButton.h"
 #include "Nova/UI/Widget/NovaSlider.h"
 
@@ -83,10 +84,9 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 				.HAlign(HAlign_Center)
 				.AutoHeight()
 				[
-					SNew(SNovaButton) // No navigation
+					InArgs._Panel->SNovaNew(SNovaButton)
 					.Text(LOCTEXT("MinimizeDeltaV", "Minimize Delta-V"))
 					.HelpText(LOCTEXT("MinimizeDeltaVHelp", "Configure the trajectory to minimize the Delta-V cost"))
-					.Focusable(false)
 					.Action(InArgs._DeltaVActionName)
 					.OnClicked(this, &SNovaTrajectoryCalculator::OptimizeForDeltaV)
 				]
@@ -131,10 +131,9 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 				.HAlign(HAlign_Center)
 				.AutoHeight()
 				[
-					SNew(SNovaButton) // No navigation
+					InArgs._Panel->SNovaNew(SNovaButton)
 					.Text(LOCTEXT("MinimizeTravelTime", "Minimize travel time"))
 					.HelpText(LOCTEXT("MinimizeTravelTimeHelp", "Configure the trajectory to minimize the travel tile"))
-					.Focusable(false)
 					.Action(InArgs._DurationActionName)
 					.OnClicked(this, &SNovaTrajectoryCalculator::OptimizeForDuration)
 				]

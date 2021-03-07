@@ -125,14 +125,14 @@ public:
 		return State;
 	}
 
+	/** Get the key binding for closing this menu */
+	FKey GetActionKey() const;
+
 	/*----------------------------------------------------
 	    Callbacks
 	----------------------------------------------------*/
 
 protected:
-	/** Get the key binding for closing this menu */
-	FKey GetActionKey() const;
-
 	/** Icon brush callback */
 	const FSlateBrush* GetIconBrush() const;
 

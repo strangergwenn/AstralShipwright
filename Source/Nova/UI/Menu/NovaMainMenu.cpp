@@ -58,14 +58,13 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		// Close button
 		.End()
 		[
-			SNew(SNovaButton) // No navigation
+			SNovaNew(SNovaButton)
 			.Theme("TabButton")
 			.Size("TabButtonSize")
 			.Action(FNovaPlayerInput::MenuToggle)
 			.Text(this, &SNovaMainMenu::GetCloseText)
 			.HelpText(this, &SNovaMainMenu::GetCloseHelpText)
 			.OnClicked(this, &SNovaMainMenu::OnClose)
-			.Focusable(false)
 		]
 
 		// Header widget
@@ -255,13 +254,6 @@ FReply SNovaMainMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& Ke
 				TabView->ShowNextTab();
 				Result = FReply::Handled();
 			}
-		}
-
-		// Exit
-		else if (IsActionKey(FNovaPlayerInput::MenuToggle, Key))
-		{
-			OnClose();
-			Result = FReply::Handled();
 		}
 	}
 

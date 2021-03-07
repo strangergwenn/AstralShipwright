@@ -33,8 +33,6 @@ public:
 
 	TSharedPtr<class SNovaButton> GetDefaultFocusButton() const override;
 
-	void AbilityPrimary() override;
-
 	/*----------------------------------------------------
 	    Input management
 	----------------------------------------------------*/
