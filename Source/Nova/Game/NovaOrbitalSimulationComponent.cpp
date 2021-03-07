@@ -5,10 +5,51 @@
 #include "NovaAssetCatalog.h"
 #include "NovaGameInstance.h"
 #include "NovaGameWorld.h"
+
+#include "Nova/Spacecraft/NovaSpacecraft.h"
 #include "Nova/Nova.h"
 
 #include "EngineUtils.h"
 #include "Net/UnrealNetwork.h"
+
+#define LOCTEXT_NAMESPACE "UNovaOrbitalSimulationComponent"
+
+/*----------------------------------------------------
+    Internal structures
+----------------------------------------------------*/
+
+FText FNovaOrbitalObject::GetText() const
+{
+	if (Area)
+	{
+		return Area->Name;
+	}
+	else if (Spacecraft.IsValid())
+	{
+		FString IDentifier = Spacecraft->Identifier.ToString(EGuidFormats::DigitsWithHyphens);
+		int32   Index;
+		if (IDentifier.FindLastChar('-', Index))
+		{
+			return FText::FromString(IDentifier.RightChop(Index));
+		}
+		else
+		{
+			return FText();
+		}
+	}
+	else if (Maneuver)
+	{
+		FNumberFormattingOptions NumberOptions;
+		NumberOptions.SetMaximumFractionalDigits(1);
+
+		return FText::FormatNamed(LOCTEXT("ManeuverFormat", "Maneuver at {phase}° / {deltav} m/s"), TEXT("phase"),
+			FText::AsNumber(Maneuver->Phase, &NumberOptions), TEXT("deltav"), FText::AsNumber(Maneuver->DeltaV, &NumberOptions));
+	}
+	else
+	{
+		return FText();
+	}
+}
 
 /*----------------------------------------------------
     Constructor
@@ -145,3 +186,5 @@ void UNovaOrbitalSimulationComponent::UpdatePositions()
 		Positions.Add(Area, Area->Phase);
 	}
 }
+
+#undef LOCTEXT_NAMESPACE

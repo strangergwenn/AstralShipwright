@@ -7,7 +7,6 @@
 #include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaGameWorld.h"
-#include "Nova/Game/NovaOrbitalSimulationComponent.h"
 
 #include "Nova/Player/NovaMenuManager.h"
 
@@ -16,43 +15,6 @@
 #include "Slate/SRetainerWidget.h"
 
 #define LOCTEXT_NAMESPACE "SNovaOrbitalMap"
-
-/*----------------------------------------------------
-    Internal structures
-----------------------------------------------------*/
-
-FText FNovaOrbitalObject::GetText() const
-{
-	if (Area)
-	{
-		return Area->Name;
-	}
-	else if (Spacecraft.IsValid())
-	{
-		FString IDentifier = Spacecraft->Identifier.ToString(EGuidFormats::DigitsWithHyphens);
-		int32   Index;
-		if (IDentifier.FindLastChar('-', Index))
-		{
-			return FText::FromString(IDentifier.RightChop(Index));
-		}
-		else
-		{
-			return FText();
-		}
-	}
-	else if (Maneuver)
-	{
-		FNumberFormattingOptions NumberOptions;
-		NumberOptions.SetMaximumFractionalDigits(1);
-
-		return FText::FormatNamed(LOCTEXT("ManeuverFormat", "Maneuver at {phase}° / {deltav} m/s"), TEXT("phase"),
-			FText::AsNumber(Maneuver->Phase, &NumberOptions), TEXT("deltav"), FText::AsNumber(Maneuver->DeltaV, &NumberOptions));
-	}
-	else
-	{
-		return FText();
-	}
-}
 
 /** Geometry of an orbit on the map */
 struct FNovaSplineOrbit

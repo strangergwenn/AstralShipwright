@@ -4,48 +4,13 @@
 
 #include "Nova/UI/NovaUI.h"
 #include "Nova/Game/NovaGameTypes.h"
+#include "Nova/Game/NovaOrbitalSimulationComponent.h"
 
 #include "Widgets/SCompoundWidget.h"
 
 /*----------------------------------------------------
     Internal structures
 ----------------------------------------------------*/
-
-/** Point of interest on the map */
-struct FNovaOrbitalObject
-{
-	FNovaOrbitalObject() : Area(nullptr), Spacecraft(nullptr), Maneuver(nullptr)
-	{}
-
-	FNovaOrbitalObject(const class UNovaArea* A, float P) : FNovaOrbitalObject()
-	{
-		Area  = A;
-		Phase = P;
-	}
-
-	FNovaOrbitalObject(const TSharedPtr<struct FNovaSpacecraft>& S, float P) : FNovaOrbitalObject()
-	{
-		Spacecraft = S;
-		Phase      = P;
-	}
-
-	FNovaOrbitalObject(const FNovaManeuver& M) : FNovaOrbitalObject()
-	{
-		Maneuver = MakeShared<FNovaManeuver>(M);
-		Phase    = M.Phase;
-	}
-
-	FText GetText() const;
-
-	// Object data
-	const class UNovaArea*             Area;
-	TSharedPtr<struct FNovaSpacecraft> Spacecraft;
-	TSharedPtr<struct FNovaManeuver>   Maneuver;
-
-	// Positioning
-	float     Phase;
-	FVector2D Position;
-};
 
 /** Batched data for drawing a spline */
 struct FNovaBatchedSpline
@@ -118,7 +83,7 @@ public:
 	----------------------------------------------------*/
 
 	/** Preview a spacecraft trajectory */
-	void PreviewTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, bool Immediate = false);
+	void PreviewTrajectory(const TSharedPtr<struct FNovaTrajectory>& Trajectory, bool Immediate = false);
 
 	/*----------------------------------------------------
 	    Internals
@@ -129,7 +94,7 @@ protected:
 	void AddPlanet(const FVector2D& Pos, const class UNovaPlanet* Planet);
 
 	/** Draw a trajectory */
-	void AddTrajectory(const FVector2D& Origin, const FNovaTrajectory& Trajectory, const struct FNovaSplineStyle& Style,
+	void AddTrajectory(const FVector2D& Origin, const struct FNovaTrajectory& Trajectory, const struct FNovaSplineStyle& Style,
 		bool IncludeCurrent = true, float Progress = 1.0f);
 
 	/** Draw an orbit */
@@ -180,8 +145,8 @@ protected:
 	float                            TrajectoryPreviewDuration;
 
 	// Local state
-	TSharedPtr<FNovaTrajectory> CurrentPreviewTrajectory;
-	float                       CurrentPreviewProgress;
+	TSharedPtr<struct FNovaTrajectory> CurrentPreviewTrajectory;
+	float                              CurrentPreviewProgress;
 
 	// Batching system
 	TArray<FNovaBatchedSpline> BatchedSplines;

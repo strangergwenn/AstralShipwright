@@ -72,7 +72,7 @@ protected:
 	void OnUndock();
 	void OnDock();
 
-	void OnTrajectoryAltitudeChanged(float Altitude);
+	void OnTrajectoryChanged(TSharedPtr<struct FNovaTrajectory> Trajectory);
 
 	/*----------------------------------------------------
 	    Data
