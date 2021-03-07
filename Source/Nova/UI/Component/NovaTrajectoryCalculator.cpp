@@ -23,6 +23,9 @@
     Construct
 ----------------------------------------------------*/
 
+SNovaTrajectoryCalculator::SNovaTrajectoryCalculator() : CurrentTrajectoryDisplayTime(0), NeedTrajectoryDisplayUpdate(false)
+{}
+
 void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 {
 	// Get data

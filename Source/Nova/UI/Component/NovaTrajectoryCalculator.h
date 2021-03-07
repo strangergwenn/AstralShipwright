@@ -37,8 +37,7 @@ class SNovaTrajectoryCalculator : public SCompoundWidget
 	SLATE_END_ARGS()
 
 public:
-	SNovaTrajectoryCalculator() : CurrentTrajectoryDisplayTime(0), NeedTrajectoryDisplayUpdate(false)
-	{}
+	SNovaTrajectoryCalculator();
 
 	void Construct(const FArguments& InArgs);
 

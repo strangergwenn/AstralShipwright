@@ -56,6 +56,9 @@ struct FNovaTrajectory
 	FNovaTrajectory(const FNovaOrbit& Orbit) : CurrentOrbit(Orbit), TotalTransferDuration(0), TotalDeltaV(0)
 	{}
 
+	/** Get the maximum altitude reached by this trajectory */
+	float GetHighestAltitude() const;
+
 	FNovaOrbit            CurrentOrbit;
 	TArray<FNovaOrbit>    TransferOrbits;
 	TArray<FNovaManeuver> Maneuvers;

@@ -51,6 +51,26 @@ FText FNovaOrbitalObject::GetText() const
 	}
 }
 
+float FNovaTrajectory::GetHighestAltitude() const
+{
+	float MaximumAltitude = 0;
+
+	auto EvaluateForMaximum = [&](const FNovaOrbit& Orbit)
+	{
+		MaximumAltitude = FMath::Max(MaximumAltitude, Orbit.StartAltitude);
+		MaximumAltitude = FMath::Max(MaximumAltitude, Orbit.OppositeAltitude);
+	};
+
+	EvaluateForMaximum(CurrentOrbit);
+	EvaluateForMaximum(FinalOrbit);
+	for (const FNovaOrbit& Orbit : TransferOrbits)
+	{
+		EvaluateForMaximum(Orbit);
+	}
+
+	return MaximumAltitude;
+}
+
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
