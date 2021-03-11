@@ -17,7 +17,7 @@ class SNovaTrajectoryCalculator : public SCompoundWidget
 	SLATE_BEGIN_ARGS(SNovaTrajectoryCalculator)
 		: _MenuManager(nullptr)
 		, _Panel(nullptr)
-		, _MinAltitude(200)
+		, _MinAltitude(100)
 		, _MaxAltitude(1000)
 		, _DeltaVActionName(NAME_None)
 		, _DurationActionName(NAME_None)
@@ -92,7 +92,7 @@ protected:
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 	TAttribute<float>                CurrentAlpha;
 	FOnTrajectoryChanged             OnTrajectoryChanged;
-	float                            AltitudeStep;
+	int32                            AltitudeStep;
 
 	// Trajectory data
 	TMap<float, TSharedPtr<struct FNovaTrajectory>> SimulatedTrajectories;

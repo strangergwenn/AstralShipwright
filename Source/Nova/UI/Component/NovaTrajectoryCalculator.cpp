@@ -36,7 +36,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 	MenuManager                             = InArgs._MenuManager;
 	CurrentAlpha                            = InArgs._CurrentAlpha;
 	OnTrajectoryChanged                     = InArgs._OnTrajectoryChanged;
-	AltitudeStep                            = 5.0f;
+	AltitudeStep                            = 2;
 
 	// clang-format off
 	ChildSlot
@@ -182,7 +182,7 @@ void SNovaTrajectoryCalculator::Tick(const FGeometry& AllottedGeometry, const do
 
 				auto Transform = [](float Value)
 				{
-					return FMath::LogX(10, Value);
+					return FMath::LogX(5, Value);
 				};
 
 				double DeltaVAlpha = FMath::Clamp(
@@ -241,6 +241,8 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const class UNovaArea* Sour
 	NCHECK(Destination);
 	NLOG("SNovaTrajectoryCalculator::SimulateTrajectories : %s -> %s", *Source->Name.ToString(), *Destination->Name.ToString());
 
+	int64 Cycles = FPlatformTime::Cycles64();
+
 	// Get the game state
 	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	NCHECK(GameState);
@@ -252,6 +254,7 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const class UNovaArea* Sour
 	Reset();
 
 	// Run trajectory calculations over a range of altitudes
+	SimulatedTrajectories.Reserve((Slider->GetMaxValue() - Slider->GetMinValue()) / AltitudeStep + 1);
 	for (float Altitude = Slider->GetMinValue(); Altitude <= Slider->GetMaxValue(); Altitude += AltitudeStep)
 	{
 		TSharedPtr<FNovaTrajectory> Trajectory = OrbitalSimulation->ComputeTrajectory(Source, Destination, Altitude);
@@ -260,35 +263,41 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const class UNovaArea* Sour
 	}
 
 	// Pre-process the trajectory data
-	for (TPair<float, TSharedPtr<FNovaTrajectory>>& AltitudeAndTrajectory : SimulatedTrajectories)
+	for (const TPair<float, TSharedPtr<FNovaTrajectory>>& AltitudeAndTrajectory : SimulatedTrajectories)
 	{
-		float                        Altitude   = AltitudeAndTrajectory.Key;
-		TSharedPtr<FNovaTrajectory>& Trajectory = AltitudeAndTrajectory.Value;
+		float                              Altitude   = AltitudeAndTrajectory.Key;
+		const TSharedPtr<FNovaTrajectory>& Trajectory = AltitudeAndTrajectory.Value;
 		NCHECK(Trajectory.IsValid());
 
-		if (Trajectory->TotalDeltaV < MinDeltaV)
+		if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(Trajectory->TotalTransferDuration))
 		{
-			MinDeltaV         = Trajectory->TotalDeltaV;
-			MinDeltaVAltitude = Altitude;
-		}
-		if (Trajectory->TotalDeltaV > MaxDeltaV && FMath::IsFinite(Trajectory->TotalDeltaV))
-		{
-			MaxDeltaV = Trajectory->TotalDeltaV;
-		}
-		if (Trajectory->TotalTransferDuration < MinDuration)
-		{
-			MinDuration         = Trajectory->TotalTransferDuration;
-			MinDurationAltitude = Altitude;
-		}
-		if (Trajectory->TotalTransferDuration > MaxDuration && FMath::IsFinite(Trajectory->TotalTransferDuration))
-		{
-			MaxDuration = Trajectory->TotalTransferDuration;
+			if (Trajectory->TotalDeltaV < MinDeltaV)
+			{
+				MinDeltaV         = Trajectory->TotalDeltaV;
+				MinDeltaVAltitude = Altitude;
+			}
+			if (Trajectory->TotalDeltaV > MaxDeltaV)
+			{
+				MaxDeltaV = Trajectory->TotalDeltaV;
+			}
+			if (Trajectory->TotalTransferDuration < MinDuration)
+			{
+				MinDuration         = Trajectory->TotalTransferDuration;
+				MinDurationAltitude = Altitude;
+			}
+			if (Trajectory->TotalTransferDuration > MaxDuration)
+			{
+				MaxDuration = Trajectory->TotalTransferDuration;
+			}
 		}
 	}
 
 	// Complete display setup
 	NeedTrajectoryDisplayUpdate = true;
 	OptimizeForDeltaV();
+
+	NLOG("NovaTrajectoryCalculator::SimulateTrajectories : simulated %d trajectories in %.2fms", SimulatedTrajectories.Num(),
+		FPlatformTime::ToMilliseconds(FPlatformTime::Cycles64() - Cycles));
 }
 
 void SNovaTrajectoryCalculator::OptimizeForDeltaV()
@@ -372,7 +381,8 @@ FText SNovaTrajectoryCalculator::GetDurationText() const
 
 void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 {
-	CurrentAltitude = Slider->GetMinValue() + FMath::RoundToInt((Altitude - Slider->GetMinValue()) / AltitudeStep) * AltitudeStep;
+	CurrentAltitude =
+		Slider->GetMinValue() + FMath::RoundToInt((Altitude - Slider->GetMinValue()) / static_cast<float>(AltitudeStep)) * AltitudeStep;
 
 	const TSharedPtr<FNovaTrajectory>* TrajectoryPtr = SimulatedTrajectories.Find(CurrentAltitude);
 	if (TrajectoryPtr)

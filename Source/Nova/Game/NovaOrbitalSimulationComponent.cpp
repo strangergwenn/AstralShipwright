@@ -109,7 +109,11 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	AddManeuverIfNotNull(FNovaManeuver(TransferA.EndDeltaV, TransferA.Duration, Source->Phase + 180));
 
 	// Phasing orbit
-	Trajectory->TransferOrbits.Add(FNovaOrbit(PhasingAltitude, PhasingAltitude, Source->Phase + 180, Source->Phase + 180 + PhasingAngle));
+	if (PhasingAngle != 0)
+	{
+		Trajectory->TransferOrbits.Add(
+			FNovaOrbit(PhasingAltitude, PhasingAltitude, Source->Phase + 180, Source->Phase + 180 + PhasingAngle));
+	}
 
 	// Second transfer
 	AddManeuverIfNotNull(FNovaManeuver(TransferB.StartDeltaV, TransferA.Duration + PhasingDuration, Source->Phase + 180 + PhasingAngle));

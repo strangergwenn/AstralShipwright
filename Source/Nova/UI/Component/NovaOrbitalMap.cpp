@@ -141,7 +141,7 @@ void SNovaOrbitalMap::Construct(const FArguments& InArgs)
 	TrajectoryZoomSpeed        = 0.5f;
 	TrajectoryZoomAcceleration = 1.0f;
 	TrajectoryZoomSnappinness  = 10.0f;
-	TrajectoryInflationRatio   = 1.1f;
+	TrajectoryInflationRatio   = 1.2f;
 
 	// clang-format off
 	ChildSlot
