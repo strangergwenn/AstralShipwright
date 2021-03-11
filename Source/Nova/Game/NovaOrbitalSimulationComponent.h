@@ -68,42 +68,6 @@ struct FNovaTrajectory
 	double TotalDeltaV;
 };
 
-/** Point of interest on the map */
-struct FNovaOrbitalObject
-{
-	FNovaOrbitalObject() : Area(nullptr), Spacecraft(nullptr), Maneuver(nullptr)
-	{}
-
-	FNovaOrbitalObject(const class UNovaArea* A, float P) : FNovaOrbitalObject()
-	{
-		Area  = A;
-		Phase = P;
-	}
-
-	FNovaOrbitalObject(const TSharedPtr<struct FNovaSpacecraft>& S, float P) : FNovaOrbitalObject()
-	{
-		Spacecraft = S;
-		Phase      = P;
-	}
-
-	FNovaOrbitalObject(const FNovaManeuver& M) : FNovaOrbitalObject()
-	{
-		Maneuver = MakeShared<FNovaManeuver>(M);
-		Phase    = M.Phase;
-	}
-
-	FText GetText() const;
-
-	// Object data
-	const class UNovaArea*             Area;
-	TSharedPtr<struct FNovaSpacecraft> Spacecraft;
-	TSharedPtr<FNovaManeuver>          Maneuver;
-
-	// Positioning
-	float     Phase;
-	FVector2D Position;
-};
-
 /*----------------------------------------------------
     Simulator class
 ----------------------------------------------------*/

@@ -15,63 +15,6 @@
 #define LOCTEXT_NAMESPACE "UNovaOrbitalSimulationComponent"
 
 /*----------------------------------------------------
-    Internal structures
-----------------------------------------------------*/
-
-FText FNovaOrbitalObject::GetText() const
-{
-	if (Area)
-	{
-		return Area->Name;
-	}
-	else if (Spacecraft.IsValid())
-	{
-		FString IDentifier = Spacecraft->Identifier.ToString(EGuidFormats::DigitsWithHyphens);
-		int32   Index;
-		if (IDentifier.FindLastChar('-', Index))
-		{
-			return FText::FromString(IDentifier.RightChop(Index));
-		}
-		else
-		{
-			return FText();
-		}
-	}
-	else if (Maneuver)
-	{
-		FNumberFormattingOptions NumberOptions;
-		NumberOptions.SetMaximumFractionalDigits(1);
-
-		return FText::FormatNamed(LOCTEXT("ManeuverFormat", "Maneuver at {phase}° / {deltav} m/s"), TEXT("phase"),
-			FText::AsNumber(Maneuver->Phase, &NumberOptions), TEXT("deltav"), FText::AsNumber(Maneuver->DeltaV, &NumberOptions));
-	}
-	else
-	{
-		return FText();
-	}
-}
-
-float FNovaTrajectory::GetHighestAltitude() const
-{
-	float MaximumAltitude = 0;
-
-	auto EvaluateForMaximum = [&](const FNovaOrbit& Orbit)
-	{
-		MaximumAltitude = FMath::Max(MaximumAltitude, Orbit.StartAltitude);
-		MaximumAltitude = FMath::Max(MaximumAltitude, Orbit.OppositeAltitude);
-	};
-
-	EvaluateForMaximum(CurrentOrbit);
-	EvaluateForMaximum(FinalOrbit);
-	for (const FNovaOrbit& Orbit : TransferOrbits)
-	{
-		EvaluateForMaximum(Orbit);
-	}
-
-	return MaximumAltitude;
-}
-
-/*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
@@ -151,22 +94,28 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 #endif
 
 	// Initial orbit
-	TSharedPtr<FNovaTrajectory> Trajectory = MakeShared<FNovaTrajectory>(FNovaOrbit(Source->Altitude, Source->Phase));
+	TSharedPtr<FNovaTrajectory> Trajectory           = MakeShared<FNovaTrajectory>(FNovaOrbit(Source->Altitude, Source->Phase));
+	auto                        AddManeuverIfNotNull = [&Trajectory](const FNovaManeuver& Maneuver)
+	{
+		if (Maneuver.DeltaV != 0)
+		{
+			Trajectory->Maneuvers.Add(Maneuver);
+		}
+	};
 
 	// First transfer
-	Trajectory->Maneuvers.Add(FNovaManeuver(TransferA.StartDeltaV, 0, Source->Phase));
+	AddManeuverIfNotNull(FNovaManeuver(TransferA.StartDeltaV, 0, Source->Phase));
 	Trajectory->TransferOrbits.Add(FNovaOrbit(Source->Altitude, PhasingAltitude, Source->Phase, Source->Phase + 180));
-	Trajectory->Maneuvers.Add(FNovaManeuver(TransferA.EndDeltaV, TransferA.Duration, Source->Phase + 180));
+	AddManeuverIfNotNull(FNovaManeuver(TransferA.EndDeltaV, TransferA.Duration, Source->Phase + 180));
 
 	// Phasing orbit
 	Trajectory->TransferOrbits.Add(FNovaOrbit(PhasingAltitude, PhasingAltitude, Source->Phase + 180, Source->Phase + 180 + PhasingAngle));
 
 	// Second transfer
-	Trajectory->Maneuvers.Add(
-		FNovaManeuver(TransferB.StartDeltaV, TransferA.Duration + PhasingDuration, Source->Phase + 180 + PhasingAngle));
+	AddManeuverIfNotNull(FNovaManeuver(TransferB.StartDeltaV, TransferA.Duration + PhasingDuration, Source->Phase + 180 + PhasingAngle));
 	Trajectory->TransferOrbits.Add(
 		FNovaOrbit(PhasingAltitude, Destination->Altitude, Source->Phase + 180 + PhasingAngle, Source->Phase + 360 + PhasingAngle));
-	Trajectory->Maneuvers.Add(
+	AddManeuverIfNotNull(
 		FNovaManeuver(TransferB.EndDeltaV, TransferA.Duration + PhasingDuration + TransferB.Duration, Source->Phase + 360 + PhasingAngle));
 
 	// Final orbit

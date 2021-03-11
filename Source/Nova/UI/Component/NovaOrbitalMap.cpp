@@ -1,4 +1,4 @@
-﻿// Nova project - Gwennaël Arbona
+// Nova project - Gwennaël Arbona
 
 #include "NovaOrbitalMap.h"
 
@@ -13,8 +13,68 @@
 #include "Nova/Nova.h"
 
 #include "Slate/SRetainerWidget.h"
+#include "Widgets/Layout/SBackgroundBlur.h"
 
 #define LOCTEXT_NAMESPACE "SNovaOrbitalMap"
+
+/*----------------------------------------------------
+    Internal structures
+----------------------------------------------------*/
+
+FText FNovaOrbitalObject::GetText() const
+{
+	if (Area)
+	{
+		return Area->Name;
+	}
+	else if (Spacecraft.IsValid())
+	{
+		FString IDentifier = Spacecraft->Identifier.ToString(EGuidFormats::DigitsWithHyphens);
+		int32   Index;
+		if (IDentifier.FindLastChar('-', Index))
+		{
+			return FText::FromString(IDentifier.RightChop(Index));
+		}
+		else
+		{
+			return FText();
+		}
+	}
+	else if (Maneuver)
+	{
+		FNumberFormattingOptions NumberOptions;
+		NumberOptions.SetMaximumFractionalDigits(1);
+
+		return FText::FormatNamed(LOCTEXT("ManeuverFormat", "{deltav} m/s maneuver at {phase}° in {time}"), TEXT("phase"),
+			FText::AsNumber(FMath::Fmod(Maneuver->Phase, 360.0f), &NumberOptions), TEXT("time"),
+			FText::AsTimespan(FTimespan(Maneuver->Time * ETimespan::TicksPerMinute)), TEXT("deltav"),
+			FText::AsNumber(Maneuver->DeltaV, &NumberOptions));
+	}
+	else
+	{
+		return FText();
+	}
+}
+
+float FNovaTrajectory::GetHighestAltitude() const
+{
+	float MaximumAltitude = 0;
+
+	auto EvaluateForMaximum = [&](const FNovaOrbit& Orbit)
+	{
+		MaximumAltitude = FMath::Max(MaximumAltitude, Orbit.StartAltitude);
+		MaximumAltitude = FMath::Max(MaximumAltitude, Orbit.OppositeAltitude);
+	};
+
+	EvaluateForMaximum(CurrentOrbit);
+	EvaluateForMaximum(FinalOrbit);
+	for (const FNovaOrbit& Orbit : TransferOrbits)
+	{
+		EvaluateForMaximum(Orbit);
+	}
+
+	return MaximumAltitude;
+}
 
 /** Geometry of an orbit on the map */
 struct FNovaSplineOrbit
@@ -73,32 +133,106 @@ SNovaOrbitalMap::SNovaOrbitalMap() : CurrentPreviewProgress(0), CurrentDesiredSi
 
 void SNovaOrbitalMap::Construct(const FArguments& InArgs)
 {
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+	// Settings
 	MenuManager                = InArgs._MenuManager;
 	TrajectoryPreviewDuration  = 2.0f;
 	TrajectoryZoomSpeed        = 0.5f;
 	TrajectoryZoomAcceleration = 1.0f;
 	TrajectoryZoomSnappinness  = 10.0f;
+	TrajectoryInflationRatio   = 1.1f;
+
+	// clang-format off
+	ChildSlot
+	[
+		SNew(SVerticalBox)
+
+		+ SVerticalBox::Slot()
+		
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.VAlign(VAlign_Bottom)
+		[
+			SNew(SBackgroundBlur)
+			.BlurRadius(Theme.BlurRadius)
+			.BlurStrength(Theme.BlurStrength)
+			.bApplyAlphaToBlur(true)
+			.Padding(0)
+			[
+				SNew(SBorder)
+				.BorderImage(&Theme.MainMenuBackground)
+				.Padding(Theme.ContentPadding)
+				.HAlign(HAlign_Center)
+				[
+					SNew(STextBlock)
+					.Text(this, &SNovaOrbitalMap::GetHoverText)
+					.TextStyle(&Theme.MainFont)
+				]
+			]
+		]
+	];
+	// clang-format on
 }
 
 /*----------------------------------------------------
-    Inherited
+    Interface
 ----------------------------------------------------*/
 
 void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
 {
 	SCompoundWidget::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
-	// Reset state
-	BatchedSplines.Empty();
-	BatchedPoints.Empty();
-	BatchedBrushes.Empty();
-
-	// Process the planet
+	// Debug data
 	FVector2D                Origin = FVector2D(0, 0);
 	const class UNovaPlanet* DefaultPlanet =
 		MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaPlanet>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
-	AddPlanet(Origin, DefaultPlanet);
 
+	// Reset state
+	ClearBatches();
+	CurrentDesiredSize = 100;
+	DesiredObjectTexts.Empty();
+	CurrentOrigin = GetTickSpaceGeometry().GetLocalSize() / 2;
+
+	// Run processes
+	AddPlanet(Origin, DefaultPlanet);
+	ProcessOrbits(Origin);
+	ProcessTrajectoryPreview(Origin, DeltaTime);
+	ProcessDrawScale(DeltaTime);
+}
+
+void SNovaOrbitalMap::PreviewTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, bool Immediate)
+{
+	CurrentPreviewTrajectory = Trajectory;
+	CurrentPreviewProgress   = Immediate ? TrajectoryPreviewDuration : 0;
+}
+
+/*----------------------------------------------------
+    Slate callbacks
+----------------------------------------------------*/
+
+FText SNovaOrbitalMap::GetHoverText() const
+{
+	FString Result;
+
+	for (const FString& Text : DesiredObjectTexts)
+	{
+		if (Result.Len())
+		{
+			Result += '\n';
+		}
+		Result += Text;
+	}
+
+	return FText::FromString(Result);
+}
+
+/*----------------------------------------------------
+    High-level internals
+----------------------------------------------------*/
+
+void SNovaOrbitalMap::ProcessOrbits(const FVector2D& Origin)
+{
 	// Get trajectory data
 	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	NCHECK(GameState);
@@ -122,9 +256,13 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	TArray<FNovaMergedOrbit> MergedOrbits;
 
 	// Merge orbits
-	CurrentDesiredSize = 100;
 	for (const auto ObjectAndTrajectory : Trajectories)
 	{
+		if (ObjectAndTrajectory.Value.CurrentOrbit.StartAltitude == 0)
+		{
+			continue;
+		}
+
 		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, ObjectAndTrajectory.Value.GetHighestAltitude());
 
 		FNovaMergedOrbit* ExistingTrajectory = MergedOrbits.FindByPredicate(
@@ -153,80 +291,33 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	{
 		AddOrbit(Origin, Orbit, Orbit.Objects, FNovaSplineStyle(FLinearColor::White));
 	}
+}
 
-	// Process preview trajectory
+void SNovaOrbitalMap::ProcessTrajectoryPreview(const FVector2D& Origin, float DeltaTime)
+{
 	CurrentPreviewProgress += DeltaTime / TrajectoryPreviewDuration;
 	CurrentPreviewProgress = FMath::Min(CurrentPreviewProgress, 1.0f);
+
 	if (CurrentPreviewTrajectory.IsValid())
 	{
 		AddTrajectory(Origin, *CurrentPreviewTrajectory, FNovaSplineStyle(FLinearColor::Red), false, CurrentPreviewProgress);
 		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, CurrentPreviewTrajectory->GetHighestAltitude());
 	};
+}
 
-	// Process auto-zoom
-	CurrentDesiredSize *= 2.5f;
+void SNovaOrbitalMap::ProcessDrawScale(float DeltaTime)
+{
+	CurrentDesiredSize *= 2 * TrajectoryInflationRatio;
+
 	const float CurrentDesiredScale =
 		FMath::Min(GetTickSpaceGeometry().GetLocalSize().X, GetTickSpaceGeometry().GetLocalSize().Y) / CurrentDesiredSize;
 	float ScaleDelta        = (CurrentDesiredScale - CurrentDrawScale) * TrajectoryZoomSnappinness;
 	float ScaleAcceleration = CurrentZoomSpeed - ScaleDelta;
 	ScaleAcceleration       = FMath::Clamp(ScaleAcceleration, -TrajectoryZoomAcceleration, TrajectoryZoomAcceleration);
+
 	CurrentZoomSpeed += ScaleAcceleration * DeltaTime;
 	CurrentZoomSpeed = FMath::Clamp(CurrentZoomSpeed, -TrajectoryZoomSpeed, TrajectoryZoomSpeed);
 	CurrentDrawScale += ScaleDelta * DeltaTime;
-}
-
-int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect,
-	FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
-{
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-
-	// Draw batched brushes
-	for (const FNovaBatchedBrush& Brush : BatchedBrushes)
-	{
-		NCHECK(Brush.Brush);
-		FVector2D BrushSize = Brush.Brush->GetImageSize() * Brush.Scale;
-
-		FSlateDrawElement::MakeBox(OutDrawElements, LayerId,
-			AllottedGeometry.ToPaintGeometry(BrushSize, FSlateLayoutTransform(Brush.Pos - BrushSize / 2)), Brush.Brush,
-			ESlateDrawEffect::None, FLinearColor::White);
-	}
-
-	// Draw batched splines
-	for (const FNovaBatchedSpline& Spline : BatchedSplines)
-	{
-		FSlateDrawElement::MakeCubicBezierSpline(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), Spline.P0, Spline.P1,
-			Spline.P2, Spline.P3, Spline.WidthOuter * AllottedGeometry.Scale, ESlateDrawEffect::None, Spline.ColorOuter);
-
-		FSlateDrawElement::MakeCubicBezierSpline(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), Spline.P0, Spline.P1,
-			Spline.P2, Spline.P3, Spline.WidthInner * AllottedGeometry.Scale, ESlateDrawEffect::None, Spline.ColorInner);
-	}
-
-	// Draw batched points
-	for (const FNovaBatchedPoint& Point : BatchedPoints)
-	{
-		FSlateColorBrush WhiteBox          = FSlateColorBrush(FLinearColor::White);
-		const FVector2D  BezierPointRadius = FVector2D(Point.Radius, Point.Radius);
-
-		FSlateDrawElement::MakeBox(OutDrawElements, LayerId,
-			AllottedGeometry.ToPaintGeometry(2 * BezierPointRadius, FSlateLayoutTransform(Point.Pos - BezierPointRadius)), &WhiteBox,
-			ESlateDrawEffect::None, Point.Color);
-
-		FVector2D TextSize(100, 20);
-		FSlateDrawElement::MakeText(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(Point.Pos - TextSize / 2, TextSize),
-			Point.Object.GetText(), Theme.MainFont.Font);
-	}
-
-	return SCompoundWidget::OnPaint(PaintArgs, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
-}
-
-/*----------------------------------------------------
-    Interface
-----------------------------------------------------*/
-
-void SNovaOrbitalMap::PreviewTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, bool Immediate)
-{
-	CurrentPreviewTrajectory = Trajectory;
-	CurrentPreviewProgress   = Immediate ? TrajectoryPreviewDuration : 0;
 }
 
 /*----------------------------------------------------
@@ -235,15 +326,24 @@ void SNovaOrbitalMap::PreviewTrajectory(const TSharedPtr<FNovaTrajectory>& Traje
 
 void SNovaOrbitalMap::AddPlanet(const FVector2D& Pos, const class UNovaPlanet* Planet)
 {
+	NCHECK(Planet);
+
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+	// Planet brush
 	FNovaBatchedBrush Brush;
-
-	const FVector2D Origin = GetTickSpaceGeometry().GetLocalSize() / 2;
-
 	Brush.Brush = &Planet->Image;
-	Brush.Pos   = Origin + Pos * CurrentDrawScale;
-	Brush.Scale = CurrentDrawScale;
+	Brush.Pos   = Pos * CurrentDrawScale;
+	BatchedBrushes.AddUnique(Brush);
 
-	BatchedBrushes.Add(Brush);
+	FVector2D BrushSize = Brush.Brush->GetImageSize();
+
+	// Add text label
+	FNovaBatchedText Text;
+	Text.Text      = Planet->Name.ToUpper();
+	Text.Pos       = Brush.Pos - FVector2D(0, Planet->Image.GetImageSize().Y);
+	Text.TextStyle = &Theme.SubtitleFont;
+	BatchedTexts.Add(Text);
 }
 
 void SNovaOrbitalMap::AddTrajectory(
@@ -286,8 +386,7 @@ void SNovaOrbitalMap::AddTrajectory(
 TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbit(
 	const FVector2D& Position, const FNovaOrbit& Orbit, const TArray<FNovaOrbitalObject>& Objects, const FNovaSplineStyle& Style)
 {
-	const FVector2D Origin        = GetTickSpaceGeometry().GetLocalSize() / 2;
-	const FVector2D LocalPosition = Origin + Position * CurrentDrawScale;
+	const FVector2D LocalPosition = Position * CurrentDrawScale;
 
 	const float  RadiusA       = CurrentDrawScale * Orbit.StartAltitude;
 	const float  RadiusB       = CurrentDrawScale * Orbit.OppositeAltitude;
@@ -304,13 +403,20 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbit(
 
 void SNovaOrbitalMap::AddOrbitalObject(const FNovaOrbitalObject& Object, const FLinearColor& Color)
 {
+	bool IsHovered =
+		(CurrentOrigin + Object.Position - GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos())).Size() < 50;
+
 	FNovaBatchedPoint Point;
 	Point.Pos    = Object.Position;
 	Point.Color  = Color;
-	Point.Radius = 4.0f;
-	Point.Object = Object;
+	Point.Radius = IsHovered ? 8.0f : 4.0f;
 
-	BatchedPoints.Add(Point);
+	BatchedPoints.AddUnique(Point);
+
+	if (IsHovered)
+	{
+		DesiredObjectTexts.AddUnique(Object.GetText().ToString());
+	}
 }
 
 TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
@@ -347,18 +453,6 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 		FVector2D P2 = Transform(BezierPoints[2]);
 		FVector2D P3 = Transform(BezierPoints[3]);
 
-		// Process points of interest
-		for (FNovaOrbitalObject& Point : Objects)
-		{
-			const float ScaledPoint = 4.0f * (Point.Phase / 360.0f);
-			if (Point.Phase >= Orbit.InitialAngle && Point.Phase <= Orbit.AngularLength && ScaledPoint >= SplineIndex &&
-				ScaledPoint < SplineIndex + 1)
-			{
-				const float Alpha = FMath::Fmod(Point.Phase, 90.0f) / 90.0f;
-				Point.Position    = DeCasteljauInterp(P0, P1, P2, P3, Alpha);
-			}
-		}
-
 		// Split the curve to account for initial angle
 		float CurrentSegmentLength = 90.0f;
 		if (Orbit.InitialAngle >= CurrentEndAngle)
@@ -393,6 +487,25 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 			P3 = ControlPoints[3];
 		}
 
+		// Process points of interest
+		for (FNovaOrbitalObject& Object : Objects)
+		{
+			const float CurrentSplineStartPhase = Orbit.Phase + CurrentStartAngle;
+			float       CurrentSplineEndPhase   = Orbit.Phase + CurrentEndAngle;
+
+			if (!Object.Valid && Object.Phase >= CurrentSplineStartPhase && Object.Phase <= CurrentSplineEndPhase)
+			{
+				float Alpha = FMath::Fmod(Object.Phase - Orbit.Phase, 90.0f) / 90.0f;
+				if (Alpha == 0 && Object.Phase != CurrentSplineStartPhase)
+				{
+					Alpha = 1.0f;
+				}
+
+				Object.Position = DeCasteljauInterp(P0, P1, P2, P3, Alpha);
+				Object.Valid    = true;
+			}
+		}
+
 		// Batch the spline segment
 		FNovaBatchedSpline Spline;
 		Spline.P0         = P0;
@@ -403,7 +516,7 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 		Spline.ColorOuter = Style.ColorOuter;
 		Spline.WidthInner = Style.WidthInner;
 		Spline.WidthOuter = Style.WidthOuter;
-		BatchedSplines.Add(Spline);
+		BatchedSplines.AddUnique(Spline);
 
 		// Report the initial and final positions
 		if (FirstRenderedSpline)
@@ -417,7 +530,10 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 	// Draw positioned objects
 	for (const FNovaOrbitalObject& Object : Objects)
 	{
-		AddOrbitalObject(Object, Style.ColorInner);
+		if (Object.Valid)
+		{
+			AddOrbitalObject(Object, Style.ColorInner);
+		}
 	}
 
 	return TPair<FVector2D, FVector2D>(InitialPosition, FinalPosition);
@@ -461,6 +577,75 @@ void SNovaOrbitalMap::AddTestOrbits()
 	AddTransferOrbit(Origin, 300, 250, 135, 0, Objects, FNovaSplineStyle(FLinearColor::Blue));
 	AddPartialCircularOrbit(Origin, 250, 135 + 180, 0, 45, Objects, FNovaSplineStyle(FLinearColor::Blue));
 	AddTransferOrbit(Origin, 250, 450, 135 + 180 + 45, 0, Objects, FNovaSplineStyle(FLinearColor::Blue));
+}
+
+/*----------------------------------------------------
+       Batch renderer
+----------------------------------------------------*/
+
+void SNovaOrbitalMap::ClearBatches()
+{
+	BatchedSplines.Empty();
+	BatchedPoints.Empty();
+	BatchedBrushes.Empty();
+	BatchedTexts.Empty();
+}
+
+int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect,
+	FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
+{
+#if 0
+	NDIS("Painting %d brushes, %d splines, %d points, %d texts", BatchedBrushes.Num(), BatchedSplines.Num(), BatchedPoints.Num(),
+		BatchedTexts.Num());
+#endif
+
+	// Draw batched brushes
+	for (const FNovaBatchedBrush& Brush : BatchedBrushes)
+	{
+		NCHECK(Brush.Brush);
+		FVector2D BrushSize = Brush.Brush->GetImageSize();
+
+		FSlateDrawElement::MakeBox(OutDrawElements, LayerId,
+			AllottedGeometry.ToPaintGeometry(BrushSize, FSlateLayoutTransform(CurrentOrigin + Brush.Pos - BrushSize / 2)), Brush.Brush,
+			ESlateDrawEffect::None, FLinearColor::White);
+	}
+
+	// Draw batched splines
+	for (const FNovaBatchedSpline& Spline : BatchedSplines)
+	{
+		FSlateDrawElement::MakeCubicBezierSpline(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), CurrentOrigin + Spline.P0,
+			CurrentOrigin + Spline.P1, CurrentOrigin + Spline.P2, CurrentOrigin + Spline.P3, Spline.WidthOuter * AllottedGeometry.Scale,
+			ESlateDrawEffect::None, Spline.ColorOuter);
+
+		FSlateDrawElement::MakeCubicBezierSpline(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), CurrentOrigin + Spline.P0,
+			CurrentOrigin + Spline.P1, CurrentOrigin + Spline.P2, CurrentOrigin + Spline.P3, Spline.WidthInner * AllottedGeometry.Scale,
+			ESlateDrawEffect::None, Spline.ColorInner);
+	}
+
+	// Draw batched points
+	for (const FNovaBatchedPoint& Point : BatchedPoints)
+	{
+		FSlateColorBrush WhiteBox          = FSlateColorBrush(FLinearColor::White);
+		const FVector2D  BezierPointRadius = FVector2D(Point.Radius, Point.Radius);
+
+		FSlateDrawElement::MakeBox(OutDrawElements, LayerId,
+			AllottedGeometry.ToPaintGeometry(2 * BezierPointRadius, FSlateLayoutTransform(CurrentOrigin + Point.Pos - BezierPointRadius)),
+			&WhiteBox, ESlateDrawEffect::None, Point.Color);
+	}
+
+	// Draw batched texts
+	for (const FNovaBatchedText& Text : BatchedTexts)
+	{
+		const TSharedRef<FSlateFontMeasure> FontMeasureService = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+		FVector2D                           TextSize           = FontMeasureService->Measure(Text.Text, Text.TextStyle->Font);
+
+		FPaintGeometry TextGeometry =
+			AllottedGeometry.ToPaintGeometry(TextSize, FSlateLayoutTransform(CurrentOrigin + Text.Pos - TextSize / 2));
+
+		FSlateDrawElement::MakeText(OutDrawElements, LayerId, TextGeometry, Text.Text, Text.TextStyle->Font);
+	}
+
+	return SCompoundWidget::OnPaint(PaintArgs, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 }
 
 #undef LOCTEXT_NAMESPACE
