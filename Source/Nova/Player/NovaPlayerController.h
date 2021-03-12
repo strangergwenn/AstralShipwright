@@ -247,5 +247,5 @@ public:
 	class ANovaGameWorld* GetGameWorld() const;
 
 	/** Get the player spacecraft */
-	TSharedPtr<struct FNovaSpacecraft> GetSpacecraft() const;
+	struct FNovaSpacecraft* GetSpacecraft() const;
 };

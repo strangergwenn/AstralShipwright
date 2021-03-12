@@ -77,9 +77,8 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 				ANovaGameWorld* GameWorld = GameState->GetGameWorld();
 				if (IsValid(GameWorld))
 				{
-					const TSharedPtr<FNovaSpacecraft>& NewSpacecraft =
-						GameWorld->GetSpacecraft(OwningPlayerState->GetSpacecraftIdentifier());
-					if (NewSpacecraft.IsValid() && (!Spacecraft.IsValid() || *NewSpacecraft.Get() != *Spacecraft.Get()))
+					const FNovaSpacecraft* NewSpacecraft = GameWorld->GetSpacecraft(OwningPlayerState->GetSpacecraftIdentifier());
+					if (NewSpacecraft && (!Spacecraft.IsValid() || *NewSpacecraft != *Spacecraft.Get()))
 					{
 						NLOG("ANovaSpacecraftPawn::Tick : updating spacecraft");
 						SetSpacecraft(NewSpacecraft);
@@ -186,11 +185,11 @@ void ANovaSpacecraftPawn::SaveAssembly()
 	PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
 }
 
-void ANovaSpacecraftPawn::SetSpacecraft(const TSharedPtr<FNovaSpacecraft> NewSpacecraft)
+void ANovaSpacecraftPawn::SetSpacecraft(const FNovaSpacecraft* NewSpacecraft)
 {
 	if (AssemblyState == ENovaAssemblyState::Idle)
 	{
-		NCHECK(NewSpacecraft.IsValid());
+		NCHECK(NewSpacecraft != nullptr);
 		NLOG("ANovaAssembly::SetSpacecraft (%d compartments)", NewSpacecraft->Compartments.Num());
 
 		// Clean up first

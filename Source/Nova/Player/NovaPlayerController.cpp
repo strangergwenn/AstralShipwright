@@ -125,7 +125,11 @@ TSharedPtr<FNovaPlayerSave> ANovaPlayerController::Save() const
 	// Save the spacecraft
 	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
 	NCHECK(SpacecraftPawn);
-	SaveData->Spacecraft = GetSpacecraft();
+	const FNovaSpacecraft* Spacecraft = GetSpacecraft();
+	if (Spacecraft)
+	{
+		SaveData->Spacecraft = Spacecraft->GetSharedCopy();
+	}
 
 	return SaveData;
 }
@@ -500,7 +504,7 @@ void ANovaPlayerController::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft)
 	// Update the player spacecraft
 	ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 	GetPlayerState<ANovaPlayerState>()->SetSpacecraftIdentifier(Spacecraft.Identifier);
-	GetGameWorld()->AddPlayerSpacecraft(Spacecraft);
+	GetGameWorld()->AddOrUpdateSpacecraft(Spacecraft);
 
 	if (GetLocalRole() == ROLE_AutonomousProxy)
 	{
@@ -620,7 +624,7 @@ bool ANovaPlayerController::IsReady() const
 	{
 		// Check spacecraft pawn
 		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-		bool IsSpacecraftReady = IsValid(SpacecraftPawn) && GetSpacecraft().IsValid() && SpacecraftPawn->GetSpacecraftMovement()->IsReady();
+		bool IsSpacecraftReady = IsValid(SpacecraftPawn) && GetSpacecraft() && SpacecraftPawn->GetSpacecraftMovement()->IsReady();
 
 		// Check game state
 		ANovaGameState* GameState        = GetWorld()->GetGameState<ANovaGameState>();
@@ -715,7 +719,7 @@ ANovaGameWorld* ANovaPlayerController::GetGameWorld() const
 	return GameState ? GameState->GetGameWorld() : nullptr;
 }
 
-TSharedPtr<FNovaSpacecraft> ANovaPlayerController::GetSpacecraft() const
+FNovaSpacecraft* ANovaPlayerController::GetSpacecraft() const
 {
 	ANovaGameWorld*   GameWorld        = GetGameWorld();
 	ANovaPlayerState* OwnedPlayerState = GetPlayerState<ANovaPlayerState>();

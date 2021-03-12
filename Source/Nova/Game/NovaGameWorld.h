@@ -4,17 +4,57 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Engine/NetSerialization.h"
 
 #include "NovaGameTypes.h"
 #include "Nova/Spacecraft/NovaSpacecraft.h"
 
 #include "NovaGameWorld.generated.h"
 
-/** Spacecraft database entry */
-struct FNovaSpacecraftDatabaseEntry
+/** Spacecraft database with fast array replication and fast lookup */
+USTRUCT()
+struct FNovaSpacecraftDatabase : public FFastArraySerializer
 {
-	TSharedPtr<FNovaSpacecraft> Spacecraft;
-	bool                        IsPlayer;
+	GENERATED_BODY()
+
+public:
+	/** Add a new spacecraft to the database or update an existing entry with the same identifier */
+	void AddOrUpdate(const FNovaSpacecraft& NewSpacecraft);
+
+	/** Remove a spacecraft from the database */
+	void Remove(const FNovaSpacecraft& Spacecraft);
+
+	/** Get a spacecraft */
+	FNovaSpacecraft* Get(const FGuid& Identifier)
+	{
+		TPair<int32, FNovaSpacecraft*>* Entry = Map.Find(Identifier);
+		return Entry ? Entry->Value : nullptr;
+	}
+
+	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
+	{
+		return FFastArraySerializer::FastArrayDeltaSerialize<FNovaSpacecraft, FNovaSpacecraftDatabase>(Array, DeltaParms, *this);
+	}
+
+	void PostReplicatedChange(const TArrayView<int32>& ChangedIndices, int32 FinalSize);
+
+protected:
+	// Replicated state
+	UPROPERTY()
+	TArray<FNovaSpacecraft> Array;
+
+	// Local state
+	TMap<FGuid, TPair<int32, FNovaSpacecraft*>> Map;
+};
+
+/** Enable fast replication */
+template <>
+struct TStructOpsTypeTraits<FNovaSpacecraftDatabase> : public TStructOpsTypeTraitsBase2<FNovaSpacecraftDatabase>
+{
+	enum
+	{
+		WithNetDeltaSerializer = true,
+	};
 };
 
 /** World manager class */
@@ -42,20 +82,11 @@ public:
 	----------------------------------------------------*/
 
 public:
-	/** Register a new AI spacecraft */
-	void AddAISpacecraft(const FNovaSpacecraft Spacecraft);
-
 	/** Register a new player spacecraft */
-	void AddPlayerSpacecraft(const FNovaSpacecraft Spacecraft);
+	void AddOrUpdateSpacecraft(const FNovaSpacecraft Spacecraft);
 
-	/** Return a weak pointer for a spacecraft by identifier */
-	TSharedPtr<FNovaSpacecraft> GetSpacecraft(FGuid Identifier);
-
-	/** Get the spacecraft database */
-	TMap<FGuid, FNovaSpacecraftDatabaseEntry>& GetSpacecraftDatabase()
-	{
-		return SpacecraftDatabase;
-	}
+	/** Return a pointer for a spacecraft by identifier */
+	FNovaSpacecraft* GetSpacecraft(FGuid Identifier);
 
 	/** Return the orbital simulation class */
 	class UNovaOrbitalSimulationComponent* GetOrbitalSimulation() const
@@ -68,10 +99,6 @@ public:
 	----------------------------------------------------*/
 
 protected:
-	/** Spacecraft data just replicated */
-	UFUNCTION()
-	void OnSpacecraftReplicated();
-
 	/** Update the local database */
 	void UpdateDatabase();
 
@@ -90,14 +117,9 @@ protected:
 
 private:
 	// Spacecraft array
-	UPROPERTY(ReplicatedUsing = OnSpacecraftReplicated)
-	TArray<FNovaSpacecraft> AISpacecraft;
-
-	// Spacecraft array for player ships
-	UPROPERTY(ReplicatedUsing = OnSpacecraftReplicated)
-	TArray<FNovaSpacecraft> PlayerSpacecraft;
+	UPROPERTY(Replicated)
+	FNovaSpacecraftDatabase SpacecraftDatabase;
 
 	// Local state
-	TMap<FGuid, FNovaSpacecraftDatabaseEntry> SpacecraftDatabase;
-	TArray<const class UNovaArea*>            Areas;
+	TArray<const class UNovaArea*> Areas;
 };

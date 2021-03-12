@@ -75,7 +75,7 @@ public:
 	void SaveAssembly();
 
 	/** Store a copy of a spacecraft and start editing it */
-	void SetSpacecraft(const TSharedPtr<FNovaSpacecraft> NewSpacecraft);
+	void SetSpacecraft(const FNovaSpacecraft* NewSpacecraft);
 
 	/** Get the spacecraft movement component */
 	UFUNCTION(Category = Nova, BlueprintCallable)

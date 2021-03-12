@@ -114,7 +114,7 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 	}
 
 	// Set up the scene
-	SpacecraftPawn->SetSpacecraft(Spacecraft);
+	SpacecraftPawn->SetSpacecraft(Spacecraft.Get());
 	SpacecraftPawn->UpdateAssembly();
 	PlaceCamera();
 

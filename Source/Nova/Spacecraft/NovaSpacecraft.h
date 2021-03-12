@@ -385,7 +385,7 @@ struct FNovaCompartment
 
 /** Full spacecraft data */
 USTRUCT(Atomic)
-struct FNovaSpacecraft
+struct FNovaSpacecraft : public FFastArraySerializerItem
 {
 	GENERATED_BODY()
 
