@@ -12,7 +12,6 @@
 
 #include "Nova/Nova.h"
 
-#include "Slate/SRetainerWidget.h"
 #include "Widgets/Layout/SBackgroundBlur.h"
 
 #define LOCTEXT_NAMESPACE "SNovaOrbitalMap"

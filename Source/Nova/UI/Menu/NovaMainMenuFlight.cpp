@@ -26,7 +26,6 @@
 #include "Nova/Nova.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
-#include "Slate/SRetainerWidget.h"
 
 #define LOCTEXT_NAMESPACE "SNovaMainMenuFlight"
 
@@ -157,19 +156,12 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			// Map slot
 			+ SHorizontalBox::Slot()
 			[
-				SAssignNew(MapRetainer, SRetainerWidget)
-				[
-					SAssignNew(OrbitalMap, SNovaOrbitalMap)
-					.MenuManager(MenuManager)
-				]
+				SAssignNew(OrbitalMap, SNovaOrbitalMap)
+				.MenuManager(MenuManager)
 			]
 		]
 	];
 	// clang-format on
-
-	// Setup retainer
-	MapRetainer->SetEffectMaterial(Theme.EffectMaterial);
-	MapRetainer->SetTextureParameter(TEXT("UI"));
 }
 
 /*----------------------------------------------------
