@@ -46,13 +46,14 @@ void ANovaGameMode::InitGameState()
 	NLOG("ANovaGameMode::InitGameState");
 	Super::InitGameState();
 
-	UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
-	NCHECK(GameInstance);
-
 	// Spawn the game world
-	ANovaGameWorld* GameWorld = GetWorld()->SpawnActor<ANovaGameWorld>();
-	NCHECK(IsValid(GameInstance));
-	GetGameState<ANovaGameState>()->SetGameWorld(GameWorld);
+	UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
+	if (GameInstance)
+	{
+		ANovaGameWorld* GameWorld = GetWorld()->SpawnActor<ANovaGameWorld>();
+		NCHECK(IsValid(GameInstance));
+		GetGameState<ANovaGameState>()->SetGameWorld(GameWorld);
+	}
 }
 
 void ANovaGameMode::StartPlay()
@@ -166,6 +167,11 @@ void ANovaGameMode::ResetArea()
 	}
 }
 
+void ANovaGameMode::ChangeAreaToOrbit()
+{
+	ChangeArea(OrbitArea);
+}
+
 void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 {
 	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
@@ -216,6 +222,11 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 
 	// 1 : Start a shared transition for the cutscene
 	PC->SharedTransition(true, StartCutscene);
+}
+
+bool ANovaGameMode::IsInOrbit() const
+{
+	return GetGameState<ANovaGameState>()->GetCurrentArea() == OrbitArea;
 }
 
 /*----------------------------------------------------

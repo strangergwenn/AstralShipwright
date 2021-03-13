@@ -85,12 +85,11 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.HelpText(LOCTEXT("HelpLeaveStation", "Leave station"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
-							const class UNovaArea* Orbit = MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{D1D46588-494D-E081-ADE6-48AE0B010BBB}"));
-							MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChangeArea(Orbit);
+							MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChangeAreaToOrbit();
 						}))
 						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 						{
-							return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority;
+							return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority && !MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->IsInOrbit();
 						})))
 					]
 			
@@ -107,7 +106,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						}))
 						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 						{
-							return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority;
+							return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority && MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->IsInOrbit();
 						})))
 					]
 			
@@ -119,12 +118,22 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.HelpText(LOCTEXT("DockHelp", "Dock at the station"))
 						.OnClicked(this, &SNovaMainMenuFlight::OnDock)
 						.Enabled(this, &SNovaMainMenuFlight::IsDockEnabled)
-					]
+					]			
 			
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
 						SNovaAssignNew(UndockButton, SNovaButton)
+						.Text(LOCTEXT("Undock", "Undock"))
+						.HelpText(LOCTEXT("UndockHelp", "Undock from the station"))
+						.OnClicked(this, &SNovaMainMenuFlight::OnUndock)
+						.Enabled(this, &SNovaMainMenuFlight::IsUndockEnabled)
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaNew(SNovaButton)
 						.Text(LOCTEXT("Calculaterajectories", "Calculate trajectories"))
 						.HelpText(LOCTEXT("HelpCalculateTrajectories", "Dump trajectories"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()

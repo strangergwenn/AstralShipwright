@@ -39,8 +39,14 @@ public:
 	/** Reset the area, moving all ships to player starts */
 	void ResetArea();
 
+	/** Have all players fade to black, play the exit cutscene and switch to orbit */
+	void ChangeAreaToOrbit();
+
 	/** Have all players fade to black, play the exit cutscene and switch area */
 	void ChangeArea(const class UNovaArea* Area);
+
+	/** Check if we are in orbit */
+	bool IsInOrbit() const;
 
 	/*----------------------------------------------------
 	    Level loading
@@ -60,6 +66,15 @@ protected:
 	/** Callback for an unloaded streaming level */
 	UFUNCTION()
 	void OnLevelUnLoaded();
+
+	/*----------------------------------------------------
+	    Properties
+	----------------------------------------------------*/
+
+public:
+	/** Area to use for orbit */
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	const class UNovaArea* OrbitArea;
 
 	/*----------------------------------------------------
 	    Data
