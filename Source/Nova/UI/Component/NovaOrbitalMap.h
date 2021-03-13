@@ -88,7 +88,7 @@ struct FNovaOrbitalObject
 		Phase    = M.Phase;
 	}
 
-	FText GetText() const;
+	FText GetText(double CurrentTime) const;
 
 	// Object data
 	const class UNovaArea*             Area;
@@ -141,7 +141,7 @@ protected:
 	----------------------------------------------------*/
 
 	/** Add orbits to the map */
-	void ProcessOrbits(const FVector2D& Origin);
+	void ProcessAreas(const FVector2D& Origin);
 
 	/** Add the trajectory preview * */
 	void ProcessTrajectoryPreview(const FVector2D& Origin, float DeltaTime);
@@ -165,8 +165,8 @@ protected:
 	void AddPlanet(const FVector2D& Pos, const class UNovaPlanet* Planet);
 
 	/** Draw a trajectory */
-	void AddTrajectory(const FVector2D& Position, const struct FNovaTrajectory& Trajectory, const struct FNovaSplineStyle& Style,
-		bool IncludeCurrent = true, float Progress = 1.0f);
+	void AddTrajectory(
+		const FVector2D& Position, const struct FNovaTrajectory& Trajectory, const struct FNovaSplineStyle& Style, float Progress = 1.0f);
 
 	/** Draw an orbit */
 	TPair<FVector2D, FVector2D> AddOrbit(const FVector2D& Position, const FNovaOrbit& Orbit, const TArray<FNovaOrbitalObject>& Objects,

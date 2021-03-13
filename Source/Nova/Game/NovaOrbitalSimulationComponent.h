@@ -21,6 +21,20 @@ struct FNovaHohmannTransfer
 	double Duration;
 };
 
+/** Trajectory computation parameters */
+struct FNovaTrajectoryParameters
+{
+	double StartTime;
+
+	double SourceAltitude;
+	double SourcePhase;
+	double DestinationAltitude;
+	double DestinationPhase;
+
+	const class UNovaPlanet* Planet;
+	double                   µ;
+};
+
 /** Data for a stable orbit that might be a circular, elliptical or Hohmann transfer orbit */
 struct FNovaOrbit
 {
@@ -32,6 +46,12 @@ struct FNovaOrbit
 
 	FNovaOrbit(float SA, float EA, float SP, float EP) : StartAltitude(SA), OppositeAltitude(EA), StartPhase(SP), EndPhase(EP)
 	{}
+
+	/** Get the maximum altitude reached by this orbit */
+	float GetHighestAltitude() const
+	{
+		return FMath::Max(StartAltitude, OppositeAltitude);
+	}
 
 	float StartAltitude;
 	float OppositeAltitude;
@@ -53,13 +73,12 @@ struct FNovaManeuver
 /** Full trajectory data including the last stable orbit */
 struct FNovaTrajectory
 {
-	FNovaTrajectory(const FNovaOrbit& Orbit) : CurrentOrbit(Orbit), TotalTransferDuration(0), TotalDeltaV(0)
+	FNovaTrajectory() : TotalTransferDuration(0), TotalDeltaV(0)
 	{}
 
 	/** Get the maximum altitude reached by this trajectory */
 	float GetHighestAltitude() const;
 
-	FNovaOrbit            CurrentOrbit;
 	TArray<FNovaOrbit>    TransferOrbits;
 	TArray<FNovaManeuver> Maneuvers;
 	FNovaOrbit            FinalOrbit;
@@ -90,19 +109,24 @@ public:
 
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	/** Compute a trajectory */
-	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const class UNovaArea* Source, const class UNovaArea* Destination, float PhasingAltitude);
+	/** Build trajectory parameters */
+	FNovaTrajectoryParameters MakeTrajectoryParameters(
+		const class UNovaArea* Source, const class UNovaArea* Destination, double DeltaTime = 0) const;
 
-	/** Get the trajectory data */
-	TMap<const class UNovaArea*, FNovaTrajectory> GetTrajectories() const
+	/** Compute a trajectory */
+	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const FNovaTrajectoryParameters& Parameters, float PhasingAltitude);
+
+	/** Get the orbit & position data for all areas */
+	const TMap<const class UNovaArea*, TPair<FNovaOrbit, double>>& GetAreasOrbitAndPosition() const
 	{
-		return Trajectories;
+		return AreasOrbitAndPosition;
 	}
 
-	/** Get the position data */
-	TMap<const class UNovaArea*, float> GetPositions() const
+	/** Get the current time in minutes */
+	double GetCurrentTime() const
 	{
-		return Positions;
+		// TODO : shared time for multiplayer
+		return GetWorld()->GetTimeSeconds() / 60.0;
 	}
 
 	/*----------------------------------------------------
@@ -110,11 +134,8 @@ public:
 	----------------------------------------------------*/
 
 protected:
-	/** Update all trajectories */
-	void UpdateTrajectories();
-
-	/** Update all positions based on the current time */
-	void UpdatePositions();
+	/** Update all area's position */
+	void UpdateAreas();
 
 	/** Compute the parameters of a Hohmann transfer orbit */
 	static FNovaHohmannTransfer ComputeHohmannTransfer(
@@ -134,11 +155,14 @@ protected:
 		return Result;
 	}
 
-	/** Compute the period of a stable circular orbit */
+	/** Compute the period of a stable circular orbit in minutes */
 	static double GetCircularOrbitPeriod(const double GravitationalParameter, const double Radius)
 	{
 		return 2.0 * PI * sqrt(pow(Radius, 3.0) / GravitationalParameter) / 60.0;
 	}
+
+	/** Get the current phase of an area */
+	double GetAreaPhase(const class UNovaArea* Area, double DeltaTime = 0) const;
 
 	/*----------------------------------------------------
 	    Data
@@ -146,7 +170,6 @@ protected:
 
 private:
 	// Local state
-	TArray<const class UNovaArea*>                Areas;
-	TMap<const class UNovaArea*, FNovaTrajectory> Trajectories;
-	TMap<const class UNovaArea*, float>           Positions;
+	TArray<const class UNovaArea*>                          Areas;
+	TMap<const class UNovaArea*, TPair<FNovaOrbit, double>> AreasOrbitAndPosition;
 };

@@ -26,6 +26,8 @@ FString GetRoleString(const AActor* Actor);
 
 FString GetRoleString(const UActorComponent* Component);
 
+FText GetDurationText(float Minutes, int32 MaxComponents = 4);
+
 /*----------------------------------------------------
     Error reporting
 ----------------------------------------------------*/

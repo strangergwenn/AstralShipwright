@@ -20,7 +20,7 @@
     Internal structures
 ----------------------------------------------------*/
 
-FText FNovaOrbitalObject::GetText() const
+FText FNovaOrbitalObject::GetText(double CurrentTime) const
 {
 	if (Area)
 	{
@@ -46,33 +46,12 @@ FText FNovaOrbitalObject::GetText() const
 
 		return FText::FormatNamed(LOCTEXT("ManeuverFormat", "{deltav} m/s maneuver at {phase}° in {time}"), TEXT("phase"),
 			FText::AsNumber(FMath::Fmod(Maneuver->Phase, 360.0f), &NumberOptions), TEXT("time"),
-			FText::AsTimespan(FTimespan(Maneuver->Time * ETimespan::TicksPerMinute)), TEXT("deltav"),
-			FText::AsNumber(Maneuver->DeltaV, &NumberOptions));
+			GetDurationText(Maneuver->Time - CurrentTime), TEXT("deltav"), FText::AsNumber(Maneuver->DeltaV, &NumberOptions));
 	}
 	else
 	{
 		return FText();
 	}
-}
-
-float FNovaTrajectory::GetHighestAltitude() const
-{
-	float MaximumAltitude = 0;
-
-	auto EvaluateForMaximum = [&](const FNovaOrbit& Orbit)
-	{
-		MaximumAltitude = FMath::Max(MaximumAltitude, Orbit.StartAltitude);
-		MaximumAltitude = FMath::Max(MaximumAltitude, Orbit.OppositeAltitude);
-	};
-
-	EvaluateForMaximum(CurrentOrbit);
-	EvaluateForMaximum(FinalOrbit);
-	for (const FNovaOrbit& Orbit : TransferOrbits)
-	{
-		EvaluateForMaximum(Orbit);
-	}
-
-	return MaximumAltitude;
 }
 
 /** Geometry of an orbit on the map */
@@ -195,7 +174,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 
 	// Run processes
 	AddPlanet(Origin, DefaultPlanet);
-	ProcessOrbits(Origin);
+	ProcessAreas(Origin);
 	ProcessTrajectoryPreview(Origin, DeltaTime);
 	ProcessDrawScale(DeltaTime);
 }
@@ -230,17 +209,14 @@ FText SNovaOrbitalMap::GetHoverText() const
     High-level internals
 ----------------------------------------------------*/
 
-void SNovaOrbitalMap::ProcessOrbits(const FVector2D& Origin)
+void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 {
-	// Get trajectory data
 	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	NCHECK(GameState);
 	ANovaGameWorld* GameWorld = GameState->GetGameWorld();
 	NCHECK(GameWorld);
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
 	NCHECK(OrbitalSimulation);
-	const auto Trajectories = OrbitalSimulation->GetTrajectories();
-	const auto Positions    = OrbitalSimulation->GetPositions();
 
 	// Orbit merging structure
 	struct FNovaMergedOrbit : FNovaOrbit
@@ -255,25 +231,22 @@ void SNovaOrbitalMap::ProcessOrbits(const FVector2D& Origin)
 	TArray<FNovaMergedOrbit> MergedOrbits;
 
 	// Merge orbits
-	for (const auto ObjectAndTrajectory : Trajectories)
+	for (const auto AreaAndOrbitAndPosition : OrbitalSimulation->GetAreasOrbitAndPosition())
 	{
-		if (ObjectAndTrajectory.Value.CurrentOrbit.StartAltitude == 0)
-		{
-			continue;
-		}
+		const TPair<FNovaOrbit, double>& OrbitAndPosition = AreaAndOrbitAndPosition.Value;
+		const FNovaOrbit&                Orbit            = OrbitAndPosition.Key;
+		const float                      Phase            = OrbitAndPosition.Value;
 
-		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, ObjectAndTrajectory.Value.GetHighestAltitude());
+		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Orbit.GetHighestAltitude());
 
 		FNovaMergedOrbit* ExistingTrajectory = MergedOrbits.FindByPredicate(
 			[&](const FNovaMergedOrbit& OtherOrbit)
 			{
-				const FNovaOrbit& Orbit = ObjectAndTrajectory.Value.CurrentOrbit;
-
 				return OtherOrbit.StartAltitude == Orbit.StartAltitude && OtherOrbit.OppositeAltitude == Orbit.OppositeAltitude &&
 					   OtherOrbit.StartPhase == Orbit.StartPhase && OtherOrbit.EndPhase == Orbit.EndPhase;
 			});
 
-		FNovaOrbitalObject Point = FNovaOrbitalObject(ObjectAndTrajectory.Key, Positions[ObjectAndTrajectory.Key]);
+		FNovaOrbitalObject Point = FNovaOrbitalObject(AreaAndOrbitAndPosition.Key, Phase);
 
 		if (ExistingTrajectory)
 		{
@@ -281,7 +254,7 @@ void SNovaOrbitalMap::ProcessOrbits(const FVector2D& Origin)
 		}
 		else
 		{
-			MergedOrbits.Add(FNovaMergedOrbit(ObjectAndTrajectory.Value.CurrentOrbit, Point));
+			MergedOrbits.Add(FNovaMergedOrbit(Orbit, Point));
 		}
 	}
 
@@ -299,7 +272,7 @@ void SNovaOrbitalMap::ProcessTrajectoryPreview(const FVector2D& Origin, float De
 
 	if (CurrentPreviewTrajectory.IsValid())
 	{
-		AddTrajectory(Origin, *CurrentPreviewTrajectory, FNovaSplineStyle(FLinearColor::Red), false, CurrentPreviewProgress);
+		AddTrajectory(Origin, *CurrentPreviewTrajectory, FNovaSplineStyle(FLinearColor::Red), CurrentPreviewProgress);
 		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, CurrentPreviewTrajectory->GetHighestAltitude());
 	};
 }
@@ -346,14 +319,8 @@ void SNovaOrbitalMap::AddPlanet(const FVector2D& Pos, const class UNovaPlanet* P
 }
 
 void SNovaOrbitalMap::AddTrajectory(
-	const FVector2D& Position, const FNovaTrajectory& Trajectory, const FNovaSplineStyle& Style, bool IncludeCurrent, float Progress)
+	const FVector2D& Position, const FNovaTrajectory& Trajectory, const FNovaSplineStyle& Style, float Progress)
 {
-	if (IncludeCurrent)
-	{
-		TArray<FNovaOrbitalObject> Empty;
-		AddOrbit(Position, Trajectory.CurrentOrbit, Empty, Style);
-	}
-
 	for (int32 TransferIndex = 0; TransferIndex < Trajectory.TransferOrbits.Num(); TransferIndex++)
 	{
 		const TArray<FNovaOrbit>& TransferOrbits = Trajectory.TransferOrbits;
@@ -414,7 +381,14 @@ void SNovaOrbitalMap::AddOrbitalObject(const FNovaOrbitalObject& Object, const F
 
 	if (IsHovered)
 	{
-		DesiredObjectTexts.AddUnique(Object.GetText().ToString());
+		ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+		NCHECK(GameState);
+		ANovaGameWorld* GameWorld = GameState->GetGameWorld();
+		NCHECK(GameWorld);
+		UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
+		NCHECK(OrbitalSimulation);
+
+		DesiredObjectTexts.AddUnique(Object.GetText(OrbitalSimulation->GetCurrentTime()).ToString());
 	}
 }
 
@@ -629,7 +603,7 @@ int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& All
 
 		FSlateDrawElement::MakeBox(OutDrawElements, LayerId,
 			AllottedGeometry.ToPaintGeometry(2 * BezierPointRadius, FSlateLayoutTransform(CurrentOrigin + Point.Pos - BezierPointRadius)),
-			&WhiteBox, ESlateDrawEffect::None, Point.Color);
+			&WhiteBox, ESlateDrawEffect::NoPixelSnapping, Point.Color);
 	}
 
 	// Draw batched texts

@@ -254,10 +254,11 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const class UNovaArea* Sour
 	Reset();
 
 	// Run trajectory calculations over a range of altitudes
+	const FNovaTrajectoryParameters& Parameters = OrbitalSimulation->MakeTrajectoryParameters(Source, Destination, 1);
 	SimulatedTrajectories.Reserve((Slider->GetMaxValue() - Slider->GetMinValue()) / AltitudeStep + 1);
 	for (float Altitude = Slider->GetMinValue(); Altitude <= Slider->GetMaxValue(); Altitude += AltitudeStep)
 	{
-		TSharedPtr<FNovaTrajectory> Trajectory = OrbitalSimulation->ComputeTrajectory(Source, Destination, Altitude);
+		TSharedPtr<FNovaTrajectory> Trajectory = OrbitalSimulation->ComputeTrajectory(Parameters, Altitude);
 		NCHECK(Trajectory.IsValid());
 		SimulatedTrajectories.Add(Altitude, Trajectory);
 	}
@@ -352,28 +353,7 @@ FText SNovaTrajectoryCalculator::GetDurationText() const
 		const TSharedPtr<FNovaTrajectory>& Trajectory = *TrajectoryPtr;
 		NCHECK(Trajectory.IsValid());
 
-		FNumberFormattingOptions NumberOptions;
-		NumberOptions.SetMaximumFractionalDigits(1);
-
-		if (Trajectory->TotalTransferDuration > 60 * 24 * 365)
-		{
-			return LOCTEXT("DurationFormatInfinite", "A very long time");
-		}
-		else if (Trajectory->TotalTransferDuration > 60 * 24 * 2)
-		{
-			return FText::FormatNamed(LOCTEXT("DurationFormatDays", "{days} days"), TEXT("days"),
-				FText::AsNumber(Trajectory->TotalTransferDuration / (60.0f * 24), &NumberOptions));
-		}
-		else if (Trajectory->TotalTransferDuration > 60 * 2)
-		{
-			return FText::FormatNamed(LOCTEXT("DurationFormatHours", "{hours} hours"), TEXT("hours"),
-				FText::AsNumber(Trajectory->TotalTransferDuration / 60.0f, &NumberOptions));
-		}
-		else
-		{
-			return FText::FormatNamed(LOCTEXT("DurationFormatMinutes", "{minutes} minutes"), TEXT("minutes"),
-				FText::AsNumber(Trajectory->TotalTransferDuration, &NumberOptions));
-		}
+		return ::GetDurationText(Trajectory->TotalTransferDuration, 2);
 	}
 
 	return FText();
