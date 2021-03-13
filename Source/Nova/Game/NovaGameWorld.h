@@ -19,7 +19,7 @@ struct FNovaSpacecraftDatabase : public FFastArraySerializer
 
 public:
 	/** Add a new spacecraft to the database or update an existing entry with the same identifier */
-	void AddOrUpdate(const FNovaSpacecraft& NewSpacecraft);
+	void AddOrUpdate(const FNovaSpacecraft& Spacecraft);
 
 	/** Remove a spacecraft from the database */
 	void Remove(const FNovaSpacecraft& Spacecraft);
@@ -116,7 +116,7 @@ protected:
 	----------------------------------------------------*/
 
 private:
-	// Spacecraft array
+	// Replicated spacecraft database
 	UPROPERTY(Replicated)
 	FNovaSpacecraftDatabase SpacecraftDatabase;
 

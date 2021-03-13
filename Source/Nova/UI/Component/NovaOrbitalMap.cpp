@@ -175,11 +175,12 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	// Run processes
 	AddPlanet(Origin, DefaultPlanet);
 	ProcessAreas(Origin);
+	ProcessPlayerTrajectory(Origin);
 	ProcessTrajectoryPreview(Origin, DeltaTime);
 	ProcessDrawScale(DeltaTime);
 }
 
-void SNovaOrbitalMap::PreviewTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, bool Immediate)
+void SNovaOrbitalMap::Set(const TSharedPtr<FNovaTrajectory>& Trajectory, bool Immediate)
 {
 	CurrentPreviewTrajectory = Trajectory;
 	CurrentPreviewProgress   = Immediate ? TrajectoryPreviewDuration : 0;
@@ -265,14 +266,33 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 	}
 }
 
+void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
+{
+	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(GameState);
+	ANovaGameWorld* GameWorld = GameState->GetGameWorld();
+	NCHECK(GameWorld);
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
+	NCHECK(OrbitalSimulation);
+
+	// Add the current trajectory
+	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetCommittedPlayerTrajectory();
+	if (PlayerTrajectory)
+	{
+		AddTrajectory(Origin, *PlayerTrajectory, FNovaSplineStyle(FLinearColor::Blue));
+		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, PlayerTrajectory->GetHighestAltitude());
+	}
+}
+
 void SNovaOrbitalMap::ProcessTrajectoryPreview(const FVector2D& Origin, float DeltaTime)
 {
 	CurrentPreviewProgress += DeltaTime / TrajectoryPreviewDuration;
 	CurrentPreviewProgress = FMath::Min(CurrentPreviewProgress, 1.0f);
 
+	// Add the preview trajectory
 	if (CurrentPreviewTrajectory.IsValid())
 	{
-		AddTrajectory(Origin, *CurrentPreviewTrajectory, FNovaSplineStyle(FLinearColor::Red), CurrentPreviewProgress);
+		AddTrajectory(Origin, *CurrentPreviewTrajectory, FNovaSplineStyle(FLinearColor::Yellow), CurrentPreviewProgress);
 		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, CurrentPreviewTrajectory->GetHighestAltitude());
 	};
 }

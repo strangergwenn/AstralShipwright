@@ -46,6 +46,9 @@ public:
 	/** Get the current sub-level name to use */
 	FName GetCurrentLevelName() const;
 
+	/** Get the list of all player spacecraft identifiers */
+	TArray<FGuid> GetPlayerSpacecraftIdentifiers() const;
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/

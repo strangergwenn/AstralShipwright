@@ -3,6 +3,8 @@
 #include "NovaGameState.h"
 #include "NovaArea.h"
 
+#include "Nova/Player/NovaPlayerState.h"
+
 #include "Net/UnrealNetwork.h"
 
 /*----------------------------------------------------
@@ -35,6 +37,22 @@ FName ANovaGameState::GetCurrentLevelName() const
 {
 	NCHECK(CurrentArea);
 	return CurrentArea->LevelName;
+}
+
+TArray<FGuid> ANovaGameState::GetPlayerSpacecraftIdentifiers() const
+{
+	TArray<FGuid> Result;
+
+	for (const APlayerState* PlayerStateBase : PlayerArray)
+	{
+		const ANovaPlayerState* PlayerState = Cast<ANovaPlayerState>(PlayerStateBase);
+		if (IsValid(PlayerState))
+		{
+			Result.Add(PlayerState->GetSpacecraftIdentifier());
+		}
+	}
+
+	return Result;
 }
 
 /*----------------------------------------------------

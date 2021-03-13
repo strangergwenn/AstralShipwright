@@ -133,7 +133,19 @@ public:
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
 	/** Preview a spacecraft trajectory */
-	void PreviewTrajectory(const TSharedPtr<struct FNovaTrajectory>& Trajectory, bool Immediate = false);
+	void Set(const TSharedPtr<struct FNovaTrajectory>& Trajectory, bool Immediate = false);
+
+	/** Remove the trajectory preview */
+	void ClearTrajectoryPreview()
+	{
+		CurrentPreviewTrajectory.Reset();
+	}
+
+	/** Get the preview trajectory */
+	const TSharedPtr<struct FNovaTrajectory>& GetPreviewTrajectory() const
+	{
+		return CurrentPreviewTrajectory;
+	}
 
 protected:
 	/*----------------------------------------------------
@@ -143,7 +155,10 @@ protected:
 	/** Add orbits to the map */
 	void ProcessAreas(const FVector2D& Origin);
 
-	/** Add the trajectory preview * */
+	/** Add player trajectory to the map */
+	void ProcessPlayerTrajectory(const FVector2D& Origin);
+
+	/** Add the trajectory preview */
 	void ProcessTrajectoryPreview(const FVector2D& Origin, float DeltaTime);
 
 	/** Update the draw scale */

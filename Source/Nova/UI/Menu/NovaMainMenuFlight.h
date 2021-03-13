@@ -69,6 +69,7 @@ protected:
 	void OnDock();
 
 	void OnTrajectoryChanged(TSharedPtr<struct FNovaTrajectory> Trajectory);
+	void OnCommitTrajectory();
 
 	/*----------------------------------------------------
 	    Data

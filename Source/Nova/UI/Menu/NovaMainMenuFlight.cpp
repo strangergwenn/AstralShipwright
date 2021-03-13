@@ -8,8 +8,6 @@
 #include "Nova/Game/NovaArea.h"
 #include "Nova/Game/NovaGameMode.h"
 #include "Nova/Game/NovaGameInstance.h"
-#include "Nova/Game/NovaOrbitalSimulationComponent.h"
-
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaGameWorld.h"
 #include "Nova/Game/NovaOrbitalSimulationComponent.h"
@@ -135,7 +133,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					[
 						SNovaNew(SNovaButton)
 						.Text(LOCTEXT("Calculaterajectories", "Calculate trajectories"))
-						.HelpText(LOCTEXT("HelpCalculateTrajectories", "Dump trajectories"))
+						.HelpText(LOCTEXT("HelpCalculateTrajectories", "Calculate trajectory options"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
 							const class UNovaArea* StationA = MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
@@ -144,6 +142,25 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					
 							TrajectoryCalculator->SimulateTrajectories(StationA, StationC);
 						}))
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaNew(SNovaButton)
+						.Text(LOCTEXT("CommitTrajectory", "Commit trajectory"))
+						.HelpText(LOCTEXT("HelpCommitTrajectory", "Commit to the currently selected trajectory"))
+						.OnClicked(this, &SNovaMainMenuFlight::OnCommitTrajectory)
+						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+						{
+							ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+							NCHECK(GameState);
+							ANovaGameWorld* GameWorld = GameState->GetGameWorld();
+							NCHECK(GameWorld);
+							UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
+
+							return OrbitalSimulation->CanCommitTrajectory(OrbitalMap->GetPreviewTrajectory());
+						})))
 					]
 			
 					// Delta-V trade-off slider
@@ -280,7 +297,25 @@ void SNovaMainMenuFlight::OnDock()
 
 void SNovaMainMenuFlight::OnTrajectoryChanged(TSharedPtr<FNovaTrajectory> Trajectory)
 {
-	OrbitalMap->PreviewTrajectory(Trajectory, true);
+	OrbitalMap->Set(Trajectory, true);
+}
+
+void SNovaMainMenuFlight::OnCommitTrajectory()
+{
+	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(GameState);
+	ANovaGameWorld* GameWorld = GameState->GetGameWorld();
+	NCHECK(GameWorld);
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
+	NCHECK(OrbitalSimulation);
+
+	const TSharedPtr<FNovaTrajectory>& Trajectory = OrbitalMap->GetPreviewTrajectory();
+	if (OrbitalSimulation->CanCommitTrajectory(Trajectory))
+	{
+		OrbitalSimulation->CommitTrajectory(Trajectory, GameState->GetPlayerSpacecraftIdentifiers());
+		OrbitalMap->ClearTrajectoryPreview();
+		TrajectoryCalculator->Reset();
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -6,6 +6,7 @@
 #include "NovaGameInstance.h"
 #include "NovaGameWorld.h"
 
+#include "Nova/Player/NovaPlayerState.h"
 #include "Nova/Spacecraft/NovaSpacecraft.h"
 #include "Nova/Nova.h"
 
@@ -15,22 +16,6 @@
 #define LOCTEXT_NAMESPACE "UNovaOrbitalSimulationComponent"
 
 /*----------------------------------------------------
-    Internal structures
-----------------------------------------------------*/
-
-float FNovaTrajectory::GetHighestAltitude() const
-{
-	float MaximumAltitude = 0;
-
-	for (const FNovaOrbit& Orbit : TransferOrbits)
-	{
-		MaximumAltitude = FMath::Max(MaximumAltitude, Orbit.GetHighestAltitude());
-	}
-
-	return MaximumAltitude;
-}
-
-/*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
@@ -38,7 +23,7 @@ UNovaOrbitalSimulationComponent::UNovaOrbitalSimulationComponent() : Super()
 {
 	// Settings
 	PrimaryComponentTick.bCanEverTick = true;
-	SetIsReplicatedByDefault(false);
+	SetIsReplicatedByDefault(true);
 }
 
 /*----------------------------------------------------
@@ -57,10 +42,12 @@ void UNovaOrbitalSimulationComponent::TickComponent(
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	UpdateAreas();
+	// Run processes
+	ProcessAreas();
+	ProcessTrajectories();
 }
 
-FNovaTrajectoryParameters UNovaOrbitalSimulationComponent::MakeTrajectoryParameters(
+FNovaTrajectoryParameters UNovaOrbitalSimulationComponent::PrepareTrajectory(
 	const UNovaArea* Source, const UNovaArea* Destination, double DeltaTime) const
 {
 	FNovaTrajectoryParameters Parameters;
@@ -180,11 +167,40 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	return Trajectory;
 }
 
+bool UNovaOrbitalSimulationComponent::CanCommitTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory) const
+{
+	return GetOwner()->GetLocalRole() == ROLE_Authority && Trajectory.IsValid() && Trajectory->Maneuvers.Num() > 0 &&
+		   Trajectory->Maneuvers[0].Time > GetCurrentTime();
+}
+
+void UNovaOrbitalSimulationComponent::CommitTrajectory(
+	const TSharedPtr<FNovaTrajectory>& Trajectory, const TArray<FGuid>& SpacecraftIdentifiers)
+{
+	NCHECK(CanCommitTrajectory(Trajectory));
+
+	NLOG("UNovaOrbitalSimulationComponent::CommitTrajectory for %d spacecraft", SpacecraftIdentifiers.Num());
+
+	TrajectoryDatabase.Add(Trajectory, SpacecraftIdentifiers);
+}
+
+const FNovaTrajectory* UNovaOrbitalSimulationComponent::GetCommittedPlayerTrajectory() const
+{
+	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
+	{
+		if (IsValid(PlayerState))
+		{
+			return TrajectoryDatabase.Get(PlayerState->GetSpacecraftIdentifier());
+		}
+	}
+
+	return nullptr;
+}
+
 /*----------------------------------------------------
     Internals
 ----------------------------------------------------*/
 
-void UNovaOrbitalSimulationComponent::UpdateAreas()
+void UNovaOrbitalSimulationComponent::ProcessAreas()
 {
 	ANovaGameWorld* GameWorld = GetOwner<ANovaGameWorld>();
 
@@ -209,11 +225,25 @@ void UNovaOrbitalSimulationComponent::UpdateAreas()
 	}
 }
 
+void UNovaOrbitalSimulationComponent::ProcessTrajectories()
+{}
+
 double UNovaOrbitalSimulationComponent::GetAreaPhase(const UNovaArea* Area, double DeltaTime) const
 {
 	const double OrbitalPeriod = GetCircularOrbitPeriod(Area->Planet->GetGravitationalParameter(), Area->Planet->GetRadius(Area->Altitude));
 	const double CurrentTime   = GetCurrentTime() + DeltaTime;
 	return FMath::Fmod(Area->Phase + (CurrentTime / OrbitalPeriod) * 360, 360.0);
+}
+
+/*----------------------------------------------------
+    Networking
+----------------------------------------------------*/
+
+void UNovaOrbitalSimulationComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UNovaOrbitalSimulationComponent, TrajectoryDatabase);
 }
 
 #undef LOCTEXT_NAMESPACE
