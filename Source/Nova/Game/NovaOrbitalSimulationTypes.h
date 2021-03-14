@@ -40,13 +40,15 @@ struct FNovaOrbit
 {
 	GENERATED_BODY()
 
-	FNovaOrbit() : StartAltitude(0), OppositeAltitude(0), StartPhase(0), EndPhase(0)
+	FNovaOrbit() : Planet(nullptr), StartAltitude(0), OppositeAltitude(0), StartPhase(0), EndPhase(0)
 	{}
 
-	FNovaOrbit(float SA, float SP) : StartAltitude(SA), OppositeAltitude(SA), StartPhase(SP), EndPhase(SP + 360)
+	FNovaOrbit(const class UNovaPlanet* P, float SA, float SP)
+		: Planet(P), StartAltitude(SA), OppositeAltitude(SA), StartPhase(SP), EndPhase(SP + 360)
 	{}
 
-	FNovaOrbit(float SA, float EA, float SP, float EP) : StartAltitude(SA), OppositeAltitude(EA), StartPhase(SP), EndPhase(EP)
+	FNovaOrbit(const class UNovaPlanet* P, float SA, float EA, float SP, float EP)
+		: Planet(P), StartAltitude(SA), OppositeAltitude(EA), StartPhase(SP), EndPhase(EP)
 	{}
 
 	bool operator==(const FNovaOrbit& Other) const
@@ -60,6 +62,9 @@ struct FNovaOrbit
 	{
 		return FMath::Max(StartAltitude, OppositeAltitude);
 	}
+
+	UPROPERTY()
+	const class UNovaPlanet* Planet;
 
 	UPROPERTY()
 	float StartAltitude;
@@ -210,7 +215,7 @@ struct FNovaOrbitDatabase : public FFastArraySerializer
 
 public:
 	/** Add a new trajectory to the database */
-	void Add(const TSharedPtr<FNovaTimedOrbit>& Orbit, const TArray<FGuid>& SpacecraftIdentifiers);
+	void Add(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTimedOrbit>& Orbit);
 
 	/** Remove trajectories from the database */
 	void Remove(const TArray<FGuid>& SpacecraftIdentifiers);
@@ -285,7 +290,7 @@ struct FNovaTrajectoryDatabase : public FFastArraySerializer
 
 public:
 	/** Add a new trajectory to the database */
-	void Add(const TSharedPtr<FNovaTrajectory>& Trajectory, const TArray<FGuid>& SpacecraftIdentifiers);
+	void Add(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory);
 
 	/** Remove trajectories from the database */
 	void Remove(const TArray<FGuid>& SpacecraftIdentifiers);

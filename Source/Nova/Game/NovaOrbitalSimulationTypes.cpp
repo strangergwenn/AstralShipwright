@@ -40,10 +40,10 @@ FNovaTimedOrbit FNovaTrajectory::GetFinalOrbit() const
     Orbit database
 ----------------------------------------------------*/
 
-void FNovaOrbitDatabase::Add(const TSharedPtr<FNovaTimedOrbit>& Orbit, const TArray<FGuid>& SpacecraftIdentifiers)
+void FNovaOrbitDatabase::Add(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTimedOrbit>& Orbit)
 {
 	FNovaOrbitDatabaseEntry TrajectoryData;
-	TrajectoryData.Orbit                = *Orbit.Get();
+	TrajectoryData.Orbit                = *Orbit;
 	TrajectoryData.SpacecraftIdentifier = SpacecraftIdentifiers;
 
 	const int32 NewTrajectoryIndex = Array.Add(TrajectoryData);
@@ -120,10 +120,10 @@ void FNovaOrbitDatabase::PostReplicatedChange(const TArrayView<int32>& ChangedIn
     Trajectory database
 ----------------------------------------------------*/
 
-void FNovaTrajectoryDatabase::Add(const TSharedPtr<FNovaTrajectory>& Trajectory, const TArray<FGuid>& SpacecraftIdentifiers)
+void FNovaTrajectoryDatabase::Add(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory)
 {
 	FNovaTrajectoryDatabaseEntry TrajectoryData;
-	TrajectoryData.Trajectory           = *Trajectory.Get();
+	TrajectoryData.Trajectory           = *Trajectory;
 	TrajectoryData.SpacecraftIdentifier = SpacecraftIdentifiers;
 
 	const int32 NewTrajectoryIndex = Array.Add(TrajectoryData);

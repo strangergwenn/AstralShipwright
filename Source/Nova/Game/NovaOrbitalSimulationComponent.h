@@ -34,23 +34,29 @@ public:
 	/** Compute a trajectory */
 	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const FNovaTrajectoryParameters& Parameters, float PhasingAltitude);
 
-	/** Check if this trajectory can be committed to players */
-	bool CanCommitTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory) const;
+	/** Check if this trajectory can be started */
+	bool CanStartTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory) const;
 
-	/** Commit the trajectory decided by players */
-	void CommitTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, const TArray<FGuid>& SpacecraftIdentifiers);
+	/** Put spacecraft on a new trajectory */
+	void StartTrajectory(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory);
+
+	/** Complete the current trajectory of spacecraft */
+	void CompleteTrajectory(const TArray<FGuid>& SpacecraftIdentifiers);
+
+	/** Put spacecraft in a particular orbit */
+	void SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTimedOrbit>& Orbit);
 
 	/** Get the player trajectory */
-	const FNovaTrajectory* GetCommittedPlayerTrajectory() const;
-
-	/** Complete the current trajectory of ships */
-	void CompleteTrajectory(const TArray<FGuid>& SpacecraftIdentifiers);
+	const FNovaTrajectory* GetPlayerTrajectory() const;
 
 	/** Get the orbit & position data for all areas */
 	const TMap<const class UNovaArea*, FNovaOrbitalLocation>& GetAreasOrbitalLocation() const
 	{
 		return AreasOrbitalLocation;
 	}
+
+	/** Get the orbital data for an area */
+	TSharedPtr<FNovaTimedOrbit> GetAreaOrbit(const class UNovaArea* Area) const;
 
 	/** Get the orbit & position data for all spacecraft */
 	const TMap<FGuid, FNovaOrbitalLocation>& GetSpacecraftOrbitalLocation() const
@@ -99,6 +105,9 @@ protected:
 		return 2.0 * PI * sqrt(pow(Radius, 3.0) / GravitationalParameter) / 60.0;
 	}
 
+	/** Get the current phase of an orbit */
+	double GetCircularOrbitPhase(const class UNovaPlanet* Planet, const FNovaTimedOrbit& Orbit, double DeltaTime = 0) const;
+
 	/** Get the current phase of an area */
 	double GetAreaPhase(const class UNovaArea* Area, double DeltaTime = 0) const;
 
@@ -109,11 +118,11 @@ protected:
 private:
 	// Replicated orbit database
 	UPROPERTY(Replicated)
-	FNovaOrbitDatabase OrbitDatabase;
+	FNovaOrbitDatabase SpacecraftOrbitDatabase;
 
 	// Replicated trajectory database
 	UPROPERTY(Replicated)
-	FNovaTrajectoryDatabase TrajectoryDatabase;
+	FNovaTrajectoryDatabase SpacecraftTrajectoryDatabase;
 
 	// Local state
 	TArray<const class UNovaArea*>                     Areas;

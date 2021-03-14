@@ -276,7 +276,7 @@ void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
 	NCHECK(OrbitalSimulation);
 
 	// Add the current trajectory
-	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetCommittedPlayerTrajectory();
+	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
 	if (PlayerTrajectory)
 	{
 		AddTrajectory(Origin, *PlayerTrajectory, FNovaSplineStyle(FLinearColor::Blue));

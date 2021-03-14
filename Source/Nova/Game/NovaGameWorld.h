@@ -18,8 +18,8 @@ struct FNovaSpacecraftDatabase : public FFastArraySerializer
 	GENERATED_BODY()
 
 public:
-	/** Add a new spacecraft to the database or update an existing entry with the same identifier */
-	void AddOrUpdate(const FNovaSpacecraft& Spacecraft);
+	/** Add a new spacecraft to the database or update an existing entry with the same identifier, return true if new */
+	bool AddOrUpdate(const FNovaSpacecraft& Spacecraft);
 
 	/** Remove a spacecraft from the database */
 	void Remove(const FNovaSpacecraft& Spacecraft);
@@ -83,10 +83,7 @@ public:
 
 public:
 	/** Register or update a spacecraft */
-	void UpdateSpacecraft(const FNovaSpacecraft Spacecraft)
-	{
-		SpacecraftDatabase.AddOrUpdate(Spacecraft);
-	}
+	void UpdateSpacecraft(const FNovaSpacecraft Spacecraft);
 
 	/** Return a pointer for a spacecraft by identifier */
 	const FNovaSpacecraft* GetSpacecraft(FGuid Identifier)

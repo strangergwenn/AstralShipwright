@@ -159,7 +159,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 							NCHECK(GameWorld);
 							UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
 
-							return OrbitalSimulation->CanCommitTrajectory(OrbitalMap->GetPreviewTrajectory());
+							return OrbitalSimulation->CanStartTrajectory(OrbitalMap->GetPreviewTrajectory());
 						})))
 					]
 			
@@ -310,9 +310,9 @@ void SNovaMainMenuFlight::OnCommitTrajectory()
 	NCHECK(OrbitalSimulation);
 
 	const TSharedPtr<FNovaTrajectory>& Trajectory = OrbitalMap->GetPreviewTrajectory();
-	if (OrbitalSimulation->CanCommitTrajectory(Trajectory))
+	if (OrbitalSimulation->CanStartTrajectory(Trajectory))
 	{
-		OrbitalSimulation->CommitTrajectory(Trajectory, GameState->GetPlayerSpacecraftIdentifiers());
+		OrbitalSimulation->StartTrajectory(GameState->GetPlayerSpacecraftIdentifiers(), Trajectory);
 		OrbitalMap->ClearTrajectoryPreview();
 		TrajectoryCalculator->Reset();
 	}

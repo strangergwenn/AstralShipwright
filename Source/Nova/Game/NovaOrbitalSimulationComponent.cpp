@@ -105,17 +105,13 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	const double PhasingDuration = PhaseDelta / (360.0 * (1.0 / PhasingOrbitPeriod - 1.0 / DestinationOrbitPeriod));
 	const double PhasingAngle    = (PhasingDuration / PhasingOrbitPeriod) * 360.0;
 
-#if WITH_EDITOR
+#if 0
 
 	// Confirm the final spacecraft phase matches the destination's
 	float DestinationPhasingAngle = (PhasingDuration / DestinationOrbitPeriod) * 360.0;
 	float FinalDestinationPhase   = fmod(NewDestinationPhaseAfterTransfers + DestinationPhasingAngle, 360.0);
 	float FinalSpacecraftPhase    = fmod(SourcePhase + PhasingAngle, 360.0);
-	NCHECK(FinalSpacecraftPhase == FinalDestinationPhase);
-
-#endif
-
-#if 0
+	NCHECK(FMath::Abs(FinalSpacecraftPhase - FinalDestinationPhase) < KINDA_SMALL_NUMBER);
 
 	NLOG("UNovaOrbitalSimulationComponent::ComputeTrajectory : (%f, %f) --> (%f, %f)", SourceAltitude, SourcePhase, DestinationAltitude,
 		DestinationPhase);
@@ -149,17 +145,18 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 
 	// First transfer
 	AddManeuverIfNotNull(FNovaManeuver(TransferA.StartDeltaV, StartTime, SourcePhase));
-	AddTransferIfNotNull(FNovaOrbit(SourceAltitude, PhasingAltitude, SourcePhase, SourcePhase + 180));
+	AddTransferIfNotNull(FNovaOrbit(Parameters.Planet, SourceAltitude, PhasingAltitude, SourcePhase, SourcePhase + 180));
 	AddManeuverIfNotNull(FNovaManeuver(TransferA.EndDeltaV, StartTime + TransferA.Duration, SourcePhase + 180));
 
 	// Phasing orbit
-	AddTransferIfNotNull(FNovaOrbit(PhasingAltitude, PhasingAltitude, SourcePhase + 180, SourcePhase + 180 + PhasingAngle));
+	AddTransferIfNotNull(
+		FNovaOrbit(Parameters.Planet, PhasingAltitude, PhasingAltitude, SourcePhase + 180, SourcePhase + 180 + PhasingAngle));
 
 	// Second transfer
 	AddManeuverIfNotNull(
 		FNovaManeuver(TransferB.StartDeltaV, StartTime + TransferA.Duration + PhasingDuration, SourcePhase + 180 + PhasingAngle));
-	AddTransferIfNotNull(
-		FNovaOrbit(PhasingAltitude, DestinationAltitude, SourcePhase + 180 + PhasingAngle, SourcePhase + 360 + PhasingAngle));
+	AddTransferIfNotNull(FNovaOrbit(
+		Parameters.Planet, PhasingAltitude, DestinationAltitude, SourcePhase + 180 + PhasingAngle, SourcePhase + 360 + PhasingAngle));
 	AddManeuverIfNotNull(FNovaManeuver(
 		TransferB.EndDeltaV, StartTime + TransferA.Duration + PhasingDuration + TransferB.Duration, SourcePhase + 360 + PhasingAngle));
 
@@ -170,39 +167,28 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	return Trajectory;
 }
 
-bool UNovaOrbitalSimulationComponent::CanCommitTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory) const
+bool UNovaOrbitalSimulationComponent::CanStartTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory) const
 {
-	return GetOwner()->GetLocalRole() == ROLE_Authority && Trajectory.IsValid() && Trajectory->Maneuvers.Num() > 0 &&
+	return GetOwner()->GetLocalRole() == ROLE_Authority && Trajectory.IsValid() && Trajectory->IsValid() &&
 		   Trajectory->Maneuvers[0].Time > GetCurrentTime();
 }
 
-void UNovaOrbitalSimulationComponent::CommitTrajectory(
-	const TSharedPtr<FNovaTrajectory>& Trajectory, const TArray<FGuid>& SpacecraftIdentifiers)
+void UNovaOrbitalSimulationComponent::StartTrajectory(
+	const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory)
 {
-	NCHECK(CanCommitTrajectory(Trajectory));
+	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
+	NCHECK(Trajectory.IsValid() && Trajectory->IsValid());
 
-	NLOG("UNovaOrbitalSimulationComponent::CommitTrajectory for %d spacecraft", SpacecraftIdentifiers.Num());
+	NLOG("UNovaOrbitalSimulationComponent::StartTrajectory for %d spacecraft", SpacecraftIdentifiers.Num());
 
 	// Move spacecraft to the trajectory
-	OrbitDatabase.Remove(SpacecraftIdentifiers);
-	TrajectoryDatabase.Add(Trajectory, SpacecraftIdentifiers);
-}
-
-const FNovaTrajectory* UNovaOrbitalSimulationComponent::GetCommittedPlayerTrajectory() const
-{
-	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
-	{
-		if (IsValid(PlayerState))
-		{
-			return TrajectoryDatabase.GetTrajectory(PlayerState->GetSpacecraftIdentifier());
-		}
-	}
-
-	return nullptr;
+	SpacecraftOrbitDatabase.Remove(SpacecraftIdentifiers);
+	SpacecraftTrajectoryDatabase.Add(SpacecraftIdentifiers, Trajectory);
 }
 
 void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& SpacecraftIdentifiers)
 {
+	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 	NLOG("UNovaOrbitalSimulationComponent::CompleteTrajectory for %d spacecraft", SpacecraftIdentifiers.Num());
 
 	const FNovaTimedOrbit CommonFinalOrbit;
@@ -211,7 +197,7 @@ void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& Sp
 	// Compute the final orbit and ensure all spacecraft are going there
 	for (const FGuid& Identifier : SpacecraftIdentifiers)
 	{
-		const FNovaTrajectory* Trajectory = TrajectoryDatabase.GetTrajectory(Identifier);
+		const FNovaTrajectory* Trajectory = SpacecraftTrajectoryDatabase.GetTrajectory(Identifier);
 		if (Trajectory)
 		{
 			const FNovaTimedOrbit FinalOrbit = Trajectory->GetFinalOrbit();
@@ -221,8 +207,34 @@ void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& Sp
 	}
 
 	// Commit the change
-	TrajectoryDatabase.Remove(SpacecraftIdentifiers);
-	OrbitDatabase.Add(MakeShared<FNovaTimedOrbit>(CommonFinalOrbit), SpacecraftIdentifiers);
+	SetOrbit(SpacecraftIdentifiers, MakeShared<FNovaTimedOrbit>(CommonFinalOrbit));
+}
+
+void UNovaOrbitalSimulationComponent::SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTimedOrbit>& Orbit)
+{
+	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
+	NLOG("UNovaOrbitalSimulationComponent::SetOrbit for %d spacecraft", SpacecraftIdentifiers.Num());
+
+	SpacecraftTrajectoryDatabase.Remove(SpacecraftIdentifiers);
+	SpacecraftOrbitDatabase.Add(SpacecraftIdentifiers, Orbit);
+}
+
+const FNovaTrajectory* UNovaOrbitalSimulationComponent::GetPlayerTrajectory() const
+{
+	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
+	{
+		if (IsValid(PlayerState))
+		{
+			return SpacecraftTrajectoryDatabase.GetTrajectory(PlayerState->GetSpacecraftIdentifier());
+		}
+	}
+
+	return nullptr;
+}
+
+TSharedPtr<FNovaTimedOrbit> UNovaOrbitalSimulationComponent::GetAreaOrbit(const UNovaArea* Area) const
+{
+	return MakeShared<FNovaTimedOrbit>(FNovaOrbit(Area->Planet, Area->Altitude, Area->Phase), 0);
 }
 
 double UNovaOrbitalSimulationComponent::GetCurrentTime() const
@@ -245,7 +257,7 @@ void UNovaOrbitalSimulationComponent::ProcessAreas()
 		NCHECK(Planet);
 
 		// Update the position
-		double CurrentPhase = GetAreaPhase(Area);
+		double CurrentPhase = GetCircularOrbitPhase(Area->Planet, *GetAreaOrbit(Area));
 
 		// Add or update the current orbit and position
 		FNovaOrbitalLocation* Entry = AreasOrbitalLocation.Find(Area);
@@ -255,23 +267,51 @@ void UNovaOrbitalSimulationComponent::ProcessAreas()
 		}
 		else
 		{
-			AreasOrbitalLocation.Add(Area, FNovaOrbitalLocation(FNovaOrbit(Area->Altitude, Area->Phase), CurrentPhase));
+			AreasOrbitalLocation.Add(Area, FNovaOrbitalLocation(GetAreaOrbit(Area)->Orbit, CurrentPhase));
 		}
 	}
 }
 
 void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 {
-	for (const FNovaOrbitDatabaseEntry& DatabaseEntry : OrbitDatabase.GetOrbits())
+	for (const FNovaOrbitDatabaseEntry& DatabaseEntry : SpacecraftOrbitDatabase.GetOrbits())
 	{
+		const UNovaPlanet* Planet = DatabaseEntry.Orbit.Orbit.Planet;
+		NCHECK(Planet);
+
+		// Update the position
+		double CurrentPhase = GetCircularOrbitPhase(Planet, DatabaseEntry.Orbit);
+
+		// Add or update the current orbit and position
+		for (const FGuid& Identifier : DatabaseEntry.SpacecraftIdentifier)
+		{
+			FNovaOrbitalLocation* Entry = SpacecraftOrbitalLocation.Find(Identifier);
+			if (Entry)
+			{
+				Entry->Phase = CurrentPhase;
+			}
+			else
+			{
+				SpacecraftOrbitalLocation.Add(Identifier, FNovaOrbitalLocation(DatabaseEntry.Orbit.Orbit, CurrentPhase));
+			}
+		}
 	}
 }
 
 void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 {
-	for (const FNovaTrajectoryDatabaseEntry& DatabaseEntry : TrajectoryDatabase.GetTrajectories())
+	for (const FNovaTrajectoryDatabaseEntry& DatabaseEntry : SpacecraftTrajectoryDatabase.GetTrajectories())
 	{
+		// TODO
 	}
+}
+
+double UNovaOrbitalSimulationComponent::GetCircularOrbitPhase(
+	const UNovaPlanet* Planet, const FNovaTimedOrbit& Orbit, double DeltaTime) const
+{
+	const double OrbitalPeriod = GetCircularOrbitPeriod(Planet->GetGravitationalParameter(), Planet->GetRadius(Orbit.Orbit.StartAltitude));
+	const double CurrentTime   = GetCurrentTime() + DeltaTime;
+	return FMath::Fmod(Orbit.Orbit.StartPhase + (CurrentTime / OrbitalPeriod) * 360, 360.0);
 }
 
 double UNovaOrbitalSimulationComponent::GetAreaPhase(const UNovaArea* Area, double DeltaTime) const
@@ -289,8 +329,8 @@ void UNovaOrbitalSimulationComponent::GetLifetimeReplicatedProps(TArray<FLifetim
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UNovaOrbitalSimulationComponent, OrbitDatabase);
-	DOREPLIFETIME(UNovaOrbitalSimulationComponent, TrajectoryDatabase);
+	DOREPLIFETIME(UNovaOrbitalSimulationComponent, SpacecraftOrbitDatabase);
+	DOREPLIFETIME(UNovaOrbitalSimulationComponent, SpacecraftTrajectoryDatabase);
 }
 
 #undef LOCTEXT_NAMESPACE
