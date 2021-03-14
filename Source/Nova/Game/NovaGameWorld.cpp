@@ -1,9 +1,11 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaGameWorld.h"
+
 #include "NovaArea.h"
 #include "NovaAssetCatalog.h"
 #include "NovaGameInstance.h"
+#include "NovaGameState.h"
 #include "NovaOrbitalSimulationComponent.h"
 #include "Nova/Nova.h"
 
@@ -52,7 +54,7 @@ void ANovaGameWorld::SerializeJson(
     Gameplay
 ----------------------------------------------------*/
 
-void ANovaGameWorld::UpdateSpacecraft(const FNovaSpacecraft Spacecraft)
+void ANovaGameWorld::UpdateSpacecraft(const FNovaSpacecraft Spacecraft, bool IsPlayerSpacecraft)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 
@@ -62,12 +64,31 @@ void ANovaGameWorld::UpdateSpacecraft(const FNovaSpacecraft Spacecraft)
 
 	if (IsNew)
 	{
-		// TODO : should first look into deserialized save data, and then if nothing, fetch the default location from game mode
+		// Attempt orbit merging for player spacecraft joining the game
+		bool HasMergedOrbits = false;
+		if (IsPlayerSpacecraft)
+		{
+			ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+			NCHECK(GameState);
+			const FNovaOrbit* CurrentOrbit = OrbitalSimulationComponent->GetPlayerOrbit();
 
-		const class UNovaArea* StationA =
-			GetGameInstance<UNovaGameInstance>()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
+			if (CurrentOrbit)
+			{
+				OrbitalSimulationComponent->MergeOrbit(GameState->GetPlayerSpacecraftIdentifiers(), MakeShared<FNovaOrbit>(*CurrentOrbit));
+				HasMergedOrbits = true;
+			}
+		}
 
-		OrbitalSimulationComponent->SetOrbit({Spacecraft.Identifier}, OrbitalSimulationComponent->GetAreaOrbit(StationA));
+		// Load a default
+		if (!HasMergedOrbits)
+		{
+			// TODO : should first look into deserialized save data, and then if nothing, fetch the default location from game mode
+
+			const class UNovaArea* StationA =
+				GetGameInstance<UNovaGameInstance>()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
+
+			OrbitalSimulationComponent->SetOrbit({Spacecraft.Identifier}, OrbitalSimulationComponent->GetAreaOrbit(StationA));
+		}
 	}
 }
 

@@ -137,6 +137,18 @@ struct TGuidCacheMap
 		return Entry ? Entry->Value : nullptr;
 	}
 
+	/** Handle removal of entries */
+	void PreReplicatedRemove(const TArrayView<int32>& RemovedIndices, int32 NewSize)
+	{
+		for (auto Iterator = Map.CreateIterator(); Iterator; ++Iterator)
+		{
+			if (RemovedIndices.Contains(Iterator.Value().Key))
+			{
+				Iterator.RemoveCurrent();
+			}
+		}
+	}
+
 	/** Update the map from the array Array */
 	void Update(const TArray<T>& Array)
 	{
@@ -258,6 +270,18 @@ struct TMultiGuidCacheMap
 		return Entry ? Entry->Value : nullptr;
 	}
 
+	/** Handle removal of entries */
+	void PreReplicatedRemove(const TArrayView<int32>& RemovedIndices, int32 NewSize)
+	{
+		for (auto Iterator = Map.CreateIterator(); Iterator; ++Iterator)
+		{
+			if (RemovedIndices.Contains(Iterator.Value().Key))
+			{
+				Iterator.RemoveCurrent();
+			}
+		}
+	}
+
 	/** Update the map from the array Array */
 	void Update(const TArray<T>& Array)
 	{
@@ -284,8 +308,9 @@ struct TMultiGuidCacheMap
 				}
 
 				KnownIdentifiers.Add(Identifier);
-				Index++;
 			}
+
+			Index++;
 		}
 
 		// Prune unused entries

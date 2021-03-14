@@ -228,6 +228,22 @@ void UNovaOrbitalSimulationComponent::SetOrbit(const TArray<FGuid>& SpacecraftId
 	SpacecraftOrbitDatabase.AddOrUpdate(SpacecraftIdentifiers, Orbit);
 }
 
+void UNovaOrbitalSimulationComponent::MergeOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit)
+{
+	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
+	NCHECK(Orbit.IsValid());
+	NCHECK(Orbit->IsValid());
+
+	NLOG("UNovaOrbitalSimulationComponent::MergeOrbit for %d spacecraft", SpacecraftIdentifiers.Num());
+
+	for (const FGuid& Identifier : SpacecraftIdentifiers)
+	{
+		SpacecraftOrbitDatabase.Remove({Identifier});
+	}
+
+	SetOrbit(SpacecraftIdentifiers, Orbit);
+}
+
 const FNovaOrbit* UNovaOrbitalSimulationComponent::GetPlayerOrbit() const
 {
 	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))

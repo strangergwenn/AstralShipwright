@@ -47,6 +47,9 @@ public:
 	/** Put spacecraft in a particular orbit */
 	void SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit);
 
+	/** Merge different spacecraft in a particular orbit */
+	void MergeOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit);
+
 	/** Get the player orbit */
 	const FNovaOrbit* GetPlayerOrbit() const;
 

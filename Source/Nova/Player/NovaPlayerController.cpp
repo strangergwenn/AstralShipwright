@@ -504,7 +504,7 @@ void ANovaPlayerController::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft)
 	// Update the player spacecraft
 	ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 	GetPlayerState<ANovaPlayerState>()->SetSpacecraftIdentifier(Spacecraft.Identifier);
-	GetGameWorld()->UpdateSpacecraft(Spacecraft);
+	GetGameWorld()->UpdateSpacecraft(Spacecraft, true);
 
 	if (GetLocalRole() == ROLE_AutonomousProxy)
 	{

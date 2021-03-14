@@ -85,7 +85,7 @@ public:
 
 public:
 	/** Register or update a spacecraft */
-	void UpdateSpacecraft(const FNovaSpacecraft Spacecraft);
+	void UpdateSpacecraft(const FNovaSpacecraft Spacecraft, bool IsPlayerSpacecraft);
 
 	/** Return a pointer for a spacecraft by identifier */
 	const FNovaSpacecraft* Get(FGuid Identifier)

@@ -263,6 +263,11 @@ struct FNovaOrbitDatabase : public FFastArraySerializer
 		return FFastArraySerializer::FastArrayDeltaSerialize<FNovaOrbitDatabaseEntry, FNovaOrbitDatabase>(Array, DeltaParms, *this);
 	}
 
+	void PreReplicatedRemove(const TArrayView<int32>& RemovedIndices, int32 NewSize)
+	{
+		Cache.PreReplicatedRemove(RemovedIndices, NewSize);
+	}
+
 	void PostReplicatedChange(const TArrayView<int32>& ChangedIndices, int32 FinalSize)
 	{
 		Cache.Update(Array);
@@ -344,6 +349,11 @@ struct FNovaTrajectoryDatabase : public FFastArraySerializer
 	{
 		return FFastArraySerializer::FastArrayDeltaSerialize<FNovaTrajectoryDatabaseEntry, FNovaTrajectoryDatabase>(
 			Array, DeltaParms, *this);
+	}
+
+	void PreReplicatedRemove(const TArrayView<int32>& RemovedIndices, int32 NewSize)
+	{
+		Cache.PreReplicatedRemove(RemovedIndices, NewSize);
 	}
 
 	void PostReplicatedChange(const TArrayView<int32>& ChangedIndices, int32 FinalSize)
