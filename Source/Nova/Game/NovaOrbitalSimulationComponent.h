@@ -46,6 +46,9 @@ public:
 	/** Put spacecraft in a particular orbit */
 	void SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTimedOrbit>& Orbit);
 
+	/** Get the player orbit */
+	const FNovaTimedOrbit* GetPlayerOrbit() const;
+
 	/** Get the player trajectory */
 	const FNovaTrajectory* GetPlayerTrajectory() const;
 

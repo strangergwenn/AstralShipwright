@@ -44,6 +44,7 @@ void UNovaOrbitalSimulationComponent::TickComponent(
 
 	// Run processes
 	ProcessAreas();
+	ProcessSpacecraftOrbits();
 	ProcessSpacecraftTrajectories();
 }
 
@@ -191,8 +192,8 @@ void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& Sp
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 	NLOG("UNovaOrbitalSimulationComponent::CompleteTrajectory for %d spacecraft", SpacecraftIdentifiers.Num());
 
-	const FNovaTimedOrbit CommonFinalOrbit;
-	bool                  FoundCommonOrbit = false;
+	FNovaTimedOrbit CommonFinalOrbit;
+	bool            FoundCommonOrbit = false;
 
 	// Compute the final orbit and ensure all spacecraft are going there
 	for (const FGuid& Identifier : SpacecraftIdentifiers)
@@ -203,20 +204,38 @@ void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& Sp
 			const FNovaTimedOrbit FinalOrbit = Trajectory->GetFinalOrbit();
 			NCHECK(!FoundCommonOrbit || FinalOrbit == CommonFinalOrbit);
 			FoundCommonOrbit = true;
+			CommonFinalOrbit = FinalOrbit;
 		}
 	}
 
 	// Commit the change
+	NCHECK(FoundCommonOrbit);
 	SetOrbit(SpacecraftIdentifiers, MakeShared<FNovaTimedOrbit>(CommonFinalOrbit));
 }
 
 void UNovaOrbitalSimulationComponent::SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTimedOrbit>& Orbit)
 {
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
+	NCHECK(Orbit.IsValid());
+	NCHECK(Orbit->IsValid());
+
 	NLOG("UNovaOrbitalSimulationComponent::SetOrbit for %d spacecraft", SpacecraftIdentifiers.Num());
 
 	SpacecraftTrajectoryDatabase.Remove(SpacecraftIdentifiers);
 	SpacecraftOrbitDatabase.AddOrUpdate(SpacecraftIdentifiers, Orbit);
+}
+
+const FNovaTimedOrbit* UNovaOrbitalSimulationComponent::GetPlayerOrbit() const
+{
+	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
+	{
+		if (IsValid(PlayerState))
+		{
+			return SpacecraftOrbitDatabase.Get(PlayerState->GetSpacecraftIdentifier());
+		}
+	}
+
+	return nullptr;
 }
 
 const FNovaTrajectory* UNovaOrbitalSimulationComponent::GetPlayerTrajectory() const
@@ -280,7 +299,8 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 		NCHECK(Planet);
 
 		// Update the position
-		double CurrentPhase = GetCircularOrbitPhase(Planet, DatabaseEntry.Orbit);
+		double                     CurrentPhase = GetCircularOrbitPhase(Planet, DatabaseEntry.Orbit);
+		const FNovaOrbitalLocation NewLocation  = FNovaOrbitalLocation(DatabaseEntry.Orbit.Orbit, CurrentPhase);
 
 		// Add or update the current orbit and position
 		for (const FGuid& Identifier : DatabaseEntry.Identifiers)
@@ -288,11 +308,11 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 			FNovaOrbitalLocation* Entry = SpacecraftOrbitalLocation.Find(Identifier);
 			if (Entry)
 			{
-				Entry->Phase = CurrentPhase;
+				*Entry = NewLocation;
 			}
 			else
 			{
-				SpacecraftOrbitalLocation.Add(Identifier, FNovaOrbitalLocation(DatabaseEntry.Orbit.Orbit, CurrentPhase));
+				SpacecraftOrbitalLocation.Add(Identifier, NewLocation);
 			}
 		}
 	}

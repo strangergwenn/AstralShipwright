@@ -76,7 +76,7 @@ struct FNovaOrbitalObject
 		Phase = P;
 	}
 
-	FNovaOrbitalObject(const TSharedPtr<struct FNovaSpacecraft>& S, float P) : FNovaOrbitalObject()
+	FNovaOrbitalObject(const struct FNovaSpacecraft* S, float P) : FNovaOrbitalObject()
 	{
 		Spacecraft = S;
 		Phase      = P;
@@ -91,9 +91,9 @@ struct FNovaOrbitalObject
 	FText GetText(double CurrentTime) const;
 
 	// Object data
-	const class UNovaArea*             Area;
-	TSharedPtr<struct FNovaSpacecraft> Spacecraft;
-	TSharedPtr<FNovaManeuver>          Maneuver;
+	const class UNovaArea*        Area;
+	const struct FNovaSpacecraft* Spacecraft;
+	TSharedPtr<FNovaManeuver>     Maneuver;
 
 	// Generated data
 	float Phase;
@@ -154,6 +154,9 @@ protected:
 
 	/** Add orbits to the map */
 	void ProcessAreas(const FVector2D& Origin);
+
+	/** Add player orbit to the map */
+	void ProcessSpacecraftOrbits(const FVector2D& Origin);
 
 	/** Add player trajectory to the map */
 	void ProcessPlayerTrajectory(const FVector2D& Origin);

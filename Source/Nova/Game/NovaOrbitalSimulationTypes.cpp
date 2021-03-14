@@ -27,7 +27,7 @@ FNovaTimedOrbit FNovaTrajectory::GetFinalOrbit() const
 	// Assume the final maneuver is a circularization burn
 	FNovaOrbit FinalOrbit    = TransferOrbits[TransferOrbits.Num() - 1];
 	FinalOrbit.StartAltitude = FinalOrbit.OppositeAltitude;
-	FinalOrbit.StartPhase    = FinalOrbit.EndPhase;
+	FinalOrbit.StartPhase    = FMath::Fmod(FinalOrbit.EndPhase, 360.0);
 
 	// Assume maneuvers are of zero time
 	const FNovaManeuver& FinalManeuver = Maneuvers[Maneuvers.Num() - 1];

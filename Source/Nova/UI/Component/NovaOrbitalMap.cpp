@@ -26,13 +26,13 @@ FText FNovaOrbitalObject::GetText(double CurrentTime) const
 	{
 		return Area->Name;
 	}
-	else if (Spacecraft.IsValid())
+	else if (Spacecraft)
 	{
 		FString IDentifier = Spacecraft->Identifier.ToString(EGuidFormats::DigitsWithHyphens);
 		int32   Index;
 		if (IDentifier.FindLastChar('-', Index))
 		{
-			return FText::FromString(IDentifier.RightChop(Index));
+			return FText::FromString(IDentifier.RightChop(Index + 1));
 		}
 		else
 		{
@@ -175,6 +175,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	// Run processes
 	AddPlanet(Origin, DefaultPlanet);
 	ProcessAreas(Origin);
+	ProcessSpacecraftOrbits(Origin);
 	ProcessPlayerTrajectory(Origin);
 	ProcessTrajectoryPreview(Origin, DeltaTime);
 	ProcessDrawScale(DeltaTime);
@@ -263,6 +264,30 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 	for (FNovaMergedOrbit& Orbit : MergedOrbits)
 	{
 		AddOrbit(Origin, Orbit, Orbit.Objects, FNovaSplineStyle(FLinearColor::White));
+	}
+}
+
+void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
+{
+	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(GameState);
+	ANovaGameWorld* GameWorld = GameState->GetGameWorld();
+	NCHECK(GameWorld);
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
+	NCHECK(OrbitalSimulation);
+
+	// Add the current orbit
+	for (const auto SpacecraftIdentifierAndOrbitalLocation : OrbitalSimulation->GetSpacecraftOrbitalLocation())
+	{
+		const FGuid&                Identifier = SpacecraftIdentifierAndOrbitalLocation.Key;
+		const FNovaOrbitalLocation& Location   = SpacecraftIdentifierAndOrbitalLocation.Value;
+
+		TArray<FNovaOrbitalObject> Objects;
+
+		Objects.Add(FNovaOrbitalObject(GameWorld->Get(Identifier), Location.Phase));
+
+		AddOrbit(Origin, Location.Orbit, Objects, FNovaSplineStyle(FLinearColor::Blue));
+		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Location.Orbit.GetHighestAltitude());
 	}
 }
 

@@ -45,16 +45,26 @@ struct FNovaOrbit
 
 	FNovaOrbit(const class UNovaPlanet* P, float SA, float SP)
 		: Planet(P), StartAltitude(SA), OppositeAltitude(SA), StartPhase(SP), EndPhase(SP + 360)
-	{}
+	{
+		NCHECK(Planet != nullptr);
+	}
 
 	FNovaOrbit(const class UNovaPlanet* P, float SA, float EA, float SP, float EP)
 		: Planet(P), StartAltitude(SA), OppositeAltitude(EA), StartPhase(SP), EndPhase(EP)
-	{}
+	{
+		NCHECK(Planet != nullptr);
+	}
 
 	bool operator==(const FNovaOrbit& Other) const
 	{
 		return StartAltitude == Other.StartAltitude && OppositeAltitude == Other.OppositeAltitude && StartPhase == Other.StartPhase &&
 			   EndPhase == Other.EndPhase;
+	}
+
+	/** Check for validity */
+	bool IsValid() const
+	{
+		return Planet != nullptr && StartAltitude > 0 && OppositeAltitude > 0;
 	}
 
 	/** Get the maximum altitude reached by this orbit */
@@ -89,11 +99,19 @@ struct FNovaTimedOrbit
 	{}
 
 	FNovaTimedOrbit(const FNovaOrbit& O, float T) : Orbit(O), InsertionTime(T)
-	{}
+	{
+		NCHECK(Orbit.Planet != nullptr);
+	}
 
 	bool operator==(const FNovaTimedOrbit& Other) const
 	{
 		return Orbit == Other.Orbit && InsertionTime == Other.InsertionTime;
+	}
+
+	/** Check for validity */
+	bool IsValid() const
+	{
+		return Orbit.IsValid();
 	}
 
 	UPROPERTY()
@@ -159,7 +177,7 @@ struct FNovaTrajectory
 			   TotalTransferDuration == Other.TotalTransferDuration && TotalDeltaV == Other.TotalDeltaV;
 	}
 
-	/** Check if this trajectory is valid */
+	/** Check for validity */
 	bool IsValid() const
 	{
 		return TransferOrbits.Num() > 0 && Maneuvers.Num() > 0;
@@ -214,6 +232,9 @@ struct FNovaOrbitDatabase : public FFastArraySerializer
 
 	bool AddOrUpdate(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTimedOrbit>& Orbit)
 	{
+		NCHECK(Orbit.IsValid());
+		NCHECK(Orbit->IsValid());
+
 		FNovaOrbitDatabaseEntry TrajectoryData;
 		TrajectoryData.Orbit       = *Orbit;
 		TrajectoryData.Identifiers = SpacecraftIdentifiers;
@@ -293,6 +314,9 @@ struct FNovaTrajectoryDatabase : public FFastArraySerializer
 
 	bool AddOrUpdate(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory)
 	{
+		NCHECK(Trajectory.IsValid());
+		NCHECK(Trajectory->IsValid());
+
 		FNovaTrajectoryDatabaseEntry TrajectoryData;
 		TrajectoryData.Trajectory  = *Trajectory;
 		TrajectoryData.Identifiers = SpacecraftIdentifiers;
