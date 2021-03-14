@@ -62,8 +62,7 @@ void ANovaGameWorld::UpdateSpacecraft(const FNovaSpacecraft Spacecraft)
 
 	if (IsNew)
 	{
-		// TODO : should first look into deserialized save data
-		// TODO : do better start
+		// TODO : should first look into deserialized save data, and then if nothing, fetch the default location from game mode
 
 		const class UNovaArea* StationA =
 			GetGameInstance<UNovaGameInstance>()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));

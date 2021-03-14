@@ -132,7 +132,7 @@ void FNovaSpacecraft::UpdateProceduralElements()
 			// TODO : outer skirt would be used for compartment that have side modules, when the following (aft) compartment does not
 			Compartment.NeedsOuterSkirt = false;
 
-			// TODO : main piping & wiring is probably always desired
+			// TODO : review whether main piping & wiring can ever be undesired - maybe on extremities with no module ?
 			Compartment.NeedsMainPiping = true;
 			Compartment.NeedsMainWiring = true;
 

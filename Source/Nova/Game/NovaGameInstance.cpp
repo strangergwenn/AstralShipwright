@@ -216,7 +216,7 @@ void UNovaGameInstance::LoadGame(FString SaveName)
 	Load(CurrentSaveData);
 }
 
-void UNovaGameInstance::SaveGame(ANovaPlayerController* PC, bool Synchronous)    // TODO PC
+void UNovaGameInstance::SaveGame(ANovaPlayerController* PC, bool Synchronous)
 {
 	NLOG("UNovaGameInstance::SaveGame : synchronous %d", Synchronous);
 

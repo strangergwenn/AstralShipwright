@@ -322,7 +322,7 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 {
 	for (const FNovaTrajectoryDatabaseEntry& DatabaseEntry : SpacecraftTrajectoryDatabase.Get())
 	{
-		// TODO
+		// TODO : implement trajectory progression
 	}
 }
 
