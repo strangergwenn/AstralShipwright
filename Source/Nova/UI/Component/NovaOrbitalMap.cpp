@@ -232,11 +232,11 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 	TArray<FNovaMergedOrbit> MergedOrbits;
 
 	// Merge orbits
-	for (const auto AreaAndOrbitAndPosition : OrbitalSimulation->GetAreasOrbitAndPosition())
+	for (const auto AreaAndOrbitalLocation : OrbitalSimulation->GetAreasOrbitalLocation())
 	{
-		const TPair<FNovaOrbit, double>& OrbitAndPosition = AreaAndOrbitAndPosition.Value;
-		const FNovaOrbit&                Orbit            = OrbitAndPosition.Key;
-		const float                      Phase            = OrbitAndPosition.Value;
+		const FNovaOrbitalLocation& OrbitalLocation = AreaAndOrbitalLocation.Value;
+		const FNovaOrbit&           Orbit           = OrbitalLocation.Orbit;
+		const float                 Phase           = OrbitalLocation.Phase;
 
 		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Orbit.GetHighestAltitude());
 
@@ -247,7 +247,7 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 					   OtherOrbit.StartPhase == Orbit.StartPhase && OtherOrbit.EndPhase == Orbit.EndPhase;
 			});
 
-		FNovaOrbitalObject Point = FNovaOrbitalObject(AreaAndOrbitAndPosition.Key, Phase);
+		FNovaOrbitalObject Point = FNovaOrbitalObject(AreaAndOrbitalLocation.Key, Phase);
 
 		if (ExistingTrajectory)
 		{

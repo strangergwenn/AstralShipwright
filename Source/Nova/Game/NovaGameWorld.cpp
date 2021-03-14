@@ -122,20 +122,6 @@ void ANovaGameWorld::SerializeJson(
 {}
 
 /*----------------------------------------------------
-    Gameplay
-----------------------------------------------------*/
-
-void ANovaGameWorld::AddOrUpdateSpacecraft(const FNovaSpacecraft Identifier)
-{
-	SpacecraftDatabase.AddOrUpdate(Identifier);
-}
-
-FNovaSpacecraft* ANovaGameWorld::GetSpacecraft(FGuid Identifier)
-{
-	return SpacecraftDatabase.Get(Identifier);
-}
-
-/*----------------------------------------------------
     Internals
 ----------------------------------------------------*/
 

@@ -25,9 +25,9 @@ public:
 	void Remove(const FNovaSpacecraft& Spacecraft);
 
 	/** Get a spacecraft */
-	FNovaSpacecraft* Get(const FGuid& Identifier)
+	const FNovaSpacecraft* Get(const FGuid& Identifier) const
 	{
-		TPair<int32, FNovaSpacecraft*>* Entry = Map.Find(Identifier);
+		const TPair<int32, FNovaSpacecraft*>* Entry = Map.Find(Identifier);
 		return Entry ? Entry->Value : nullptr;
 	}
 
@@ -82,25 +82,23 @@ public:
 	----------------------------------------------------*/
 
 public:
-	/** Register a new player spacecraft */
-	void AddOrUpdateSpacecraft(const FNovaSpacecraft Spacecraft);
+	/** Register or update a spacecraft */
+	void UpdateSpacecraft(const FNovaSpacecraft Spacecraft)
+	{
+		SpacecraftDatabase.AddOrUpdate(Spacecraft);
+	}
 
 	/** Return a pointer for a spacecraft by identifier */
-	FNovaSpacecraft* GetSpacecraft(FGuid Identifier);
+	const FNovaSpacecraft* GetSpacecraft(FGuid Identifier)
+	{
+		return SpacecraftDatabase.Get(Identifier);
+	}
 
 	/** Return the orbital simulation class */
 	class UNovaOrbitalSimulationComponent* GetOrbitalSimulation() const
 	{
 		return OrbitalSimulationComponent;
 	}
-
-	/*----------------------------------------------------
-	    Internals
-	----------------------------------------------------*/
-
-protected:
-	/** Update the local database */
-	void UpdateDatabase();
 
 	/*----------------------------------------------------
 	    Components

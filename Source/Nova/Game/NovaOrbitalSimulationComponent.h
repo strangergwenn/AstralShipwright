@@ -43,18 +43,23 @@ public:
 	/** Get the player trajectory */
 	const FNovaTrajectory* GetCommittedPlayerTrajectory() const;
 
+	/** Complete the current trajectory of ships */
+	void CompleteTrajectory(const TArray<FGuid>& SpacecraftIdentifiers);
+
 	/** Get the orbit & position data for all areas */
-	const TMap<const class UNovaArea*, TPair<FNovaOrbit, double>>& GetAreasOrbitAndPosition() const
+	const TMap<const class UNovaArea*, FNovaOrbitalLocation>& GetAreasOrbitalLocation() const
 	{
-		return AreasOrbitAndPosition;
+		return AreasOrbitalLocation;
+	}
+
+	/** Get the orbit & position data for all spacecraft */
+	const TMap<FGuid, FNovaOrbitalLocation>& GetSpacecraftOrbitalLocation() const
+	{
+		return SpacecraftOrbitalLocation;
 	}
 
 	/** Get the current time in minutes */
-	double GetCurrentTime() const
-	{
-		// TODO : shared time for multiplayer
-		return GetWorld()->GetTimeSeconds() / 60.0;
-	}
+	double GetCurrentTime() const;
 
 	/*----------------------------------------------------
 	    Internals
@@ -64,8 +69,11 @@ protected:
 	/** Update all area's position */
 	void ProcessAreas();
 
-	/** Update the current trajectory of players */
-	void ProcessTrajectories();
+	/** Update the current orbit of spacecraft */
+	void ProcessSpacecraftOrbits();
+
+	/** Update the current trajectory of spacecraft */
+	void ProcessSpacecraftTrajectories();
 
 	/** Compute the parameters of a Hohmann transfer orbit */
 	static FNovaHohmannTransfer ComputeHohmannTransfer(
@@ -99,11 +107,16 @@ protected:
 	----------------------------------------------------*/
 
 private:
+	// Replicated orbit database
+	UPROPERTY(Replicated)
+	FNovaOrbitDatabase OrbitDatabase;
+
 	// Replicated trajectory database
 	UPROPERTY(Replicated)
 	FNovaTrajectoryDatabase TrajectoryDatabase;
 
 	// Local state
-	TArray<const class UNovaArea*>                          Areas;
-	TMap<const class UNovaArea*, TPair<FNovaOrbit, double>> AreasOrbitAndPosition;
+	TArray<const class UNovaArea*>                     Areas;
+	TMap<const class UNovaArea*, FNovaOrbitalLocation> AreasOrbitalLocation;
+	TMap<FGuid, FNovaOrbitalLocation>                  SpacecraftOrbitalLocation;
 };
