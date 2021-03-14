@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+
+#include "NovaArea.h"
 #include "NovaOrbitalSimulationTypes.h"
 #include "Nova/Game/NovaGameTypes.h"
 
@@ -28,8 +30,7 @@ public:
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	/** Build trajectory parameters */
-	FNovaTrajectoryParameters PrepareTrajectory(
-		const class UNovaArea* Source, const class UNovaArea* Destination, double DeltaTime = 0) const;
+	FNovaTrajectoryParameters PrepareTrajectory(const UNovaArea* Source, const UNovaArea* Destination, double DeltaTime = 0) const;
 
 	/** Compute a trajectory */
 	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const FNovaTrajectoryParameters& Parameters, float PhasingAltitude);
@@ -53,13 +54,16 @@ public:
 	const FNovaTrajectory* GetPlayerTrajectory() const;
 
 	/** Get the orbit & position data for all areas */
-	const TMap<const class UNovaArea*, FNovaOrbitalLocation>& GetAreasOrbitalLocation() const
+	const TMap<const UNovaArea*, FNovaOrbitalLocation>& GetAreasOrbitalLocation() const
 	{
 		return AreasOrbitalLocation;
 	}
 
 	/** Get the orbital data for an area */
-	TSharedPtr<FNovaOrbit> GetAreaOrbit(const class UNovaArea* Area) const;
+	TSharedPtr<FNovaOrbit> GetAreaOrbit(const UNovaArea* Area) const
+	{
+		return MakeShared<FNovaOrbit>(FNovaOrbitGeometry(Area->Planet, Area->Altitude, Area->Phase), 0);
+	}
 
 	/** Get the orbit & position data for all spacecraft */
 	const TMap<FGuid, FNovaOrbitalLocation>& GetSpacecraftOrbitalLocation() const
@@ -109,10 +113,22 @@ protected:
 	}
 
 	/** Get the current phase of an orbit */
-	double GetCircularOrbitPhase(const class UNovaPlanet* Planet, const FNovaOrbit& Orbit, double DeltaTime = 0) const;
+	double GetCircularOrbitPhase(const UNovaPlanet* Planet, const FNovaOrbit& Orbit, double DeltaTime = 0) const
+	{
+		const double OrbitalPeriod =
+			GetCircularOrbitPeriod(Planet->GetGravitationalParameter(), Planet->GetRadius(Orbit.Geometry.StartAltitude));
+		const double CurrentTime = GetCurrentTime() + DeltaTime;
+		return FMath::Fmod(Orbit.Geometry.StartPhase + (CurrentTime / OrbitalPeriod) * 360, 360.0);
+	}
 
 	/** Get the current phase of an area */
-	double GetAreaPhase(const class UNovaArea* Area, double DeltaTime = 0) const;
+	double GetAreaPhase(const UNovaArea* Area, double DeltaTime = 0) const
+	{
+		const double OrbitalPeriod =
+			GetCircularOrbitPeriod(Area->Planet->GetGravitationalParameter(), Area->Planet->GetRadius(Area->Altitude));
+		const double CurrentTime = GetCurrentTime() + DeltaTime;
+		return FMath::Fmod(Area->Phase + (CurrentTime / OrbitalPeriod) * 360, 360.0);
+	}
 
 	/*----------------------------------------------------
 	    Data
@@ -120,8 +136,7 @@ protected:
 
 private:
 	// Replicated orbit database
-	UPROPERTY(Replicated)
-	FNovaOrbitDatabase SpacecraftOrbitDatabase;
+	UPROPERTY(Replicated) FNovaOrbitDatabase SpacecraftOrbitDatabase;
 
 	// Replicated trajectory database
 	UPROPERTY(Replicated)

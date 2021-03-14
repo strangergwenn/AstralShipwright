@@ -1,7 +1,6 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaOrbitalSimulationComponent.h"
-#include "NovaArea.h"
 #include "NovaAssetCatalog.h"
 #include "NovaGameInstance.h"
 #include "NovaGameWorld.h"
@@ -106,13 +105,17 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	const double PhasingDuration = PhaseDelta / (360.0 * (1.0 / PhasingOrbitPeriod - 1.0 / DestinationOrbitPeriod));
 	const double PhasingAngle    = (PhasingDuration / PhasingOrbitPeriod) * 360.0;
 
-#if 0
+#if WITH_EDITOR
 
 	// Confirm the final spacecraft phase matches the destination's
-	float DestinationPhasingAngle = (PhasingDuration / DestinationOrbitPeriod) * 360.0;
-	float FinalDestinationPhase   = fmod(NewDestinationPhaseAfterTransfers + DestinationPhasingAngle, 360.0);
-	float FinalSpacecraftPhase    = fmod(SourcePhase + PhasingAngle, 360.0);
-	NCHECK(FMath::Abs(FinalSpacecraftPhase - FinalDestinationPhase) < KINDA_SMALL_NUMBER);
+	const double DestinationPhasingAngle = (PhasingDuration / DestinationOrbitPeriod) * 360.0;
+	const double FinalDestinationPhase   = fmod(NewDestinationPhaseAfterTransfers + DestinationPhasingAngle, 360.0);
+	const double FinalSpacecraftPhase    = fmod(SourcePhase + PhasingAngle, 360.0);
+	NCHECK(FMath::Abs(FinalSpacecraftPhase - FinalDestinationPhase) < SMALL_NUMBER);
+
+#endif
+
+#if 0
 
 	NLOG("UNovaOrbitalSimulationComponent::ComputeTrajectory : (%f, %f) --> (%f, %f)", SourceAltitude, SourcePhase, DestinationAltitude,
 		DestinationPhase);
@@ -251,11 +254,6 @@ const FNovaTrajectory* UNovaOrbitalSimulationComponent::GetPlayerTrajectory() co
 	return nullptr;
 }
 
-TSharedPtr<FNovaOrbit> UNovaOrbitalSimulationComponent::GetAreaOrbit(const UNovaArea* Area) const
-{
-	return MakeShared<FNovaOrbit>(FNovaOrbitGeometry(Area->Planet, Area->Altitude, Area->Phase), 0);
-}
-
 double UNovaOrbitalSimulationComponent::GetCurrentTime() const
 {
 	// TODO : shared time for multiplayer
@@ -324,21 +322,6 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 	{
 		// TODO : implement trajectory progression
 	}
-}
-
-double UNovaOrbitalSimulationComponent::GetCircularOrbitPhase(const UNovaPlanet* Planet, const FNovaOrbit& Orbit, double DeltaTime) const
-{
-	const double OrbitalPeriod =
-		GetCircularOrbitPeriod(Planet->GetGravitationalParameter(), Planet->GetRadius(Orbit.Geometry.StartAltitude));
-	const double CurrentTime = GetCurrentTime() + DeltaTime;
-	return FMath::Fmod(Orbit.Geometry.StartPhase + (CurrentTime / OrbitalPeriod) * 360, 360.0);
-}
-
-double UNovaOrbitalSimulationComponent::GetAreaPhase(const UNovaArea* Area, double DeltaTime) const
-{
-	const double OrbitalPeriod = GetCircularOrbitPeriod(Area->Planet->GetGravitationalParameter(), Area->Planet->GetRadius(Area->Altitude));
-	const double CurrentTime   = GetCurrentTime() + DeltaTime;
-	return FMath::Fmod(Area->Phase + (CurrentTime / OrbitalPeriod) * 360, 360.0);
 }
 
 /*----------------------------------------------------
