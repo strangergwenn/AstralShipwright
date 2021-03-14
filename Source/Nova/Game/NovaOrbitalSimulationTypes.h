@@ -196,39 +196,43 @@ struct FNovaOrbitDatabaseEntry : public FFastArraySerializerItem
 
 	bool operator==(const FNovaOrbitDatabaseEntry& Other) const
 	{
-		return Orbit == Other.Orbit && SpacecraftIdentifier == Other.SpacecraftIdentifier;
+		return Orbit == Other.Orbit && Identifiers == Other.Identifiers;
 	}
 
 	UPROPERTY()
 	FNovaTimedOrbit Orbit;
 
 	UPROPERTY()
-	TArray<FGuid> SpacecraftIdentifier;
+	TArray<FGuid> Identifiers;
 };
 
-/** Orbit database with fast array replication and fast lookup
-    FNovaOrbitDatabase and FNovaTrajectoryDatabase are siblings, maintain the code between both */
+/** Orbit database with fast array replication and fast lookup */
 USTRUCT()
 struct FNovaOrbitDatabase : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-public:
-	/** Add a new trajectory to the database */
-	void Add(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTimedOrbit>& Orbit);
-
-	/** Remove trajectories from the database */
-	void Remove(const TArray<FGuid>& SpacecraftIdentifiers);
-
-	/** Get the current orbit of a spacecraft, if any */
-	const FNovaTimedOrbit* GetOrbit(const FGuid& Identifier) const
+	bool AddOrUpdate(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTimedOrbit>& Orbit)
 	{
-		const FNovaOrbitDatabaseEntry* const* Entry = Map.Find(Identifier);
-		return Entry ? &(*Entry)->Orbit : nullptr;
+		FNovaOrbitDatabaseEntry TrajectoryData;
+		TrajectoryData.Orbit       = *Orbit;
+		TrajectoryData.Identifiers = SpacecraftIdentifiers;
+
+		return Cache.AddOrUpdate(*this, Array, TrajectoryData);
 	}
 
-	/** Get the orbit array */
-	const TArray<FNovaOrbitDatabaseEntry>& GetOrbits() const
+	void Remove(const TArray<FGuid>& SpacecraftIdentifiers)
+	{
+		Cache.Remove(*this, Array, SpacecraftIdentifiers);
+	}
+
+	const FNovaTimedOrbit* Get(const FGuid& Identifier) const
+	{
+		const FNovaOrbitDatabaseEntry* Entry = Cache.Get(Identifier);
+		return Entry ? &Entry->Orbit : nullptr;
+	}
+
+	const TArray<FNovaOrbitDatabaseEntry>& Get() const
 	{
 		return Array;
 	}
@@ -238,15 +242,15 @@ public:
 		return FFastArraySerializer::FastArrayDeltaSerialize<FNovaOrbitDatabaseEntry, FNovaOrbitDatabase>(Array, DeltaParms, *this);
 	}
 
-	void PostReplicatedChange(const TArrayView<int32>& ChangedIndices, int32 FinalSize);
+	void PostReplicatedChange(const TArrayView<int32>& ChangedIndices, int32 FinalSize)
+	{
+		Cache.Update(Array);
+	}
 
-protected:
-	// Replicated state
 	UPROPERTY()
 	TArray<FNovaOrbitDatabaseEntry> Array;
 
-	// Local state
-	TMap<FGuid, FNovaOrbitDatabaseEntry*> Map;
+	TMultiGuidCacheMap<FNovaOrbitDatabaseEntry> Cache;
 };
 
 /** Enable fast replication */
@@ -271,39 +275,43 @@ struct FNovaTrajectoryDatabaseEntry : public FFastArraySerializerItem
 
 	bool operator==(const FNovaTrajectoryDatabaseEntry& Other) const
 	{
-		return Trajectory == Other.Trajectory && SpacecraftIdentifier == Other.SpacecraftIdentifier;
+		return Trajectory == Other.Trajectory && Identifiers == Other.Identifiers;
 	}
 
 	UPROPERTY()
 	FNovaTrajectory Trajectory;
 
 	UPROPERTY()
-	TArray<FGuid> SpacecraftIdentifier;
+	TArray<FGuid> Identifiers;
 };
 
-/** Trajectory database with fast array replication and fast lookup
-    FNovaOrbitDatabase and FNovaTrajectoryDatabase are siblings, maintain the code between both */
+/** Trajectory database with fast array replication and fast lookup */
 USTRUCT()
 struct FNovaTrajectoryDatabase : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-public:
-	/** Add a new trajectory to the database */
-	void Add(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory);
-
-	/** Remove trajectories from the database */
-	void Remove(const TArray<FGuid>& SpacecraftIdentifiers);
-
-	/** Get the current trajectory of a spacecraft, if any */
-	const FNovaTrajectory* GetTrajectory(const FGuid& Identifier) const
+	bool AddOrUpdate(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory)
 	{
-		const FNovaTrajectoryDatabaseEntry* const* Entry = Map.Find(Identifier);
-		return Entry ? &(*Entry)->Trajectory : nullptr;
+		FNovaTrajectoryDatabaseEntry TrajectoryData;
+		TrajectoryData.Trajectory  = *Trajectory;
+		TrajectoryData.Identifiers = SpacecraftIdentifiers;
+
+		return Cache.AddOrUpdate(*this, Array, TrajectoryData);
 	}
 
-	/** Get the trajectory array */
-	const TArray<FNovaTrajectoryDatabaseEntry>& GetTrajectories() const
+	void Remove(const TArray<FGuid>& SpacecraftIdentifiers)
+	{
+		Cache.Remove(*this, Array, SpacecraftIdentifiers);
+	}
+
+	const FNovaTrajectory* Get(const FGuid& Identifier) const
+	{
+		const FNovaTrajectoryDatabaseEntry* Entry = Cache.Get(Identifier);
+		return Entry ? &Entry->Trajectory : nullptr;
+	}
+
+	const TArray<FNovaTrajectoryDatabaseEntry>& Get() const
 	{
 		return Array;
 	}
@@ -314,15 +322,15 @@ public:
 			Array, DeltaParms, *this);
 	}
 
-	void PostReplicatedChange(const TArrayView<int32>& ChangedIndices, int32 FinalSize);
+	void PostReplicatedChange(const TArrayView<int32>& ChangedIndices, int32 FinalSize)
+	{
+		Cache.Update(Array);
+	}
 
-protected:
-	// Replicated state
 	UPROPERTY()
 	TArray<FNovaTrajectoryDatabaseEntry> Array;
 
-	// Local state
-	TMap<FGuid, FNovaTrajectoryDatabaseEntry*> Map;
+	TMultiGuidCacheMap<FNovaTrajectoryDatabaseEntry> Cache;
 };
 
 /** Enable fast replication */

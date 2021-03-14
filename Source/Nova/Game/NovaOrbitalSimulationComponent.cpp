@@ -183,7 +183,7 @@ void UNovaOrbitalSimulationComponent::StartTrajectory(
 
 	// Move spacecraft to the trajectory
 	SpacecraftOrbitDatabase.Remove(SpacecraftIdentifiers);
-	SpacecraftTrajectoryDatabase.Add(SpacecraftIdentifiers, Trajectory);
+	SpacecraftTrajectoryDatabase.AddOrUpdate(SpacecraftIdentifiers, Trajectory);
 }
 
 void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& SpacecraftIdentifiers)
@@ -197,7 +197,7 @@ void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& Sp
 	// Compute the final orbit and ensure all spacecraft are going there
 	for (const FGuid& Identifier : SpacecraftIdentifiers)
 	{
-		const FNovaTrajectory* Trajectory = SpacecraftTrajectoryDatabase.GetTrajectory(Identifier);
+		const FNovaTrajectory* Trajectory = SpacecraftTrajectoryDatabase.Get(Identifier);
 		if (Trajectory)
 		{
 			const FNovaTimedOrbit FinalOrbit = Trajectory->GetFinalOrbit();
@@ -216,7 +216,7 @@ void UNovaOrbitalSimulationComponent::SetOrbit(const TArray<FGuid>& SpacecraftId
 	NLOG("UNovaOrbitalSimulationComponent::SetOrbit for %d spacecraft", SpacecraftIdentifiers.Num());
 
 	SpacecraftTrajectoryDatabase.Remove(SpacecraftIdentifiers);
-	SpacecraftOrbitDatabase.Add(SpacecraftIdentifiers, Orbit);
+	SpacecraftOrbitDatabase.AddOrUpdate(SpacecraftIdentifiers, Orbit);
 }
 
 const FNovaTrajectory* UNovaOrbitalSimulationComponent::GetPlayerTrajectory() const
@@ -225,7 +225,7 @@ const FNovaTrajectory* UNovaOrbitalSimulationComponent::GetPlayerTrajectory() co
 	{
 		if (IsValid(PlayerState))
 		{
-			return SpacecraftTrajectoryDatabase.GetTrajectory(PlayerState->GetSpacecraftIdentifier());
+			return SpacecraftTrajectoryDatabase.Get(PlayerState->GetSpacecraftIdentifier());
 		}
 	}
 
@@ -274,7 +274,7 @@ void UNovaOrbitalSimulationComponent::ProcessAreas()
 
 void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 {
-	for (const FNovaOrbitDatabaseEntry& DatabaseEntry : SpacecraftOrbitDatabase.GetOrbits())
+	for (const FNovaOrbitDatabaseEntry& DatabaseEntry : SpacecraftOrbitDatabase.Get())
 	{
 		const UNovaPlanet* Planet = DatabaseEntry.Orbit.Orbit.Planet;
 		NCHECK(Planet);
@@ -283,7 +283,7 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 		double CurrentPhase = GetCircularOrbitPhase(Planet, DatabaseEntry.Orbit);
 
 		// Add or update the current orbit and position
-		for (const FGuid& Identifier : DatabaseEntry.SpacecraftIdentifier)
+		for (const FGuid& Identifier : DatabaseEntry.Identifiers)
 		{
 			FNovaOrbitalLocation* Entry = SpacecraftOrbitalLocation.Find(Identifier);
 			if (Entry)
@@ -300,7 +300,7 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 
 void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 {
-	for (const FNovaTrajectoryDatabaseEntry& DatabaseEntry : SpacecraftTrajectoryDatabase.GetTrajectories())
+	for (const FNovaTrajectoryDatabaseEntry& DatabaseEntry : SpacecraftTrajectoryDatabase.Get())
 	{
 		// TODO
 	}

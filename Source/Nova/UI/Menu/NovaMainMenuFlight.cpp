@@ -163,6 +163,35 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						})))
 					]
 			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaNew(SNovaButton)
+						.Text(LOCTEXT("CompleteTrajectory", "Complete trajectory"))
+						.HelpText(LOCTEXT("HelpCompleteTrajectory", "Finish the currently selected trajectory"))
+						.OnClicked(FSimpleDelegate::CreateLambda([&]()
+						{
+							ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+							NCHECK(GameState);
+							ANovaGameWorld* GameWorld = GameState->GetGameWorld();
+							NCHECK(GameWorld);
+							UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
+							NCHECK(OrbitalSimulation);
+							
+							OrbitalSimulation->CompleteTrajectory(GameState->GetPlayerSpacecraftIdentifiers());
+						}))
+						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+						{
+							ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+							NCHECK(GameState);
+							ANovaGameWorld* GameWorld = GameState->GetGameWorld();
+							NCHECK(GameWorld);
+							UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
+
+							return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority && OrbitalSimulation->GetPlayerTrajectory();
+						})))
+					]
+			
 					// Delta-V trade-off slider
 					+ SVerticalBox::Slot()
 					.VAlign(VAlign_Center)

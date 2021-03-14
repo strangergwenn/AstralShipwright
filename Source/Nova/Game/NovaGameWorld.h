@@ -17,18 +17,19 @@ struct FNovaSpacecraftDatabase : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-public:
-	/** Add a new spacecraft to the database or update an existing entry with the same identifier, return true if new */
-	bool AddOrUpdate(const FNovaSpacecraft& Spacecraft);
+	bool AddOrUpdate(const FNovaSpacecraft& Spacecraft)
+	{
+		return Cache.AddOrUpdate(*this, Array, Spacecraft);
+	}
 
-	/** Remove a spacecraft from the database */
-	void Remove(const FNovaSpacecraft& Spacecraft);
+	void Remove(const FGuid& Identifier)
+	{
+		Cache.Remove(*this, Array, Identifier);
+	}
 
-	/** Get a spacecraft */
 	const FNovaSpacecraft* Get(const FGuid& Identifier) const
 	{
-		const TPair<int32, FNovaSpacecraft*>* Entry = Map.Find(Identifier);
-		return Entry ? Entry->Value : nullptr;
+		return Cache.Get(Identifier);
 	}
 
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
@@ -36,15 +37,16 @@ public:
 		return FFastArraySerializer::FastArrayDeltaSerialize<FNovaSpacecraft, FNovaSpacecraftDatabase>(Array, DeltaParms, *this);
 	}
 
-	void PostReplicatedChange(const TArrayView<int32>& ChangedIndices, int32 FinalSize);
+	void PostReplicatedChange(const TArrayView<int32>& ChangedIndices, int32 FinalSize)
+	{
+		Cache.Update(Array);
+	}
 
 protected:
-	// Replicated state
 	UPROPERTY()
 	TArray<FNovaSpacecraft> Array;
 
-	// Local state
-	TMap<FGuid, TPair<int32, FNovaSpacecraft*>> Map;
+	TGuidCacheMap<FNovaSpacecraft> Cache;
 };
 
 /** Enable fast replication */
@@ -86,7 +88,7 @@ public:
 	void UpdateSpacecraft(const FNovaSpacecraft Spacecraft);
 
 	/** Return a pointer for a spacecraft by identifier */
-	const FNovaSpacecraft* GetSpacecraft(FGuid Identifier)
+	const FNovaSpacecraft* Get(FGuid Identifier)
 	{
 		return SpacecraftDatabase.Get(Identifier);
 	}
