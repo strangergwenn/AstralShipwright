@@ -221,31 +221,31 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 	NCHECK(OrbitalSimulation);
 
 	// Orbit merging structure
-	struct FNovaMergedOrbit : FNovaOrbit
+	struct FNovaMergedOrbitGeometry : FNovaOrbitGeometry
 	{
-		FNovaMergedOrbit(const FNovaOrbit& Base, const FNovaOrbitalObject& Point) : FNovaOrbit(Base)
+		FNovaMergedOrbitGeometry(const FNovaOrbitGeometry& Base, const FNovaOrbitalObject& Object) : FNovaOrbitGeometry(Base)
 		{
-			Objects.Add(Point);
+			Objects.Add(Object);
 		}
 
 		TArray<FNovaOrbitalObject> Objects;
 	};
-	TArray<FNovaMergedOrbit> MergedOrbits;
+	TArray<FNovaMergedOrbitGeometry> MergedOrbitGeometries;
 
 	// Merge orbits
 	for (const auto AreaAndOrbitalLocation : OrbitalSimulation->GetAreasOrbitalLocation())
 	{
 		const FNovaOrbitalLocation& OrbitalLocation = AreaAndOrbitalLocation.Value;
-		const FNovaOrbit&           Orbit           = OrbitalLocation.Orbit;
+		const FNovaOrbitGeometry&   Geometry        = OrbitalLocation.Geometry;
 		const float                 Phase           = OrbitalLocation.Phase;
 
-		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Orbit.GetHighestAltitude());
+		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Geometry.GetHighestAltitude());
 
-		FNovaMergedOrbit* ExistingTrajectory = MergedOrbits.FindByPredicate(
-			[&](const FNovaMergedOrbit& OtherOrbit)
+		FNovaMergedOrbitGeometry* ExistingTrajectory = MergedOrbitGeometries.FindByPredicate(
+			[&](const FNovaMergedOrbitGeometry& OtherOrbit)
 			{
-				return OtherOrbit.StartAltitude == Orbit.StartAltitude && OtherOrbit.OppositeAltitude == Orbit.OppositeAltitude &&
-					   OtherOrbit.StartPhase == Orbit.StartPhase && OtherOrbit.EndPhase == Orbit.EndPhase;
+				return OtherOrbit.StartAltitude == Geometry.StartAltitude && OtherOrbit.OppositeAltitude == Geometry.OppositeAltitude &&
+					   OtherOrbit.StartPhase == Geometry.StartPhase && OtherOrbit.EndPhase == Geometry.EndPhase;
 			});
 
 		FNovaOrbitalObject Point = FNovaOrbitalObject(AreaAndOrbitalLocation.Key, Phase);
@@ -256,14 +256,14 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 		}
 		else
 		{
-			MergedOrbits.Add(FNovaMergedOrbit(Orbit, Point));
+			MergedOrbitGeometries.Add(FNovaMergedOrbitGeometry(Geometry, Point));
 		}
 	}
 
 	// Draw merged orbits
-	for (FNovaMergedOrbit& Orbit : MergedOrbits)
+	for (FNovaMergedOrbitGeometry& Geometry : MergedOrbitGeometries)
 	{
-		AddOrbit(Origin, Orbit, Orbit.Objects, FNovaSplineStyle(FLinearColor::White));
+		AddOrbit(Origin, Geometry, Geometry.Objects, FNovaSplineStyle(FLinearColor::White));
 	}
 }
 
@@ -286,8 +286,8 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 
 		Objects.Add(FNovaOrbitalObject(GameWorld->Get(Identifier), Location.Phase));
 
-		AddOrbit(Origin, Location.Orbit, Objects, FNovaSplineStyle(FLinearColor::Blue));
-		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Location.Orbit.GetHighestAltitude());
+		AddOrbit(Origin, Location.Geometry, Objects, FNovaSplineStyle(FLinearColor::Blue));
+		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Location.Geometry.GetHighestAltitude());
 	}
 }
 
@@ -368,14 +368,14 @@ void SNovaOrbitalMap::AddTrajectory(
 {
 	for (int32 TransferIndex = 0; TransferIndex < Trajectory.TransferOrbits.Num(); TransferIndex++)
 	{
-		const TArray<FNovaOrbit>& TransferOrbits = Trajectory.TransferOrbits;
-		FNovaOrbit                Orbit          = TransferOrbits[TransferIndex];
+		const TArray<FNovaOrbitGeometry>& TransferOrbits = Trajectory.TransferOrbits;
+		FNovaOrbitGeometry                Geometry       = TransferOrbits[TransferIndex];
 
 		bool  SkipRemainingTransfers = false;
 		float CurrentPhase = FMath::Lerp(TransferOrbits[0].StartPhase, TransferOrbits[TransferOrbits.Num() - 1].EndPhase, Progress);
-		if (CurrentPhase < Orbit.EndPhase)
+		if (CurrentPhase < Geometry.EndPhase)
 		{
-			Orbit.EndPhase         = CurrentPhase;
+			Geometry.EndPhase      = CurrentPhase;
 			SkipRemainingTransfers = true;
 		}
 
@@ -385,7 +385,7 @@ void SNovaOrbitalMap::AddTrajectory(
 			Maneuvers.Add(Maneuver);
 		}
 
-		AddOrbit(Position, Orbit, Maneuvers, Style);
+		AddOrbit(Position, Geometry, Maneuvers, Style);
 
 		if (SkipRemainingTransfers)
 		{
@@ -395,17 +395,17 @@ void SNovaOrbitalMap::AddTrajectory(
 }
 
 TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbit(
-	const FVector2D& Position, const FNovaOrbit& Orbit, const TArray<FNovaOrbitalObject>& Objects, const FNovaSplineStyle& Style)
+	const FVector2D& Position, const FNovaOrbitGeometry& Geometry, const TArray<FNovaOrbitalObject>& Objects, const FNovaSplineStyle& Style)
 {
 	const FVector2D LocalPosition = Position * CurrentDrawScale;
 
-	const float  RadiusA       = CurrentDrawScale * Orbit.StartAltitude;
-	const float  RadiusB       = CurrentDrawScale * Orbit.OppositeAltitude;
+	const float  RadiusA       = CurrentDrawScale * Geometry.StartAltitude;
+	const float  RadiusB       = CurrentDrawScale * Geometry.OppositeAltitude;
 	const float  MajorAxis     = 0.5f * (RadiusA + RadiusB);
 	const float  MinorAxis     = FMath::Sqrt(RadiusA * RadiusB);
-	const float& Phase         = Orbit.StartPhase;
+	const float& Phase         = Geometry.StartPhase;
 	const float& InitialAngle  = 0;
-	const float  AngularLength = Orbit.EndPhase - Orbit.StartPhase;
+	const float  AngularLength = Geometry.EndPhase - Geometry.StartPhase;
 	const float  Offset        = 0.5f * (RadiusB - RadiusA);
 
 	return AddOrbitInternal(

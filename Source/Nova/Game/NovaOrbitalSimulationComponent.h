@@ -44,10 +44,10 @@ public:
 	void CompleteTrajectory(const TArray<FGuid>& SpacecraftIdentifiers);
 
 	/** Put spacecraft in a particular orbit */
-	void SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTimedOrbit>& Orbit);
+	void SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit);
 
 	/** Get the player orbit */
-	const FNovaTimedOrbit* GetPlayerOrbit() const;
+	const FNovaOrbit* GetPlayerOrbit() const;
 
 	/** Get the player trajectory */
 	const FNovaTrajectory* GetPlayerTrajectory() const;
@@ -59,7 +59,7 @@ public:
 	}
 
 	/** Get the orbital data for an area */
-	TSharedPtr<FNovaTimedOrbit> GetAreaOrbit(const class UNovaArea* Area) const;
+	TSharedPtr<FNovaOrbit> GetAreaOrbit(const class UNovaArea* Area) const;
 
 	/** Get the orbit & position data for all spacecraft */
 	const TMap<FGuid, FNovaOrbitalLocation>& GetSpacecraftOrbitalLocation() const
@@ -109,7 +109,7 @@ protected:
 	}
 
 	/** Get the current phase of an orbit */
-	double GetCircularOrbitPhase(const class UNovaPlanet* Planet, const FNovaTimedOrbit& Orbit, double DeltaTime = 0) const;
+	double GetCircularOrbitPhase(const class UNovaPlanet* Planet, const FNovaOrbit& Orbit, double DeltaTime = 0) const;
 
 	/** Get the current phase of an area */
 	double GetAreaPhase(const class UNovaArea* Area, double DeltaTime = 0) const;

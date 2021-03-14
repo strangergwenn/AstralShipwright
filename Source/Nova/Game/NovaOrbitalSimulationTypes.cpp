@@ -12,26 +12,26 @@ float FNovaTrajectory::GetHighestAltitude() const
 
 	float MaximumAltitude = 0;
 
-	for (const FNovaOrbit& Orbit : TransferOrbits)
+	for (const FNovaOrbitGeometry& Geometry : TransferOrbits)
 	{
-		MaximumAltitude = FMath::Max(MaximumAltitude, Orbit.GetHighestAltitude());
+		MaximumAltitude = FMath::Max(MaximumAltitude, Geometry.GetHighestAltitude());
 	}
 
 	return MaximumAltitude;
 }
 
-FNovaTimedOrbit FNovaTrajectory::GetFinalOrbit() const
+FNovaOrbit FNovaTrajectory::GetFinalOrbit() const
 {
 	NCHECK(IsValid());
 
 	// Assume the final maneuver is a circularization burn
-	FNovaOrbit FinalOrbit    = TransferOrbits[TransferOrbits.Num() - 1];
-	FinalOrbit.StartAltitude = FinalOrbit.OppositeAltitude;
-	FinalOrbit.StartPhase    = FMath::Fmod(FinalOrbit.EndPhase, 360.0);
+	FNovaOrbitGeometry FinalGeometry = TransferOrbits[TransferOrbits.Num() - 1];
+	FinalGeometry.StartAltitude      = FinalGeometry.OppositeAltitude;
+	FinalGeometry.StartPhase         = FMath::Fmod(FinalGeometry.EndPhase, 360.0);
 
 	// Assume maneuvers are of zero time
 	const FNovaManeuver& FinalManeuver = Maneuvers[Maneuvers.Num() - 1];
 	const float&         InsertionTime = FinalManeuver.Time;
 
-	return FNovaTimedOrbit(FinalOrbit, InsertionTime);
+	return FNovaOrbit(FinalGeometry, InsertionTime);
 }

@@ -36,26 +36,26 @@ struct FNovaTrajectoryParameters
 
 /** Data for a stable orbit that might be a circular, elliptical or Hohmann transfer orbit */
 USTRUCT(Atomic)
-struct FNovaOrbit
+struct FNovaOrbitGeometry
 {
 	GENERATED_BODY()
 
-	FNovaOrbit() : Planet(nullptr), StartAltitude(0), OppositeAltitude(0), StartPhase(0), EndPhase(0)
+	FNovaOrbitGeometry() : Planet(nullptr), StartAltitude(0), OppositeAltitude(0), StartPhase(0), EndPhase(0)
 	{}
 
-	FNovaOrbit(const class UNovaPlanet* P, float SA, float SP)
+	FNovaOrbitGeometry(const class UNovaPlanet* P, float SA, float SP)
 		: Planet(P), StartAltitude(SA), OppositeAltitude(SA), StartPhase(SP), EndPhase(SP + 360)
 	{
 		NCHECK(Planet != nullptr);
 	}
 
-	FNovaOrbit(const class UNovaPlanet* P, float SA, float EA, float SP, float EP)
+	FNovaOrbitGeometry(const class UNovaPlanet* P, float SA, float EA, float SP, float EP)
 		: Planet(P), StartAltitude(SA), OppositeAltitude(EA), StartPhase(SP), EndPhase(EP)
 	{
 		NCHECK(Planet != nullptr);
 	}
 
-	bool operator==(const FNovaOrbit& Other) const
+	bool operator==(const FNovaOrbitGeometry& Other) const
 	{
 		return StartAltitude == Other.StartAltitude && OppositeAltitude == Other.OppositeAltitude && StartPhase == Other.StartPhase &&
 			   EndPhase == Other.EndPhase;
@@ -91,31 +91,31 @@ struct FNovaOrbit
 
 /** Orbit + time of insertion, allowing prediction of where a spacecraft will be at any time */
 USTRUCT(Atomic)
-struct FNovaTimedOrbit
+struct FNovaOrbit
 {
 	GENERATED_BODY()
 
-	FNovaTimedOrbit() : Orbit(), InsertionTime(0)
+	FNovaOrbit() : Geometry(), InsertionTime(0)
 	{}
 
-	FNovaTimedOrbit(const FNovaOrbit& O, float T) : Orbit(O), InsertionTime(T)
+	FNovaOrbit(const FNovaOrbitGeometry& G, float T) : Geometry(G), InsertionTime(T)
 	{
-		NCHECK(Orbit.Planet != nullptr);
+		NCHECK(Geometry.Planet != nullptr);
 	}
 
-	bool operator==(const FNovaTimedOrbit& Other) const
+	bool operator==(const FNovaOrbit& Other) const
 	{
-		return Orbit == Other.Orbit && InsertionTime == Other.InsertionTime;
+		return Geometry == Other.Geometry && InsertionTime == Other.InsertionTime;
 	}
 
 	/** Check for validity */
 	bool IsValid() const
 	{
-		return Orbit.IsValid();
+		return Geometry.IsValid();
 	}
 
 	UPROPERTY()
-	FNovaOrbit Orbit;
+	FNovaOrbitGeometry Geometry;
 
 	UPROPERTY()
 	float InsertionTime;
@@ -127,14 +127,14 @@ struct FNovaOrbitalLocation
 {
 	GENERATED_BODY()
 
-	FNovaOrbitalLocation() : Orbit(), Phase(0)
+	FNovaOrbitalLocation() : Geometry(), Phase(0)
 	{}
 
-	FNovaOrbitalLocation(const FNovaOrbit& O, float P) : Orbit(O), Phase(P)
+	FNovaOrbitalLocation(const FNovaOrbitGeometry& G, float P) : Geometry(G), Phase(P)
 	{}
 
 	UPROPERTY()
-	FNovaOrbit Orbit;
+	FNovaOrbitGeometry Geometry;
 
 	UPROPERTY()
 	float Phase;
@@ -187,10 +187,10 @@ struct FNovaTrajectory
 	float GetHighestAltitude() const;
 
 	/** Compute the final orbit this trajectory will put the spacecraft in */
-	FNovaTimedOrbit GetFinalOrbit() const;
+	FNovaOrbit GetFinalOrbit() const;
 
 	UPROPERTY()
-	TArray<FNovaOrbit> TransferOrbits;
+	TArray<FNovaOrbitGeometry> TransferOrbits;
 
 	UPROPERTY()
 	TArray<FNovaManeuver> Maneuvers;
@@ -218,7 +218,7 @@ struct FNovaOrbitDatabaseEntry : public FFastArraySerializerItem
 	}
 
 	UPROPERTY()
-	FNovaTimedOrbit Orbit;
+	FNovaOrbit Orbit;
 
 	UPROPERTY()
 	TArray<FGuid> Identifiers;
@@ -230,7 +230,7 @@ struct FNovaOrbitDatabase : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-	bool AddOrUpdate(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTimedOrbit>& Orbit)
+	bool AddOrUpdate(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit)
 	{
 		NCHECK(Orbit.IsValid());
 		NCHECK(Orbit->IsValid());
@@ -247,7 +247,7 @@ struct FNovaOrbitDatabase : public FFastArraySerializer
 		Cache.Remove(*this, Array, SpacecraftIdentifiers);
 	}
 
-	const FNovaTimedOrbit* Get(const FGuid& Identifier) const
+	const FNovaOrbit* Get(const FGuid& Identifier) const
 	{
 		const FNovaOrbitDatabaseEntry* Entry = Cache.Get(Identifier);
 		return Entry ? &Entry->Orbit : nullptr;

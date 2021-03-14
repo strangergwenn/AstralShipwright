@@ -187,8 +187,8 @@ protected:
 		const FVector2D& Position, const struct FNovaTrajectory& Trajectory, const struct FNovaSplineStyle& Style, float Progress = 1.0f);
 
 	/** Draw an orbit */
-	TPair<FVector2D, FVector2D> AddOrbit(const FVector2D& Position, const FNovaOrbit& Orbit, const TArray<FNovaOrbitalObject>& Objects,
-		const struct FNovaSplineStyle& Style);
+	TPair<FVector2D, FVector2D> AddOrbit(const FVector2D& Position, const FNovaOrbitGeometry& Geometry,
+		const TArray<FNovaOrbitalObject>& Objects, const struct FNovaSplineStyle& Style);
 
 	/** Draw an orbit based on processed 2D parameters */
 	TPair<FVector2D, FVector2D> AddOrbitInternal(

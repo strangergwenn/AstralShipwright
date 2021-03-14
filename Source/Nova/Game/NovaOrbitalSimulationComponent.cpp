@@ -136,27 +136,27 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 			Trajectory->Maneuvers.Add(Maneuver);
 		}
 	};
-	auto AddTransferIfNotNull = [&Trajectory](const FNovaOrbit& Orbit)
+	auto AddTransferIfNotNull = [&Trajectory](const FNovaOrbitGeometry& Geometry)
 	{
-		if (Orbit.StartPhase != Orbit.EndPhase)
+		if (Geometry.StartPhase != Geometry.EndPhase)
 		{
-			Trajectory->TransferOrbits.Add(Orbit);
+			Trajectory->TransferOrbits.Add(Geometry);
 		}
 	};
 
 	// First transfer
 	AddManeuverIfNotNull(FNovaManeuver(TransferA.StartDeltaV, StartTime, SourcePhase));
-	AddTransferIfNotNull(FNovaOrbit(Parameters.Planet, SourceAltitude, PhasingAltitude, SourcePhase, SourcePhase + 180));
+	AddTransferIfNotNull(FNovaOrbitGeometry(Parameters.Planet, SourceAltitude, PhasingAltitude, SourcePhase, SourcePhase + 180));
 	AddManeuverIfNotNull(FNovaManeuver(TransferA.EndDeltaV, StartTime + TransferA.Duration, SourcePhase + 180));
 
 	// Phasing orbit
 	AddTransferIfNotNull(
-		FNovaOrbit(Parameters.Planet, PhasingAltitude, PhasingAltitude, SourcePhase + 180, SourcePhase + 180 + PhasingAngle));
+		FNovaOrbitGeometry(Parameters.Planet, PhasingAltitude, PhasingAltitude, SourcePhase + 180, SourcePhase + 180 + PhasingAngle));
 
 	// Second transfer
 	AddManeuverIfNotNull(
 		FNovaManeuver(TransferB.StartDeltaV, StartTime + TransferA.Duration + PhasingDuration, SourcePhase + 180 + PhasingAngle));
-	AddTransferIfNotNull(FNovaOrbit(
+	AddTransferIfNotNull(FNovaOrbitGeometry(
 		Parameters.Planet, PhasingAltitude, DestinationAltitude, SourcePhase + 180 + PhasingAngle, SourcePhase + 360 + PhasingAngle));
 	AddManeuverIfNotNull(FNovaManeuver(
 		TransferB.EndDeltaV, StartTime + TransferA.Duration + PhasingDuration + TransferB.Duration, SourcePhase + 360 + PhasingAngle));
@@ -192,8 +192,8 @@ void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& Sp
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 	NLOG("UNovaOrbitalSimulationComponent::CompleteTrajectory for %d spacecraft", SpacecraftIdentifiers.Num());
 
-	FNovaTimedOrbit CommonFinalOrbit;
-	bool            FoundCommonOrbit = false;
+	FNovaOrbit CommonFinalOrbit;
+	bool       FoundCommonOrbit = false;
 
 	// Compute the final orbit and ensure all spacecraft are going there
 	for (const FGuid& Identifier : SpacecraftIdentifiers)
@@ -201,7 +201,7 @@ void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& Sp
 		const FNovaTrajectory* Trajectory = SpacecraftTrajectoryDatabase.Get(Identifier);
 		if (Trajectory)
 		{
-			const FNovaTimedOrbit FinalOrbit = Trajectory->GetFinalOrbit();
+			const FNovaOrbit FinalOrbit = Trajectory->GetFinalOrbit();
 			NCHECK(!FoundCommonOrbit || FinalOrbit == CommonFinalOrbit);
 			FoundCommonOrbit = true;
 			CommonFinalOrbit = FinalOrbit;
@@ -210,10 +210,10 @@ void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& Sp
 
 	// Commit the change
 	NCHECK(FoundCommonOrbit);
-	SetOrbit(SpacecraftIdentifiers, MakeShared<FNovaTimedOrbit>(CommonFinalOrbit));
+	SetOrbit(SpacecraftIdentifiers, MakeShared<FNovaOrbit>(CommonFinalOrbit));
 }
 
-void UNovaOrbitalSimulationComponent::SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTimedOrbit>& Orbit)
+void UNovaOrbitalSimulationComponent::SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit)
 {
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 	NCHECK(Orbit.IsValid());
@@ -225,7 +225,7 @@ void UNovaOrbitalSimulationComponent::SetOrbit(const TArray<FGuid>& SpacecraftId
 	SpacecraftOrbitDatabase.AddOrUpdate(SpacecraftIdentifiers, Orbit);
 }
 
-const FNovaTimedOrbit* UNovaOrbitalSimulationComponent::GetPlayerOrbit() const
+const FNovaOrbit* UNovaOrbitalSimulationComponent::GetPlayerOrbit() const
 {
 	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
 	{
@@ -251,9 +251,9 @@ const FNovaTrajectory* UNovaOrbitalSimulationComponent::GetPlayerTrajectory() co
 	return nullptr;
 }
 
-TSharedPtr<FNovaTimedOrbit> UNovaOrbitalSimulationComponent::GetAreaOrbit(const UNovaArea* Area) const
+TSharedPtr<FNovaOrbit> UNovaOrbitalSimulationComponent::GetAreaOrbit(const UNovaArea* Area) const
 {
-	return MakeShared<FNovaTimedOrbit>(FNovaOrbit(Area->Planet, Area->Altitude, Area->Phase), 0);
+	return MakeShared<FNovaOrbit>(FNovaOrbitGeometry(Area->Planet, Area->Altitude, Area->Phase), 0);
 }
 
 double UNovaOrbitalSimulationComponent::GetCurrentTime() const
@@ -286,7 +286,7 @@ void UNovaOrbitalSimulationComponent::ProcessAreas()
 		}
 		else
 		{
-			AreasOrbitalLocation.Add(Area, FNovaOrbitalLocation(GetAreaOrbit(Area)->Orbit, CurrentPhase));
+			AreasOrbitalLocation.Add(Area, FNovaOrbitalLocation(GetAreaOrbit(Area)->Geometry, CurrentPhase));
 		}
 	}
 }
@@ -295,12 +295,12 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 {
 	for (const FNovaOrbitDatabaseEntry& DatabaseEntry : SpacecraftOrbitDatabase.Get())
 	{
-		const UNovaPlanet* Planet = DatabaseEntry.Orbit.Orbit.Planet;
+		const UNovaPlanet* Planet = DatabaseEntry.Orbit.Geometry.Planet;
 		NCHECK(Planet);
 
 		// Update the position
 		double                     CurrentPhase = GetCircularOrbitPhase(Planet, DatabaseEntry.Orbit);
-		const FNovaOrbitalLocation NewLocation  = FNovaOrbitalLocation(DatabaseEntry.Orbit.Orbit, CurrentPhase);
+		const FNovaOrbitalLocation NewLocation  = FNovaOrbitalLocation(DatabaseEntry.Orbit.Geometry, CurrentPhase);
 
 		// Add or update the current orbit and position
 		for (const FGuid& Identifier : DatabaseEntry.Identifiers)
@@ -326,12 +326,12 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 	}
 }
 
-double UNovaOrbitalSimulationComponent::GetCircularOrbitPhase(
-	const UNovaPlanet* Planet, const FNovaTimedOrbit& Orbit, double DeltaTime) const
+double UNovaOrbitalSimulationComponent::GetCircularOrbitPhase(const UNovaPlanet* Planet, const FNovaOrbit& Orbit, double DeltaTime) const
 {
-	const double OrbitalPeriod = GetCircularOrbitPeriod(Planet->GetGravitationalParameter(), Planet->GetRadius(Orbit.Orbit.StartAltitude));
-	const double CurrentTime   = GetCurrentTime() + DeltaTime;
-	return FMath::Fmod(Orbit.Orbit.StartPhase + (CurrentTime / OrbitalPeriod) * 360, 360.0);
+	const double OrbitalPeriod =
+		GetCircularOrbitPeriod(Planet->GetGravitationalParameter(), Planet->GetRadius(Orbit.Geometry.StartAltitude));
+	const double CurrentTime = GetCurrentTime() + DeltaTime;
+	return FMath::Fmod(Orbit.Geometry.StartPhase + (CurrentTime / OrbitalPeriod) * 360, 360.0);
 }
 
 double UNovaOrbitalSimulationComponent::GetAreaPhase(const UNovaArea* Area, double DeltaTime) const
