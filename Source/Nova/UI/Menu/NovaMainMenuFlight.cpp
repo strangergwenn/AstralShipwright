@@ -71,7 +71,9 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.HelpText(LOCTEXT("HelpTestJoin", "Join random session"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
-							MenuManager->GetPC()->TestJoin();
+							#if WITH_EDITOR
+								MenuManager->GetPC()->TestJoin();
+							#endif
 						}))
 					]
 			
