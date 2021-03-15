@@ -176,8 +176,10 @@ void FNovaModule::DisplayLog(FString Log)
 	UE_LOG(LogNova, Display, TEXT("%s"), *Log);
 }
 
-void FNovaModule::ReportError(FString Function)
+void FNovaModule::ReportError(FString Expression, FString Function, FString File)
 {
+#if UE_BUILD_SHIPPING
+
 	// Ensure no duplicates
 	if (HasCrashed)
 	{
@@ -194,20 +196,26 @@ void FNovaModule::ReportError(FString Function)
 		Callstack, UE_ARRAY_COUNT(Callstack), 1, FGenericPlatformStackWalk::EStackWalkFlags::AccurateStackWalk);
 	FCString::Strncat(CallstackString, ANSI_TO_TCHAR(Callstack), UE_ARRAY_COUNT(CallstackString) - 1);
 
-#if UE_BUILD_SHIPPING
-
 	// Parameters
-	FString ReportURL      = TEXT("https://deimos.games/report.php");
-	FString GameString     = TEXT("Nova");
-	FString GameParameter  = TEXT("game");
-	FString TitleParameter = TEXT("title");
-	FString StackParameter = TEXT("callstack");
+	const FString ReportURL           = TEXT("https://deimos.games/report.php");
+	const FString GameString          = TEXT("Nova");
+	const FString GameParameter       = TEXT("game");
+	const FString ExpressionParameter = TEXT("expression");
+	const FString FunctionParameter   = TEXT("function");
+	const FString FileParameter       = TEXT("file");
+	const FString StackParameter      = TEXT("callstack");
+
+	// Sanitize expression
+	const FString SanitizedExpression = FPlatformHttp::UrlEncode(Expression);
+	const FString SanitizedCallstack  = FPlatformHttp::UrlEncode(CallstackString);
 
 	// Format data
-	FString RequestContent = GameParameter + TEXT("=") + GameString + TEXT("&") + TitleParameter + TEXT("=") + Function + TEXT("&") +
-							 StackParameter + TEXT("=") + FString(CallstackString);
+	const FString RequestContent = GameParameter + TEXT("=") + GameString + TEXT("&") + ExpressionParameter + TEXT("=") +
+								   SanitizedExpression + TEXT("&") + FunctionParameter + TEXT("=") + Function + TEXT("&") + FileParameter +
+								   TEXT("=") + File + TEXT("&") + StackParameter + TEXT("=") + FString(SanitizedCallstack);
 
 	// Report to server
+	NLOG("Reporting error: '%s'", *RequestContent);
 	FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
 	Request->SetURL(ReportURL);
 	Request->SetVerb("POST");
@@ -226,14 +234,14 @@ void FNovaModule::ReportError(FString Function)
 		FPlatformProcess::Sleep(0.1f);
 	}
 
-#endif
-
 	// Report to user
 	FPlatformMisc::MessageBoxExt(EAppMsgType::Ok,
 		TEXT("An automated report has been sent. Please report this issue yourself with more information."), TEXT("The game has crashed."));
 
 	// Crash
 	FPlatformMisc::RequestExit(0);
+
+#endif
 }
 
 #undef LOCTEXT_NAMESPACE

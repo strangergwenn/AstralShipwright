@@ -33,13 +33,13 @@ FText GetDurationText(float Minutes, int32 MaxComponents = 4);
 ----------------------------------------------------*/
 
 /** Ensure an expression is true */
-#define NCHECK(Expression)                          \
-	do                                              \
-	{                                               \
-		if (!ensure(Expression))                    \
-		{                                           \
-			FNovaModule::ReportError(__FUNCTION__); \
-		}                                           \
+#define NCHECK(Expression)                                                 \
+	do                                                                     \
+	{                                                                      \
+		if (!ensure(Expression))                                           \
+		{                                                                  \
+			FNovaModule::ReportError(#Expression, __FUNCTION__, __FILE__); \
+		}                                                                  \
 	} while (0)
 
 /*----------------------------------------------------
@@ -58,5 +58,5 @@ public:
 	static void DisplayLog(FString Log);
 
 	/** Send a crash report, display the stack and exit */
-	static void ReportError(FString Function);
+	static void ReportError(FString Expression, FString Function, FString File);
 };
