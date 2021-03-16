@@ -29,6 +29,9 @@ void UNovaGameUserSettings::SetToDefaults()
 {
 	Super::SetToDefaults();
 
+	// System
+	EnableCrashReports = true;
+
 	// Gameplay
 	MouseSensitivity   = 0.8f;
 	GamepadSensitivity = 2.0f;

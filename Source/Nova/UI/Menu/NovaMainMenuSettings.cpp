@@ -91,6 +91,16 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 				[
 					SAssignNew(GameplayContainer, SVerticalBox)
 				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNovaAssignNew(CrashReportButton, SNovaButton)
+					.Toggle(true)
+					.Text(LOCTEXT("EnableCrashReport", "Enable crash reports"))
+					.HelpText(LOCTEXT("EnableCrashReportHelp", "Send anonymous debugging information to Deimos Games when the game crashes"))
+					.OnClicked(this, &SNovaMainMenuSettings::OnCrashReportToggled)
+				]
 			]
 
 			// Video settings panel
@@ -724,6 +734,12 @@ bool SNovaMainMenuSettings::IsHDRSupported() const
 void SNovaMainMenuSettings::OnFOVChanged(float Value)
 {
 	GameUserSettings->FOV = Value;
+	GameUserSettings->SaveSettings();
+}
+
+void SNovaMainMenuSettings::OnCrashReportToggled()
+{
+	GameUserSettings->EnableCrashReports = CrashReportButton->IsActive();
 	GameUserSettings->SaveSettings();
 }
 

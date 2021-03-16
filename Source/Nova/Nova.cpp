@@ -3,12 +3,6 @@
 #include "Nova.h"
 #include "UI/Style/NovaStyleSet.h"
 
-#include "Runtime/Online/HTTP/Public/Http.h"
-#include "Runtime/Online/HTTP/Public/HttpManager.h"
-#include "HAL/PlatformStackWalk.h"
-#include "HAL/PlatformProcess.h"
-#include "HAL/PlatformTime.h"
-#include "HAL/ThreadSafeBool.h"
 #include "Engine.h"
 
 IMPLEMENT_PRIMARY_GAME_MODULE(FNovaModule, Nova, "Nova");
@@ -168,80 +162,10 @@ FText GetDurationText(float SourceMinutes, int32 MaxComponents)
     Module code
 ----------------------------------------------------*/
 
-FThreadSafeBool HasCrashed = false;
-
 void FNovaModule::DisplayLog(FString Log)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, Log);
 	UE_LOG(LogNova, Display, TEXT("%s"), *Log);
-}
-
-void FNovaModule::ReportError(FString Expression, FString Function, FString File)
-{
-#if UE_BUILD_SHIPPING
-
-	// Ensure no duplicates
-	if (HasCrashed)
-	{
-		return;
-	}
-	HasCrashed = true;
-
-	// Get stack trace
-	ANSICHAR Callstack[16384];
-	Callstack[0] = 0;
-	TCHAR CallstackString[16384];
-	CallstackString[0] = 0;
-	FPlatformStackWalk::StackWalkAndDumpEx(
-		Callstack, UE_ARRAY_COUNT(Callstack), 1, FGenericPlatformStackWalk::EStackWalkFlags::AccurateStackWalk);
-	FCString::Strncat(CallstackString, ANSI_TO_TCHAR(Callstack), UE_ARRAY_COUNT(CallstackString) - 1);
-
-	// Parameters
-	const FString ReportURL           = TEXT("https://deimos.games/report.php");
-	const FString GameString          = TEXT("Nova");
-	const FString GameParameter       = TEXT("game");
-	const FString ExpressionParameter = TEXT("expression");
-	const FString FunctionParameter   = TEXT("function");
-	const FString FileParameter       = TEXT("file");
-	const FString StackParameter      = TEXT("callstack");
-
-	// Sanitize expression
-	const FString SanitizedExpression = FPlatformHttp::UrlEncode(Expression);
-	const FString SanitizedCallstack  = FPlatformHttp::UrlEncode(CallstackString);
-
-	// Format data
-	const FString RequestContent = GameParameter + TEXT("=") + GameString + TEXT("&") + ExpressionParameter + TEXT("=") +
-								   SanitizedExpression + TEXT("&") + FunctionParameter + TEXT("=") + Function + TEXT("&") + FileParameter +
-								   TEXT("=") + File + TEXT("&") + StackParameter + TEXT("=") + FString(SanitizedCallstack);
-
-	// Report to server
-	NLOG("Reporting error: '%s'", *RequestContent);
-	FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
-	Request->SetURL(ReportURL);
-	Request->SetVerb("POST");
-	Request->SetHeader(TEXT("User-Agent"), "X-DeimosGames-Agent");
-	Request->SetHeader("Content-Type", TEXT("application/x-www-form-urlencoded"));
-	Request->SetContentAsString(RequestContent);
-	Request->ProcessRequest();
-
-	// Wait for end
-	double CurrentTime = FPlatformTime::Seconds();
-	while (EHttpRequestStatus::Processing == Request->GetStatus())
-	{
-		const double AppTime = FPlatformTime::Seconds();
-		FHttpModule::Get().GetHttpManager().Tick(AppTime - CurrentTime);
-		CurrentTime = AppTime;
-		FPlatformProcess::Sleep(0.1f);
-	}
-
-	// Report to user
-	FPlatformMisc::MessageBoxExt(EAppMsgType::Ok,
-		TEXT("An automated report has been sent. Please report this issue yourself with more information."), TEXT("The game has crashed."));
-
-	// Crash
-	FPlatformMisc::RequestExit(0);
-
-#endif
 }
 
 #undef LOCTEXT_NAMESPACE

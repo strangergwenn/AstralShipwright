@@ -30,6 +30,10 @@ public:
 	    Properties
 	----------------------------------------------------*/
 
+	/** Enable the crash reporter */
+	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
+	bool EnableCrashReports;
+
 	/** Mouse sensitivity */
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	float MouseSensitivity;

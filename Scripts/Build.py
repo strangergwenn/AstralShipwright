@@ -129,7 +129,7 @@ for platform in projectPlatforms:
 	])
 
 	# Post-processing of generated files
-	for root, directories, filenames in os.walk(buildOutputDir):				
+	for root, directories, filenames in os.walk(buildOutputDir):
 		for filename in filenames:
 			
 			absoluteFilename = str(os.path.join(root, filename))
@@ -153,3 +153,15 @@ for platform in projectPlatforms:
 	# Copy Steam Appid file
 	buildExecutableDir = os.path.join(buildOutputDir, projectName, 'Binaries', platform)
 	shutil.copyfile(os.path.join('..', 'steam_appid.txt'), os.path.join(buildExecutableDir, 'steam_appid.txt'))
+	
+	# Copy the crash reporter
+	crashReportExecutableDir = os.path.join(buildOutputDir, 'Engine', 'Binaries', platform)
+	crashReportExecutable = os.path.join('..', 'Mayday')
+	os.mkdir(crashReportExecutableDir)
+	if platform == 'Linux':
+		if os.path.exists(crashReportExecutable):
+			shutil.copyfile(crashReportExecutable, os.path.join(crashReportExecutableDir, 'CrashReportClient'))
+	else:
+		crashReportExecutable = crashReportExecutable + '.exe'
+		if os.path.exists(crashReportExecutable):
+			shutil.copyfile(crashReportExecutable, os.path.join(crashReportExecutableDir, 'CrashReportClient.exe'))

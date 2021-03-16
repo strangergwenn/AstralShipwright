@@ -70,6 +70,7 @@ protected:
 
 	// Gameplay settings callbacks
 	void OnFOVChanged(float Value);
+	void OnCrashReportToggled();
 
 	// Graphics settings callbacks
 	void OnViewDistanceChanged(float Value);
@@ -129,6 +130,7 @@ protected:
 	TSharedPtr<SVerticalBox>                            GameplayContainer;
 	TSharedPtr<SNovaModalListView<TSharedPtr<FString>>> CultureListView;
 	TSharedPtr<class SNovaSlider>                       FOVSlider;
+	TSharedPtr<class SNovaButton>                       CrashReportButton;
 
 	// Display settings widgets
 	TSharedPtr<SNovaModalListView<TSharedPtr<struct FScreenResolutionRHI>>> ResolutionListView;
