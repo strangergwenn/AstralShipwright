@@ -390,7 +390,7 @@ struct FNovaSpacecraft : public FFastArraySerializerItem
 	GENERATED_BODY()
 
 public:
-	FNovaSpacecraft() : Identifier(FGuid::NewGuid())
+	FNovaSpacecraft() : Identifier(0, 0, 0, 0)
 	{}
 
 	bool operator==(const FNovaSpacecraft& Other) const;
@@ -398,6 +398,12 @@ public:
 	bool operator!=(const FNovaSpacecraft& Other) const
 	{
 		return !operator==(Other);
+	}
+
+	/** Create a new spacecraft */
+	void Create()
+	{
+		Identifier = FGuid::NewGuid();
 	}
 
 	/** Update bulkheads, pipes, wiring, based on the current state */

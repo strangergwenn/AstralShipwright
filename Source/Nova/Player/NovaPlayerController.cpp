@@ -153,7 +153,7 @@ void ANovaPlayerController::SerializeJson(
 		TSharedPtr<FJsonObject> FactoryJsonData;
 		if (SaveData)
 		{
-			ANovaSpacecraftPawn::SerializeJson(SaveData->Spacecraft, FactoryJsonData, ENovaSerialize::DataToJson);
+			FNovaSpacecraft::SerializeJson(SaveData->Spacecraft, FactoryJsonData, ENovaSerialize::DataToJson);
 		}
 		JsonData->SetObjectField("Spacecraft", FactoryJsonData);
 	}
@@ -162,7 +162,7 @@ void ANovaPlayerController::SerializeJson(
 		SaveData = MakeShared<FNovaPlayerSave>();
 
 		TSharedPtr<FJsonObject> FactoryJsonData = JsonData->GetObjectField("Spacecraft");
-		ANovaSpacecraftPawn::SerializeJson(SaveData->Spacecraft, FactoryJsonData, ENovaSerialize::JsonToData);
+		FNovaSpacecraft::SerializeJson(SaveData->Spacecraft, FactoryJsonData, ENovaSerialize::JsonToData);
 	}
 }
 

@@ -295,6 +295,7 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 	else
 	{
 		This = MakeShared<FNovaSpacecraft>();
+		This->Create();
 
 		FGuid Identifier;
 		if (FGuid::Parse(JsonData->GetStringField("Identifier"), Identifier))

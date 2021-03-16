@@ -38,12 +38,6 @@ public:
 	ANovaSpacecraftPawn();
 
 	/*----------------------------------------------------
-	    Loading & saving
-	----------------------------------------------------*/
-
-	static void SerializeJson(TSharedPtr<FNovaSpacecraft>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
-
-	/*----------------------------------------------------
 	    Gameplay
 	----------------------------------------------------*/
 

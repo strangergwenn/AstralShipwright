@@ -42,15 +42,6 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 }
 
 /*----------------------------------------------------
-    Loading & saving
-----------------------------------------------------*/
-
-void ANovaSpacecraftPawn::SerializeJson(TSharedPtr<FNovaSpacecraft>& SaveData, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
-{
-	FNovaSpacecraft::SerializeJson(SaveData, JsonData, Direction);
-}
-
-/*----------------------------------------------------
     Gameplay
 ----------------------------------------------------*/
 
