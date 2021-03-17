@@ -183,8 +183,8 @@ protected:
 	void AddPlanet(const FVector2D& Pos, const class UNovaPlanet* Planet);
 
 	/** Draw a trajectory */
-	void AddTrajectory(
-		const FVector2D& Position, const struct FNovaTrajectory& Trajectory, const struct FNovaSplineStyle& Style, float Progress = 1.0f);
+	void AddTrajectory(const FVector2D& Position, const struct FNovaTrajectory& Trajectory, const struct FNovaSplineStyle& Style,
+		const struct FNovaSpacecraft* Spacecraft = nullptr, float Progress = 1.0f);
 
 	/** Draw an orbit */
 	TPair<FVector2D, FVector2D> AddOrbit(const FVector2D& Position, const FNovaOrbitGeometry& Geometry,

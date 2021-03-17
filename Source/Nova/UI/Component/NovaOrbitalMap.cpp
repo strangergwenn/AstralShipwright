@@ -275,7 +275,7 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 
 		TArray<FNovaOrbitalObject> Objects;
 
-		Objects.Add(FNovaOrbitalObject(GameWorld->Get(Identifier), Location.Phase));
+		Objects.Add(FNovaOrbitalObject(GameWorld->GetSpacecraft(Identifier), Location.Phase));
 
 		AddOrbit(Origin, Location.Geometry, Objects, FNovaSplineStyle(FLinearColor::Blue));
 		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Location.Geometry.GetHighestAltitude());
@@ -284,13 +284,15 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 
 void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
 {
+	ANovaGameWorld*                  GameWorld         = ANovaGameWorld::Get(MenuManager.Get());
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
 	// Add the current trajectory
 	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
 	if (PlayerTrajectory)
 	{
-		AddTrajectory(Origin, *PlayerTrajectory, FNovaSplineStyle(FLinearColor::Blue));
+		AddTrajectory(Origin, *PlayerTrajectory, FNovaSplineStyle(FLinearColor::Blue),
+			GameWorld->GetSpacecraft(OrbitalSimulation->GetPlayerSpacecraftIdentifier()));
 		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, PlayerTrajectory->GetHighestAltitude());
 	}
 }
@@ -303,7 +305,7 @@ void SNovaOrbitalMap::ProcessTrajectoryPreview(const FVector2D& Origin, float De
 	// Add the preview trajectory
 	if (CurrentPreviewTrajectory.IsValid())
 	{
-		AddTrajectory(Origin, *CurrentPreviewTrajectory, FNovaSplineStyle(FLinearColor::Yellow), CurrentPreviewProgress);
+		AddTrajectory(Origin, *CurrentPreviewTrajectory, FNovaSplineStyle(FLinearColor::Yellow), nullptr, CurrentPreviewProgress);
 		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, CurrentPreviewTrajectory->GetHighestAltitude());
 	};
 }
@@ -349,8 +351,8 @@ void SNovaOrbitalMap::AddPlanet(const FVector2D& Pos, const class UNovaPlanet* P
 	BatchedTexts.Add(Text);
 }
 
-void SNovaOrbitalMap::AddTrajectory(
-	const FVector2D& Position, const FNovaTrajectory& Trajectory, const FNovaSplineStyle& Style, float Progress)
+void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajectory& Trajectory, const FNovaSplineStyle& Style,
+	const struct FNovaSpacecraft* Spacecraft, float Progress)
 {
 	for (int32 TransferIndex = 0; TransferIndex < Trajectory.TransferOrbits.Num(); TransferIndex++)
 	{
@@ -365,13 +367,23 @@ void SNovaOrbitalMap::AddTrajectory(
 			SkipRemainingTransfers = true;
 		}
 
-		TArray<FNovaOrbitalObject> Maneuvers;
+		TArray<FNovaOrbitalObject> Objects;
 		for (const FNovaManeuver& Maneuver : Trajectory.Maneuvers)
 		{
-			Maneuvers.Add(Maneuver);
+			Objects.Add(Maneuver);
 		}
 
-		AddOrbit(Position, Geometry, Maneuvers, Style);
+		if (Spacecraft)
+		{
+			UNovaOrbitalSimulationComponent* OrbitalSimulation  = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+			const FNovaOrbitalLocation*      SpacecraftLocation = OrbitalSimulation->GetSpacecraftLocation(Spacecraft->Identifier);
+			if (SpacecraftLocation)
+			{
+				Objects.Add(FNovaOrbitalObject(Spacecraft, SpacecraftLocation->Phase));
+			}
+		}
+
+		AddOrbit(Position, Geometry, Objects, Style);
 
 		if (SkipRemainingTransfers)
 		{
@@ -387,15 +399,15 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbit(
 
 	const float  RadiusA       = CurrentDrawScale * Geometry.StartAltitude;
 	const float  RadiusB       = CurrentDrawScale * Geometry.OppositeAltitude;
-	const float  MajorAxis     = 0.5f * (RadiusA + RadiusB);
-	const float  MinorAxis     = FMath::Sqrt(RadiusA * RadiusB);
+	const float  SemiMajorAxis = 0.5f * (RadiusA + RadiusB);
+	const float  SemiMinorAxis = FMath::Sqrt(RadiusA * RadiusB);
 	const float& Phase         = Geometry.StartPhase;
 	const float& InitialAngle  = 0;
 	const float  AngularLength = Geometry.EndPhase - Geometry.StartPhase;
 	const float  Offset        = 0.5f * (RadiusB - RadiusA);
 
 	return AddOrbitInternal(
-		FNovaSplineOrbit(LocalPosition, MajorAxis, MinorAxis, Phase, InitialAngle, AngularLength, Offset), Objects, Style);
+		FNovaSplineOrbit(LocalPosition, SemiMajorAxis, SemiMinorAxis, Phase, InitialAngle, AngularLength, Offset), Objects, Style);
 }
 
 void SNovaOrbitalMap::AddOrbitalObject(const FNovaOrbitalObject& Object, const FLinearColor& Color)
@@ -412,12 +424,7 @@ void SNovaOrbitalMap::AddOrbitalObject(const FNovaOrbitalObject& Object, const F
 
 	if (IsHovered)
 	{
-		ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-		NCHECK(GameState);
-		ANovaGameWorld* GameWorld = GameState->GetGameWorld();
-		NCHECK(GameWorld);
-		UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
-		NCHECK(OrbitalSimulation);
+		UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
 		DesiredObjectTexts.AddUnique(Object.GetText(OrbitalSimulation->GetCurrentTime()).ToString());
 	}

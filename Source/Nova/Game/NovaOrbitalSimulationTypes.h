@@ -3,36 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Nova/Game/NovaGameTypes.h"
+#include "NovaArea.h"
+#include "NovaGameTypes.h"
 
 #include "NovaOrbitalSimulationTypes.generated.h"
 
 /*----------------------------------------------------
     Simulation structures
 ----------------------------------------------------*/
-
-/** Hohmann transfer orbit parameters */
-struct FNovaHohmannTransfer
-{
-	double StartDeltaV;
-	double EndDeltaV;
-	double TotalDeltaV;
-	double Duration;
-};
-
-/** Trajectory computation parameters */
-struct FNovaTrajectoryParameters
-{
-	double StartTime;
-
-	double SourceAltitude;
-	double SourcePhase;
-	double DestinationAltitude;
-	double DestinationPhase;
-
-	const class UNovaPlanet* Planet;
-	double                   µ;
-};
 
 /** Data for a stable orbit that might be a circular, elliptical or Hohmann transfer orbit */
 USTRUCT(Atomic)
@@ -43,13 +21,13 @@ struct FNovaOrbitGeometry
 	FNovaOrbitGeometry() : Planet(nullptr), StartAltitude(0), OppositeAltitude(0), StartPhase(0), EndPhase(0)
 	{}
 
-	FNovaOrbitGeometry(const class UNovaPlanet* P, float SA, float SP)
+	FNovaOrbitGeometry(const UNovaPlanet* P, float SA, float SP)
 		: Planet(P), StartAltitude(SA), OppositeAltitude(SA), StartPhase(SP), EndPhase(SP + 360)
 	{
 		NCHECK(Planet != nullptr);
 	}
 
-	FNovaOrbitGeometry(const class UNovaPlanet* P, float SA, float EA, float SP, float EP)
+	FNovaOrbitGeometry(const UNovaPlanet* P, float SA, float EA, float SP, float EP)
 		: Planet(P), StartAltitude(SA), OppositeAltitude(EA), StartPhase(SP), EndPhase(EP)
 	{
 		NCHECK(Planet != nullptr);
@@ -73,8 +51,30 @@ struct FNovaOrbitGeometry
 		return FMath::Max(StartAltitude, OppositeAltitude);
 	}
 
+	/** Compute the period of this orbit geometry in minutes */
+	double GetOrbitalPeriod() const
+	{
+		NCHECK(Planet);
+		const double RadiusA = Planet->GetRadius(StartAltitude);
+		const double RadiusB = Planet->GetRadius(OppositeAltitude);
+		const double µ       = Planet->GetGravitationalParameter();
+
+		const float SemiMajorAxis = 0.5f * (RadiusA + RadiusB);
+		return 2.0 * PI * sqrt(pow(SemiMajorAxis, 3.0) / µ) / 60.0;
+	}
+
+	/** Get the current phase on this orbit */
+	template <bool Unwind = true>
+	double GetCurrentPhase(const double DeltaTime) const
+	{
+		NCHECK(Planet);
+		const double OrbitalPeriod = GetOrbitalPeriod();
+		const double Phase         = StartPhase + (DeltaTime / OrbitalPeriod) * 360;
+		return Unwind ? FMath::Fmod(Phase, 360.0) : Phase;
+	}
+
 	UPROPERTY()
-	const class UNovaPlanet* Planet;
+	const UNovaPlanet* Planet;
 
 	UPROPERTY()
 	float StartAltitude;
@@ -114,6 +114,13 @@ struct FNovaOrbit
 		return Geometry.IsValid();
 	}
 
+	/** Get the current phase on this orbit */
+	template <bool Unwind = true>
+	double GetCurrentPhase(const double CurrentTime) const
+	{
+		return Geometry.GetCurrentPhase(CurrentTime - InsertionTime);
+	}
+
 	UPROPERTY()
 	FNovaOrbitGeometry Geometry;
 
@@ -136,8 +143,8 @@ struct FNovaOrbitalLocation
 	/** Get the Cartesian coordinates for this location */
 	FVector2D GetCartesianLocation() const
 	{
-		NCHECK(Geometry.StartAltitude == Geometry.OppositeAltitude);
-		return FVector2D(Geometry.StartAltitude, 0).GetRotated(Phase);
+		return FVector2D(0.5f * (Geometry.OppositeAltitude - Geometry.StartAltitude), 0).GetRotated(Geometry.StartPhase) +
+			   FVector2D(Geometry.StartAltitude, 0).GetRotated(Phase);
 	}
 
 	FNovaOrbitalLocation() : Geometry(), Phase(0)
@@ -181,7 +188,7 @@ struct FNovaTrajectory
 {
 	GENERATED_BODY()
 
-	FNovaTrajectory() : TotalTransferDuration(0), TotalDeltaV(0)
+	FNovaTrajectory() : StartTime(0), TotalTransferDuration(0), TotalDeltaV(0)
 	{}
 
 	bool operator==(const FNovaTrajectory& Other) const
@@ -202,11 +209,17 @@ struct FNovaTrajectory
 	/** Compute the final orbit this trajectory will put the spacecraft in */
 	FNovaOrbit GetFinalOrbit() const;
 
+	/** *Get the current location in orbit */
+	FNovaOrbitalLocation GetCurrentLocation(double CurrentTime) const;
+
 	UPROPERTY()
 	TArray<FNovaOrbitGeometry> TransferOrbits;
 
 	UPROPERTY()
 	TArray<FNovaManeuver> Maneuvers;
+
+	UPROPERTY()
+	float StartTime;
 
 	UPROPERTY()
 	float TotalTransferDuration;

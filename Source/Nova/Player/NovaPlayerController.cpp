@@ -727,7 +727,7 @@ const FNovaSpacecraft* ANovaPlayerController::GetSpacecraft() const
 	if (IsValid(GameWorld) && IsValid(OwnedPlayerState))
 	{
 		FGuid PlayerSpacecraftIdentifier = GetPlayerState<ANovaPlayerState>()->GetSpacecraftIdentifier();
-		return GameWorld->Get(PlayerSpacecraftIdentifier);
+		return GameWorld->GetSpacecraft(PlayerSpacecraftIdentifier);
 	}
 	else
 	{

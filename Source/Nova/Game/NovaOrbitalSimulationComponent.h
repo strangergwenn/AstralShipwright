@@ -11,6 +11,29 @@
 
 #include "NovaOrbitalSimulationComponent.generated.h"
 
+/** Hohmann transfer orbit parameters */
+struct FNovaHohmannTransfer
+{
+	double StartDeltaV;
+	double EndDeltaV;
+	double TotalDeltaV;
+	double Duration;
+};
+
+/** Trajectory computation parameters */
+struct FNovaTrajectoryParameters
+{
+	double StartTime;
+
+	double SourceAltitude;
+	double SourcePhase;
+	double DestinationAltitude;
+	double DestinationPhase;
+
+	const UNovaPlanet* Planet;
+	double             µ;
+};
+
 /** Orbital simulation component that ticks orbiting spacecraft */
 UCLASS(ClassGroup = (Nova))
 class UNovaOrbitalSimulationComponent : public UActorComponent
@@ -35,10 +58,11 @@ public:
 
 public:
 	/** Build trajectory parameters */
-	FNovaTrajectoryParameters PrepareTrajectory(const UNovaArea* Source, const UNovaArea* Destination, double DeltaTime = 0) const;
+	TSharedPtr<FNovaTrajectoryParameters> PrepareTrajectory(
+		const UNovaArea* Source, const UNovaArea* Destination, double DeltaTime = 0) const;
 
 	/** Compute a trajectory */
-	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const FNovaTrajectoryParameters& Parameters, float PhasingAltitude);
+	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const TSharedPtr<FNovaTrajectoryParameters>& Parameters, float PhasingAltitude);
 
 	/** Check if this trajectory can be started */
 	bool CanStartTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory) const;
@@ -98,7 +122,7 @@ public:
 	/** Get a spacecraft's location */
 	const FNovaOrbitalLocation* GetSpacecraftLocation(const FGuid& Identifier) const
 	{
-		return &SpacecraftOrbitalLocations[Identifier];
+		return SpacecraftOrbitalLocations.Find(Identifier);
 	}
 
 	/** Get all spacecraft's locations */
@@ -106,6 +130,9 @@ public:
 	{
 		return SpacecraftOrbitalLocations;
 	}
+
+	/** Return the identifier of one of the player spacecraft */
+	FGuid GetPlayerSpacecraftIdentifier() const;
 
 	/** Get the player orbit */
 	const FNovaOrbit* GetPlayerOrbit() const;
@@ -124,6 +151,9 @@ public:
 	----------------------------------------------------*/
 
 protected:
+	/** Clean up obsolete orbit data */
+	void ProcessOrbitCleanup();
+
 	/** Update all area's position */
 	void ProcessAreas();
 
@@ -152,28 +182,26 @@ protected:
 	}
 
 	/** Compute the period of a stable circular orbit in minutes */
-	static double GetCircularOrbitPeriod(const double GravitationalParameter, const double Radius)
+	static double GetOrbitalPeriod(const double GravitationalParameter, const double SemiMajorAxis)
 	{
-		return 2.0 * PI * sqrt(pow(Radius, 3.0) / GravitationalParameter) / 60.0;
+		return 2.0 * PI * sqrt(pow(SemiMajorAxis, 3.0) / GravitationalParameter) / 60.0;
 	}
 
-	/** Get the current phase of an orbit */
-	double GetCircularOrbitPhase(const UNovaPlanet* Planet, const FNovaOrbit& Orbit, double DeltaTime = 0) const
+	/** Get the current phase of an area in a circular orbit */
+	static double GetAreaPhase(const UNovaArea* Area, double CurrentTime)
 	{
-		const double OrbitalPeriod =
-			GetCircularOrbitPeriod(Planet->GetGravitationalParameter(), Planet->GetRadius(Orbit.Geometry.StartAltitude));
-		const double CurrentTime = GetCurrentTime() + DeltaTime;
-		return FMath::Fmod(Orbit.Geometry.StartPhase + (CurrentTime / OrbitalPeriod) * 360, 360.0);
-	}
-
-	/** Get the current phase of an area */
-	double GetAreaPhase(const UNovaArea* Area, double DeltaTime = 0) const
-	{
-		const double OrbitalPeriod =
-			GetCircularOrbitPeriod(Area->Planet->GetGravitationalParameter(), Area->Planet->GetRadius(Area->Altitude));
-		const double CurrentTime = GetCurrentTime() + DeltaTime;
+		const double OrbitalPeriod = GetOrbitalPeriod(Area->Planet->GetGravitationalParameter(), Area->Planet->GetRadius(Area->Altitude));
 		return FMath::Fmod(Area->Phase + (CurrentTime / OrbitalPeriod) * 360, 360.0);
 	}
+
+	/*----------------------------------------------------
+	    Properties
+	----------------------------------------------------*/
+
+public:
+	// Delay after a trajectory has started before removing the orbit data
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float OrbitGarbageCollectionDelay;
 
 	/*----------------------------------------------------
 	    Data

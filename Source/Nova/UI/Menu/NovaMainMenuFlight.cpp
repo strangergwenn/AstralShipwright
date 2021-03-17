@@ -333,7 +333,7 @@ void SNovaMainMenuFlight::OnDock()
 
 void SNovaMainMenuFlight::OnTrajectoryChanged(TSharedPtr<FNovaTrajectory> Trajectory)
 {
-	OrbitalMap->Set(Trajectory, true);
+	OrbitalMap->Set(Trajectory, false);
 }
 
 void SNovaMainMenuFlight::OnCommitTrajectory()

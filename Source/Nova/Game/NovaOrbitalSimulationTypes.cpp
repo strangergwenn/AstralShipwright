@@ -35,3 +35,38 @@ FNovaOrbit FNovaTrajectory::GetFinalOrbit() const
 
 	return FNovaOrbit(FinalGeometry, InsertionTime);
 }
+
+FNovaOrbitalLocation FNovaTrajectory::GetCurrentLocation(double CurrentTime) const
+{
+	const FNovaManeuver*      Maneuver = nullptr;
+	const FNovaOrbitGeometry* Geometry = nullptr;
+
+	// Find the current maneuver
+	for (int32 ManeuverIndex = 0; ManeuverIndex < Maneuvers.Num() - 1; ManeuverIndex++)
+	{
+		if (CurrentTime >= Maneuvers[ManeuverIndex].Time && CurrentTime <= Maneuvers[ManeuverIndex + 1].Time)
+		{
+			Maneuver = &Maneuvers[ManeuverIndex];
+		}
+	}
+
+	// Find the current transfer orbit
+	if (Maneuver)
+	{
+		for (const FNovaOrbitGeometry& Transfer : TransferOrbits)
+		{
+			if (Transfer.StartPhase == Maneuver->Phase)
+			{
+				Geometry = &Transfer;
+			}
+		}
+
+		// Compute the current location
+		if (Geometry)
+		{
+			return FNovaOrbitalLocation(*Geometry, Geometry->GetCurrentPhase<false>(CurrentTime - Maneuver->Time));
+		}
+	}
+
+	return FNovaOrbitalLocation();
+}

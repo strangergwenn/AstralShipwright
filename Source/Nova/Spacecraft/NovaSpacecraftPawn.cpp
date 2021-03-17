@@ -68,7 +68,7 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 				ANovaGameWorld* GameWorld = GameState->GetGameWorld();
 				if (IsValid(GameWorld))
 				{
-					const FNovaSpacecraft* NewSpacecraft = GameWorld->Get(OwningPlayerState->GetSpacecraftIdentifier());
+					const FNovaSpacecraft* NewSpacecraft = GameWorld->GetSpacecraft(OwningPlayerState->GetSpacecraftIdentifier());
 					if (NewSpacecraft && (!Spacecraft.IsValid() || *NewSpacecraft != *Spacecraft.Get()))
 					{
 						NLOG("ANovaSpacecraftPawn::Tick : updating spacecraft");

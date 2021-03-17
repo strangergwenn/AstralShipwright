@@ -91,7 +91,7 @@ public:
 	void UpdateSpacecraft(const FNovaSpacecraft Spacecraft, bool IsPlayerSpacecraft);
 
 	/** Return a pointer for a spacecraft by identifier */
-	const FNovaSpacecraft* Get(FGuid Identifier)
+	const FNovaSpacecraft* GetSpacecraft(FGuid Identifier)
 	{
 		return SpacecraftDatabase.Get(Identifier);
 	}
