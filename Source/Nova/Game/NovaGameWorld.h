@@ -84,6 +84,9 @@ public:
 	----------------------------------------------------*/
 
 public:
+	/** Get this actor */
+	static ANovaGameWorld* Get(const UObject* Outer);
+
 	/** Register or update a spacecraft */
 	void UpdateSpacecraft(const FNovaSpacecraft Spacecraft, bool IsPlayerSpacecraft);
 

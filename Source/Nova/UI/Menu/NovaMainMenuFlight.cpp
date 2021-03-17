@@ -80,6 +80,22 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
+						SNew(STextBlock)
+						.Text_Lambda([this]() -> FText {
+							const UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+							const FNovaOrbitalLocation* Location = OrbitalSimulation->GetPlayerLocation();
+							if (Location)
+							{
+								auto AreaAndDistance = OrbitalSimulation->GetClosestAreaAndDistance(*Location);
+								return AreaAndDistance.Key->Name;
+							}
+							return FText();
+						})
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
 						SNovaNew(SNovaButton)
 						.Text(LOCTEXT("LeaveStation", "Leave station"))
 						.HelpText(LOCTEXT("HelpLeaveStation", "Leave station"))
@@ -134,7 +150,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					.AutoHeight()
 					[
 						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("Calculaterajectories", "Calculate trajectories"))
+						.Text(LOCTEXT("CalculateTrajectories", "Calculate trajectories"))
 						.HelpText(LOCTEXT("HelpCalculateTrajectories", "Calculate trajectory options"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
@@ -155,11 +171,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.OnClicked(this, &SNovaMainMenuFlight::OnCommitTrajectory)
 						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 						{
-							ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-							NCHECK(GameState);
-							ANovaGameWorld* GameWorld = GameState->GetGameWorld();
-							NCHECK(GameWorld);
-							UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
+							UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
 							return OrbitalSimulation->CanStartTrajectory(OrbitalMap->GetPreviewTrajectory());
 						})))
@@ -175,20 +187,13 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						{
 							ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 							NCHECK(GameState);
-							ANovaGameWorld* GameWorld = GameState->GetGameWorld();
-							NCHECK(GameWorld);
-							UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
-							NCHECK(OrbitalSimulation);
+							UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 							
 							OrbitalSimulation->CompleteTrajectory(GameState->GetPlayerSpacecraftIdentifiers());
 						}))
 						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 						{
-							ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-							NCHECK(GameState);
-							ANovaGameWorld* GameWorld = GameState->GetGameWorld();
-							NCHECK(GameWorld);
-							UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
+							UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
 							return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority && OrbitalSimulation->GetPlayerTrajectory();
 						})))
@@ -335,10 +340,7 @@ void SNovaMainMenuFlight::OnCommitTrajectory()
 {
 	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	NCHECK(GameState);
-	ANovaGameWorld* GameWorld = GameState->GetGameWorld();
-	NCHECK(GameWorld);
-	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
-	NCHECK(OrbitalSimulation);
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
 	const TSharedPtr<FNovaTrajectory>& Trajectory = OrbitalMap->GetPreviewTrajectory();
 	if (OrbitalSimulation->CanStartTrajectory(Trajectory))

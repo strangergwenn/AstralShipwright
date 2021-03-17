@@ -21,7 +21,7 @@ public:
 	UNovaOrbitalSimulationComponent();
 
 	/*----------------------------------------------------
-	    Gameplay
+	    Inherited
 	----------------------------------------------------*/
 
 public:
@@ -29,6 +29,11 @@ public:
 
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	/*----------------------------------------------------
+	    Trajectory & orbiting interface
+	----------------------------------------------------*/
+
+public:
 	/** Build trajectory parameters */
 	FNovaTrajectoryParameters PrepareTrajectory(const UNovaArea* Source, const UNovaArea* Destination, double DeltaTime = 0) const;
 
@@ -50,17 +55,12 @@ public:
 	/** Merge different spacecraft in a particular orbit */
 	void MergeOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit);
 
-	/** Get the player orbit */
-	const FNovaOrbit* GetPlayerOrbit() const;
+	/*----------------------------------------------------
+	    Trajectory & orbiting getters
+	----------------------------------------------------*/
 
-	/** Get the player trajectory */
-	const FNovaTrajectory* GetPlayerTrajectory() const;
-
-	/** Get the orbit & position data for all areas */
-	const TMap<const UNovaArea*, FNovaOrbitalLocation>& GetAreasOrbitalLocation() const
-	{
-		return AreasOrbitalLocation;
-	}
+	/** Get this component */
+	static UNovaOrbitalSimulationComponent* Get(const UObject* Outer);
 
 	/** Get the orbital data for an area */
 	TSharedPtr<FNovaOrbit> GetAreaOrbit(const UNovaArea* Area) const
@@ -68,11 +68,53 @@ public:
 		return MakeShared<FNovaOrbit>(FNovaOrbitGeometry(Area->Planet, Area->Altitude, Area->Phase), 0);
 	}
 
-	/** Get the orbit & position data for all spacecraft */
-	const TMap<FGuid, FNovaOrbitalLocation>& GetSpacecraftOrbitalLocation() const
+	/** Get an area's location */
+	const FNovaOrbitalLocation& GetAreaLocation(const UNovaArea* Area) const
 	{
-		return SpacecraftOrbitalLocation;
+		return AreaOrbitalLocations[Area];
 	}
+
+	/** Get all area's locations */
+	const TMap<const UNovaArea*, FNovaOrbitalLocation>& GetAllAreasLocations() const
+	{
+		return AreaOrbitalLocations;
+	}
+
+	/** Get the closest area and the associated distance from an arbitrary location */
+	TPair<const UNovaArea*, float> GetClosestAreaAndDistance(const FNovaOrbitalLocation& Location) const;
+
+	/** Get a spacecraft's orbit */
+	const FNovaOrbit* GetSpacecraftOrbit(const FGuid& Identifier) const
+	{
+		return SpacecraftOrbitDatabase.Get(Identifier);
+	}
+
+	/** Get a spacecraft's trajectory */
+	const FNovaTrajectory* GetSpacecraftTrajectory(const FGuid& Identifier) const
+	{
+		return SpacecraftTrajectoryDatabase.Get(Identifier);
+	}
+
+	/** Get a spacecraft's location */
+	const FNovaOrbitalLocation* GetSpacecraftLocation(const FGuid& Identifier) const
+	{
+		return &SpacecraftOrbitalLocations[Identifier];
+	}
+
+	/** Get all spacecraft's locations */
+	const TMap<FGuid, FNovaOrbitalLocation>& GetAllSpacecraftLocations() const
+	{
+		return SpacecraftOrbitalLocations;
+	}
+
+	/** Get the player orbit */
+	const FNovaOrbit* GetPlayerOrbit() const;
+
+	/** Get the player trajectory */
+	const FNovaTrajectory* GetPlayerTrajectory() const;
+
+	/** Get the player location */
+	const FNovaOrbitalLocation* GetPlayerLocation() const;
 
 	/** Get the current time in minutes */
 	double GetCurrentTime() const;
@@ -146,7 +188,8 @@ private:
 	FNovaTrajectoryDatabase SpacecraftTrajectoryDatabase;
 
 	// Local state
+	const class ANovaPlayerState*                      CurrentPlayerState;
 	TArray<const class UNovaArea*>                     Areas;
-	TMap<const class UNovaArea*, FNovaOrbitalLocation> AreasOrbitalLocation;
-	TMap<FGuid, FNovaOrbitalLocation>                  SpacecraftOrbitalLocation;
+	TMap<const class UNovaArea*, FNovaOrbitalLocation> AreaOrbitalLocations;
+	TMap<FGuid, FNovaOrbitalLocation>                  SpacecraftOrbitalLocations;
 };

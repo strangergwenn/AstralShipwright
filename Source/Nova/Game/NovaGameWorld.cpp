@@ -54,6 +54,16 @@ void ANovaGameWorld::SerializeJson(
     Gameplay
 ----------------------------------------------------*/
 
+ANovaGameWorld* ANovaGameWorld::Get(const UObject* Outer)
+{
+	ANovaGameState* GameState = Outer->GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(GameState);
+	ANovaGameWorld* GameWorld = GameState->GetGameWorld();
+	NCHECK(GameWorld);
+
+	return GameWorld;
+}
+
 void ANovaGameWorld::UpdateSpacecraft(const FNovaSpacecraft Spacecraft, bool IsPlayerSpacecraft)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);

@@ -26,7 +26,7 @@ UNovaOrbitalSimulationComponent::UNovaOrbitalSimulationComponent() : Super()
 }
 
 /*----------------------------------------------------
-    Gameplay
+    Inherited
 ----------------------------------------------------*/
 
 void UNovaOrbitalSimulationComponent::BeginPlay()
@@ -41,11 +41,26 @@ void UNovaOrbitalSimulationComponent::TickComponent(
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// Get a player state
+	CurrentPlayerState = nullptr;
+	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
+	{
+		if (IsValid(PlayerState))
+		{
+			CurrentPlayerState = PlayerState;
+			break;
+		}
+	}
+
 	// Run processes
 	ProcessAreas();
 	ProcessSpacecraftOrbits();
 	ProcessSpacecraftTrajectories();
 }
+
+/*----------------------------------------------------
+    Trajectory & orbiting interface
+----------------------------------------------------*/
 
 FNovaTrajectoryParameters UNovaOrbitalSimulationComponent::PrepareTrajectory(
 	const UNovaArea* Source, const UNovaArea* Destination, double DeltaTime) const
@@ -244,30 +259,72 @@ void UNovaOrbitalSimulationComponent::MergeOrbit(const TArray<FGuid>& Spacecraft
 	SetOrbit(SpacecraftIdentifiers, Orbit);
 }
 
+/*----------------------------------------------------
+    Trajectory & orbiting getters
+----------------------------------------------------*/
+
+UNovaOrbitalSimulationComponent* UNovaOrbitalSimulationComponent::Get(const UObject* Outer)
+{
+	ANovaGameWorld* GameWorld = ANovaGameWorld::Get(Outer);
+	NCHECK(GameWorld);
+	UNovaOrbitalSimulationComponent* SimulationComponent = GameWorld->GetOrbitalSimulation();
+	NCHECK(SimulationComponent);
+
+	return SimulationComponent;
+}
+
 const FNovaOrbit* UNovaOrbitalSimulationComponent::GetPlayerOrbit() const
 {
-	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
+	if (IsValid(CurrentPlayerState))
 	{
-		if (IsValid(PlayerState))
-		{
-			return SpacecraftOrbitDatabase.Get(PlayerState->GetSpacecraftIdentifier());
-		}
+		return GetSpacecraftOrbit(CurrentPlayerState->GetSpacecraftIdentifier());
 	}
-
-	return nullptr;
+	else
+	{
+		return nullptr;
+	}
 }
 
 const FNovaTrajectory* UNovaOrbitalSimulationComponent::GetPlayerTrajectory() const
 {
-	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
+	if (IsValid(CurrentPlayerState))
 	{
-		if (IsValid(PlayerState))
+		return GetSpacecraftTrajectory(CurrentPlayerState->GetSpacecraftIdentifier());
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+const FNovaOrbitalLocation* UNovaOrbitalSimulationComponent::GetPlayerLocation() const
+{
+	if (IsValid(CurrentPlayerState))
+	{
+		return GetSpacecraftLocation(CurrentPlayerState->GetSpacecraftIdentifier());
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+TPair<const UNovaArea*, float> UNovaOrbitalSimulationComponent::GetClosestAreaAndDistance(const FNovaOrbitalLocation& Location) const
+{
+	const UNovaArea* ClosestArea     = nullptr;
+	float            ClosestDistance = MAX_FLT;
+
+	for (const TPair<const UNovaArea*, FNovaOrbitalLocation>& Entry : AreaOrbitalLocations)
+	{
+		float Distance = Entry.Value.GetDistanceTo(Location);
+		if (Distance < ClosestDistance)
 		{
-			return SpacecraftTrajectoryDatabase.Get(PlayerState->GetSpacecraftIdentifier());
+			ClosestArea     = Entry.Key;
+			ClosestDistance = Distance;
 		}
 	}
 
-	return nullptr;
+	return TPair<const UNovaArea*, float>(ClosestArea, ClosestDistance);
 }
 
 double UNovaOrbitalSimulationComponent::GetCurrentTime() const
@@ -293,14 +350,14 @@ void UNovaOrbitalSimulationComponent::ProcessAreas()
 		double CurrentPhase = GetCircularOrbitPhase(Area->Planet, *GetAreaOrbit(Area));
 
 		// Add or update the current orbit and position
-		FNovaOrbitalLocation* Entry = AreasOrbitalLocation.Find(Area);
+		FNovaOrbitalLocation* Entry = AreaOrbitalLocations.Find(Area);
 		if (Entry)
 		{
 			Entry->Phase = CurrentPhase;
 		}
 		else
 		{
-			AreasOrbitalLocation.Add(Area, FNovaOrbitalLocation(GetAreaOrbit(Area)->Geometry, CurrentPhase));
+			AreaOrbitalLocations.Add(Area, FNovaOrbitalLocation(GetAreaOrbit(Area)->Geometry, CurrentPhase));
 		}
 	}
 }
@@ -319,14 +376,14 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 		// Add or update the current orbit and position
 		for (const FGuid& Identifier : DatabaseEntry.Identifiers)
 		{
-			FNovaOrbitalLocation* Entry = SpacecraftOrbitalLocation.Find(Identifier);
+			FNovaOrbitalLocation* Entry = SpacecraftOrbitalLocations.Find(Identifier);
 			if (Entry)
 			{
 				*Entry = NewLocation;
 			}
 			else
 			{
-				SpacecraftOrbitalLocation.Add(Identifier, NewLocation);
+				SpacecraftOrbitalLocations.Add(Identifier, NewLocation);
 			}
 		}
 	}

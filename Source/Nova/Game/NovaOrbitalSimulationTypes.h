@@ -127,6 +127,19 @@ struct FNovaOrbitalLocation
 {
 	GENERATED_BODY()
 
+	/** Get the linear distance between this location and another */
+	float GetDistanceTo(const FNovaOrbitalLocation& Other) const
+	{
+		return (GetCartesianLocation() - Other.GetCartesianLocation()).Size();
+	}
+
+	/** Get the Cartesian coordinates for this location */
+	FVector2D GetCartesianLocation() const
+	{
+		NCHECK(Geometry.StartAltitude == Geometry.OppositeAltitude);
+		return FVector2D(Geometry.StartAltitude, 0).GetRotated(Phase);
+	}
+
 	FNovaOrbitalLocation() : Geometry(), Phase(0)
 	{}
 

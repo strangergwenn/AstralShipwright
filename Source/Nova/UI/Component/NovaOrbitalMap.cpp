@@ -213,12 +213,7 @@ FText SNovaOrbitalMap::GetHoverText() const
 
 void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 {
-	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-	NCHECK(GameState);
-	ANovaGameWorld* GameWorld = GameState->GetGameWorld();
-	NCHECK(GameWorld);
-	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
-	NCHECK(OrbitalSimulation);
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
 	// Orbit merging structure
 	struct FNovaMergedOrbitGeometry : FNovaOrbitGeometry
@@ -233,7 +228,7 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 	TArray<FNovaMergedOrbitGeometry> MergedOrbitGeometries;
 
 	// Merge orbits
-	for (const auto AreaAndOrbitalLocation : OrbitalSimulation->GetAreasOrbitalLocation())
+	for (const auto AreaAndOrbitalLocation : OrbitalSimulation->GetAllAreasLocations())
 	{
 		const FNovaOrbitalLocation& OrbitalLocation = AreaAndOrbitalLocation.Value;
 		const FNovaOrbitGeometry&   Geometry        = OrbitalLocation.Geometry;
@@ -269,15 +264,11 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 
 void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 {
-	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-	NCHECK(GameState);
-	ANovaGameWorld* GameWorld = GameState->GetGameWorld();
-	NCHECK(GameWorld);
-	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
-	NCHECK(OrbitalSimulation);
+	ANovaGameWorld*                  GameWorld         = ANovaGameWorld::Get(MenuManager.Get());
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
 	// Add the current orbit
-	for (const auto SpacecraftIdentifierAndOrbitalLocation : OrbitalSimulation->GetSpacecraftOrbitalLocation())
+	for (const auto SpacecraftIdentifierAndOrbitalLocation : OrbitalSimulation->GetAllSpacecraftLocations())
 	{
 		const FGuid&                Identifier = SpacecraftIdentifierAndOrbitalLocation.Key;
 		const FNovaOrbitalLocation& Location   = SpacecraftIdentifierAndOrbitalLocation.Value;
@@ -293,12 +284,7 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 
 void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
 {
-	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-	NCHECK(GameState);
-	ANovaGameWorld* GameWorld = GameState->GetGameWorld();
-	NCHECK(GameWorld);
-	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
-	NCHECK(OrbitalSimulation);
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
 	// Add the current trajectory
 	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();

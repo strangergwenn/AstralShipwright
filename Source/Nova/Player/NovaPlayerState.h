@@ -26,7 +26,7 @@ public:
 	}
 
 	/** Return the identifier for the player spacecraft */
-	const FGuid GetSpacecraftIdentifier() const
+	const FGuid& GetSpacecraftIdentifier() const
 	{
 		return SpacecraftIdentifier;
 	}
