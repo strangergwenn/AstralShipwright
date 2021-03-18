@@ -151,7 +151,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					[
 						SNovaNew(SNovaButton)
 						.Text(LOCTEXT("CalculateTrajectories", "Calculate trajectories"))
-						.HelpText(LOCTEXT("HelpCalculateTrajectories", "Calculate trajectory options"))
+						.HelpText(LOCTEXT("CalculateTrajectoriesHelp", "Calculate trajectory options"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
 							const class UNovaArea* StationA = MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
@@ -167,7 +167,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					[
 						SNovaNew(SNovaButton)
 						.Text(LOCTEXT("CommitTrajectory", "Commit trajectory"))
-						.HelpText(LOCTEXT("HelpCommitTrajectory", "Commit to the currently selected trajectory"))
+						.HelpText(LOCTEXT("CommitTrajectoryHelp", "Commit to the currently selected trajectory"))
 						.OnClicked(this, &SNovaMainMenuFlight::OnCommitTrajectory)
 						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 						{
@@ -181,21 +181,50 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					.AutoHeight()
 					[
 						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("CompleteTrajectory", "Complete trajectory"))
-						.HelpText(LOCTEXT("HelpCompleteTrajectory", "Finish the currently selected trajectory"))
+						.Text(LOCTEXT("TimeDilation", "Time dilation 1"))
+						.HelpText(LOCTEXT("TimeDilationHelp", "Set time dilation to 1"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
-							ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-							NCHECK(GameState);
-							UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-							
-							OrbitalSimulation->CompleteTrajectory(GameState->GetPlayerSpacecraftIdentifiers());
+							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
+							GameWorld->SetTimeDilation(1);
 						}))
 						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 						{
-							UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-
-							return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority && OrbitalSimulation->GetPlayerTrajectory();
+							return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority;
+						})))
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaNew(SNovaButton)
+						.Text(LOCTEXT("TimeDilation60", "Time dilation 60"))
+						.HelpText(LOCTEXT("TimeDilation60Help", "Set time dilation to 60 (1m = 1h)"))
+						.OnClicked(FSimpleDelegate::CreateLambda([&]()
+						{
+							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
+							GameWorld->SetTimeDilation(60);
+						}))
+						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+						{
+							return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority;
+						})))
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaNew(SNovaButton)
+						.Text(LOCTEXT("TimeDilation600", "Time dilation 600"))
+						.HelpText(LOCTEXT("TimeDilation600Help", "Set time dilation to 600 (1m = 10h)"))
+						.OnClicked(FSimpleDelegate::CreateLambda([&]()
+						{
+							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
+							GameWorld->SetTimeDilation(600);
+						}))
+						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+						{
+							return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority;
 						})))
 					]
 			

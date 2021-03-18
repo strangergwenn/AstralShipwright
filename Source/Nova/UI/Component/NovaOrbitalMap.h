@@ -67,7 +67,7 @@ struct FNovaBatchedText
 /** Point of interest on the map */
 struct FNovaOrbitalObject
 {
-	FNovaOrbitalObject() : Area(nullptr), Spacecraft(nullptr), Maneuver(nullptr), Valid(false)
+	FNovaOrbitalObject() : Area(nullptr), Spacecraft(nullptr), Maneuver(nullptr), Positioned(false)
 	{}
 
 	FNovaOrbitalObject(const class UNovaArea* A, float P) : FNovaOrbitalObject()
@@ -99,7 +99,7 @@ struct FNovaOrbitalObject
 	float Phase;
 
 	// Positioning
-	bool      Valid;
+	bool      Positioned;
 	FVector2D Position;
 };
 

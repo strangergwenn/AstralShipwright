@@ -42,7 +42,7 @@ void UNovaActorTools::SortComponentsByClosestDistance(TArray<USceneComponent*>& 
 		});
 }
 
-float UNovaActorTools::GetPlayerLatency(class APlayerController* PC)
+float UNovaActorTools::GetPlayerLatency(const class APlayerController* PC)
 {
 	if (PC)
 	{
@@ -54,7 +54,7 @@ float UNovaActorTools::GetPlayerLatency(class APlayerController* PC)
 	}
 }
 
-float UNovaActorTools::GetPlayerLatency(class APlayerState* PlayerState)
+float UNovaActorTools::GetPlayerLatency(const class APlayerState* PlayerState)
 {
 	if (PlayerState)
 	{

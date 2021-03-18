@@ -64,13 +64,12 @@ struct FNovaOrbitGeometry
 	}
 
 	/** Get the current phase on this orbit */
-	template <bool Unwind = true>
+	template <bool Unwind = false>
 	double GetCurrentPhase(const double DeltaTime) const
 	{
 		NCHECK(Planet);
-		const double OrbitalPeriod = GetOrbitalPeriod();
-		const double Phase         = StartPhase + (DeltaTime / OrbitalPeriod) * 360;
-		return Unwind ? FMath::Fmod(Phase, 360.0) : Phase;
+		const double PhaseDelta = (DeltaTime / GetOrbitalPeriod()) * 360;
+		return StartPhase + (Unwind ? FMath::Fmod(PhaseDelta, 360.0) : PhaseDelta);
 	}
 
 	UPROPERTY()
@@ -115,7 +114,7 @@ struct FNovaOrbit
 	}
 
 	/** Get the current phase on this orbit */
-	template <bool Unwind = true>
+	template <bool Unwind = false>
 	double GetCurrentPhase(const double CurrentTime) const
 	{
 		return Geometry.GetCurrentPhase(CurrentTime - InsertionTime);
@@ -208,6 +207,9 @@ struct FNovaTrajectory
 
 	/** Compute the final orbit this trajectory will put the spacecraft in */
 	FNovaOrbit GetFinalOrbit() const;
+
+	/** Get the arrival time */
+	double GetArrivalTime() const;
 
 	/** *Get the current location in orbit */
 	FNovaOrbitalLocation GetCurrentLocation(double CurrentTime) const;

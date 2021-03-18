@@ -7,6 +7,8 @@
 #include "NovaGameInstance.h"
 #include "NovaGameState.h"
 #include "NovaOrbitalSimulationComponent.h"
+
+#include "Nova/Tools/NovaActorTools.h"
 #include "Nova/Nova.h"
 
 #include "EngineUtils.h"
@@ -16,7 +18,7 @@
     Constructor
 ----------------------------------------------------*/
 
-ANovaGameWorld::ANovaGameWorld() : Super()
+ANovaGameWorld::ANovaGameWorld() : Super(), ServerTime(0), ServerTimeDilation(1), ClientTime(0), ClientTimeDilation(0)
 {
 	// Setup simulation component
 	OrbitalSimulationComponent = CreateDefaultSubobject<UNovaOrbitalSimulationComponent>(TEXT("OrbitalSimulationComponent"));
@@ -26,6 +28,11 @@ ANovaGameWorld::ANovaGameWorld() : Super()
 	SetReplicatingMovement(false);
 	bAlwaysRelevant               = true;
 	PrimaryActorTick.bCanEverTick = true;
+
+	// Defaults
+	MinimumTimeCorrectionThreshold = 0.25f;
+	MaximumTimeCorrectionThreshold = 2.0f;
+	TimeCorrectionFactor           = 0.2f;
 }
 
 /*----------------------------------------------------
@@ -53,6 +60,22 @@ void ANovaGameWorld::SerializeJson(
 /*----------------------------------------------------
     Gameplay
 ----------------------------------------------------*/
+
+void ANovaGameWorld::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	// Process time
+	double DilatedDeltaTime = static_cast<double>(DeltaTime * ServerTimeDilation / 60.0);
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		ServerTime += DilatedDeltaTime;
+	}
+	else
+	{
+		ClientTime += DilatedDeltaTime * ClientTimeDilation;
+	}
+}
 
 ANovaGameWorld* ANovaGameWorld::Get(const UObject* Outer)
 {
@@ -102,13 +125,67 @@ void ANovaGameWorld::UpdateSpacecraft(const FNovaSpacecraft Spacecraft, bool IsP
 	}
 }
 
+void ANovaGameWorld::SetTimeDilation(float Dilation)
+{
+	NCHECK(GetLocalRole() == ROLE_Authority);
+	NCHECK(Dilation >= 0);
+
+	ServerTimeDilation = Dilation;
+}
+
+double ANovaGameWorld::GetCurrentTime() const
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		return ServerTime;
+	}
+	else
+	{
+		return ClientTime;
+	}
+}
+
 /*----------------------------------------------------
-    Internals
+    Networking
 ----------------------------------------------------*/
+
+void ANovaGameWorld::OnServerTimeReplicated()
+{
+	const APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController();
+	NCHECK(PC);
+
+	// Evaluate the current server time
+	const double PingSeconds      = UNovaActorTools::GetPlayerLatency(PC);
+	const double RealServerTime   = ServerTime + PingSeconds / 60.0;
+	const double TimeDeltaSeconds = (RealServerTime - ClientTime) * 60.0;
+
+	// We can never go back in time
+	NCHECK(TimeDeltaSeconds > -MaximumTimeCorrectionThreshold);
+
+	// Hard correct if the change is large
+	if (TimeDeltaSeconds > MaximumTimeCorrectionThreshold)
+	{
+		NLOG("ANovaGameWorld::OnServerTimeReplicated : time rollback from %.2f to %.2f", ClientTime, RealServerTime);
+		ClientTime         = RealServerTime;
+		ClientTimeDilation = 1.0;
+	}
+
+	// Smooth correct if it isn't
+	else
+	{
+		const float TimeDeltaRatio = FMath::Clamp(
+			(TimeDeltaSeconds - MinimumTimeCorrectionThreshold) / (MaximumTimeCorrectionThreshold - MinimumTimeCorrectionThreshold), 0.0,
+			1.0);
+
+		ClientTimeDilation = 1.0 + TimeDeltaRatio * TimeCorrectionFactor * FMath::Sign(TimeDeltaSeconds);
+	}
+}
 
 void ANovaGameWorld::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ANovaGameWorld, SpacecraftDatabase);
+	DOREPLIFETIME(ANovaGameWorld, ServerTime);
+	DOREPLIFETIME(ANovaGameWorld, ServerTimeDilation);
 };

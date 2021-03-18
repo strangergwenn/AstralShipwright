@@ -22,10 +22,10 @@ public:
 	static void SortComponentsByClosestDistance(TArray<USceneComponent*>& Components, const FVector& BaseLocation);
 
 	/** Get half of the ping time in seconds for this player */
-	static float GetPlayerLatency(class APlayerController* PC);
+	static float GetPlayerLatency(const class APlayerController* PC);
 
 	/** Get half of the ping time in seconds for this player */
-	static float GetPlayerLatency(class APlayerState* PC);
+	static float GetPlayerLatency(const class APlayerState* PC);
 
 	/** Apply collision effects on velocity */
 	static FVector GetVelocityCollisionResponse(

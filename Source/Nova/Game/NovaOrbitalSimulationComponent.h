@@ -11,29 +11,6 @@
 
 #include "NovaOrbitalSimulationComponent.generated.h"
 
-/** Hohmann transfer orbit parameters */
-struct FNovaHohmannTransfer
-{
-	double StartDeltaV;
-	double EndDeltaV;
-	double TotalDeltaV;
-	double Duration;
-};
-
-/** Trajectory computation parameters */
-struct FNovaTrajectoryParameters
-{
-	double StartTime;
-
-	double SourceAltitude;
-	double SourcePhase;
-	double DestinationAltitude;
-	double DestinationPhase;
-
-	const UNovaPlanet* Planet;
-	double             µ;
-};
-
 /** Orbital simulation component that ticks orbiting spacecraft */
 UCLASS(ClassGroup = (Nova))
 class UNovaOrbitalSimulationComponent : public UActorComponent
@@ -58,11 +35,14 @@ public:
 
 public:
 	/** Build trajectory parameters */
-	TSharedPtr<FNovaTrajectoryParameters> PrepareTrajectory(
+	TSharedPtr<struct FNovaTrajectoryParameters> PrepareTrajectory(
 		const UNovaArea* Source, const UNovaArea* Destination, double DeltaTime = 0) const;
 
 	/** Compute a trajectory */
-	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const TSharedPtr<FNovaTrajectoryParameters>& Parameters, float PhasingAltitude);
+	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const TSharedPtr<struct FNovaTrajectoryParameters>& Parameters, float PhasingAltitude);
+
+	/** Check if this spacecraft is on a trajectory */
+	bool IsOnTrajectory(const FGuid& SpacecraftIdentifier) const;
 
 	/** Check if this trajectory can be started */
 	bool CanStartTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory) const;
@@ -163,35 +143,10 @@ protected:
 	/** Update the current trajectory of spacecraft */
 	void ProcessSpacecraftTrajectories();
 
-	/** Compute the parameters of a Hohmann transfer orbit */
-	static FNovaHohmannTransfer ComputeHohmannTransfer(
-		const double GravitationalParameter, const double SourceRadius, const double DestinationRadius)
-	{
-		FNovaHohmannTransfer Result;
-
-		Result.StartDeltaV =
-			abs(sqrt(GravitationalParameter / SourceRadius) * (sqrt((2.0 * DestinationRadius) / (SourceRadius + DestinationRadius)) - 1.0));
-		Result.EndDeltaV =
-			abs(sqrt(GravitationalParameter / DestinationRadius) * (1.0 - sqrt((2.0 * SourceRadius) / (SourceRadius + DestinationRadius))));
-
-		Result.TotalDeltaV = Result.StartDeltaV + Result.EndDeltaV;
-
-		Result.Duration = PI * sqrt(pow(SourceRadius + DestinationRadius, 3.0) / (8.0 * GravitationalParameter)) / 60;
-
-		return Result;
-	}
-
 	/** Compute the period of a stable circular orbit in minutes */
 	static double GetOrbitalPeriod(const double GravitationalParameter, const double SemiMajorAxis)
 	{
 		return 2.0 * PI * sqrt(pow(SemiMajorAxis, 3.0) / GravitationalParameter) / 60.0;
-	}
-
-	/** Get the current phase of an area in a circular orbit */
-	static double GetAreaPhase(const UNovaArea* Area, double CurrentTime)
-	{
-		const double OrbitalPeriod = GetOrbitalPeriod(Area->Planet->GetGravitationalParameter(), Area->Planet->GetRadius(Area->Altitude));
-		return FMath::Fmod(Area->Phase + (CurrentTime / OrbitalPeriod) * 360, 360.0);
 	}
 
 	/*----------------------------------------------------

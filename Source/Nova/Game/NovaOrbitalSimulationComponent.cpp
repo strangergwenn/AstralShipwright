@@ -15,6 +15,45 @@
 #define LOCTEXT_NAMESPACE "UNovaOrbitalSimulationComponent"
 
 /*----------------------------------------------------
+    Internal structures
+----------------------------------------------------*/
+
+/** Hohmann transfer orbit parameters */
+struct FNovaHohmannTransfer
+{
+	FNovaHohmannTransfer(const double GravitationalParameter, const double SourceRadius, const double DestinationRadius)
+	{
+		StartDeltaV =
+			abs(sqrt(GravitationalParameter / SourceRadius) * (sqrt((2.0 * DestinationRadius) / (SourceRadius + DestinationRadius)) - 1.0));
+		EndDeltaV =
+			abs(sqrt(GravitationalParameter / DestinationRadius) * (1.0 - sqrt((2.0 * SourceRadius) / (SourceRadius + DestinationRadius))));
+
+		TotalDeltaV = StartDeltaV + EndDeltaV;
+
+		Duration = PI * sqrt(pow(SourceRadius + DestinationRadius, 3.0) / (8.0 * GravitationalParameter)) / 60;
+	}
+
+	double StartDeltaV;
+	double EndDeltaV;
+	double TotalDeltaV;
+	double Duration;
+};
+
+/** Trajectory computation parameters */
+struct FNovaTrajectoryParameters
+{
+	double StartTime;
+
+	double SourceAltitude;
+	double SourcePhase;
+	double DestinationAltitude;
+	double DestinationPhase;
+
+	const UNovaPlanet* Planet;
+	double             µ;
+};
+
+/*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
@@ -75,6 +114,12 @@ TSharedPtr<FNovaTrajectoryParameters> UNovaOrbitalSimulationComponent::PrepareTr
 	NCHECK(Source->Planet != nullptr && Destination->Planet != nullptr);
 	NCHECK(Source->Planet == Destination->Planet);
 
+	auto GetAreaPhase = [](const UNovaArea* Area, double CurrentTime)
+	{
+		const double OrbitalPeriod = GetOrbitalPeriod(Area->Planet->GetGravitationalParameter(), Area->Planet->GetRadius(Area->Altitude));
+		return FMath::Fmod(Area->Phase + (CurrentTime / OrbitalPeriod) * 360, 360.0);
+	};
+
 	// Get basic parameters
 	Parameters->StartTime           = GetCurrentTime() + DeltaTime;
 	Parameters->SourcePhase         = GetAreaPhase(Source, GetCurrentTime() + DeltaTime);
@@ -105,10 +150,10 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	const double R3 = Parameters->Planet->GetRadius(DestinationAltitude);
 
 	// Compute both Hohmann transfers as well as the orbital periods
-	const FNovaHohmannTransfer& TransferA              = ComputeHohmannTransfer(Parameters->µ, R1, R2);
-	const FNovaHohmannTransfer& TransferB              = ComputeHohmannTransfer(Parameters->µ, R2, R3);
-	const double&               PhasingOrbitPeriod     = GetOrbitalPeriod(Parameters->µ, R2);
-	const double&               DestinationOrbitPeriod = GetOrbitalPeriod(Parameters->µ, R3);
+	const FNovaHohmannTransfer TransferA(Parameters->µ, R1, R2);
+	const FNovaHohmannTransfer TransferB(Parameters->µ, R2, R3);
+	const double&              PhasingOrbitPeriod     = GetOrbitalPeriod(Parameters->µ, R2);
+	const double&              DestinationOrbitPeriod = GetOrbitalPeriod(Parameters->µ, R3);
 
 	// Compute the new destination parameters after both transfers, ignoring the phasing orbit
 	const double TotalTransferDuration                = TransferA.Duration + TransferB.Duration;
@@ -189,6 +234,13 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	Trajectory->TotalDeltaV           = TransferA.TotalDeltaV + TransferB.TotalDeltaV;
 
 	return Trajectory;
+}
+
+bool UNovaOrbitalSimulationComponent::IsOnTrajectory(const FGuid& SpacecraftIdentifier) const
+{
+	const FNovaTrajectory* Trajectory = SpacecraftTrajectoryDatabase.Get(SpacecraftIdentifier);
+
+	return Trajectory && GetCurrentTime() >= Trajectory->StartTime && GetCurrentTime() <= Trajectory->GetArrivalTime();
 }
 
 bool UNovaOrbitalSimulationComponent::CanStartTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory) const
@@ -277,6 +329,24 @@ UNovaOrbitalSimulationComponent* UNovaOrbitalSimulationComponent::Get(const UObj
 	return SimulationComponent;
 }
 
+TPair<const UNovaArea*, float> UNovaOrbitalSimulationComponent::GetClosestAreaAndDistance(const FNovaOrbitalLocation& Location) const
+{
+	const UNovaArea* ClosestArea     = nullptr;
+	float            ClosestDistance = MAX_FLT;
+
+	for (const TPair<const UNovaArea*, FNovaOrbitalLocation>& Entry : AreaOrbitalLocations)
+	{
+		float Distance = Entry.Value.GetDistanceTo(Location);
+		if (Distance < ClosestDistance)
+		{
+			ClosestArea     = Entry.Key;
+			ClosestDistance = Distance;
+		}
+	}
+
+	return TPair<const UNovaArea*, float>(ClosestArea, ClosestDistance);
+}
+
 FGuid UNovaOrbitalSimulationComponent::GetPlayerSpacecraftIdentifier() const
 {
 	return CurrentPlayerState ? CurrentPlayerState->GetSpacecraftIdentifier() : FGuid(0, 0, 0, 0);
@@ -318,28 +388,9 @@ const FNovaOrbitalLocation* UNovaOrbitalSimulationComponent::GetPlayerLocation()
 	}
 }
 
-TPair<const UNovaArea*, float> UNovaOrbitalSimulationComponent::GetClosestAreaAndDistance(const FNovaOrbitalLocation& Location) const
-{
-	const UNovaArea* ClosestArea     = nullptr;
-	float            ClosestDistance = MAX_FLT;
-
-	for (const TPair<const UNovaArea*, FNovaOrbitalLocation>& Entry : AreaOrbitalLocations)
-	{
-		float Distance = Entry.Value.GetDistanceTo(Location);
-		if (Distance < ClosestDistance)
-		{
-			ClosestArea     = Entry.Key;
-			ClosestDistance = Distance;
-		}
-	}
-
-	return TPair<const UNovaArea*, float>(ClosestArea, ClosestDistance);
-}
-
 double UNovaOrbitalSimulationComponent::GetCurrentTime() const
 {
-	// TODO : shared time for multiplayer
-	return GetWorld()->GetTimeSeconds() / 60.0;
+	return Cast<ANovaGameWorld>(GetOwner())->GetCurrentTime();
 }
 
 /*----------------------------------------------------
@@ -355,7 +406,6 @@ void UNovaOrbitalSimulationComponent::ProcessOrbitCleanup()
 		{
 			if (GetCurrentTime() >= DatabaseEntry.Trajectory.StartTime + OrbitGarbageCollectionDelay)
 			{
-				NLOG("UNovaOrbitalSimulationComponent::ProcessOrbitCleanup : removing spacecraft from orbit database");
 				SpacecraftOrbitDatabase.Remove(DatabaseEntry.Identifiers);
 			}
 		}
@@ -369,7 +419,11 @@ void UNovaOrbitalSimulationComponent::ProcessAreas()
 	for (const UNovaArea* Area : Areas)
 	{
 		// Update the position
-		double CurrentPhase = GetAreaOrbit(Area)->Geometry.GetCurrentPhase(GetCurrentTime());
+		double CurrentPhase = GetAreaOrbit(Area)->Geometry.GetCurrentPhase<true>(GetCurrentTime());
+
+#if 0
+		NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits : %s has phase %f", *Area->Name.ToString(), CurrentPhase);
+#endif
 
 		// Add or update the current orbit and position
 		FNovaOrbitalLocation* Entry = AreaOrbitalLocations.Find(Area);
@@ -389,12 +443,12 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 	for (const FNovaOrbitDatabaseEntry& DatabaseEntry : SpacecraftOrbitDatabase.Get())
 	{
 		// Update the position
-		double                     CurrentPhase = DatabaseEntry.Orbit.GetCurrentPhase(GetCurrentTime());
+		double                     CurrentPhase = DatabaseEntry.Orbit.GetCurrentPhase<true>(GetCurrentTime());
 		const FNovaOrbitalLocation NewLocation  = FNovaOrbitalLocation(DatabaseEntry.Orbit.Geometry, CurrentPhase);
 
 #if 0
-		NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits : %s has phase %f, sphase %f, ephase %f", *DatabaseEntry.Identifiers[0].ToString(), NewLocation.Phase,
-			NewLocation.Geometry.StartPhase, NewLocation.Geometry.EndPhase);
+		NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits : %s has phase %f, sphase %f, ephase %f",
+			*DatabaseEntry.Identifiers[0].ToString(), NewLocation.Phase, NewLocation.Geometry.StartPhase, NewLocation.Geometry.EndPhase);
 #endif
 
 		// Add or update the current orbit and position
@@ -415,6 +469,8 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 
 void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 {
+	TArray<TArray<FGuid>> CompletedTrajectories;
+
 	for (const FNovaTrajectoryDatabaseEntry& DatabaseEntry : SpacecraftTrajectoryDatabase.Get())
 	{
 		if (GetCurrentTime() >= DatabaseEntry.Trajectory.StartTime)
@@ -422,8 +478,9 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 			FNovaOrbitalLocation NewLocation = DatabaseEntry.Trajectory.GetCurrentLocation(GetCurrentTime());
 
 #if 0
-			NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories : %s has phase %f, with sphase %f, ephase %f", *DatabaseEntry.Identifiers[0].ToString(), NewLocation.Phase,
-				NewLocation.Geometry.StartPhase, NewLocation.Geometry.EndPhase);
+			NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories : %s has phase %f, with sphase %f, ephase %f",
+				*DatabaseEntry.Identifiers[0].ToString(), NewLocation.Phase, NewLocation.Geometry.StartPhase,
+				NewLocation.Geometry.EndPhase);
 #endif
 
 			// Add or update the current orbit and position
@@ -439,10 +496,21 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 					SpacecraftOrbitalLocations.Add(Identifier, NewLocation);
 				}
 			}
+
+			// Complete the trajectory on arrival
+			if (GetCurrentTime() > DatabaseEntry.Trajectory.GetArrivalTime())
+			{
+				CompletedTrajectories.Add(DatabaseEntry.Identifiers);
+			}
 		}
 	}
-}
 
+	// Complete trajectories
+	for (const TArray<FGuid>& Identifiers : CompletedTrajectories)
+	{
+		CompleteTrajectory(Identifiers);
+	}
+}
 /*----------------------------------------------------
     Networking
 ----------------------------------------------------*/

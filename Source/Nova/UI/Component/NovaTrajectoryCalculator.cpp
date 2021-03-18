@@ -254,7 +254,7 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const class UNovaArea* Sour
 	Reset();
 
 	// Run trajectory calculations over a range of altitudes
-	const FNovaTrajectoryParameters& Parameters = OrbitalSimulation->PrepareTrajectory(Source, Destination, 1);
+	const TSharedPtr<FNovaTrajectoryParameters>& Parameters = OrbitalSimulation->PrepareTrajectory(Source, Destination, 1);
 	SimulatedTrajectories.Reserve((Slider->GetMaxValue() - Slider->GetMinValue()) / AltitudeStep + 1);
 	for (float Altitude = Slider->GetMinValue(); Altitude <= Slider->GetMaxValue(); Altitude += AltitudeStep)
 	{

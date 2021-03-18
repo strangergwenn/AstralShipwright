@@ -84,6 +84,8 @@ public:
 	----------------------------------------------------*/
 
 public:
+	virtual void Tick(float DeltaTime) override;
+
 	/** Get this actor */
 	static ANovaGameWorld* Get(const UObject* Outer);
 
@@ -101,6 +103,37 @@ public:
 	{
 		return OrbitalSimulationComponent;
 	}
+
+	/** Get the current time dilation factor */
+	void SetTimeDilation(float Dilation);
+
+	/** Get the current game time in minutes */
+	double GetCurrentTime() const;
+
+	/*----------------------------------------------------
+	    Networking
+	----------------------------------------------------*/
+
+	/** Server replication event for time reconciliation */
+	UFUNCTION()
+	void OnServerTimeReplicated();
+
+	/*----------------------------------------------------
+	    Properties
+	----------------------------------------------------*/
+
+public:
+	// Threshold in seconds above which the client time starts compensating
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float MinimumTimeCorrectionThreshold;
+
+	// Threshold in seconds above which the client time is at maximum compensation
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float MaximumTimeCorrectionThreshold;
+
+	// Maximum time dilation applied to compensate time
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float TimeCorrectionFactor;
 
 	/*----------------------------------------------------
 	    Components
@@ -120,6 +153,16 @@ private:
 	UPROPERTY(Replicated)
 	FNovaSpacecraftDatabase SpacecraftDatabase;
 
+	// Replicated world time value
+	UPROPERTY(ReplicatedUsing = OnServerTimeReplicated)
+	double ServerTime;
+
+	// Replicated world time dilation
+	UPROPERTY(Replicated)
+	float ServerTimeDilation;
+
 	// Local state
+	double                         ClientTime;
+	double                         ClientTimeDilation;
 	TArray<const class UNovaArea*> Areas;
 };
