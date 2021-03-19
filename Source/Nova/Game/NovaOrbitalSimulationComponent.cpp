@@ -42,12 +42,10 @@ struct FNovaHohmannTransfer
 /** Trajectory computation parameters */
 struct FNovaTrajectoryParameters
 {
-	double StartTime;
-
-	double SourceAltitude;
-	double SourcePhase;
-	double DestinationAltitude;
-	double DestinationPhase;
+	double     StartTime;
+	FNovaOrbit Source;
+	double     DestinationAltitude;
+	double     DestinationPhase;
 
 	const UNovaPlanet* Planet;
 	double             µ;
@@ -106,30 +104,25 @@ void UNovaOrbitalSimulationComponent::TickComponent(
 ----------------------------------------------------*/
 
 TSharedPtr<FNovaTrajectoryParameters> UNovaOrbitalSimulationComponent::PrepareTrajectory(
-	const UNovaArea* Source, const UNovaArea* Destination, double DeltaTime) const
+	const TSharedPtr<FNovaOrbit>& Source, const TSharedPtr<FNovaOrbit>& Destination, double DeltaTime) const
 {
 	TSharedPtr<FNovaTrajectoryParameters> Parameters = MakeShared<FNovaTrajectoryParameters>();
 
-	NCHECK(Source != nullptr && Destination != nullptr);
-	NCHECK(Source->Planet != nullptr && Destination->Planet != nullptr);
-	NCHECK(Source->Planet == Destination->Planet);
-
-	auto GetAreaPhase = [](const UNovaArea* Area, double CurrentTime)
-	{
-		const double OrbitalPeriod = GetOrbitalPeriod(Area->Planet->GetGravitationalParameter(), Area->Planet->GetRadius(Area->Altitude));
-		return FMath::Fmod(Area->Phase + (CurrentTime / OrbitalPeriod) * 360, 360.0);
-	};
+	NCHECK(Source.IsValid() && Destination.IsValid());
+	NCHECK(Source->IsValid() && Destination->IsValid());
+	NCHECK(*Source.Get() != *Destination.Get());
+	NCHECK(Destination->Geometry.IsCircular());
+	NCHECK(Source->Geometry.Planet == Destination->Geometry.Planet);
 
 	// Get basic parameters
 	Parameters->StartTime           = GetCurrentTime() + DeltaTime;
-	Parameters->SourcePhase         = GetAreaPhase(Source, GetCurrentTime() + DeltaTime);
-	Parameters->DestinationPhase    = GetAreaPhase(Destination, GetCurrentTime() + DeltaTime);
-	Parameters->SourceAltitude      = Source->Altitude;
-	Parameters->DestinationAltitude = Destination->Altitude;
+	Parameters->Source              = *Source;
+	Parameters->DestinationPhase    = Destination->GetCurrentPhase<true>(GetCurrentTime() + DeltaTime);
+	Parameters->DestinationAltitude = Destination->Geometry.StartAltitude;
 
 	// Get orbital parameters
-	Parameters->Planet = Source->Planet;
-	Parameters->µ      = Source->Planet->GetGravitationalParameter();
+	Parameters->Planet = Source->Geometry.Planet;
+	Parameters->µ      = Source->Geometry.Planet->GetGravitationalParameter();
 
 	return Parameters;
 }
@@ -139,10 +132,27 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 {
 	// Get phase and altitude
 	const double& StartTime           = Parameters->StartTime;
-	const double& SourceAltitude      = Parameters->SourceAltitude;
-	const double& SourcePhase         = Parameters->SourcePhase;
+	double        SourceAltitude      = Parameters->Source.Geometry.StartAltitude;
+	double        SourcePhase         = Parameters->Source.GetCurrentPhase<true>(StartTime);
 	const double& DestinationAltitude = Parameters->DestinationAltitude;
 	const double& DestinationPhase    = Parameters->DestinationPhase;
+
+	// if the source orbit isn't circular, circularize to PhasingAltitude at one of the apsides
+	double InitialWaitingDuration = 0;
+	if (!Parameters->Source.Geometry.IsCircular())
+	{
+		const FNovaOrbitGeometry& Geometry = Parameters->Source.Geometry;
+
+		const bool CircularizeAtStart =
+			FMath::Abs(Geometry.OppositeAltitude - PhasingAltitude) < FMath::Abs(Geometry.StartAltitude - PhasingAltitude);
+
+		// Get the basic circularization parameters
+		const double InitialSourcePhase = SourcePhase;
+		SourcePhase                     = CircularizeAtStart ? Geometry.StartPhase : Geometry.StartPhase + 180;
+		SourceAltitude                  = CircularizeAtStart ? Geometry.StartAltitude : Geometry.OppositeAltitude;
+		const double WaitingPhaseDelta  = fmod(SourcePhase - InitialSourcePhase + 360.0, 360.0);
+		InitialWaitingDuration          = (WaitingPhaseDelta / 360.0) * Geometry.GetOrbitalPeriod();
+	}
 
 	// Get orbital parameters
 	const double R1 = Parameters->Planet->GetRadius(SourceAltitude);
@@ -156,7 +166,7 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	const double&              DestinationOrbitPeriod = GetOrbitalPeriod(Parameters->µ, R3);
 
 	// Compute the new destination parameters after both transfers, ignoring the phasing orbit
-	const double TotalTransferDuration                = TransferA.Duration + TransferB.Duration;
+	const double TotalTransferDuration                = InitialWaitingDuration + TransferA.Duration + TransferB.Duration;
 	const double DestinationPhaseChangeDuringTransfer = (TotalTransferDuration / DestinationOrbitPeriod) * 360.0;
 	const double NewDestinationPhaseAfterTransfers    = fmod(DestinationPhase + DestinationPhaseChangeDuringTransfer, 360.0);
 	double       PhaseDelta                           = fmod(NewDestinationPhaseAfterTransfers - SourcePhase + 360.0, 360.0);
@@ -168,10 +178,11 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	// Compute the time spent waiting
 	const double PhasingDuration     = PhaseDelta / (360.0 * (1.0 / PhasingOrbitPeriod - 1.0 / DestinationOrbitPeriod));
 	const double PhasingAngle        = (PhasingDuration / PhasingOrbitPeriod) * 360.0;
-	const double TotalTravelDuration = TransferA.Duration + PhasingDuration + TransferB.Duration;
+	const double TotalTravelDuration = TotalTransferDuration + PhasingDuration;
 
 	// Build trajectory
-	TSharedPtr<FNovaTrajectory> Trajectory = MakeShared<FNovaTrajectory>();
+	TSharedPtr<FNovaTrajectory> Trajectory          = MakeShared<FNovaTrajectory>();
+	double                      CurrentManeuverTime = StartTime + InitialWaitingDuration;
 
 	// Helpers
 	auto AddManeuverIfNotNull = [&Trajectory](const FNovaManeuver& Maneuver)
@@ -190,21 +201,21 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	};
 
 	// First transfer
-	AddManeuverIfNotNull(FNovaManeuver(TransferA.StartDeltaV, StartTime, SourcePhase));
+	AddManeuverIfNotNull(FNovaManeuver(TransferA.StartDeltaV, CurrentManeuverTime, SourcePhase));
 	AddTransferIfNotNull(FNovaOrbitGeometry(Parameters->Planet, SourceAltitude, PhasingAltitude, SourcePhase, SourcePhase + 180));
-	AddManeuverIfNotNull(FNovaManeuver(TransferA.EndDeltaV, StartTime + TransferA.Duration, SourcePhase + 180));
+	AddManeuverIfNotNull(FNovaManeuver(TransferA.EndDeltaV, CurrentManeuverTime + TransferA.Duration, SourcePhase + 180));
+	CurrentManeuverTime += TransferA.Duration;
 
 	// Phasing orbit
 	AddTransferIfNotNull(
 		FNovaOrbitGeometry(Parameters->Planet, PhasingAltitude, PhasingAltitude, SourcePhase + 180, SourcePhase + 180 + PhasingAngle));
+	CurrentManeuverTime += PhasingDuration;
 
 	// Second transfer
-	AddManeuverIfNotNull(
-		FNovaManeuver(TransferB.StartDeltaV, StartTime + TransferA.Duration + PhasingDuration, SourcePhase + 180 + PhasingAngle));
+	AddManeuverIfNotNull(FNovaManeuver(TransferB.StartDeltaV, CurrentManeuverTime, SourcePhase + 180 + PhasingAngle));
 	AddTransferIfNotNull(FNovaOrbitGeometry(
 		Parameters->Planet, PhasingAltitude, DestinationAltitude, SourcePhase + 180 + PhasingAngle, SourcePhase + 360 + PhasingAngle));
-	AddManeuverIfNotNull(FNovaManeuver(
-		TransferB.EndDeltaV, StartTime + TransferA.Duration + PhasingDuration + TransferB.Duration, SourcePhase + 360 + PhasingAngle));
+	AddManeuverIfNotNull(FNovaManeuver(TransferB.EndDeltaV, CurrentManeuverTime + TransferB.Duration, SourcePhase + 360 + PhasingAngle));
 
 	// Metadata
 	Trajectory->TotalTravelDuration = TotalTravelDuration;

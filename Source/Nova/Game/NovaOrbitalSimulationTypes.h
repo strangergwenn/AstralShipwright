@@ -39,6 +39,11 @@ struct FNovaOrbitGeometry
 			   EndPhase == Other.EndPhase;
 	}
 
+	bool operator!=(const FNovaOrbitGeometry& Other) const
+	{
+		return !operator==(Other);
+	}
+
 	/** Check for validity */
 	bool IsValid() const
 	{
@@ -118,6 +123,11 @@ struct FNovaOrbit
 	bool operator==(const FNovaOrbit& Other) const
 	{
 		return Geometry == Other.Geometry && InsertionTime == Other.InsertionTime;
+	}
+
+	bool operator!=(const FNovaOrbit& Other) const
+	{
+		return !operator==(Other);
 	}
 
 	/** Check for validity */
@@ -207,6 +217,11 @@ struct FNovaTrajectory
 	{
 		return TransferOrbits.Num() == Other.TransferOrbits.Num() && Maneuvers.Num() == Other.Maneuvers.Num() &&
 			   TotalTravelDuration == Other.TotalTravelDuration && TotalDeltaV == Other.TotalDeltaV;
+	}
+
+	bool operator!=(const FNovaTrajectory& Other) const
+	{
+		return !operator==(Other);
 	}
 
 	/** Check for validity */

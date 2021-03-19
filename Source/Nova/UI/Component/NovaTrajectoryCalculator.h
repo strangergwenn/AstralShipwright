@@ -54,8 +54,8 @@ public:
 	/** Reset the widget */
 	void Reset();
 
-	/** Simulate trajectories to go between areas */
-	void SimulateTrajectories(const class UNovaArea* Source, const class UNovaArea* Destination);
+	/** Simulate trajectories to go between orbits */
+	void SimulateTrajectories(const TSharedPtr<struct FNovaOrbit>& Source, const TSharedPtr<struct FNovaOrbit>& Destination);
 
 	/** Optimize for Delta-V */
 	void OptimizeForDeltaV();

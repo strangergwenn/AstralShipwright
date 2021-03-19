@@ -154,11 +154,12 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.HelpText(LOCTEXT("CalculateTrajectoriesHelp", "Calculate trajectory options"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
+							UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 							const class UNovaArea* StationA = MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
 							const class UNovaArea* StationB = MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{CCA2E0C7-43AE-CDD1-06CA-AF951F61C44A}"));
 							const class UNovaArea* StationC = MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{CAC5C9B9-451B-1212-6EC4-E8918B69A795}"));
 					
-							TrajectoryCalculator->SimulateTrajectories(StationA, StationC);
+							TrajectoryCalculator->SimulateTrajectories(MakeShared<FNovaOrbit>(*OrbitalSimulation->GetPlayerOrbit()), OrbitalSimulation->GetAreaOrbit(StationC));
 						}))
 					]
 			

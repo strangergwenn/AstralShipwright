@@ -34,9 +34,9 @@ public:
 	----------------------------------------------------*/
 
 public:
-	/** Build trajectory parameters */
+	/** Build trajectory parameters from an arbitrary orbit to another  */
 	TSharedPtr<struct FNovaTrajectoryParameters> PrepareTrajectory(
-		const UNovaArea* Source, const UNovaArea* Destination, double DeltaTime = 0) const;
+		const TSharedPtr<FNovaOrbit>& Source, const TSharedPtr<FNovaOrbit>& Destination, double DeltaTime = 0) const;
 
 	/** Compute a trajectory */
 	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const TSharedPtr<struct FNovaTrajectoryParameters>& Parameters, float PhasingAltitude);

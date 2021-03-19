@@ -235,11 +235,11 @@ void SNovaTrajectoryCalculator::Reset()
 	MaxDuration = 0;
 }
 
-void SNovaTrajectoryCalculator::SimulateTrajectories(const class UNovaArea* Source, const class UNovaArea* Destination)
+void SNovaTrajectoryCalculator::SimulateTrajectories(
+	const TSharedPtr<struct FNovaOrbit>& Source, const TSharedPtr<struct FNovaOrbit>& Destination)
 {
-	NCHECK(Source);
-	NCHECK(Destination);
-	NLOG("SNovaTrajectoryCalculator::SimulateTrajectories : %s -> %s", *Source->Name.ToString(), *Destination->Name.ToString());
+	NCHECK(Source.IsValid());
+	NCHECK(Destination.IsValid());
 
 	int64 Cycles = FPlatformTime::Cycles64();
 
