@@ -188,7 +188,7 @@ void SNovaTrajectoryCalculator::Tick(const FGeometry& AllottedGeometry, const do
 				double DeltaVAlpha = FMath::Clamp(
 					(Transform(Trajectory->TotalDeltaV) - Transform(MinDeltaV)) / (Transform(MaxDeltaV) - Transform(MinDeltaV)), 0.0f,
 					1.0f);
-				double DurationAlpha = FMath::Clamp((Transform(Trajectory->TotalTransferDuration) - Transform(MinDuration)) /
+				double DurationAlpha = FMath::Clamp((Transform(Trajectory->TotalTravelDuration) - Transform(MinDuration)) /
 														(Transform(MaxDuration) - Transform(MinDuration)),
 					0.0f, 1.0f);
 
@@ -270,7 +270,7 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const class UNovaArea* Sour
 		const TSharedPtr<FNovaTrajectory>& Trajectory = AltitudeAndTrajectory.Value;
 		NCHECK(Trajectory.IsValid());
 
-		if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(Trajectory->TotalTransferDuration))
+		if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(Trajectory->TotalTravelDuration))
 		{
 			if (Trajectory->TotalDeltaV < MinDeltaV)
 			{
@@ -281,14 +281,14 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const class UNovaArea* Sour
 			{
 				MaxDeltaV = Trajectory->TotalDeltaV;
 			}
-			if (Trajectory->TotalTransferDuration < MinDuration)
+			if (Trajectory->TotalTravelDuration < MinDuration)
 			{
-				MinDuration         = Trajectory->TotalTransferDuration;
+				MinDuration         = Trajectory->TotalTravelDuration;
 				MinDurationAltitude = Altitude;
 			}
-			if (Trajectory->TotalTransferDuration > MaxDuration)
+			if (Trajectory->TotalTravelDuration > MaxDuration)
 			{
-				MaxDuration = Trajectory->TotalTransferDuration;
+				MaxDuration = Trajectory->TotalTravelDuration;
 			}
 		}
 	}
@@ -353,7 +353,7 @@ FText SNovaTrajectoryCalculator::GetDurationText() const
 		const TSharedPtr<FNovaTrajectory>& Trajectory = *TrajectoryPtr;
 		NCHECK(Trajectory.IsValid());
 
-		return ::GetDurationText(Trajectory->TotalTransferDuration, 2);
+		return ::GetDurationText(Trajectory->TotalTravelDuration, 2);
 	}
 
 	return FText();

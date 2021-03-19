@@ -36,13 +36,6 @@ FNovaOrbit FNovaTrajectory::GetFinalOrbit() const
 	return FNovaOrbit(FinalGeometry, InsertionTime);
 }
 
-double FNovaTrajectory::GetArrivalTime() const
-{
-	NCHECK(IsValid());
-
-	return Maneuvers[Maneuvers.Num() - 1].Time;
-}
-
 FNovaOrbitalLocation FNovaTrajectory::GetCurrentLocation(double CurrentTime) const
 {
 	const FNovaManeuver*      Maneuver = nullptr;
@@ -71,7 +64,7 @@ FNovaOrbitalLocation FNovaTrajectory::GetCurrentLocation(double CurrentTime) con
 		// Compute the current location
 		if (Geometry)
 		{
-			return FNovaOrbitalLocation(*Geometry, Geometry->GetCurrentPhase(CurrentTime - Maneuver->Time));
+			return FNovaOrbitalLocation(*Geometry, Geometry->GetCurrentPhase<false>(CurrentTime - Maneuver->Time));
 		}
 	}
 
