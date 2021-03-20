@@ -187,12 +187,12 @@ protected:
 		const struct FNovaSpacecraft* Spacecraft = nullptr, float Progress = 1.0f);
 
 	/** Draw an orbit */
-	TPair<FVector2D, FVector2D> AddOrbit(const FVector2D& Position, const FNovaOrbitGeometry& Geometry,
-		const TArray<FNovaOrbitalObject>& Objects, const struct FNovaSplineStyle& Style);
+	TPair<FVector2D, FVector2D> AddOrbit(const FVector2D& Position, const FNovaOrbitGeometry& Geometry, TArray<FNovaOrbitalObject>& Objects,
+		const struct FNovaSplineStyle& Style, float InitialPhase = 0.0f);
 
 	/** Draw an orbit based on processed 2D parameters */
 	TPair<FVector2D, FVector2D> AddOrbitInternal(
-		const struct FNovaSplineOrbit& Orbit, TArray<FNovaOrbitalObject> Objects, const struct FNovaSplineStyle& Style);
+		const struct FNovaSplineOrbit& Orbit, TArray<FNovaOrbitalObject>& Objects, const struct FNovaSplineStyle& Style);
 
 	/** Draw an interactive orbital object on the map */
 	void AddOrbitalObject(const FNovaOrbitalObject& Object, const FLinearColor& Color);
