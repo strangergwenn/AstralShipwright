@@ -21,16 +21,27 @@
 /** Hohmann transfer orbit parameters */
 struct FNovaHohmannTransfer
 {
-	FNovaHohmannTransfer(const double GravitationalParameter, const double SourceRadius, const double DestinationRadius)
+	/** Compute a Hohmann transfer from the elliptic orbit (ManeuverRadius, OriginalRadius) to the circular orbit DestinationRadius,
+	 * raising OriginalRadius to DestinationRadius, while maneuvering at ManeuverRadius (technically not a Hohmann transfer) */
+	FNovaHohmannTransfer(const double µ, const double ManeuverRadius, const double OriginalRadius, const double DestinationRadius)
 	{
-		StartDeltaV =
-			abs(sqrt(GravitationalParameter / SourceRadius) * (sqrt((2.0 * DestinationRadius) / (SourceRadius + DestinationRadius)) - 1.0));
-		EndDeltaV =
-			abs(sqrt(GravitationalParameter / DestinationRadius) * (1.0 - sqrt((2.0 * SourceRadius) / (SourceRadius + DestinationRadius))));
+		const double SourceSemiMajorAxis = 0.5f * (ManeuverRadius + OriginalRadius);
+
+#if 1
+		// StartDeltaV = VTransfer1 - VSource
+		StartDeltaV = abs(sqrt((2.0 * µ * DestinationRadius) / (ManeuverRadius * (ManeuverRadius + DestinationRadius))) -
+						  sqrt(µ * ((2.0 / ManeuverRadius) - (1.0 / SourceSemiMajorAxis))));
+#else
+		// StartDeltaV = VTransfer1 - VSource, factorized with VSource
+		StartDeltaV = abs(sqrt(µ / ManeuverRadius) * (sqrt((2.0 * DestinationRadius) / (ManeuverRadius + DestinationRadius)) - 1.0));
+#endif
+
+		// EndDeltaV = VDest - VTransfer2
+		EndDeltaV = abs(sqrt(µ / DestinationRadius) * (1.0 - sqrt((2.0 * ManeuverRadius) / (ManeuverRadius + DestinationRadius))));
 
 		TotalDeltaV = StartDeltaV + EndDeltaV;
 
-		Duration = PI * sqrt(pow(SourceRadius + DestinationRadius, 3.0) / (8.0 * GravitationalParameter)) / 60;
+		Duration = PI * sqrt(pow(ManeuverRadius + DestinationRadius, 3.0) / (8.0 * µ)) / 60;
 	}
 
 	double StartDeltaV;
@@ -132,7 +143,8 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 {
 	// Get phase and altitude
 	const double& StartTime           = Parameters->StartTime;
-	double        SourceAltitude      = Parameters->Source.Geometry.StartAltitude;
+	double        SourceAltitudeA     = Parameters->Source.Geometry.StartAltitude;
+	double        SourceAltitudeB     = Parameters->Source.Geometry.StartAltitude;
 	double        SourcePhase         = Parameters->Source.GetCurrentPhase<true>(StartTime);
 	const double& DestinationAltitude = Parameters->DestinationAltitude;
 	const double& DestinationPhase    = Parameters->DestinationPhase;
@@ -149,19 +161,21 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 		// Get the basic circularization parameters
 		const double InitialSourcePhase = SourcePhase;
 		SourcePhase                     = CircularizeAtStart ? Geometry.StartPhase : Geometry.StartPhase + 180;
-		SourceAltitude                  = CircularizeAtStart ? Geometry.StartAltitude : Geometry.OppositeAltitude;
+		SourceAltitudeA                 = CircularizeAtStart ? Geometry.StartAltitude : Geometry.OppositeAltitude;
+		SourceAltitudeB                 = CircularizeAtStart ? Geometry.OppositeAltitude : Geometry.StartAltitude;
 		const double WaitingPhaseDelta  = fmod(SourcePhase - InitialSourcePhase + 360.0, 360.0);
 		InitialWaitingDuration          = (WaitingPhaseDelta / 360.0) * Geometry.GetOrbitalPeriod();
 	}
 
 	// Get orbital parameters
-	const double R1 = Parameters->Planet->GetRadius(SourceAltitude);
-	const double R2 = Parameters->Planet->GetRadius(PhasingAltitude);
-	const double R3 = Parameters->Planet->GetRadius(DestinationAltitude);
+	const double R1A = Parameters->Planet->GetRadius(SourceAltitudeA);
+	const double R1B = Parameters->Planet->GetRadius(SourceAltitudeB);
+	const double R2  = Parameters->Planet->GetRadius(PhasingAltitude);
+	const double R3  = Parameters->Planet->GetRadius(DestinationAltitude);
 
 	// Compute both Hohmann transfers as well as the orbital periods
-	const FNovaHohmannTransfer TransferA(Parameters->µ, R1, R2);
-	const FNovaHohmannTransfer TransferB(Parameters->µ, R2, R3);
+	const FNovaHohmannTransfer TransferA(Parameters->µ, R1A, R1B, R2);
+	const FNovaHohmannTransfer TransferB(Parameters->µ, R2, R2, R3);
 	const double&              PhasingOrbitPeriod     = GetOrbitalPeriod(Parameters->µ, R2);
 	const double&              DestinationOrbitPeriod = GetOrbitalPeriod(Parameters->µ, R3);
 
@@ -202,7 +216,7 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 
 	// First transfer
 	AddManeuverIfNotNull(FNovaManeuver(TransferA.StartDeltaV, CurrentManeuverTime, SourcePhase));
-	AddTransferIfNotNull(FNovaOrbitGeometry(Parameters->Planet, SourceAltitude, PhasingAltitude, SourcePhase, SourcePhase + 180));
+	AddTransferIfNotNull(FNovaOrbitGeometry(Parameters->Planet, SourceAltitudeA, PhasingAltitude, SourcePhase, SourcePhase + 180));
 	AddManeuverIfNotNull(FNovaManeuver(TransferA.EndDeltaV, CurrentManeuverTime + TransferA.Duration, SourcePhase + 180));
 	CurrentManeuverTime += TransferA.Duration;
 
@@ -230,7 +244,7 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 
 #if 0
 	NLOG("--------------------------------------------------------------------------------");
-	NLOG("UNovaOrbitalSimulationComponent::ComputeTrajectory : (%f, %f) --> (%f, %f)", SourceAltitude, SourcePhase, DestinationAltitude,
+	NLOG("UNovaOrbitalSimulationComponent::ComputeTrajectory : (%f, %f) --> (%f, %f)", SourceAltitudeA, SourcePhase, DestinationAltitude,
 		DestinationPhase);
 	NLOG("Transfer A : DVS %f, DVE %f, DV %f, T %f", TransferA.StartDeltaV, TransferA.EndDeltaV, TransferA.TotalDeltaV);
 	NLOG("Transfer B : DVS %f, DVE %f, DV %f, T %f", TransferB.StartDeltaV, TransferB.EndDeltaV, TransferB.TotalDeltaV);
