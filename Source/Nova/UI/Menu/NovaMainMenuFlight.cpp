@@ -83,11 +83,24 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						SNew(STextBlock)
 						.Text_Lambda([this]() -> FText {
 							const UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+
+							const FNovaTrajectory* Trajectory = OrbitalSimulation->GetPlayerTrajectory();
 							const FNovaOrbitalLocation* Location = OrbitalSimulation->GetPlayerLocation();
-							if (Location)
+
+							if (Trajectory)
 							{
-								auto AreaAndDistance = OrbitalSimulation->GetClosestAreaAndDistance(*Location);
-								return AreaAndDistance.Key->Name;
+								return LOCTEXT("Trajectory", "On trajectory");
+							}
+							else if (Location)
+							{
+								auto AreaAndDistance = OrbitalSimulation->GetNearestAreaAndDistance(*Location);
+
+								FNumberFormattingOptions NumberOptions;
+								NumberOptions.SetMaximumFractionalDigits(1);
+
+								return FText::FormatNamed(LOCTEXT("NearestAreaFormat", "{area} at {distance}km"),
+									TEXT("area"), AreaAndDistance.Key->Name,
+									TEXT("distance"), FText::AsNumber(AreaAndDistance.Value, &NumberOptions));
 							}
 							return FText();
 						})

@@ -356,7 +356,7 @@ UNovaOrbitalSimulationComponent* UNovaOrbitalSimulationComponent::Get(const UObj
 	return SimulationComponent;
 }
 
-TPair<const UNovaArea*, float> UNovaOrbitalSimulationComponent::GetClosestAreaAndDistance(const FNovaOrbitalLocation& Location) const
+TPair<const UNovaArea*, float> UNovaOrbitalSimulationComponent::GetNearestAreaAndDistance(const FNovaOrbitalLocation& Location) const
 {
 	const UNovaArea* ClosestArea     = nullptr;
 	float            ClosestDistance = MAX_FLT;

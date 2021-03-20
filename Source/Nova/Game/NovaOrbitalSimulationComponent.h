@@ -85,7 +85,7 @@ public:
 	}
 
 	/** Get the closest area and the associated distance from an arbitrary location */
-	TPair<const UNovaArea*, float> GetClosestAreaAndDistance(const FNovaOrbitalLocation& Location) const;
+	TPair<const UNovaArea*, float> GetNearestAreaAndDistance(const FNovaOrbitalLocation& Location) const;
 
 	/** Get a spacecraft's orbit */
 	const FNovaOrbit* GetSpacecraftOrbit(const FGuid& Identifier) const

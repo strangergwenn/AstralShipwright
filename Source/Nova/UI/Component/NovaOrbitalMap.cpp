@@ -277,7 +277,7 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 	{
 		const FGuid& Identifier = SpacecraftIdentifierAndOrbitalLocation.Key;
 
-		if (!OrbitalSimulation->IsOnTrajectory(Identifier))
+		if (SpacecraftIdentifierAndOrbitalLocation.Value.Geometry.IsValid() && !OrbitalSimulation->IsOnTrajectory(Identifier))
 		{
 			const FNovaOrbitalLocation& Location = SpacecraftIdentifierAndOrbitalLocation.Value;
 
