@@ -453,7 +453,12 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 	FVector2D InitialPosition     = FVector2D::ZeroVector;
 	FVector2D FinalPosition       = FVector2D::ZeroVector;
 
-	for (int32 SplineIndex = 0; SplineIndex < FMath::CeilToInt(Orbit.AngularLength / 90); SplineIndex++)
+	NCHECK(Orbit.AngularLength > 0);
+
+	// Strip orbits down to the minimum length to improve performance (Orbit.AngularLength can be +inf)
+	const float AngularLength = FMath::IsFinite(Orbit.AngularLength) ? Orbit.AngularLength : 360;
+
+	for (int32 SplineIndex = 0; SplineIndex < FMath::CeilToInt(AngularLength / 90); SplineIndex++)
 	{
 		// Useful constants
 		const float     CurrentStartAngle = SplineIndex * 90.0f;
@@ -499,13 +504,13 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 		}
 
 		// Split the curve to account for angular length
-		if (CurrentStartAngle >= Orbit.AngularLength)
+		if (CurrentStartAngle >= AngularLength)
 		{
 			break;
 		}
-		if (CurrentEndAngle > Orbit.AngularLength)
+		if (CurrentEndAngle > AngularLength)
 		{
-			float             Alpha         = FMath::Fmod(Orbit.AngularLength, 90.0f) / CurrentSegmentLength;
+			float             Alpha         = FMath::Fmod(AngularLength, 90.0f) / CurrentSegmentLength;
 			TArray<FVector2D> ControlPoints = DeCasteljauSplit(P0, P1, P2, P3, Alpha);
 
 			CurrentSegmentLength *= Alpha;
