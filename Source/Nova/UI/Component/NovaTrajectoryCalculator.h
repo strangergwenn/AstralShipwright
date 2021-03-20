@@ -97,6 +97,7 @@ protected:
 	// Trajectory data
 	TMap<float, TSharedPtr<struct FNovaTrajectory>> SimulatedTrajectories;
 	float                                           MinDeltaV;
+	float                                           MinDeltaVWithTolerance;
 	float                                           MaxDeltaV;
 	float                                           MinDuration;
 	float                                           MaxDuration;

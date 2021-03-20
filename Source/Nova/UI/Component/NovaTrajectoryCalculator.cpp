@@ -229,10 +229,11 @@ void SNovaTrajectoryCalculator::Reset()
 	TrajectoryDeltaVGradientData   = {FLinearColor::Black, FLinearColor::Black};
 	TrajectoryDurationGradientData = {FLinearColor::Black, FLinearColor::Black};
 
-	MinDeltaV   = FLT_MAX;
-	MaxDeltaV   = 0;
-	MinDuration = FLT_MAX;
-	MaxDuration = 0;
+	MinDeltaV              = FLT_MAX;
+	MinDeltaVWithTolerance = FLT_MAX;
+	MaxDeltaV              = 0;
+	MinDuration            = FLT_MAX;
+	MaxDuration            = 0;
 }
 
 void SNovaTrajectoryCalculator::SimulateTrajectories(
@@ -263,7 +264,7 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(
 		SimulatedTrajectories.Add(Altitude, Trajectory);
 	}
 
-	// Pre-process the trajectory data
+	// Pre-process the trajectory data for absolute minimas and maximas
 	for (const TPair<float, TSharedPtr<FNovaTrajectory>>& AltitudeAndTrajectory : SimulatedTrajectories)
 	{
 		float                              Altitude   = AltitudeAndTrajectory.Key;
@@ -274,8 +275,7 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(
 		{
 			if (Trajectory->TotalDeltaV < MinDeltaV)
 			{
-				MinDeltaV         = Trajectory->TotalDeltaV;
-				MinDeltaVAltitude = Altitude;
+				MinDeltaV = Trajectory->TotalDeltaV;
 			}
 			if (Trajectory->TotalDeltaV > MaxDeltaV)
 			{
@@ -289,6 +289,24 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(
 			if (Trajectory->TotalTravelDuration > MaxDuration)
 			{
 				MaxDuration = Trajectory->TotalTravelDuration;
+			}
+		}
+	}
+
+	// Pre-process the trajectory data again for a smarter minimum Delta-V
+	float MinDurationWithinMinDeltaV = FLT_MAX;
+	for (const TPair<float, TSharedPtr<FNovaTrajectory>>& AltitudeAndTrajectory : SimulatedTrajectories)
+	{
+		float                              Altitude   = AltitudeAndTrajectory.Key;
+		const TSharedPtr<FNovaTrajectory>& Trajectory = AltitudeAndTrajectory.Value;
+
+		if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(Trajectory->TotalTravelDuration))
+		{
+			if (Trajectory->TotalDeltaV < 1.001f * MinDeltaV && Trajectory->TotalTravelDuration < MinDurationWithinMinDeltaV)
+			{
+				MinDeltaVWithTolerance     = Trajectory->TotalDeltaV;
+				MinDurationWithinMinDeltaV = Trajectory->TotalTravelDuration;
+				MinDeltaVAltitude          = Altitude;
 			}
 		}
 	}
