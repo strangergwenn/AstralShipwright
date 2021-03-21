@@ -385,18 +385,16 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 	}
 
 	// Position the player spacecraft
-	float                       CurrentSpacecraftPhase = 0;
-	const FNovaOrbitalLocation* SpacecraftLocation     = nullptr;
+	float CurrentSpacecraftPhase = 0;
 	if (Spacecraft)
 	{
-		UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-		SpacecraftLocation                                 = OrbitalSimulation->GetSpacecraftLocation(Spacecraft->Identifier);
+		UNovaOrbitalSimulationComponent* OrbitalSimulation  = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+		const FNovaOrbitalLocation*      SpacecraftLocation = OrbitalSimulation->GetSpacecraftLocation(Spacecraft->Identifier);
 
 		if (SpacecraftLocation)
 		{
 #if 0
-			NLOG("T%d : %s at phase %f on orbit with sphase %f, ephase %f", TransferIndex, *Spacecraft->Identifier.ToString(),
-				SpacecraftLocation->Phase, Geometry.StartPhase, Geometry.EndPhase);
+			NLOG("SNovaOrbitalMap::AddTrajectory : %s at phase %f ", *Spacecraft->Identifier.ToString(), SpacecraftLocation->Phase);
 #endif
 
 			Objects.Add(FNovaOrbitalObject(Spacecraft, SpacecraftLocation->Phase));
@@ -432,14 +430,14 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbit(const FVector2D& Position,
 {
 	const FVector2D LocalPosition = Position * CurrentDrawScale;
 
-	const float  RadiusA       = CurrentDrawScale * Geometry.StartAltitude;
-	const float  RadiusB       = CurrentDrawScale * Geometry.OppositeAltitude;
-	const float  SemiMajorAxis = 0.5f * (RadiusA + RadiusB);
-	const float  SemiMinorAxis = FMath::Sqrt(RadiusA * RadiusB);
-	const float& Phase         = Geometry.StartPhase;
-	const float& InitialAngle  = InitialPhase - Geometry.StartPhase;
-	const float  AngularLength = Geometry.EndPhase - Geometry.StartPhase;
-	const float  Offset        = 0.5f * (RadiusB - RadiusA);
+	const float RadiusA       = CurrentDrawScale * Geometry.StartAltitude;
+	const float RadiusB       = CurrentDrawScale * Geometry.OppositeAltitude;
+	const float SemiMajorAxis = 0.5f * (RadiusA + RadiusB);
+	const float SemiMinorAxis = FMath::Sqrt(RadiusA * RadiusB);
+	const float Phase         = Geometry.StartPhase;
+	const float InitialAngle  = InitialPhase - Geometry.StartPhase;
+	const float AngularLength = Geometry.EndPhase - Geometry.StartPhase;
+	const float Offset        = 0.5f * (RadiusB - RadiusA);
 
 	return AddOrbitInternal(
 		FNovaSplineOrbit(LocalPosition, SemiMajorAxis, SemiMinorAxis, Phase, InitialAngle, AngularLength, Offset), Objects, Style);
@@ -468,9 +466,9 @@ void SNovaOrbitalMap::AddOrbitalObject(const FNovaOrbitalObject& Object, const F
 TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 	const FNovaSplineOrbit& Orbit, TArray<FNovaOrbitalObject>& Objects, const FNovaSplineStyle& Style)
 {
-	int32     SplineRendered  = 0;
-	FVector2D InitialPosition = FVector2D::ZeroVector;
-	FVector2D FinalPosition   = FVector2D::ZeroVector;
+	int32     RenderedSplineCount = 0;
+	FVector2D InitialPosition     = FVector2D::ZeroVector;
+	FVector2D FinalPosition       = FVector2D::ZeroVector;
 
 	NCHECK(Orbit.AngularLength > 0);
 
@@ -548,15 +546,15 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 		}
 
 		// Process points of interest
+		const float CurrentSplineStartPhase = Orbit.Phase + CurrentStartAngle + RelativeInitialAngle;
+		const float CurrentSplineEndPhase   = Orbit.Phase + CurrentEndAngle;
 		for (FNovaOrbitalObject& Object : Objects)
 		{
-			const float CurrentSplineStartPhase = Orbit.Phase + CurrentStartAngle + RelativeInitialAngle;
-			const float CurrentSplineEndPhase   = Orbit.Phase + CurrentEndAngle;
-
-			if (!Object.Positioned && Object.Phase >= CurrentSplineStartPhase && Object.Phase <= CurrentSplineEndPhase)
+			if (!Object.Positioned && Object.Phase >= CurrentSplineStartPhase - KINDA_SMALL_NUMBER &&
+				Object.Phase <= CurrentSplineEndPhase + KINDA_SMALL_NUMBER)
 			{
 				float Alpha = FMath::Fmod(Object.Phase - Orbit.Phase - RelativeInitialAngle, 90.0f) / CurrentSegmentLength;
-				if (Alpha == 0 && Object.Phase != CurrentSplineStartPhase)
+				if (Alpha == 0 && Object.Phase > (CurrentSplineStartPhase + KINDA_SMALL_NUMBER))
 				{
 					Alpha = 1.0f;
 				}
@@ -565,15 +563,15 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 				Object.Positioned = true;
 
 #if 0
-				NLOG("Positioning at phase %f -> %f (%f) -> %f, %fp // CSSP %f, CSEP %f, CurrentEndAngle %f", Object.Phase, Alpha,
-					CurrentSegmentLength, Object.Position.X, Object.Position.Y, CurrentSplineStartPhase, CurrentSplineEndPhase,
-					CurrentEndAngle);
+				NLOG("SNovaOrbitalMap::AddOrbitalObject : positioned %f -> %f (%f) -> %f, %fp // CSSP %f, CSEP %f, CurrentEndAngle %f",
+					Object.Phase, Alpha, CurrentSegmentLength, Object.Position.X, Object.Position.Y, CurrentSplineStartPhase,
+					CurrentSplineEndPhase, CurrentEndAngle);
 #endif
 			}
 		}
 
 		// Batch the spline segment if we haven't done a full circle yet, including partial start & end segments
-		if (SplineRendered < 6)
+		if (RenderedSplineCount < 6)
 		{
 			FNovaBatchedSpline Spline;
 			Spline.P0         = P0;
@@ -588,12 +586,12 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 		}
 
 		// Report the initial and final positions
-		if (SplineRendered == 0)
+		if (RenderedSplineCount == 0)
 		{
 			InitialPosition = P0;
 		}
 		FinalPosition = P3;
-		SplineRendered++;
+		RenderedSplineCount++;
 	}
 
 	// Draw positioned objects
