@@ -493,7 +493,7 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 		if (GetCurrentTime() >= DatabaseEntry.Trajectory.GetManeuverStartTime())
 		{
 			FNovaOrbitalLocation NewLocation = DatabaseEntry.Trajectory.GetCurrentLocation(GetCurrentTime());
-			if (!NewLocation.Geometry.IsValid())
+			if (!NewLocation.IsValid())
 			{
 				NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories : missing trajectory data");
 			}

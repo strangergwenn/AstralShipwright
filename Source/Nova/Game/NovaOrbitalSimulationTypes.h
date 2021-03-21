@@ -133,7 +133,7 @@ struct FNovaOrbit
 	/** Check for validity */
 	bool IsValid() const
 	{
-		return Geometry.IsValid();
+		return Geometry.IsValid() && InsertionTime >= 0;
 	}
 
 	/** Get the current phase on this orbit */
@@ -156,6 +156,18 @@ struct FNovaOrbitalLocation
 {
 	GENERATED_BODY()
 
+	FNovaOrbitalLocation() : Geometry(), Phase(0)
+	{}
+
+	FNovaOrbitalLocation(const FNovaOrbitGeometry& G, float P) : Geometry(G), Phase(P)
+	{}
+
+	/** Check for validity */
+	bool IsValid() const
+	{
+		return Geometry.IsValid() && Phase >= 0;
+	}
+
 	/** Get the linear distance between this location and another */
 	float GetDistanceTo(const FNovaOrbitalLocation& Other) const
 	{
@@ -168,12 +180,6 @@ struct FNovaOrbitalLocation
 		return FVector2D(0.5f * (Geometry.OppositeAltitude - Geometry.StartAltitude), 0).GetRotated(Geometry.StartPhase) +
 			   FVector2D(Geometry.StartAltitude, 0).GetRotated(Phase);
 	}
-
-	FNovaOrbitalLocation() : Geometry(), Phase(0)
-	{}
-
-	FNovaOrbitalLocation(const FNovaOrbitGeometry& G, float P) : Geometry(G), Phase(P)
-	{}
 
 	UPROPERTY()
 	FNovaOrbitGeometry Geometry;
