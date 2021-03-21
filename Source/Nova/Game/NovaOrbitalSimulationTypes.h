@@ -47,7 +47,7 @@ struct FNovaOrbitGeometry
 	/** Check for validity */
 	bool IsValid() const
 	{
-		return Planet != nullptr && StartAltitude > 0 && OppositeAltitude > 0;
+		return ::IsValid(Planet) && StartAltitude > 0 && OppositeAltitude > 0 && StartPhase >= 0 && EndPhase > 0;
 	}
 
 	/** Check whether this geometry is circular */
@@ -227,7 +227,50 @@ struct FNovaTrajectory
 	/** Check for validity */
 	bool IsValid() const
 	{
-		return TransferOrbits.Num() > 0 && Maneuvers.Num() > 0;
+		if (TransferOrbits.Num() == 0 || Maneuvers.Num() == 0)
+		{
+			return false;
+		}
+
+		for (const FNovaOrbitGeometry& Geometry : TransferOrbits)
+		{
+			if (!Geometry.IsValid())
+			{
+				return false;
+			}
+		}
+
+		for (const FNovaManeuver& Maneuver : Maneuvers)
+		{
+			if (Maneuver.DeltaV <= 0)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/** Add a maneuver if it's not zero Delta-V */
+	bool Add(const FNovaManeuver& Maneuver)
+	{
+		if (Maneuver.DeltaV != 0)
+		{
+			Maneuvers.Add(Maneuver);
+			return true;
+		}
+		return false;
+	}
+
+	/** Add a transfer if it's not zero angular length */
+	bool Add(const FNovaOrbitGeometry& Geometry)
+	{
+		if (Geometry.StartPhase != Geometry.EndPhase)
+		{
+			TransferOrbits.Add(Geometry);
+			return true;
+		}
+		return false;
 	}
 
 	/** Get the maximum altitude reached by this trajectory */
@@ -241,6 +284,13 @@ struct FNovaTrajectory
 	{
 		NCHECK(IsValid());
 		return GetArrivalTime() - TotalTravelDuration;
+	}
+
+	/** Get the start time for the first maneuver */
+	float GetManeuverStartTime() const
+	{
+		NCHECK(IsValid());
+		return Maneuvers[0].Time;
 	}
 
 	/** Get the arrival time */
@@ -293,7 +343,7 @@ struct FNovaOrbitDatabase : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-	bool AddOrUpdate(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit)
+	bool Add(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit)
 	{
 		NCHECK(Orbit.IsValid());
 		NCHECK(Orbit->IsValid());
@@ -302,7 +352,7 @@ struct FNovaOrbitDatabase : public FFastArraySerializer
 		TrajectoryData.Orbit       = *Orbit;
 		TrajectoryData.Identifiers = SpacecraftIdentifiers;
 
-		return Cache.AddOrUpdate(*this, Array, TrajectoryData);
+		return Cache.Add(*this, Array, TrajectoryData);
 	}
 
 	void Remove(const TArray<FGuid>& SpacecraftIdentifiers)
@@ -312,8 +362,13 @@ struct FNovaOrbitDatabase : public FFastArraySerializer
 
 	const FNovaOrbit* Get(const FGuid& Identifier) const
 	{
-		const FNovaOrbitDatabaseEntry* Entry = Cache.Get(Identifier);
+		const FNovaOrbitDatabaseEntry* Entry = Cache.Get(Identifier, Array);
 		return Entry ? &Entry->Orbit : nullptr;
+	}
+
+	void UpdateCache()
+	{
+		Cache.Update(Array);
 	}
 
 	const TArray<FNovaOrbitDatabaseEntry>& Get() const
@@ -324,16 +379,6 @@ struct FNovaOrbitDatabase : public FFastArraySerializer
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{
 		return FFastArraySerializer::FastArrayDeltaSerialize<FNovaOrbitDatabaseEntry, FNovaOrbitDatabase>(Array, DeltaParms, *this);
-	}
-
-	void PreReplicatedRemove(const TArrayView<int32>& RemovedIndices, int32 NewSize)
-	{
-		Cache.PreReplicatedRemove(RemovedIndices, NewSize);
-	}
-
-	void PostReplicatedChange(const TArrayView<int32>& ChangedIndices, int32 FinalSize)
-	{
-		Cache.Update(Array);
 	}
 
 	UPROPERTY()
@@ -380,7 +425,7 @@ struct FNovaTrajectoryDatabase : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-	bool AddOrUpdate(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory)
+	bool Add(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory)
 	{
 		NCHECK(Trajectory.IsValid());
 		NCHECK(Trajectory->IsValid());
@@ -389,7 +434,7 @@ struct FNovaTrajectoryDatabase : public FFastArraySerializer
 		TrajectoryData.Trajectory  = *Trajectory;
 		TrajectoryData.Identifiers = SpacecraftIdentifiers;
 
-		return Cache.AddOrUpdate(*this, Array, TrajectoryData);
+		return Cache.Add(*this, Array, TrajectoryData);
 	}
 
 	void Remove(const TArray<FGuid>& SpacecraftIdentifiers)
@@ -399,8 +444,13 @@ struct FNovaTrajectoryDatabase : public FFastArraySerializer
 
 	const FNovaTrajectory* Get(const FGuid& Identifier) const
 	{
-		const FNovaTrajectoryDatabaseEntry* Entry = Cache.Get(Identifier);
+		const FNovaTrajectoryDatabaseEntry* Entry = Cache.Get(Identifier, Array);
 		return Entry ? &Entry->Trajectory : nullptr;
+	}
+
+	void UpdateCache()
+	{
+		Cache.Update(Array);
 	}
 
 	const TArray<FNovaTrajectoryDatabaseEntry>& Get() const
@@ -412,16 +462,6 @@ struct FNovaTrajectoryDatabase : public FFastArraySerializer
 	{
 		return FFastArraySerializer::FastArrayDeltaSerialize<FNovaTrajectoryDatabaseEntry, FNovaTrajectoryDatabase>(
 			Array, DeltaParms, *this);
-	}
-
-	void PreReplicatedRemove(const TArrayView<int32>& RemovedIndices, int32 NewSize)
-	{
-		Cache.PreReplicatedRemove(RemovedIndices, NewSize);
-	}
-
-	void PostReplicatedChange(const TArrayView<int32>& ChangedIndices, int32 FinalSize)
-	{
-		Cache.Update(Array);
 	}
 
 	UPROPERTY()

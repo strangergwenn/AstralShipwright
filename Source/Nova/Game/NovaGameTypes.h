@@ -89,7 +89,7 @@ template <typename T>
 struct TGuidCacheMap
 {
 	/** Add or update ArrayItem to the array Array held by structure Serializer */
-	bool AddOrUpdate(FFastArraySerializer& Serializer, TArray<T>& Array, const T& ArrayItem)
+	bool Add(FFastArraySerializer& Serializer, TArray<T>& Array, const T& ArrayItem)
 	{
 		bool NewEntry = false;
 
@@ -131,22 +131,17 @@ struct TGuidCacheMap
 	}
 
 	/** Get an item by identifier */
-	const T* Get(const FGuid& Identifier) const
+	const T* Get(const FGuid& Identifier, const TArray<T>& Array) const
 	{
 		const TPair<int32, const T*>* Entry = Map.Find(Identifier);
-		return Entry ? Entry->Value : nullptr;
-	}
 
-	/** Handle removal of entries */
-	void PreReplicatedRemove(const TArrayView<int32>& RemovedIndices, int32 NewSize)
-	{
-		for (auto Iterator = Map.CreateIterator(); Iterator; ++Iterator)
+		if (Entry)
 		{
-			if (RemovedIndices.Contains(Iterator.Value().Key))
-			{
-				Iterator.RemoveCurrent();
-			}
+			NCHECK(Entry->Key >= 0 && Entry->Key < Array.Num());
+			NCHECK(Entry->Value == &Array[Entry->Key]);
 		}
+
+		return Entry ? Entry->Value : nullptr;
 	}
 
 	/** Update the map from the array Array */
@@ -187,6 +182,12 @@ struct TGuidCacheMap
 				Iterator.RemoveCurrent();
 			}
 		}
+
+		for (auto& IdentifierAndEntry : Map)
+		{
+			NCHECK(IdentifierAndEntry.Value.Key >= 0 && IdentifierAndEntry.Value.Key < Array.Num());
+			NCHECK(IdentifierAndEntry.Value.Value == &Array[IdentifierAndEntry.Value.Key]);
+		}
 	}
 
 	TMap<FGuid, TPair<int32, const T*>> Map;
@@ -197,7 +198,7 @@ template <typename T>
 struct TMultiGuidCacheMap
 {
 	/** Add or update ArrayItem to the array Array held by structure Serializer */
-	bool AddOrUpdate(FFastArraySerializer& Serializer, TArray<T>& Array, const T& ArrayItem)
+	bool Add(FFastArraySerializer& Serializer, TArray<T>& Array, const T& ArrayItem)
 	{
 		bool NewEntry = false;
 
@@ -264,22 +265,17 @@ struct TMultiGuidCacheMap
 	}
 
 	/** Get an item by identifier */
-	const T* Get(const FGuid& Identifier) const
+	const T* Get(const FGuid& Identifier, const TArray<T>& Array) const
 	{
 		const TPair<int32, const T*>* Entry = Map.Find(Identifier);
-		return Entry ? Entry->Value : nullptr;
-	}
 
-	/** Handle removal of entries */
-	void PreReplicatedRemove(const TArrayView<int32>& RemovedIndices, int32 NewSize)
-	{
-		for (auto Iterator = Map.CreateIterator(); Iterator; ++Iterator)
+		if (Entry)
 		{
-			if (RemovedIndices.Contains(Iterator.Value().Key))
-			{
-				Iterator.RemoveCurrent();
-			}
+			NCHECK(Entry->Key >= 0 && Entry->Key < Array.Num());
+			NCHECK(Entry->Value == &Array[Entry->Key]);
 		}
+
+		return Entry ? Entry->Value : nullptr;
 	}
 
 	/** Update the map from the array Array */
@@ -320,6 +316,12 @@ struct TMultiGuidCacheMap
 			{
 				Iterator.RemoveCurrent();
 			}
+		}
+
+		for (auto& IdentifierAndEntry : Map)
+		{
+			NCHECK(IdentifierAndEntry.Value.Key >= 0 && IdentifierAndEntry.Value.Key < Array.Num());
+			NCHECK(IdentifierAndEntry.Value.Value == &Array[IdentifierAndEntry.Value.Key]);
 		}
 	}
 

@@ -103,6 +103,10 @@ void UNovaOrbitalSimulationComponent::TickComponent(
 		}
 	}
 
+	// Update databases for replication
+	SpacecraftOrbitDatabase.UpdateCache();
+	SpacecraftTrajectoryDatabase.UpdateCache();
+
 	// Run processes
 	ProcessOrbitCleanup();
 	ProcessAreas();
@@ -198,38 +202,24 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	TSharedPtr<FNovaTrajectory> Trajectory          = MakeShared<FNovaTrajectory>();
 	double                      CurrentManeuverTime = StartTime + InitialWaitingDuration;
 
-	// Helpers
-	auto AddManeuverIfNotNull = [&Trajectory](const FNovaManeuver& Maneuver)
-	{
-		if (Maneuver.DeltaV != 0)
-		{
-			Trajectory->Maneuvers.Add(Maneuver);
-		}
-	};
-	auto AddTransferIfNotNull = [&Trajectory](const FNovaOrbitGeometry& Geometry)
-	{
-		if (Geometry.StartPhase != Geometry.EndPhase)
-		{
-			Trajectory->TransferOrbits.Add(Geometry);
-		}
-	};
-
 	// First transfer
-	AddManeuverIfNotNull(FNovaManeuver(TransferA.StartDeltaV, CurrentManeuverTime, SourcePhase));
-	AddTransferIfNotNull(FNovaOrbitGeometry(Parameters->Planet, SourceAltitudeA, PhasingAltitude, SourcePhase, SourcePhase + 180));
-	AddManeuverIfNotNull(FNovaManeuver(TransferA.EndDeltaV, CurrentManeuverTime + TransferA.Duration, SourcePhase + 180));
+	if (Trajectory->Add(FNovaManeuver(TransferA.StartDeltaV, CurrentManeuverTime, SourcePhase)))
+	{
+		Trajectory->Add(FNovaOrbitGeometry(Parameters->Planet, SourceAltitudeA, PhasingAltitude, SourcePhase, SourcePhase + 180));
+	}
+	Trajectory->Add(FNovaManeuver(TransferA.EndDeltaV, CurrentManeuverTime + TransferA.Duration, SourcePhase + 180));
 	CurrentManeuverTime += TransferA.Duration;
 
 	// Phasing orbit
-	AddTransferIfNotNull(
+	Trajectory->Add(
 		FNovaOrbitGeometry(Parameters->Planet, PhasingAltitude, PhasingAltitude, SourcePhase + 180, SourcePhase + 180 + PhasingAngle));
 	CurrentManeuverTime += PhasingDuration;
 
 	// Second transfer
-	AddManeuverIfNotNull(FNovaManeuver(TransferB.StartDeltaV, CurrentManeuverTime, SourcePhase + 180 + PhasingAngle));
-	AddTransferIfNotNull(FNovaOrbitGeometry(
+	Trajectory->Add(FNovaManeuver(TransferB.StartDeltaV, CurrentManeuverTime, SourcePhase + 180 + PhasingAngle));
+	Trajectory->Add(FNovaOrbitGeometry(
 		Parameters->Planet, PhasingAltitude, DestinationAltitude, SourcePhase + 180 + PhasingAngle, SourcePhase + 360 + PhasingAngle));
-	AddManeuverIfNotNull(FNovaManeuver(TransferB.EndDeltaV, CurrentManeuverTime + TransferB.Duration, SourcePhase + 360 + PhasingAngle));
+	Trajectory->Add(FNovaManeuver(TransferB.EndDeltaV, CurrentManeuverTime + TransferB.Duration, SourcePhase + 360 + PhasingAngle));
 
 	// Metadata
 	Trajectory->TotalTravelDuration = TotalTravelDuration;
@@ -263,11 +253,11 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	return Trajectory;
 }
 
-bool UNovaOrbitalSimulationComponent::IsOnTrajectory(const FGuid& SpacecraftIdentifier) const
+bool UNovaOrbitalSimulationComponent::IsOnStartedTrajectory(const FGuid& SpacecraftIdentifier) const
 {
 	const FNovaTrajectory* Trajectory = SpacecraftTrajectoryDatabase.Get(SpacecraftIdentifier);
 
-	return Trajectory && GetCurrentTime() >= Trajectory->GetStartTime() && GetCurrentTime() <= Trajectory->GetArrivalTime();
+	return Trajectory && GetCurrentTime() >= Trajectory->GetManeuverStartTime() && GetCurrentTime() <= Trajectory->GetArrivalTime();
 }
 
 bool UNovaOrbitalSimulationComponent::CanStartTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory) const
@@ -285,7 +275,7 @@ void UNovaOrbitalSimulationComponent::StartTrajectory(
 	NLOG("UNovaOrbitalSimulationComponent::StartTrajectory for %d spacecraft", SpacecraftIdentifiers.Num());
 
 	// Move spacecraft to the trajectory
-	SpacecraftTrajectoryDatabase.AddOrUpdate(SpacecraftIdentifiers, Trajectory);
+	SpacecraftTrajectoryDatabase.Add(SpacecraftIdentifiers, Trajectory);
 }
 
 void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& SpacecraftIdentifiers)
@@ -323,7 +313,7 @@ void UNovaOrbitalSimulationComponent::SetOrbit(const TArray<FGuid>& SpacecraftId
 	NLOG("UNovaOrbitalSimulationComponent::SetOrbit for %d spacecraft", SpacecraftIdentifiers.Num());
 
 	SpacecraftTrajectoryDatabase.Remove(SpacecraftIdentifiers);
-	SpacecraftOrbitDatabase.AddOrUpdate(SpacecraftIdentifiers, Orbit);
+	SpacecraftOrbitDatabase.Add(SpacecraftIdentifiers, Orbit);
 }
 
 void UNovaOrbitalSimulationComponent::MergeOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit)
@@ -431,7 +421,7 @@ void UNovaOrbitalSimulationComponent::ProcessOrbitCleanup()
 		// We need orbit data right until the time a trajectory actually start, so we remove it there
 		for (const FNovaTrajectoryDatabaseEntry& DatabaseEntry : SpacecraftTrajectoryDatabase.Get())
 		{
-			if (GetCurrentTime() >= DatabaseEntry.Trajectory.GetStartTime() + OrbitGarbageCollectionDelay)
+			if (GetCurrentTime() >= DatabaseEntry.Trajectory.GetManeuverStartTime() + OrbitGarbageCollectionDelay)
 			{
 				SpacecraftOrbitDatabase.Remove(DatabaseEntry.Identifiers);
 			}
@@ -500,9 +490,13 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 
 	for (const FNovaTrajectoryDatabaseEntry& DatabaseEntry : SpacecraftTrajectoryDatabase.Get())
 	{
-		if (GetCurrentTime() >= DatabaseEntry.Trajectory.GetStartTime())
+		if (GetCurrentTime() >= DatabaseEntry.Trajectory.GetManeuverStartTime())
 		{
 			FNovaOrbitalLocation NewLocation = DatabaseEntry.Trajectory.GetCurrentLocation(GetCurrentTime());
+			if (!NewLocation.Geometry.IsValid())
+			{
+				NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories : missing trajectory data");
+			}
 
 #if 0
 			NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories : %s has phase %f, with sphase %f, ephase %f",
@@ -533,13 +527,17 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 	}
 
 	// Complete trajectories
-	for (const TArray<FGuid>& Identifiers : CompletedTrajectories)
+	if (GetOwner()->GetLocalRole() == ROLE_Authority)
 	{
-		NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories : completing trajectory for %d spacecraft at time %f",
-			Identifiers.Num(), GetCurrentTime());
-		CompleteTrajectory(Identifiers);
+		for (const TArray<FGuid>& Identifiers : CompletedTrajectories)
+		{
+			NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories : completing trajectory for %d spacecraft at time %f",
+				Identifiers.Num(), GetCurrentTime());
+			CompleteTrajectory(Identifiers);
+		}
 	}
 }
+
 /*----------------------------------------------------
     Networking
 ----------------------------------------------------*/

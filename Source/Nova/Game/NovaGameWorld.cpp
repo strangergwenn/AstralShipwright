@@ -31,7 +31,7 @@ ANovaGameWorld::ANovaGameWorld() : Super(), ServerTime(0), ServerTimeDilation(1)
 
 	// Defaults
 	MinimumTimeCorrectionThreshold = 0.25f;
-	MaximumTimeCorrectionThreshold = 2.0f;
+	MaximumTimeCorrectionThreshold = 10.0f;
 	TimeCorrectionFactor           = 0.2f;
 }
 
@@ -65,6 +65,8 @@ void ANovaGameWorld::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	SpacecraftDatabase.UpdateCache();
+
 	// Process time
 	double DilatedDeltaTime = static_cast<double>(DeltaTime * ServerTimeDilation / 60.0);
 	if (GetLocalRole() == ROLE_Authority)
@@ -93,7 +95,7 @@ void ANovaGameWorld::UpdateSpacecraft(const FNovaSpacecraft Spacecraft, bool IsP
 
 	NLOG("ANovaGameWorld::UpdateSpacecraft");
 
-	bool IsNew = SpacecraftDatabase.AddOrUpdate(Spacecraft);
+	bool IsNew = SpacecraftDatabase.Add(Spacecraft);
 
 	if (IsNew)
 	{
@@ -161,7 +163,7 @@ void ANovaGameWorld::OnServerTimeReplicated()
 	// Evaluate the current server time
 	const double PingSeconds      = UNovaActorTools::GetPlayerLatency(PC);
 	const double RealServerTime   = ServerTime + PingSeconds / 60.0;
-	const double TimeDeltaSeconds = (RealServerTime - ClientTime) * 60.0;
+	const double TimeDeltaSeconds = (RealServerTime - ClientTime) * 60.0 / ServerTimeDilation;
 
 	// We can never go back in time
 	NCHECK(TimeDeltaSeconds > -MaximumTimeCorrectionThreshold);

@@ -291,7 +291,7 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 	{
 		const FGuid& Identifier = SpacecraftIdentifierAndOrbitalLocation.Key;
 
-		if (SpacecraftIdentifierAndOrbitalLocation.Value.Geometry.IsValid() && !OrbitalSimulation->IsOnTrajectory(Identifier))
+		if (SpacecraftIdentifierAndOrbitalLocation.Value.Geometry.IsValid() && !OrbitalSimulation->IsOnStartedTrajectory(Identifier))
 		{
 			const FNovaOrbitalLocation& Location = SpacecraftIdentifierAndOrbitalLocation.Value;
 
@@ -377,6 +377,8 @@ void SNovaOrbitalMap::AddPlanet(const FVector2D& Pos, const class UNovaPlanet* P
 void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajectory& Trajectory, const FNovaSplineStyle& Style,
 	const struct FNovaSpacecraft* Spacecraft, float Progress)
 {
+	NCHECK(Trajectory.IsValid());
+
 	// Add maneuvers
 	TArray<FNovaOrbitalObject> Objects;
 	for (const FNovaManeuver& Maneuver : Trajectory.Maneuvers)

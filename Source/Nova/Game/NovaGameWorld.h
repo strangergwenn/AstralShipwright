@@ -17,9 +17,9 @@ struct FNovaSpacecraftDatabase : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-	bool AddOrUpdate(const FNovaSpacecraft& Spacecraft)
+	bool Add(const FNovaSpacecraft& Spacecraft)
 	{
-		return Cache.AddOrUpdate(*this, Array, Spacecraft);
+		return Cache.Add(*this, Array, Spacecraft);
 	}
 
 	void Remove(const FGuid& Identifier)
@@ -29,17 +29,17 @@ struct FNovaSpacecraftDatabase : public FFastArraySerializer
 
 	const FNovaSpacecraft* Get(const FGuid& Identifier) const
 	{
-		return Cache.Get(Identifier);
+		return Cache.Get(Identifier, Array);
+	}
+
+	void UpdateCache()
+	{
+		Cache.Update(Array);
 	}
 
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
 	{
 		return FFastArraySerializer::FastArrayDeltaSerialize<FNovaSpacecraft, FNovaSpacecraftDatabase>(Array, DeltaParms, *this);
-	}
-
-	void PostReplicatedChange(const TArrayView<int32>& ChangedIndices, int32 FinalSize)
-	{
-		Cache.Update(Array);
 	}
 
 protected:
