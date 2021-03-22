@@ -302,7 +302,9 @@ void ANovaSpacecraftPawn::StartAssemblyUpdate()
 	// In case we have nothing to de-materialize or load, we will move there
 	AssemblyState = ENovaAssemblyState::Moving;
 
+	// Update the spacecraft
 	Spacecraft->UpdateProceduralElements();
+	Spacecraft->UpdatePropulsionMetrics();
 
 	// De-materialize unwanted compartments
 	for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
@@ -453,7 +455,7 @@ void ANovaSpacecraftPawn::UpdateAssembly()
 			}
 		}
 
-		if (!StillWaiting)
+		if (!StillWaiting || ImmediateMode)
 		{
 			AssemblyState = ENovaAssemblyState::Building;
 		}
