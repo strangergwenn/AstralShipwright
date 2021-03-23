@@ -53,10 +53,11 @@ struct FNovaHohmannTransfer
 /** Trajectory computation parameters */
 struct FNovaTrajectoryParameters
 {
-	double     StartTime;
-	FNovaOrbit Source;
-	double     DestinationAltitude;
-	double     DestinationPhase;
+	double        StartTime;
+	FNovaOrbit    Source;
+	double        DestinationAltitude;
+	double        DestinationPhase;
+	TArray<FGuid> SpacecraftIdentifiers;
 
 	const UNovaPlanet* Planet;
 	double             µ;
@@ -118,8 +119,8 @@ void UNovaOrbitalSimulationComponent::TickComponent(
     Trajectory & orbiting interface
 ----------------------------------------------------*/
 
-TSharedPtr<FNovaTrajectoryParameters> UNovaOrbitalSimulationComponent::PrepareTrajectory(
-	const TSharedPtr<FNovaOrbit>& Source, const TSharedPtr<FNovaOrbit>& Destination, double DeltaTime) const
+TSharedPtr<FNovaTrajectoryParameters> UNovaOrbitalSimulationComponent::PrepareTrajectory(const TSharedPtr<FNovaOrbit>& Source,
+	const TSharedPtr<FNovaOrbit>& Destination, double DeltaTime, const TArray<FGuid>& SpacecraftIdentifiers) const
 {
 	TSharedPtr<FNovaTrajectoryParameters> Parameters = MakeShared<FNovaTrajectoryParameters>();
 
@@ -128,12 +129,14 @@ TSharedPtr<FNovaTrajectoryParameters> UNovaOrbitalSimulationComponent::PrepareTr
 	NCHECK(*Source.Get() != *Destination.Get());
 	NCHECK(Destination->Geometry.IsCircular());
 	NCHECK(Source->Geometry.Planet == Destination->Geometry.Planet);
+	NCHECK(SpacecraftIdentifiers.Num() > 0);
 
 	// Get basic parameters
-	Parameters->StartTime           = GetCurrentTime() + DeltaTime;
-	Parameters->Source              = *Source;
-	Parameters->DestinationPhase    = Destination->GetCurrentPhase<true>(GetCurrentTime() + DeltaTime);
-	Parameters->DestinationAltitude = Destination->Geometry.StartAltitude;
+	Parameters->StartTime             = GetCurrentTime() + DeltaTime;
+	Parameters->Source                = *Source;
+	Parameters->DestinationPhase      = Destination->GetCurrentPhase<true>(GetCurrentTime() + DeltaTime);
+	Parameters->DestinationAltitude   = Destination->Geometry.StartAltitude;
+	Parameters->SpacecraftIdentifiers = SpacecraftIdentifiers;
 
 	// Get orbital parameters
 	Parameters->Planet = Source->Geometry.Planet;
@@ -198,16 +201,36 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	const double PhasingAngle        = (PhasingDuration / PhasingOrbitPeriod) * 360.0;
 	const double TotalTravelDuration = TotalTransferDuration + PhasingDuration;
 
-	// Build trajectory
-	TSharedPtr<FNovaTrajectory> Trajectory          = MakeShared<FNovaTrajectory>();
-	double                      CurrentManeuverTime = StartTime + InitialWaitingDuration;
+	// Get a list of spacecraft
+	TArray<const FNovaSpacecraft*> Spacecraft;
+	for (const FGuid& Identifier : Parameters->SpacecraftIdentifiers)
+	{
+		const FNovaSpacecraft* NewSpacecraft = Cast<ANovaGameWorld>(GetOwner())->GetSpacecraft(Identifier);
+		NCHECK(NewSpacecraft != nullptr);
+		Spacecraft.Add(NewSpacecraft);
+	}
+
+	// Sort spacecraft by least acceleration because the fleet will match the least-performing
+	Spacecraft.Sort(
+		[](const FNovaSpacecraft& A, const FNovaSpacecraft& B)
+		{
+			return A.GetPropulsionMetrics().GetLowestAcceleration() < B.GetPropulsionMetrics().GetLowestAcceleration();
+		});
+
+	// Start building trajectory
+	TSharedPtr<FNovaTrajectory>             Trajectory            = MakeShared<FNovaTrajectory>();
+	double                                  CurrentManeuverTime   = StartTime + InitialWaitingDuration;
+	float                                   CurrentPropellantMass = Spacecraft[0]->GetRemainingPropellantMass();
+	const FNovaSpacecraftPropulsionMetrics& PropulsionMetrics     = Spacecraft[0]->GetPropulsionMetrics();
 
 	// First transfer
-	if (Trajectory->Add(FNovaManeuver(TransferA.StartDeltaV, CurrentManeuverTime, SourcePhase)))
+	float ManeuverDuration = PropulsionMetrics.GetManeuverDurationAndPropellantUsed(TransferA.StartDeltaV, CurrentPropellantMass);
+	if (Trajectory->Add(FNovaManeuver(TransferA.StartDeltaV, CurrentManeuverTime, ManeuverDuration, SourcePhase)))
 	{
 		Trajectory->Add(FNovaOrbitGeometry(Parameters->Planet, SourceAltitudeA, PhasingAltitude, SourcePhase, SourcePhase + 180));
 	}
-	Trajectory->Add(FNovaManeuver(TransferA.EndDeltaV, CurrentManeuverTime + TransferA.Duration, SourcePhase + 180));
+	ManeuverDuration = PropulsionMetrics.GetManeuverDurationAndPropellantUsed(TransferA.EndDeltaV, CurrentPropellantMass);
+	Trajectory->Add(FNovaManeuver(TransferA.EndDeltaV, CurrentManeuverTime + TransferA.Duration, ManeuverDuration, SourcePhase + 180));
 	CurrentManeuverTime += TransferA.Duration;
 
 	// Phasing orbit
@@ -216,10 +239,13 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	CurrentManeuverTime += PhasingDuration;
 
 	// Second transfer
-	Trajectory->Add(FNovaManeuver(TransferB.StartDeltaV, CurrentManeuverTime, SourcePhase + 180 + PhasingAngle));
+	ManeuverDuration = PropulsionMetrics.GetManeuverDurationAndPropellantUsed(TransferB.StartDeltaV, CurrentPropellantMass);
+	Trajectory->Add(FNovaManeuver(TransferB.StartDeltaV, CurrentManeuverTime, ManeuverDuration, SourcePhase + 180 + PhasingAngle));
 	Trajectory->Add(FNovaOrbitGeometry(
 		Parameters->Planet, PhasingAltitude, DestinationAltitude, SourcePhase + 180 + PhasingAngle, SourcePhase + 360 + PhasingAngle));
-	Trajectory->Add(FNovaManeuver(TransferB.EndDeltaV, CurrentManeuverTime + TransferB.Duration, SourcePhase + 360 + PhasingAngle));
+	ManeuverDuration = PropulsionMetrics.GetManeuverDurationAndPropellantUsed(TransferB.EndDeltaV, CurrentPropellantMass);
+	Trajectory->Add(
+		FNovaManeuver(TransferB.EndDeltaV, CurrentManeuverTime + TransferB.Duration, ManeuverDuration, SourcePhase + 360 + PhasingAngle));
 
 	// Metadata
 	Trajectory->TotalTravelDuration = TotalTravelDuration;
@@ -367,6 +393,21 @@ TPair<const UNovaArea*, float> UNovaOrbitalSimulationComponent::GetNearestAreaAn
 FGuid UNovaOrbitalSimulationComponent::GetPlayerSpacecraftIdentifier() const
 {
 	return CurrentPlayerState ? CurrentPlayerState->GetSpacecraftIdentifier() : FGuid(0, 0, 0, 0);
+}
+
+TArray<FGuid> UNovaOrbitalSimulationComponent::GetPlayerSpacecraftIdentifiers() const
+{
+	TArray<FGuid> Result;
+
+	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
+	{
+		if (IsValid(PlayerState))
+		{
+			Result.Add(PlayerState->GetSpacecraftIdentifier());
+		}
+	}
+
+	return Result;
 }
 
 const FNovaOrbit* UNovaOrbitalSimulationComponent::GetPlayerOrbit() const

@@ -44,9 +44,10 @@ FText FNovaOrbitalObject::GetText(double CurrentTime) const
 		FNumberFormattingOptions NumberOptions;
 		NumberOptions.SetMaximumFractionalDigits(1);
 
-		return FText::FormatNamed(LOCTEXT("ManeuverFormat", "{deltav} m/s maneuver at {phase}° in {time}"), TEXT("phase"),
-			FText::AsNumber(FMath::Fmod(Maneuver->Phase, 360.0f), &NumberOptions), TEXT("time"),
-			GetDurationText(Maneuver->Time - CurrentTime), TEXT("deltav"), FText::AsNumber(Maneuver->DeltaV, &NumberOptions));
+		return FText::FormatNamed(LOCTEXT("ManeuverFormat", "{duration} burn for a {deltav} m/s maneuver at {phase}° in {time}"),
+			TEXT("phase"), FText::AsNumber(FMath::Fmod(Maneuver->Phase, 360.0f), &NumberOptions), TEXT("time"),
+			GetDurationText(Maneuver->Time - CurrentTime), TEXT("duration"), GetDurationText(Maneuver->Duration), TEXT("deltav"),
+			FText::AsNumber(Maneuver->DeltaV, &NumberOptions));
 	}
 	else
 	{

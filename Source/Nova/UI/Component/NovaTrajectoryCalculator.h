@@ -55,7 +55,8 @@ public:
 	void Reset();
 
 	/** Simulate trajectories to go between orbits */
-	void SimulateTrajectories(const TSharedPtr<struct FNovaOrbit>& Source, const TSharedPtr<struct FNovaOrbit>& Destination);
+	void SimulateTrajectories(const TSharedPtr<struct FNovaOrbit>& Source, const TSharedPtr<struct FNovaOrbit>& Destination,
+		const TArray<FGuid>& SpacecraftIdentifiers);
 
 	/** Optimize for Delta-V */
 	void OptimizeForDeltaV();

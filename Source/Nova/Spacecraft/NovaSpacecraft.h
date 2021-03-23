@@ -89,22 +89,41 @@ struct FNovaSpacecraftPropulsionMetrics
 {
 	FNovaSpacecraftPropulsionMetrics()
 		: DryMass(0)
-		, FuelMass(0)
+		, PropellantMass(0)
 		, CargoMass(0)
 		, TotalMass(0)
 		, SpecificImpulse(0)
 		, Thrust(0)
-		, FuelRate(0)
+		, PropellantRate(0)
 		, ExhaustVelocity(0)
 		, TotalDeltaV(0)
 		, TotalBurnTime(0)
 	{}
 
+	/** Get the worst-case acceleration for this spacecraft in m/s² */
+	float GetLowestAcceleration() const
+	{
+		return Thrust / (DryMass + PropellantMass + CargoMass);
+	}
+
+	/** Get the duration in minutes & mass of fuel spent in T for a maneuver */
+	float GetManeuverDurationAndPropellantUsed(const float DeltaV, float& CurrentPropellantMass) const
+	{
+		float Duration = (((DryMass + CargoMass + CurrentPropellantMass) * 1000.0f * ExhaustVelocity) / (Thrust * 1000.0f)) *
+						 (1.0f - exp(-DeltaV / ExhaustVelocity)) / 60.0f;
+		float PropellantUsed = PropellantRate * Duration;
+
+		CurrentPropellantMass -= PropellantUsed;
+		NCHECK(CurrentPropellantMass > 0);
+
+		return Duration;
+	}
+
 	// Dry mass before fuel and cargo in T
 	float DryMass;
 
 	// Maximum fuel mass in T
-	float FuelMass;
+	float PropellantMass;
 
 	// Maximum cargo mass in T
 	float CargoMass;
@@ -119,7 +138,7 @@ struct FNovaSpacecraftPropulsionMetrics
 	float Thrust;
 
 	// Fuel mass rate in T/S
-	float FuelRate;
+	float PropellantRate;
 
 	// Engine exhaust velocity in m/s
 	float ExhaustVelocity;
@@ -185,6 +204,13 @@ public:
 	const FNovaSpacecraftPropulsionMetrics& GetPropulsionMetrics() const
 	{
 		return PropulsionMetrics;
+	}
+
+	/** Get the remaining mass of propellant in T */
+	float GetRemainingPropellantMass() const
+	{
+		// TODO : implement
+		return PropulsionMetrics.PropellantMass;
 	}
 
 	/** Get a safe copy of this spacecraft without empty compartments */

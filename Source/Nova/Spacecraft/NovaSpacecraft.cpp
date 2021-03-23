@@ -2,6 +2,7 @@
 
 #include "NovaSpacecraft.h"
 #include "Nova/Game/NovaAssetCatalog.h"
+#include "Nova/Game/NovaOrbitalSimulationTypes.h"
 #include "Nova/Nova.h"
 
 #include "Dom/JsonObject.h"
@@ -380,7 +381,7 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 							FuelMass *= FuelSkirtMultiplier;
 						}
 
-						PropulsionMetrics.FuelMass += FuelMass;
+						PropulsionMetrics.PropellantMass += FuelMass;
 					}
 
 					// Handle cargo modules
@@ -412,14 +413,14 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 	}
 
 	// Compute metrics
-	PropulsionMetrics.TotalMass = PropulsionMetrics.DryMass + PropulsionMetrics.FuelMass + PropulsionMetrics.CargoMass;
+	PropulsionMetrics.TotalMass = PropulsionMetrics.DryMass + PropulsionMetrics.PropellantMass + PropulsionMetrics.CargoMass;
 	if (PropulsionMetrics.Thrust > 0)
 	{
 		PropulsionMetrics.SpecificImpulse = TotalEngineISPTimesThrust / PropulsionMetrics.Thrust;
 		PropulsionMetrics.ExhaustVelocity = StandardGravity * PropulsionMetrics.SpecificImpulse;
-		PropulsionMetrics.FuelRate        = PropulsionMetrics.Thrust / PropulsionMetrics.ExhaustVelocity;
+		PropulsionMetrics.PropellantRate  = PropulsionMetrics.Thrust / PropulsionMetrics.ExhaustVelocity;
 		PropulsionMetrics.TotalDeltaV = PropulsionMetrics.ExhaustVelocity * log((PropulsionMetrics.TotalMass) / PropulsionMetrics.DryMass);
-		PropulsionMetrics.TotalBurnTime = PropulsionMetrics.FuelMass / PropulsionMetrics.FuelRate;
+		PropulsionMetrics.TotalBurnTime = PropulsionMetrics.PropellantMass / PropulsionMetrics.PropellantRate;
 	}
 
 #if 0

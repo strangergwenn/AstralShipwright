@@ -35,8 +35,8 @@ public:
 
 public:
 	/** Build trajectory parameters from an arbitrary orbit to another  */
-	TSharedPtr<struct FNovaTrajectoryParameters> PrepareTrajectory(
-		const TSharedPtr<FNovaOrbit>& Source, const TSharedPtr<FNovaOrbit>& Destination, double DeltaTime = 0) const;
+	TSharedPtr<struct FNovaTrajectoryParameters> PrepareTrajectory(const TSharedPtr<FNovaOrbit>& Source,
+		const TSharedPtr<FNovaOrbit>& Destination, double DeltaTime, const TArray<FGuid>& SpacecraftIdentifiers) const;
 
 	/** Compute a trajectory */
 	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const TSharedPtr<struct FNovaTrajectoryParameters>& Parameters, float PhasingAltitude);
@@ -113,6 +113,9 @@ public:
 
 	/** Return the identifier of one of the player spacecraft */
 	FGuid GetPlayerSpacecraftIdentifier() const;
+
+	/** Return the identifiers of all of the player spacecraft */
+	TArray<FGuid> GetPlayerSpacecraftIdentifiers() const;
 
 	/** Get the player orbit */
 	const FNovaOrbit* GetPlayerOrbit() const;

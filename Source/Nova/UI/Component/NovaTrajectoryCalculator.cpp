@@ -236,8 +236,8 @@ void SNovaTrajectoryCalculator::Reset()
 	MaxDuration            = 0;
 }
 
-void SNovaTrajectoryCalculator::SimulateTrajectories(
-	const TSharedPtr<struct FNovaOrbit>& Source, const TSharedPtr<struct FNovaOrbit>& Destination)
+void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNovaOrbit>& Source,
+	const TSharedPtr<struct FNovaOrbit>& Destination, const TArray<FGuid>& SpacecraftIdentifiers)
 {
 	NCHECK(Source.IsValid());
 	NCHECK(Destination.IsValid());
@@ -255,7 +255,8 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(
 	Reset();
 
 	// Run trajectory calculations over a range of altitudes
-	const TSharedPtr<FNovaTrajectoryParameters>& Parameters = OrbitalSimulation->PrepareTrajectory(Source, Destination, 1);
+	const TSharedPtr<FNovaTrajectoryParameters>& Parameters =
+		OrbitalSimulation->PrepareTrajectory(Source, Destination, 1, SpacecraftIdentifiers);
 	SimulatedTrajectories.Reserve((Slider->GetMaxValue() - Slider->GetMinValue()) / AltitudeStep + 1);
 	for (float Altitude = Slider->GetMinValue(); Altitude <= Slider->GetMaxValue(); Altitude += AltitudeStep)
 	{

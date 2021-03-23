@@ -194,10 +194,10 @@ struct FNovaManeuver
 {
 	GENERATED_BODY()
 
-	FNovaManeuver() : DeltaV(0), Time(0), Phase(0)
+	FNovaManeuver() : DeltaV(0), Time(0), Duration(0), Phase(0)
 	{}
 
-	FNovaManeuver(float DV, float T, float P) : DeltaV(DV), Time(T), Phase(P)
+	FNovaManeuver(float DV, float T, float D, float P) : DeltaV(DV), Time(T), Duration(D), Phase(P)
 	{}
 
 	UPROPERTY()
@@ -205,6 +205,9 @@ struct FNovaManeuver
 
 	UPROPERTY()
 	float Time;
+
+	UPROPERTY()
+	float Duration;
 
 	UPROPERTY()
 	float Phase;
