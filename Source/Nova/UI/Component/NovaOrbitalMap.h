@@ -36,12 +36,12 @@ struct FNovaBatchedPoint
 {
 	bool operator==(const FNovaBatchedPoint& Other) const
 	{
-		return Pos == Other.Pos && Color == Other.Color && Radius == Other.Radius;
+		return Pos == Other.Pos && Color == Other.Color && Scale == Other.Scale;
 	}
 
 	FVector2D    Pos;
 	FLinearColor Color;
-	float        Radius;
+	float        Scale;
 };
 
 /** Batched data for drawing a quad */
@@ -183,8 +183,8 @@ protected:
 	void AddPlanet(const FVector2D& Pos, const class UNovaPlanet* Planet);
 
 	/** Draw a trajectory */
-	void AddTrajectory(const FVector2D& Position, const struct FNovaTrajectory& Trajectory, const struct FNovaSplineStyle& Style,
-		const struct FNovaSpacecraft* Spacecraft = nullptr, float Progress = 1.0f);
+	void AddTrajectory(const FVector2D& Position, const struct FNovaTrajectory& Trajectory, const struct FNovaSpacecraft* Spacecraft,
+		float Progress, const struct FNovaSplineStyle& OrbitStyle, const struct FNovaSplineStyle& ManeuverStyle);
 
 	/** Draw an orbit */
 	TPair<FVector2D, FVector2D> AddOrbit(const FVector2D& Position, const FNovaOrbitGeometry& Geometry, TArray<FNovaOrbitalObject>& Objects,

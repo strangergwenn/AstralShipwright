@@ -218,34 +218,51 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 		});
 
 	// Start building trajectory
-	TSharedPtr<FNovaTrajectory>             Trajectory            = MakeShared<FNovaTrajectory>();
-	double                                  CurrentManeuverTime   = StartTime + InitialWaitingDuration;
-	float                                   CurrentPropellantMass = Spacecraft[0]->GetRemainingPropellantMass();
-	const FNovaSpacecraftPropulsionMetrics& PropulsionMetrics     = Spacecraft[0]->GetPropulsionMetrics();
+	TSharedPtr<FNovaTrajectory>             Trajectory        = MakeShared<FNovaTrajectory>();
+	double                                  CurrentTime       = StartTime + InitialWaitingDuration;
+	double                                  CurrentPhase      = SourcePhase;
+	float                                   CurrentPropellant = Spacecraft[0]->GetRemainingPropellantMass();
+	const FNovaSpacecraftPropulsionMetrics& Metrics           = Spacecraft[0]->GetPropulsionMetrics();
 
-	// First transfer
-	float ManeuverDuration = PropulsionMetrics.GetManeuverDurationAndPropellantUsed(TransferA.StartDeltaV, CurrentPropellantMass);
-	if (Trajectory->Add(FNovaManeuver(TransferA.StartDeltaV, CurrentManeuverTime, ManeuverDuration, SourcePhase)))
+	// Departure burn on first transfer
+	double ManeuverDuration = Metrics.GetManeuverDurationAndPropellantUsed(TransferA.StartDeltaV, CurrentPropellant);
+	if (Trajectory->Add(FNovaManeuver(TransferA.StartDeltaV, CurrentTime, ManeuverDuration, CurrentPhase)))
 	{
-		Trajectory->Add(FNovaOrbitGeometry(Parameters->Planet, SourceAltitudeA, PhasingAltitude, SourcePhase, SourcePhase + 180));
+		// First transfer
+		Trajectory->Add(FNovaOrbit(
+			FNovaOrbitGeometry(Parameters->Planet, SourceAltitudeA, PhasingAltitude, CurrentPhase, CurrentPhase + 180), CurrentTime));
 	}
-	ManeuverDuration = PropulsionMetrics.GetManeuverDurationAndPropellantUsed(TransferA.EndDeltaV, CurrentPropellantMass);
-	Trajectory->Add(FNovaManeuver(TransferA.EndDeltaV, CurrentManeuverTime + TransferA.Duration, ManeuverDuration, SourcePhase + 180));
-	CurrentManeuverTime += TransferA.Duration;
+	CurrentPhase += 180;
+
+	// Circularization burn after first transfer
+	ManeuverDuration          = Metrics.GetManeuverDurationAndPropellantUsed(TransferA.EndDeltaV, CurrentPropellant);
+	double ManeuverPhaseDelta = ((ManeuverDuration / 2.0) / PhasingOrbitPeriod) * 360.0;
+	Trajectory->Add(FNovaManeuver(TransferA.EndDeltaV, CurrentTime + TransferA.Duration - ManeuverDuration / 2.0, ManeuverDuration,
+		CurrentPhase - ManeuverPhaseDelta));
+	CurrentTime += TransferA.Duration;
 
 	// Phasing orbit
+	Trajectory->Add(FNovaOrbit(
+		FNovaOrbitGeometry(Parameters->Planet, PhasingAltitude, PhasingAltitude, CurrentPhase, CurrentPhase + PhasingAngle), CurrentTime));
+	CurrentTime += PhasingDuration;
+	CurrentPhase += PhasingAngle;
+
+	// Departure burn on second transfer
+	ManeuverDuration   = Metrics.GetManeuverDurationAndPropellantUsed(TransferB.StartDeltaV, CurrentPropellant);
+	ManeuverPhaseDelta = ((ManeuverDuration / 2.0) / PhasingOrbitPeriod) * 360.0;
 	Trajectory->Add(
-		FNovaOrbitGeometry(Parameters->Planet, PhasingAltitude, PhasingAltitude, SourcePhase + 180, SourcePhase + 180 + PhasingAngle));
-	CurrentManeuverTime += PhasingDuration;
+		FNovaManeuver(TransferB.StartDeltaV, CurrentTime - ManeuverDuration / 2.0, ManeuverDuration, CurrentPhase - ManeuverPhaseDelta));
 
 	// Second transfer
-	ManeuverDuration = PropulsionMetrics.GetManeuverDurationAndPropellantUsed(TransferB.StartDeltaV, CurrentPropellantMass);
-	Trajectory->Add(FNovaManeuver(TransferB.StartDeltaV, CurrentManeuverTime, ManeuverDuration, SourcePhase + 180 + PhasingAngle));
-	Trajectory->Add(FNovaOrbitGeometry(
-		Parameters->Planet, PhasingAltitude, DestinationAltitude, SourcePhase + 180 + PhasingAngle, SourcePhase + 360 + PhasingAngle));
-	ManeuverDuration = PropulsionMetrics.GetManeuverDurationAndPropellantUsed(TransferB.EndDeltaV, CurrentPropellantMass);
-	Trajectory->Add(
-		FNovaManeuver(TransferB.EndDeltaV, CurrentManeuverTime + TransferB.Duration, ManeuverDuration, SourcePhase + 360 + PhasingAngle));
+	Trajectory->Add(FNovaOrbit(
+		FNovaOrbitGeometry(Parameters->Planet, PhasingAltitude, DestinationAltitude, CurrentPhase, CurrentPhase + 180), CurrentTime));
+	ManeuverDuration = Metrics.GetManeuverDurationAndPropellantUsed(TransferB.EndDeltaV, CurrentPropellant);
+	CurrentPhase += 180;
+
+	// Circularization burn after second transfer
+	ManeuverPhaseDelta = (ManeuverDuration / PhasingOrbitPeriod) * 360.0;
+	Trajectory->Add(FNovaManeuver(
+		TransferB.EndDeltaV, CurrentTime + TransferB.Duration - ManeuverDuration, ManeuverDuration, CurrentPhase - ManeuverPhaseDelta));
 
 	// Metadata
 	Trajectory->TotalTravelDuration = TotalTravelDuration;

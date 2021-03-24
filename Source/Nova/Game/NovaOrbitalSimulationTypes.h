@@ -47,7 +47,7 @@ struct FNovaOrbitGeometry
 	/** Check for validity */
 	bool IsValid() const
 	{
-		return ::IsValid(Planet) && StartAltitude > 0 && OppositeAltitude > 0 && StartPhase >= 0 && EndPhase > 0;
+		return ::IsValid(Planet) && StartAltitude > 0 && OppositeAltitude > 0 && StartPhase >= 0 && EndPhase > 0 && StartPhase < EndPhase;
 	}
 
 	/** Check whether this geometry is circular */
@@ -224,7 +224,7 @@ struct FNovaTrajectory
 
 	bool operator==(const FNovaTrajectory& Other) const
 	{
-		return TransferOrbits.Num() == Other.TransferOrbits.Num() && Maneuvers.Num() == Other.Maneuvers.Num() &&
+		return Transfers.Num() == Other.Transfers.Num() && Maneuvers.Num() == Other.Maneuvers.Num() &&
 			   TotalTravelDuration == Other.TotalTravelDuration && TotalDeltaV == Other.TotalDeltaV;
 	}
 
@@ -236,14 +236,14 @@ struct FNovaTrajectory
 	/** Check for validity */
 	bool IsValid() const
 	{
-		if (TransferOrbits.Num() == 0 || Maneuvers.Num() == 0)
+		if (Transfers.Num() == 0 || Maneuvers.Num() == 0)
 		{
 			return false;
 		}
 
-		for (const FNovaOrbitGeometry& Geometry : TransferOrbits)
+		for (const FNovaOrbit& Transfer : Transfers)
 		{
-			if (!Geometry.IsValid())
+			if (!Transfer.IsValid())
 			{
 				return false;
 			}
@@ -272,11 +272,11 @@ struct FNovaTrajectory
 	}
 
 	/** Add a transfer if it's not zero angular length */
-	bool Add(const FNovaOrbitGeometry& Geometry)
+	bool Add(const FNovaOrbit& Orbit)
 	{
-		if (Geometry.StartPhase != Geometry.EndPhase)
+		if (Orbit.IsValid())
 		{
-			TransferOrbits.Add(Geometry);
+			Transfers.Add(Orbit);
 			return true;
 		}
 		return false;
@@ -305,14 +305,17 @@ struct FNovaTrajectory
 	/** Get the arrival time */
 	float GetArrivalTime() const
 	{
-		return Maneuvers[Maneuvers.Num() - 1].Time;
+		const FNovaManeuver& FinalManeuver = Maneuvers[Maneuvers.Num() - 1];
+		return FinalManeuver.Time + FinalManeuver.Duration;
 	}
 
-	/** *Get the current location in orbit */
+	/** Get the current location in orbit */
 	FNovaOrbitalLocation GetCurrentLocation(double CurrentTime) const;
 
-	UPROPERTY()
-	TArray<FNovaOrbitGeometry> TransferOrbits;
+	/** Get the orbits that a maneuver is going from and to */
+	TArray<FNovaOrbit> GetRelevantOrbitsForManeuver(const FNovaManeuver& Maneuver) const;
+
+	UPROPERTY() TArray<FNovaOrbit> Transfers;
 
 	UPROPERTY()
 	TArray<FNovaManeuver> Maneuvers;

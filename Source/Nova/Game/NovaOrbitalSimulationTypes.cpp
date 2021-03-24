@@ -12,9 +12,9 @@ float FNovaTrajectory::GetHighestAltitude() const
 
 	float MaximumAltitude = 0;
 
-	for (const FNovaOrbitGeometry& Geometry : TransferOrbits)
+	for (const FNovaOrbit& Transfer : Transfers)
 	{
-		MaximumAltitude = FMath::Max(MaximumAltitude, Geometry.GetHighestAltitude());
+		MaximumAltitude = FMath::Max(MaximumAltitude, Transfer.Geometry.GetHighestAltitude());
 	}
 
 	return MaximumAltitude;
@@ -25,48 +25,61 @@ FNovaOrbit FNovaTrajectory::GetFinalOrbit() const
 	NCHECK(IsValid());
 
 	// Assume the final maneuver is a circularization burn
-	FNovaOrbitGeometry FinalGeometry = TransferOrbits[TransferOrbits.Num() - 1];
+	FNovaOrbitGeometry FinalGeometry = Transfers[Transfers.Num() - 1].Geometry;
 	FinalGeometry.StartAltitude      = FinalGeometry.OppositeAltitude;
 	FinalGeometry.StartPhase         = FMath::Fmod(FinalGeometry.EndPhase, 360.0);
 
-	// Assume maneuvers are of zero time
-	const FNovaManeuver& FinalManeuver = Maneuvers[Maneuvers.Num() - 1];
-	const float&         InsertionTime = FinalManeuver.Time;
-
-	return FNovaOrbit(FinalGeometry, InsertionTime);
+	return FNovaOrbit(FinalGeometry, GetArrivalTime());
 }
 
 FNovaOrbitalLocation FNovaTrajectory::GetCurrentLocation(double CurrentTime) const
 {
-	const FNovaManeuver*      Maneuver = nullptr;
-	const FNovaOrbitGeometry* Geometry = nullptr;
+	FNovaOrbit LastValidTransfer;
 
-	// Find the current maneuver
-	for (int32 ManeuverIndex = 0; ManeuverIndex < Maneuvers.Num() - 1; ManeuverIndex++)
+	for (const FNovaOrbit& Transfer : Transfers)
 	{
-		if (CurrentTime >= Maneuvers[ManeuverIndex].Time && CurrentTime <= Maneuvers[ManeuverIndex + 1].Time)
+		if (Transfer.InsertionTime <= CurrentTime)
 		{
-			Maneuver = &Maneuvers[ManeuverIndex];
+			LastValidTransfer = Transfer;
 		}
 	}
 
-	// Find the current transfer orbit
-	if (Maneuver)
+	if (LastValidTransfer.IsValid())
 	{
-		for (const FNovaOrbitGeometry& Transfer : TransferOrbits)
-		{
-			if (Transfer.StartPhase == Maneuver->Phase)
-			{
-				Geometry = &Transfer;
-			}
-		}
+		return FNovaOrbitalLocation(LastValidTransfer.Geometry, LastValidTransfer.GetCurrentPhase<false>(CurrentTime));
+	}
+	else
+	{
+		return FNovaOrbitalLocation();
+	}
+}
 
-		// Compute the current location
-		if (Geometry)
+TArray<FNovaOrbit> FNovaTrajectory::GetRelevantOrbitsForManeuver(const FNovaManeuver& Maneuver) const
+{
+	FNovaOrbit OriginTransfer;
+	FNovaOrbit CurrentTransfer;
+
+	for (const FNovaOrbit& Transfer : Transfers)
+	{
+		if (Transfer.InsertionTime <= Maneuver.Time)
 		{
-			return FNovaOrbitalLocation(*Geometry, Geometry->GetCurrentPhase<false>(CurrentTime - Maneuver->Time));
+			OriginTransfer = Transfer;
+		}
+		else if (Transfer.InsertionTime <= Maneuver.Time + Maneuver.Duration)
+		{
+			CurrentTransfer = Transfer;
 		}
 	}
 
-	return FNovaOrbitalLocation();
+	TArray<FNovaOrbit> Result;
+	if (OriginTransfer.IsValid())
+	{
+		Result.Add(OriginTransfer);
+	}
+	if (CurrentTransfer.IsValid())
+	{
+		Result.Add(CurrentTransfer);
+	}
+
+	return Result;
 }
