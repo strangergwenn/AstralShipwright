@@ -251,7 +251,7 @@ struct FNovaTrajectory
 
 		for (const FNovaManeuver& Maneuver : Maneuvers)
 		{
-			if (Maneuver.DeltaV <= 0)
+			if (Maneuver.DeltaV == 0)
 			{
 				return false;
 			}

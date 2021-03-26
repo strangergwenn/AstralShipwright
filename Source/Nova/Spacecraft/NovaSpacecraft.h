@@ -110,7 +110,7 @@ struct FNovaSpacecraftPropulsionMetrics
 	float GetManeuverDurationAndPropellantUsed(const float DeltaV, float& CurrentPropellantMass) const
 	{
 		float Duration = (((DryMass + CargoMass + CurrentPropellantMass) * 1000.0f * ExhaustVelocity) / (Thrust * 1000.0f)) *
-						 (1.0f - exp(-DeltaV / ExhaustVelocity)) / 60.0f;
+						 (1.0f - exp(-abs(DeltaV) / ExhaustVelocity)) / 60.0f;
 		float PropellantUsed = PropellantRate * Duration;
 
 		CurrentPropellantMass -= PropellantUsed;
