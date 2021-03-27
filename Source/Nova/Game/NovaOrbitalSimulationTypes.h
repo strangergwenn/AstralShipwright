@@ -115,7 +115,7 @@ struct FNovaOrbit
 	FNovaOrbit() : Geometry(), InsertionTime(0)
 	{}
 
-	FNovaOrbit(const FNovaOrbitGeometry& G, float T) : Geometry(G), InsertionTime(T)
+	FNovaOrbit(const FNovaOrbitGeometry& G, double T) : Geometry(G), InsertionTime(T)
 	{
 		NCHECK(Geometry.Planet != nullptr);
 	}
@@ -138,7 +138,7 @@ struct FNovaOrbit
 
 	/** Get the current phase on this orbit */
 	template <bool Unwind>
-	double GetCurrentPhase(const double CurrentTime) const
+	double GetCurrentPhase(double CurrentTime) const
 	{
 		return Geometry.GetCurrentPhase<Unwind>(CurrentTime - InsertionTime);
 	}
@@ -147,7 +147,7 @@ struct FNovaOrbit
 	FNovaOrbitGeometry Geometry;
 
 	UPROPERTY()
-	float InsertionTime;
+	double InsertionTime;
 };
 
 /** Current location of a spacecraft or sector, including orbit + phase */
@@ -194,23 +194,23 @@ struct FNovaManeuver
 {
 	GENERATED_BODY()
 
-	FNovaManeuver() : DeltaV(0), Time(0), Duration(0), Phase(0)
+	FNovaManeuver() : DeltaV(0), Phase(0), Time(0), Duration(0)
 	{}
 
-	FNovaManeuver(float DV, float T, float D, float P) : DeltaV(DV), Time(T), Duration(D), Phase(P)
+	FNovaManeuver(float DV, float P, double T, float D) : DeltaV(DV), Phase(P), Time(T), Duration(D)
 	{}
 
 	UPROPERTY()
 	float DeltaV;
 
 	UPROPERTY()
-	float Time;
+	float Phase;
+
+	UPROPERTY()
+	double Time;
 
 	UPROPERTY()
 	float Duration;
-
-	UPROPERTY()
-	float Phase;
 };
 
 /** Full trajectory data including the last stable orbit */
@@ -289,24 +289,24 @@ struct FNovaTrajectory
 	FNovaOrbit GetFinalOrbit() const;
 
 	/** Get the start time */
-	float GetStartTime() const
+	double GetStartTime() const
 	{
 		NCHECK(IsValid());
-		return GetArrivalTime() - TotalTravelDuration;
+		return GetArrivalTime() - static_cast<double>(TotalTravelDuration);
 	}
 
 	/** Get the start time for the first maneuver */
-	float GetManeuverStartTime() const
+	double GetManeuverStartTime() const
 	{
 		NCHECK(IsValid());
 		return Maneuvers[0].Time;
 	}
 
 	/** Get the arrival time */
-	float GetArrivalTime() const
+	double GetArrivalTime() const
 	{
 		const FNovaManeuver& FinalManeuver = Maneuvers[Maneuvers.Num() - 1];
-		return FinalManeuver.Time + FinalManeuver.Duration;
+		return FinalManeuver.Time + static_cast<double>(FinalManeuver.Duration);
 	}
 
 	/** Get the current location in orbit */

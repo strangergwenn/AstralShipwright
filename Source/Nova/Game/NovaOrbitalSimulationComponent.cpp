@@ -226,7 +226,7 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 
 	// Departure burn on first transfer
 	double ManeuverDuration = Metrics.GetManeuverDurationAndPropellantUsed(TransferA.StartDeltaV, CurrentPropellant);
-	if (Trajectory->Add(FNovaManeuver(TransferA.StartDeltaV, CurrentTime, ManeuverDuration, CurrentPhase)))
+	if (Trajectory->Add(FNovaManeuver(TransferA.StartDeltaV, CurrentPhase, CurrentTime, ManeuverDuration)))
 	{
 		// First transfer
 		Trajectory->Add(FNovaOrbit(
@@ -237,8 +237,8 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	// Circularization burn after first transfer
 	ManeuverDuration          = Metrics.GetManeuverDurationAndPropellantUsed(TransferA.EndDeltaV, CurrentPropellant);
 	double ManeuverPhaseDelta = ((ManeuverDuration / 2.0) / PhasingOrbitPeriod) * 360.0;
-	Trajectory->Add(FNovaManeuver(TransferA.EndDeltaV, CurrentTime + TransferA.Duration - ManeuverDuration / 2.0, ManeuverDuration,
-		CurrentPhase - ManeuverPhaseDelta));
+	Trajectory->Add(FNovaManeuver(TransferA.EndDeltaV, CurrentPhase - ManeuverPhaseDelta,
+		CurrentTime + TransferA.Duration - ManeuverDuration / 2.0, ManeuverDuration));
 	CurrentTime += TransferA.Duration;
 
 	// Phasing orbit
@@ -251,7 +251,7 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	ManeuverDuration   = Metrics.GetManeuverDurationAndPropellantUsed(TransferB.StartDeltaV, CurrentPropellant);
 	ManeuverPhaseDelta = ((ManeuverDuration / 2.0) / PhasingOrbitPeriod) * 360.0;
 	Trajectory->Add(
-		FNovaManeuver(TransferB.StartDeltaV, CurrentTime - ManeuverDuration / 2.0, ManeuverDuration, CurrentPhase - ManeuverPhaseDelta));
+		FNovaManeuver(TransferB.StartDeltaV, CurrentPhase - ManeuverPhaseDelta, CurrentTime - ManeuverDuration / 2.0, ManeuverDuration));
 
 	// Second transfer
 	Trajectory->Add(FNovaOrbit(
@@ -262,7 +262,7 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	// Circularization burn after second transfer
 	ManeuverPhaseDelta = (ManeuverDuration / PhasingOrbitPeriod) * 360.0;
 	Trajectory->Add(FNovaManeuver(
-		TransferB.EndDeltaV, CurrentTime + TransferB.Duration - ManeuverDuration, ManeuverDuration, CurrentPhase - ManeuverPhaseDelta));
+		TransferB.EndDeltaV, CurrentPhase - ManeuverPhaseDelta, CurrentTime + TransferB.Duration - ManeuverDuration, ManeuverDuration));
 
 	// Metadata
 	Trajectory->TotalTravelDuration = TotalTravelDuration;
