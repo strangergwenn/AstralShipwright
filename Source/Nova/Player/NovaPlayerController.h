@@ -89,6 +89,12 @@ public:
 	    Gameplay
 	----------------------------------------------------*/
 
+	/** Dock the player to a dock with a cutscene */
+	void Dock();
+
+	/** Undock the player from the current dock with a cutscene */
+	void Undock();
+
 	/** Run a shared transition with a fade to black on all clients */
 	void SharedTransition(bool CutsceneMode, FSimpleDelegate StartCallback, FSimpleDelegate FinishCallback = FSimpleDelegate());
 
@@ -106,12 +112,6 @@ public:
 
 	/** Check if loading is currently ocurring */
 	bool IsLevelStreamingComplete() const;
-
-	/** Dock the player to a dock with a cutscene */
-	void Dock();
-
-	/** Undock the player from the current dock with a cutscene */
-	void Undock();
 
 	/*----------------------------------------------------
 	    Server-side save

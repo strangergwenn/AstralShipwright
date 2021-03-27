@@ -290,6 +290,52 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
     Gameplay
 ----------------------------------------------------*/
 
+void ANovaPlayerController::Dock()
+{
+	NLOG("ANovaPlayerController::Dock");
+
+	FSimpleDelegate EndCutscene = FSimpleDelegate::CreateLambda(
+		[=]()
+		{
+			GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda(
+				[=]()
+				{
+					GetSpacecraftPawn()->ResetView();
+				}));
+		});
+
+	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda(
+		[=]()
+		{
+			GetSpacecraftPawn()->GetSpacecraftMovement()->Dock(EndCutscene);
+		});
+
+	GetMenuManager()->CloseMenu(StartCutscene);
+}
+
+void ANovaPlayerController::Undock()
+{
+	NLOG("ANovaPlayerController::Undock");
+
+	FSimpleDelegate EndCutscene = FSimpleDelegate::CreateLambda(
+		[=]()
+		{
+			GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda(
+				[=]()
+				{
+					GetSpacecraftPawn()->ResetView();
+				}));
+		});
+
+	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda(
+		[=]()
+		{
+			GetSpacecraftPawn()->GetSpacecraftMovement()->Undock(EndCutscene);
+		});
+
+	GetMenuManager()->CloseMenu(StartCutscene);
+}
+
 void ANovaPlayerController::SharedTransition(bool CutsceneMode, FSimpleDelegate StartCallback, FSimpleDelegate FinishCallback)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
@@ -397,52 +443,6 @@ void ANovaPlayerController::ServerSharedTransitionReady_Implementation()
 	IsInSharedTransition = true;
 }
 
-void ANovaPlayerController::Dock()
-{
-	NLOG("ANovaPlayerController::Dock");
-
-	FSimpleDelegate EndCutscene = FSimpleDelegate::CreateLambda(
-		[=]()
-		{
-			GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda(
-				[=]()
-				{
-					GetSpacecraftPawn()->ResetView();
-				}));
-		});
-
-	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda(
-		[=]()
-		{
-			GetSpacecraftPawn()->GetSpacecraftMovement()->Dock(EndCutscene);
-		});
-
-	GetMenuManager()->CloseMenu(StartCutscene);
-}
-
-void ANovaPlayerController::Undock()
-{
-	NLOG("ANovaPlayerController::Undock");
-
-	FSimpleDelegate EndCutscene = FSimpleDelegate::CreateLambda(
-		[=]()
-		{
-			GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda(
-				[=]()
-				{
-					GetSpacecraftPawn()->ResetView();
-				}));
-		});
-
-	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda(
-		[=]()
-		{
-			GetSpacecraftPawn()->GetSpacecraftMovement()->Undock(EndCutscene);
-		});
-
-	GetMenuManager()->CloseMenu(StartCutscene);
-}
-
 bool ANovaPlayerController::IsLevelStreamingComplete() const
 {
 	ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
@@ -460,11 +460,7 @@ bool ANovaPlayerController::IsLevelStreamingComplete() const
 		else if (Level->IsLevelLoaded())
 		{
 			FString LoadedLevelName = Level->GetWorldAssetPackageFName().ToString();
-			int32   Index;
-			if (LoadedLevelName.FindLastChar('/', Index))
-			{
-				return LoadedLevelName.RightChop(Index + 1) == GameState->GetCurrentLevelName().ToString();
-			}
+			LoadedLevelName.EndsWith(GameState->GetCurrentLevelName().ToString());
 		}
 	}
 
@@ -643,7 +639,7 @@ bool ANovaPlayerController::IsReady() const
 	{
 		// Check spacecraft pawn
 		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-		bool IsSpacecraftReady = IsValid(SpacecraftPawn) && GetSpacecraft() && SpacecraftPawn->GetSpacecraftMovement()->IsReady();
+		bool IsSpacecraftReady = IsValid(SpacecraftPawn) && GetSpacecraft() && SpacecraftPawn->GetSpacecraftMovement()->IsInitialized();
 
 		// Check game state
 		ANovaGameState* GameState        = GetWorld()->GetGameState<ANovaGameState>();

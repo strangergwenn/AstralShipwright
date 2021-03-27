@@ -36,9 +36,6 @@ public:
 	----------------------------------------------------*/
 
 public:
-	/** Reset the area, moving all ships to player starts */
-	void ResetArea();
-
 	/** Have all players fade to black, play the exit cutscene and switch to orbit */
 	void ChangeAreaToOrbit();
 

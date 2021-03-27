@@ -20,13 +20,23 @@ enum class ENovaMovementState : uint8
 	Stopping,
 };
 
-/** Type of intro animation to play in a level */
-UENUM()
-enum class ENovaLevelIntroType : uint8
+/** Initialization parameters */
+USTRUCT(Atomic)
+struct FNovaMovementStartParameters
 {
-	Idle,
-	Docked,
-	Braking
+	GENERATED_BODY()
+
+	FNovaMovementStartParameters() : DockActor(nullptr), StartDocked(false)
+	{}
+
+	FNovaMovementStartParameters(const class ANovaPlayerStart* S, bool D) : DockActor(S), StartDocked(D)
+	{}
+
+	UPROPERTY()
+	const class ANovaPlayerStart* DockActor;
+
+	UPROPERTY()
+	bool StartDocked;
 };
 
 /** High level movement command sent by a player */
@@ -92,14 +102,16 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	/** Initialize the component with a starting point */
-	void Initialize(const class AActor* Start, ENovaLevelIntroType IntroType);
+	void Initialize(const class ANovaPlayerStart* Start, bool StartDocked);
 
-	/** Initialize the component with a starting point */
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastInitialize(const class AActor* Start, ENovaLevelIntroType IntroType);
+	/** Check if this component is initialized */
+	bool IsInitialized() const;
 
-	/** Uninitialize the component */
-	void Reset();
+	/*** Can we dock */
+	bool CanDock() const;
+
+	/*** Can we undock */
+	bool CanUndock() const;
 
 	/** Dock at a particular location */
 	void Dock(FSimpleDelegate Callback = FSimpleDelegate());
@@ -143,6 +155,13 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+	/** Start point replication event */
+	UFUNCTION()
+	void OnStartParametersReplicated();
+
+	/** Reset the local state */
+	void ResetState();
+
 	/** Measure velocities and accelerations */
 	void ProcessMeasurementsBeforeAttitude(float DeltaTime);
 
@@ -202,10 +221,6 @@ public:
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float MaxAngularVelocity;
 
-	// Slope multiplier on the angular target
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
-	float AngularControlIntensity;
-
 	// How much to underestimate stopping distances
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float AngularOvershootRatio;
@@ -236,9 +251,9 @@ protected:
 	UPROPERTY(Replicated)
 	FNovaAttitudeCommand AttitudeCommand;
 
-	// Dock we were initialized for
-	UPROPERTY(Replicated)
-	const class AActor* StartActor;
+	// Start parameters
+	UPROPERTY(ReplicatedUsing = OnStartParametersReplicated)
+	FNovaMovementStartParameters InitParameters;
 
 	// Movement state
 	FVector CurrentLinearVelocity;
@@ -264,11 +279,6 @@ public:
 	ENovaMovementState GetState() const
 	{
 		return MovementCommand.State;
-	}
-
-	inline bool IsReady() const
-	{
-		return StartActor != nullptr;
 	}
 
 	inline bool IsMainDriveRunning() const

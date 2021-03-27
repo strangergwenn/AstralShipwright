@@ -338,7 +338,7 @@ ANovaSpacecraftPawn* SNovaMainMenuFlight::GetSpacecraftPawn() const
 UNovaSpacecraftMovementComponent* SNovaMainMenuFlight::GetSpacecraftMovement() const
 {
 	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-	if (SpacecraftPawn)
+	if (IsValid(SpacecraftPawn))
 	{
 		return Cast<UNovaSpacecraftMovementComponent>(SpacecraftPawn->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
 	}
@@ -354,12 +354,12 @@ UNovaSpacecraftMovementComponent* SNovaMainMenuFlight::GetSpacecraftMovement() c
 
 bool SNovaMainMenuFlight::IsUndockEnabled() const
 {
-	return GetSpacecraftMovement() && GetSpacecraftMovement()->GetState() == ENovaMovementState::Docked;
+	return GetSpacecraftMovement() && GetSpacecraftMovement()->CanUndock();
 }
 
 bool SNovaMainMenuFlight::IsDockEnabled() const
 {
-	return GetSpacecraftMovement() && GetSpacecraftMovement()->GetState() == ENovaMovementState::Idle;
+	return GetSpacecraftMovement() && GetSpacecraftMovement()->CanDock();
 }
 
 /*----------------------------------------------------

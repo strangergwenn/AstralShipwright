@@ -73,12 +73,7 @@ void ANovaGameMode::StartPlay()
 
 	// TODO : this should be dependent on save data
 	const UNovaArea* Station = GameInstance->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
-	LoadStreamingLevel(Station, true,
-		FSimpleDelegate::CreateLambda(
-			[=]()
-			{
-				ResetArea();
-			}));
+	LoadStreamingLevel(Station, true, FSimpleDelegate());
 }
 
 void ANovaGameMode::PostLogin(APlayerController* Player)
@@ -153,20 +148,6 @@ AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
     Gameplay
 ----------------------------------------------------*/
 
-void ANovaGameMode::ResetArea()
-{
-	NLOG("ANovaGameMode::ResetArea");
-
-	for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
-	{
-		ANovaPlayerController* PC    = SpacecraftPawn->GetController<ANovaPlayerController>();
-		AActor*                Start = ChoosePlayerStart(PC);
-		NCHECK(Start);
-
-		SpacecraftPawn->GetSpacecraftMovement()->Reset();
-	}
-}
-
 void ANovaGameMode::ChangeAreaToOrbit()
 {
 	ChangeArea(OrbitArea);
@@ -181,11 +162,11 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 	NLOG("ANovaGameMode::ChangeArea : '%s'", *Area->LevelName.ToString());
 	ANovaSpacecraftPawn* PlayerPawn = PC->GetSpacecraftPawn();
 
-	// 5 : Cutscene is finished, level has loaded, reinitialize ships
-	FSimpleDelegate ResetSpacecraft = FSimpleDelegate::CreateLambda(
+	// 5 : Cutscene is finished, level has loaded
+	FSimpleDelegate CompleteCutscene = FSimpleDelegate::CreateLambda(
 		[=]()
 		{
-			ResetArea();
+			NLOG("ANovaGameMode::ChangeArea : completed cutscene");
 		});
 
 	// 4 : Cutscene is completed during shared transition : switch the levels
@@ -207,7 +188,7 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 		[=]()
 		{
 			NLOG("ANovaGameMode::ChangeArea : stopping cutscene");
-			PC->SharedTransition(false, SwitchLevels, ResetSpacecraft);
+			PC->SharedTransition(false, SwitchLevels, CompleteCutscene);
 		});
 
 	// 2 : Cutscene is starting : start leaving the area
