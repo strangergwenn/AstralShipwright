@@ -35,8 +35,7 @@ void ANovaGameState::SetCurrentArea(const UNovaArea* Area, bool Docked)
 
 FName ANovaGameState::GetCurrentLevelName() const
 {
-	NCHECK(CurrentArea);
-	return CurrentArea->LevelName;
+	return CurrentArea ? CurrentArea->LevelName : NAME_None;
 }
 
 TArray<FGuid> ANovaGameState::GetPlayerSpacecraftIdentifiers() const

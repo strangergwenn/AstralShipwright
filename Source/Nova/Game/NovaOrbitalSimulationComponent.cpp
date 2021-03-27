@@ -382,11 +382,16 @@ void UNovaOrbitalSimulationComponent::MergeOrbit(const TArray<FGuid>& Spacecraft
 UNovaOrbitalSimulationComponent* UNovaOrbitalSimulationComponent::Get(const UObject* Outer)
 {
 	ANovaGameWorld* GameWorld = ANovaGameWorld::Get(Outer);
-	NCHECK(GameWorld);
-	UNovaOrbitalSimulationComponent* SimulationComponent = GameWorld->GetOrbitalSimulation();
-	NCHECK(SimulationComponent);
+	if (IsValid(GameWorld))
+	{
+		UNovaOrbitalSimulationComponent* SimulationComponent = GameWorld->GetOrbitalSimulation();
+		if (IsValid(SimulationComponent))
+		{
+			return SimulationComponent;
+		}
+	}
 
-	return SimulationComponent;
+	return nullptr;
 }
 
 TPair<const UNovaArea*, float> UNovaOrbitalSimulationComponent::GetNearestAreaAndDistance(const FNovaOrbitalLocation& Location) const

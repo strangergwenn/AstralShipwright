@@ -221,6 +221,10 @@ FText SNovaOrbitalMap::GetHoverText() const
 void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 {
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+	if (!IsValid(OrbitalSimulation))
+	{
+		return;
+	}
 
 	FNovaSplineStyle AreaStyle(FLinearColor(1, 1, 1, 0.5f));
 	AreaStyle.WidthInner = 4;
@@ -282,6 +286,10 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 {
 	ANovaGameWorld*                  GameWorld         = ANovaGameWorld::Get(MenuManager.Get());
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+	if (!IsValid(OrbitalSimulation))
+	{
+		return;
+	}
 
 	FNovaSplineStyle SpacecraftStyle(FLinearColor::Blue);
 	SpacecraftStyle.WidthInner = 3;
@@ -310,6 +318,10 @@ void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
 {
 	ANovaGameWorld*                  GameWorld         = ANovaGameWorld::Get(MenuManager.Get());
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+	if (!IsValid(OrbitalSimulation))
+	{
+		return;
+	}
 
 	FNovaSplineStyle OrbitStyle    = FNovaSplineStyle(FLinearColor::Red);
 	FNovaSplineStyle ManeuverStyle = FNovaSplineStyle(FLinearColor::Yellow);

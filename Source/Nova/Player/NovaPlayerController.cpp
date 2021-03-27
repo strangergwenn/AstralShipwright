@@ -349,7 +349,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(bool Cuts
 					OnSharedTransitionStarted.ExecuteIfBound();
 					OnSharedTransitionStarted.Unbind();
 
-					if (!IsStreamingLevel())
+					if (IsLevelStreamingComplete())
 					{
 						OnSharedTransitionFinished.ExecuteIfBound();
 						OnSharedTransitionFinished.Unbind();
@@ -443,17 +443,32 @@ void ANovaPlayerController::Undock()
 	GetMenuManager()->CloseMenu(StartCutscene);
 }
 
-bool ANovaPlayerController::IsStreamingLevel() const
+bool ANovaPlayerController::IsLevelStreamingComplete() const
 {
+	ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	if (!IsValid(GameState))
+	{
+		return false;
+	}
+
 	for (const ULevelStreaming* Level : GetWorld()->GetStreamingLevels())
 	{
 		if (Level->IsStreamingStatePending())
 		{
-			return true;
+			return false;
+		}
+		else if (Level->IsLevelLoaded())
+		{
+			FString LoadedLevelName = Level->GetWorldAssetPackageFName().ToString();
+			int32   Index;
+			if (LoadedLevelName.FindLastChar('/', Index))
+			{
+				return LoadedLevelName.RightChop(Index + 1) == GameState->GetCurrentLevelName().ToString();
+			}
 		}
 	}
 
-	return false;
+	return true;
 }
 
 /*----------------------------------------------------
@@ -634,7 +649,7 @@ bool ANovaPlayerController::IsReady() const
 		ANovaGameState* GameState        = GetWorld()->GetGameState<ANovaGameState>();
 		bool            IsGameStateReady = IsValid(GameState) && GameState->GetCurrentArea() != nullptr;
 
-		return !IsStreamingLevel() && IsSpacecraftReady && IsGameStateReady;
+		return IsLevelStreamingComplete() && IsSpacecraftReady && IsGameStateReady;
 	}
 }
 

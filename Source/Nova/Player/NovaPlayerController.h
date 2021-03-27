@@ -105,7 +105,7 @@ public:
 	void ServerSharedTransitionReady();
 
 	/** Check if loading is currently ocurring */
-	bool IsStreamingLevel() const;
+	bool IsLevelStreamingComplete() const;
 
 	/** Dock the player to a dock with a cutscene */
 	void Dock();

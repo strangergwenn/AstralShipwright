@@ -142,8 +142,8 @@ void UNovaSpacecraftMovementComponent::Initialize(const AActor* Start, ENovaLeve
 {
 	NLOG("UNovaSpacecraftMovementComponent::Initialize : '%s'", Start ? *Start->GetName() : nullptr);
 
-	NCHECK(GetLocalRole() == ROLE_Authority);
 	NCHECK(IsValid(Start));
+	NCHECK(GetLocalRole() == ROLE_Authority);
 	MulticastInitialize(Start, IntroType);
 }
 
@@ -151,6 +151,9 @@ void UNovaSpacecraftMovementComponent::MulticastInitialize_Implementation(const 
 {
 	NLOG("UNovaSpacecraftMovementComponent::MulticastInitialize_Implementation : '%s' %d ('%s')", Start ? *Start->GetName() : nullptr,
 		(int32) IntroType, *GetRoleString(this));
+
+	NCHECK(IsValid(Start));
+	NCHECK(IsValid(UpdatedComponent));
 
 	// Reset transform
 	UpdatedComponent->SetWorldTransform(Start->GetActorTransform());

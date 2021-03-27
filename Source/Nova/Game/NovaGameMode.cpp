@@ -196,9 +196,10 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 			{
 				NLOG("ANovaGameMode::ChangeArea : ending cutscene");
 				SpacecraftPawn->GetSpacecraftMovement()->Stop();
-				UnloadStreamingLevel(GetGameState<ANovaGameState>()->GetCurrentArea());
-				LoadStreamingLevel(Area);
 			}
+
+			UnloadStreamingLevel(GetGameState<ANovaGameState>()->GetCurrentArea());
+			LoadStreamingLevel(Area);
 		});
 
 	// 3: Cutscene is ending : start a shared transition

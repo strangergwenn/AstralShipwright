@@ -87,11 +87,16 @@ void ANovaGameWorld::Tick(float DeltaTime)
 ANovaGameWorld* ANovaGameWorld::Get(const UObject* Outer)
 {
 	ANovaGameState* GameState = Outer->GetWorld()->GetGameState<ANovaGameState>();
-	NCHECK(GameState);
-	ANovaGameWorld* GameWorld = GameState->GetGameWorld();
-	NCHECK(GameWorld);
+	if (IsValid(GameState))
+	{
+		ANovaGameWorld* GameWorld = GameState->GetGameWorld();
+		if (IsValid(GameWorld))
+		{
+			return GameWorld;
+		}
+	}
 
-	return GameWorld;
+	return nullptr;
 }
 
 void ANovaGameWorld::UpdateSpacecraft(const FNovaSpacecraft Spacecraft, bool IsPlayerSpacecraft)

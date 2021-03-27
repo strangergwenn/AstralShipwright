@@ -84,23 +84,26 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.Text_Lambda([this]() -> FText {
 							const UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
-							const FNovaTrajectory* Trajectory = OrbitalSimulation->GetPlayerTrajectory();
-							const FNovaOrbitalLocation* Location = OrbitalSimulation->GetPlayerLocation();
-
-							if (Trajectory)
+							if (OrbitalSimulation)
 							{
-								return LOCTEXT("Trajectory", "On trajectory");
-							}
-							else if (Location)
-							{
-								auto AreaAndDistance = OrbitalSimulation->GetNearestAreaAndDistance(*Location);
+								const FNovaTrajectory* Trajectory = OrbitalSimulation->GetPlayerTrajectory();
+								const FNovaOrbitalLocation* Location = OrbitalSimulation->GetPlayerLocation();
 
-								FNumberFormattingOptions NumberOptions;
-								NumberOptions.SetMaximumFractionalDigits(1);
+								if (Trajectory)
+								{
+									return LOCTEXT("Trajectory", "On trajectory");
+								}
+								else if (Location)
+								{
+									auto AreaAndDistance = OrbitalSimulation->GetNearestAreaAndDistance(*Location);
 
-								return FText::FormatNamed(LOCTEXT("NearestAreaFormat", "{area} at {distance}km"),
-									TEXT("area"), AreaAndDistance.Key->Name,
-									TEXT("distance"), FText::AsNumber(AreaAndDistance.Value, &NumberOptions));
+									FNumberFormattingOptions NumberOptions;
+									NumberOptions.SetMaximumFractionalDigits(1);
+
+									return FText::FormatNamed(LOCTEXT("NearestAreaFormat", "{area} at {distance}km"),
+										TEXT("area"), AreaAndDistance.Key->Name,
+										TEXT("distance"), FText::AsNumber(AreaAndDistance.Value, &NumberOptions));
+								}
 							}
 							return FText();
 						})
@@ -190,7 +193,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						{
 							UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
-							return OrbitalSimulation->CanStartTrajectory(OrbitalMap->GetPreviewTrajectory());
+							return OrbitalSimulation && OrbitalSimulation->CanStartTrajectory(OrbitalMap->GetPreviewTrajectory());
 						})))
 					]
 			
@@ -389,7 +392,7 @@ void SNovaMainMenuFlight::OnCommitTrajectory()
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
 	const TSharedPtr<FNovaTrajectory>& Trajectory = OrbitalMap->GetPreviewTrajectory();
-	if (OrbitalSimulation->CanStartTrajectory(Trajectory))
+	if (OrbitalSimulation && OrbitalSimulation->CanStartTrajectory(Trajectory))
 	{
 		OrbitalSimulation->StartTrajectory(GameState->GetPlayerSpacecraftIdentifiers(), Trajectory);
 		OrbitalMap->ClearTrajectoryPreview();
