@@ -13,6 +13,14 @@
 
 #include "NovaPlayerController.generated.h"
 
+/** Menu actions supported by shared transitions */
+UENUM()
+enum class ENovaSharedTransitionMenuAction : uint8
+{
+	Open,
+	Close
+};
+
 /** High level post processing targets */
 enum class ENovaPostProcessPreset : uint8
 {
@@ -96,11 +104,12 @@ public:
 	void Undock();
 
 	/** Run a shared transition with a fade to black on all clients */
-	void SharedTransition(bool CutsceneMode, FSimpleDelegate StartCallback, FSimpleDelegate FinishCallback = FSimpleDelegate());
+	void SharedTransition(ENovaSharedTransitionMenuAction MenuAction, FNovaAsyncAction StartAction,
+		FNovaAsyncAction FinishAction = FNovaAsyncAction(), FNovaAsyncCondition Condition = FNovaAsyncCondition());
 
 	/** Signal a client that a shared transition is starting */
 	UFUNCTION(Client, Reliable)
-	void ClientStartSharedTransition(bool CutsceneMode);
+	void ClientStartSharedTransition(ENovaSharedTransitionMenuAction MenuAction);
 
 	/** Signal a client that the transition is complete */
 	UFUNCTION(Client, Reliable)
@@ -110,7 +119,7 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerSharedTransitionReady();
 
-	/** Check if loading is currently ocurring */
+	/** Check if loading is currently occurring */
 	bool IsLevelStreamingComplete() const;
 
 	/*----------------------------------------------------
@@ -216,9 +225,10 @@ private:
 	ENovaNetworkError LastNetworkError;
 
 	// Transitions
-	bool            IsInSharedTransition;
-	FSimpleDelegate OnSharedTransitionStarted;
-	FSimpleDelegate OnSharedTransitionFinished;
+	bool                IsInSharedTransition;
+	FNovaAsyncAction    SharedTransitionStartAction;
+	FNovaAsyncAction    SharedTransitionFinishAction;
+	FNovaAsyncCondition SharedTransitionCondition;
 
 	// Gameplay state
 	TMap<ENovaPostProcessPreset, TSharedPtr<FNovaPostProcessSetting>> PostProcessSettings;

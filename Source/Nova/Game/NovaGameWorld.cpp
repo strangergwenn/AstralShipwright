@@ -8,6 +8,7 @@
 #include "NovaGameState.h"
 #include "NovaOrbitalSimulationComponent.h"
 
+#include "Nova/Player/NovaPlayerState.h"
 #include "Nova/Tools/NovaActorTools.h"
 #include "Nova/Nova.h"
 
@@ -19,7 +20,12 @@
 ----------------------------------------------------*/
 
 ANovaGameWorld::ANovaGameWorld()
-	: Super(), ServerTime(0), ServerTimeDilation(ENovaTimeDilation::Normal), ClientTime(0), ClientAdditionalTimeDilation(0), PreviousTime(0)
+	: Super()
+	, ServerTime(0)
+	, ServerTimeDilation(ENovaTimeDilation::Normal)
+	, ClientTime(0)
+	, ClientAdditionalTimeDilation(0)
+	, IsFastForward(false)
 {
 	// Setup simulation component
 	OrbitalSimulationComponent = CreateDefaultSubobject<UNovaOrbitalSimulationComponent>(TEXT("OrbitalSimulationComponent"));
@@ -30,11 +36,15 @@ ANovaGameWorld::ANovaGameWorld()
 	bAlwaysRelevant               = true;
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Defaults
+	// General defaults
 	MinimumTimeCorrectionThreshold = 0.25f;
 	MaximumTimeCorrectionThreshold = 10.0f;
 	TimeCorrectionFactor           = 0.2f;
-	TimeDilationManeuverDelay      = 1.0f / 60.0f;
+	TimeMarginBeforeManeuver       = 1.0f;
+
+	// Fast forward defaults : 2 days per frame in 2h steps
+	FastForwardUpdateTime      = 2 * 60;
+	FastForwardUpdatesPerFrame = 24;
 }
 
 /*----------------------------------------------------
@@ -67,10 +77,47 @@ void ANovaGameWorld::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Process subsystems
-	ProcessSpacecraftDatabase();
-	ProcessWakeEvents();
-	ProcessTime(DeltaTime);
+	// Get a player state
+	CurrentPlayerState = nullptr;
+	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
+	{
+		if (IsValid(PlayerState) && PlayerState->GetSpacecraftIdentifier().IsValid())
+		{
+			CurrentPlayerState = PlayerState;
+			break;
+		}
+	}
+
+	// Process fast forward simulation
+	if (IsFastForward)
+	{
+		int64 Cycles = FPlatformTime::Cycles64();
+
+		for (int32 Index = 0; Index < FastForwardUpdatesPerFrame; Index++)
+		{
+			ProcessSpacecraftDatabase();
+			bool ContinueProcessing = ProcessTime(static_cast<double>(FastForwardUpdateTime));
+			OrbitalSimulationComponent->UpdateSimulation();
+
+			if (!ContinueProcessing)
+			{
+				NLOG("ANovaGameWorld::ProcessTime : fast-forward stopping at %.2f", ServerTime);
+				IsFastForward = false;
+				break;
+			}
+		}
+
+		NLOG("ANovaGameWorld::Tick : processed fast-forward frame in %.2fms",
+			FPlatformTime::ToMilliseconds(FPlatformTime::Cycles64() - Cycles));
+	}
+
+	// Process real-time simulation
+	else
+	{
+		ProcessSpacecraftDatabase();
+		ProcessTime(static_cast<double>(DeltaTime) / 60.0);
+		OrbitalSimulationComponent->UpdateSimulation();
+	}
 }
 
 ANovaGameWorld* ANovaGameWorld::Get(const UObject* Outer)
@@ -116,7 +163,7 @@ void ANovaGameWorld::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool Is
 		// Load a default
 		if (!HasMergedOrbits)
 		{
-			// TODO : should first look into deserialized save data, and then if nothing, fetch the default location from game mode
+			// TODO : should first look into de-serialized save data, and then if nothing, fetch the default location from game mode
 
 			const class UNovaArea* StationA =
 				GetGameInstance<UNovaGameInstance>()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
@@ -130,13 +177,29 @@ void ANovaGameWorld::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool Is
 	}
 }
 
-void ANovaGameWorld::SetTimeDilation(ENovaTimeDilation Dilation)
+FGuid ANovaGameWorld::GetPlayerSpacecraftIdentifier() const
 {
-	NCHECK(GetLocalRole() == ROLE_Authority);
-	NCHECK(Dilation >= ENovaTimeDilation::Normal && Dilation <= ENovaTimeDilation::Level4);
-
-	ServerTimeDilation = Dilation;
+	return CurrentPlayerState ? CurrentPlayerState->GetSpacecraftIdentifier() : FGuid();
 }
+
+TArray<FGuid> ANovaGameWorld::GetPlayerSpacecraftIdentifiers() const
+{
+	TArray<FGuid> Result;
+
+	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
+	{
+		if (IsValid(PlayerState))
+		{
+			Result.Add(PlayerState->GetSpacecraftIdentifier());
+		}
+	}
+
+	return Result;
+}
+
+/*----------------------------------------------------
+    Time management
+----------------------------------------------------*/
 
 double ANovaGameWorld::GetCurrentTime() const
 {
@@ -150,26 +213,39 @@ double ANovaGameWorld::GetCurrentTime() const
 	}
 }
 
-double ANovaGameWorld::GetPreviousTime() const
+void ANovaGameWorld::FastForward()
 {
-	return PreviousTime;
+	SetTimeDilation(ENovaTimeDilation::Normal);
+	IsFastForward = true;
 }
 
-bool ANovaGameWorld::CanDilateTime(ENovaTimeDilation Dilation) const
+bool ANovaGameWorld::CanFastForward() const
 {
 	if (GetLocalRole() != ROLE_Authority)
 	{
 		return false;
 	}
-	else if (Dilation == ENovaTimeDilation::Normal)
+	else if (OrbitalSimulationComponent->GetPlayerTrajectory() == nullptr)
 	{
-		return true;
+		return false;
 	}
 	else
 	{
-		return OrbitalSimulationComponent->GetTimeLeftUntilManeuver() >
-			   static_cast<double>(TimeDilationManeuverDelay) * GetTimeDilationValue(Dilation);
+		return true;
 	}
+}
+
+void ANovaGameWorld::SetTimeDilation(ENovaTimeDilation Dilation)
+{
+	NCHECK(GetLocalRole() == ROLE_Authority);
+	NCHECK(Dilation >= ENovaTimeDilation::Normal && Dilation <= ENovaTimeDilation::Level3);
+
+	ServerTimeDilation = Dilation;
+}
+
+bool ANovaGameWorld::CanDilateTime(ENovaTimeDilation Dilation) const
+{
+	return GetLocalRole() == ROLE_Authority;
 }
 
 /*----------------------------------------------------
@@ -185,27 +261,39 @@ void ANovaGameWorld::ProcessSpacecraftDatabase()
 	}
 }
 
-void ANovaGameWorld::ProcessWakeEvents()
+bool ANovaGameWorld::ProcessTime(double DeltaTimeMinutes)
 {
-	if (GetLocalRole() == ROLE_Authority && !CanDilateTime(GetCurrentTimeDilation()))
-	{
-		DecreaseTimeDilation();
-	}
-}
+	bool         ContinueProcessing = true;
+	const double TimeDilation       = GetCurrentTimeDilationValue();
 
-void ANovaGameWorld::ProcessTime(float DeltaTime)
-{
-	double DilatedDeltaTime = static_cast<double>(DeltaTime) * GetCurrentTimeDilationValue() / 60.0;
+	// Under fast forward, stop on events
+	if (IsFastForward && GetLocalRole() == ROLE_Authority)
+	{
+		const double MaxAllowedDeltaTime =
+			OrbitalSimulationComponent->GetTimeOfNextPlayerManeuver() - GetCurrentTime() - TimeMarginBeforeManeuver;
+
+		NCHECK(TimeDilation == 1.0);
+		NCHECK(MaxAllowedDeltaTime > 0);
+
+		if (DeltaTimeMinutes > MaxAllowedDeltaTime)
+		{
+			DeltaTimeMinutes   = MaxAllowedDeltaTime;
+			ContinueProcessing = false;
+		}
+	}
+
+	// Update the time
+	const double DilatedDeltaTime = TimeDilation * DeltaTimeMinutes;
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		PreviousTime = ServerTime;
 		ServerTime += DilatedDeltaTime;
 	}
 	else
 	{
-		PreviousTime = ClientTime;
 		ClientTime += DilatedDeltaTime * ClientAdditionalTimeDilation;
 	}
+
+	return ContinueProcessing;
 }
 
 void ANovaGameWorld::OnServerTimeReplicated()
@@ -224,7 +312,7 @@ void ANovaGameWorld::OnServerTimeReplicated()
 	// Hard correct if the change is large
 	if (TimeDeltaSeconds > MaximumTimeCorrectionThreshold)
 	{
-		NLOG("ANovaGameWorld::OnServerTimeReplicated : time rollback from %.2f to %.2f", ClientTime, RealServerTime);
+		NLOG("ANovaGameWorld::OnServerTimeReplicated : time jump from %.2f to %.2f", ClientTime, RealServerTime);
 		ClientTime                   = RealServerTime;
 		ClientAdditionalTimeDilation = 1.0;
 	}

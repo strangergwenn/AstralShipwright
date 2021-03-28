@@ -5,7 +5,6 @@
 #include "NovaGameInstance.h"
 #include "NovaGameWorld.h"
 
-#include "Nova/Player/NovaPlayerState.h"
 #include "Nova/Spacecraft/NovaSpacecraft.h"
 #include "Nova/Nova.h"
 
@@ -78,7 +77,7 @@ UNovaOrbitalSimulationComponent::UNovaOrbitalSimulationComponent() : Super()
 }
 
 /*----------------------------------------------------
-    Inherited
+    General simulation
 ----------------------------------------------------*/
 
 void UNovaOrbitalSimulationComponent::BeginPlay()
@@ -88,26 +87,10 @@ void UNovaOrbitalSimulationComponent::BeginPlay()
 	Areas = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetCatalog()->GetAssets<UNovaArea>();
 }
 
-void UNovaOrbitalSimulationComponent::TickComponent(
-	float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UNovaOrbitalSimulationComponent::UpdateSimulation()
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// Get a player state
-	CurrentPlayerState = nullptr;
-	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
-	{
-		if (IsValid(PlayerState) && PlayerState->GetSpacecraftIdentifier() != FGuid())
-		{
-			CurrentPlayerState = PlayerState;
-			break;
-		}
-	}
-
-	// Clean up state
-	TimeLeftUntilManeuver = DBL_MAX;
-
-	// Update databases for replication
+	// Clean up our local state
+	TimeOfNextPlayerManeuver = DBL_MAX;
 	SpacecraftOrbitDatabase.UpdateCache();
 	SpacecraftTrajectoryDatabase.UpdateCache();
 
@@ -116,6 +99,11 @@ void UNovaOrbitalSimulationComponent::TickComponent(
 	ProcessAreas();
 	ProcessSpacecraftOrbits();
 	ProcessSpacecraftTrajectories();
+}
+
+double UNovaOrbitalSimulationComponent::GetCurrentTime() const
+{
+	return Cast<ANovaGameWorld>(GetOwner())->GetCurrentTime();
 }
 
 /*----------------------------------------------------
@@ -303,7 +291,7 @@ bool UNovaOrbitalSimulationComponent::IsOnStartedTrajectory(const FGuid& Spacecr
 {
 	const FNovaTrajectory* Trajectory = SpacecraftTrajectoryDatabase.Get(SpacecraftIdentifier);
 
-	return Trajectory && GetCurrentTime() >= Trajectory->GetManeuverStartTime() && GetCurrentTime() <= Trajectory->GetArrivalTime();
+	return Trajectory && GetCurrentTime() >= Trajectory->GetFirstManeuverStartTime() && GetCurrentTime() <= Trajectory->GetArrivalTime();
 }
 
 bool UNovaOrbitalSimulationComponent::CanStartTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory) const
@@ -415,31 +403,14 @@ TPair<const UNovaArea*, float> UNovaOrbitalSimulationComponent::GetNearestAreaAn
 	return TPair<const UNovaArea*, float>(ClosestArea, ClosestDistance);
 }
 
-FGuid UNovaOrbitalSimulationComponent::GetPlayerSpacecraftIdentifier() const
-{
-	return CurrentPlayerState ? CurrentPlayerState->GetSpacecraftIdentifier() : FGuid(0, 0, 0, 0);
-}
-
-TArray<FGuid> UNovaOrbitalSimulationComponent::GetPlayerSpacecraftIdentifiers() const
-{
-	TArray<FGuid> Result;
-
-	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
-	{
-		if (IsValid(PlayerState))
-		{
-			Result.Add(PlayerState->GetSpacecraftIdentifier());
-		}
-	}
-
-	return Result;
-}
-
 const FNovaOrbit* UNovaOrbitalSimulationComponent::GetPlayerOrbit() const
 {
-	if (IsValid(CurrentPlayerState))
+	const ANovaGameWorld* GameWorld        = GetOwner<ANovaGameWorld>();
+	const FGuid&          PlayerIdentifier = GameWorld->GetPlayerSpacecraftIdentifier();
+
+	if (PlayerIdentifier.IsValid())
 	{
-		return GetSpacecraftOrbit(CurrentPlayerState->GetSpacecraftIdentifier());
+		return GetSpacecraftOrbit(PlayerIdentifier);
 	}
 	else
 	{
@@ -449,9 +420,12 @@ const FNovaOrbit* UNovaOrbitalSimulationComponent::GetPlayerOrbit() const
 
 const FNovaTrajectory* UNovaOrbitalSimulationComponent::GetPlayerTrajectory() const
 {
-	if (IsValid(CurrentPlayerState))
+	const ANovaGameWorld* GameWorld        = GetOwner<ANovaGameWorld>();
+	const FGuid&          PlayerIdentifier = GameWorld->GetPlayerSpacecraftIdentifier();
+
+	if (PlayerIdentifier.IsValid())
 	{
-		return GetSpacecraftTrajectory(CurrentPlayerState->GetSpacecraftIdentifier());
+		return GetSpacecraftTrajectory(PlayerIdentifier);
 	}
 	else
 	{
@@ -461,24 +435,17 @@ const FNovaTrajectory* UNovaOrbitalSimulationComponent::GetPlayerTrajectory() co
 
 const FNovaOrbitalLocation* UNovaOrbitalSimulationComponent::GetPlayerLocation() const
 {
-	if (IsValid(CurrentPlayerState))
+	const ANovaGameWorld* GameWorld        = GetOwner<ANovaGameWorld>();
+	const FGuid&          PlayerIdentifier = GameWorld->GetPlayerSpacecraftIdentifier();
+
+	if (PlayerIdentifier.IsValid())
 	{
-		return GetSpacecraftLocation(CurrentPlayerState->GetSpacecraftIdentifier());
+		return GetSpacecraftLocation(PlayerIdentifier);
 	}
 	else
 	{
 		return nullptr;
 	}
-}
-
-double UNovaOrbitalSimulationComponent::GetCurrentTime() const
-{
-	return Cast<ANovaGameWorld>(GetOwner())->GetCurrentTime();
-}
-
-double UNovaOrbitalSimulationComponent::GetPreviousTime() const
-{
-	return Cast<ANovaGameWorld>(GetOwner())->GetPreviousTime();
 }
 
 /*----------------------------------------------------
@@ -492,7 +459,7 @@ void UNovaOrbitalSimulationComponent::ProcessOrbitCleanup()
 		// We need orbit data right until the time a trajectory actually start, so we remove it there
 		for (const FNovaTrajectoryDatabaseEntry& DatabaseEntry : SpacecraftTrajectoryDatabase.Get())
 		{
-			if (GetCurrentTime() >= DatabaseEntry.Trajectory.GetManeuverStartTime() + OrbitGarbageCollectionDelay)
+			if (GetCurrentTime() >= DatabaseEntry.Trajectory.GetFirstManeuverStartTime() + OrbitGarbageCollectionDelay)
 			{
 				SpacecraftOrbitDatabase.Remove(DatabaseEntry.Identifiers);
 			}
@@ -502,8 +469,6 @@ void UNovaOrbitalSimulationComponent::ProcessOrbitCleanup()
 
 void UNovaOrbitalSimulationComponent::ProcessAreas()
 {
-	ANovaGameWorld* GameWorld = GetOwner<ANovaGameWorld>();
-
 	for (const UNovaArea* Area : Areas)
 	{
 		// Update the position
@@ -561,7 +526,7 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 
 	for (const FNovaTrajectoryDatabaseEntry& DatabaseEntry : SpacecraftTrajectoryDatabase.Get())
 	{
-		if (GetCurrentTime() >= DatabaseEntry.Trajectory.GetManeuverStartTime())
+		if (GetCurrentTime() >= DatabaseEntry.Trajectory.GetFirstManeuverStartTime())
 		{
 			// Compute the new location
 			FNovaOrbitalLocation NewLocation = DatabaseEntry.Trajectory.GetCurrentLocation(GetCurrentTime());
@@ -598,9 +563,11 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 		}
 
 		// If this trajectory is for a player spacecraft, detect whether we're nearing a maneuver
-		if (IsValid(CurrentPlayerState) && DatabaseEntry.Identifiers.Contains(CurrentPlayerState->GetSpacecraftIdentifier()))
+		const ANovaGameWorld* GameWorld        = GetOwner<ANovaGameWorld>();
+		const FGuid&          PlayerIdentifier = GameWorld->GetPlayerSpacecraftIdentifier();
+		if (PlayerIdentifier.IsValid() && DatabaseEntry.Identifiers.Contains(PlayerIdentifier))
 		{
-			TimeLeftUntilManeuver = DatabaseEntry.Trajectory.GetRemainingTimeBeforeManeuver(GetCurrentTime());
+			TimeOfNextPlayerManeuver = DatabaseEntry.Trajectory.GetNextManeuverStartTime(GetCurrentTime());
 		}
 	}
 

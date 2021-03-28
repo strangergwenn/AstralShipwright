@@ -336,29 +336,32 @@ void ANovaPlayerController::Undock()
 	GetMenuManager()->CloseMenu(StartCutscene);
 }
 
-void ANovaPlayerController::SharedTransition(bool CutsceneMode, FSimpleDelegate StartCallback, FSimpleDelegate FinishCallback)
+void ANovaPlayerController::SharedTransition(
+	ENovaSharedTransitionMenuAction MenuAction, FNovaAsyncAction StartAction, FNovaAsyncAction FinishAction, FNovaAsyncCondition Condition)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 	NLOG("ANovaPlayerController::ServerSharedTransition");
 
 	for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
 	{
-		OtherPlayer->ClientStartSharedTransition(CutsceneMode);
+		OtherPlayer->ClientStartSharedTransition(MenuAction);
 	}
 
-	OnSharedTransitionStarted  = StartCallback;
-	OnSharedTransitionFinished = FinishCallback;
+	SharedTransitionStartAction  = StartAction;
+	SharedTransitionFinishAction = FinishAction;
+	SharedTransitionCondition    = Condition;
 }
 
-void ANovaPlayerController::ClientStartSharedTransition_Implementation(bool CutsceneMode)
+void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaSharedTransitionMenuAction MenuAction)
 {
 	NLOG("ANovaPlayerController::ClientStartSharedTransition_Implementation");
 
 	// Shared transitions work like this :
 	// - Server signals all players to fade to black through this very method
-	// - Once faded, Action is called and all players call ServerSharedTransitionReady to signal they're dark
-	// - Server calls SharedTransitionCallback when all clients have called ServerSharedTransitionReady, and no level is loading/unloading
-	// - Server then calls ClientStopSharedTransition on all players so that they know to resume
+	// - Once faded, Action is called and all players call ServerSharedTransitionReady() to signal they're dark
+	// - Server fires SharedTransitionStartAction when all clients have called ServerSharedTransitionReady()
+	// - Server fires SharedTransitionFinishAction once SharedTransitionCondition returns true on the server
+	// - Server then calls ClientStopSharedTransition() on all players so that they know to resume
 	// - All players then fade back to the game
 
 	IsInSharedTransition = true;
@@ -392,13 +395,13 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(bool Cuts
 				// If all players are ready, fire the start event, and wait for no streaming level operation to be ongoing
 				if (AllPlayersInTransition)
 				{
-					OnSharedTransitionStarted.ExecuteIfBound();
-					OnSharedTransitionStarted.Unbind();
+					SharedTransitionStartAction.ExecuteIfBound();
+					SharedTransitionStartAction.Unbind();
 
-					if (IsLevelStreamingComplete())
+					if (!SharedTransitionCondition.IsBound() || SharedTransitionCondition.Execute())
 					{
-						OnSharedTransitionFinished.ExecuteIfBound();
-						OnSharedTransitionFinished.Unbind();
+						SharedTransitionFinishAction.ExecuteIfBound();
+						SharedTransitionFinishAction.Unbind();
 
 						for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
 						{
@@ -418,13 +421,15 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(bool Cuts
 		});
 
 	// Run the process
-	if (CutsceneMode)
+	switch (MenuAction)
 	{
-		GetMenuManager()->CloseMenu(Action, Condition);
-	}
-	else
-	{
-		GetMenuManager()->OpenMenu(Action, Condition);
+		case ENovaSharedTransitionMenuAction::Close:
+			GetMenuManager()->CloseMenu(Action, Condition);
+			break;
+
+		case ENovaSharedTransitionMenuAction::Open:
+			GetMenuManager()->OpenMenu(Action, Condition);
+			break;
 	}
 }
 

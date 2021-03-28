@@ -18,8 +18,7 @@ enum class ENovaTimeDilation : uint8
 	Normal,
 	Level1,
 	Level2,
-	Level3,
-	Level4
+	Level3
 };
 
 /** Spacecraft database with fast array replication and fast lookup */
@@ -96,7 +95,7 @@ public:
 		TSharedPtr<struct FNovaWorldSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
 
 	/*----------------------------------------------------
-	    Gameplay
+	    General gameplay
 	----------------------------------------------------*/
 
 public:
@@ -109,7 +108,7 @@ public:
 	void UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool IsPlayerSpacecraft);
 
 	/** Return a pointer for a spacecraft by identifier */
-	const FNovaSpacecraft* GetSpacecraft(FGuid Identifier)
+	const FNovaSpacecraft* GetSpacecraft(FGuid Identifier) const
 	{
 		return SpacecraftDatabase.Get(Identifier);
 	}
@@ -120,52 +119,46 @@ public:
 		return OrbitalSimulationComponent;
 	}
 
+	/** Return the identifier of one of the player spacecraft */
+	FGuid GetPlayerSpacecraftIdentifier() const;
+
+	/** Return the identifiers of all of the player spacecraft */
+	TArray<FGuid> GetPlayerSpacecraftIdentifiers() const;
+
+	/*----------------------------------------------------
+	    Time management
+	----------------------------------------------------*/
+
+	/** Get the current game time in minutes */
+	double GetCurrentTime() const;
+
+	/** Simulate the world at full speed until an event */
+	void FastForward();
+
+	/** Check if we can skip time */
+	bool CanFastForward() const;
+
+	/** Check if we are in a time skip */
+	bool IsInFastForward() const
+	{
+		return IsFastForward;
+	}
+
 	/** Get the current time dilation factor */
 	void SetTimeDilation(ENovaTimeDilation Dilation);
-
-	/** Increase time dilation by one level */
-	void IncreaseTimeDilation()
-	{
-		if (ServerTimeDilation < ENovaTimeDilation::Level4)
-		{
-			SetTimeDilation(static_cast<ENovaTimeDilation>(static_cast<int32>(ServerTimeDilation) + 1));
-		}
-	}
-
-	/** Decrease time dilation by one level */
-	void DecreaseTimeDilation()
-	{
-		if (ServerTimeDilation > ENovaTimeDilation::Normal)
-		{
-			SetTimeDilation(static_cast<ENovaTimeDilation>(static_cast<int32>(ServerTimeDilation) - 1));
-		}
-	}
-
-	/** Stop the time dilation */
-	void StopTimeDilation()
-	{
-		SetTimeDilation(ENovaTimeDilation::Normal);
-	}
 
 	/** Get time dilation values */
 	static float GetTimeDilationValue(ENovaTimeDilation Dilation)
 	{
 		constexpr float TimeDilationValues[] = {
-			1,        // Normal
-			60,       // Level1
-			1200,     // Level2
-			14400,    // Level3
-			86400     // Level4
+			1,       // Normal : 1s = 1s
+			60,      // Level1 : 1s = 1m
+			1200,    // Level2 : 1s = 20m
+			7200,    // Level3 : 1s = 2h
 		};
 
 		return TimeDilationValues[static_cast<int32>(Dilation)];
 	}
-
-	/** Get the current game time in minutes */
-	double GetCurrentTime() const;
-
-	/** Get the time in the last simulated frame in minutes */
-	double GetPreviousTime() const;
 
 	/** Get the current time dilation */
 	ENovaTimeDilation GetCurrentTimeDilation() const
@@ -190,11 +183,8 @@ protected:
 	/** Update the spacecraft database */
 	void ProcessSpacecraftDatabase();
 
-	/** Process dilation wake events */
-	void ProcessWakeEvents();
-
 	/** Process time */
-	void ProcessTime(float DeltaTime);
+	bool ProcessTime(double DeltaTimeMinutes);
 
 	/** Server replication event for time reconciliation */
 	UFUNCTION()
@@ -219,7 +209,15 @@ public:
 
 	// Time in minutes to leave players before a maneuver
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float TimeDilationManeuverDelay;
+	double TimeMarginBeforeManeuver;
+
+	// Time between simulation updates during fast forward in minutes
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	int32 FastForwardUpdateTime;
+
+	// Number of update steps to run per frame under fast forward
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	int32 FastForwardUpdatesPerFrame;
 
 	/*----------------------------------------------------
 	    Components
@@ -248,8 +246,9 @@ private:
 	ENovaTimeDilation ServerTimeDilation;
 
 	// Local state
+	const class ANovaPlayerState*  CurrentPlayerState;
 	double                         ClientTime;
 	double                         ClientAdditionalTimeDilation;
-	double                         PreviousTime;
+	bool                           IsFastForward;
 	TArray<const class UNovaArea*> Areas;
 };

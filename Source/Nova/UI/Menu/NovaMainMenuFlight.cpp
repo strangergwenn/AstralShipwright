@@ -170,7 +170,9 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.HelpText(LOCTEXT("CalculateTrajectoriesHelp", "Calculate trajectory options"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
+							const ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
 							UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+
 							const class UNovaArea* StationA = MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
 							const class UNovaArea* StationB = MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{CCA2E0C7-43AE-CDD1-06CA-AF951F61C44A}"));
 							const class UNovaArea* StationC = MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{CAC5C9B9-451B-1212-6EC4-E8918B69A795}"));
@@ -178,7 +180,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 							TrajectoryCalculator->SimulateTrajectories(
 								MakeShared<FNovaOrbit>(*OrbitalSimulation->GetPlayerOrbit()),
 								OrbitalSimulation->GetAreaOrbit(StationC),
-								OrbitalSimulation->GetPlayerSpacecraftIdentifiers());
+								GameWorld->GetPlayerSpacecraftIdentifiers());
 						}))
 					]
 			
@@ -202,7 +204,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					[
 						SNovaNew(SNovaButton)
 						.Text(LOCTEXT("TimeDilation", "Disable time dilation"))
-						.HelpText(LOCTEXT("TimeDilationHelp", "Set time dilation to 1"))
+						.HelpText(LOCTEXT("TimeDilationHelp", "Set time dilation to zero"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
 							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
@@ -210,7 +212,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						}))
 						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 						{
-							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
+							const ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
 							return GameWorld && GameWorld->CanDilateTime(ENovaTimeDilation::Normal);
 						})))
 					]
@@ -220,7 +222,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					[
 						SNovaNew(SNovaButton)
 						.Text(LOCTEXT("TimeDilation1", "Time dilation 1"))
-						.HelpText(LOCTEXT("TimeDilation1Help", "Set time dilation to 60 (1s = 1m)"))
+						.HelpText(LOCTEXT("TimeDilation1Help", "Set time dilation to 1 (1s = 1m)"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
 							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
@@ -228,7 +230,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						}))
 						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 						{
-							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
+							const ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
 							return GameWorld && GameWorld->CanDilateTime(ENovaTimeDilation::Level1);
 						})))
 					]
@@ -238,7 +240,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					[
 						SNovaNew(SNovaButton)
 						.Text(LOCTEXT("TimeDilation2", "Time dilation 2"))
-						.HelpText(LOCTEXT("TimeDilation2Help", "Set time dilation to 1200 (1s = 20m)"))
+						.HelpText(LOCTEXT("TimeDilation2Help", "Set time dilation to 2 (1s = 20m)"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
 							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
@@ -246,7 +248,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						}))
 						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 						{
-							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
+							const ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
 							return GameWorld && GameWorld->CanDilateTime(ENovaTimeDilation::Level2);
 						})))
 					]
@@ -255,35 +257,16 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					.AutoHeight()
 					[
 						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("TimeDilation3", "Time dilation 3"))
-						.HelpText(LOCTEXT("TimeDilation3Help", "Set time dilation to 14400 (1s = 4h)"))
+						.Text(LOCTEXT("FastForward", "Time skip"))
+						.HelpText(LOCTEXT("FastForwardHelp", "Wait until the next event"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
-							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
-							GameWorld->SetTimeDilation(ENovaTimeDilation::Level3);
+							MenuManager->GetPC()->GetWorld()->GetAuthGameMode<ANovaGameMode>()->FastForward();
 						}))
 						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 						{
-							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
-							return GameWorld && GameWorld->CanDilateTime(ENovaTimeDilation::Level3);
-						})))
-					]
-			
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("TimeDilation4", "Time dilation 4"))
-						.HelpText(LOCTEXT("TimeDilation4Help", "Set time dilation to 86400 (1s = 24h)"))
-						.OnClicked(FSimpleDelegate::CreateLambda([&]()
-						{
-							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
-							GameWorld->SetTimeDilation(ENovaTimeDilation::Level4);
-						}))
-						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
-						{
-							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
-							return GameWorld && GameWorld->CanDilateTime(ENovaTimeDilation::Level4);
+							const ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
+							return GameWorld && GameWorld->CanFastForward();
 						})))
 					]
 			

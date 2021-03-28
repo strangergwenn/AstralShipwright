@@ -36,6 +36,9 @@ public:
 	----------------------------------------------------*/
 
 public:
+	/** Run the time-skipping process in a shared transition */
+	void FastForward();
+
 	/** Have all players fade to black, play the exit cutscene and switch to orbit */
 	void ChangeAreaToOrbit();
 

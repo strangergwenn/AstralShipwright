@@ -148,6 +148,31 @@ AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
     Gameplay
 ----------------------------------------------------*/
 
+void ANovaGameMode::FastForward()
+{
+	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
+	NCHECK(IsValid(PC) && PC->IsLocalController());
+	ANovaGameWorld* GameWorld = GetGameState<ANovaGameState>()->GetGameWorld();
+	NCHECK(IsValid(GameWorld));
+
+	// 3 : Wait for fast-forward to end
+	FNovaAsyncCondition IsFastForwardComplete = FNovaAsyncCondition::CreateLambda(
+		[=]()
+		{
+			return !GameWorld->IsInFastForward();
+		});
+
+	// 2 : Start fast-forward
+	FNovaAsyncAction StartFastForward = FNovaAsyncAction::CreateLambda(
+		[=]()
+		{
+			GameWorld->FastForward();
+		});
+
+	// 1 : Start a shared transition for fast-forwarding
+	PC->SharedTransition(ENovaSharedTransitionMenuAction::Open, StartFastForward, FNovaAsyncAction(), IsFastForwardComplete);
+}
+
 void ANovaGameMode::ChangeAreaToOrbit()
 {
 	ChangeArea(OrbitArea);
@@ -156,21 +181,21 @@ void ANovaGameMode::ChangeAreaToOrbit()
 void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 {
 	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
-	NCHECK(PC);
+	NCHECK(IsValid(PC) && PC->IsLocalController());
 	NCHECK(Area);
 
 	NLOG("ANovaGameMode::ChangeArea : '%s'", *Area->LevelName.ToString());
 	ANovaSpacecraftPawn* PlayerPawn = PC->GetSpacecraftPawn();
 
-	// 5 : Cutscene is finished, level has loaded
-	FSimpleDelegate CompleteCutscene = FSimpleDelegate::CreateLambda(
+	// 5 : Wait for level loading
+	FNovaAsyncCondition CanCompleteCutscene = FNovaAsyncCondition::CreateLambda(
 		[=]()
 		{
-			NLOG("ANovaGameMode::ChangeArea : completed cutscene");
+			return PC->IsLevelStreamingComplete();
 		});
 
 	// 4 : Cutscene is completed during shared transition : switch the levels
-	FSimpleDelegate SwitchLevels = FSimpleDelegate::CreateLambda(
+	FNovaAsyncAction SwitchLevels = FNovaAsyncAction::CreateLambda(
 		[=]()
 		{
 			for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
@@ -184,15 +209,15 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 		});
 
 	// 3: Cutscene is ending : start a shared transition
-	FSimpleDelegate StopCutscene = FSimpleDelegate::CreateLambda(
+	FNovaAsyncAction StopCutscene = FNovaAsyncAction::CreateLambda(
 		[=]()
 		{
 			NLOG("ANovaGameMode::ChangeArea : stopping cutscene");
-			PC->SharedTransition(false, SwitchLevels, CompleteCutscene);
+			PC->SharedTransition(ENovaSharedTransitionMenuAction::Open, SwitchLevels, FNovaAsyncAction(), CanCompleteCutscene);
 		});
 
 	// 2 : Cutscene is starting : start leaving the area
-	FSimpleDelegate StartCutscene = FSimpleDelegate::CreateLambda(
+	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda(
 		[=]()
 		{
 			NLOG("ANovaGameMode::ChangeArea : starting cutscene");
@@ -203,7 +228,7 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 		});
 
 	// 1 : Start a shared transition for the cutscene
-	PC->SharedTransition(true, StartCutscene);
+	PC->SharedTransition(ENovaSharedTransitionMenuAction::Close, StartCutscene);
 }
 
 bool ANovaGameMode::IsInOrbit() const

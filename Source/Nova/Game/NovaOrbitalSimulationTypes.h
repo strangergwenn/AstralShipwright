@@ -295,11 +295,25 @@ struct FNovaTrajectory
 		return GetArrivalTime() - static_cast<double>(TotalTravelDuration);
 	}
 
-	/** Get the start time for the first maneuver */
-	double GetManeuverStartTime() const
+	/** Get the start time of the first maneuver */
+	double GetFirstManeuverStartTime() const
 	{
 		NCHECK(IsValid());
 		return Maneuvers[0].Time;
+	}
+
+	/** Get the start time of the next maneuver */
+	double GetNextManeuverStartTime(double CurrentTime) const
+	{
+		for (const FNovaManeuver& Maneuver : Maneuvers)
+		{
+			if (Maneuver.Time > CurrentTime)
+			{
+				return Maneuver.Time;
+			}
+		}
+
+		return 0;
 	}
 
 	/** Get the arrival time */
@@ -307,20 +321,6 @@ struct FNovaTrajectory
 	{
 		const FNovaManeuver& FinalManeuver = Maneuvers[Maneuvers.Num() - 1];
 		return FinalManeuver.Time + static_cast<double>(FinalManeuver.Duration);
-	}
-
-	/** Get the time left before a maneuver */
-	double GetRemainingTimeBeforeManeuver(double CurrentTime) const
-	{
-		for (const FNovaManeuver& Maneuver : Maneuvers)
-		{
-			if (Maneuver.Time > CurrentTime)
-			{
-				return Maneuver.Time - CurrentTime;
-			}
-		}
-
-		return 0;
 	}
 
 	/** Get the current location in orbit */

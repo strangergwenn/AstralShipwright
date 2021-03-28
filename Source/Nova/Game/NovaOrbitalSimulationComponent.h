@@ -21,13 +21,22 @@ public:
 	UNovaOrbitalSimulationComponent();
 
 	/*----------------------------------------------------
-	    Inherited
+	    General simulation
 	----------------------------------------------------*/
-
 public:
 	virtual void BeginPlay() override;
 
-	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	/** Update the simulation */
+	void UpdateSimulation();
+
+	/** Get the current time in minutes */
+	double GetCurrentTime() const;
+
+	/** Get the time at which the next player maneuver will occur in minutes */
+	double GetTimeOfNextPlayerManeuver() const
+	{
+		return TimeOfNextPlayerManeuver;
+	}
 
 	/*----------------------------------------------------
 	    Trajectory & orbiting interface
@@ -111,12 +120,6 @@ public:
 		return SpacecraftOrbitalLocations;
 	}
 
-	/** Return the identifier of one of the player spacecraft */
-	FGuid GetPlayerSpacecraftIdentifier() const;
-
-	/** Return the identifiers of all of the player spacecraft */
-	TArray<FGuid> GetPlayerSpacecraftIdentifiers() const;
-
 	/** Get the player orbit */
 	const FNovaOrbit* GetPlayerOrbit() const;
 
@@ -125,18 +128,6 @@ public:
 
 	/** Get the player location */
 	const FNovaOrbitalLocation* GetPlayerLocation() const;
-
-	/** Get the current time in minutes */
-	double GetCurrentTime() const;
-
-	/** Get the time in the last simulated frame in minutes */
-	double GetPreviousTime() const;
-
-	/** Get the time until the next player maneuver in minutes */
-	double GetTimeLeftUntilManeuver() const
-	{
-		return TimeLeftUntilManeuver;
-	}
 
 	/*----------------------------------------------------
 	    Internals
@@ -183,11 +174,10 @@ private:
 	FNovaTrajectoryDatabase SpacecraftTrajectoryDatabase;
 
 	// Local object state
-	const class ANovaPlayerState*                      CurrentPlayerState;
 	TArray<const class UNovaArea*>                     Areas;
 	TMap<const class UNovaArea*, FNovaOrbitalLocation> AreaOrbitalLocations;
 	TMap<FGuid, FNovaOrbitalLocation>                  SpacecraftOrbitalLocations;
 
 	// Local state
-	double TimeLeftUntilManeuver;
+	double TimeOfNextPlayerManeuver;
 };

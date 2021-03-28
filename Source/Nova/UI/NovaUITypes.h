@@ -6,6 +6,10 @@
     General purpose types
 ----------------------------------------------------*/
 
+// Callbacks
+DECLARE_DELEGATE(FNovaAsyncAction);
+DECLARE_DELEGATE_RetVal(bool, FNovaAsyncCondition);
+
 /** UI constants */
 namespace ENovaUIConstants
 {

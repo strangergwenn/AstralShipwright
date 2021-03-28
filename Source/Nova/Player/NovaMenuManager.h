@@ -9,9 +9,6 @@
 #include "SlateBasics.h"
 #include "NovaMenuManager.generated.h"
 
-DECLARE_DELEGATE(FNovaAsyncAction);
-DECLARE_DELEGATE_RetVal(bool, FNovaAsyncCondition);
-
 /** Menu states */
 enum class ENovaFadeState : uint8
 {
