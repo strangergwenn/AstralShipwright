@@ -99,7 +99,7 @@ ANovaGameWorld* ANovaGameWorld::Get(const UObject* Outer)
 	return nullptr;
 }
 
-void ANovaGameWorld::UpdateSpacecraft(const FNovaSpacecraft Spacecraft, bool IsPlayerSpacecraft)
+void ANovaGameWorld::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool IsPlayerSpacecraft)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 

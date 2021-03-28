@@ -88,7 +88,7 @@ struct FNovaCompartment
 struct FNovaSpacecraftPropulsionMetrics
 {
 	FNovaSpacecraftPropulsionMetrics()
-		: DryMass(0)
+		: DryMass(-1)
 		, PropellantMass(0)
 		, CargoMass(0)
 		, TotalMass(0)
@@ -109,6 +109,9 @@ struct FNovaSpacecraftPropulsionMetrics
 	/** Get the duration in minutes & mass of fuel spent in T for a maneuver */
 	float GetManeuverDurationAndPropellantUsed(const float DeltaV, float& CurrentPropellantMass) const
 	{
+		NCHECK(Thrust > 0);
+		NCHECK(ExhaustVelocity > 0);
+
 		float Duration = (((DryMass + CargoMass + CurrentPropellantMass) * 1000.0f * ExhaustVelocity) / (Thrust * 1000.0f)) *
 						 (1.0f - exp(-abs(DeltaV) / ExhaustVelocity)) / 60.0f;
 		float PropellantUsed = PropellantRate * Duration;
@@ -203,6 +206,7 @@ public:
 	/** Get propulsion characteristics for this spacecraft */
 	const FNovaSpacecraftPropulsionMetrics& GetPropulsionMetrics() const
 	{
+		NCHECK(PropulsionMetrics.DryMass >= 0);
 		return PropulsionMetrics;
 	}
 

@@ -95,7 +95,7 @@ public:
 	static ANovaGameWorld* Get(const UObject* Outer);
 
 	/** Register or update a spacecraft */
-	void UpdateSpacecraft(const FNovaSpacecraft Spacecraft, bool IsPlayerSpacecraft);
+	void UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool IsPlayerSpacecraft);
 
 	/** Return a pointer for a spacecraft by identifier */
 	const FNovaSpacecraft* GetSpacecraft(FGuid Identifier)

@@ -218,8 +218,8 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					.AutoHeight()
 					[
 						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("TimeDilation60", "Time dilation 60"))
-						.HelpText(LOCTEXT("TimeDilation60Help", "Set time dilation to 60 (1m = 1h)"))
+						.Text(LOCTEXT("TimeDilation1", "Time dilation 60"))
+						.HelpText(LOCTEXT("TimeDilation1Help", "Set time dilation to 60 (1s = 1m)"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
 							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
@@ -235,12 +235,46 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					.AutoHeight()
 					[
 						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("TimeDilation600", "Time dilation 600"))
-						.HelpText(LOCTEXT("TimeDilation600Help", "Set time dilation to 600 (1m = 10h)"))
+						.Text(LOCTEXT("TimeDilation2", "Time dilation 1200"))
+						.HelpText(LOCTEXT("TimeDilation2Help", "Set time dilation to 1200 (1s = 20m)"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
 							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
-							GameWorld->SetTimeDilation(600);
+							GameWorld->SetTimeDilation(1200);
+						}))
+						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+						{
+							return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority;
+						})))
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaNew(SNovaButton)
+						.Text(LOCTEXT("TimeDilation3", "Time dilation 14400"))
+						.HelpText(LOCTEXT("TimeDilation3Help", "Set time dilation to 14400 (1s = 4h)"))
+						.OnClicked(FSimpleDelegate::CreateLambda([&]()
+						{
+							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
+							GameWorld->SetTimeDilation(14400);
+						}))
+						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+						{
+							return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority;
+						})))
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaNew(SNovaButton)
+						.Text(LOCTEXT("TimeDilation4", "Time dilation 86400"))
+						.HelpText(LOCTEXT("TimeDilation4Help", "Set time dilation to 86400 (1s = 24h)"))
+						.OnClicked(FSimpleDelegate::CreateLambda([&]()
+						{
+							ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
+							GameWorld->SetTimeDilation(86400);
 						}))
 						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 						{
