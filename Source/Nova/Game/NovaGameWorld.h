@@ -11,6 +11,17 @@
 
 #include "NovaGameWorld.generated.h"
 
+/** Time dilation settings */
+UENUM()
+enum class ENovaTimeDilation : uint8
+{
+	Normal,
+	Level1,
+	Level2,
+	Level3,
+	Level4
+};
+
 /** Spacecraft database with fast array replication and fast lookup */
 USTRUCT()
 struct FNovaSpacecraftDatabase : public FFastArraySerializer
@@ -110,14 +121,80 @@ public:
 	}
 
 	/** Get the current time dilation factor */
-	void SetTimeDilation(float Dilation);
+	void SetTimeDilation(ENovaTimeDilation Dilation);
+
+	/** Increase time dilation by one level */
+	void IncreaseTimeDilation()
+	{
+		if (ServerTimeDilation < ENovaTimeDilation::Level4)
+		{
+			SetTimeDilation(static_cast<ENovaTimeDilation>(static_cast<int32>(ServerTimeDilation) + 1));
+		}
+	}
+
+	/** Decrease time dilation by one level */
+	void DecreaseTimeDilation()
+	{
+		if (ServerTimeDilation > ENovaTimeDilation::Normal)
+		{
+			SetTimeDilation(static_cast<ENovaTimeDilation>(static_cast<int32>(ServerTimeDilation) - 1));
+		}
+	}
+
+	/** Stop the time dilation */
+	void StopTimeDilation()
+	{
+		SetTimeDilation(ENovaTimeDilation::Normal);
+	}
+
+	/** Get time dilation values */
+	static float GetTimeDilationValue(ENovaTimeDilation Dilation)
+	{
+		constexpr float TimeDilationValues[] = {
+			1,        // Normal
+			60,       // Level1
+			1200,     // Level2
+			14400,    // Level3
+			86400     // Level4
+		};
+
+		return TimeDilationValues[static_cast<int32>(Dilation)];
+	}
 
 	/** Get the current game time in minutes */
 	double GetCurrentTime() const;
 
+	/** Get the time in the last simulated frame in minutes */
+	double GetPreviousTime() const;
+
+	/** Get the current time dilation */
+	ENovaTimeDilation GetCurrentTimeDilation() const
+	{
+		return ServerTimeDilation;
+	}
+
+	/** Get the current time dilation */
+	double GetCurrentTimeDilationValue() const
+	{
+		return GetTimeDilationValue(ServerTimeDilation);
+	}
+
+	/** Check if we can dilate time */
+	bool CanDilateTime(ENovaTimeDilation Dilation) const;
+
 	/*----------------------------------------------------
-	    Networking
+	    Internals
 	----------------------------------------------------*/
+
+protected:
+	/** Update the spacecraft database */
+	void ProcessSpacecraftDatabase();
+
+	/** Process dilation wake events */
+	void ProcessWakeEvents();
+
+	/** Process time */
+	void ProcessTime(float DeltaTime);
 
 	/** Server replication event for time reconciliation */
 	UFUNCTION()
@@ -139,6 +216,10 @@ public:
 	// Maximum time dilation applied to compensate time
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float TimeCorrectionFactor;
+
+	// Time in minutes to leave players before a maneuver
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float TimeDilationManeuverDelay;
 
 	/*----------------------------------------------------
 	    Components
@@ -164,10 +245,11 @@ private:
 
 	// Replicated world time dilation
 	UPROPERTY(Replicated)
-	float ServerTimeDilation;
+	ENovaTimeDilation ServerTimeDilation;
 
 	// Local state
 	double                         ClientTime;
-	double                         ClientTimeDilation;
+	double                         ClientAdditionalTimeDilation;
+	double                         PreviousTime;
 	TArray<const class UNovaArea*> Areas;
 };

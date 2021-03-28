@@ -181,7 +181,7 @@ public:
 	/** Create a new spacecraft */
 	void Create()
 	{
-		Identifier = FGuid::NewGuid();
+		Identifier = FGuid();
 	}
 
 	/** Trigger a rebuilding of the local state on all clients */

@@ -18,7 +18,8 @@
     Constructor
 ----------------------------------------------------*/
 
-ANovaGameWorld::ANovaGameWorld() : Super(), ServerTime(0), ServerTimeDilation(1), ClientTime(0), ClientTimeDilation(0)
+ANovaGameWorld::ANovaGameWorld()
+	: Super(), ServerTime(0), ServerTimeDilation(ENovaTimeDilation::Normal), ClientTime(0), ClientAdditionalTimeDilation(0), PreviousTime(0)
 {
 	// Setup simulation component
 	OrbitalSimulationComponent = CreateDefaultSubobject<UNovaOrbitalSimulationComponent>(TEXT("OrbitalSimulationComponent"));
@@ -33,6 +34,7 @@ ANovaGameWorld::ANovaGameWorld() : Super(), ServerTime(0), ServerTimeDilation(1)
 	MinimumTimeCorrectionThreshold = 0.25f;
 	MaximumTimeCorrectionThreshold = 10.0f;
 	TimeCorrectionFactor           = 0.2f;
+	TimeDilationManeuverDelay      = 1.0f / 60.0f;
 }
 
 /*----------------------------------------------------
@@ -65,23 +67,10 @@ void ANovaGameWorld::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Update spacecraft
-	SpacecraftDatabase.UpdateCache();
-	for (FNovaSpacecraft& Spacecraft : SpacecraftDatabase.Get())
-	{
-		Spacecraft.UpdateIfDirty();
-	}
-
-	// Process time
-	double DilatedDeltaTime = static_cast<double>(DeltaTime * ServerTimeDilation / 60.0);
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		ServerTime += DilatedDeltaTime;
-	}
-	else
-	{
-		ClientTime += DilatedDeltaTime * ClientTimeDilation;
-	}
+	// Process subsystems
+	ProcessSpacecraftDatabase();
+	ProcessWakeEvents();
+	ProcessTime(DeltaTime);
 }
 
 ANovaGameWorld* ANovaGameWorld::Get(const UObject* Outer)
@@ -141,10 +130,10 @@ void ANovaGameWorld::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool Is
 	}
 }
 
-void ANovaGameWorld::SetTimeDilation(float Dilation)
+void ANovaGameWorld::SetTimeDilation(ENovaTimeDilation Dilation)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
-	NCHECK(Dilation >= 0);
+	NCHECK(Dilation >= ENovaTimeDilation::Normal && Dilation <= ENovaTimeDilation::Level4);
 
 	ServerTimeDilation = Dilation;
 }
@@ -161,9 +150,63 @@ double ANovaGameWorld::GetCurrentTime() const
 	}
 }
 
+double ANovaGameWorld::GetPreviousTime() const
+{
+	return PreviousTime;
+}
+
+bool ANovaGameWorld::CanDilateTime(ENovaTimeDilation Dilation) const
+{
+	if (GetLocalRole() != ROLE_Authority)
+	{
+		return false;
+	}
+	else if (Dilation == ENovaTimeDilation::Normal)
+	{
+		return true;
+	}
+	else
+	{
+		return OrbitalSimulationComponent->GetTimeLeftUntilManeuver() >
+			   static_cast<double>(TimeDilationManeuverDelay) * GetTimeDilationValue(Dilation);
+	}
+}
+
 /*----------------------------------------------------
-    Networking
+    Internals
 ----------------------------------------------------*/
+
+void ANovaGameWorld::ProcessSpacecraftDatabase()
+{
+	SpacecraftDatabase.UpdateCache();
+	for (FNovaSpacecraft& Spacecraft : SpacecraftDatabase.Get())
+	{
+		Spacecraft.UpdateIfDirty();
+	}
+}
+
+void ANovaGameWorld::ProcessWakeEvents()
+{
+	if (GetLocalRole() == ROLE_Authority && !CanDilateTime(GetCurrentTimeDilation()))
+	{
+		DecreaseTimeDilation();
+	}
+}
+
+void ANovaGameWorld::ProcessTime(float DeltaTime)
+{
+	double DilatedDeltaTime = static_cast<double>(DeltaTime) * GetCurrentTimeDilationValue() / 60.0;
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		PreviousTime = ServerTime;
+		ServerTime += DilatedDeltaTime;
+	}
+	else
+	{
+		PreviousTime = ClientTime;
+		ClientTime += DilatedDeltaTime * ClientAdditionalTimeDilation;
+	}
+}
 
 void ANovaGameWorld::OnServerTimeReplicated()
 {
@@ -173,7 +216,7 @@ void ANovaGameWorld::OnServerTimeReplicated()
 	// Evaluate the current server time
 	const double PingSeconds      = UNovaActorTools::GetPlayerLatency(PC);
 	const double RealServerTime   = ServerTime + PingSeconds / 60.0;
-	const double TimeDeltaSeconds = (RealServerTime - ClientTime) * 60.0 / ServerTimeDilation;
+	const double TimeDeltaSeconds = (RealServerTime - ClientTime) * 60.0 / GetCurrentTimeDilationValue();
 
 	// We can never go back in time
 	NCHECK(TimeDeltaSeconds > -MaximumTimeCorrectionThreshold);
@@ -182,8 +225,8 @@ void ANovaGameWorld::OnServerTimeReplicated()
 	if (TimeDeltaSeconds > MaximumTimeCorrectionThreshold)
 	{
 		NLOG("ANovaGameWorld::OnServerTimeReplicated : time rollback from %.2f to %.2f", ClientTime, RealServerTime);
-		ClientTime         = RealServerTime;
-		ClientTimeDilation = 1.0;
+		ClientTime                   = RealServerTime;
+		ClientAdditionalTimeDilation = 1.0;
 	}
 
 	// Smooth correct if it isn't
@@ -193,7 +236,7 @@ void ANovaGameWorld::OnServerTimeReplicated()
 			(TimeDeltaSeconds - MinimumTimeCorrectionThreshold) / (MaximumTimeCorrectionThreshold - MinimumTimeCorrectionThreshold), 0.0,
 			1.0);
 
-		ClientTimeDilation = 1.0 + TimeDeltaRatio * TimeCorrectionFactor * FMath::Sign(TimeDeltaSeconds);
+		ClientAdditionalTimeDilation = 1.0 + TimeDeltaRatio * TimeCorrectionFactor * FMath::Sign(TimeDeltaSeconds);
 	}
 }
 

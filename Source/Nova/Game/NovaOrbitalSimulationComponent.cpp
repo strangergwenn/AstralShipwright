@@ -97,12 +97,15 @@ void UNovaOrbitalSimulationComponent::TickComponent(
 	CurrentPlayerState = nullptr;
 	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
 	{
-		if (IsValid(PlayerState))
+		if (IsValid(PlayerState) && PlayerState->GetSpacecraftIdentifier() != FGuid())
 		{
 			CurrentPlayerState = PlayerState;
 			break;
 		}
 	}
+
+	// Clean up state
+	TimeLeftUntilManeuver = DBL_MAX;
 
 	// Update databases for replication
 	SpacecraftOrbitDatabase.UpdateCache();
@@ -473,6 +476,11 @@ double UNovaOrbitalSimulationComponent::GetCurrentTime() const
 	return Cast<ANovaGameWorld>(GetOwner())->GetCurrentTime();
 }
 
+double UNovaOrbitalSimulationComponent::GetPreviousTime() const
+{
+	return Cast<ANovaGameWorld>(GetOwner())->GetPreviousTime();
+}
+
 /*----------------------------------------------------
     Internals
 ----------------------------------------------------*/
@@ -555,6 +563,7 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 	{
 		if (GetCurrentTime() >= DatabaseEntry.Trajectory.GetManeuverStartTime())
 		{
+			// Compute the new location
 			FNovaOrbitalLocation NewLocation = DatabaseEntry.Trajectory.GetCurrentLocation(GetCurrentTime());
 			if (!NewLocation.IsValid())
 			{
@@ -567,7 +576,7 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 				NewLocation.Geometry.EndPhase);
 #endif
 
-			// Add or update the current orbit and position
+			// Add or update the current orbit and location
 			for (const FGuid& Identifier : DatabaseEntry.Identifiers)
 			{
 				FNovaOrbitalLocation* Entry = SpacecraftOrbitalLocations.Find(Identifier);
@@ -586,6 +595,12 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 			{
 				CompletedTrajectories.Add(DatabaseEntry.Identifiers);
 			}
+		}
+
+		// If this trajectory is for a player spacecraft, detect whether we're nearing a maneuver
+		if (IsValid(CurrentPlayerState) && DatabaseEntry.Identifiers.Contains(CurrentPlayerState->GetSpacecraftIdentifier()))
+		{
+			TimeLeftUntilManeuver = DatabaseEntry.Trajectory.GetRemainingTimeBeforeManeuver(GetCurrentTime());
 		}
 	}
 

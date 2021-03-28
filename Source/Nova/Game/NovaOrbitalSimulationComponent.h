@@ -129,6 +129,15 @@ public:
 	/** Get the current time in minutes */
 	double GetCurrentTime() const;
 
+	/** Get the time in the last simulated frame in minutes */
+	double GetPreviousTime() const;
+
+	/** Get the time until the next player maneuver in minutes */
+	double GetTimeLeftUntilManeuver() const
+	{
+		return TimeLeftUntilManeuver;
+	}
+
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
@@ -173,9 +182,12 @@ private:
 	UPROPERTY(Replicated)
 	FNovaTrajectoryDatabase SpacecraftTrajectoryDatabase;
 
-	// Local state
+	// Local object state
 	const class ANovaPlayerState*                      CurrentPlayerState;
 	TArray<const class UNovaArea*>                     Areas;
 	TMap<const class UNovaArea*, FNovaOrbitalLocation> AreaOrbitalLocations;
 	TMap<FGuid, FNovaOrbitalLocation>                  SpacecraftOrbitalLocations;
+
+	// Local state
+	double TimeLeftUntilManeuver;
 };
