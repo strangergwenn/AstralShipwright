@@ -207,10 +207,6 @@ public:
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float TimeCorrectionFactor;
 
-	// Time in minutes to leave players before a maneuver
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	double TimeMarginBeforeManeuver;
-
 	// Time between simulation updates during fast forward in minutes
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	int32 FastForwardUpdateTime;

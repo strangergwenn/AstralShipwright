@@ -1,14 +1,15 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaGameMode.h"
-#include "NovaGameInstance.h"
 
-#include "Nova/Game/NovaAssetCatalog.h"
-#include "Nova/Game/NovaArea.h"
-#include "Nova/Game/NovaGameState.h"
-#include "Nova/Game/NovaGameWorld.h"
-#include "Nova/Game/NovaOrbitalSimulationComponent.h"
-#include "Nova/Game/NovaWorldSettings.h"
+#include "NovaAssetCatalog.h"
+#include "NovaArea.h"
+#include "NovaGameInstance.h"
+#include "NovaGameModeStates.h"
+#include "NovaGameState.h"
+#include "NovaGameWorld.h"
+#include "NovaOrbitalSimulationComponent.h"
+#include "NovaWorldSettings.h"
 
 #include "Nova/Actor/NovaPlayerStart.h"
 #include "Nova/Player/NovaPlayerController.h"
@@ -26,7 +27,11 @@
     Constructor
 ----------------------------------------------------*/
 
-ANovaGameMode::ANovaGameMode() : Super(), CurrentStreamingLevelIndex(0)
+ANovaGameMode::ANovaGameMode()
+	: Super()
+	, DesiredStateIdentifier(ENovaGameStateIdentifier::Area)
+	, CurrentStateIdentifier(ENovaGameStateIdentifier::Area)
+	, CurrentStreamingLevelIndex(0)
 {
 	// Defaults
 	GameStateClass        = ANovaGameState::StaticClass();
@@ -35,7 +40,8 @@ ANovaGameMode::ANovaGameMode() : Super(), CurrentStreamingLevelIndex(0)
 	DefaultPawnClass      = ANovaSpacecraftPawn::StaticClass();
 
 	// Settings
-	bUseSeamlessTravel = true;
+	PrimaryActorTick.bCanEverTick = true;
+	bUseSeamlessTravel            = true;
 }
 
 /*----------------------------------------------------
@@ -75,6 +81,9 @@ void ANovaGameMode::StartPlay()
 	// TODO : this should be dependent on save data
 	const UNovaArea* Station = GameInstance->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
 	LoadStreamingLevel(Station, true, FSimpleDelegate());
+
+	// Startup the state machine
+	InitializeStateMachine();
 }
 
 void ANovaGameMode::PostLogin(APlayerController* Player)
@@ -145,91 +154,57 @@ AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	return nullptr;
 }
 
+void ANovaGameMode::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	ProcessStateMachine();
+}
+
 /*----------------------------------------------------
     Gameplay
 ----------------------------------------------------*/
 
 void ANovaGameMode::FastForward()
 {
-	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
-	NCHECK(IsValid(PC) && PC->IsLocalController());
-	ANovaGameWorld* GameWorld = GetGameState<ANovaGameState>()->GetGameWorld();
+	DesiredStateIdentifier = ENovaGameStateIdentifier::FastForward;
+}
+
+bool ANovaGameMode::CanFastForward() const
+{
+	const ANovaGameWorld* GameWorld = GetGameState<ANovaGameState>()->GetGameWorld();
 	NCHECK(IsValid(GameWorld));
 
-	// 3 : Wait for fast-forward to end
-	FNovaAsyncCondition IsFastForwardComplete = FNovaAsyncCondition::CreateLambda(
-		[=]()
-		{
-			return !GameWorld->IsInFastForward();
-		});
+	return (CurrentStateIdentifier == ENovaGameStateIdentifier::Area || CurrentStateIdentifier == ENovaGameStateIdentifier::ArrivalCoast ||
+			   CurrentStateIdentifier == ENovaGameStateIdentifier::Orbit ||
+			   CurrentStateIdentifier == ENovaGameStateIdentifier::DepartureCoast) &&
+		   GameWorld->CanFastForward();
+}
 
-	// 2 : Start fast-forward
-	FNovaAsyncAction StartFastForward = FNovaAsyncAction::CreateLambda(
-		[=]()
-		{
-			GameWorld->FastForward();
-		});
+void ANovaGameMode::ChangeArea(const UNovaArea* Area)
+{
+	NCHECK(IsValid(Area));
+	NCHECK(Area->IsValidLowLevelFast());
 
-	// 1 : Start a shared transition for fast-forwarding
-	PC->SharedTransition(ENovaPlayerCameraState::Default, StartFastForward, IsFastForwardComplete);
+	// Compare with the current area and exit
+	const UNovaArea* CurrentArea = GetGameState<ANovaGameState>()->GetCurrentArea();
+	if (Area != CurrentArea)
+	{
+		NLOG("ANovaGameMode::ChangeArea : '%s'", *Area->LevelName.ToString());
+
+		for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+		{
+			SpacecraftPawn->GetSpacecraftMovement()->Stop();
+		}
+
+		UnloadStreamingLevel(CurrentArea);
+		LoadStreamingLevel(Area);
+	}
 }
 
 void ANovaGameMode::ChangeAreaToOrbit()
 {
 	ChangeArea(OrbitArea);
-}
-
-void ANovaGameMode::ChangeArea(const UNovaArea* Area)
-{
-	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
-	NCHECK(IsValid(PC) && PC->IsLocalController());
-	NCHECK(Area);
-
-	NLOG("ANovaGameMode::ChangeArea : '%s'", *Area->LevelName.ToString());
-	ANovaSpacecraftPawn* PlayerPawn = PC->GetSpacecraftPawn();
-
-	// 5 : Wait for level loading
-	FNovaAsyncCondition CanCompleteCutscene = FNovaAsyncCondition::CreateLambda(
-		[=]()
-		{
-			return PC->IsLevelStreamingComplete();
-		});
-
-	// 4 : Cutscene is completed during shared transition : switch the levels
-	FNovaAsyncAction SwitchLevels = FNovaAsyncAction::CreateLambda(
-		[=]()
-		{
-			for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
-			{
-				NLOG("ANovaGameMode::ChangeArea : ending cutscene");
-				SpacecraftPawn->GetSpacecraftMovement()->Stop();
-			}
-
-			UnloadStreamingLevel(GetGameState<ANovaGameState>()->GetCurrentArea());
-			LoadStreamingLevel(Area);
-		});
-
-	// 3: Cutscene is ending : start a shared transition
-	FNovaAsyncAction StopCutscene = FNovaAsyncAction::CreateLambda(
-		[=]()
-		{
-			NLOG("ANovaGameMode::ChangeArea : stopping cutscene");
-			PC->SharedTransition(ENovaPlayerCameraState::Default, SwitchLevels, CanCompleteCutscene);
-		});
-
-	// 2 : Cutscene is starting : start leaving the area
-	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda(
-		[=]()
-		{
-			NLOG("ANovaGameMode::ChangeArea : starting cutscene");
-			for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
-			{
-				SpacecraftPawn->GetSpacecraftMovement()->LeaveArea(SpacecraftPawn == PlayerPawn ? StopCutscene : FSimpleDelegate());
-			}
-		});
-
-	// 1 : Start a shared transition for the cutscene
-	PC->SharedTransition(ENovaPlayerCameraState::CinematicPawn, StartCutscene);
 }
 
 bool ANovaGameMode::IsInOrbit() const
@@ -238,8 +213,78 @@ bool ANovaGameMode::IsInOrbit() const
 }
 
 /*----------------------------------------------------
-    Level loading
+    Internals
 ----------------------------------------------------*/
+
+void ANovaGameMode::InitializeStateMachine()
+{
+	// Fetch data
+	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
+	NCHECK(IsValid(PC) && PC->IsLocalController());
+	ANovaGameWorld* GameWorld = GetGameState<ANovaGameState>()->GetGameWorld();
+	NCHECK(IsValid(GameWorld));
+	UNovaOrbitalSimulationComponent* OrbitalSimulationComponent = GameWorld->GetOrbitalSimulation();
+	NCHECK(IsValid(OrbitalSimulationComponent));
+
+	// State initializer
+	auto AddState = [&](ENovaGameStateIdentifier Identifier, TSharedPtr<FNovaGameState> State, const FString& Name)
+	{
+		State->Initialize(Name, PC, this, GameWorld, OrbitalSimulationComponent);
+		StateMap.Add(Identifier, State);
+	};
+
+	// Create states
+	AddState(ENovaGameStateIdentifier::Area, MakeShared<FNovaAreaState>(), TEXT("Area"));
+	AddState(ENovaGameStateIdentifier::Orbit, MakeShared<FNovaOrbitState>(), TEXT("Orbit"));
+	AddState(ENovaGameStateIdentifier::FastForward, MakeShared<FNovaFastForwardState>(), TEXT("FastForward"));
+	AddState(ENovaGameStateIdentifier::DepartureProximity, MakeShared<FNovaDepartureProximityState>(), TEXT("DepartureProximity"));
+	AddState(ENovaGameStateIdentifier::DepartureCoast, MakeShared<FNovaDepartureCoastState>(), TEXT("DepartureCoast"));
+	AddState(ENovaGameStateIdentifier::ArrivalIntro, MakeShared<FNovaArrivalIntroState>(), TEXT("ArrivalIntro"));
+	AddState(ENovaGameStateIdentifier::ArrivalCoast, MakeShared<FNovaArrivalCoastState>(), TEXT("ArrivalCoast"));
+	AddState(ENovaGameStateIdentifier::ArrivalProximity, MakeShared<FNovaArrivalProximityState>(), TEXT("ArrivalProximity"));
+}
+
+void ANovaGameMode::ProcessStateMachine()
+{
+	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
+	NCHECK(IsValid(PC) && PC->IsLocalController());
+
+	if (!PC->IsInSharedTransition())
+	{
+		// Process the current state
+		TSharedPtr<FNovaGameState> State = StateMap[CurrentStateIdentifier];
+		NCHECK(State.IsValid());
+		ENovaGameStateIdentifier NewStateIdentifier = State->UpdateState();
+
+		// If the current state didn't exit, process the desired state instead
+		if (NewStateIdentifier == CurrentStateIdentifier)
+		{
+			NewStateIdentifier = DesiredStateIdentifier;
+		}
+
+		// Process state changes : leave the current, enter the new
+		if (NewStateIdentifier != CurrentStateIdentifier)
+		{
+			NLOG("ANovaGameMode::ProcessStateMachine : changing state from %d to %d", CurrentStateIdentifier, NewStateIdentifier);
+
+			// Stop tile dilation
+			ANovaGameWorld* GameWorld = GetGameState<ANovaGameState>()->GetGameWorld();
+			NCHECK(IsValid(GameWorld));
+			GameWorld->SetTimeDilation(ENovaTimeDilation::Normal);
+
+			// Leave the current state
+			State->LeaveState(CurrentStateIdentifier);
+
+			// Enter the new state
+			TSharedPtr<FNovaGameState> NewState = StateMap[NewStateIdentifier];
+			NCHECK(NewState.IsValid());
+			NewState->EnterState(CurrentStateIdentifier);
+
+			CurrentStateIdentifier = NewStateIdentifier;
+			DesiredStateIdentifier = NewStateIdentifier;
+		}
+	}
+}
 
 bool ANovaGameMode::LoadStreamingLevel(const UNovaArea* Area, bool StartDocked, FSimpleDelegate Callback)
 {

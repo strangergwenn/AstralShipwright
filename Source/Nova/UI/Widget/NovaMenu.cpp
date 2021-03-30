@@ -400,7 +400,7 @@ bool SNovaMenu::IsAxisKey(FName AxisName, const FKey& Key) const
 
 void SNovaMenu::SetActiveNavigationPanel(SNovaNavigationPanel* Panel)
 {
-	NLOG("SNovaMenu::SetActiveNavigationPanel : '%s'", Panel ? *Panel->GetTypeAsString() : TEXT("null"));
+	// NLOG("SNovaMenu::SetActiveNavigationPanel : '%s'", Panel ? *Panel->GetTypeAsString() : TEXT("null"));
 
 	if (Panel != CurrentNavigationPanel)
 	{
@@ -426,7 +426,8 @@ void SNovaMenu::RefreshNavigationPanel()
 
 void SNovaMenu::ClearNavigationPanel()
 {
-	NLOG("SNovaMenu::ClearNavigationPanel : '%s'", CurrentNavigationPanel ? *CurrentNavigationPanel->GetTypeAsString() : TEXT("nullptr"));
+	// NLOG("SNovaMenu::ClearNavigationPanel : '%s'", CurrentNavigationPanel ? *CurrentNavigationPanel->GetTypeAsString() :
+	// TEXT("nullptr"));
 
 	for (TSharedPtr<SNovaButton> Button : CurrentNavigationButtons)
 	{

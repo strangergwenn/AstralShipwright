@@ -40,7 +40,6 @@ ANovaGameWorld::ANovaGameWorld()
 	MinimumTimeCorrectionThreshold = 0.25f;
 	MaximumTimeCorrectionThreshold = 10.0f;
 	TimeCorrectionFactor           = 0.2f;
-	TimeMarginBeforeManeuver       = 1.0f;
 
 	// Fast forward defaults : 2 days per frame in 2h steps
 	FastForwardUpdateTime      = 2 * 60;
@@ -215,24 +214,15 @@ double ANovaGameWorld::GetCurrentTime() const
 
 void ANovaGameWorld::FastForward()
 {
+	NLOG("ANovaGameWorld::FastForward");
 	SetTimeDilation(ENovaTimeDilation::Normal);
 	IsFastForward = true;
 }
 
 bool ANovaGameWorld::CanFastForward() const
 {
-	if (GetLocalRole() != ROLE_Authority)
-	{
-		return false;
-	}
-	else if (OrbitalSimulationComponent->GetPlayerTrajectory() == nullptr)
-	{
-		return false;
-	}
-	else
-	{
-		return true;
-	}
+	return GetLocalRole() == ROLE_Authority && OrbitalSimulationComponent->GetPlayerTrajectory() != nullptr &&
+		   OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver() > 0;
 }
 
 void ANovaGameWorld::SetTimeDilation(ENovaTimeDilation Dilation)
@@ -269,8 +259,7 @@ bool ANovaGameWorld::ProcessTime(double DeltaTimeMinutes)
 	// Under fast forward, stop on events
 	if (IsFastForward && GetLocalRole() == ROLE_Authority)
 	{
-		const double MaxAllowedDeltaTime =
-			OrbitalSimulationComponent->GetTimeOfNextPlayerManeuver() - GetCurrentTime() - TimeMarginBeforeManeuver;
+		const double MaxAllowedDeltaTime = OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver();
 
 		NCHECK(TimeDilation == 1.0);
 		NCHECK(MaxAllowedDeltaTime > 0);

@@ -19,8 +19,9 @@ enum class ENovaPlayerCameraState : uint8
 {
 	Default,
 	Chase,
-	CinematicPawn,
-	CinematicEnvironment
+	CinematicSpacecraft,
+	CinematicEnvironment,
+	FastForward
 };
 
 /** High level post processing targets */
@@ -173,6 +174,13 @@ public:
 	UFUNCTION(Category = Nova, BlueprintCallable)
 	bool IsReady() const;
 
+	/** Check if the player is currently in a shared transition */
+	UFUNCTION(Category = Nova, BlueprintCallable)
+	bool IsInSharedTransition() const
+	{
+		return SharedTransitionActive;
+	}
+
 	/*----------------------------------------------------
 	    Menus
 	----------------------------------------------------*/
@@ -241,7 +249,7 @@ private:
 	ENovaPlayerCameraState CameraState;
 
 	// Transitions
-	bool                IsInSharedTransition;
+	bool                SharedTransitionActive;
 	FNovaAsyncAction    SharedTransitionStartAction;
 	FNovaAsyncAction    SharedTransitionFinishAction;
 	FNovaAsyncCondition SharedTransitionCondition;

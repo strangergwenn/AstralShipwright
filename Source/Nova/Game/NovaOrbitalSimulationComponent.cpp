@@ -73,6 +73,7 @@ UNovaOrbitalSimulationComponent::UNovaOrbitalSimulationComponent() : Super()
 
 	// Defaults
 	OrbitGarbageCollectionDelay = 1.0f;
+	TimeMarginBeforeManeuver    = 1.0f;
 }
 
 /*----------------------------------------------------
@@ -389,24 +390,6 @@ UNovaOrbitalSimulationComponent* UNovaOrbitalSimulationComponent::Get(const UObj
 	return nullptr;
 }
 
-TPair<const UNovaArea*, float> UNovaOrbitalSimulationComponent::GetNearestAreaAndDistance(const FNovaOrbitalLocation& Location) const
-{
-	const UNovaArea* ClosestArea     = nullptr;
-	float            ClosestDistance = MAX_FLT;
-
-	for (const TPair<const UNovaArea*, FNovaOrbitalLocation>& Entry : AreaOrbitalLocations)
-	{
-		float Distance = Entry.Value.GetDistanceTo(Location);
-		if (Distance < ClosestDistance)
-		{
-			ClosestArea     = Entry.Key;
-			ClosestDistance = Distance;
-		}
-	}
-
-	return TPair<const UNovaArea*, float>(ClosestArea, ClosestDistance);
-}
-
 const FNovaOrbit* UNovaOrbitalSimulationComponent::GetPlayerOrbit() const
 {
 	const ANovaGameWorld* GameWorld        = GetOwner<ANovaGameWorld>();
@@ -450,6 +433,24 @@ const FNovaOrbitalLocation* UNovaOrbitalSimulationComponent::GetPlayerLocation()
 	{
 		return nullptr;
 	}
+}
+
+TPair<const UNovaArea*, float> UNovaOrbitalSimulationComponent::GetNearestAreaAndDistance(const FNovaOrbitalLocation& Location) const
+{
+	const UNovaArea* ClosestArea     = nullptr;
+	float            ClosestDistance = MAX_FLT;
+
+	for (const TPair<const UNovaArea*, FNovaOrbitalLocation>& Entry : AreaOrbitalLocations)
+	{
+		float Distance = Entry.Value.GetDistanceTo(Location);
+		if (Distance < ClosestDistance)
+		{
+			ClosestArea     = Entry.Key;
+			ClosestDistance = Distance;
+		}
+	}
+
+	return TPair<const UNovaArea*, float>(ClosestArea, ClosestDistance);
 }
 
 /*----------------------------------------------------

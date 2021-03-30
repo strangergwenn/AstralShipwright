@@ -6,6 +6,24 @@
 #include "GameFramework/GameModeBase.h"
 #include "NovaGameMode.generated.h"
 
+/** Game state */
+enum class ENovaGameStateIdentifier : uint8
+{
+	// Idle states
+	Area,
+	Orbit,
+	FastForward,
+
+	// Exit maneuvers
+	DepartureProximity,
+	DepartureCoast,
+
+	// Arrival maneuvers
+	ArrivalIntro,
+	ArrivalCoast,
+	ArrivalProximity
+};
+
 /** Default game mode class */
 UCLASS(ClassGroup = (Nova))
 class ANovaGameMode : public AGameModeBase
@@ -31,6 +49,8 @@ public:
 
 	virtual AActor* ChoosePlayerStart_Implementation(class AController* Player) override;
 
+	void Tick(float DeltaTime) override;
+
 	/*----------------------------------------------------
 	    Gameplay
 	----------------------------------------------------*/
@@ -39,20 +59,29 @@ public:
 	/** Run the time-skipping process in a shared transition */
 	void FastForward();
 
-	/** Have all players fade to black, play the exit cutscene and switch to orbit */
-	void ChangeAreaToOrbit();
+	/** Check whether we can fast-forward */
+	bool CanFastForward() const;
 
-	/** Have all players fade to black, play the exit cutscene and switch area */
+	/** Change the current area */
 	void ChangeArea(const class UNovaArea* Area);
+
+	/** Change the current area to orbit*/
+	void ChangeAreaToOrbit();
 
 	/** Check if we are in orbit */
 	bool IsInOrbit() const;
 
 	/*----------------------------------------------------
-	    Level loading
+	    Internals
 	----------------------------------------------------*/
 
 protected:
+	/** Set up the game state machine */
+	void InitializeStateMachine();
+
+	/** Run the game state machine */
+	void ProcessStateMachine();
+
 	/** Load a streaming level */
 	bool LoadStreamingLevel(const class UNovaArea* Area, bool StartDocked = false, FSimpleDelegate Callback = FSimpleDelegate());
 
@@ -82,6 +111,11 @@ public:
 
 private:
 	// Game state
+	ENovaGameStateIdentifier                                         DesiredStateIdentifier;
+	ENovaGameStateIdentifier                                         CurrentStateIdentifier;
+	TMap<ENovaGameStateIdentifier, TSharedPtr<class FNovaGameState>> StateMap;
+
+	// Level streaming state
 	int32           CurrentStreamingLevelIndex;
 	FSimpleDelegate OnLevelLoadedCallback;
 	FSimpleDelegate OnLevelUnloadedCallback;

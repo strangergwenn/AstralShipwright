@@ -50,7 +50,7 @@ ANovaPlayerViewpoint::ANovaPlayerViewpoint() : Super()
 }
 
 ANovaPlayerController::ANovaPlayerController()
-	: Super(), LastNetworkError(ENovaNetworkError::Success), CameraState(ENovaPlayerCameraState::Default), IsInSharedTransition(false)
+	: Super(), LastNetworkError(ENovaNetworkError::Success), CameraState(ENovaPlayerCameraState::Default), SharedTransitionActive(false)
 {
 	// Create the post-processing manager
 	PostProcessComponent = CreateDefaultSubobject<UNovaPostProcessComponent>(TEXT("PostProcessComponent"));
@@ -270,7 +270,8 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const
 {
 	// During cutscenes, use the closest camera viewpoint and focus the player ship
-	if (IsReady() && (CameraState == ENovaPlayerCameraState::CinematicPawn || CameraState == ENovaPlayerCameraState::CinematicEnvironment))
+	if (IsReady() &&
+		(CameraState == ENovaPlayerCameraState::CinematicSpacecraft || CameraState == ENovaPlayerCameraState::CinematicEnvironment))
 	{
 		TArray<AActor*> Viewpoints;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaPlayerViewpoint::StaticClass(), Viewpoints);
@@ -287,7 +288,7 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 
 		// Apply the results
 		Location = ViewpointLocation;
-		if (CameraState == ENovaPlayerCameraState::CinematicPawn)
+		if (CameraState == ENovaPlayerCameraState::CinematicSpacecraft)
 		{
 			Rotation = (GetPawn()->GetActorLocation() - ViewpointLocation).Rotation();
 		}
@@ -401,7 +402,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 	// - Server then calls ClientStopSharedTransition() on all players so that they know to resume
 	// - All players then fade back to the game
 
-	IsInSharedTransition = true;
+	SharedTransitionActive = true;
 
 	// Action : mark as in shared transition locally and remotely
 	FNovaAsyncAction Action = FNovaAsyncAction::CreateLambda(
@@ -423,7 +424,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 				bool AllPlayersInTransition = true;
 				for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
 				{
-					if (!OtherPlayer->IsInSharedTransition)
+					if (!OtherPlayer->SharedTransitionActive)
 					{
 						AllPlayersInTransition = false;
 						break;
@@ -455,7 +456,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 			}
 			else
 			{
-				return !IsInSharedTransition;
+				return !SharedTransitionActive;
 			}
 		});
 
@@ -469,8 +470,9 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 			break;
 
 		// UI disabled states
-		case ENovaPlayerCameraState::CinematicPawn:
+		case ENovaPlayerCameraState::CinematicSpacecraft:
 		case ENovaPlayerCameraState::CinematicEnvironment:
+		case ENovaPlayerCameraState::FastForward:
 			GetMenuManager()->CloseMenu(Action, Condition);
 			break;
 	}
@@ -480,7 +482,7 @@ void ANovaPlayerController::ClientStopSharedTransition_Implementation()
 {
 	NLOG("ANovaPlayerController::ClientStopSharedTransition_Implementation");
 
-	IsInSharedTransition = false;
+	SharedTransitionActive = false;
 }
 
 void ANovaPlayerController::ServerSharedTransitionReady_Implementation()
@@ -488,7 +490,7 @@ void ANovaPlayerController::ServerSharedTransitionReady_Implementation()
 	NCHECK(GetLocalRole() == ROLE_Authority);
 	NLOG("ANovaPlayerController::ServerSharedTransitionReady_Implementation");
 
-	IsInSharedTransition = true;
+	SharedTransitionActive = true;
 }
 
 bool ANovaPlayerController::IsLevelStreamingComplete() const

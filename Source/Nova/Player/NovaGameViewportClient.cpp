@@ -94,7 +94,7 @@ void UNovaGameViewportClient::SetLoadingScreen(ENovaLoadingScreen LoadingScreen)
 		CurrentLoadingScreen = LoadingScreen;
 	}
 
-	NLOG("UNovaGameViewportClient::SetLoadingScreen : setting %d", static_cast<int32>(LoadingScreen));
+	// NLOG("UNovaGameViewportClient::SetLoadingScreen : setting %d", static_cast<int32>(LoadingScreen));
 
 	// Setup the loading screen widget with the desired resource
 	UTexture2D* LoadingScreenTexture =
@@ -123,10 +123,10 @@ void UNovaGameViewportClient::ShowLoadingScreen()
 
 void UNovaGameViewportClient::Initialize()
 {
-	NLOG("UNovaGameViewportClient::Initialize");
-
 	if (LoadingScreenSetup == nullptr || AnimatedMaterialInstance == nullptr || !LoadingScreenWidget.IsValid())
 	{
+		NLOG("UNovaGameViewportClient::Initialize");
+
 		// Find the loading screen setup
 		TArray<const UNovaLoadingScreenSetup*> LoadingScreenSetupList =
 			Cast<UNovaGameInstance>(GetGameInstance())->GetCatalog()->GetAssets<UNovaLoadingScreenSetup>();

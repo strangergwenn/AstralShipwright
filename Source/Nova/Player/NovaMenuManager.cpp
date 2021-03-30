@@ -155,7 +155,7 @@ void UNovaMenuManager::Tick(float DeltaTime)
 				{
 					CurrentCommand.Action.Execute();
 					CurrentCommand.Action.Unbind();
-					NLOG("UNovaMenuManager::Tick : action finished, waiting condition");
+					// NLOG("UNovaMenuManager::Tick : action finished, waiting condition");
 				}
 
 				// Waiting condition
@@ -167,14 +167,14 @@ void UNovaMenuManager::Tick(float DeltaTime)
 
 						CompleteAsyncAction();
 
-						NLOG("UNovaMenuManager::Tick : action and condition finished");
+						// NLOG("UNovaMenuManager::Tick : action and condition finished");
 					}
 				}
 				else
 				{
 					CompleteAsyncAction();
 
-					NLOG("UNovaMenuManager::Tick : action finished with no condition");
+					// NLOG("UNovaMenuManager::Tick : action finished with no condition");
 				}
 
 				break;
@@ -349,7 +349,7 @@ TSharedPtr<SNovaOverlay> UNovaMenuManager::GetOverlay() const
 
 void UNovaMenuManager::SetFocusToMenu()
 {
-	NLOG("UNovaMenuManager::SetFocusToMenu");
+	// NLOG("UNovaMenuManager::SetFocusToMenu");
 
 	if (!IsUsingGamepad())
 	{
@@ -361,7 +361,7 @@ void UNovaMenuManager::SetFocusToMenu()
 
 void UNovaMenuManager::SetFocusToOverlay()
 {
-	NLOG("UNovaMenuManager::SetFocusToOverlay");
+	// NLOG("UNovaMenuManager::SetFocusToOverlay");
 
 	if (!IsUsingGamepad())
 	{
@@ -373,7 +373,7 @@ void UNovaMenuManager::SetFocusToOverlay()
 
 void UNovaMenuManager::SetFocusToGame()
 {
-	NLOG("UNovaMenuManager::SetFocusToGame");
+	// NLOG("UNovaMenuManager::SetFocusToGame");
 
 	GetPC()->SetInputMode(FInputModeGameOnly());
 

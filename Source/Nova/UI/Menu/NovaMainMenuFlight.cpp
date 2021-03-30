@@ -112,39 +112,6 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
-						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("LeaveStation", "Leave station"))
-						.HelpText(LOCTEXT("HelpLeaveStation", "Leave station"))
-						.OnClicked(FSimpleDelegate::CreateLambda([&]()
-						{
-							MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChangeAreaToOrbit();
-						}))
-						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
-						{
-							return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority && !MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->IsInOrbit();
-						})))
-					]
-			
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("GoToStation", "Go to station"))
-						.HelpText(LOCTEXT("HelpGoToStation", "Go to station"))
-						.OnClicked(FSimpleDelegate::CreateLambda([&]()
-						{
-							const class UNovaArea* Station = MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
-							MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChangeArea(Station);
-						}))
-						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
-						{
-							return MenuManager->GetPC() && MenuManager->GetPC()->GetLocalRole() == ROLE_Authority && MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->IsInOrbit();
-						})))
-					]
-			
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
 						SNovaAssignNew(DockButton, SNovaButton)
 						.Text(LOCTEXT("Dock", "Dock"))
 						.HelpText(LOCTEXT("DockHelp", "Dock at the station"))
@@ -257,7 +224,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					.AutoHeight()
 					[
 						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("FastForward", "Time skip"))
+						.Text(LOCTEXT("FastForward", "Fast forward"))
 						.HelpText(LOCTEXT("FastForwardHelp", "Wait until the next event"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
@@ -265,8 +232,8 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						}))
 						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 						{
-							const ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
-							return GameWorld && GameWorld->CanFastForward();
+							const ANovaGameMode* GameMode = MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>();
+							return GameMode && GameMode->CanFastForward();
 						})))
 					]
 			

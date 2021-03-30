@@ -69,7 +69,7 @@ public:
 	void MergeOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit);
 
 	/*----------------------------------------------------
-	    Trajectory & orbiting getters
+	    Simple trajectory & orbiting getters
 	----------------------------------------------------*/
 
 	/** Get this component */
@@ -92,9 +92,6 @@ public:
 	{
 		return AreaOrbitalLocations;
 	}
-
-	/** Get the closest area and the associated distance from an arbitrary location */
-	TPair<const UNovaArea*, float> GetNearestAreaAndDistance(const FNovaOrbitalLocation& Location) const;
 
 	/** Get a spacecraft's orbit */
 	const FNovaOrbit* GetSpacecraftOrbit(const FGuid& Identifier) const
@@ -120,6 +117,10 @@ public:
 		return SpacecraftOrbitalLocations;
 	}
 
+	/*----------------------------------------------------
+	    Advanced trajectory & orbiting getters
+	----------------------------------------------------*/
+
 	/** Get the player orbit */
 	const FNovaOrbit* GetPlayerOrbit() const;
 
@@ -128,6 +129,48 @@ public:
 
 	/** Get the player location */
 	const FNovaOrbitalLocation* GetPlayerLocation() const;
+
+	/** Get the time left until a maneuver happens */
+	double GetTimeLeftUntilPlayerManeuver() const
+	{
+		return GetTimeOfNextPlayerManeuver() - GetCurrentTime() - TimeMarginBeforeManeuver;
+	}
+
+	/** Is the player past the first maneuver of a trajectory */
+	bool IsPlayerPastFirstManeuver() const
+	{
+		const FNovaTrajectory* Trajectory = GetPlayerTrajectory();
+
+		return Trajectory && Trajectory->GetFirstManeuverStartTime() < GetCurrentTime();
+	}
+
+	/** Is the player nearing the last maneuver of a trajectory */
+	bool IsPlayerNearingLastManeuver() const
+	{
+		const FNovaTrajectory* Trajectory = GetPlayerTrajectory();
+
+		return Trajectory && Trajectory->GetRemainingManeuverCount(GetCurrentTime()) == 1;
+	}
+
+	/** Get the closest area and the associated distance from an arbitrary location */
+	TPair<const UNovaArea*, float> GetNearestAreaAndDistance(const FNovaOrbitalLocation& Location) const;
+
+	/** Get the closest area and the associated distance from the player*/
+	TPair<const UNovaArea*, float> GetPlayerNearestAreaAndDistance() const
+	{
+		const FNovaTrajectory*      PlayerTrajectory = GetPlayerTrajectory();
+		const FNovaOrbitalLocation* PlayerLocation   = GetPlayerLocation();
+
+		if (PlayerTrajectory)
+		{
+			if (PlayerLocation)
+			{
+				return GetNearestAreaAndDistance(*PlayerLocation);
+			}
+		}
+
+		return TPair<const UNovaArea*, float>(nullptr, MAX_FLT);
+	}
 
 	/*----------------------------------------------------
 	    Internals
@@ -160,6 +203,10 @@ public:
 	// Delay after a trajectory has started before removing the orbit data
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float OrbitGarbageCollectionDelay;
+
+	// Time in minutes to leave players before a maneuver
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	double TimeMarginBeforeManeuver;
 
 	/*----------------------------------------------------
 	    Data
