@@ -69,7 +69,6 @@ struct FNovaTrajectoryParameters
 UNovaOrbitalSimulationComponent::UNovaOrbitalSimulationComponent() : Super()
 {
 	// Settings
-	PrimaryComponentTick.bCanEverTick = true;
 	SetIsReplicatedByDefault(true);
 
 	// Defaults
@@ -277,10 +276,15 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	NLOG("PhasingOrbitPeriod = %f, DestinationOrbitPeriod = %f", PhasingOrbitPeriod, DestinationOrbitPeriod);
 	NLOG("PhasingDuration = %f, PhasingAngle = %f", PhasingDuration, PhasingAngle);
 	NLOG("FinalDestinationPhase = %f, FinalSpacecraftPhase = %f", FinalDestinationPhase, FinalSpacecraftPhase);
+	NLOG("Trajectory->GetStartTime() = %f, Parameters->StartTime = %f", Trajectory->GetStartTime(), Parameters->StartTime);
 	NLOG("--------------------------------------------------------------------------------");
 #endif
 
 	NCHECK(FMath::Abs(FinalSpacecraftPhase - FinalDestinationPhase) < SMALL_NUMBER);
+	if (FMath::IsFinite(Trajectory->GetStartTime()))
+	{
+		NCHECK(FMath::Abs(Trajectory->GetStartTime() - Parameters->StartTime) * 60.0 < 1);
+	}
 
 #endif
 

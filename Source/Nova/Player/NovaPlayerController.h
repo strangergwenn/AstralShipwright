@@ -13,12 +13,14 @@
 
 #include "NovaPlayerController.generated.h"
 
-/** Menu actions supported by shared transitions */
+/** Camera styles supported by shared transitions */
 UENUM()
-enum class ENovaSharedTransitionMenuAction : uint8
+enum class ENovaPlayerCameraState : uint8
 {
-	Open,
-	Close
+	Default,
+	Chase,
+	CinematicPawn,
+	CinematicEnvironment
 };
 
 /** High level post processing targets */
@@ -104,12 +106,12 @@ public:
 	void Undock();
 
 	/** Run a shared transition with a fade to black on all clients */
-	void SharedTransition(ENovaSharedTransitionMenuAction MenuAction, FNovaAsyncAction StartAction,
-		FNovaAsyncAction FinishAction = FNovaAsyncAction(), FNovaAsyncCondition Condition = FNovaAsyncCondition());
+	void SharedTransition(ENovaPlayerCameraState NewCameraState, FNovaAsyncAction StartAction = FNovaAsyncAction(),
+		FNovaAsyncCondition Condition = FNovaAsyncCondition(), FNovaAsyncAction FinishAction = FNovaAsyncAction());
 
 	/** Signal a client that a shared transition is starting */
 	UFUNCTION(Client, Reliable)
-	void ClientStartSharedTransition(ENovaSharedTransitionMenuAction MenuAction);
+	void ClientStartSharedTransition(ENovaPlayerCameraState NewCameraState);
 
 	/** Signal a client that the transition is complete */
 	UFUNCTION(Client, Reliable)
@@ -209,6 +211,19 @@ public:
 #endif
 
 	/*----------------------------------------------------
+	    Properties
+	----------------------------------------------------*/
+
+public:
+	/** Base chase cam distance in units */
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float ChaseCamBaseDistance;
+
+	/** Distance added at acceleration = 1 in units */
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float ChaseCamAccelerationDistance;
+
+	/*----------------------------------------------------
 	    Components
 	----------------------------------------------------*/
 
@@ -221,8 +236,9 @@ public:
 	----------------------------------------------------*/
 
 private:
-	// Travel state
-	ENovaNetworkError LastNetworkError;
+	// General state
+	ENovaNetworkError      LastNetworkError;
+	ENovaPlayerCameraState CameraState;
 
 	// Transitions
 	bool                IsInSharedTransition;

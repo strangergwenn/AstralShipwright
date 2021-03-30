@@ -7,6 +7,7 @@
 #include "Nova/Game/NovaArea.h"
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaGameWorld.h"
+#include "Nova/Game/NovaOrbitalSimulationComponent.h"
 #include "Nova/Game/NovaWorldSettings.h"
 
 #include "Nova/Actor/NovaPlayerStart.h"
@@ -170,7 +171,7 @@ void ANovaGameMode::FastForward()
 		});
 
 	// 1 : Start a shared transition for fast-forwarding
-	PC->SharedTransition(ENovaSharedTransitionMenuAction::Open, StartFastForward, FNovaAsyncAction(), IsFastForwardComplete);
+	PC->SharedTransition(ENovaPlayerCameraState::Default, StartFastForward, IsFastForwardComplete);
 }
 
 void ANovaGameMode::ChangeAreaToOrbit()
@@ -213,7 +214,7 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 		[=]()
 		{
 			NLOG("ANovaGameMode::ChangeArea : stopping cutscene");
-			PC->SharedTransition(ENovaSharedTransitionMenuAction::Open, SwitchLevels, FNovaAsyncAction(), CanCompleteCutscene);
+			PC->SharedTransition(ENovaPlayerCameraState::Default, SwitchLevels, CanCompleteCutscene);
 		});
 
 	// 2 : Cutscene is starting : start leaving the area
@@ -228,7 +229,7 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 		});
 
 	// 1 : Start a shared transition for the cutscene
-	PC->SharedTransition(ENovaSharedTransitionMenuAction::Close, StartCutscene);
+	PC->SharedTransition(ENovaPlayerCameraState::CinematicPawn, StartCutscene);
 }
 
 bool ANovaGameMode::IsInOrbit() const

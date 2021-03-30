@@ -49,7 +49,8 @@ ANovaPlayerViewpoint::ANovaPlayerViewpoint() : Super()
 	RootComponent = CreateDefaultSubobject<USceneComponent>("Root");
 }
 
-ANovaPlayerController::ANovaPlayerController() : Super(), LastNetworkError(ENovaNetworkError::Success), IsInSharedTransition(false)
+ANovaPlayerController::ANovaPlayerController()
+	: Super(), LastNetworkError(ENovaNetworkError::Success), CameraState(ENovaPlayerCameraState::Default), IsInSharedTransition(false)
 {
 	// Create the post-processing manager
 	PostProcessComponent = CreateDefaultSubobject<UNovaPostProcessComponent>(TEXT("PostProcessComponent"));
@@ -107,6 +108,10 @@ ANovaPlayerController::ANovaPlayerController() : Super(), LastNetworkError(ENova
 				Volume->Settings.GrainIntensity = FMath::Lerp(MyCurrent->GrainIntensity, MyTarget->GrainIntensity, Alpha);
 				Volume->Settings.SceneColorTint = FMath::Lerp(MyCurrent->SceneColorTint, MyTarget->SceneColorTint, Alpha);
 			}));
+
+	// Defaults
+	ChaseCamBaseDistance         = 5000;
+	ChaseCamAccelerationDistance = 5000;
 }
 
 /*----------------------------------------------------
@@ -265,21 +270,53 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const
 {
 	// During cutscenes, use the closest camera viewpoint and focus the player ship
-	if (IsReady() && !GetMenuManager()->IsMenuOpen())
+	if (IsReady() && (CameraState == ENovaPlayerCameraState::CinematicPawn || CameraState == ENovaPlayerCameraState::CinematicEnvironment))
 	{
 		TArray<AActor*> Viewpoints;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaPlayerViewpoint::StaticClass(), Viewpoints);
 
-		FVector ViewpointLocation = FVector::ZeroVector;
+		// Get the first viewpoint actor and extract its transform
+		FVector  ViewpointLocation = FVector::ZeroVector;
+		FRotator ViewpointRotation = FRotator::ZeroRotator;
 		if (Viewpoints.Num())
 		{
 			UNovaActorTools::SortActorsByClosestDistance(Viewpoints, GetPawn()->GetActorLocation());
 			ViewpointLocation = Viewpoints[0]->GetActorLocation();
+			ViewpointRotation = Viewpoints[0]->GetActorRotation();
 		}
 
+		// Apply the results
 		Location = ViewpointLocation;
-		Rotation = (GetPawn()->GetActorLocation() - ViewpointLocation).Rotation();
+		if (CameraState == ENovaPlayerCameraState::CinematicPawn)
+		{
+			Rotation = (GetPawn()->GetActorLocation() - ViewpointLocation).Rotation();
+		}
+		else
+		{
+			Rotation = ViewpointRotation;
+		}
 	}
+
+	// Chase cam
+	else if (IsReady() && CameraState == ENovaPlayerCameraState::Chase)
+	{
+		const ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+		NCHECK(SpacecraftPawn);
+
+		const FVector Backwards             = -SpacecraftPawn->GetActorForwardVector();
+		const FVector SpacecraftLocation    = SpacecraftPawn->GetActorLocation();
+		const float   SpacecraftExtent      = SpacecraftPawn->GetTurntableBounds().Value.Size();
+		const float   MainDriveAcceleration = SpacecraftPawn->GetSpacecraftMovement()->GetMainDriveAcceleration();
+
+		FVector BoundsOffset       = SpacecraftExtent * Backwards;
+		FVector BaseOffset         = ChaseCamBaseDistance * Backwards;
+		FVector AccelerationOffset = MainDriveAcceleration * ChaseCamAccelerationDistance * Backwards;
+
+		Location = SpacecraftLocation + BoundsOffset + BaseOffset + AccelerationOffset;
+		Rotation = (GetPawn()->GetActorLocation() - Location).Rotation();
+	}
+
+	// Default camera
 	else
 	{
 		Super::GetPlayerViewPoint(Location, Rotation);
@@ -337,14 +374,14 @@ void ANovaPlayerController::Undock()
 }
 
 void ANovaPlayerController::SharedTransition(
-	ENovaSharedTransitionMenuAction MenuAction, FNovaAsyncAction StartAction, FNovaAsyncAction FinishAction, FNovaAsyncCondition Condition)
+	ENovaPlayerCameraState NewCameraState, FNovaAsyncAction StartAction, FNovaAsyncCondition Condition, FNovaAsyncAction FinishAction)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 	NLOG("ANovaPlayerController::ServerSharedTransition");
 
 	for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
 	{
-		OtherPlayer->ClientStartSharedTransition(MenuAction);
+		OtherPlayer->ClientStartSharedTransition(NewCameraState);
 	}
 
 	SharedTransitionStartAction  = StartAction;
@@ -352,7 +389,7 @@ void ANovaPlayerController::SharedTransition(
 	SharedTransitionCondition    = Condition;
 }
 
-void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaSharedTransitionMenuAction MenuAction)
+void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlayerCameraState NewCameraState)
 {
 	NLOG("ANovaPlayerController::ClientStartSharedTransition_Implementation");
 
@@ -370,6 +407,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaShar
 	FNovaAsyncAction Action = FNovaAsyncAction::CreateLambda(
 		[=]()
 		{
+			CameraState = NewCameraState;
 			ServerSharedTransitionReady();
 			NLOG("ANovaPlayerController::ClientStartSharedTransition_Implementation : done, waiting for server");
 		});
@@ -392,7 +430,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaShar
 					}
 				}
 
-				// If all players are ready, fire the start event, and wait for no streaming level operation to be ongoing
+				// Once all players are in the transition, fire the start event, wait for the condition, fire the end event, and stop
 				if (AllPlayersInTransition)
 				{
 					SharedTransitionStartAction.ExecuteIfBound();
@@ -402,6 +440,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaShar
 					{
 						SharedTransitionFinishAction.ExecuteIfBound();
 						SharedTransitionFinishAction.Unbind();
+						SharedTransitionCondition.Unbind();
 
 						for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
 						{
@@ -421,14 +460,18 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaShar
 		});
 
 	// Run the process
-	switch (MenuAction)
+	switch (NewCameraState)
 	{
-		case ENovaSharedTransitionMenuAction::Close:
-			GetMenuManager()->CloseMenu(Action, Condition);
+		// UI enabled states
+		case ENovaPlayerCameraState::Default:
+		case ENovaPlayerCameraState::Chase:
+			GetMenuManager()->OpenMenu(Action, Condition);
 			break;
 
-		case ENovaSharedTransitionMenuAction::Open:
-			GetMenuManager()->OpenMenu(Action, Condition);
+		// UI disabled states
+		case ENovaPlayerCameraState::CinematicPawn:
+		case ENovaPlayerCameraState::CinematicEnvironment:
+			GetMenuManager()->CloseMenu(Action, Condition);
 			break;
 	}
 }

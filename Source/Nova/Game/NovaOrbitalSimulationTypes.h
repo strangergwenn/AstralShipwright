@@ -323,6 +323,22 @@ struct FNovaTrajectory
 		return FinalManeuver.Time + static_cast<double>(FinalManeuver.Duration);
 	}
 
+	/** Get the number of remaining maneuvers */
+	int32 GetRemainingManeuverCount(double CurrentTime) const
+	{
+		int32 Count = 0;
+
+		for (const FNovaManeuver& Maneuver : Maneuvers)
+		{
+			if (Maneuver.Time > CurrentTime)
+			{
+				Count++;
+			}
+		}
+
+		return Count;
+	}
+
 	/** Get the current location in orbit */
 	FNovaOrbitalLocation GetCurrentLocation(double CurrentTime) const;
 
