@@ -307,7 +307,7 @@ float UNovaMenuManager::GetLoadingScreenAlpha() const
 	}
 }
 
-void UNovaMenuManager::ShowTooltip(SWidget* TargetWidget, FText Content)
+void UNovaMenuManager::ShowTooltip(SWidget* TargetWidget, const FText& Content)
 {
 	if (Menu.IsValid())
 	{

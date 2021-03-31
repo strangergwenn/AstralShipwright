@@ -713,9 +713,14 @@ bool ANovaPlayerController::IsMenuOnly() const
 	return Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMenuMap();
 }
 
-void ANovaPlayerController::Notify(FText Text, ENovaNotificationType Type)
+void ANovaPlayerController::Notify(const FText& Text, ENovaNotificationType Type)
 {
 	GetMenuManager()->GetOverlay()->Notify(Text, Type);
+}
+
+void ANovaPlayerController::ShowTitle(const FText& Text)
+{
+	GetMenuManager()->GetOverlay()->ShowTitle(Text);
 }
 
 /*----------------------------------------------------

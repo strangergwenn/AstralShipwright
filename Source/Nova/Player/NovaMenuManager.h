@@ -103,7 +103,7 @@ public:
 	float GetLoadingScreenAlpha() const;
 
 	/** Start displaying the tooltip */
-	void ShowTooltip(SWidget* TargetWidget, FText Content);
+	void ShowTooltip(SWidget* TargetWidget, const FText& Content);
 
 	/** Stop displaying the tooltip */
 	void HideTooltip(SWidget* TargetWidget);

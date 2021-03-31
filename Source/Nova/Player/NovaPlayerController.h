@@ -193,7 +193,10 @@ public:
 	bool IsMenuOnly() const;
 
 	/** Show a text notification on the screen */
-	void Notify(FText Text, ENovaNotificationType Type);
+	void Notify(const FText& Text, ENovaNotificationType Type);
+
+	/** Show a title on the screen */
+	void ShowTitle(const FText& Text);
 
 	/*----------------------------------------------------
 	    Input

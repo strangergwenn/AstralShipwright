@@ -2,6 +2,7 @@
 
 #include "NovaOverlay.h"
 #include "NovaMainMenu.h"
+#include "Nova/UI/Widget/NovaFadingWidget.h"
 #include "Nova/UI/Widget/NovaModalPanel.h"
 
 #include "Nova/Player/NovaMenuManager.h"
@@ -15,133 +16,124 @@
 #define LOCTEXT_NAMESPACE "SNovaOverlay"
 
 /*----------------------------------------------------
-    Constructor
+    Notification widget
 ----------------------------------------------------*/
 
-void SNovaOverlay::Construct(const FArguments& InArgs)
+class SNovaNotification
+	: public SNovaFadingWidget
+	, public FGCObject
 {
-	// Data
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	MenuManager                 = InArgs._MenuManager;
+public:
+	void Construct(const FArguments& InArgs)
+	{
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 
-	// Create material
-	auto DynamicBrush        = FNovaStyleSet::GetDynamicBrush("Notification/SB_NotificationIcon_Base");
-	NotificationIconBrush    = DynamicBrush.Key;
-	NotificationIconMaterial = DynamicBrush.Value;
+		// Create material
+		auto DynamicBrush        = FNovaStyleSet::GetDynamicBrush("Notification/SB_NotificationIcon_Base");
+		NotificationIconBrush    = DynamicBrush.Key;
+		NotificationIconMaterial = DynamicBrush.Value;
 
-	// clang-format off
-	ChildSlot
-	.VAlign(VAlign_Fill)
-	[
-		SNew(SOverlay)
+		// clang-format off
+		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments()
+			.FadeDuration(ENovaUIConstants::FadeDurationShort)
+			.DisplayDuration(5.0f)
+		);
 
-		// Notification box
-		+ SOverlay::Slot()
-		.VAlign(VAlign_Top)
-		.Padding(FMargin(0, 100))
+		ChildSlot
+		.VAlign(VAlign_Fill)
 		[
-			SNew(SBox)
-			.HeightOverride(Theme.NotificationDisplayHeight)
-			.Padding(0)
+			SNew(SOverlay)
+
+			// Notification box
+			+ SOverlay::Slot()
+			.VAlign(VAlign_Top)
+			.Padding(FMargin(0, 100))
 			[
-				SNew(SBorder)
-				.BorderImage(&Theme.MainMenuGenericBorder)
-				.ColorAndOpacity(this, &SNovaOverlay::GetColor)
-				.BorderBackgroundColor(this, &SNovaOverlay::GetBackgroundColor)
-				.Padding(FMargin(0, 1))
+				SNew(SBox)
+				.HeightOverride(Theme.NotificationDisplayHeight)
+				.Padding(0)
 				[
-					SNew(SBackgroundBlur)
-					.BlurRadius(Theme.BlurRadius)
-					.BlurStrength(Theme.BlurStrength)
-					.bApplyAlphaToBlur(true)
-					.Padding(0)
+					SNew(SBorder)
+					.BorderImage(&Theme.MainMenuGenericBorder)
+					.ColorAndOpacity(this, &SNovaFadingWidget::GetLinearColor)
+					.BorderBackgroundColor(this, &SNovaFadingWidget::GetSlateColor)
+					.Padding(FMargin(0, 1))
 					[
-						SNew(SBorder)
+						SNew(SBackgroundBlur)
+						.BlurRadius(Theme.BlurRadius)
+						.BlurStrength(Theme.BlurStrength)
+						.bApplyAlphaToBlur(true)
 						.Padding(0)
-						.BorderImage(&Theme.MainMenuGenericBackground)
-						.ColorAndOpacity(this, &SNovaOverlay::GetColor)
-						.BorderBackgroundColor(this, &SNovaOverlay::GetBackgroundColor)
-						.HAlign(HAlign_Center)
-						.VAlign(VAlign_Center)
 						[
-							SNew(STextBlock)
-							.Text(this, &SNovaOverlay::GetNotifyText)
-							.TextStyle(&Theme.SubtitleFont)
-							.ColorAndOpacity(this, &SNovaOverlay::GetTextColor)
+							SNew(SBorder)
+							.Padding(0)
+							.BorderImage(&Theme.MainMenuGenericBackground)
+							.ColorAndOpacity(this, &SNovaFadingWidget::GetLinearColor)
+							.BorderBackgroundColor(this, &SNovaFadingWidget::GetSlateColor)
+							.HAlign(HAlign_Center)
+							.VAlign(VAlign_Center)
+							[
+								SNew(STextBlock)
+								.Text(this, &SNovaNotification::GetNotifyText)
+								.TextStyle(&Theme.SubtitleFont)
+								.ColorAndOpacity(this, &SNovaNotification::GetTextColor)
+							]
 						]
 					]
 				]
 			]
-		]
 
-		// Notification icon
-		+ SOverlay::Slot()
-		.VAlign(VAlign_Top)
-		.Padding(FMargin(0, 75))
-		[
-			SNew(SHorizontalBox)
-
-			+ SHorizontalBox::Slot()
-			.AutoWidth()
+			// Notification icon
+			+ SOverlay::Slot()
+			.VAlign(VAlign_Top)
+			.Padding(FMargin(0, 75))
 			[
-				SNew(SImage)
-				.Image(NotificationIconBrush.Get())
-				.ColorAndOpacity(this, &SNovaOverlay::GetBackgroundColor)
+				SNew(SHorizontalBox)
+
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SImage)
+					.Image(NotificationIconBrush.Get())
+					.ColorAndOpacity(this, &SNovaFadingWidget::GetSlateColor)
+				]
 			]
-		]
-	];
-	// clang-format on
-
-	// Defaults
-	NotifyFadeDuration    = ENovaUIConstants::FadeDurationShort;
-	NotifyDisplayDuration = 5.0f;
-
-	// Initialization
-	CurrentNotifyAlpha       = 0;
-	CurrentNotifyFadeTime    = 0;
-	CurrentNotifyDisplayTime = NotifyDisplayDuration;
-	SetVisibility(EVisibility::HitTestInvisible);
-}
-
-/*----------------------------------------------------
-    Interaction
-----------------------------------------------------*/
-
-void SNovaOverlay::Notify(FText Text, ENovaNotificationType Type)
-{
-	NLOG("SNovaOverlayMenu::Notify : %s", *Text.ToString());
-
-	DesiredNotifyText = Text;
-	DesiredNotifyType = Type;
-
-	// Force update if we're past the original time
-	if (CurrentNotifyDisplayTime > NotifyDisplayDuration)
-	{
-		CurrentNotifyText = FText();
+		];
+		// clang-format on
 	}
-}
 
-void SNovaOverlay::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
-{
-	SCompoundWidget::Tick(AllottedGeometry, CurrentTime, DeltaTime);
-
-	// Update notification fade time
-	if (CurrentNotifyDisplayTime > NotifyDisplayDuration || DesiredNotifyText.ToString() != CurrentNotifyText.ToString())
+	virtual FString GetReferencerName() const override
 	{
-		CurrentNotifyFadeTime -= DeltaTime;
+		return FString("SNovaNotification");
 	}
-	else
-	{
-		CurrentNotifyFadeTime += DeltaTime;
-	}
-	CurrentNotifyFadeTime = FMath::Clamp(CurrentNotifyFadeTime, 0.0f, NotifyFadeDuration);
-	CurrentNotifyAlpha    = FMath::InterpEaseInOut(0.0f, 1.0f, CurrentNotifyFadeTime / NotifyFadeDuration, ENovaUIConstants::EaseStandard);
 
-	// Update notification text & icon when invisible
-	if (CurrentNotifyFadeTime <= 0 && CurrentNotifyText.ToString() != DesiredNotifyText.ToString())
+	virtual void AddReferencedObjects(FReferenceCollector& Collector) override
 	{
-		CurrentNotifyText        = DesiredNotifyText;
-		CurrentNotifyDisplayTime = 0;
+		Collector.AddReferencedObject(NotificationIconMaterial);
+	}
+
+	void Notify(const FText& Text, ENovaNotificationType Type)
+	{
+		NLOG("SNovaNotification::Notify : %s", *Text.ToString());
+
+		DesiredNotifyText = Text;
+		DesiredNotifyType = Type;
+
+		// Force update if we're past the original time
+		if (CurrentDisplayTime > DisplayDuration)
+		{
+			CurrentNotifyText = FText();
+		}
+	}
+
+	virtual bool IsDirty() const
+	{
+		return !CurrentNotifyText.EqualTo(DesiredNotifyText);
+	}
+
+	virtual void OnUpdate() override
+	{
+		CurrentNotifyText = DesiredNotifyText;
 
 		const FSlateBrush* TemplateNotificationBrush = nullptr;
 		if (DesiredNotifyType == ENovaNotificationType::Info)
@@ -167,44 +159,135 @@ void SNovaOverlay::Tick(const FGeometry& AllottedGeometry, const double CurrentT
 			NotificationIconMaterial->SetTextureParameterValue("MonitorTexture", IconTexture);
 		}
 	}
-	else
+
+	FText GetNotifyText() const
 	{
-		CurrentNotifyDisplayTime += DeltaTime;
+		return CurrentNotifyText;
 	}
-}
+
+	FSlateColor GetTextColor() const
+	{
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+		return SNovaFadingWidget::GetTextColor(Theme.SubtitleFont);
+	}
+
+private:
+	// Notification icon
+	TSharedPtr<FSlateBrush>         NotificationIconBrush;
+	class UMaterialInstanceDynamic* NotificationIconMaterial;
+
+	// Notification state
+	FText                 DesiredNotifyText;
+	ENovaNotificationType DesiredNotifyType;
+	FText                 CurrentNotifyText;
+};
 
 /*----------------------------------------------------
-    Content callbacks
+    Title card widget
 ----------------------------------------------------*/
 
-FText SNovaOverlay::GetNotifyText() const
+class SNovaTitleCard : public SNovaFadingWidget
 {
-	return CurrentNotifyText;
-}
+public:
+	void Construct(const FArguments& InArgs)
+	{
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 
-FLinearColor SNovaOverlay::GetColor() const
-{
-	// Hack for proper smoothing of background blur
-	return FLinearColor(1.0f, 1.0f, 1.0f, CurrentNotifyAlpha > 0.1f ? CurrentNotifyAlpha : 0.0f);
-}
+		// clang-format off
+		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments()
+			.FadeDuration(ENovaUIConstants::FadeDurationLong)
+			.DisplayDuration(5.0f)
+		);
 
-FSlateColor SNovaOverlay::GetBackgroundColor() const
-{
-	return GetColor();
-}
+		ChildSlot
+		[
+			SNew(SBox)
+			.HAlign(HAlign_Center)
+			.VAlign(VAlign_Center)
+			[
+				SNew(STextBlock)
+				.Text(this, &SNovaTitleCard::GetText)
+				.TextStyle(&Theme.TitleFont)
+				.ColorAndOpacity(this, &SNovaTitleCard::GetTextColor)
+				.WrapTextAt(2000)
+				.Justification(ETextJustify::Center)
+			]
+		];
+		// clang-format on
+	}
 
-FSlateColor SNovaOverlay::GetTextColor() const
+	virtual bool IsDirty() const
+	{
+		return !CurrentText.EqualTo(DesiredText);
+	}
+
+	virtual void OnUpdate() override
+	{
+		CurrentText = DesiredText;
+	}
+
+	FText GetText() const
+	{
+		return CurrentText.ToUpper();
+	}
+
+	FSlateColor GetTextColor() const
+	{
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+		return SNovaFadingWidget::GetTextColor(Theme.TitleFont);
+	}
+
+	void ShowTitle(const FText& Text)
+	{
+		DesiredText = Text;
+	}
+
+private:
+	// Title state
+	FText DesiredText;
+	FText CurrentText;
+};
+
+/*----------------------------------------------------
+    Overlay implementation
+----------------------------------------------------*/
+
+void SNovaOverlay::Construct(const FArguments& InArgs)
 {
+	// Data
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	MenuManager                 = InArgs._MenuManager;
 
-	FLinearColor Color = Theme.SubtitleFont.ColorAndOpacity.GetSpecifiedColor();
-	Color.A *= CurrentNotifyAlpha;
+	// clang-format off
+	ChildSlot
+	.VAlign(VAlign_Fill)
+	[
+		SNew(SOverlay)
 
-	return Color;
+		+ SOverlay::Slot()
+		[
+			SAssignNew(Notification, SNovaNotification)
+		]
+
+		+ SOverlay::Slot()
+		[
+			SAssignNew(TitleCard, SNovaTitleCard)
+		]
+	];
+	// clang-format on
+
+	// Initialization
+	SetVisibility(EVisibility::HitTestInvisible);
 }
 
-/*----------------------------------------------------
-    Callbacks
-----------------------------------------------------*/
+void SNovaOverlay::Notify(const FText& Text, ENovaNotificationType Type)
+{
+	Notification->Notify(Text, Type);
+}
+
+void SNovaOverlay::ShowTitle(const FText& Text)
+{
+	TitleCard->ShowTitle(Text);
+}
 
 #undef LOCTEXT_NAMESPACE

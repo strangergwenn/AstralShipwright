@@ -7,9 +7,7 @@
 #include "Nova/Game/NovaGameTypes.h"
 #include "Widgets/SCompoundWidget.h"
 
-class SNovaOverlay
-	: public SCompoundWidget
-	, public FGCObject
+class SNovaOverlay : public SCompoundWidget
 {
 	/*----------------------------------------------------
 	    Slate arguments
@@ -30,38 +28,11 @@ public:
 	----------------------------------------------------*/
 
 	/** Show a text notification on the screen */
-	void Notify(FText Text, ENovaNotificationType Type);
+	void Notify(const FText& Text, ENovaNotificationType Type);
 
-	virtual FString GetReferencerName() const override
-	{
-		return FString("SNovaOverlay");
-	}
+	/** Show a title on the screen */
+	void ShowTitle(const FText& Text);
 
-	virtual void AddReferencedObjects(FReferenceCollector& Collector) override
-	{
-		Collector.AddReferencedObject(NotificationIconMaterial);
-	}
-
-	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
-
-	/*----------------------------------------------------
-	    Content callbacks
-	----------------------------------------------------*/
-
-protected:
-	FText GetNotifyText() const;
-
-	FLinearColor GetColor() const;
-
-	FSlateColor GetBackgroundColor() const;
-
-	FSlateColor GetTextColor() const;
-
-	/*----------------------------------------------------
-	    Callbacks
-	----------------------------------------------------*/
-
-protected:
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
@@ -70,19 +41,7 @@ protected:
 	// Menu reference
 	TWeakObjectPtr<class UNovaMenuManager> MenuManager;
 
-	// Notification icon
-	TSharedPtr<FSlateBrush>         NotificationIconBrush;
-	class UMaterialInstanceDynamic* NotificationIconMaterial;
-
-	// Settings
-	float NotifyFadeDuration;
-	float NotifyDisplayDuration;
-
-	// Notification state
-	FText                 DesiredNotifyText;
-	ENovaNotificationType DesiredNotifyType;
-	FText                 CurrentNotifyText;
-	float                 CurrentNotifyFadeTime;
-	float                 CurrentNotifyDisplayTime;
-	float                 CurrentNotifyAlpha;
+	// Widgets
+	TSharedPtr<class SNovaNotification> Notification;
+	TSharedPtr<class SNovaTitleCard>    TitleCard;
 };
