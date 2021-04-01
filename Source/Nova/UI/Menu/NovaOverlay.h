@@ -31,7 +31,7 @@ public:
 	void Notify(const FText& Text, ENovaNotificationType Type);
 
 	/** Show a title on the screen */
-	void ShowTitle(const FText& Text);
+	void ShowTitle(const FText& Title, const FText& Subtitle);
 
 	/*----------------------------------------------------
 	    Data

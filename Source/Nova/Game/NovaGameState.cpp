@@ -13,18 +13,25 @@
 #include "Net/UnrealNetwork.h"
 #include "EngineUtils.h"
 
+#define LOCTEXT_NAMESPACE "ANovaGameState"
+
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
 ANovaGameState::ANovaGameState()
 	: Super()
+
 	, CurrentArea(nullptr)
 	, ServerTime(0)
 	, ServerTimeDilation(ENovaTimeDilation::Normal)
+
 	, ClientTime(0)
 	, ClientAdditionalTimeDilation(0)
 	, IsFastForward(false)
+
+	, TimeSinceTransition(0)
+	, LastTransitionArea(nullptr)
 {
 	// Setup simulation component
 	OrbitalSimulationComponent = CreateDefaultSubobject<UNovaOrbitalSimulationComponent>(TEXT("OrbitalSimulationComponent"));
@@ -129,6 +136,31 @@ void ANovaGameState::SetCurrentArea(const UNovaArea* Area, bool Docked)
 FName ANovaGameState::GetCurrentLevelName() const
 {
 	return CurrentArea ? CurrentArea->LevelName : NAME_None;
+}
+
+TPair<FText, FText> ANovaGameState::OnSharedTransition()
+{
+	FText PrimaryText, SecondaryText;
+
+	// Handle area changes as the primary information
+	if (LastTransitionArea && CurrentArea != LastTransitionArea)
+	{
+		PrimaryText = FText::FormatNamed(LOCTEXT("SharedTransitionAreaFormat", "{area}"), TEXT("area"), CurrentArea->Name);
+	}
+
+	// Handle time skips as the secondary information
+	if (TimeSinceTransition > 2)
+	{
+		FText& Text = PrimaryText.IsEmpty() ? PrimaryText : SecondaryText;
+
+		Text = FText::FormatNamed(
+			LOCTEXT("SharedTransitionTimeFormat", "{duration} have passed"), TEXT("duration"), GetDurationText(TimeSinceTransition, 1));
+	}
+
+	TimeSinceTransition = 0;
+	LastTransitionArea  = CurrentArea;
+
+	return TPair<FText, FText>(PrimaryText, SecondaryText);
 }
 
 /*----------------------------------------------------
@@ -282,6 +314,7 @@ bool ANovaGameState::ProcessTime(double DeltaTimeMinutes)
 	{
 		ClientTime += DilatedDeltaTime * ClientAdditionalTimeDilation;
 	}
+	TimeSinceTransition += DilatedDeltaTime;
 
 	return ContinueProcessing;
 }
@@ -332,3 +365,5 @@ void ANovaGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME(ANovaGameState, ServerTime);
 	DOREPLIFETIME(ANovaGameState, ServerTimeDilation);
 }
+
+#undef LOCTEXT_NAMESPACE

@@ -108,6 +108,9 @@ public:
 	/** Get the current sub-level name to use */
 	FName GetCurrentLevelName() const;
 
+	/** Signal a shared transition and get optional title text to show */
+	TPair<FText, FText> OnSharedTransition();
+
 	/** Whether spacecraft at this area should start docked */
 	bool ShouldStartDocked() const
 	{
@@ -259,11 +262,17 @@ private:
 	UPROPERTY(Replicated)
 	ENovaTimeDilation ServerTimeDilation;
 
-	// Local state
+	// General state
 	bool                           StartDocked;
 	const class ANovaPlayerState*  CurrentPlayerState;
-	double                         ClientTime;
-	double                         ClientAdditionalTimeDilation;
-	bool                           IsFastForward;
 	TArray<const class UNovaArea*> Areas;
+
+	// Time processing state
+	double ClientTime;
+	double ClientAdditionalTimeDilation;
+	bool   IsFastForward;
+
+	// Shared transition state
+	double                 TimeSinceTransition;
+	const class UNovaArea* LastTransitionArea;
 };

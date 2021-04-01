@@ -205,12 +205,29 @@ public:
 			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Center)
 			[
-				SNew(STextBlock)
-				.Text(this, &SNovaTitleCard::GetText)
-				.TextStyle(&Theme.TitleFont)
-				.ColorAndOpacity(this, &SNovaTitleCard::GetTextColor)
-				.WrapTextAt(2000)
-				.Justification(ETextJustify::Center)
+				SNew(SVerticalBox)
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Text(this, &SNovaTitleCard::GetTitleText)
+					.TextStyle(&Theme.TitleFont)
+					.ColorAndOpacity(this, &SNovaTitleCard::GetTitleColor)
+					.WrapTextAt(2000)
+					.Justification(ETextJustify::Center)
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Text(this, &SNovaTitleCard::GetSubtitleText)
+					.TextStyle(&Theme.SubtitleFont)
+					.ColorAndOpacity(this, &SNovaTitleCard::GetSubtitleColor)
+					.WrapTextAt(2000)
+					.Justification(ETextJustify::Center)
+				]
 			]
 		];
 		// clang-format on
@@ -218,34 +235,49 @@ public:
 
 	virtual bool IsDirty() const
 	{
-		return !CurrentText.EqualTo(DesiredText);
+		return !CurrentTitle.EqualTo(DesiredTitle) || !CurrentSubtitle.EqualTo(DesiredSubtitle);
 	}
 
 	virtual void OnUpdate() override
 	{
-		CurrentText = DesiredText;
+		CurrentTitle    = DesiredTitle;
+		CurrentSubtitle = DesiredSubtitle;
 	}
 
-	FText GetText() const
+	FText GetTitleText() const
 	{
-		return CurrentText.ToUpper();
+		return CurrentTitle.ToUpper();
 	}
 
-	FSlateColor GetTextColor() const
+	FText GetSubtitleText() const
+	{
+		return CurrentSubtitle.ToUpper();
+	}
+
+	FSlateColor GetTitleColor() const
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 		return SNovaFadingWidget::GetTextColor(Theme.TitleFont);
 	}
 
-	void ShowTitle(const FText& Text)
+	FSlateColor GetSubtitleColor() const
 	{
-		DesiredText = Text;
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+		return SNovaFadingWidget::GetTextColor(Theme.SubtitleFont);
+	}
+
+	void ShowTitle(const FText& Title, const FText& Subtitle)
+	{
+		DesiredTitle    = Title;
+		DesiredSubtitle = Subtitle;
 	}
 
 private:
 	// Title state
-	FText DesiredText;
-	FText CurrentText;
+	FText DesiredTitle;
+	FText DesiredSubtitle;
+	FText CurrentTitle;
+	FText CurrentSubtitle;
 };
 
 /*----------------------------------------------------
@@ -285,9 +317,9 @@ void SNovaOverlay::Notify(const FText& Text, ENovaNotificationType Type)
 	Notification->Notify(Text, Type);
 }
 
-void SNovaOverlay::ShowTitle(const FText& Text)
+void SNovaOverlay::ShowTitle(const FText& Title, const FText& Subtitle)
 {
-	TitleCard->ShowTitle(Text);
+	TitleCard->ShowTitle(Title, Subtitle);
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -459,6 +459,9 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 			}
 		});
 
+	// TODO : ENovaPlayerCameraState::FastForward is not actually handled, need a black overlay widget
+	// It will produce a few visible frames between the two FF transitions
+
 	// Run the process
 	switch (NewCameraState)
 	{
@@ -480,6 +483,12 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 void ANovaPlayerController::ClientStopSharedTransition_Implementation()
 {
 	NLOG("ANovaPlayerController::ClientStopSharedTransition_Implementation");
+
+	TPair<FText, FText> TitleTexts = GetWorld()->GetGameState<ANovaGameState>()->OnSharedTransition();
+	if (!TitleTexts.Key.IsEmpty())
+	{
+		ShowTitle(TitleTexts.Key, TitleTexts.Value);
+	}
 
 	SharedTransitionActive = false;
 }
@@ -719,9 +728,9 @@ void ANovaPlayerController::Notify(const FText& Text, ENovaNotificationType Type
 	GetMenuManager()->GetOverlay()->Notify(Text, Type);
 }
 
-void ANovaPlayerController::ShowTitle(const FText& Text)
+void ANovaPlayerController::ShowTitle(const FText& Title, const FText& Subtitle)
 {
-	GetMenuManager()->GetOverlay()->ShowTitle(Text);
+	GetMenuManager()->GetOverlay()->ShowTitle(Title, Subtitle);
 }
 
 /*----------------------------------------------------
