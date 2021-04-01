@@ -45,7 +45,7 @@
 
 ANovaPlayerViewpoint::ANovaPlayerViewpoint() : Super()
 {
-	RootComponent = CreateDefaultSubobject<USceneComponent>("Root");
+	RootComponent = CreateDefaultSubobject<UCameraComponent>("Root");
 }
 
 ANovaPlayerController::ANovaPlayerController()
