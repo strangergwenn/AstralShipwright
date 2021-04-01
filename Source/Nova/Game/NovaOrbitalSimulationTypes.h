@@ -305,15 +305,8 @@ struct FNovaTrajectory
 	/** Get the start time of the next maneuver */
 	double GetNextManeuverStartTime(double CurrentTime) const
 	{
-		for (const FNovaManeuver& Maneuver : Maneuvers)
-		{
-			if (Maneuver.Time > CurrentTime)
-			{
-				return Maneuver.Time;
-			}
-		}
-
-		return 0;
+		const FNovaManeuver* Maneuver = GetNextManeuver(CurrentTime);
+		return Maneuver ? Maneuver->Time : 0;
 	}
 
 	/** Get the arrival time */
@@ -341,6 +334,34 @@ struct FNovaTrajectory
 
 	/** Get the current location in orbit */
 	FNovaOrbitalLocation GetCurrentLocation(double CurrentTime) const;
+
+	/** Get the current maneuver */
+	const FNovaManeuver* GetCurrentManeuver(double CurrentTime) const
+	{
+		for (const FNovaManeuver& Maneuver : Maneuvers)
+		{
+			if (Maneuver.Time <= CurrentTime && CurrentTime <= Maneuver.Time + Maneuver.Duration)
+			{
+				return &Maneuver;
+			}
+		}
+
+		return nullptr;
+	}
+
+	/** Get the next maneuver */
+	const FNovaManeuver* GetNextManeuver(double CurrentTime) const
+	{
+		for (const FNovaManeuver& Maneuver : Maneuvers)
+		{
+			if (Maneuver.Time > CurrentTime)
+			{
+				return &Maneuver;
+			}
+		}
+
+		return nullptr;
+	}
 
 	/** Get the orbits that a maneuver is going from and to */
 	TArray<FNovaOrbit> GetRelevantOrbitsForManeuver(const FNovaManeuver& Maneuver) const;

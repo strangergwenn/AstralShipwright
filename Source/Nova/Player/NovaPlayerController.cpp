@@ -344,6 +344,7 @@ void ANovaPlayerController::Dock()
 	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda(
 		[=]()
 		{
+			CameraState = ENovaPlayerCameraState::CinematicSpacecraft;
 			GetSpacecraftPawn()->GetSpacecraftMovement()->Dock(EndCutscene);
 		});
 
@@ -367,6 +368,7 @@ void ANovaPlayerController::Undock()
 	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda(
 		[=]()
 		{
+			CameraState = ENovaPlayerCameraState::CinematicSpacecraft;
 			GetSpacecraftPawn()->GetSpacecraftMovement()->Undock(EndCutscene);
 		});
 

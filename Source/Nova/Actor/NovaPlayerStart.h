@@ -14,11 +14,51 @@ class ANovaPlayerStart : public APlayerStart
 	GENERATED_BODY()
 
 public:
-	ANovaPlayerStart(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+	ANovaPlayerStart(const FObjectInitializer& ObjectInitializer);
+
+	/*----------------------------------------------------
+	    Public methods
+	----------------------------------------------------*/
+public:
+#if WITH_EDITOR
+
+	virtual void Tick(float DeltaTime) override;
+
+	virtual bool ShouldTickIfViewportsOnly() const override
 	{
-		// Defaults
-		IsInSpace = false;
+		return true;
 	}
+
+#endif
+
+	/** Get the world location of the dock waiting point */
+	FVector GetWaitingPointLocation() const
+	{
+		return WaitingPoint->GetComponentLocation();
+	}
+
+	/** Get the world location of the area enter point */
+	FVector GetEnterPointLocation(bool PositiveDeltaV) const
+	{
+		const FVector Offset = (PositiveDeltaV ? -1 : 1) * FVector(0, 100000, 0);
+		return WaitingPoint->GetComponentLocation() + Offset;
+	}
+
+	/** Get the world location of the area exit point */
+	FVector GetExitPointLocation(bool PositiveDeltaV) const
+	{
+		const FVector Offset = (PositiveDeltaV ? -1 : 1) * FVector(0, -100000, 0);
+		return WaitingPoint->GetComponentLocation() + Offset;
+	}
+
+	/*----------------------------------------------------
+	    Components
+	----------------------------------------------------*/
+
+protected:
+	// Waiting point for spacecraft that just left dock or is waiting for docking
+	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
+	USceneComponent* WaitingPoint;
 
 	/*----------------------------------------------------
 	    Properties
