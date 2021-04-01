@@ -18,7 +18,7 @@
 
 // Cutscene timing values in seconds
 constexpr float DepartureCutsceneDelay    = 5.0;
-constexpr float DepartureCutsceneDuration = 5.0;
+constexpr float DepartureCutsceneDuration = 10.0;
 constexpr float AreaIntroductionDuration  = 5.0;
 constexpr float ArrivalCutsceneDuration   = 10.0;
 

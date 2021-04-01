@@ -85,4 +85,8 @@ public:
 	// Initial phase on the orbit in degrees
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Phase;
+
+	// Whether to prevent spacecraft from moving in this space
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	bool DisableSpacecraftMovement;
 };

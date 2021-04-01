@@ -16,8 +16,7 @@ enum class ENovaMovementState : uint8
 	Docked,
 	Undocking,
 	Docking,
-	LeavingArea,
-	Stopping,
+	Stopping
 };
 
 /** Initialization parameters */
@@ -118,9 +117,6 @@ public:
 
 	/** Undock from the current dock */
 	void Undock(FSimpleDelegate Callback = FSimpleDelegate());
-
-	/** Leave the area */
-	void LeaveArea(FSimpleDelegate Callback = FSimpleDelegate());
 
 	/** Stop right there with no particular target */
 	void Stop(FSimpleDelegate Callback = FSimpleDelegate());
@@ -286,11 +282,6 @@ public:
 		return AttitudeCommand.MainDriveEnabled && AngularAttitudeDistance < VectoringAngle;
 	}
 
-	inline const FVector GetLocation(const FVector& Offset = FVector::ZeroVector) const
-	{
-		return UpdatedComponent->GetComponentLocation() + Offset * 100;
-	}
-
 	inline bool IsMaxVelocity() const
 	{
 		return CurrentLinearVelocity.Size() >= MaxLinearVelocity;
@@ -318,7 +309,7 @@ public:
 
 	inline const float GetMainDriveAcceleration() const
 	{
-		return IsMainDriveRunning() ? CurrentLinearVelocity.Size() : 0;
+		return IsMainDriveRunning() ? LinearMainAcceleration : 0;
 	}
 
 	inline ENetRole GetLocalRole() const

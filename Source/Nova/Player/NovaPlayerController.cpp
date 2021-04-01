@@ -110,7 +110,7 @@ ANovaPlayerController::ANovaPlayerController()
 
 	// Defaults
 	ChaseCamBaseDistance         = 5000;
-	ChaseCamAccelerationDistance = 5000;
+	ChaseCamAccelerationDistance = 50;
 }
 
 /*----------------------------------------------------
@@ -337,6 +337,7 @@ void ANovaPlayerController::Dock()
 			GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda(
 				[=]()
 				{
+					CameraState = ENovaPlayerCameraState::Default;
 					GetSpacecraftPawn()->ResetView();
 				}));
 		});
@@ -361,6 +362,7 @@ void ANovaPlayerController::Undock()
 			GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda(
 				[=]()
 				{
+					CameraState = ENovaPlayerCameraState::Default;
 					GetSpacecraftPawn()->ResetView();
 				}));
 		});

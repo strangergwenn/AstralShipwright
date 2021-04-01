@@ -40,14 +40,14 @@ public:
 	/** Get the world location of the area enter point */
 	FVector GetEnterPointLocation(bool PositiveDeltaV) const
 	{
-		const FVector Offset = (PositiveDeltaV ? -1 : 1) * FVector(0, 100000, 0);
+		const FVector Offset = (PositiveDeltaV ? -1 : 1) * FVector(0, 1000000, 0);
 		return WaitingPoint->GetComponentLocation() + Offset;
 	}
 
 	/** Get the world location of the area exit point */
 	FVector GetExitPointLocation(bool PositiveDeltaV) const
 	{
-		const FVector Offset = (PositiveDeltaV ? -1 : 1) * FVector(0, -100000, 0);
+		const FVector Offset = (PositiveDeltaV ? -1 : 1) * FVector(0, -1000000, 0);
 		return WaitingPoint->GetComponentLocation() + Offset;
 	}
 
