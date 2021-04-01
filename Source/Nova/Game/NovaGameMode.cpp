@@ -7,7 +7,6 @@
 #include "NovaGameInstance.h"
 #include "NovaGameModeStates.h"
 #include "NovaGameState.h"
-#include "NovaGameWorld.h"
 #include "NovaOrbitalSimulationComponent.h"
 #include "NovaWorldSettings.h"
 
@@ -52,15 +51,6 @@ void ANovaGameMode::InitGameState()
 {
 	NLOG("ANovaGameMode::InitGameState");
 	Super::InitGameState();
-
-	// Spawn the game world
-	UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
-	if (GameInstance)
-	{
-		ANovaGameWorld* GameWorld = GetWorld()->SpawnActor<ANovaGameWorld>();
-		NCHECK(IsValid(GameInstance));
-		GetGameState<ANovaGameState>()->SetGameWorld(GameWorld);
-	}
 }
 
 void ANovaGameMode::StartPlay()
@@ -73,9 +63,9 @@ void ANovaGameMode::StartPlay()
 	NCHECK(GameInstance);
 	if (GameInstance->HasSave())
 	{
-		ANovaGameWorld* GameWorld = GetGameState<ANovaGameState>()->GetGameWorld();
-		NCHECK(IsValid(GameInstance));
-		GameWorld->Load(GameInstance->GetWorldSave());
+		ANovaGameState* NovaGameState = GetGameState<ANovaGameState>();
+		NCHECK(IsValid(NovaGameState));
+		NovaGameState->Load(GameInstance->GetWorldSave());
 	}
 
 	// TODO : this should be dependent on save data
@@ -172,13 +162,13 @@ void ANovaGameMode::FastForward()
 
 bool ANovaGameMode::CanFastForward() const
 {
-	const ANovaGameWorld* GameWorld = GetGameState<ANovaGameState>()->GetGameWorld();
-	NCHECK(IsValid(GameWorld));
+	const ANovaGameState* Nova = GetGameState<ANovaGameState>();
+	NCHECK(IsValid(Nova));
 
 	return (CurrentStateIdentifier == ENovaGameStateIdentifier::Area || CurrentStateIdentifier == ENovaGameStateIdentifier::ArrivalCoast ||
 			   CurrentStateIdentifier == ENovaGameStateIdentifier::Orbit ||
 			   CurrentStateIdentifier == ENovaGameStateIdentifier::DepartureCoast) &&
-		   GameWorld->CanFastForward();
+		   Nova->CanFastForward();
 }
 
 void ANovaGameMode::ChangeArea(const UNovaArea* Area)
@@ -221,15 +211,15 @@ void ANovaGameMode::InitializeStateMachine()
 	// Fetch data
 	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
 	NCHECK(IsValid(PC) && PC->IsLocalController());
-	ANovaGameWorld* GameWorld = GetGameState<ANovaGameState>()->GetGameWorld();
-	NCHECK(IsValid(GameWorld));
-	UNovaOrbitalSimulationComponent* OrbitalSimulationComponent = GameWorld->GetOrbitalSimulation();
+	ANovaGameState* NovaGameState = GetGameState<ANovaGameState>();
+	NCHECK(IsValid(NovaGameState));
+	UNovaOrbitalSimulationComponent* OrbitalSimulationComponent = NovaGameState->GetOrbitalSimulation();
 	NCHECK(IsValid(OrbitalSimulationComponent));
 
 	// State initializer
-	auto AddState = [&](ENovaGameStateIdentifier Identifier, TSharedPtr<FNovaGameState> State, const FString& Name)
+	auto AddState = [&](ENovaGameStateIdentifier Identifier, TSharedPtr<FNovaGameModeState> State, const FString& Name)
 	{
-		State->Initialize(Name, PC, this, GameWorld, OrbitalSimulationComponent);
+		State->Initialize(Name, PC, this, GetGameState<ANovaGameState>(), OrbitalSimulationComponent);
 		StateMap.Add(Identifier, State);
 	};
 
@@ -252,7 +242,7 @@ void ANovaGameMode::ProcessStateMachine()
 	if (!PC->IsInSharedTransition())
 	{
 		// Process the current state
-		TSharedPtr<FNovaGameState> State = StateMap[CurrentStateIdentifier];
+		TSharedPtr<FNovaGameModeState> State = StateMap[CurrentStateIdentifier];
 		NCHECK(State.IsValid());
 		ENovaGameStateIdentifier NewStateIdentifier = State->UpdateState();
 
@@ -268,15 +258,13 @@ void ANovaGameMode::ProcessStateMachine()
 			NLOG("ANovaGameMode::ProcessStateMachine : changing state from %d to %d", CurrentStateIdentifier, NewStateIdentifier);
 
 			// Stop tile dilation
-			ANovaGameWorld* GameWorld = GetGameState<ANovaGameState>()->GetGameWorld();
-			NCHECK(IsValid(GameWorld));
-			GameWorld->SetTimeDilation(ENovaTimeDilation::Normal);
+			GetGameState<ANovaGameState>()->SetTimeDilation(ENovaTimeDilation::Normal);
 
 			// Leave the current state
 			State->LeaveState(CurrentStateIdentifier);
 
 			// Enter the new state
-			TSharedPtr<FNovaGameState> NewState = StateMap[NewStateIdentifier];
+			TSharedPtr<FNovaGameModeState> NewState = StateMap[NewStateIdentifier];
 			NCHECK(NewState.IsValid());
 			NewState->EnterState(CurrentStateIdentifier);
 

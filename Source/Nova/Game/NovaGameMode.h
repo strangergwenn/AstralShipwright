@@ -111,9 +111,9 @@ public:
 
 private:
 	// Game state
-	ENovaGameStateIdentifier                                         DesiredStateIdentifier;
-	ENovaGameStateIdentifier                                         CurrentStateIdentifier;
-	TMap<ENovaGameStateIdentifier, TSharedPtr<class FNovaGameState>> StateMap;
+	ENovaGameStateIdentifier                                             DesiredStateIdentifier;
+	ENovaGameStateIdentifier                                             CurrentStateIdentifier;
+	TMap<ENovaGameStateIdentifier, TSharedPtr<class FNovaGameModeState>> StateMap;
 
 	// Level streaming state
 	int32           CurrentStreamingLevelIndex;

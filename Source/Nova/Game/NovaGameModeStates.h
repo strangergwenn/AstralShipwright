@@ -1,9 +1,9 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaGameMode.h"
+#include "NovaGameState.h"
 
 #include "NovaArea.h"
-#include "NovaGameWorld.h"
 #include "NovaOrbitalSimulationComponent.h"
 
 #include "Nova/Player/NovaPlayerController.h"
@@ -27,43 +27,43 @@ constexpr float ArrivalCutsceneDuration   = 10.0;
 ----------------------------------------------------*/
 
 /** Game state */
-class FNovaGameState
+class FNovaGameModeState
 {
 public:
-	FNovaGameState() : PC(nullptr), GameWorld(nullptr), OrbitalSimulationComponent(nullptr)
+	FNovaGameModeState() : PC(nullptr), GameState(nullptr), OrbitalSimulationComponent(nullptr)
 	{}
 
-	virtual ~FNovaGameState()
+	virtual ~FNovaGameModeState()
 	{}
 
 	/** Set the required work data */
-	void Initialize(const FString& Name, class ANovaPlayerController* P, class ANovaGameMode* GM, class ANovaGameWorld* GW,
+	void Initialize(const FString& Name, class ANovaPlayerController* P, class ANovaGameMode* GM, class ANovaGameState* GW,
 		class UNovaOrbitalSimulationComponent* OSC)
 	{
 		StateName                  = Name;
 		PC                         = P;
 		GameMode                   = GM;
-		GameWorld                  = GW;
+		GameState                  = GW;
 		OrbitalSimulationComponent = OSC;
 	}
 
 	/** Get the time spent in this state in minutes */
 	double GetMinutesInState() const
 	{
-		return GameWorld->GetCurrentTime() - StateStartTime;
+		return GameState->GetCurrentTime() - StateStartTime;
 	}
 
 	/** Get the time spent in this state in seconds */
 	double GetSecondsInState() const
 	{
-		return (GameWorld->GetCurrentTime() - StateStartTime) * 60.0;
+		return (GameState->GetCurrentTime() - StateStartTime) * 60.0;
 	}
 
 	/** Enter this state from a previous one */
 	virtual void EnterState(ENovaGameStateIdentifier PreviousStateIdentifier)
 	{
 		NLOG("FNovaGameState::EnterState : entering state '%s'", *StateName);
-		StateStartTime = GameWorld->GetCurrentTime();
+		StateStartTime = GameState->GetCurrentTime();
 	}
 
 	/** Run the state and return the desired current state */
@@ -84,7 +84,7 @@ protected:
 	// Outer objects
 	class ANovaPlayerController*           PC;
 	class ANovaGameMode*                   GameMode;
-	class ANovaGameWorld*                  GameWorld;
+	class ANovaGameState*                  GameState;
 	class UNovaOrbitalSimulationComponent* OrbitalSimulationComponent;
 };
 
@@ -93,24 +93,24 @@ protected:
 ----------------------------------------------------*/
 
 // Area state : operating locally within an area
-class FNovaAreaState : public FNovaGameState
+class FNovaAreaState : public FNovaGameModeState
 {
 public:
 	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
 	{
-		FNovaGameState::EnterState(PreviousState);
+		FNovaGameModeState::EnterState(PreviousState);
 
 		PC->SharedTransition(ENovaPlayerCameraState::Default);
 	}
 
 	virtual ENovaGameStateIdentifier UpdateState() override
 	{
-		FNovaGameState::UpdateState();
+		FNovaGameModeState::UpdateState();
 
 		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
 
 		if (PlayerTrajectory &&
-			PlayerTrajectory->GetFirstManeuverStartTime() <= GameWorld->GetCurrentTime() + DepartureCutsceneDelay / 60.0)
+			PlayerTrajectory->GetFirstManeuverStartTime() <= GameState->GetCurrentTime() + DepartureCutsceneDelay / 60.0)
 		{
 			return ENovaGameStateIdentifier::DepartureProximity;
 		}
@@ -122,12 +122,12 @@ public:
 };
 
 // Orbit state : operating locally in empty space
-class FNovaOrbitState : public FNovaGameState
+class FNovaOrbitState : public FNovaGameModeState
 {
 public:
 	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
 	{
-		FNovaGameState::EnterState(PreviousState);
+		FNovaGameModeState::EnterState(PreviousState);
 
 		PC->SharedTransition(ENovaPlayerCameraState::Default,    //
 			FNovaAsyncAction::CreateLambda(
@@ -139,7 +139,7 @@ public:
 
 	virtual ENovaGameStateIdentifier UpdateState() override
 	{
-		FNovaGameState::UpdateState();
+		FNovaGameModeState::UpdateState();
 
 		if (OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver() <= 0 && OrbitalSimulationComponent->IsPlayerNearingLastManeuver())
 		{
@@ -153,26 +153,26 @@ public:
 };
 
 // Fast forward state : screen is blacked out, exit state depends on orbital simulation
-class FNovaFastForwardState : public FNovaGameState
+class FNovaFastForwardState : public FNovaGameModeState
 {
 public:
 	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
 	{
-		FNovaGameState::EnterState(PreviousState);
+		FNovaGameModeState::EnterState(PreviousState);
 
 		PC->SharedTransition(ENovaPlayerCameraState::FastForward,    //
 			FNovaAsyncAction::CreateLambda(
 				[&]()
 				{
-					GameWorld->FastForward();
+					GameState->FastForward();
 				}));
 	}
 
 	virtual ENovaGameStateIdentifier UpdateState() override
 	{
-		FNovaGameState::UpdateState();
+		FNovaGameModeState::UpdateState();
 
-		if (GameWorld->IsInFastForward())
+		if (GameState->IsInFastForward())
 		{
 			return ENovaGameStateIdentifier::FastForward;
 		}
@@ -199,19 +199,19 @@ public:
 ----------------------------------------------------*/
 
 // Departure stage 1 : cutscene focused on spacecraft
-class FNovaDepartureProximityState : public FNovaGameState
+class FNovaDepartureProximityState : public FNovaGameModeState
 {
 public:
 	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
 	{
-		FNovaGameState::EnterState(PreviousState);
+		FNovaGameModeState::EnterState(PreviousState);
 
 		PC->SharedTransition(ENovaPlayerCameraState::CinematicSpacecraft);
 	}
 
 	virtual ENovaGameStateIdentifier UpdateState() override
 	{
-		FNovaGameState::UpdateState();
+		FNovaGameModeState::UpdateState();
 
 		if (GetSecondsInState() > DepartureCutsceneDuration)
 		{
@@ -225,12 +225,12 @@ public:
 };
 
 // Departure stage 2 : chase cam until fast forward or arrival
-class FNovaDepartureCoastState : public FNovaGameState
+class FNovaDepartureCoastState : public FNovaGameModeState
 {
 public:
 	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
 	{
-		FNovaGameState::EnterState(PreviousState);
+		FNovaGameModeState::EnterState(PreviousState);
 
 		PC->SharedTransition(ENovaPlayerCameraState::Chase,    //
 			FNovaAsyncAction::CreateLambda(
@@ -242,7 +242,7 @@ public:
 
 	virtual ENovaGameStateIdentifier UpdateState() override
 	{
-		FNovaGameState::UpdateState();
+		FNovaGameModeState::UpdateState();
 
 		if (OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver() <= 0 && OrbitalSimulationComponent->IsPlayerNearingLastManeuver())
 		{
@@ -260,12 +260,12 @@ public:
 ----------------------------------------------------*/
 
 // Arrival stage 1 : level loading and introduction
-class FNovaArrivalIntroState : public FNovaGameState
+class FNovaArrivalIntroState : public FNovaGameModeState
 {
 public:
 	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
 	{
-		FNovaGameState::EnterState(PreviousState);
+		FNovaGameModeState::EnterState(PreviousState);
 
 		PC->SharedTransition(ENovaPlayerCameraState::CinematicEnvironment,
 			FNovaAsyncAction::CreateLambda(
@@ -278,7 +278,7 @@ public:
 
 	virtual ENovaGameStateIdentifier UpdateState() override
 	{
-		FNovaGameState::UpdateState();
+		FNovaGameModeState::UpdateState();
 
 		if (GetSecondsInState() > AreaIntroductionDuration)
 		{
@@ -292,23 +292,23 @@ public:
 };
 
 // Arrival stage 2 : coast until proximity
-class FNovaArrivalCoastState : public FNovaGameState
+class FNovaArrivalCoastState : public FNovaGameModeState
 {
 public:
 	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
 	{
-		FNovaGameState::EnterState(PreviousState);
+		FNovaGameModeState::EnterState(PreviousState);
 
 		PC->SharedTransition(ENovaPlayerCameraState::Chase);
 	}
 
 	virtual ENovaGameStateIdentifier UpdateState() override
 	{
-		FNovaGameState::UpdateState();
+		FNovaGameModeState::UpdateState();
 
 		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
 		if (PlayerTrajectory == nullptr ||
-			(PlayerTrajectory->GetArrivalTime() - GameWorld->GetCurrentTime()) * 60.0 < ArrivalCutsceneDuration)
+			(PlayerTrajectory->GetArrivalTime() - GameState->GetCurrentTime()) * 60.0 < ArrivalCutsceneDuration)
 		{
 			return ENovaGameStateIdentifier::ArrivalProximity;
 		}
@@ -320,19 +320,19 @@ public:
 };
 
 // Arrival stage 3 : proximity
-class FNovaArrivalProximityState : public FNovaGameState
+class FNovaArrivalProximityState : public FNovaGameModeState
 {
 public:
 	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
 	{
-		FNovaGameState::EnterState(PreviousState);
+		FNovaGameModeState::EnterState(PreviousState);
 
 		PC->SharedTransition(ENovaPlayerCameraState::CinematicSpacecraft);
 	}
 
 	virtual ENovaGameStateIdentifier UpdateState() override
 	{
-		FNovaGameState::UpdateState();
+		FNovaGameModeState::UpdateState();
 
 		if (OrbitalSimulationComponent->GetPlayerTrajectory() == nullptr)
 		{

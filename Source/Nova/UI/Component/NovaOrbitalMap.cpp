@@ -6,7 +6,6 @@
 #include "Nova/Game/NovaAssetCatalog.h"
 #include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Game/NovaGameState.h"
-#include "Nova/Game/NovaGameWorld.h"
 
 #include "Nova/Player/NovaMenuManager.h"
 
@@ -284,7 +283,7 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 
 void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 {
-	const ANovaGameWorld*            GameWorld         = ANovaGameWorld::Get(MenuManager.Get());
+	const ANovaGameState*            GameState         = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 	if (!IsValid(OrbitalSimulation))
 	{
@@ -306,7 +305,7 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 
 			TArray<FNovaOrbitalObject> Objects;
 
-			Objects.Add(FNovaOrbitalObject(GameWorld->GetSpacecraft(Identifier), Location.Phase));
+			Objects.Add(FNovaOrbitalObject(GameState->GetSpacecraft(Identifier), Location.Phase));
 
 			AddOrbit(Origin, Location.Geometry, Objects, SpacecraftStyle);
 			CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Location.Geometry.GetHighestAltitude());
@@ -316,7 +315,7 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 
 void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
 {
-	const ANovaGameWorld*            GameWorld         = ANovaGameWorld::Get(MenuManager.Get());
+	const ANovaGameState*            GameState         = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 	if (!IsValid(OrbitalSimulation))
 	{
@@ -331,7 +330,7 @@ void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
 	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
 	if (PlayerTrajectory)
 	{
-		AddTrajectory(Origin, *PlayerTrajectory, GameWorld->GetSpacecraft(GameWorld->GetPlayerSpacecraftIdentifier()), 1.0f, OrbitStyle,
+		AddTrajectory(Origin, *PlayerTrajectory, GameState->GetSpacecraft(GameState->GetPlayerSpacecraftIdentifier()), 1.0f, OrbitStyle,
 			ManeuverStyle);
 		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, PlayerTrajectory->GetHighestAltitude());
 	}
@@ -497,9 +496,8 @@ void SNovaOrbitalMap::AddOrbitalObject(const FNovaOrbitalObject& Object, const F
 
 	if (IsHovered)
 	{
-		const ANovaGameWorld* GameWorld = ANovaGameWorld::Get(MenuManager.Get());
-
-		DesiredObjectTexts.AddUnique(Object.GetText(GameWorld->GetCurrentTime()).ToString());
+		const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+		DesiredObjectTexts.AddUnique(Object.GetText(GameState->GetCurrentTime()).ToString());
 	}
 }
 

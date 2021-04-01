@@ -140,7 +140,7 @@ public:
 	TSharedPtr<struct FNovaPlayerSave> GetPlayerSave();
 
 	/** Get the save data for the world */
-	TSharedPtr<struct FNovaWorldSave> GetWorldSave();
+	TSharedPtr<struct FNovaGameStateSave> GetWorldSave();
 
 	/** Get the save data for the contract system*/
 	TSharedPtr<struct FNovaContractManagerSave> GetContractManagerSave();

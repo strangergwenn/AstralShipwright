@@ -9,7 +9,6 @@
 #include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Game/NovaAssetCatalog.h"
 #include "Nova/Game/NovaGameState.h"
-#include "Nova/Game/NovaGameWorld.h"
 #include "Nova/Player/NovaPlayerController.h"
 #include "Nova/Player/NovaPlayerState.h"
 
@@ -61,19 +60,16 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 		// Fetch the spacecraft from the player state when we are remotely controlled OR no spacecraft was ever set
 		if (!Spacecraft.IsValid() || !IsLocallyControlled())
 		{
-			ANovaGameState*   GameState         = GetWorld()->GetGameState<ANovaGameState>();
-			ANovaPlayerState* OwningPlayerState = GetPlayerState<ANovaPlayerState>();
+			const ANovaGameState*   GameState         = GetWorld()->GetGameState<ANovaGameState>();
+			const ANovaPlayerState* OwningPlayerState = GetPlayerState<ANovaPlayerState>();
+
 			if (IsValid(GameState) && IsValid(OwningPlayerState) && OwningPlayerState->GetSpacecraftIdentifier().IsValid())
 			{
-				ANovaGameWorld* GameWorld = GameState->GetGameWorld();
-				if (IsValid(GameWorld))
+				const FNovaSpacecraft* NewSpacecraft = GameState->GetSpacecraft(OwningPlayerState->GetSpacecraftIdentifier());
+				if (NewSpacecraft && (!Spacecraft.IsValid() || *NewSpacecraft != *Spacecraft.Get()))
 				{
-					const FNovaSpacecraft* NewSpacecraft = GameWorld->GetSpacecraft(OwningPlayerState->GetSpacecraftIdentifier());
-					if (NewSpacecraft && (!Spacecraft.IsValid() || *NewSpacecraft != *Spacecraft.Get()))
-					{
-						NLOG("ANovaSpacecraftPawn::Tick : updating spacecraft");
-						SetSpacecraft(NewSpacecraft);
-					}
+					NLOG("ANovaSpacecraftPawn::Tick : updating spacecraft");
+					SetSpacecraft(NewSpacecraft);
 				}
 			}
 		}

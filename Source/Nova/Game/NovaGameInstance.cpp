@@ -5,7 +5,6 @@
 #include "NovaAssetCatalog.h"
 #include "NovaGameMode.h"
 #include "NovaGameState.h"
-#include "NovaGameWorld.h"
 #include "NovaGameUserSettings.h"
 #include "NovaContractManager.h"
 #include "NovaSaveManager.h"
@@ -53,7 +52,7 @@ UNovaGameInstance::UNovaGameInstance() : Super(), CurrentSaveData(nullptr), Netw
 struct FNovaGameSave
 {
 	TSharedPtr<struct FNovaPlayerSave>          PlayerData;
-	TSharedPtr<struct FNovaWorldSave>           WorldData;
+	TSharedPtr<struct FNovaGameStateSave>       GameStateData;
 	TSharedPtr<struct FNovaContractManagerSave> ContractManagerData;
 };
 
@@ -67,10 +66,10 @@ TSharedPtr<FNovaGameSave> UNovaGameInstance::Save(const ANovaPlayerController* P
 	// Save the world
 	if (PC->GetLocalRole() == ROLE_Authority)
 	{
-		ANovaGameWorld* GameWorld = GetWorld()->GetGameState<ANovaGameState>()->GetGameWorld();
-		if (GameWorld)
+		ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+		if (IsValid(GameState))
 		{
-			Save->WorldData = GameWorld->Save();
+			Save->GameStateData = GameState->Save();
 		}
 	}
 
@@ -98,6 +97,10 @@ void UNovaGameInstance::SerializeJson(TSharedPtr<FNovaGameSave>& SaveData, TShar
 		ANovaPlayerController::SerializeJson(SaveData->PlayerData, PlayerJsonData, ENovaSerialize::DataToJson);
 		JsonData->SetObjectField("Player", PlayerJsonData);
 
+		TSharedPtr<FJsonObject> GameStateJsonData = MakeShared<FJsonObject>();
+		ANovaGameState::SerializeJson(SaveData->GameStateData, GameStateJsonData, ENovaSerialize::DataToJson);
+		JsonData->SetObjectField("GameState", GameStateJsonData);
+
 		TSharedPtr<FJsonObject> ContractManagerJsonData = MakeShared<FJsonObject>();
 		UNovaContractManager::SerializeJson(SaveData->ContractManagerData, ContractManagerJsonData, ENovaSerialize::DataToJson);
 		JsonData->SetObjectField("ContractManager", ContractManagerJsonData);
@@ -106,9 +109,13 @@ void UNovaGameInstance::SerializeJson(TSharedPtr<FNovaGameSave>& SaveData, TShar
 	{
 		SaveData = MakeShared<FNovaGameSave>();
 
-		TSharedPtr<FJsonObject> PlayerJsonData          = JsonData->GetObjectField("Player");
-		TSharedPtr<FJsonObject> ContractManagerJsonData = JsonData->GetObjectField("ContractManager");
+		TSharedPtr<FJsonObject> PlayerJsonData = JsonData->GetObjectField("Player");
 		ANovaPlayerController::SerializeJson(SaveData->PlayerData, PlayerJsonData, ENovaSerialize::JsonToData);
+
+		TSharedPtr<FJsonObject> GameStateJsonData = JsonData->GetObjectField("GameState");
+		ANovaGameState::SerializeJson(SaveData->GameStateData, GameStateJsonData, ENovaSerialize::JsonToData);
+
+		TSharedPtr<FJsonObject> ContractManagerJsonData = JsonData->GetObjectField("ContractManager");
 		UNovaContractManager::SerializeJson(SaveData->ContractManagerData, ContractManagerJsonData, ENovaSerialize::JsonToData);
 	}
 }
@@ -258,10 +265,10 @@ TSharedPtr<FNovaPlayerSave> UNovaGameInstance::GetPlayerSave()
 	return CurrentSaveData->PlayerData;
 }
 
-TSharedPtr<struct FNovaWorldSave> UNovaGameInstance::GetWorldSave()
+TSharedPtr<struct FNovaGameStateSave> UNovaGameInstance::GetWorldSave()
 {
 	NCHECK(CurrentSaveData);
-	return CurrentSaveData->WorldData;
+	return CurrentSaveData->GameStateData;
 }
 
 TSharedPtr<FNovaContractManagerSave> UNovaGameInstance::GetContractManagerSave()

@@ -6,7 +6,6 @@
 
 #include "Nova/Game/NovaArea.h"
 #include "Nova/Game/NovaGameState.h"
-#include "Nova/Game/NovaGameWorld.h"
 #include "Nova/Game/NovaOrbitalSimulationComponent.h"
 
 #include "Nova/UI/Widget/NovaNavigationPanel.h"
@@ -247,9 +246,7 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNo
 	// Get the game state
 	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	NCHECK(GameState);
-	ANovaGameWorld* GameWorld = GameState->GetGameWorld();
-	NCHECK(GameWorld);
-	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameWorld->GetOrbitalSimulation();
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
 	NCHECK(OrbitalSimulation);
 
 	Reset();

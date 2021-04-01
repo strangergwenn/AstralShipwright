@@ -12,7 +12,6 @@
 #include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Game/NovaGameMode.h"
 #include "Nova/Game/NovaGameState.h"
-#include "Nova/Game/NovaGameWorld.h"
 #include "Nova/Game/NovaGameUserSettings.h"
 #include "Nova/Game/NovaSaveManager.h"
 #include "Nova/Game/NovaWorldSettings.h"
@@ -566,8 +565,10 @@ void ANovaPlayerController::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft)
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+		NCHECK(IsValid(GameState));
+
 		GetPlayerState<ANovaPlayerState>()->SetSpacecraftIdentifier(Spacecraft.Identifier);
-		GetGameWorld()->UpdateSpacecraft(Spacecraft, true);
+		GameState->UpdateSpacecraft(Spacecraft, true);
 	}
 
 	// Tell the server
@@ -783,21 +784,15 @@ void ANovaPlayerController::AnyKey(FKey Key)
     Getters
 ----------------------------------------------------*/
 
-ANovaGameWorld* ANovaPlayerController::GetGameWorld() const
-{
-	ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
-	return GameState ? GameState->GetGameWorld() : nullptr;
-}
-
 const FNovaSpacecraft* ANovaPlayerController::GetSpacecraft() const
 {
-	ANovaGameWorld*   GameWorld        = GetGameWorld();
-	ANovaPlayerState* OwnedPlayerState = GetPlayerState<ANovaPlayerState>();
+	const ANovaGameState* GameState        = GetWorld()->GetGameState<ANovaGameState>();
+	ANovaPlayerState*     OwnedPlayerState = GetPlayerState<ANovaPlayerState>();
 
-	if (IsValid(GameWorld) && IsValid(OwnedPlayerState))
+	if (IsValid(GameState) && IsValid(OwnedPlayerState))
 	{
 		FGuid PlayerSpacecraftIdentifier = GetPlayerState<ANovaPlayerState>()->GetSpacecraftIdentifier();
-		return GameWorld->GetSpacecraft(PlayerSpacecraftIdentifier);
+		return GameState->GetSpacecraft(PlayerSpacecraftIdentifier);
 	}
 	else
 	{

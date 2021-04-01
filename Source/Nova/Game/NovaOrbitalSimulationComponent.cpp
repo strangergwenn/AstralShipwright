@@ -3,7 +3,7 @@
 #include "NovaOrbitalSimulationComponent.h"
 #include "NovaAssetCatalog.h"
 #include "NovaGameInstance.h"
-#include "NovaGameWorld.h"
+#include "NovaGameState.h"
 
 #include "Nova/Spacecraft/NovaSpacecraft.h"
 #include "Nova/Nova.h"
@@ -103,7 +103,7 @@ void UNovaOrbitalSimulationComponent::UpdateSimulation()
 
 double UNovaOrbitalSimulationComponent::GetCurrentTime() const
 {
-	return Cast<ANovaGameWorld>(GetOwner())->GetCurrentTime();
+	return Cast<ANovaGameState>(GetOwner())->GetCurrentTime();
 }
 
 /*----------------------------------------------------
@@ -196,7 +196,7 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	TArray<const FNovaSpacecraft*> Spacecraft;
 	for (const FGuid& Identifier : Parameters->SpacecraftIdentifiers)
 	{
-		const FNovaSpacecraft* NewSpacecraft = Cast<ANovaGameWorld>(GetOwner())->GetSpacecraft(Identifier);
+		const FNovaSpacecraft* NewSpacecraft = Cast<ANovaGameState>(GetOwner())->GetSpacecraft(Identifier);
 		NCHECK(NewSpacecraft != nullptr);
 		Spacecraft.Add(NewSpacecraft);
 	}
@@ -377,10 +377,10 @@ void UNovaOrbitalSimulationComponent::MergeOrbit(const TArray<FGuid>& Spacecraft
 
 UNovaOrbitalSimulationComponent* UNovaOrbitalSimulationComponent::Get(const UObject* Outer)
 {
-	ANovaGameWorld* GameWorld = ANovaGameWorld::Get(Outer);
-	if (IsValid(GameWorld))
+	const ANovaGameState* GameState = Outer->GetWorld()->GetGameState<ANovaGameState>();
+	if (IsValid(GameState))
 	{
-		UNovaOrbitalSimulationComponent* SimulationComponent = GameWorld->GetOrbitalSimulation();
+		UNovaOrbitalSimulationComponent* SimulationComponent = GameState->GetOrbitalSimulation();
 		if (IsValid(SimulationComponent))
 		{
 			return SimulationComponent;
@@ -392,8 +392,8 @@ UNovaOrbitalSimulationComponent* UNovaOrbitalSimulationComponent::Get(const UObj
 
 const FNovaOrbit* UNovaOrbitalSimulationComponent::GetPlayerOrbit() const
 {
-	const ANovaGameWorld* GameWorld        = GetOwner<ANovaGameWorld>();
-	const FGuid&          PlayerIdentifier = GameWorld->GetPlayerSpacecraftIdentifier();
+	const ANovaGameState* GameState        = GetOwner<ANovaGameState>();
+	const FGuid&          PlayerIdentifier = GameState->GetPlayerSpacecraftIdentifier();
 
 	if (PlayerIdentifier.IsValid())
 	{
@@ -407,8 +407,8 @@ const FNovaOrbit* UNovaOrbitalSimulationComponent::GetPlayerOrbit() const
 
 const FNovaTrajectory* UNovaOrbitalSimulationComponent::GetPlayerTrajectory() const
 {
-	const ANovaGameWorld* GameWorld        = GetOwner<ANovaGameWorld>();
-	const FGuid&          PlayerIdentifier = GameWorld->GetPlayerSpacecraftIdentifier();
+	const ANovaGameState* GameState        = GetOwner<ANovaGameState>();
+	const FGuid&          PlayerIdentifier = GameState->GetPlayerSpacecraftIdentifier();
 
 	if (PlayerIdentifier.IsValid())
 	{
@@ -422,8 +422,8 @@ const FNovaTrajectory* UNovaOrbitalSimulationComponent::GetPlayerTrajectory() co
 
 const FNovaOrbitalLocation* UNovaOrbitalSimulationComponent::GetPlayerLocation() const
 {
-	const ANovaGameWorld* GameWorld        = GetOwner<ANovaGameWorld>();
-	const FGuid&          PlayerIdentifier = GameWorld->GetPlayerSpacecraftIdentifier();
+	const ANovaGameState* GameState        = GetOwner<ANovaGameState>();
+	const FGuid&          PlayerIdentifier = GameState->GetPlayerSpacecraftIdentifier();
 
 	if (PlayerIdentifier.IsValid())
 	{
@@ -568,8 +568,8 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 		}
 
 		// If this trajectory is for a player spacecraft, detect whether we're nearing a maneuver
-		const ANovaGameWorld* GameWorld        = GetOwner<ANovaGameWorld>();
-		const FGuid&          PlayerIdentifier = GameWorld->GetPlayerSpacecraftIdentifier();
+		const ANovaGameState* GameState        = GetOwner<ANovaGameState>();
+		const FGuid&          PlayerIdentifier = GameState->GetPlayerSpacecraftIdentifier();
 		if (PlayerIdentifier.IsValid() && DatabaseEntry.Identifiers.Contains(PlayerIdentifier))
 		{
 			TimeOfNextPlayerManeuver = DatabaseEntry.Trajectory.GetNextManeuverStartTime(GetCurrentTime());

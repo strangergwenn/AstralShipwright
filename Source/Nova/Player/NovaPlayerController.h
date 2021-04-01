@@ -279,10 +279,6 @@ public:
 		return GetPawn<ANovaSpacecraftPawn>();
 	}
 
-	/** Get the game world actor */
-	UFUNCTION(Category = Nova, BlueprintCallable)
-	class ANovaGameWorld* GetGameWorld() const;
-
 	/** Get the player spacecraft */
 	const struct FNovaSpacecraft* GetSpacecraft() const;
 };
