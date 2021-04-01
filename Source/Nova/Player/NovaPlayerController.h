@@ -54,7 +54,7 @@ struct FNovaPostProcessSetting : public FNovaPostProcessSettingBase
 	FLinearColor SceneColorTint;
 };
 
-/** Camera viewpoint */
+/** Camera viewpoint component */
 UCLASS(ClassGroup = (Nova))
 class ANovaPlayerViewpoint : public AActor
 {
@@ -62,6 +62,22 @@ class ANovaPlayerViewpoint : public AActor
 
 public:
 	ANovaPlayerViewpoint();
+
+	// Camera animation duration
+	UPROPERTY(Category = Nova, EditAnywhere)
+	float CameraAnimationDuration;
+
+	// Camera panning amount in degrees over the animation time
+	UPROPERTY(Category = Nova, EditAnywhere)
+	float CameraPanAmount;
+
+	// Camera tilting amount in degrees over the animation time
+	UPROPERTY(Category = Nova, EditAnywhere)
+	float CameraTiltAmount;
+
+	// Camera traveling amount in units over the animation time
+	UPROPERTY(Category = Nova, EditAnywhere)
+	float CameraTravelingAmount;
 };
 
 /** Default player controller class */
@@ -124,6 +140,13 @@ public:
 
 	/** Check if loading is currently occurring */
 	bool IsLevelStreamingComplete() const;
+
+	/** Set the current camera state */
+	void SetCameraState(ENovaPlayerCameraState State)
+	{
+		CurrentCameraState       = State;
+		CurrentTimeInCameraState = 0;
+	}
 
 	/*----------------------------------------------------
 	    Server-side save
@@ -249,7 +272,8 @@ public:
 private:
 	// General state
 	ENovaNetworkError      LastNetworkError;
-	ENovaPlayerCameraState CameraState;
+	ENovaPlayerCameraState CurrentCameraState;
+	float                  CurrentTimeInCameraState;
 
 	// Transitions
 	bool                SharedTransitionActive;

@@ -46,10 +46,20 @@
 ANovaPlayerViewpoint::ANovaPlayerViewpoint() : Super()
 {
 	RootComponent = CreateDefaultSubobject<UCameraComponent>("Root");
+
+	// Defaults
+	CameraAnimationDuration = 5.0f;
+	CameraPanAmount         = 5.0f;
+	CameraTiltAmount        = 0.0f;
+	CameraTravelingAmount   = 250.0f;
 }
 
 ANovaPlayerController::ANovaPlayerController()
-	: Super(), LastNetworkError(ENovaNetworkError::Success), CameraState(ENovaPlayerCameraState::Default), SharedTransitionActive(false)
+	: Super()
+	, LastNetworkError(ENovaNetworkError::Success)
+	, CurrentCameraState(ENovaPlayerCameraState::Default)
+	, CurrentTimeInCameraState(0)
+	, SharedTransitionActive(false)
 {
 	// Create the post-processing manager
 	PostProcessComponent = CreateDefaultSubobject<UNovaPostProcessComponent>(TEXT("PostProcessComponent"));
@@ -263,42 +273,47 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 		{
 			Light->GetLightComponent()->SetCastRaytracedShadow(GameUserSettings->EnableRaytracedShadows);
 		}
+
+		CurrentTimeInCameraState += DeltaTime;
 	}
 }
 
 void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const
 {
 	// During cutscenes, use the closest camera viewpoint and focus the player ship
-	if (IsReady() &&
-		(CameraState == ENovaPlayerCameraState::CinematicSpacecraft || CameraState == ENovaPlayerCameraState::CinematicEnvironment))
+	if (IsReady() && (CurrentCameraState == ENovaPlayerCameraState::CinematicSpacecraft ||
+						 CurrentCameraState == ENovaPlayerCameraState::CinematicEnvironment))
 	{
 		TArray<AActor*> Viewpoints;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaPlayerViewpoint::StaticClass(), Viewpoints);
 
 		// Get the first viewpoint actor and extract its transform
-		FVector  ViewpointLocation = FVector::ZeroVector;
-		FRotator ViewpointRotation = FRotator::ZeroRotator;
+		const ANovaPlayerViewpoint* PlayerViewpoint = nullptr;
 		if (Viewpoints.Num())
 		{
 			UNovaActorTools::SortActorsByClosestDistance(Viewpoints, GetPawn()->GetActorLocation());
-			ViewpointLocation = Viewpoints[0]->GetActorLocation();
-			ViewpointRotation = Viewpoints[0]->GetActorRotation();
+			PlayerViewpoint = Cast<ANovaPlayerViewpoint>(Viewpoints[0]);
 		}
 
 		// Apply the results
-		Location = ViewpointLocation;
-		if (CameraState == ENovaPlayerCameraState::CinematicSpacecraft)
+		Location = PlayerViewpoint->GetActorLocation();
+		if (CurrentCameraState == ENovaPlayerCameraState::CinematicSpacecraft)
 		{
-			Rotation = (GetPawn()->GetActorLocation() - ViewpointLocation).Rotation();
+			Rotation = (GetPawn()->GetActorLocation() - Location).Rotation();
 		}
 		else
 		{
-			Rotation = ViewpointRotation;
+			float AnimationAlpha = FMath::Clamp(CurrentTimeInCameraState / PlayerViewpoint->CameraAnimationDuration, 0.0f, 1.0f);
+			AnimationAlpha       = FMath::InterpEaseOut(-0.5f, 0.5f, AnimationAlpha, ENovaUIConstants::EaseStandard);
+
+			Rotation = PlayerViewpoint->GetActorRotation();
+			Rotation += FRotator(0, AnimationAlpha * PlayerViewpoint->CameraPanAmount, AnimationAlpha * PlayerViewpoint->CameraTiltAmount);
+			Location += Rotation.Vector() * AnimationAlpha * PlayerViewpoint->CameraTravelingAmount;
 		}
 	}
 
 	// Chase cam
-	else if (IsReady() && CameraState == ENovaPlayerCameraState::Chase)
+	else if (IsReady() && CurrentCameraState == ENovaPlayerCameraState::Chase)
 	{
 		const ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
 		NCHECK(SpacecraftPawn);
@@ -306,7 +321,7 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 		const FVector Backwards             = -SpacecraftPawn->GetActorForwardVector();
 		const FVector SpacecraftLocation    = SpacecraftPawn->GetActorLocation();
 		const float   SpacecraftExtent      = SpacecraftPawn->GetTurntableBounds().Value.Size();
-		const float   MainDriveAcceleration = SpacecraftPawn->GetSpacecraftMovement()->GetMainDriveAcceleration();
+		const float   MainDriveAcceleration = FMath::Abs(SpacecraftPawn->GetSpacecraftMovement()->GetMainDriveAcceleration());
 
 		FVector BoundsOffset       = SpacecraftExtent * Backwards;
 		FVector BaseOffset         = ChaseCamBaseDistance * Backwards;
@@ -337,7 +352,7 @@ void ANovaPlayerController::Dock()
 			GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda(
 				[=]()
 				{
-					CameraState = ENovaPlayerCameraState::Default;
+					SetCameraState(ENovaPlayerCameraState::Default);
 					GetSpacecraftPawn()->ResetView();
 				}));
 		});
@@ -345,7 +360,7 @@ void ANovaPlayerController::Dock()
 	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda(
 		[=]()
 		{
-			CameraState = ENovaPlayerCameraState::CinematicSpacecraft;
+			SetCameraState(ENovaPlayerCameraState::CinematicSpacecraft);
 			GetSpacecraftPawn()->GetSpacecraftMovement()->Dock(EndCutscene);
 		});
 
@@ -362,7 +377,7 @@ void ANovaPlayerController::Undock()
 			GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda(
 				[=]()
 				{
-					CameraState = ENovaPlayerCameraState::Default;
+					SetCameraState(ENovaPlayerCameraState::Default);
 					GetSpacecraftPawn()->ResetView();
 				}));
 		});
@@ -370,7 +385,7 @@ void ANovaPlayerController::Undock()
 	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda(
 		[=]()
 		{
-			CameraState = ENovaPlayerCameraState::CinematicSpacecraft;
+			SetCameraState(ENovaPlayerCameraState::CinematicSpacecraft);
 			GetSpacecraftPawn()->GetSpacecraftMovement()->Undock(EndCutscene);
 		});
 
@@ -411,7 +426,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 	FNovaAsyncAction Action = FNovaAsyncAction::CreateLambda(
 		[=]()
 		{
-			CameraState = NewCameraState;
+			SetCameraState(NewCameraState);
 			ServerSharedTransitionReady();
 			NLOG("ANovaPlayerController::ClientStartSharedTransition_Implementation : done, waiting for server");
 		});

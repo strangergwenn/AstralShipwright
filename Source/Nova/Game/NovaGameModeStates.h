@@ -17,10 +17,10 @@
 ----------------------------------------------------*/
 
 // Cutscene timing values in seconds
-constexpr float DepartureCutsceneDelay    = 5.0;
-constexpr float DepartureCutsceneDuration = 10.0;
+constexpr float DepartureCutsceneDelay    = 2.0;
+constexpr float DepartureCutsceneDuration = 5.0;
 constexpr float AreaIntroductionDuration  = 5.0;
-constexpr float ArrivalCutsceneDuration   = 10.0;
+constexpr float ArrivalCutsceneDuration   = 5.0;
 
 /*----------------------------------------------------
     Game state class
@@ -213,7 +213,7 @@ public:
 	{
 		FNovaGameModeState::UpdateState();
 
-		if (GetSecondsInState() > DepartureCutsceneDuration)
+		if (GetSecondsInState() > DepartureCutsceneDelay + DepartureCutsceneDuration)
 		{
 			return ENovaGameStateIdentifier::DepartureCoast;
 		}
