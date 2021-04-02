@@ -216,10 +216,12 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	const FNovaSpacecraftPropulsionMetrics& Metrics           = Spacecraft[0]->GetPropulsionMetrics();
 
 	// Departure burn on first transfer
-	double ManeuverDuration = Metrics.GetManeuverDurationAndPropellantUsed(TransferA.StartDeltaV, CurrentPropellant);
-	if (Trajectory->Add(FNovaManeuver(TransferA.StartDeltaV, CurrentPhase, CurrentTime, ManeuverDuration)))
+	double ManeuverDuration     = Metrics.GetManeuverDurationAndPropellantUsed(TransferA.StartDeltaV, CurrentPropellant);
+	bool   FirstTransferIsValid = Trajectory->Add(FNovaManeuver(TransferA.StartDeltaV, CurrentPhase, CurrentTime, ManeuverDuration));
+
+	// First transfer
+	if (FirstTransferIsValid)
 	{
-		// First transfer
 		Trajectory->Add(FNovaOrbit(
 			FNovaOrbitGeometry(Parameters->Planet, SourceAltitudeA, PhasingAltitude, CurrentPhase, CurrentPhase + 180), CurrentTime));
 	}
@@ -233,16 +235,27 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	CurrentTime += TransferA.Duration;
 
 	// Phasing orbit
-	Trajectory->Add(FNovaOrbit(
-		FNovaOrbitGeometry(Parameters->Planet, PhasingAltitude, PhasingAltitude, CurrentPhase, CurrentPhase + PhasingAngle), CurrentTime));
+	if (FirstTransferIsValid)
+	{
+		Trajectory->Add(
+			FNovaOrbit(FNovaOrbitGeometry(Parameters->Planet, PhasingAltitude, PhasingAltitude, CurrentPhase, CurrentPhase + PhasingAngle),
+				CurrentTime));
+	}
 	CurrentTime += PhasingDuration;
 	CurrentPhase += PhasingAngle;
 
-	// Departure burn on second transfer
-	ManeuverDuration   = Metrics.GetManeuverDurationAndPropellantUsed(TransferB.StartDeltaV, CurrentPropellant);
-	ManeuverPhaseDelta = ((ManeuverDuration / 2.0) / PhasingOrbitPeriod) * 360.0;
-	Trajectory->Add(
-		FNovaManeuver(TransferB.StartDeltaV, CurrentPhase - ManeuverPhaseDelta, CurrentTime - ManeuverDuration / 2.0, ManeuverDuration));
+	// Departure burn on second transfer, accounting for whether the departure burn occurs in the middle of the arc or just after
+	ManeuverDuration = Metrics.GetManeuverDurationAndPropellantUsed(TransferB.StartDeltaV, CurrentPropellant);
+	if (FirstTransferIsValid)
+	{
+		ManeuverPhaseDelta = ((ManeuverDuration / 2.0) / PhasingOrbitPeriod) * 360.0;
+		Trajectory->Add(FNovaManeuver(
+			TransferB.StartDeltaV, CurrentPhase - ManeuverPhaseDelta, CurrentTime - ManeuverDuration / 2.0, ManeuverDuration));
+	}
+	else
+	{
+		Trajectory->Add(FNovaManeuver(TransferB.StartDeltaV, CurrentPhase, CurrentTime, ManeuverDuration));
+	}
 
 	// Second transfer
 	Trajectory->Add(FNovaOrbit(

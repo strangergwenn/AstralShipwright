@@ -420,9 +420,9 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 	}
 
 	// Draw orbit segments
-	for (int32 TransferIndex = 0; TransferIndex < Trajectory.Transfers.Num(); TransferIndex++)
+	for (const FNovaOrbit& Transfer : Trajectory.Transfers)
 	{
-		FNovaOrbitGeometry Geometry = Transfers[TransferIndex].Geometry;
+		FNovaOrbitGeometry Geometry = Transfer.Geometry;
 
 		bool SkipRemainingTransfers = false;
 		if (CurrentProgressPhase < Geometry.EndPhase)
