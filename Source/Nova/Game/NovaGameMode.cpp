@@ -171,22 +171,27 @@ bool ANovaGameMode::CanFastForward() const
 		   Nova->CanFastForward();
 }
 
+void ANovaGameMode::ResetSpacecraft()
+{
+	for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+	{
+		SpacecraftPawn->GetSpacecraftMovement()->Reset();
+	}
+}
+
 void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 {
 	NCHECK(IsValid(Area));
 	NCHECK(Area->IsValidLowLevelFast());
 
-	// Compare with the current area and exit
+	NLOG("ANovaGameMode::ChangeArea : '%s'", *Area->LevelName.ToString());
+
+	ResetSpacecraft();
+
+	// Compare with the current area and process the change if needed
 	const UNovaArea* CurrentArea = GetGameState<ANovaGameState>()->GetCurrentArea();
 	if (Area != CurrentArea)
 	{
-		NLOG("ANovaGameMode::ChangeArea : '%s'", *Area->LevelName.ToString());
-
-		for (ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
-		{
-			SpacecraftPawn->GetSpacecraftMovement()->Stop();
-		}
-
 		UnloadStreamingLevel(CurrentArea);
 		LoadStreamingLevel(Area);
 	}

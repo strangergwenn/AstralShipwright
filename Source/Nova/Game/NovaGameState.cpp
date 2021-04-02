@@ -23,6 +23,7 @@ ANovaGameState::ANovaGameState()
 	: Super()
 
 	, CurrentArea(nullptr)
+	, UseTrajectoryMovement(false)
 	, ServerTime(0)
 	, ServerTimeDilation(ENovaTimeDilation::Normal)
 
@@ -362,6 +363,7 @@ void ANovaGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME(ANovaGameState, CurrentArea);
 
 	DOREPLIFETIME(ANovaGameState, SpacecraftDatabase);
+	DOREPLIFETIME(ANovaGameState, UseTrajectoryMovement);
 	DOREPLIFETIME(ANovaGameState, ServerTime);
 	DOREPLIFETIME(ANovaGameState, ServerTimeDilation);
 }

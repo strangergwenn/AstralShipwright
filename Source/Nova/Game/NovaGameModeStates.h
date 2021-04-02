@@ -100,7 +100,12 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
-		PC->SharedTransition(ENovaPlayerCameraState::Default);
+		PC->SharedTransition(ENovaPlayerCameraState::Default,    //
+			FNovaAsyncAction::CreateLambda(
+				[&]()
+				{
+					GameState->SetUsingTrajectoryMovement(false);
+				}));
 	}
 
 	virtual ENovaGameStateIdentifier UpdateState() override
@@ -178,6 +183,8 @@ public:
 		}
 		else if (OrbitalSimulationComponent->IsPlayerPastFirstManeuver())
 		{
+			GameMode->ResetSpacecraft();
+
 			if (OrbitalSimulationComponent->IsPlayerNearingLastManeuver())
 			{
 				return ENovaGameStateIdentifier::ArrivalIntro;
@@ -189,6 +196,8 @@ public:
 		}
 		else
 		{
+			GameMode->ResetSpacecraft();
+
 			return ENovaGameStateIdentifier::Area;
 		}
 	}
@@ -206,7 +215,12 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
-		PC->SharedTransition(ENovaPlayerCameraState::CinematicSpacecraft);
+		PC->SharedTransition(ENovaPlayerCameraState::CinematicSpacecraft,    //
+			FNovaAsyncAction::CreateLambda(
+				[&]()
+				{
+					GameState->SetUsingTrajectoryMovement(true);
+				}));
 	}
 
 	virtual ENovaGameStateIdentifier UpdateState() override
@@ -236,6 +250,7 @@ public:
 			FNovaAsyncAction::CreateLambda(
 				[&]()
 				{
+					GameState->SetUsingTrajectoryMovement(false);
 					GameMode->ChangeAreaToOrbit();
 				}));
 	}
@@ -327,7 +342,12 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
-		PC->SharedTransition(ENovaPlayerCameraState::CinematicSpacecraft);
+		PC->SharedTransition(ENovaPlayerCameraState::CinematicSpacecraft,    //
+			FNovaAsyncAction::CreateLambda(
+				[&]()
+				{
+					GameState->SetUsingTrajectoryMovement(true);
+				}));
 	}
 
 	virtual ENovaGameStateIdentifier UpdateState() override

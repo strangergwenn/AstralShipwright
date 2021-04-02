@@ -62,6 +62,9 @@ public:
 	/** Check whether we can fast-forward */
 	bool CanFastForward() const;
 
+	/** Reset all spacecraft movement */
+	void ResetSpacecraft();
+
 	/** Change the current area */
 	void ChangeArea(const class UNovaArea* Area);
 

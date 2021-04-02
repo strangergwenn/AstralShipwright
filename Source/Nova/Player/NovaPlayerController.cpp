@@ -292,19 +292,23 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 		}
 
 		// Apply the results
-		Location = PlayerViewpoint->GetActorLocation();
-		if (CurrentCameraState == ENovaPlayerCameraState::CinematicSpacecraft)
+		if (PlayerViewpoint)
 		{
-			Rotation = (GetPawn()->GetActorLocation() - Location).Rotation();
-		}
-		else
-		{
-			float AnimationAlpha = FMath::Clamp(CurrentTimeInCameraState / PlayerViewpoint->CameraAnimationDuration, 0.0f, 1.0f);
-			AnimationAlpha       = FMath::InterpEaseOut(-0.5f, 0.5f, AnimationAlpha, ENovaUIConstants::EaseStandard);
+			Location = PlayerViewpoint->GetActorLocation();
+			if (CurrentCameraState == ENovaPlayerCameraState::CinematicSpacecraft)
+			{
+				Rotation = (GetPawn()->GetActorLocation() - Location).Rotation();
+			}
+			else
+			{
+				float AnimationAlpha = FMath::Clamp(CurrentTimeInCameraState / PlayerViewpoint->CameraAnimationDuration, 0.0f, 1.0f);
+				AnimationAlpha       = FMath::InterpEaseOut(-0.5f, 0.5f, AnimationAlpha, ENovaUIConstants::EaseStandard);
 
-			Rotation = PlayerViewpoint->GetActorRotation();
-			Rotation += FRotator(0, AnimationAlpha * PlayerViewpoint->CameraPanAmount, AnimationAlpha * PlayerViewpoint->CameraTiltAmount);
-			Location += Rotation.Vector() * AnimationAlpha * PlayerViewpoint->CameraTravelingAmount;
+				Rotation = PlayerViewpoint->GetActorRotation();
+				Rotation +=
+					FRotator(0, AnimationAlpha * PlayerViewpoint->CameraPanAmount, AnimationAlpha * PlayerViewpoint->CameraTiltAmount);
+				Location += Rotation.Vector() * AnimationAlpha * PlayerViewpoint->CameraTravelingAmount;
+			}
 		}
 	}
 

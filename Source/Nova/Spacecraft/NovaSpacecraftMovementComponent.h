@@ -19,25 +19,6 @@ enum class ENovaMovementState : uint8
 	Stopping
 };
 
-/** Initialization parameters */
-USTRUCT(Atomic)
-struct FNovaMovementStartParameters
-{
-	GENERATED_BODY()
-
-	FNovaMovementStartParameters() : DockActor(nullptr), StartDocked(false)
-	{}
-
-	FNovaMovementStartParameters(const class ANovaPlayerStart* S, bool D) : DockActor(S), StartDocked(D)
-	{}
-
-	UPROPERTY()
-	const class ANovaPlayerStart* DockActor;
-
-	UPROPERTY()
-	bool StartDocked;
-};
-
 /** High level movement command sent by a player */
 USTRUCT(Atomic)
 struct FNovaMovementCommand
@@ -106,6 +87,9 @@ public:
 	/** Check if this component is initialized */
 	bool IsInitialized() const;
 
+	/** Signal that the area changed */
+	void Reset();
+
 	/*** Can we dock */
 	bool CanDock() const;
 
@@ -153,7 +137,7 @@ protected:
 protected:
 	/** Start point replication event */
 	UFUNCTION()
-	void OnStartParametersReplicated();
+	void OnDockActorReplicated();
 
 	/** Reset the local state */
 	void ResetState();
@@ -172,6 +156,9 @@ protected:
 
 	/** Process overall movement */
 	void ProcessMovement(float DeltaTime);
+
+	/** Process trajectory movement */
+	void ProcessTrajectoryMovement(float DeltaTime);
 
 	/** Apply hit effects */
 	virtual void OnHit(const FHitResult& Hit, const FVector& HitVelocity);
@@ -248,8 +235,8 @@ protected:
 	FNovaAttitudeCommand AttitudeCommand;
 
 	// Start parameters
-	UPROPERTY(ReplicatedUsing = OnStartParametersReplicated)
-	FNovaMovementStartParameters InitParameters;
+	UPROPERTY(ReplicatedUsing = OnDockActorReplicated)
+	const class ANovaPlayerStart* DockActor;
 
 	// Movement state
 	FVector CurrentLinearVelocity;

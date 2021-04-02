@@ -117,6 +117,19 @@ public:
 		return StartDocked;
 	}
 
+	/** Enable moving spacecraft based on trajectories */
+	void SetUsingTrajectoryMovement(bool State)
+	{
+		NCHECK(GetLocalRole() == ROLE_Authority);
+		UseTrajectoryMovement = State;
+	}
+
+	/** Check whether spacecraft are using trajectory movement */
+	bool IsUsingTrajectoryMovement() const
+	{
+		return UseTrajectoryMovement;
+	}
+
 	/** Return the orbital simulation class */
 	class UNovaOrbitalSimulationComponent* GetOrbitalSimulation() const
 	{
@@ -249,6 +262,10 @@ private:
 	// Current level-based area
 	UPROPERTY(Replicated)
 	const class UNovaArea* CurrentArea;
+
+	// When this is enabled, spacecraft will rely on trajectory movement
+	UPROPERTY(Replicated)
+	bool UseTrajectoryMovement;
 
 	// Replicated spacecraft database
 	UPROPERTY(Replicated)

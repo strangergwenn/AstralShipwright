@@ -38,17 +38,31 @@ public:
 	}
 
 	/** Get the world location of the area enter point */
-	FVector GetEnterPointLocation(bool PositiveDeltaV) const
+	FVector GetEnterPointLocation(float DeltaV, float Acceleration) const
 	{
-		const FVector Offset = (PositiveDeltaV ? -1 : 1) * FVector(0, 1000000, 0);
-		return WaitingPoint->GetComponentLocation() + Offset;
+		const float StoppingTime     = FMath::Abs(DeltaV) / Acceleration;
+		const float StoppingDistance = 100 * StoppingTime * (DeltaV / 2);
+		return GetWaitingPointLocation() + GetEnterPointDirection(DeltaV) * StoppingDistance;
+	}
+
+	/** Get the world direction of the area enter point */
+	FVector GetEnterPointDirection(float DeltaV) const
+	{
+		return (DeltaV > 0 ? -1 : 1) * FVector(0, 1, 0);
 	}
 
 	/** Get the world location of the area exit point */
-	FVector GetExitPointLocation(bool PositiveDeltaV) const
+	FVector GetExitPointLocation(float DeltaV, float Acceleration) const
 	{
-		const FVector Offset = (PositiveDeltaV ? -1 : 1) * FVector(0, -1000000, 0);
-		return WaitingPoint->GetComponentLocation() + Offset;
+		const float StoppingTime     = FMath::Abs(DeltaV) / Acceleration;
+		const float StoppingDistance = 100 * StoppingTime * (DeltaV / 2);
+		return GetWaitingPointLocation() + GetExitPointDirection(DeltaV) * StoppingDistance;
+	}
+
+	/** Get the world direction of the area exit point */
+	FVector GetExitPointDirection(float DeltaV) const
+	{
+		return (DeltaV > 0 ? -1 : 1) * FVector(0, -1, 0);
 	}
 
 	/*----------------------------------------------------
