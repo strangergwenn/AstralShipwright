@@ -117,10 +117,6 @@ ANovaPlayerController::ANovaPlayerController()
 				Volume->Settings.GrainIntensity = FMath::Lerp(MyCurrent->GrainIntensity, MyTarget->GrainIntensity, Alpha);
 				Volume->Settings.SceneColorTint = FMath::Lerp(MyCurrent->SceneColorTint, MyTarget->SceneColorTint, Alpha);
 			}));
-
-	// Defaults
-	ChaseCamBaseDistance         = 5000;
-	ChaseCamAccelerationDistance = 50;
 }
 
 /*----------------------------------------------------
@@ -323,12 +319,11 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 		const float   SpacecraftExtent      = SpacecraftPawn->GetTurntableBounds().Value.Size();
 		const float   MainDriveAcceleration = FMath::Abs(SpacecraftPawn->GetSpacecraftMovement()->GetMainDriveAcceleration());
 
-		FVector BoundsOffset       = SpacecraftExtent * Backwards;
-		FVector BaseOffset         = ChaseCamBaseDistance * Backwards;
-		FVector AccelerationOffset = MainDriveAcceleration * ChaseCamAccelerationDistance * Backwards;
+		FVector BoundsOffset = SpacecraftExtent * Backwards;
+		FVector BaseOffset   = 5000 * Backwards;
 
-		Location = SpacecraftLocation + BoundsOffset + BaseOffset + AccelerationOffset;
-		Rotation = (GetPawn()->GetActorLocation() - Location).Rotation();
+		Location = SpacecraftLocation + BoundsOffset + BaseOffset;
+		Rotation = (SpacecraftPawn->GetActorLocation() - Location).Rotation();
 	}
 
 	// Default camera

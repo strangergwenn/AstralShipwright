@@ -245,19 +245,6 @@ public:
 #endif
 
 	/*----------------------------------------------------
-	    Properties
-	----------------------------------------------------*/
-
-public:
-	/** Base chase cam distance in units */
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float ChaseCamBaseDistance;
-
-	/** Distance added at acceleration = 1 in units */
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float ChaseCamAccelerationDistance;
-
-	/*----------------------------------------------------
 	    Components
 	----------------------------------------------------*/
 
