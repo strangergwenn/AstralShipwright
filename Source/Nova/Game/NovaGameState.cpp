@@ -126,12 +126,11 @@ void ANovaGameState::Tick(float DeltaTime)
 	}
 }
 
-void ANovaGameState::SetCurrentArea(const UNovaArea* Area, bool Docked)
+void ANovaGameState::SetCurrentArea(const UNovaArea* Area)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 
 	CurrentArea = Area;
-	StartDocked = Docked;
 }
 
 FName ANovaGameState::GetCurrentLevelName() const

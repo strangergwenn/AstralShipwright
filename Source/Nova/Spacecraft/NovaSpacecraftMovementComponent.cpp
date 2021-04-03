@@ -68,17 +68,15 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
-
 	// Initialize the movement component on server when it doesn't have a start actor
 	if (GetLocalRole() == ROLE_Authority && !IsInitialized())
 	{
 		ANovaPlayerController* PC    = GetOwner<APawn>()->GetController<ANovaPlayerController>();
 		ANovaPlayerStart*      Start = Cast<ANovaPlayerStart>(GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChoosePlayerStart(PC));
 
-		if (IsValid(Start) && IsValid(GameState))
+		if (IsValid(Start))
 		{
-			Initialize(Start, GameState->ShouldStartDocked());
+			Initialize(Start);
 		}
 	}
 
@@ -130,6 +128,8 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 		ProcessState();
 	}
 
+	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+
 	// Run movement implementation
 	ProcessMeasurementsBeforeAttitude(DeltaTime);
 	if (IsValid(GameState) && GameState->IsUsingTrajectoryMovement())
@@ -145,9 +145,9 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 	}
 }
 
-void UNovaSpacecraftMovementComponent::Initialize(const ANovaPlayerStart* Start, bool StartDocked)
+void UNovaSpacecraftMovementComponent::Initialize(const ANovaPlayerStart* Start)
 {
-	NLOG("UNovaSpacecraftMovementComponent::Initialize : '%s', StartDocked %d", Start ? *Start->GetName() : nullptr, StartDocked);
+	NLOG("UNovaSpacecraftMovementComponent::Initialize : '%s'", Start ? *Start->GetName() : nullptr);
 
 	NCHECK(IsValid(Start));
 	NCHECK(IsValid(UpdatedComponent));
@@ -157,7 +157,7 @@ void UNovaSpacecraftMovementComponent::Initialize(const ANovaPlayerStart* Start,
 	if (IsValid(Start))
 	{
 		// Reset the state
-		DockActor = Start;
+		DockState.Actor = Start;
 		ResetState();
 
 		// Reset attitude
@@ -172,8 +172,24 @@ void UNovaSpacecraftMovementComponent::Initialize(const ANovaPlayerStart* Start,
 		const FNovaTrajectory* Trajectory   = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
 		const FNovaManeuver*   NextManeuver = Trajectory ? Trajectory->GetNextManeuver(GameState->GetCurrentTime()) : nullptr;
 
+		// Start docked
+		if (DockState.IsDocked)
+		{
+			NLOG("UNovaSpacecraftMovementComponent::Initialize : docked");
+
+			MovementCommand = FNovaMovementCommand(ENovaMovementState::Docked);
+		}
+
+		// Start in space
+		else if (Start->IsInSpace)
+		{
+			NLOG("UNovaSpacecraftMovementComponent::Initialize : idle in space");
+
+			MovementCommand = FNovaMovementCommand(ENovaMovementState::Idle);
+		}
+
 		// Maneuver override
-		if (NextManeuver)
+		else if (NextManeuver)
 		{
 			// Exit maneuver
 			if (Trajectory->GetFirstManeuverStartTime() > GameState->GetCurrentTime())
@@ -195,28 +211,12 @@ void UNovaSpacecraftMovementComponent::Initialize(const ANovaPlayerStart* Start,
 			UpdatedComponent->SetWorldRotation(AttitudeCommand.Direction.Rotation());
 			MovementCommand = FNovaMovementCommand(ENovaMovementState::Idle);
 		}
-
-		// Start docked
-		else if (StartDocked)
-		{
-			NLOG("UNovaSpacecraftMovementComponent::Initialize : docked");
-
-			MovementCommand = FNovaMovementCommand(ENovaMovementState::Docked);
-		}
-
-		// Start in space
-		else if (Start->IsInSpace)
-		{
-			NLOG("UNovaSpacecraftMovementComponent::Initialize : idle in space");
-
-			MovementCommand = FNovaMovementCommand(ENovaMovementState::Idle);
-		}
 	}
 }
 
 bool UNovaSpacecraftMovementComponent::IsInitialized() const
 {
-	return IsValid(DockActor);
+	return IsValid(DockState.Actor);
 }
 
 void UNovaSpacecraftMovementComponent::Reset()
@@ -224,12 +224,16 @@ void UNovaSpacecraftMovementComponent::Reset()
 	NCHECK(GetLocalRole() == ROLE_Authority);
 	NLOG("UNovaSpacecraftMovementComponent::Reset");
 
-	DockActor = nullptr;
+	DockState.Actor = nullptr;
 }
 
 bool UNovaSpacecraftMovementComponent::CanDock() const
 {
-	return IsInitialized() && GetState() == ENovaMovementState::Idle && !DockActor->IsInSpace;
+	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(IsValid(GameState));
+	const FNovaTrajectory* Trajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
+
+	return IsInitialized() && GetState() == ENovaMovementState::Idle && !DockState.Actor->IsInSpace && Trajectory == nullptr;
 }
 
 bool UNovaSpacecraftMovementComponent::CanUndock() const
@@ -242,7 +246,7 @@ void UNovaSpacecraftMovementComponent::Dock(FSimpleDelegate Callback)
 	NLOG("UNovaSpacecraftMovementComponent::Dock ('%s')", *GetRoleString(this));
 
 	CompletionCallback = Callback;
-	RequestMovement(FNovaMovementCommand(ENovaMovementState::Docking, DockActor));
+	RequestMovement(FNovaMovementCommand(ENovaMovementState::Docking, DockState.Actor));
 }
 
 void UNovaSpacecraftMovementComponent::Undock(FSimpleDelegate Callback)
@@ -282,7 +286,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 		// Idle state
 		case ENovaMovementState::Idle:
-			if (NextManeuver && IsValid(DockActor))
+			if (NextManeuver && IsValid(DockState.Actor))
 			{
 				FVector ManeuverDirection = GetManeuverDirection();
 				if (AttitudeCommand.Direction != ManeuverDirection)
@@ -308,6 +312,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 		// Docking procedure
 		case ENovaMovementState::Docking:
 			AttitudeCommand.MainDriveRunning = false;
+			DockState.IsDocked               = true;
 			if (!IsValid(MovementCommand.Target))
 			{
 				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Docking : aborted");
@@ -334,11 +339,12 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 		// Undocking procedure
 		case ENovaMovementState::Undocking:
 			AttitudeCommand.MainDriveRunning = false;
+			DockState.IsDocked               = false;
 			if (MovementCommand.Dirty)
 			{
 				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Undocking : starting");
 
-				AttitudeCommand.Location = DockActor->GetWaitingPointLocation();
+				AttitudeCommand.Location = DockState.Actor->GetWaitingPointLocation();
 			}
 			else if (LinearAttitudeIdle && AngularAttitudeIdle)
 			{
@@ -425,15 +431,16 @@ void UNovaSpacecraftMovementComponent::ServerRequestMovement_Implementation(cons
     Internal movement implementation
 ----------------------------------------------------*/
 
-void UNovaSpacecraftMovementComponent::OnDockActorReplicated()
+void UNovaSpacecraftMovementComponent::OnDockStateReplicated()
 {
-	NLOG("UNovaSpacecraftMovementComponent::OnDockActorReplicated : resetting to '%s', IsInSpace %d",
-		DockActor ? *DockActor->GetName() : TEXT("nullptr"), DockActor ? DockActor->IsInSpace : false);
+	NLOG("UNovaSpacecraftMovementComponent::OnDockStateReplicated : resetting to '%s', IsDocked %d, IsInSpace %d",
+		DockState.Actor ? *DockState.Actor->GetName() : TEXT("nullptr"), DockState.IsDocked,
+		DockState.Actor ? DockState.Actor->IsInSpace : false);
 
-	if (DockActor)
+	if (DockState.Actor)
 	{
 		NCHECK(IsValid(UpdatedComponent));
-		UpdatedComponent->SetWorldTransform(DockActor->GetActorTransform());
+		UpdatedComponent->SetWorldTransform(DockState.Actor->GetActorTransform());
 		ResetState();
 	}
 }
@@ -644,7 +651,7 @@ void UNovaSpacecraftMovementComponent::ProcessTrajectoryMovement(float DeltaTime
 {
 	const ANovaGameState*  GameState  = GetWorld()->GetGameState<ANovaGameState>();
 	const FNovaTrajectory* Trajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
-	if (DockActor && Trajectory && Trajectory->IsValid())
+	if (DockState.Actor && Trajectory && Trajectory->IsValid())
 	{
 		const double StartTime         = Trajectory->GetStartTime();
 		const double ManeuverStartTime = Trajectory->GetFirstManeuverStartTime();
@@ -714,18 +721,18 @@ void UNovaSpacecraftMovementComponent::ProcessTrajectoryMovement(float DeltaTime
 		float ClosestManeuverDeltaV = Trajectory->Maneuvers[CurrentManeuverIndex].DeltaV;
 
 		// Get the current direction to apply
-		const FVector Direction = IsEnteringArea ? DockActor->GetInterfacePointDirection(ClosestManeuverDeltaV)
-												 : DockActor->GetInterfacePointDirection(ClosestManeuverDeltaV);
+		const FVector Direction = IsEnteringArea ? DockState.Actor->GetInterfacePointDirection(ClosestManeuverDeltaV)
+												 : DockState.Actor->GetInterfacePointDirection(ClosestManeuverDeltaV);
 		UpdatedComponent->SetWorldRotation(Direction.Rotation());
 
 		// Get the current location to apply
-		FVector Location = DockActor->GetWaitingPointLocation() + 100 * CurrentPosition * DockActor->GetOrbitalAxis();
+		FVector Location = DockState.Actor->GetWaitingPointLocation() + 100 * CurrentPosition * DockState.Actor->GetOrbitalAxis();
 		UpdatedComponent->SetWorldLocation(Location);
 
 		// Signal the end location we want for when the non(trajectory state machine kicks back in
 		if (IsEnteringArea && GetLocalRole() == ROLE_Authority)
 		{
-			AttitudeCommand.Location = DockActor->GetWaitingPointLocation();
+			AttitudeCommand.Location = DockState.Actor->GetWaitingPointLocation();
 		}
 	}
 }
@@ -740,7 +747,7 @@ FVector UNovaSpacecraftMovementComponent::GetManeuverDirection() const
 	const FNovaTrajectory* Trajectory   = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
 	const FNovaManeuver*   NextManeuver = Trajectory ? Trajectory->GetNextManeuver(GameState->GetCurrentTime()) : nullptr;
 
-	if (DockActor && NextManeuver)
+	if (DockState.Actor && NextManeuver)
 	{
 		const double ManeuverStartTime = Trajectory->GetFirstManeuverStartTime();
 		const double ArrivalTime       = Trajectory->GetArrivalTime();
@@ -749,11 +756,11 @@ FVector UNovaSpacecraftMovementComponent::GetManeuverDirection() const
 
 		if (IsEnteringArea)
 		{
-			return DockActor->GetInterfacePointDirection(NextManeuver->DeltaV);
+			return DockState.Actor->GetInterfacePointDirection(NextManeuver->DeltaV);
 		}
 		else
 		{
-			return DockActor->GetInterfacePointDirection(NextManeuver->DeltaV);
+			return DockState.Actor->GetInterfacePointDirection(NextManeuver->DeltaV);
 		}
 	}
 
@@ -766,7 +773,7 @@ void UNovaSpacecraftMovementComponent::GetLifetimeReplicatedProps(TArray<FLifeti
 
 	DOREPLIFETIME(UNovaSpacecraftMovementComponent, MovementCommand);
 	DOREPLIFETIME(UNovaSpacecraftMovementComponent, AttitudeCommand);
-	DOREPLIFETIME(UNovaSpacecraftMovementComponent, DockActor);
+	DOREPLIFETIME(UNovaSpacecraftMovementComponent, DockState.Actor);
 }
 
 #undef LOCTEXT_NAMESPACE

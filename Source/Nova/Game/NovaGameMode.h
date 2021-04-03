@@ -86,7 +86,7 @@ protected:
 	void ProcessStateMachine();
 
 	/** Load a streaming level */
-	bool LoadStreamingLevel(const class UNovaArea* Area, bool StartDocked = false, FSimpleDelegate Callback = FSimpleDelegate());
+	bool LoadStreamingLevel(const class UNovaArea* Area, FSimpleDelegate Callback = FSimpleDelegate());
 
 	/** Unload a streaming level */
 	void UnloadStreamingLevel(const class UNovaArea* Area, FSimpleDelegate Callback = FSimpleDelegate());

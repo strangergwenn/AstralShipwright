@@ -70,7 +70,7 @@ void ANovaGameMode::StartPlay()
 
 	// TODO : this should be dependent on save data
 	const UNovaArea* Station = GameInstance->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
-	LoadStreamingLevel(Station, true, FSimpleDelegate());
+	LoadStreamingLevel(Station);
 
 	// Startup the state machine
 	InitializeStateMachine();
@@ -279,15 +279,15 @@ void ANovaGameMode::ProcessStateMachine()
 	}
 }
 
-bool ANovaGameMode::LoadStreamingLevel(const UNovaArea* Area, bool StartDocked, FSimpleDelegate Callback)
+bool ANovaGameMode::LoadStreamingLevel(const UNovaArea* Area, FSimpleDelegate Callback)
 {
 	NCHECK(Area);
 
 	if (Area->LevelName != NAME_None)
 	{
-		GetGameState<ANovaGameState>()->SetCurrentArea(Area, StartDocked);
+		GetGameState<ANovaGameState>()->SetCurrentArea(Area);
 
-		NLOG("ANovaGameMode::LoadStreamingLevel : loading streaming level '%s' (%d)", *Area->LevelName.ToString(), StartDocked);
+		NLOG("ANovaGameMode::LoadStreamingLevel : loading streaming level '%s'", *Area->LevelName.ToString());
 
 		FLatentActionInfo Info;
 		Info.CallbackTarget    = this;

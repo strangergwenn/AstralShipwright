@@ -20,6 +20,22 @@ enum class ENovaMovementState : uint8
 	Stopping
 };
 
+/** Initialization parameters */
+USTRUCT(Atomic)
+struct FNovaMovementDockState
+{
+	GENERATED_BODY()
+
+	FNovaMovementDockState() : Actor(nullptr), IsDocked(true)
+	{}
+
+	UPROPERTY()
+	const class ANovaPlayerStart* Actor;
+
+	UPROPERTY()
+	bool IsDocked;
+};
+
 /** High level movement command sent by a player */
 USTRUCT(Atomic)
 struct FNovaMovementCommand
@@ -83,7 +99,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	/** Initialize the component with a starting point */
-	void Initialize(const class ANovaPlayerStart* Start, bool StartDocked);
+	void Initialize(const class ANovaPlayerStart* Start);
 
 	/** Check if this component is initialized */
 	bool IsInitialized() const;
@@ -138,7 +154,7 @@ protected:
 protected:
 	/** Start point replication event */
 	UFUNCTION()
-	void OnDockActorReplicated();
+	void OnDockStateReplicated();
 
 	/** Reset the local state */
 	void ResetState();
@@ -239,8 +255,8 @@ protected:
 	FNovaAttitudeCommand AttitudeCommand;
 
 	// Start parameters
-	UPROPERTY(ReplicatedUsing = OnDockActorReplicated)
-	const class ANovaPlayerStart* DockActor;
+	UPROPERTY(ReplicatedUsing = OnDockStateReplicated)
+	FNovaMovementDockState DockState;
 
 	// Movement state
 	FVector CurrentLinearVelocity;

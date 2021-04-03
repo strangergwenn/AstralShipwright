@@ -97,7 +97,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	/** Set the current area to use */
-	void SetCurrentArea(const class UNovaArea* Area, bool StartDocked);
+	void SetCurrentArea(const class UNovaArea* Area);
 
 	/** Get the current area we are at */
 	const class UNovaArea* GetCurrentArea() const
@@ -110,12 +110,6 @@ public:
 
 	/** Signal a shared transition and get optional title text to show */
 	TPair<FText, FText> OnSharedTransition();
-
-	/** Whether spacecraft at this area should start docked */
-	bool ShouldStartDocked() const
-	{
-		return StartDocked;
-	}
 
 	/** Enable moving spacecraft based on trajectories */
 	void SetUsingTrajectoryMovement(bool State)
@@ -280,7 +274,6 @@ private:
 	ENovaTimeDilation ServerTimeDilation;
 
 	// General state
-	bool                           StartDocked;
 	const class ANovaPlayerState*  CurrentPlayerState;
 	TArray<const class UNovaArea*> Areas;
 
