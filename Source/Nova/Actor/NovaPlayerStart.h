@@ -37,32 +37,22 @@ public:
 		return WaitingPoint->GetComponentLocation();
 	}
 
-	/** Get the world location of the area enter point */
-	FVector GetEnterPointLocation(float DeltaV, float Acceleration) const
+	/** Get the world location of the area interface point */
+	FVector GetInterfacePointLocation(float DeltaV) const
 	{
-		const float StoppingTime     = FMath::Abs(DeltaV) / Acceleration;
-		const float StoppingDistance = 100 * StoppingTime * (DeltaV / 2);
-		return GetWaitingPointLocation() + GetEnterPointDirection(DeltaV) * StoppingDistance;
+		return GetWaitingPointLocation() + GetInterfacePointDirection(DeltaV) * 10000;
 	}
 
-	/** Get the world direction of the area enter point */
-	FVector GetEnterPointDirection(float DeltaV) const
+	/** Get the world direction of the area interface point */
+	FVector GetInterfacePointDirection(float DeltaV) const
 	{
-		return (DeltaV > 0 ? -1 : 1) * FVector(0, 1, 0);
+		return (DeltaV > 0 ? 1 : -1) * GetOrbitalAxis();
 	}
 
-	/** Get the world location of the area exit point */
-	FVector GetExitPointLocation(float DeltaV, float Acceleration) const
+	/** Get the world direction of orbital axis */
+	FVector GetOrbitalAxis() const
 	{
-		const float StoppingTime     = FMath::Abs(DeltaV) / Acceleration;
-		const float StoppingDistance = 100 * StoppingTime * (DeltaV / 2);
-		return GetWaitingPointLocation() + GetExitPointDirection(DeltaV) * StoppingDistance;
-	}
-
-	/** Get the world direction of the area exit point */
-	FVector GetExitPointDirection(float DeltaV) const
-	{
-		return (DeltaV > 0 ? -1 : 1) * FVector(0, -1, 0);
+		return FVector(0, 1, 0);
 	}
 
 	/*----------------------------------------------------

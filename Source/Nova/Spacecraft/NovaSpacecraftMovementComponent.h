@@ -16,6 +16,7 @@ enum class ENovaMovementState : uint8
 	Docked,
 	Undocking,
 	Docking,
+	Orientating,
 	Stopping
 };
 
@@ -47,7 +48,7 @@ struct FNovaAttitudeCommand
 	GENERATED_BODY()
 
 	FNovaAttitudeCommand()
-		: Location(FVector::ZeroVector), Velocity(FVector::ZeroVector), Direction(FVector::ZeroVector), Roll(0), MainDriveEnabled(false)
+		: Location(FVector::ZeroVector), Velocity(FVector::ZeroVector), Direction(FVector::ZeroVector), Roll(0), MainDriveRunning(false)
 	{}
 
 	UPROPERTY()
@@ -63,7 +64,7 @@ struct FNovaAttitudeCommand
 	float Roll;
 
 	UPROPERTY()
-	bool MainDriveEnabled;
+	bool MainDriveRunning;
 };
 
 /** Spacecraft movement component */
@@ -162,6 +163,9 @@ protected:
 
 	/** Apply hit effects */
 	virtual void OnHit(const FHitResult& Hit, const FVector& HitVelocity);
+
+	/** Get the direction for the upcoming maneuver */
+	FVector GetManeuverDirection() const;
 
 	/*----------------------------------------------------
 	    Properties
@@ -264,47 +268,47 @@ public:
 		return MovementCommand.State;
 	}
 
-	inline bool IsMainDriveRunning() const
+	bool IsMainDriveRunning() const
 	{
-		return AttitudeCommand.MainDriveEnabled && AngularAttitudeDistance < VectoringAngle;
+		return AttitudeCommand.MainDriveRunning;
 	}
 
-	inline bool IsMaxVelocity() const
+	bool IsMaxVelocity() const
 	{
 		return CurrentLinearVelocity.Size() >= MaxLinearVelocity;
 	}
 
-	inline const FVector GetCurrentLinearVelocity() const
+	const FVector GetCurrentLinearVelocity() const
 	{
 		return CurrentLinearVelocity;
 	}
 
-	inline const FVector GetCurrentAngularVelocity() const
+	const FVector GetCurrentAngularVelocity() const
 	{
 		return CurrentAngularVelocity;
 	}
 
-	inline const FVector GetThrusterAcceleration() const
+	const FVector GetThrusterAcceleration() const
 	{
 		return MeasuredAcceleration;
 	}
 
-	inline const FVector GetThrusterAngularAcceleration() const
+	const FVector GetThrusterAngularAcceleration() const
 	{
 		return MeasuredAngularAcceleration;
 	}
 
-	inline const float GetMainDriveAcceleration() const
+	const float GetMainDriveAcceleration() const
 	{
 		return IsMainDriveRunning() ? LinearMainAcceleration : 0;
 	}
 
-	inline ENetRole GetLocalRole() const
+	ENetRole GetLocalRole() const
 	{
 		return GetOwner()->GetLocalRole();
 	}
 
-	inline ENetRole GetRemoteRole() const
+	ENetRole GetRemoteRole() const
 	{
 		return GetOwner()->GetRemoteRole();
 	}
