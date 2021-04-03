@@ -112,25 +112,20 @@ AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
 		FVector        ActorLocation = PlayerStart->GetActorLocation();
 		const FRotator ActorRotation = PlayerStart->GetActorRotation();
 
-		// Calculate the horizontal distance with other pawns to avoid colliding
-		// This is required because EncroachingBlockingGeometry() does not work without a full movement component
-		bool Collided = false;
-		for (APawn* Pawn : TActorRange<APawn>(GetWorld()))
+		bool PlayerStartAlreadyInUse = false;
+		for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 		{
-			FVector DistanceVector = Pawn->GetActorLocation() - ActorLocation;
-			DistanceVector.Z       = 0;
+			const UNovaSpacecraftMovementComponent* MovementComponent = SpacecraftPawn->GetSpacecraftMovement();
+			NCHECK(MovementComponent);
 
-			if (DistanceVector.Size() < 500)
+			if (PlayerStart == MovementComponent->GetPlayerStart())
 			{
-				NLOG("ANovaGameMode::ChoosePlayerStart_Implementation : encroaching '%s' invalidated '%s'", *Pawn->GetName(),
-					*PlayerStart->GetName());
-
-				Collided = true;
+				PlayerStartAlreadyInUse = true;
 				break;
 			}
 		}
 
-		if (!Collided)
+		if (!PlayerStartAlreadyInUse)
 		{
 			Candidates.Add(PlayerStart);
 		}

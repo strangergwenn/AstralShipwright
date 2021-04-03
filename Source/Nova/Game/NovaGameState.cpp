@@ -46,7 +46,7 @@ ANovaGameState::ANovaGameState()
 	// General defaults
 	MinimumTimeCorrectionThreshold = 0.25f;
 	MaximumTimeCorrectionThreshold = 10.0f;
-	TimeCorrectionFactor           = 0.2f;
+	TimeCorrectionFactor           = 1.0f;
 
 	// Fast forward defaults : 2 days per frame in 2h steps
 	FastForwardUpdateTime      = 2 * 60;
@@ -133,6 +133,11 @@ void ANovaGameState::SetCurrentArea(const UNovaArea* Area)
 	CurrentArea = Area;
 }
 
+void ANovaGameState::OnCurrentAreaReplicated()
+{
+	NLOG("ANovaGameState::OnCurrentAreaReplicated");
+}
+
 FName ANovaGameState::GetCurrentLevelName() const
 {
 	return CurrentArea ? CurrentArea->LevelName : NAME_None;
@@ -141,6 +146,12 @@ FName ANovaGameState::GetCurrentLevelName() const
 TPair<FText, FText> ANovaGameState::OnSharedTransition()
 {
 	FText PrimaryText, SecondaryText;
+
+	// TODO fix area on client
+
+	NLOG("ANovaGameState::OnSharedTransition : %f, '%s' -> '%s' ('%s')", TimeSinceTransition,
+		LastTransitionArea ? *LastTransitionArea->Name.ToString() : TEXT("nullptr"),
+		CurrentArea ? *CurrentArea->Name.ToString() : TEXT("nullptr"), *GetRoleString(this));
 
 	// Handle area changes as the primary information
 	if (LastTransitionArea && CurrentArea != LastTransitionArea)
@@ -322,7 +333,7 @@ bool ANovaGameState::ProcessTime(double DeltaTimeMinutes)
 void ANovaGameState::OnServerTimeReplicated()
 {
 	const APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController();
-	NCHECK(PC);
+	NCHECK(IsValid(PC) && PC->IsLocalController());
 
 	// Evaluate the current server time
 	const double PingSeconds      = UNovaActorTools::GetPlayerLatency(PC);
@@ -336,6 +347,8 @@ void ANovaGameState::OnServerTimeReplicated()
 	if (TimeDeltaSeconds > MaximumTimeCorrectionThreshold)
 	{
 		NLOG("ANovaGameState::OnServerTimeReplicated : time jump from %.2f to %.2f", ClientTime, RealServerTime);
+
+		TimeSinceTransition += RealServerTime - ClientTime;
 		ClientTime                   = RealServerTime;
 		ClientAdditionalTimeDilation = 1.0;
 	}
@@ -350,10 +363,6 @@ void ANovaGameState::OnServerTimeReplicated()
 		ClientAdditionalTimeDilation = 1.0 + TimeDeltaRatio * TimeCorrectionFactor * FMath::Sign(TimeDeltaSeconds);
 	}
 }
-
-/*----------------------------------------------------
-    Networking
-----------------------------------------------------*/
 
 void ANovaGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

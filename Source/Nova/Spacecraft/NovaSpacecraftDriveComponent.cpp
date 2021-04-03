@@ -65,7 +65,7 @@ void UNovaSpacecraftDriveComponent::TickComponent(float DeltaTime, ELevelTick Ti
 		}
 		else
 		{
-			EngineIntensity = MovementComponent->GetMainDriveAcceleration();
+			EngineIntensity = MovementComponent->IsMainDriveRunning() ? 1.0f : 0.0f;
 		}
 
 		// Apply power

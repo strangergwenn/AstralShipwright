@@ -63,8 +63,7 @@ struct FNovaAttitudeCommand
 {
 	GENERATED_BODY()
 
-	FNovaAttitudeCommand()
-		: Location(FVector::ZeroVector), Velocity(FVector::ZeroVector), Direction(FVector::ZeroVector), Roll(0), MainDriveRunning(false)
+	FNovaAttitudeCommand() : Location(FVector::ZeroVector), Velocity(FVector::ZeroVector), Direction(FVector::ZeroVector), Roll(0)
 	{}
 
 	UPROPERTY()
@@ -78,9 +77,6 @@ struct FNovaAttitudeCommand
 
 	UPROPERTY()
 	float Roll;
-
-	UPROPERTY()
-	bool MainDriveRunning;
 };
 
 /** Spacecraft movement component */
@@ -103,6 +99,12 @@ public:
 
 	/** Check if this component is initialized */
 	bool IsInitialized() const;
+
+	/** Get the player start currently in use */
+	const class ANovaPlayerStart* GetPlayerStart() const
+	{
+		return DockState.Actor;
+	}
 
 	/** Signal that the area changed */
 	void Reset();
@@ -193,11 +195,6 @@ public:
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float LinearAcceleration;
 
-	// Maximum linear acceleration rate with the main drive on, in m/s²
-	// TODO move to asset
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
-	float LinearMainAcceleration;
-
 	// Maximum axis turn acceleration rate in °/s²
 	// TODO move to asset
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
@@ -254,13 +251,14 @@ protected:
 	UPROPERTY(Replicated)
 	FNovaAttitudeCommand AttitudeCommand;
 
-	// Start parameters
+	// Dock parameters
 	UPROPERTY(ReplicatedUsing = OnDockStateReplicated)
 	FNovaMovementDockState DockState;
 
 	// Movement state
 	FVector CurrentLinearVelocity;
 	FVector CurrentAngularVelocity;
+	bool    MainDriveRunning;
 
 	// Measured data
 	bool    LinearAttitudeIdle;
@@ -286,7 +284,7 @@ public:
 
 	bool IsMainDriveRunning() const
 	{
-		return AttitudeCommand.MainDriveRunning;
+		return MainDriveRunning;
 	}
 
 	bool IsMaxVelocity() const
@@ -312,11 +310,6 @@ public:
 	const FVector GetThrusterAngularAcceleration() const
 	{
 		return MeasuredAngularAcceleration;
-	}
-
-	const float GetMainDriveAcceleration() const
-	{
-		return IsMainDriveRunning() ? LinearMainAcceleration : 0;
 	}
 
 	ENetRole GetLocalRole() const

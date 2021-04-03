@@ -105,6 +105,10 @@ public:
 		return CurrentArea;
 	}
 
+	/** Server replication event for notifications */
+	UFUNCTION()
+	void OnCurrentAreaReplicated();
+
 	/** Get the current sub-level name to use */
 	FName GetCurrentLevelName() const;
 
@@ -254,7 +258,7 @@ protected:
 
 private:
 	// Current level-based area
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnCurrentAreaReplicated)
 	const class UNovaArea* CurrentArea;
 
 	// When this is enabled, spacecraft will rely on trajectory movement

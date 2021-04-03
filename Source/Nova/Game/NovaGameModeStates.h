@@ -21,6 +21,7 @@ constexpr float DepartureCutsceneDelay    = 2.0;
 constexpr float DepartureCutsceneDuration = 5.0;
 constexpr float AreaIntroductionDuration  = 5.0;
 constexpr float ArrivalCutsceneDuration   = 5.0;
+constexpr float ArrivalCutsceneDelay      = 2.0;
 
 /*----------------------------------------------------
     Game state class
@@ -342,6 +343,8 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
+		IsWaitingDelay = false;
+
 		PC->SharedTransition(ENovaPlayerCameraState::CinematicSpacecraft,    //
 			FNovaAsyncAction::CreateLambda(
 				[&]()
@@ -354,11 +357,23 @@ public:
 	{
 		FNovaGameModeState::UpdateState();
 
-		if (OrbitalSimulationComponent->GetPlayerTrajectory() == nullptr)
+		if (IsWaitingDelay)
 		{
-			return ENovaGameStateIdentifier::Area;
+			if ((GameState->GetCurrentTime() - ArrivalTime) * 60.0 > ArrivalCutsceneDelay)
+			{
+				return ENovaGameStateIdentifier::Area;
+			}
+		}
+		else if (OrbitalSimulationComponent->GetPlayerTrajectory() == nullptr)
+		{
+			ArrivalTime    = GameState->GetCurrentTime();
+			IsWaitingDelay = true;
 		}
 
 		return ENovaGameStateIdentifier::ArrivalProximity;
 	}
+
+private:
+	bool   IsWaitingDelay;
+	double ArrivalTime;
 };

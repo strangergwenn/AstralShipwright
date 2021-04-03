@@ -276,6 +276,8 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 
 void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const
 {
+	Super::GetPlayerViewPoint(Location, Rotation);
+
 	// During cutscenes, use the closest camera viewpoint and focus the player ship
 	if (IsReady() && (CurrentCameraState == ENovaPlayerCameraState::CinematicSpacecraft ||
 						 CurrentCameraState == ENovaPlayerCameraState::CinematicEnvironment))
@@ -318,22 +320,15 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 		const ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
 		NCHECK(SpacecraftPawn);
 
-		const FVector Backwards             = -SpacecraftPawn->GetActorForwardVector();
-		const FVector SpacecraftLocation    = SpacecraftPawn->GetActorLocation();
-		const float   SpacecraftExtent      = SpacecraftPawn->GetTurntableBounds().Value.Size();
-		const float   MainDriveAcceleration = FMath::Abs(SpacecraftPawn->GetSpacecraftMovement()->GetMainDriveAcceleration());
+		const FVector Backwards          = -SpacecraftPawn->GetActorForwardVector();
+		const FVector SpacecraftLocation = SpacecraftPawn->GetActorLocation();
+		const float   SpacecraftExtent   = SpacecraftPawn->GetTurntableBounds().Value.Size();
 
 		FVector BoundsOffset = SpacecraftExtent * Backwards;
 		FVector BaseOffset   = 5000 * Backwards;
 
 		Location = SpacecraftLocation + BoundsOffset + BaseOffset;
 		Rotation = (SpacecraftPawn->GetActorLocation() - Location).Rotation();
-	}
-
-	// Default camera
-	else
-	{
-		Super::GetPlayerViewPoint(Location, Rotation);
 	}
 }
 
