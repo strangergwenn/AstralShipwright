@@ -1,25 +1,26 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaPlayerController.h"
-#include "NovaMenuManager.h"
 #include "NovaPlayerState.h"
 #include "NovaGameViewportClient.h"
 
+#include "Nova/Actor/NovaActorTools.h"
 #include "Nova/Actor/NovaTurntablePawn.h"
 
-#include "Nova/Game/NovaAssetCatalog.h"
-#include "Nova/Game/NovaContractManager.h"
-#include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Game/NovaGameMode.h"
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaGameUserSettings.h"
-#include "Nova/Game/NovaSaveManager.h"
-#include "Nova/Game/NovaSessionsManager.h"
 #include "Nova/Game/NovaWorldSettings.h"
 
 #include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
 
-#include "Nova/Tools/NovaActorTools.h"
+#include "Nova/System/NovaAssetManager.h"
+#include "Nova/System/NovaContractManager.h"
+#include "Nova/System/NovaGameInstance.h"
+#include "Nova/System/NovaMenuManager.h"
+#include "Nova/System/NovaSaveManager.h"
+#include "Nova/System/NovaSessionsManager.h"
+
 #include "Nova/UI/Menu/NovaOverlay.h"
 #include "Nova/Nova.h"
 

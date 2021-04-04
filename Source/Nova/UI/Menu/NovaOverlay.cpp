@@ -5,8 +5,8 @@
 #include "Nova/UI/Widget/NovaFadingWidget.h"
 #include "Nova/UI/Widget/NovaModalPanel.h"
 
-#include "Nova/Player/NovaMenuManager.h"
-#include "Nova/Game/NovaGameInstance.h"
+#include "Nova/System/NovaMenuManager.h"
+#include "Nova/System/NovaGameInstance.h"
 #include "Nova/Nova.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"

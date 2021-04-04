@@ -6,11 +6,11 @@
 
 #include "Nova/Actor/NovaMeshInterface.h"
 
-#include "Nova/Game/NovaGameInstance.h"
-#include "Nova/Game/NovaAssetCatalog.h"
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Player/NovaPlayerController.h"
 #include "Nova/Player/NovaPlayerState.h"
+#include "Nova/System/NovaGameInstance.h"
+#include "Nova/System/NovaAssetManager.h"
 
 #include "Nova/Nova.h"
 
@@ -114,7 +114,7 @@ TArray<const UNovaCompartmentDescription*> ANovaSpacecraftPawn::GetCompatibleCom
 {
 	TArray<const UNovaCompartmentDescription*> CompartmentDescriptions;
 
-	for (const UNovaCompartmentDescription* Description : UNovaAssetCatalog::Get()->GetAssets<UNovaCompartmentDescription>())
+	for (const UNovaCompartmentDescription* Description : UNovaAssetManager::Get()->GetAssets<UNovaCompartmentDescription>())
 	{
 		CompartmentDescriptions.Add(Description);
 	}
@@ -125,7 +125,7 @@ TArray<const UNovaCompartmentDescription*> ANovaSpacecraftPawn::GetCompatibleCom
 TArray<const class UNovaModuleDescription*> ANovaSpacecraftPawn::GetCompatibleModules(int32 Index, int32 SlotIndex) const
 {
 	TArray<const UNovaModuleDescription*> ModuleDescriptions;
-	TArray<const UNovaModuleDescription*> AllModuleDescriptions = UNovaAssetCatalog::Get()->GetAssets<UNovaModuleDescription>();
+	TArray<const UNovaModuleDescription*> AllModuleDescriptions = UNovaAssetManager::Get()->GetAssets<UNovaModuleDescription>();
 	const FNovaCompartment&               Compartment           = Spacecraft->Compartments[Index];
 
 	ModuleDescriptions.Add(nullptr);
@@ -143,7 +143,7 @@ TArray<const class UNovaModuleDescription*> ANovaSpacecraftPawn::GetCompatibleMo
 TArray<const UNovaEquipmentDescription*> ANovaSpacecraftPawn::GetCompatibleEquipments(int32 Index, int32 SlotIndex) const
 {
 	TArray<const UNovaEquipmentDescription*> EquipmentDescriptions;
-	TArray<const UNovaEquipmentDescription*> AllEquipmentDescriptions = UNovaAssetCatalog::Get()->GetAssets<UNovaEquipmentDescription>();
+	TArray<const UNovaEquipmentDescription*> AllEquipmentDescriptions = UNovaAssetManager::Get()->GetAssets<UNovaEquipmentDescription>();
 	const FNovaCompartment&                  Compartment              = Spacecraft->Compartments[Index];
 
 	EquipmentDescriptions.Add(nullptr);
@@ -355,14 +355,14 @@ void ANovaSpacecraftPawn::StartAssemblyUpdate()
 	{
 		if (ImmediateMode)
 		{
-			UNovaAssetCatalog::Get()->LoadAssets(RequestedAssets);
+			UNovaAssetManager::Get()->LoadAssets(RequestedAssets);
 		}
 		else
 		{
 			AssemblyState       = ENovaAssemblyState::LoadingDematerializing;
 			WaitingAssetLoading = true;
 
-			UNovaAssetCatalog::Get()->LoadAssets(RequestedAssets, FStreamableDelegate::CreateLambda(
+			UNovaAssetManager::Get()->LoadAssets(RequestedAssets, FStreamableDelegate::CreateLambda(
 																	  [&]()
 																	  {
 																		  WaitingAssetLoading = false;
@@ -464,7 +464,7 @@ void ANovaSpacecraftPawn::UpdateAssembly()
 		{
 			if (RequestedAssets.Find(Asset) == INDEX_NONE)
 			{
-				UNovaAssetCatalog::Get()->UnloadAsset(Asset);
+				UNovaAssetManager::Get()->UnloadAsset(Asset);
 			}
 		}
 		CurrentAssets = RequestedAssets;

@@ -1,8 +1,8 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaSpacecraft.h"
-#include "Nova/Game/NovaAssetCatalog.h"
 #include "Nova/Game/NovaOrbitalSimulationTypes.h"
+#include "Nova/System/NovaAssetManager.h"
 #include "Nova/Nova.h"
 
 #include "Dom/JsonObject.h"
@@ -145,7 +145,7 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 			FGuid Identifier;
 			if (FGuid::Parse(IdentifierString, Identifier))
 			{
-				Asset = UNovaAssetCatalog::Get()->GetAsset(Identifier);
+				Asset = UNovaAssetManager::Get()->GetAsset(Identifier);
 			}
 		}
 

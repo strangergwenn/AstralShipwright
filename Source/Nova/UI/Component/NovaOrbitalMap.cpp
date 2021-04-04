@@ -3,11 +3,11 @@
 #include "NovaOrbitalMap.h"
 
 #include "Nova/Game/NovaArea.h"
-#include "Nova/Game/NovaAssetCatalog.h"
-#include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Game/NovaGameState.h"
 
-#include "Nova/Player/NovaMenuManager.h"
+#include "Nova/System/NovaAssetManager.h"
+#include "Nova/System/NovaGameInstance.h"
+#include "Nova/System/NovaMenuManager.h"
 
 #include "Nova/Nova.h"
 
@@ -164,7 +164,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	// Debug data
 	FVector2D                Origin = FVector2D(0, 0);
 	const class UNovaPlanet* DefaultPlanet =
-		MenuManager->GetGameInstance()->GetCatalog()->GetAsset<UNovaPlanet>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
+		MenuManager->GetGameInstance()->GetAssetManager()->GetAsset<UNovaPlanet>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
 
 	// Reset state
 	ClearBatches();

@@ -6,13 +6,14 @@
 #include "Nova/Game/NovaGameUserSettings.h"
 
 #include "Nova/Player/NovaGameViewportClient.h"
-#include "Nova/Player/NovaMenuManager.h"
 #include "Nova/Player/NovaPlayerController.h"
 
 #include "Nova/UI/Widget/NovaButton.h"
 #include "Nova/UI/Widget/NovaSlider.h"
 #include "Nova/UI/Widget/NovaKeyBinding.h"
 #include "Nova/UI/Widget/NovaModalPanel.h"
+
+#include "Nova/System/NovaMenuManager.h"
 
 #include "Nova/Nova.h"
 

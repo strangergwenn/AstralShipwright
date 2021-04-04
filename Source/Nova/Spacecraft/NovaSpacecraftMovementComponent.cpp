@@ -2,6 +2,7 @@
 
 #include "NovaSpacecraftMovementComponent.h"
 
+#include "Nova/Actor/NovaActorTools.h"
 #include "Nova/Actor/NovaPlayerStart.h"
 
 #include "Nova/Game/NovaGameMode.h"
@@ -9,7 +10,6 @@
 #include "Nova/Game/NovaOrbitalSimulationComponent.h"
 
 #include "Nova/Player/NovaPlayerController.h"
-#include "Nova/Tools/NovaActorTools.h"
 #include "Nova/Nova.h"
 
 #include "GameFramework/PlayerStart.h"

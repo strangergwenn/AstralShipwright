@@ -6,16 +6,16 @@
 #include "Engine/StreamableManager.h"
 #include "Nova/Game/NovaGameTypes.h"
 
-#include "NovaAssetCatalog.generated.h"
+#include "NovaAssetManager.generated.h"
 
 /** Catalog of dynamic assets to load in game */
 UCLASS(ClassGroup = (Nova))
-class UNovaAssetCatalog : public UObject
+class UNovaAssetManager : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	UNovaAssetCatalog();
+	UNovaAssetManager();
 
 	/*----------------------------------------------------
 	    Public methods
@@ -25,7 +25,7 @@ public:
 	void Initialize();
 
 	/** Get a static instance of the catalog */
-	static UNovaAssetCatalog* Get()
+	static UNovaAssetManager* Get()
 	{
 		return Singleton;
 	}
@@ -79,7 +79,7 @@ public:
 	----------------------------------------------------*/
 
 	// Singleton pointer
-	static UNovaAssetCatalog* Singleton;
+	static UNovaAssetManager* Singleton;
 
 	// All assets
 	UPROPERTY()

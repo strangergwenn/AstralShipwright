@@ -1,11 +1,11 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaOrbitalSimulationComponent.h"
-#include "NovaAssetCatalog.h"
-#include "NovaGameInstance.h"
 #include "NovaGameState.h"
 
 #include "Nova/Spacecraft/NovaSpacecraft.h"
+#include "Nova/System/NovaAssetManager.h"
+#include "Nova/System/NovaGameInstance.h"
 #include "Nova/Nova.h"
 
 #include "EngineUtils.h"
@@ -84,7 +84,7 @@ void UNovaOrbitalSimulationComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Areas = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetCatalog()->GetAssets<UNovaArea>();
+	Areas = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager()->GetAssets<UNovaArea>();
 }
 
 void UNovaOrbitalSimulationComponent::UpdateSimulation()

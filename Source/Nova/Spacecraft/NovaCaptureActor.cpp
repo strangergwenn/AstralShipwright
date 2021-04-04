@@ -7,7 +7,7 @@
 #include "Nova/Actor/NovaSkeletalMeshComponent.h"
 
 #include "Nova/Game/NovaGameTypes.h"
-#include "Nova/Game/NovaAssetCatalog.h"
+#include "Nova/System/NovaAssetManager.h"
 #include "Nova/UI/NovaUI.h"
 #include "Nova/Nova.h"
 
@@ -31,7 +31,7 @@
     Constructor
 ----------------------------------------------------*/
 
-ANovaCaptureActor::ANovaCaptureActor() : Super(), SpacecraftPawn(nullptr), Catalog(nullptr)
+ANovaCaptureActor::ANovaCaptureActor() : Super(), SpacecraftPawn(nullptr), AssetManager(nullptr)
 {
 	// Create root component
 	RootComponent                = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
@@ -75,7 +75,7 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 
 	// Get required objects
 	CreateSpacecraftPawn();
-	CreateCatalog();
+	CreateAssetManager();
 	CreateRenderTarget();
 
 	// Delete previous content
@@ -141,15 +141,15 @@ void ANovaCaptureActor::CreateSpacecraftPawn()
 	SpacecraftPawn->SetImmediateMode(true);
 }
 
-void ANovaCaptureActor::CreateCatalog()
+void ANovaCaptureActor::CreateAssetManager()
 {
-	if (Catalog == nullptr)
+	if (AssetManager == nullptr)
 	{
-		Catalog = NewObject<UNovaAssetCatalog>(this, UNovaAssetCatalog::StaticClass(), TEXT("AssetCatalog"));
-		NCHECK(Catalog);
+		AssetManager = NewObject<UNovaAssetManager>(this, UNovaAssetManager::StaticClass(), TEXT("AssetManager"));
+		NCHECK(AssetManager);
 	}
 
-	Catalog->Initialize();
+	AssetManager->Initialize();
 }
 
 void ANovaCaptureActor::CreateRenderTarget()

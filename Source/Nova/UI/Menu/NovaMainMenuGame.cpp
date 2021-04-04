@@ -4,14 +4,14 @@
 
 #include "NovaMainMenu.h"
 
-#include "Nova/Player/NovaMenuManager.h"
 #include "Nova/Player/NovaPlayerController.h"
-
-#include "Nova/Game/NovaContractManager.h"
-#include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Game/NovaGameTypes.h"
 #include "Nova/Game/NovaGameState.h"
-#include "Nova/Game/NovaSessionsManager.h"
+
+#include "Nova/System/NovaContractManager.h"
+#include "Nova/System/NovaGameInstance.h"
+#include "Nova/System/NovaMenuManager.h"
+#include "Nova/System/NovaSessionsManager.h"
 
 #include "Nova/UI/Component/NovaLargeButton.h"
 

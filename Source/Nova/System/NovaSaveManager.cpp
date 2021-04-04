@@ -1,9 +1,9 @@
 ﻿// Nova project - Gwennaël Arbona
 
 #include "NovaSaveManager.h"
+#include "NovaGameInstance.h"
 
 #include "Nova/Game/NovaGameTypes.h"
-#include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Nova.h"
 
 #include "Dom/JsonObject.h"

@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "NovaGameTypes.h"
 
 #include "GameFramework/OnlineReplStructs.h"
 #include "Net/UnrealNetwork.h"

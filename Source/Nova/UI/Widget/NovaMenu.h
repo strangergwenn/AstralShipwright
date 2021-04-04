@@ -4,7 +4,6 @@
 
 #include "Nova/UI/NovaUI.h"
 #include "Widgets/SCompoundWidget.h"
-#include "Nova/Tools/NovaActorTools.h"
 
 class SNovaMenu : public SCompoundWidget
 {

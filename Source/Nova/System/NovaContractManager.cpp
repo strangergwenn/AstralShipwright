@@ -1,10 +1,9 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaContractManager.h"
-#include "NovaContract.h"
 #include "NovaGameInstance.h"
-#include "NovaGameTypes.h"
 
+#include "Nova/Game/Contract/NovaContract.h"
 #include "Nova/Player/NovaPlayerController.h"
 
 #include "Nova/Nova.h"

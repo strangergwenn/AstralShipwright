@@ -3,8 +3,8 @@
 #include "NovaContract.h"
 
 #include "Nova/Player/NovaPlayerController.h"
-#include "Nova/Game/NovaGameInstance.h"
-#include "Nova/Game/NovaAssetCatalog.h"
+#include "Nova/System/NovaGameInstance.h"
+#include "Nova/System/NovaAssetManager.h"
 
 #include "Nova/Nova.h"
 

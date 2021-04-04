@@ -2,11 +2,11 @@
 
 #include "NovaTrajectoryCalculator.h"
 
-#include "Nova/Player/NovaMenuManager.h"
-
 #include "Nova/Game/NovaArea.h"
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaOrbitalSimulationComponent.h"
+
+#include "Nova/System/NovaMenuManager.h"
 
 #include "Nova/UI/Widget/NovaNavigationPanel.h"
 #include "Nova/UI/Widget/NovaButton.h"

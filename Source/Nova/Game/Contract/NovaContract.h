@@ -1,10 +1,10 @@
-// Nova project - Gwenna�l Arbona
+﻿// Nova project - Gwennaël Arbona
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Dom/JsonObject.h"
-#include "NovaContractManager.h"
+#include "Nova/System/NovaContractManager.h"
 
 /*----------------------------------------------------
     Base contract definitions

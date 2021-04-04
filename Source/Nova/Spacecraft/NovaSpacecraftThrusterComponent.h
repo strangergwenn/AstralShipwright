@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "NovaSpacecraftTypes.h"
+#include "Nova/Actor/NovaActorTools.h"
 #include "Components/SceneComponent.h"
-#include "Nova/Tools/NovaActorTools.h"
 
 #include "NovaSpacecraftThrusterComponent.generated.h"
 

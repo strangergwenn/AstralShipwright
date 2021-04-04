@@ -3,16 +3,20 @@
 #include "NovaGameState.h"
 
 #include "NovaArea.h"
-#include "NovaAssetCatalog.h"
-#include "NovaGameInstance.h"
-#include "NovaSessionsManager.h"
 #include "NovaOrbitalSimulationComponent.h"
+
+#include "Nova/Actor/NovaActorTools.h"
 
 #include "Nova/Player/NovaPlayerState.h"
 #include "Nova/Player/NovaPlayerController.h"
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
-#include "Nova/Tools/NovaActorTools.h"
+
+#include "Nova/System/NovaAssetManager.h"
+#include "Nova/System/NovaGameInstance.h"
+#include "Nova/System/NovaSessionsManager.h"
+
+#include "Nova/Nova.h"
 
 #include "Net/UnrealNetwork.h"
 #include "EngineUtils.h"
@@ -213,8 +217,8 @@ void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool Is
 		{
 			// TODO : should first look into de-serialized save data, and then if nothing, fetch the default location from game mode
 
-			const class UNovaArea* StationA =
-				GetGameInstance<UNovaGameInstance>()->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
+			const class UNovaArea* StationA = GetGameInstance<UNovaGameInstance>()->GetAssetManager()->GetAsset<UNovaArea>(
+				FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
 #if 0
 			OrbitalSimulationComponent->SetOrbit(
 				{Spacecraft.Identifier}, MakeShared<FNovaOrbit>(FNovaOrbitGeometry(StationA->Planet, 300, 200, 0, 360), 0));

@@ -2,9 +2,8 @@
 
 #include "NovaActorTools.h"
 
-#include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Player/NovaPlayerController.h"
-
+#include "Nova/System/NovaGameInstance.h"
 #include "Nova/Nova.h"
 
 #include "GameFramework/Actor.h"

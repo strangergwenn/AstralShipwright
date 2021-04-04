@@ -4,8 +4,8 @@
 
 #include "NovaMainMenu.h"
 
-#include "Nova/Player/NovaMenuManager.h"
 #include "Nova/Player/NovaPlayerController.h"
+#include "Nova/System/NovaMenuManager.h"
 
 #include "Nova/UI/Component/NovaLargeButton.h"
 

@@ -2,9 +2,7 @@
 
 #include "NovaGameMode.h"
 
-#include "NovaAssetCatalog.h"
 #include "NovaArea.h"
-#include "NovaGameInstance.h"
 #include "NovaGameModeStates.h"
 #include "NovaGameState.h"
 #include "NovaOrbitalSimulationComponent.h"
@@ -15,6 +13,9 @@
 #include "Nova/Player/NovaPlayerState.h"
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
+
+#include "Nova/System/NovaAssetManager.h"
+#include "Nova/System/NovaGameInstance.h"
 
 #include "Nova/Nova.h"
 
@@ -75,7 +76,7 @@ void ANovaGameMode::StartPlay()
 	if (!Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMainMenuMap())
 	{
 		// TODO : this should be dependent on save data
-		const UNovaArea* Station = GameInstance->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
+		const UNovaArea* Station = GameInstance->GetAssetManager()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
 		LoadStreamingLevel(Station);
 
 		// Startup the state machine

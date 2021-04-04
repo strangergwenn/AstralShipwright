@@ -4,11 +4,11 @@
 #include "NovaMainMenu.h"
 
 #include "Nova/Actor/NovaTurntablePawn.h"
-
-#include "Nova/Player/NovaMenuManager.h"
 #include "Nova/Player/NovaPlayerController.h"
-#include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Game/NovaGameTypes.h"
+
+#include "Nova/System/NovaGameInstance.h"
+#include "Nova/System/NovaMenuManager.h"
 
 #include "Nova/UI/Widget/NovaSlider.h"
 #include "Nova/UI/Widget/NovaModalPanel.h"

@@ -1,25 +1,25 @@
 // Nova project - Gwennaël Arbona
 
-#include "NovaAssetCatalog.h"
+#include "NovaAssetManager.h"
 #include "Nova/Nova.h"
 
 #include "AssetRegistryModule.h"
 
 // Statics
-UNovaAssetCatalog* UNovaAssetCatalog::Singleton = nullptr;
+UNovaAssetManager* UNovaAssetManager::Singleton = nullptr;
 
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
-UNovaAssetCatalog::UNovaAssetCatalog() : Super()
+UNovaAssetManager::UNovaAssetManager() : Super()
 {}
 
 /*----------------------------------------------------
     Public methods
 ----------------------------------------------------*/
 
-void UNovaAssetCatalog::Initialize()
+void UNovaAssetManager::Initialize()
 {
 	Singleton = this;
 	Catalog.Empty();
@@ -44,7 +44,7 @@ void UNovaAssetCatalog::Initialize()
 	}
 }
 
-void UNovaAssetCatalog::LoadAsset(FSoftObjectPath Asset, FStreamableDelegate Callback)
+void UNovaAssetManager::LoadAsset(FSoftObjectPath Asset, FStreamableDelegate Callback)
 {
 	TArray<FSoftObjectPath> Assets;
 	Assets.Add(Asset);
@@ -52,7 +52,7 @@ void UNovaAssetCatalog::LoadAsset(FSoftObjectPath Asset, FStreamableDelegate Cal
 	StreamableManager.RequestAsyncLoad(Assets, Callback);
 }
 
-void UNovaAssetCatalog::LoadAssets(TArray<FSoftObjectPath> Assets)
+void UNovaAssetManager::LoadAssets(TArray<FSoftObjectPath> Assets)
 {
 	for (FSoftObjectPath Asset : Assets)
 	{
@@ -60,12 +60,12 @@ void UNovaAssetCatalog::LoadAssets(TArray<FSoftObjectPath> Assets)
 	}
 }
 
-void UNovaAssetCatalog::LoadAssets(TArray<FSoftObjectPath> Assets, FStreamableDelegate Callback)
+void UNovaAssetManager::LoadAssets(TArray<FSoftObjectPath> Assets, FStreamableDelegate Callback)
 {
 	StreamableManager.RequestAsyncLoad(Assets, Callback);
 }
 
-void UNovaAssetCatalog::UnloadAsset(FSoftObjectPath Asset)
+void UNovaAssetManager::UnloadAsset(FSoftObjectPath Asset)
 {
 	StreamableManager.Unload(Asset);
 }

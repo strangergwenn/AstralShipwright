@@ -5,7 +5,7 @@
 #include "NovaNavigationPanel.h"
 #include "NovaModalPanel.h"
 
-#include "Nova/Player/NovaMenuManager.h"
+#include "Nova/System/NovaMenuManager.h"
 #include "Nova/Nova.h"
 
 #include "GameFramework/InputSettings.h"

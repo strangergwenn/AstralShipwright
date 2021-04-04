@@ -2,19 +2,18 @@
 
 #include "NovaGameInstance.h"
 
-#include "NovaAssetCatalog.h"
+#include "NovaAssetManager.h"
 #include "NovaContractManager.h"
-#include "NovaGameState.h"
-#include "NovaGameUserSettings.h"
+#include "NovaMenuManager.h"
 #include "NovaSaveManager.h"
 #include "NovaSessionsManager.h"
 
+#include "Nova/Game/NovaGameState.h"
+#include "Nova/Game/NovaGameUserSettings.h"
 #include "Nova/Player/NovaPlayerController.h"
-#include "Nova/Player/NovaMenuManager.h"
 #include "Nova/Player/NovaGameViewportClient.h"
 
 #include "Nova/UI/NovaUI.h"
-
 #include "Nova/Nova.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -121,10 +120,10 @@ void UNovaGameInstance::Init()
 	// Setup connection screen
 	FCoreUObjectDelegates::PreLoadMap.AddUObject(this, &UNovaGameInstance::PreLoadMap);
 
-	// Get asset inventory
-	Catalog = NewObject<UNovaAssetCatalog>(this, UNovaAssetCatalog::StaticClass(), TEXT("AssetCatalog"));
-	NCHECK(Catalog);
-	Catalog->Initialize();
+	// Create asset manager
+	AssetManager = NewObject<UNovaAssetManager>(this, UNovaAssetManager::StaticClass(), TEXT("AssetManager"));
+	NCHECK(AssetManager);
+	AssetManager->Initialize();
 
 	// Create save manager
 	SaveManager = NewObject<UNovaSaveManager>(this, UNovaSaveManager::StaticClass(), TEXT("SaveManager"));

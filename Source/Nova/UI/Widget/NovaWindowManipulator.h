@@ -2,8 +2,8 @@
 
 #pragma once
 
+#include "Nova/System/NovaMenuManager.h"
 #include "Nova/UI/NovaUI.h"
-#include "Nova/Player/NovaMenuManager.h"
 #include "Nova/Nova.h"
 
 #include "Widgets/Images/SImage.h"

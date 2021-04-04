@@ -1,10 +1,10 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaMenuManager.h"
-#include "NovaPlayerController.h"
-#include "NovaGameViewportClient.h"
 
 #include "Nova/Game/NovaWorldSettings.h"
+#include "Nova/Player/NovaGameViewportClient.h"
+#include "Nova/Player/NovaPlayerController.h"
 
 #include "Nova/UI/NovaUI.h"
 #include "Nova/UI/Menu/NovaMainMenu.h"

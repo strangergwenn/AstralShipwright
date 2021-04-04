@@ -3,9 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "NovaGameTypes.h"
-
 #include "Engine/GameInstance.h"
+#include "Nova/Game/NovaGameTypes.h"
 
 #include "NovaGameInstance.generated.h"
 
@@ -72,9 +71,9 @@ public:
 	----------------------------------------------------*/
 
 	/** Get the catalog */
-	class UNovaAssetCatalog* GetCatalog() const
+	class UNovaAssetManager* GetAssetManager() const
 	{
-		return Catalog;
+		return AssetManager;
 	}
 
 	/** Get the contract manager */
@@ -110,9 +109,9 @@ private:
 	    Data
 	----------------------------------------------------*/
 
-	// Catalog of game assets
+	// Asset manager object
 	UPROPERTY()
-	class UNovaAssetCatalog* Catalog;
+	class UNovaAssetManager* AssetManager;
 
 	// Save manager object
 	UPROPERTY()

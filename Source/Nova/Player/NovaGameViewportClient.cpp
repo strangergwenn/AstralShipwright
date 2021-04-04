@@ -2,17 +2,16 @@
 
 #include "NovaGameViewportClient.h"
 
-#include "Nova/Game/NovaGameInstance.h"
-#include "Nova/Game/NovaAssetCatalog.h"
 #include "Nova/Player/NovaPlayerController.h"
-#include "Nova/Player/NovaMenuManager.h"
 
-#include "Nova/Tools/NovaCanvas.h"
+#include "Nova/System/NovaAssetManager.h"
+#include "Nova/System/NovaGameInstance.h"
+#include "Nova/System/NovaMenuManager.h"
+
 #include "Nova/UI/Component/NovaLoadingScreen.h"
 #include "Nova/Nova.h"
 
 #include "MoviePlayer.h"
-#include "Engine/Canvas.h"
 
 /*----------------------------------------------------
     Constructor
@@ -129,7 +128,7 @@ void UNovaGameViewportClient::Initialize()
 
 		// Find the loading screen setup
 		TArray<const UNovaLoadingScreenSetup*> LoadingScreenSetupList =
-			Cast<UNovaGameInstance>(GetGameInstance())->GetCatalog()->GetAssets<UNovaLoadingScreenSetup>();
+			Cast<UNovaGameInstance>(GetGameInstance())->GetAssetManager()->GetAssets<UNovaLoadingScreenSetup>();
 		if (LoadingScreenSetupList.Num())
 		{
 			LoadingScreenSetup = LoadingScreenSetupList.Last();
