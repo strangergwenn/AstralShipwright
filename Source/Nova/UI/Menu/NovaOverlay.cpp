@@ -244,6 +244,18 @@ public:
 		CurrentSubtitle = DesiredSubtitle;
 	}
 
+	void ShowTitle(const FText& Title, const FText& Subtitle)
+	{
+		DesiredTitle    = Title;
+		DesiredSubtitle = Subtitle;
+
+		// Force update if we're past the original time
+		if (CurrentDisplayTime > DisplayDuration)
+		{
+			CurrentTitle = FText();
+		}
+	}
+
 	FText GetTitleText() const
 	{
 		return CurrentTitle.ToUpper();
@@ -264,12 +276,6 @@ public:
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 		return SNovaFadingWidget::GetTextColor(Theme.SubtitleFont);
-	}
-
-	void ShowTitle(const FText& Title, const FText& Subtitle)
-	{
-		DesiredTitle    = Title;
-		DesiredSubtitle = Subtitle;
 	}
 
 private:

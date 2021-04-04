@@ -71,12 +71,16 @@ void ANovaGameMode::StartPlay()
 		NovaGameState->Load(GameInstance->GetWorldSave());
 	}
 
-	// TODO : this should be dependent on save data
-	const UNovaArea* Station = GameInstance->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
-	LoadStreamingLevel(Station);
+	// Start the game mode
+	if (!Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMainMenuMap())
+	{
+		// TODO : this should be dependent on save data
+		const UNovaArea* Station = GameInstance->GetCatalog()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
+		LoadStreamingLevel(Station);
 
-	// Startup the state machine
-	InitializeStateMachine();
+		// Startup the state machine
+		InitializeStateMachine();
+	}
 }
 
 void ANovaGameMode::PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage)
@@ -176,7 +180,10 @@ void ANovaGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	ProcessStateMachine();
+	if (StateMap.Num())
+	{
+		ProcessStateMachine();
+	}
 }
 
 /*----------------------------------------------------
