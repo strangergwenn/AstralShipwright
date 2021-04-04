@@ -156,7 +156,7 @@ protected:
 protected:
 	/** Start point replication event */
 	UFUNCTION()
-	void OnDockStateReplicated();
+	void OnDockStateReplicated(const FNovaMovementDockState& PreviousDockState);
 
 	/** Reset the local state */
 	void ResetState();
@@ -184,6 +184,9 @@ protected:
 
 	/** Get the direction for the upcoming maneuver */
 	FVector GetManeuverDirection() const;
+
+	/** Get the transform to use when a new dock actor is ready */
+	FTransform GetInitialTransform() const;
 
 	/*----------------------------------------------------
 	    Properties

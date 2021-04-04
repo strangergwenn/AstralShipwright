@@ -19,6 +19,7 @@
 #include "Nova/Nova.h"
 
 #include "GameFramework/SpectatorPawn.h"
+#include "Engine/LevelStreaming.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 
@@ -109,10 +110,26 @@ AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	// Iterate over player starts
 	for (ANovaPlayerStart* PlayerStart : TActorRange<ANovaPlayerStart>(GetWorld()))
 	{
-		FVector        ActorLocation = PlayerStart->GetActorLocation();
-		const FRotator ActorRotation = PlayerStart->GetActorRotation();
+		// Check that this player start is not part of a level being unloaded
+		bool IsValidPlayerStart = true;
+		if (IsValid(PlayerStart) && IsValid(PlayerStart->GetLevel()))
+		{
+			for (const ULevelStreaming* Level : GetWorld()->GetStreamingLevels())
+			{
+				if (Level->GetLoadedLevel() &&
+					Level->GetLoadedLevel()->GetOuter()->GetFName() == PlayerStart->GetLevel()->GetOuter()->GetFName() &&
+					Level->IsStreamingStatePending())
+				{
+					IsValidPlayerStart = false;
+				}
+			}
+		}
+		else
+		{
+			IsValidPlayerStart = false;
+		}
 
-		bool PlayerStartAlreadyInUse = false;
+		// Check that the player start is not already in use
 		for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 		{
 			const UNovaSpacecraftMovementComponent* MovementComponent = SpacecraftPawn->GetSpacecraftMovement();
@@ -120,12 +137,12 @@ AActor* ANovaGameMode::ChoosePlayerStart_Implementation(AController* Player)
 
 			if (PlayerStart == MovementComponent->GetPlayerStart())
 			{
-				PlayerStartAlreadyInUse = true;
+				IsValidPlayerStart = false;
 				break;
 			}
 		}
 
-		if (!PlayerStartAlreadyInUse)
+		if (IsValidPlayerStart)
 		{
 			Candidates.Add(PlayerStart);
 		}
@@ -181,8 +198,6 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 
 	NLOG("ANovaGameMode::ChangeArea : '%s'", *Area->LevelName.ToString());
 
-	ResetSpacecraft();
-
 	// Compare with the current area and process the change if needed
 	const UNovaArea* CurrentArea = GetGameState<ANovaGameState>()->GetCurrentArea();
 	if (Area != CurrentArea)
@@ -190,6 +205,8 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 		UnloadStreamingLevel(CurrentArea);
 		LoadStreamingLevel(Area);
 	}
+
+	ResetSpacecraft();
 }
 
 void ANovaGameMode::ChangeAreaToOrbit()
