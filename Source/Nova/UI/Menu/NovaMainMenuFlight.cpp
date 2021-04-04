@@ -131,23 +131,15 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
-						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("CalculateTrajectories", "Calculate trajectories"))
-						.HelpText(LOCTEXT("CalculateTrajectoriesHelp", "Calculate trajectory options"))
-						.OnClicked(FSimpleDelegate::CreateLambda([&]()
-						{
-							const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-							UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-
-							const class UNovaArea* StationA = MenuManager->GetGameInstance()->GetAssetManager()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
-							const class UNovaArea* StationB = MenuManager->GetGameInstance()->GetAssetManager()->GetAsset<UNovaArea>(FGuid("{CCA2E0C7-43AE-CDD1-06CA-AF951F61C44A}"));
-							const class UNovaArea* StationC = MenuManager->GetGameInstance()->GetAssetManager()->GetAsset<UNovaArea>(FGuid("{CAC5C9B9-451B-1212-6EC4-E8918B69A795}"));
-					
-							TrajectoryCalculator->SimulateTrajectories(
-								MakeShared<FNovaOrbit>(*OrbitalSimulation->GetPlayerOrbit()),
-								OrbitalSimulation->GetAreaOrbit(StationC),
-								GameState->GetPlayerSpacecraftIdentifiers());
-						}))
+						SNovaAssignNew(DestinationListView, SNovaModalListView<const UNovaArea*>)
+						.Panel(this)
+						.TitleText(LOCTEXT("DestinationList", "Destinations"))
+						.HelpText(LOCTEXT("DestinationListHelp", "Plan a trajectory toward a destination"))
+						.ItemsSource(&DestinationList)
+						.OnGenerateItem(this, &SNovaMainMenuFlight::GenerateDestinationItem)
+						.OnGenerateName(this, &SNovaMainMenuFlight::GetDestinationName)
+						.OnGenerateTooltip(this, &SNovaMainMenuFlight::GenerateDestinationTooltip)
+						.OnSelectionChanged(this, &SNovaMainMenuFlight::OnSelectedDestinationChanged)
 					]
 			
 					+ SVerticalBox::Slot()
@@ -159,9 +151,10 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.OnClicked(this, &SNovaMainMenuFlight::OnCommitTrajectory)
 						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 						{
+							const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 							UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
-							return OrbitalSimulation && OrbitalSimulation->CanStartTrajectory(OrbitalMap->GetPreviewTrajectory());
+							return OrbitalSimulation && OrbitalSimulation->CanStartTrajectory(OrbitalMap->GetPreviewTrajectory()) && SelectedDestination != GameState->GetCurrentArea();
 						})))
 					]
 			
@@ -279,6 +272,11 @@ void SNovaMainMenuFlight::Show()
 	GetSpacecraftPawn()->SetHighlightCompartment(INDEX_NONE);
 
 	TrajectoryCalculator->Reset();
+
+	// Destination list
+	SelectedDestination = nullptr;
+	DestinationList     = MenuManager->GetGameInstance()->GetAssetManager()->GetAssets<UNovaArea>();
+	DestinationListView->Refresh();
 }
 
 void SNovaMainMenuFlight::Hide()
@@ -337,7 +335,77 @@ UNovaSpacecraftMovementComponent* SNovaMainMenuFlight::GetSpacecraftMovement() c
 }
 
 /*----------------------------------------------------
-    Content callbacks
+    Callbacks (destination)
+----------------------------------------------------*/
+
+TSharedRef<SWidget> SNovaMainMenuFlight::GenerateDestinationItem(const UNovaArea* Destination)
+{
+	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
+	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
+
+	// clang-format off
+	return SNew(SHorizontalBox)
+
+		+ SHorizontalBox::Slot()
+		.Padding(ButtonTheme.IconPadding)
+		.AutoWidth()
+		[
+			SNew(SBorder)
+			.BorderImage(new FSlateNoResource)
+			.HAlign(HAlign_Center)
+			.VAlign(VAlign_Center)
+			[
+				SNew(SImage)
+				.Image(this, &SNovaMainMenuFlight::GetDestinationIcon, Destination)
+			]
+		]
+
+		+ SHorizontalBox::Slot()
+		.HAlign(HAlign_Left)
+		.VAlign(VAlign_Center)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.MainFont)
+			.Text(GetDestinationName(Destination))
+		];
+	// clang-format on
+}
+
+FText SNovaMainMenuFlight::GetDestinationName(const UNovaArea* Destination) const
+{
+	return Destination->Name;
+}
+
+const FSlateBrush* SNovaMainMenuFlight::GetDestinationIcon(const UNovaArea* Destination) const
+{
+	return FNovaStyleSet::GetBrush(Destination == SelectedDestination ? "Icon/SB_ListOn" : "Icon/SB_ListOff");
+}
+
+FText SNovaMainMenuFlight::GenerateDestinationTooltip(const UNovaArea* Destination)
+{
+	return FText::FormatNamed(LOCTEXT("DestinationHelp", "Set course for {area}"), TEXT("area"), Destination->Name);
+}
+
+void SNovaMainMenuFlight::OnSelectedDestinationChanged(const UNovaArea* Destination, int32 Index)
+{
+	NLOG("SNovaMainMenuFlight::OnSelectedDestinationChanged : %s", *Destination->Name.ToString());
+
+	SelectedDestination = Destination;
+
+	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(GameState);
+
+	if (SelectedDestination != GameState->GetCurrentArea())
+	{
+		UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+
+		TrajectoryCalculator->SimulateTrajectories(MakeShared<FNovaOrbit>(*OrbitalSimulation->GetPlayerOrbit()),
+			OrbitalSimulation->GetAreaOrbit(Destination), GameState->GetPlayerSpacecraftIdentifiers());
+	}
+}
+
+/*----------------------------------------------------
+    Callbacks
 ----------------------------------------------------*/
 
 bool SNovaMainMenuFlight::IsUndockEnabled() const
@@ -349,10 +417,6 @@ bool SNovaMainMenuFlight::IsDockEnabled() const
 {
 	return GetSpacecraftMovement() && GetSpacecraftMovement()->CanDock();
 }
-
-/*----------------------------------------------------
-    Callbacks
-----------------------------------------------------*/
 
 void SNovaMainMenuFlight::OnUndock()
 {

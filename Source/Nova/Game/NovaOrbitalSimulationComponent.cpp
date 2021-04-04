@@ -290,12 +290,13 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	NLOG("PhasingOrbitPeriod = %f, DestinationOrbitPeriod = %f", PhasingOrbitPeriod, DestinationOrbitPeriod);
 	NLOG("PhasingDuration = %f, PhasingAngle = %f", PhasingDuration, PhasingAngle);
 	NLOG("FinalDestinationPhase = %f, FinalSpacecraftPhase = %f", FinalDestinationPhase, FinalSpacecraftPhase);
-	NLOG("Trajectory->GetStartTime() = %f, Parameters->StartTime = %f", Trajectory->GetStartTime(), Parameters->StartTime);
+	NLOG("Trajectory->GetStartTime() = %f, Parameters->StartTime = %f", FMath::IsFinite(PhasingDuration) ? Trajectory->GetStartTime() : 0,
+		Parameters->StartTime);
 	NLOG("--------------------------------------------------------------------------------");
 #endif
 
 	NCHECK(FMath::Abs(FinalSpacecraftPhase - FinalDestinationPhase) < SMALL_NUMBER);
-	if (FMath::IsFinite(Trajectory->GetStartTime()))
+	if (FMath::IsFinite(PhasingDuration))
 	{
 		NCHECK(FMath::Abs(Trajectory->GetStartTime() - Parameters->StartTime) * 60.0 < 1);
 	}

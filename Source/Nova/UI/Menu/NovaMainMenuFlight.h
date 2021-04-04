@@ -4,7 +4,7 @@
 
 #include "Nova/UI/NovaUI.h"
 #include "Nova/UI/Widget/NovaTabView.h"
-#include "Nova/UI/Widget/NovaListView.h"
+#include "Nova/UI/Widget/NovaModalListView.h"
 
 #include "Online.h"
 
@@ -24,6 +24,9 @@ class SNovaMainMenuFlight : public SNovaTabPanel
 	SLATE_END_ARGS()
 
 public:
+	SNovaMainMenuFlight() : SelectedDestination(nullptr)
+	{}
+
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
@@ -54,16 +57,18 @@ protected:
 	class UNovaSpacecraftMovementComponent* GetSpacecraftMovement() const;
 
 	/*----------------------------------------------------
-	    Content callbacks
+	    Callbacks
 	----------------------------------------------------*/
 
 protected:
+	TSharedRef<SWidget> GenerateDestinationItem(const class UNovaArea* Destination);
+	FText               GetDestinationName(const class UNovaArea* Destination) const;
+	const FSlateBrush*  GetDestinationIcon(const class UNovaArea* Destination) const;
+	FText               GenerateDestinationTooltip(const class UNovaArea* Destination);
+	void                OnSelectedDestinationChanged(const class UNovaArea* Destination, int32 Index);
+
 	bool IsUndockEnabled() const;
 	bool IsDockEnabled() const;
-
-	/*----------------------------------------------------
-	    Callbacks
-	----------------------------------------------------*/
 
 	void OnUndock();
 	void OnDock();
@@ -79,8 +84,12 @@ protected:
 	// Settings
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 
+	// Destination list
+	const class UNovaArea*                           SelectedDestination;
+	TArray<const class UNovaArea*>                   DestinationList;
+	TSharedPtr<SNovaModalListView<const UNovaArea*>> DestinationListView;
+
 	// Slate widgets
-	TSharedPtr<class SRetainerWidget>           MapRetainer;
 	TSharedPtr<class SNovaOrbitalMap>           OrbitalMap;
 	TSharedPtr<class SNovaButton>               UndockButton;
 	TSharedPtr<class SNovaButton>               DockButton;
