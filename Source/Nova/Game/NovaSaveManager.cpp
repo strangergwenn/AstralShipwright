@@ -8,12 +8,13 @@
 
 #include "Dom/JsonObject.h"
 #include "Kismet/GameplayStatics.h"
-#include "Runtime/Core/Public/HAL/FileManager.h"
-#include "Runtime/Core/Public/Misc/FileHelper.h"
-#include "Runtime/Core/Public/Misc/Paths.h"
-#include "Runtime/Core/Public/Async/AsyncWork.h"
-#include "Runtime/Json/Public/Serialization/JsonWriter.h"
-#include "Runtime/Json/Public/Serialization/JsonSerializer.h"
+#include "HAL/FileManager.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Async/AsyncWork.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
+#include "Policies/CondensedJsonPrintPolicy.h"
 
 /*----------------------------------------------------
     Asynchronous task

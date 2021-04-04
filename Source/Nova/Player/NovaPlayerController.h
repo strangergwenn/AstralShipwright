@@ -80,6 +80,8 @@ public:
 	float CameraTravelingAmount;
 };
 
+enum class ENovaNetworkError : uint8;
+
 /** Default player controller class */
 UCLASS(ClassGroup = (Nova))
 class ANovaPlayerController : public APlayerController

@@ -11,6 +11,7 @@
 #include "Nova/Game/NovaGameInstance.h"
 #include "Nova/Game/NovaGameTypes.h"
 #include "Nova/Game/NovaGameState.h"
+#include "Nova/Game/NovaSessionsManager.h"
 
 #include "Nova/UI/Component/NovaLargeButton.h"
 
@@ -313,11 +314,11 @@ void SNovaMainMenuGame::Tick(const FGeometry& AllottedGeometry, const double Cur
 	// Refresh the friend list
 	if (!IsHidden())
 	{
-		UNovaGameInstance* GameInstance = MenuManager->GetGameInstance();
+		UNovaSessionsManager* SessionsManager = MenuManager->GetGameInstance()->GetSessionsManager();
 
-		if (TimeSinceFriendListUpdate > FriendListUpdatePeriod && !GameInstance->IsActive())
+		if (TimeSinceFriendListUpdate > FriendListUpdatePeriod && !SessionsManager->IsBusy())
 		{
-			GameInstance->SearchFriends(FOnFriendSearchComplete::CreateRaw(this, &SNovaMainMenuGame::OnFriendListReady));
+			SessionsManager->SearchFriends(FOnFriendSearchComplete::CreateRaw(this, &SNovaMainMenuGame::OnFriendListReady));
 
 			TimeSinceFriendListUpdate = 0;
 		}
@@ -458,31 +459,30 @@ FText SNovaMainMenuGame::GetOnlineText() const
 		return FText();
 	}
 
-	UNovaGameInstance* GameInstance = MenuManager->GetGameInstance();
-	NCHECK(GameInstance);
-	APlayerState* PlayerState = PC->PlayerState;
+	UNovaSessionsManager* SessionsManager = MenuManager->GetGameInstance()->GetSessionsManager();
+	APlayerState*         PlayerState     = PC->PlayerState;
 
-	if (GameInstance && PlayerState)
+	if (SessionsManager && PlayerState)
 	{
 		FText StatusMessage;
 
 		// Get the status message
-		if (GameInstance->GetNetworkState() == ENovaNetworkState::Offline)
+		if (SessionsManager->GetNetworkState() == ENovaNetworkState::Offline)
 		{
 			StatusMessage = LOCTEXT("PlayingOffline", "You are playing offline");
 		}
-		else if (GameInstance->GetNetworkState() == ENovaNetworkState::OnlineHost)
+		else if (SessionsManager->GetNetworkState() == ENovaNetworkState::OnlineHost)
 		{
 			StatusMessage = LOCTEXT("OnlineHost", "You are playing online as the host");
 		}
-		else if (GameInstance->GetNetworkState() == ENovaNetworkState::OnlineClient)
+		else if (SessionsManager->GetNetworkState() == ENovaNetworkState::OnlineClient)
 		{
 			StatusMessage = FText::FormatNamed(LOCTEXT("OnlineClient", "You are playing online as a guest ({ping}ms ping)"), TEXT("ping"),
 				FText::AsNumber(PlayerState->ExactPing));
 		}
 		else
 		{
-			StatusMessage = GameInstance->GetNetworkStateString();
+			StatusMessage = SessionsManager->GetNetworkStateString();
 		}
 
 		return StatusMessage;
@@ -493,7 +493,8 @@ FText SNovaMainMenuGame::GetOnlineText() const
 
 FText SNovaMainMenuGame::GetOnlineButtonText() const
 {
-	if (MenuManager->GetGameInstance()->IsOnline())
+	const UNovaSessionsManager* SessionsManager = MenuManager->GetGameInstance()->GetSessionsManager();
+	if (SessionsManager->IsOnline())
 	{
 		return LOCTEXT("GoOffline", "Go offline");
 	}
@@ -505,7 +506,8 @@ FText SNovaMainMenuGame::GetOnlineButtonText() const
 
 FText SNovaMainMenuGame::GetOnlineButtonHelpText() const
 {
-	if (MenuManager->GetGameInstance()->IsOnline())
+	const UNovaSessionsManager* SessionsManager = MenuManager->GetGameInstance()->GetSessionsManager();
+	if (SessionsManager->IsOnline())
 	{
 		return LOCTEXT("GoOfflineHelp", "Terminate the network session and play alone");
 	}
@@ -580,13 +582,15 @@ FText SNovaMainMenuGame::GenerateFriendTooltip(TSharedRef<FOnlineFriend> Friend)
 
 FText SNovaMainMenuGame::GetOnlineFriendsText() const
 {
+	const UNovaSessionsManager* SessionsManager = MenuManager->GetGameInstance()->GetSessionsManager();
+
 	// Get useful pointers
 	FText InviteText;
 	FText JoinText;
 	FText CommonText;
 
 	// Build the appropriate message elements
-	if (!MenuManager->GetGameInstance()->IsOnline())
+	if (!SessionsManager->IsOnline())
 	{
 		CommonText = LOCTEXT("FriendOffline", "Go online to join or invite friends");
 	}
@@ -665,14 +669,15 @@ FText SNovaMainMenuGame::GetJoinText() const
 
 bool SNovaMainMenuGame::IsInviteFriendEnabled() const
 {
-	const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+	const UNovaSessionsManager* SessionsManager = MenuManager->GetGameInstance()->GetSessionsManager();
+	const ANovaGameState*       GameState       = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 
 	FText JoinError;
 	if (GameState && GameState->IsJoinable(JoinError) && HasSelectedFriend())
 	{
 		TSharedRef<FOnlineFriend> SelectedFriend = FriendList[SelectedFriendIndex];
 
-		return MenuManager->GetGameInstance()->IsOnline() && SelectedFriend->GetInviteStatus() != EInviteStatus::Blocked &&
+		return SessionsManager->IsOnline() && SelectedFriend->GetInviteStatus() != EInviteStatus::Blocked &&
 			   SelectedFriend->GetInviteStatus() != EInviteStatus::PendingOutbound;
 	}
 
@@ -715,7 +720,8 @@ void SNovaMainMenuGame::OnAbandonContract(uint32 Index)
 
 void SNovaMainMenuGame::OnToggleOnlineGame()
 {
-	MenuManager->GetPC()->SetGameOnline(!MenuManager->GetGameInstance()->IsOnline());
+	const UNovaSessionsManager* SessionsManager = MenuManager->GetGameInstance()->GetSessionsManager();
+	MenuManager->GetPC()->SetGameOnline(!SessionsManager->IsOnline());
 }
 
 void SNovaMainMenuGame::OnGoToMainMenu()

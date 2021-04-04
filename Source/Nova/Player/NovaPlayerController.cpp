@@ -14,6 +14,7 @@
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaGameUserSettings.h"
 #include "Nova/Game/NovaSaveManager.h"
+#include "Nova/Game/NovaSessionsManager.h"
 #include "Nova/Game/NovaWorldSettings.h"
 
 #include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
@@ -199,8 +200,8 @@ void ANovaPlayerController::BeginPlay()
 	}
 
 	// Initialize persistent objects
-	GetGameInstance<UNovaGameInstance>()->SetAcceptedInvitationCallback(
-		FOnFriendInviteAccepted::CreateUObject(this, &ANovaPlayerController::AcceptInvitation));
+	UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
+	SessionsManager->SetAcceptedInvitationCallback(FOnFriendInviteAccepted::CreateUObject(this, &ANovaPlayerController::AcceptInvitation));
 
 #if WITH_EDITOR
 
@@ -209,7 +210,7 @@ void ANovaPlayerController::BeginPlay()
 	{
 		FCommandLine::Set(TEXT(""));
 
-		GetGameInstance<UNovaGameInstance>()->StartSession(ENovaConstants::DefaultLevel, ENovaConstants::MaxPlayerCount, true);
+		SessionsManager->StartSession(ENovaConstants::DefaultLevel, ENovaConstants::MaxPlayerCount, true);
 	}
 
 #endif
@@ -228,6 +229,9 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 
 	if (IsLocalPlayerController())
 	{
+		UNovaSessionsManager*  SessionsManager  = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
+		UNovaGameUserSettings* GameUserSettings = Cast<UNovaGameUserSettings>(GEngine->GetGameUserSettings());
+
 		// Process the menu system
 		UNovaMenuManager* MenuManager = GetMenuManager();
 		if (IsValid(MenuManager))
@@ -236,7 +240,6 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 		}
 
 		// Process FOV
-		UNovaGameUserSettings* GameUserSettings = Cast<UNovaGameUserSettings>(GEngine->GetGameUserSettings());
 		NCHECK(PlayerCameraManager);
 		float FOV = PlayerCameraManager->GetFOVAngle();
 		if (FOV != GameUserSettings->FOV)
@@ -248,12 +251,12 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 		// Show network errors
 		UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
 		NCHECK(GameInstance);
-		if (GameInstance->GetNetworkError() != LastNetworkError)
+		if (SessionsManager->GetNetworkError() != LastNetworkError)
 		{
-			LastNetworkError = GameInstance->GetNetworkError();
+			LastNetworkError = SessionsManager->GetNetworkError();
 			if (LastNetworkError != ENovaNetworkError::Success)
 			{
-				Notify(GameInstance->GetNetworkErrorString(), ENovaNotificationType::Error);
+				Notify(SessionsManager->GetNetworkErrorString(), ENovaNotificationType::Error);
 			}
 		}
 
@@ -662,13 +665,12 @@ void ANovaPlayerController::InviteFriend(TSharedRef<FOnlineFriend> Friend)
 {
 	NLOG("ANovaPlayerController::InviteFriend");
 
-	UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
-	NCHECK(GameInstance);
+	UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
 
 	Notify(FText::FormatNamed(LOCTEXT("InviteFriend", "Invited {friend}"), TEXT("friend"), FText::FromString(Friend->GetDisplayName())),
 		ENovaNotificationType::Info);
 
-	GameInstance->InviteFriend(Friend->GetUserId());
+	SessionsManager->InviteFriend(Friend->GetUserId());
 }
 
 void ANovaPlayerController::JoinFriend(TSharedRef<FOnlineFriend> Friend)
@@ -681,7 +683,10 @@ void ANovaPlayerController::JoinFriend(TSharedRef<FOnlineFriend> Friend)
 																	Notify(FText::FormatNamed(LOCTEXT("JoiningFriend", "Joining {friend}"),
 																			   TEXT("friend"), FText::FromString(Friend->GetDisplayName())),
 																		ENovaNotificationType::Info);
-																	GetGameInstance<UNovaGameInstance>()->JoinFriend(Friend->GetUserId());
+
+																	UNovaSessionsManager* SessionsManager =
+																		GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
+																	SessionsManager->JoinFriend(Friend->GetUserId());
 																}));
 }
 
@@ -692,7 +697,9 @@ void ANovaPlayerController::AcceptInvitation(const FOnlineSessionSearchResult& I
 	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch, FNovaAsyncAction::CreateLambda(
 																[=]()
 																{
-																	GetGameInstance<UNovaGameInstance>()->JoinSearchResult(InviteResult);
+																	UNovaSessionsManager* SessionsManager =
+																		GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
+																	SessionsManager->JoinSearchResult(InviteResult);
 																}));
 }
 
@@ -839,31 +846,32 @@ void ANovaPlayerController::OnJoinRandomSession(TArray<FOnlineSessionSearchResul
 	{
 		if (Result.Session.OwningUserId != GetLocalPlayer()->GetPreferredUniqueNetId())
 		{
-			GetMenuManager()->RunAction(
-				ENovaLoadingScreen::Launch, FNovaAsyncAction::CreateLambda(
-												[=]()
-												{
-													Notify(FText::FormatNamed(LOCTEXT("JoinFriend", "Joining {session}"), TEXT("session"),
-															   FText::FromString(*Result.Session.GetSessionIdStr())),
-														ENovaNotificationType::Info);
+			GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,
+				FNovaAsyncAction::CreateLambda(
+					[=]()
+					{
+						Notify(FText::FormatNamed(LOCTEXT("JoinFriend", "Joining {session}"), TEXT("session"),
+								   FText::FromString(*Result.Session.GetSessionIdStr())),
+							ENovaNotificationType::Info);
 
-													GetGameInstance<UNovaGameInstance>()->JoinSearchResult(Result);
-												}));
+						UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
+						SessionsManager->JoinSearchResult(Result);
+					}));
 		}
 	}
 }
 
 void ANovaPlayerController::TestJoin()
 {
-	UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
+	UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
 
-	if (GameInstance->GetOnlineSubsystemName() != TEXT("Null"))
+	if (SessionsManager->GetOnlineSubsystemName() != TEXT("Null"))
 	{
-		GameInstance->SearchFriends(FOnFriendSearchComplete::CreateUObject(this, &ANovaPlayerController::OnJoinRandomFriend));
+		SessionsManager->SearchFriends(FOnFriendSearchComplete::CreateUObject(this, &ANovaPlayerController::OnJoinRandomFriend));
 	}
 	else
 	{
-		GameInstance->SearchSessions(true, FOnSessionSearchComplete::CreateUObject(this, &ANovaPlayerController::OnJoinRandomSession));
+		SessionsManager->SearchSessions(true, FOnSessionSearchComplete::CreateUObject(this, &ANovaPlayerController::OnJoinRandomSession));
 	}
 }
 
