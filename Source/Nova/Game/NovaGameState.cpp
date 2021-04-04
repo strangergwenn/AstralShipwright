@@ -5,6 +5,7 @@
 #include "NovaArea.h"
 #include "NovaAssetCatalog.h"
 #include "NovaGameInstance.h"
+#include "NovaSessionsManager.h"
 #include "NovaOrbitalSimulationComponent.h"
 
 #include "Nova/Player/NovaPlayerState.h"
@@ -138,7 +139,13 @@ void ANovaGameState::Tick(float DeltaTime)
 		OrbitalSimulationComponent->UpdateSimulation();
 	}
 
+	// Update event notification
 	ProcessEvents(DeltaTime);
+
+	// Update sessions
+	FText                 Unused;
+	UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
+	SessionsManager->SetSessionAdvertised(IsJoinable(Unused));
 }
 
 void ANovaGameState::SetCurrentArea(const UNovaArea* Area)

@@ -195,20 +195,22 @@ bool UNovaSessionsManager::EndSession(FString URL)
 
 void UNovaSessionsManager::SetSessionAdvertised(bool Public)
 {
-	NLOG("UNovaSessionsManager::SetSessionAdvertised %d", Public);
-
 	IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
 
 	if (OnlineSub)
 	{
 		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
-
-		FOnlineSessionSettings* Settings = Sessions->GetSessionSettings(GameSessionName);
-
-		if (Settings)
+		if (Sessions.IsValid())
 		{
-			Settings->bShouldAdvertise = Public;
-			Sessions->UpdateSession(GameSessionName, *Settings, true);
+			FOnlineSessionSettings* Settings = Sessions->GetSessionSettings(GameSessionName);
+
+			if (Settings && Settings->bShouldAdvertise != Public)
+			{
+				NLOG("UNovaSessionsManager::SetSessionAdvertised %d", Public);
+
+				Settings->bShouldAdvertise = Public;
+				Sessions->UpdateSession(GameSessionName, *Settings, true);
+			}
 		}
 	}
 }

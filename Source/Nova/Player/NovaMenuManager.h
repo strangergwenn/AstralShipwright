@@ -62,6 +62,7 @@ public:
 		return GameInstance;
 	}
 
+	/** Stop updating the loading screen */
 	void FreezeLoadingScreen()
 	{
 		LoadingScreenFrozen = true;
