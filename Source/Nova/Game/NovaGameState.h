@@ -127,6 +127,9 @@ public:
 		return OrbitalSimulationComponent;
 	}
 
+	/** Check whether the game can be joined */
+	bool IsJoinable(FText& Error) const;
+
 	/*----------------------------------------------------
 	    Spacecraft management
 	----------------------------------------------------*/

@@ -291,6 +291,7 @@ private:
 	// Errors
 	ENovaNetworkState NetworkState;
 	ENovaNetworkError LastNetworkError;
+	FString           LastNetworkErrorString;
 
 	// Session created
 	FOnCreateSessionCompleteDelegate OnCreateSessionCompleteDelegate;

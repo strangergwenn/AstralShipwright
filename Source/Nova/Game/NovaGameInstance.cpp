@@ -539,7 +539,8 @@ bool UNovaGameInstance::JoinSearchResult(const FOnlineSessionSearchResult& Searc
 
 void UNovaGameInstance::ClearError()
 {
-	LastNetworkError = ENovaNetworkError::Success;
+	LastNetworkError       = ENovaNetworkError::Success;
+	LastNetworkErrorString = "";
 }
 
 /*----------------------------------------------------
@@ -847,12 +848,14 @@ void UNovaGameInstance::OnFindFriendSessionComplete(
 
 void UNovaGameInstance::OnNetworkError(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString)
 {
-	NLOG("UNovaGameInstance::OnNetworkError %d", static_cast<int>(FailureType));
+	NLOG("UNovaGameInstance::OnNetworkError %d, '%s'", static_cast<int>(FailureType), *ErrorString);
 
 	if (LastNetworkError != ENovaNetworkError::Success)
 	{
 		return;
 	}
+
+	LastNetworkErrorString = ErrorString;
 
 	switch (FailureType)
 	{
@@ -890,7 +893,8 @@ void UNovaGameInstance::OnSessionError(ENovaNetworkError Type)
 {
 	NLOG("UNovaGameInstance::OnSessionError");
 
-	LastNetworkError = Type;
+	LastNetworkError       = Type;
+	LastNetworkErrorString = "";
 
 	ProcessAction(ActionAfterError);
 }
@@ -963,6 +967,11 @@ FText UNovaGameInstance::GetNetworkStateString() const
 
 FText UNovaGameInstance::GetNetworkErrorString() const
 {
+	if (!LastNetworkErrorString.IsEmpty())
+	{
+		return FText::FromString(LastNetworkErrorString);
+	}
+
 	switch (LastNetworkError)
 	{
 		case ENovaNetworkError::Success:

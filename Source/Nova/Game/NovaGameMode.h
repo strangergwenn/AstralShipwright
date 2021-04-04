@@ -41,6 +41,8 @@ public:
 
 	virtual void StartPlay() override;
 
+	virtual void PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage) override;
+
 	virtual void PostLogin(class APlayerController* Player) override;
 
 	virtual void Logout(class AController* Player) override;

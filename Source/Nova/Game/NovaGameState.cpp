@@ -9,6 +9,8 @@
 
 #include "Nova/Player/NovaPlayerState.h"
 #include "Nova/Player/NovaPlayerController.h"
+#include "Nova/Spacecraft/NovaSpacecraftPawn.h"
+#include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
 #include "Nova/Tools/NovaActorTools.h"
 
 #include "Net/UnrealNetwork.h"
@@ -152,6 +154,22 @@ void ANovaGameState::SetCurrentArea(const UNovaArea* Area)
 FName ANovaGameState::GetCurrentLevelName() const
 {
 	return CurrentArea ? CurrentArea->LevelName : NAME_None;
+}
+
+bool ANovaGameState::IsJoinable(FText& Error) const
+{
+	bool AllSpacecraftDocked = true;
+	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+	{
+		if (SpacecraftPawn->GetSpacecraftMovement()->GetState() != ENovaMovementState::Docked)
+		{
+			AllSpacecraftDocked = false;
+			Error               = LOCTEXT("AllSpacecraftNotDocked", "The players you are joining are not docked");
+			break;
+		}
+	}
+
+	return AllSpacecraftDocked;
 }
 
 /*----------------------------------------------------

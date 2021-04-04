@@ -23,6 +23,8 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 
+#define LOCTEXT_NAMESPACE "ANovaGameMode"
+
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
@@ -75,6 +77,20 @@ void ANovaGameMode::StartPlay()
 
 	// Startup the state machine
 	InitializeStateMachine();
+}
+
+void ANovaGameMode::PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage)
+{
+	NLOG("ANovaGameMode::PreLogin");
+
+	Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
+
+	if (ErrorMessage.IsEmpty())
+	{
+		FText Error;
+		GetGameState<ANovaGameState>()->IsJoinable(Error);
+		ErrorMessage = Error.ToString();
+	}
 }
 
 void ANovaGameMode::PostLogin(APlayerController* Player)
@@ -348,3 +364,5 @@ void ANovaGameMode::OnLevelUnLoaded()
 
 	OnLevelUnloadedCallback.ExecuteIfBound();
 }
+
+#undef LOCTEXT_NAMESPACE

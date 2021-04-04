@@ -201,10 +201,16 @@ void UNovaSpacecraftMovementComponent::Reset()
 bool UNovaSpacecraftMovementComponent::CanDock() const
 {
 	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
-	NCHECK(IsValid(GameState));
-	const FNovaTrajectory* Trajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
+	if (GameState)
+	{
+		const FNovaTrajectory* Trajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
 
-	return IsInitialized() && GetState() == ENovaMovementState::Idle && !DockState.Actor->IsInSpace && Trajectory == nullptr;
+		return IsInitialized() && GetState() == ENovaMovementState::Idle && !DockState.Actor->IsInSpace && Trajectory == nullptr;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 bool UNovaSpacecraftMovementComponent::CanUndock() const

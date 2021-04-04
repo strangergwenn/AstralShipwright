@@ -6,10 +6,11 @@
 
 #include "Nova/Player/NovaMenuManager.h"
 #include "Nova/Player/NovaPlayerController.h"
-#include "Nova/Game/NovaContractManager.h"
 
-#include "Nova/Game/NovaGameTypes.h"
+#include "Nova/Game/NovaContractManager.h"
 #include "Nova/Game/NovaGameInstance.h"
+#include "Nova/Game/NovaGameTypes.h"
+#include "Nova/Game/NovaGameState.h"
 
 #include "Nova/UI/Component/NovaLargeButton.h"
 
@@ -664,7 +665,10 @@ FText SNovaMainMenuGame::GetJoinText() const
 
 bool SNovaMainMenuGame::IsInviteFriendEnabled() const
 {
-	if (HasSelectedFriend())
+	const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+
+	FText JoinError;
+	if (GameState && GameState->IsJoinable(JoinError) && HasSelectedFriend())
 	{
 		TSharedRef<FOnlineFriend> SelectedFriend = FriendList[SelectedFriendIndex];
 
@@ -677,9 +681,10 @@ bool SNovaMainMenuGame::IsInviteFriendEnabled() const
 
 bool SNovaMainMenuGame::IsJoinFriendEnabled() const
 {
-	// TODO : gameplay condition
+	const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 
-	if (true && HasSelectedFriend())
+	FText JoinError;
+	if (GameState && GameState->IsJoinable(JoinError) && HasSelectedFriend())
 	{
 		TSharedRef<FOnlineFriend> SelectedFriend = FriendList[SelectedFriendIndex];
 		return SelectedFriend->GetPresence().bIsJoinable;
