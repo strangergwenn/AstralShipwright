@@ -536,6 +536,22 @@ bool ANovaPlayerController::IsLevelStreamingComplete() const
 	return true;
 }
 
+void ANovaPlayerController::SetCameraState(ENovaPlayerCameraState State)
+{
+	CurrentCameraState       = State;
+	CurrentTimeInCameraState = 0;
+
+	// Handle the fast-forward camera
+	if (State == ENovaPlayerCameraState::FastForward)
+	{
+		GetMenuManager()->GetOverlay()->StartFastForward();
+	}
+	else
+	{
+		GetMenuManager()->GetOverlay()->StopFastForward();
+	}
+}
+
 /*----------------------------------------------------
     Server-side save
 ----------------------------------------------------*/

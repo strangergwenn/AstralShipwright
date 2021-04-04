@@ -304,6 +304,12 @@ void SNovaOverlay::Construct(const FArguments& InArgs)
 
 		+ SOverlay::Slot()
 		[
+			SAssignNew(FastForward, SBorder)
+			.BorderImage(FNovaStyleSet::GetBrush("Common/SB_Black"))
+		]
+
+		+ SOverlay::Slot()
+		[
 			SAssignNew(Notification, SNovaNotification)
 		]
 
@@ -316,6 +322,7 @@ void SNovaOverlay::Construct(const FArguments& InArgs)
 
 	// Initialization
 	SetVisibility(EVisibility::HitTestInvisible);
+	FastForward->SetVisibility(EVisibility::Collapsed);
 }
 
 void SNovaOverlay::Notify(const FText& Text, ENovaNotificationType Type)
@@ -326,6 +333,16 @@ void SNovaOverlay::Notify(const FText& Text, ENovaNotificationType Type)
 void SNovaOverlay::ShowTitle(const FText& Title, const FText& Subtitle)
 {
 	TitleCard->ShowTitle(Title, Subtitle);
+}
+
+void SNovaOverlay::StartFastForward()
+{
+	FastForward->SetVisibility(EVisibility::Visible);
+}
+
+void SNovaOverlay::StopFastForward()
+{
+	FastForward->SetVisibility(EVisibility::Collapsed);
 }
 
 #undef LOCTEXT_NAMESPACE

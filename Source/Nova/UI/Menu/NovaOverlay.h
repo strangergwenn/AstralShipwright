@@ -33,6 +33,12 @@ public:
 	/** Show a title on the screen */
 	void ShowTitle(const FText& Title, const FText& Subtitle);
 
+	/** Start the fast-forward overlay */
+	void StartFastForward();
+
+	/** Start the fast-forward overlay */
+	void StopFastForward();
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
@@ -44,4 +50,5 @@ protected:
 	// Widgets
 	TSharedPtr<class SNovaNotification> Notification;
 	TSharedPtr<class SNovaTitleCard>    TitleCard;
+	TSharedPtr<class SBorder>           FastForward;
 };

@@ -144,11 +144,7 @@ public:
 	bool IsLevelStreamingComplete() const;
 
 	/** Set the current camera state */
-	void SetCameraState(ENovaPlayerCameraState State)
-	{
-		CurrentCameraState       = State;
-		CurrentTimeInCameraState = 0;
-	}
+	void SetCameraState(ENovaPlayerCameraState State);
 
 	/*----------------------------------------------------
 	    Server-side save
