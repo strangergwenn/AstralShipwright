@@ -105,15 +105,8 @@ public:
 		return CurrentArea;
 	}
 
-	/** Server replication event for notifications */
-	UFUNCTION()
-	void OnCurrentAreaReplicated();
-
 	/** Get the current sub-level name to use */
 	FName GetCurrentLevelName() const;
-
-	/** Signal a shared transition and get optional title text to show */
-	TPair<FText, FText> OnSharedTransition();
 
 	/** Enable moving spacecraft based on trajectories */
 	void SetUsingTrajectoryMovement(bool State)
@@ -214,9 +207,16 @@ protected:
 	/** Process time */
 	bool ProcessTime(double DeltaTimeMinutes);
 
+	/** Notify events to the player*/
+	void ProcessEvents(float DeltaTime);
+
 	/** Server replication event for time reconciliation */
 	UFUNCTION()
 	void OnServerTimeReplicated();
+
+	/** Server replication event for notifications */
+	UFUNCTION()
+	void OnCurrentAreaReplicated();
 
 	/*----------------------------------------------------
 	    Properties
@@ -242,6 +242,10 @@ protected:
 	// Number of update steps to run per frame under fast forward
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	int32 FastForwardUpdatesPerFrame;
+
+	// Time to wait in seconds after an event before notifying it with possible others in between
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	int32 EventNotificationDelay;
 
 	/*----------------------------------------------------
 	    Components
@@ -286,7 +290,8 @@ private:
 	double ClientAdditionalTimeDilation;
 	bool   IsFastForward;
 
-	// Shared transition state
-	double                 TimeSinceTransition;
-	const class UNovaArea* LastTransitionArea;
+	// Event observation system
+	float                          TimeSinceEvent;
+	TArray<double>                 TimeJumpEvents;
+	TArray<const class UNovaArea*> AreaChangeEvents;
 };

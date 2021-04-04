@@ -196,7 +196,7 @@ public:
 		// clang-format off
 		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments()
 			.FadeDuration(ENovaUIConstants::FadeDurationLong)
-			.DisplayDuration(5.0f)
+			.DisplayDuration(4.0f)
 		);
 
 		ChildSlot

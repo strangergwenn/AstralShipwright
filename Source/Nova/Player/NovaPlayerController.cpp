@@ -497,12 +497,6 @@ void ANovaPlayerController::ClientStopSharedTransition_Implementation()
 {
 	NLOG("ANovaPlayerController::ClientStopSharedTransition_Implementation");
 
-	TPair<FText, FText> TitleTexts = GetWorld()->GetGameState<ANovaGameState>()->OnSharedTransition();
-	if (!TitleTexts.Key.IsEmpty())
-	{
-		ShowTitle(TitleTexts.Key, TitleTexts.Value);
-	}
-
 	SharedTransitionActive = false;
 }
 

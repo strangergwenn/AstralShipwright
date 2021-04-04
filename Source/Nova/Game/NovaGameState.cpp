@@ -8,6 +8,7 @@
 #include "NovaOrbitalSimulationComponent.h"
 
 #include "Nova/Player/NovaPlayerState.h"
+#include "Nova/Player/NovaPlayerController.h"
 #include "Nova/Tools/NovaActorTools.h"
 
 #include "Net/UnrealNetwork.h"
@@ -31,8 +32,7 @@ ANovaGameState::ANovaGameState()
 	, ClientAdditionalTimeDilation(0)
 	, IsFastForward(false)
 
-	, TimeSinceTransition(0)
-	, LastTransitionArea(nullptr)
+	, TimeSinceEvent(0)
 {
 	// Setup simulation component
 	OrbitalSimulationComponent = CreateDefaultSubobject<UNovaOrbitalSimulationComponent>(TEXT("OrbitalSimulationComponent"));
@@ -51,6 +51,7 @@ ANovaGameState::ANovaGameState()
 	// Fast forward defaults : 2 days per frame in 2h steps
 	FastForwardUpdateTime      = 2 * 60;
 	FastForwardUpdatesPerFrame = 24;
+	EventNotificationDelay     = 0.5f;
 }
 
 /*----------------------------------------------------
@@ -97,8 +98,10 @@ void ANovaGameState::Tick(float DeltaTime)
 	// Process fast forward simulation
 	if (IsFastForward)
 	{
-		int64 Cycles = FPlatformTime::Cycles64();
+		int64  Cycles      = FPlatformTime::Cycles64();
+		double InitialTime = GetCurrentTime();
 
+		// Run FastForwardUpdatesPerFrame loops of world updates
 		for (int32 Index = 0; Index < FastForwardUpdatesPerFrame; Index++)
 		{
 			ProcessSpacecraftDatabase();
@@ -113,6 +116,14 @@ void ANovaGameState::Tick(float DeltaTime)
 			}
 		}
 
+		// Check the time jump
+		double FastForwardDeltaTime = GetCurrentTime() - InitialTime;
+		if (FastForwardDeltaTime > 1)
+		{
+			TimeJumpEvents.Add(FastForwardDeltaTime);
+			TimeSinceEvent = 0;
+		}
+
 		NLOG("ANovaGameState::Tick : processed fast-forward frame in %.2fms",
 			FPlatformTime::ToMilliseconds(FPlatformTime::Cycles64() - Cycles));
 	}
@@ -124,6 +135,8 @@ void ANovaGameState::Tick(float DeltaTime)
 		ProcessTime(static_cast<double>(DeltaTime) / 60.0);
 		OrbitalSimulationComponent->UpdateSimulation();
 	}
+
+	ProcessEvents(DeltaTime);
 }
 
 void ANovaGameState::SetCurrentArea(const UNovaArea* Area)
@@ -131,47 +144,14 @@ void ANovaGameState::SetCurrentArea(const UNovaArea* Area)
 	NCHECK(GetLocalRole() == ROLE_Authority);
 
 	CurrentArea = Area;
-}
 
-void ANovaGameState::OnCurrentAreaReplicated()
-{
-	NLOG("ANovaGameState::OnCurrentAreaReplicated");
+	AreaChangeEvents.Add(CurrentArea);
+	TimeSinceEvent = 0;
 }
 
 FName ANovaGameState::GetCurrentLevelName() const
 {
 	return CurrentArea ? CurrentArea->LevelName : NAME_None;
-}
-
-TPair<FText, FText> ANovaGameState::OnSharedTransition()
-{
-	FText PrimaryText, SecondaryText;
-
-	// TODO fix area on client
-
-	NLOG("ANovaGameState::OnSharedTransition : %f, '%s' -> '%s' ('%s')", TimeSinceTransition,
-		LastTransitionArea ? *LastTransitionArea->Name.ToString() : TEXT("nullptr"),
-		CurrentArea ? *CurrentArea->Name.ToString() : TEXT("nullptr"), *GetRoleString(this));
-
-	// Handle area changes as the primary information
-	if (LastTransitionArea && CurrentArea != LastTransitionArea)
-	{
-		PrimaryText = FText::FormatNamed(LOCTEXT("SharedTransitionAreaFormat", "{area}"), TEXT("area"), CurrentArea->Name);
-	}
-
-	// Handle time skips as the secondary information
-	if (TimeSinceTransition > 2)
-	{
-		FText& Text = PrimaryText.IsEmpty() ? PrimaryText : SecondaryText;
-
-		Text = FText::FormatNamed(
-			LOCTEXT("SharedTransitionTimeFormat", "{duration} have passed"), TEXT("duration"), GetDurationText(TimeSinceTransition, 1));
-	}
-
-	TimeSinceTransition = 0;
-	LastTransitionArea  = CurrentArea;
-
-	return TPair<FText, FText>(PrimaryText, SecondaryText);
 }
 
 /*----------------------------------------------------
@@ -325,9 +305,44 @@ bool ANovaGameState::ProcessTime(double DeltaTimeMinutes)
 	{
 		ClientTime += DilatedDeltaTime * ClientAdditionalTimeDilation;
 	}
-	TimeSinceTransition += DilatedDeltaTime;
 
 	return ContinueProcessing;
+}
+
+void ANovaGameState::ProcessEvents(float DeltaTime)
+{
+	FText PrimaryText, SecondaryText;
+
+	TimeSinceEvent += DeltaTime;
+
+	if (TimeSinceEvent > EventNotificationDelay)
+	{
+		// Handle area changes as the primary information
+		if (AreaChangeEvents.Num())
+		{
+			PrimaryText = FText::FormatNamed(
+				LOCTEXT("SharedTransitionAreaFormat", "{area}"), TEXT("area"), AreaChangeEvents[AreaChangeEvents.Num() - 1]->Name);
+		}
+
+		// Handle time skips as the secondary information
+		if (TimeJumpEvents.Num())
+		{
+			FText& Text = PrimaryText.IsEmpty() ? PrimaryText : SecondaryText;
+
+			Text = FText::FormatNamed(LOCTEXT("SharedTransitionTimeFormat", "{duration} have passed"), TEXT("duration"),
+				GetDurationText(TimeJumpEvents[TimeJumpEvents.Num() - 1], 1));
+		}
+
+		if (!PrimaryText.IsEmpty())
+		{
+			ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetGameInstance()->GetFirstLocalPlayerController());
+			NCHECK(IsValid(PC) && PC->IsLocalController());
+			PC->ShowTitle(PrimaryText, SecondaryText);
+		}
+
+		AreaChangeEvents.Empty();
+		TimeJumpEvents.Empty();
+	}
 }
 
 void ANovaGameState::OnServerTimeReplicated()
@@ -348,7 +363,9 @@ void ANovaGameState::OnServerTimeReplicated()
 	{
 		NLOG("ANovaGameState::OnServerTimeReplicated : time jump from %.2f to %.2f", ClientTime, RealServerTime);
 
-		TimeSinceTransition += RealServerTime - ClientTime;
+		TimeJumpEvents.Add(RealServerTime - ClientTime);
+		TimeSinceEvent = 0;
+
 		ClientTime                   = RealServerTime;
 		ClientAdditionalTimeDilation = 1.0;
 	}
@@ -362,6 +379,14 @@ void ANovaGameState::OnServerTimeReplicated()
 
 		ClientAdditionalTimeDilation = 1.0 + TimeDeltaRatio * TimeCorrectionFactor * FMath::Sign(TimeDeltaSeconds);
 	}
+}
+
+void ANovaGameState::OnCurrentAreaReplicated()
+{
+	NLOG("ANovaGameState::OnCurrentAreaReplicated");
+
+	AreaChangeEvents.Add(CurrentArea);
+	TimeSinceEvent = 0;
 }
 
 void ANovaGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
