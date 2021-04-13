@@ -323,6 +323,11 @@ void UNovaMenuManager::HideTooltip(SWidget* TargetWidget)
 	}
 }
 
+FLinearColor UNovaMenuManager::GetInterfaceColor() const
+{
+	return FLinearColor::White;
+}
+
 /*----------------------------------------------------
     Menu tools
 ----------------------------------------------------*/

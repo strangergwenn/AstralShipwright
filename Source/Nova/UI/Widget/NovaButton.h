@@ -142,11 +142,17 @@ protected:
 	/** Overall button color */
 	FLinearColor GetMainColor() const;
 
-	/** Current width callback */
-	FOptionalSize GetWidth() const;
+	/** Current width callback (visual box) */
+	FOptionalSize GetVisualWidth() const;
 
-	/** Current height callback */
-	FOptionalSize GetHeight() const;
+	/** Current height callback (visual box) */
+	FOptionalSize GetVisualHeight() const;
+
+	/** Current width callback (actual layout) */
+	FOptionalSize GetLayoutWidth() const;
+
+	/** Current height callback (actual layout) */
+	FOptionalSize GetLayoutHeight() const;
 
 	/** Get the text font */
 	FSlateFontInfo GetFont() const;

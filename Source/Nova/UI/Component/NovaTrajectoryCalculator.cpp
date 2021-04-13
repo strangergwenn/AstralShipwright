@@ -102,6 +102,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 					[
 						SNew(SBorder)
 						.BorderImage(&SliderTheme.Border)
+						.BorderBackgroundColor(this, &SNovaTrajectoryCalculator::GetBorderColor)
 						[
 							SNew(SComplexGradient)
 							.GradientColors(TAttribute<TArray<FLinearColor>>::Create(TAttribute<TArray<FLinearColor>>::FGetter::CreateSP(this, &SNovaTrajectoryCalculator::GetDeltaVGradient)))
@@ -122,6 +123,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 					[
 						SNew(SBorder)
 						.BorderImage(&SliderTheme.Border)
+						.BorderBackgroundColor(this, &SNovaTrajectoryCalculator::GetBorderColor)
 						[
 							SNew(SComplexGradient)
 							.GradientColors(TAttribute<TArray<FLinearColor>>::Create(TAttribute<TArray<FLinearColor>>::FGetter::CreateSP(this, &SNovaTrajectoryCalculator::GetDurationGradient)))
@@ -342,6 +344,11 @@ void SNovaTrajectoryCalculator::OptimizeForDuration()
 /*----------------------------------------------------
     Callbacks
 ----------------------------------------------------*/
+
+FSlateColor SNovaTrajectoryCalculator::GetBorderColor() const
+{
+	return MenuManager->GetInterfaceColor();
+}
 
 FText SNovaTrajectoryCalculator::GetDeltaVText() const
 {

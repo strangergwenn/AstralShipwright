@@ -77,6 +77,12 @@ public:
 	----------------------------------------------------*/
 
 protected:
+	/** Color callback*/
+	FLinearColor GetColor() const;
+
+	/** Color callback*/
+	FSlateColor GetSlateColor() const;
+
 	/** Brush callback*/
 	const FSlateBrush* GetBackgroundBrush() const;
 

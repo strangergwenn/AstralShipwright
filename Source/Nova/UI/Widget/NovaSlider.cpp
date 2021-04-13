@@ -3,6 +3,7 @@
 #include "NovaSlider.h"
 #include "NovaButton.h"
 #include "NovaNavigationPanel.h"
+#include "Nova/System/NovaMenuManager.h"
 #include "Nova/Nova.h"
 
 #include "Widgets/Text/STextBlock.h"
@@ -126,6 +127,8 @@ void SNovaSlider::Construct(const FArguments& InArgs)
 					SNew(SBorder)
 					.BorderImage(&Theme.Border)
 					.Padding(FMargin(1))
+					.ColorAndOpacity(this, &SNovaSlider::GetColor)
+					.BorderBackgroundColor(this, &SNovaSlider::GetSlateColor)
 					[
 						SNew(SBorder)
 						.BorderImage(this, &SNovaSlider::GetBackgroundBrush)
@@ -235,6 +238,19 @@ void SNovaSlider::HorizontalAnalogInput(float Value)
 /*----------------------------------------------------
     Callbacks
 ----------------------------------------------------*/
+
+FLinearColor SNovaSlider::GetColor() const
+{
+	const UNovaMenuManager* MenuManager = UNovaMenuManager::Get();
+	NCHECK(MenuManager);
+
+	return MenuManager->GetInterfaceColor();
+}
+
+FSlateColor SNovaSlider::GetSlateColor() const
+{
+	return GetColor();
+}
 
 const FSlateBrush* SNovaSlider::GetBackgroundBrush() const
 {

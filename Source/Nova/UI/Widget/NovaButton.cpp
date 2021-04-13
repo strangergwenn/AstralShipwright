@@ -75,8 +75,8 @@ void SNovaButton::Construct(const FArguments& InArgs)
 			.HAlign(HAlign_Center)
 			[
 				SNew(SBox)
-				.WidthOverride(this, &SNovaButton::GetWidth)
-				.HeightOverride(this, &SNovaButton::GetHeight)
+				.WidthOverride(this, &SNovaButton::GetVisualWidth)
+				.HeightOverride(this, &SNovaButton::GetVisualHeight)
 				.Padding(0)
 				[
 					SNew(SBorder)
@@ -95,13 +95,13 @@ void SNovaButton::Construct(const FArguments& InArgs)
 			+ SOverlay::Slot()
 			[
 				SNew(SBox)
-				.WidthOverride(Size.Width)
-				.HeightOverride(Size.Height)
+				.WidthOverride(this, &SNovaButton::GetLayoutWidth)
+				.HeightOverride(this, &SNovaButton::GetLayoutHeight)
 				.Padding(Theme.AnimationPadding)
 				[
 					SAssignNew(InnerContainer, SBorder)
-					.HAlign(HAlign_Left)
-					.VAlign(VAlign_Center)
+					.HAlign(HAlign_Fill)
+					.VAlign(VAlign_Fill)
 					.BorderImage(new FSlateNoResource)
 				]
 			]
@@ -120,33 +120,54 @@ void SNovaButton::Construct(const FArguments& InArgs)
 	// Construct the default internal layout
 	if (InArgs._Text.IsSet() || InArgs._Icon.IsSet())
 	{
+		const bool HasIcon = IsToggle || InArgs._Icon.IsSet() || InArgs._Icon.IsBound();
+		const bool HasAction = InArgs._Action.IsSet() || InArgs._Action.IsBound();
+		const bool IsFullWidthText = !HasIcon && !HasAction && !Theme.Centered;
+		
+		// Create the box
+		TSharedPtr<SHorizontalBox> Box;
+		SAssignNew(Box, SHorizontalBox);
+		
+		// Create the icon/action box
 		TSharedPtr<SOverlay> IconOverlay;
-
-		InnerContainer->SetContent(
-
-			SNew(SHorizontalBox)
-
-			// Icon / action icon
-			+ SHorizontalBox::Slot()
+		if (HasIcon || HasAction)
+		{
+			Box->AddSlot()
 			.AutoWidth()
-			.Padding(Theme.IconPadding)
 			[
-				SAssignNew(IconOverlay, SOverlay)
-			]
+				SNew(SBox)
+				.Padding(Theme.IconPadding)
+				[
+					SAssignNew(IconOverlay, SOverlay)
+				]
+			];
+		}
+		
+		// Centering
+		if (Theme.Centered)
+		{
+			Box->AddSlot();
+		}
 
-			// Text
-			+ SHorizontalBox::Slot()
-			.AutoWidth()
-			.VAlign(VAlign_Center)
-			[
-				SAssignNew(TextBlock, STextBlock)
-				.TextStyle(&Theme.MainFont)
-				.Font(this, &SNovaButton::GetFont)
-				.Text(InArgs._Text)
-			]);
+		// Create the text block
+		Box->AddSlot()
+		.AutoWidth()
+		.VAlign(VAlign_Center)
+		.Padding(IsFullWidthText ? Theme.IconPadding : Theme.Centered ? FMargin(-1, 0, 0, 0) : FMargin())
+		[
+			SAssignNew(TextBlock, STextBlock)
+			.TextStyle(&Theme.MainFont)
+			.Font(this, &SNovaButton::GetFont)
+			.Text(InArgs._Text)
+		];
+		
+		// Centering
+		if (Theme.Centered)
+		{
+			Box->AddSlot();
+		}
 
 		// Add icon if set or bound
-		bool HasIcon = IsToggle || InArgs._Icon.IsSet() || InArgs._Icon.IsBound();
 		if (HasIcon)
 		{
 			IconOverlay->AddSlot()
@@ -159,7 +180,7 @@ void SNovaButton::Construct(const FArguments& InArgs)
 		}
 
 		// Add the action key if any
-		if (InArgs._Action.IsSet() || InArgs._Action.IsBound())
+		if (HasAction)
 		{
 			IconOverlay->AddSlot()
 			.VAlign(VAlign_Center)
@@ -169,11 +190,8 @@ void SNovaButton::Construct(const FArguments& InArgs)
 				.Key(this, &SNovaButton::GetActionKey)
 			];
 		}
-	}
-	else
-	{
-		InnerContainer->SetHAlign(HAlign_Fill);
-		InnerContainer->SetVAlign(VAlign_Fill);
+
+		InnerContainer->SetContent(Box.ToSharedRef());
 	}
 	// clang-format on
 
@@ -356,34 +374,67 @@ FLinearColor SNovaButton::GetMainColor() const
 {
 	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
 
-	return FMath::InterpEaseInOut(
-		FLinearColor::White, Theme.DisabledColor, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+	UNovaMenuManager* MenuManager = UNovaMenuManager::Get();
+	NCHECK(MenuManager);
+	FLinearColor MainColor = MenuManager->GetInterfaceColor();
+
+	return FMath::InterpEaseInOut(MainColor, Theme.DisabledColor, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
 }
 
-FOptionalSize SNovaButton::GetWidth() const
+FOptionalSize SNovaButton::GetVisualWidth() const
 {
 	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
 	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
+
+	float DisabledOffset =
+		FMath::InterpEaseInOut(0.0f, Theme.DisabledOffset.X, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+	float Width = Size.Width + DisabledOffset;
 
 	float Offset = FMath::InterpEaseInOut(
 		Theme.AnimationPadding.Left + Theme.AnimationPadding.Right, 0.0f, State.CurrentSizeAnimationAlpha, ENovaUIConstants::EaseLight);
 
 	float RotationFactor = FMath::Abs(FMath::Cos(FMath::DegreesToRadians(BorderRotation)));
 
-	return RotationFactor * Size.Width - 2 - Offset;
+	return (RotationFactor * Width) - 2 - Offset;
 }
 
-FOptionalSize SNovaButton::GetHeight() const
+FOptionalSize SNovaButton::GetVisualHeight() const
 {
 	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
 	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
+
+	float DisabledOffset =
+		FMath::InterpEaseInOut(0.0f, Theme.DisabledOffset.Y, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+	float Height = Size.Height + DisabledOffset;
 
 	float Offset = FMath::InterpEaseInOut(
 		Theme.AnimationPadding.Top + Theme.AnimationPadding.Bottom, 0.0f, State.CurrentSizeAnimationAlpha, ENovaUIConstants::EaseLight);
 
 	float RotationFactor = FMath::Abs(FMath::Cos(FMath::DegreesToRadians(BorderRotation)));
 
-	return RotationFactor * Size.Height - 2 - Offset;
+	return (RotationFactor * Height) - 2 - Offset;
+}
+
+FOptionalSize SNovaButton::GetLayoutWidth() const
+{
+	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
+	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
+
+	float DisabledOffset =
+		FMath::InterpEaseInOut(0.0f, Theme.DisabledOffset.X, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+
+	return Size.Width + DisabledOffset;
+}
+
+FOptionalSize SNovaButton::GetLayoutHeight() const
+{
+	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
+	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
+
+	float DisabledOffset =
+		FMath::InterpEaseInOut(0.0f, Theme.DisabledOffset.Y, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+
+	return Size.Height + DisabledOffset;
 }
 
 FSlateFontInfo SNovaButton::GetFont() const

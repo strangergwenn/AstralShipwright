@@ -42,9 +42,11 @@ struct FNovaButtonTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = Button) FTextBlockStyle SmallFont;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FMargin AnimationPadding;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FMargin IconPadding;
+	UPROPERTY(EditDefaultsOnly, Category = Button) FVector2D DisabledOffset;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FSlateBrush Border;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FSlateBrush Background;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FLinearColor DisabledColor;
+	UPROPERTY(EditDefaultsOnly, Category = Button) bool Centered;
 };
 
 /** Theme structure storing dimensional elements of a button */

@@ -109,6 +109,9 @@ public:
 	/** Stop displaying the tooltip */
 	void HideTooltip(SWidget* TargetWidget);
 
+	/** Return the current UI color */
+	FLinearColor GetInterfaceColor() const;
+
 	/*----------------------------------------------------
 	    Menu tools
 	----------------------------------------------------*/

@@ -79,6 +79,8 @@ protected:
 		return TrajectoryDurationGradientData;
 	}
 
+	FSlateColor GetBorderColor() const;
+
 	FText GetDeltaVText() const;
 	FText GetDurationText() const;
 
