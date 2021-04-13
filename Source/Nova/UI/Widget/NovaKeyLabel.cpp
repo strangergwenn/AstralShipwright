@@ -64,7 +64,7 @@ FSlateColor SNovaKeyLabel::GetKeyTextColor() const
 {
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 
-	FLinearColor Color = Theme.HUDFont.ColorAndOpacity.GetSpecifiedColor();
+	FLinearColor Color = Theme.KeyFont.ColorAndOpacity.GetSpecifiedColor();
 	Color.A *= CurrentAlpha.Get();
 
 	return Color;

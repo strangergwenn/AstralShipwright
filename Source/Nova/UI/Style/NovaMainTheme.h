@@ -40,30 +40,25 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 	----------------------------------------------------*/
 
 	// Main
-	UPROPERTY(EditDefaultsOnly, Category = Main) FSlateBrush MainMenuBackground;
-	UPROPERTY(EditDefaultsOnly, Category = Main) FSlateBrush MainMenuGenericBackground;
-	UPROPERTY(EditDefaultsOnly, Category = Main) FSlateBrush MainMenuGenericBorder;
-	UPROPERTY(EditDefaultsOnly, Category = Main) FSlateBrush MainMenuManipulator;
-	UPROPERTY(EditDefaultsOnly, Category = Main) FMargin ContentPadding;
-	UPROPERTY(EditDefaultsOnly, Category = Main) FMargin VerticalContentPadding;
-	UPROPERTY(EditDefaultsOnly, Category = Main) FScrollBoxStyle ScrollBoxStyle;
-	UPROPERTY(EditDefaultsOnly, Category = Main) FProgressBarStyle ProgressBarStyle;
-	UPROPERTY(EditDefaultsOnly, Category = Main) float BlurRadius;
-	UPROPERTY(EditDefaultsOnly, Category = Main) float BlurStrength;
-	UPROPERTY(EditDefaultsOnly, Category = Main) class UMaterialInterface* EffectMaterial;
+	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuGenericBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuGenericBorder;
+	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuManipulator;
+
+	// General
+	UPROPERTY(EditDefaultsOnly, Category = General) FMargin ContentPadding;
+	UPROPERTY(EditDefaultsOnly, Category = General) FMargin VerticalContentPadding;
+	UPROPERTY(EditDefaultsOnly, Category = General) FScrollBoxStyle ScrollBoxStyle;
+	UPROPERTY(EditDefaultsOnly, Category = General) FProgressBarStyle ProgressBarStyle;
+	UPROPERTY(EditDefaultsOnly, Category = General) float BlurRadius;
+	UPROPERTY(EditDefaultsOnly, Category = General) float BlurStrength;
 
 	// Fonts
 	UPROPERTY(EditDefaultsOnly, Category = Font) FTextBlockStyle TitleFont;
 	UPROPERTY(EditDefaultsOnly, Category = Font) FTextBlockStyle SubtitleFont;
 	UPROPERTY(EditDefaultsOnly, Category = Font) FTextBlockStyle MainFont;
 	UPROPERTY(EditDefaultsOnly, Category = Font) FTextBlockStyle InfoFont;
-	UPROPERTY(EditDefaultsOnly, Category = Font) FTextBlockStyle HUDFont;
 	UPROPERTY(EditDefaultsOnly, Category = Font) FTextBlockStyle KeyFont;
-
-	// HUD
-	UPROPERTY(EditDefaultsOnly, Category = HUD) FMargin HudInteractionMargin;
-	UPROPERTY(EditDefaultsOnly, Category = HUD) FMargin HudProgressBarPadding;
-	UPROPERTY(EditDefaultsOnly, Category = HUD) int32 HudProgressBarWidth;
 
 	// Notifications
 	UPROPERTY(EditDefaultsOnly, Category = Notification) int32 NotificationDisplayHeight;
