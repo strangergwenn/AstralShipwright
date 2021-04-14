@@ -5,6 +5,7 @@
 #include "Nova/UI/NovaUITypes.h"
 
 #include "GameFramework/Actor.h"
+#include "Nova/Actor/NovaActorTools.h"
 #include "CoreMinimal.h"
 #include "SlateBasics.h"
 #include "NovaMenuManager.generated.h"
@@ -109,6 +110,9 @@ public:
 	/** Stop displaying the tooltip */
 	void HideTooltip(SWidget* TargetWidget);
 
+	/** Change the current UI color */
+	void SetInterfaceColor(const FLinearColor& Color);
+
 	/** Return the current UI color */
 	FLinearColor GetInterfaceColor() const;
 
@@ -159,9 +163,13 @@ public:
 	----------------------------------------------------*/
 
 public:
-	// Time it takes to fade in or out
+	// Time it takes to fade in or out in seconds
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float FadeDuration;
+
+	// Time it takes to change the UI color in seconds
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float ColorChangeDuration;
 
 protected:
 	/*----------------------------------------------------
@@ -181,12 +189,14 @@ protected:
 	TSharedPtr<class SWidget>       DesiredFocusWidget;
 
 	// Data
-	bool                      LoadingScreenFrozen;
-	static bool               UsingGamepad;
-	FNovaAsyncCommand         CurrentCommand;
-	TQueue<FNovaAsyncCommand> CommandStack;
-	ENovaFadeState            CurrentMenuState;
-	float                     CurrentFadingTime;
+	bool                            LoadingScreenFrozen;
+	static bool                     UsingGamepad;
+	FNovaAsyncCommand               CurrentCommand;
+	TQueue<FNovaAsyncCommand>       CommandStack;
+	ENovaFadeState                  CurrentMenuState;
+	float                           CurrentFadingTime;
+	FLinearColor                    DesiredInterfaceColor;
+	TNovaTimedAverage<FLinearColor> CurrentInterfaceColor;
 
 	// Dynamic material pool
 	UPROPERTY()

@@ -75,7 +75,11 @@ protected:
 	FText GetTooltipText() const;
 
 	/** Get the tooltip color */
-	FSlateColor GetTooltipColor() const;
+	FLinearColor GetTooltipColor() const;
+
+	/** Get the manipulator color */
+	FSlateColor GetManipulatorColor() const;
+
 	/** Get the key binding for the previous tab */
 	FKey GetPreviousTabKey() const;
 

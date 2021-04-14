@@ -70,13 +70,14 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		// Header widget
 		.Header()
 		[
-			SNew(SBox)
+			SNew(SBorder)
 			.Padding(Theme.ContentPadding)
+			.BorderImage(new FSlateNoResource)
+			.ColorAndOpacity(this, &SNovaMainMenu::GetTooltipColor)
 			[
 				SNew(STextBlock)
 				.TextStyle(&Theme.SubtitleFont)
 				.Text(this, &SNovaMainMenu::GetTooltipText)
-				.ColorAndOpacity(this, &SNovaMainMenu::GetTooltipColor)
 			]
 		]
 
@@ -85,6 +86,7 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		[
 			SNew(SNovaMenuManipulator)
 			.Image(&Theme.MainMenuManipulator)
+			.ColorAndOpacity(this, &SNovaMainMenu::GetManipulatorColor)
 		]
 
 		// Home menu
@@ -315,16 +317,20 @@ FText SNovaMainMenu::GetTooltipText() const
 	return FText::FromString(CurrentTooltipContent);
 }
 
-FSlateColor SNovaMainMenu::GetTooltipColor() const
+FLinearColor SNovaMainMenu::GetTooltipColor() const
 {
 	float Alpha = (CurrentTooltipTime / TooltipFadeDuration);
 	Alpha       = FMath::InterpEaseInOut(0.0f, 1.0f, Alpha, ENovaUIConstants::EaseStandard);
 
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	FLinearColor          Color = Theme.MainFont.ColorAndOpacity.GetSpecifiedColor();
+	FLinearColor Color = FLinearColor::White;
 	Color.A *= Alpha;
 
 	return Color;
+}
+
+FSlateColor SNovaMainMenu::GetManipulatorColor() const
+{
+	return MenuManager->GetInterfaceColor();
 }
 
 FKey SNovaMainMenu::GetPreviousTabKey() const

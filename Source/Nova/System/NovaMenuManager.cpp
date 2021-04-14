@@ -28,7 +28,8 @@ bool              UNovaMenuManager::UsingGamepad = false;
 UNovaMenuManager::UNovaMenuManager() : Super(), CurrentMenuState(ENovaFadeState::FadingFromBlack)
 {
 	// Settings
-	FadeDuration = ENovaUIConstants::FadeDurationLong;
+	FadeDuration        = ENovaUIConstants::FadeDurationLong;
+	ColorChangeDuration = ENovaUIConstants::FadeDurationShort;
 }
 
 /*----------------------------------------------------
@@ -92,6 +93,11 @@ void UNovaMenuManager::BeginPlay(ANovaPlayerController* PC)
 	CurrentFadingTime   = FadeDuration;
 	LoadingScreenFrozen = false;
 	Menu->UpdateKeyBindings();
+
+	// Initialize the desired color
+	DesiredInterfaceColor = FLinearColor::White;
+	CurrentInterfaceColor.SetPeriod(ColorChangeDuration);
+	CurrentInterfaceColor.Set(DesiredInterfaceColor);
 
 	// Open the menu if desired
 	RunWaitAction(ENovaLoadingScreen::Black,
@@ -213,6 +219,9 @@ void UNovaMenuManager::Tick(float DeltaTime)
 
 		FSlateApplication::Get().SetAllUserFocus(DesiredFocusWidget.ToSharedRef());
 	}
+
+	// Update UI color
+	CurrentInterfaceColor.Set(DesiredInterfaceColor, DeltaTime);
 }
 
 /*----------------------------------------------------
@@ -325,7 +334,12 @@ void UNovaMenuManager::HideTooltip(SWidget* TargetWidget)
 
 FLinearColor UNovaMenuManager::GetInterfaceColor() const
 {
-	return FLinearColor::White;
+	return CurrentInterfaceColor.Get();
+}
+
+void UNovaMenuManager::SetInterfaceColor(const FLinearColor& Color)
+{
+	DesiredInterfaceColor = Color;
 }
 
 /*----------------------------------------------------

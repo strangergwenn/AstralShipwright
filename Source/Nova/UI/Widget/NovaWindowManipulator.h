@@ -19,10 +19,11 @@ class SNovaMenuManipulator : public SImage
 	    Slate arguments
 	----------------------------------------------------*/
 
-	SLATE_BEGIN_ARGS(SNovaMenuManipulator)
+	SLATE_BEGIN_ARGS(SNovaMenuManipulator) : _ColorAndOpacity(FLinearColor::White)
 	{}
 
 	SLATE_ARGUMENT(const FSlateBrush*, Image)
+	SLATE_ATTRIBUTE(FSlateColor, ColorAndOpacity)
 
 	SLATE_END_ARGS()
 
@@ -34,7 +35,7 @@ public:
 
 	void Construct(const FArguments& InArgs)
 	{
-		SImage::Construct(SImage::FArguments().Image(InArgs._Image));
+		SImage::Construct(SImage::FArguments().Image(InArgs._Image).ColorAndOpacity(InArgs._ColorAndOpacity));
 	}
 
 	/*----------------------------------------------------
