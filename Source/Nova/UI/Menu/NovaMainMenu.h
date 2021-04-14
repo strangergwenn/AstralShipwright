@@ -11,6 +11,7 @@ enum class ENovaMainMenuType : uint8
 	Home,
 	Game,
 	Flight,
+	Navigation,
 	Assembly,
 	Settings
 };
@@ -61,6 +62,9 @@ public:
 protected:
 	/** Check if we can display the home menu */
 	bool IsHomeMenuVisible() const;
+
+	/** Check if we can display the assembly menu */
+	bool IsAssemblyMenuVisible() const;
 
 	/** Check if we can display the game menus */
 	bool AreGameMenusVisible() const;
@@ -114,10 +118,11 @@ protected:
 	bool WasOnMainMenu;
 
 	// Widgets
-	TSharedPtr<class SNovaTabView>          TabView;
-	TSharedPtr<class SNovaMainMenuHome>     HomeMenu;
-	TSharedPtr<class SNovaMainMenuGame>     GameMenu;
-	TSharedPtr<class SNovaMainMenuFlight>   FlightMenu;
-	TSharedPtr<class SNovaMainMenuAssembly> AssemblyMenu;
-	TSharedPtr<class SNovaMainMenuSettings> SettingsMenu;
+	TSharedPtr<class SNovaTabView>            TabView;
+	TSharedPtr<class SNovaMainMenuHome>       HomeMenu;
+	TSharedPtr<class SNovaMainMenuGame>       GameMenu;
+	TSharedPtr<class SNovaMainMenuFlight>     FlightMenu;
+	TSharedPtr<class SNovaMainMenuNavigation> NavigationMenu;
+	TSharedPtr<class SNovaMainMenuAssembly>   AssemblyMenu;
+	TSharedPtr<class SNovaMainMenuSettings>   SettingsMenu;
 };

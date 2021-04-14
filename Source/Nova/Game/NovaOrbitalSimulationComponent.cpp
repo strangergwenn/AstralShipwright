@@ -313,19 +313,43 @@ bool UNovaOrbitalSimulationComponent::IsOnStartedTrajectory(const FGuid& Spacecr
 	return Trajectory && GetCurrentTime() >= Trajectory->GetFirstManeuverStartTime() && GetCurrentTime() <= Trajectory->GetArrivalTime();
 }
 
-bool UNovaOrbitalSimulationComponent::CanStartTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory) const
+bool UNovaOrbitalSimulationComponent::CanCommitTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, FText* Help) const
 {
-	return GetOwner()->GetLocalRole() == ROLE_Authority && Trajectory.IsValid() && Trajectory->IsValid() &&
-		   Trajectory->Maneuvers[0].Time > GetCurrentTime();
+	if (GetOwner()->GetLocalRole() != ROLE_Authority)
+	{
+		if (Help)
+		{
+			*Help = LOCTEXT("CannotCommitTrajectoryHost", "Only the hosting player can commit to a trajectory");
+		}
+		return false;
+	}
+	else if (!Trajectory.IsValid())
+	{
+		if (Help)
+		{
+			*Help = LOCTEXT("CannotCommitTrajectoryValidity", "The selected trajectory is not valid");
+		}
+		return false;
+	}
+	else if (Trajectory->Maneuvers[0].Time <= GetCurrentTime())
+	{
+		if (Help)
+		{
+			*Help = LOCTEXT("CannotCommitTrajectoryTime", "The selected trajectory starts in the past");
+		}
+		return false;
+	}
+
+	return true;
 }
 
-void UNovaOrbitalSimulationComponent::StartTrajectory(
+void UNovaOrbitalSimulationComponent::CommitTrajectory(
 	const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory)
 {
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 	NCHECK(Trajectory.IsValid() && Trajectory->IsValid());
 
-	NLOG("UNovaOrbitalSimulationComponent::StartTrajectory for %d spacecraft", SpacecraftIdentifiers.Num());
+	NLOG("UNovaOrbitalSimulationComponent::CommitTrajectory for %d spacecraft", SpacecraftIdentifiers.Num());
 
 	// Move spacecraft to the trajectory
 	SpacecraftTrajectoryDatabase.Add(SpacecraftIdentifiers, Trajectory);

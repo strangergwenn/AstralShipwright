@@ -672,8 +672,7 @@ bool SNovaMainMenuGame::IsInviteFriendEnabled() const
 	const UNovaSessionsManager* SessionsManager = MenuManager->GetGameInstance()->GetSessionsManager();
 	const ANovaGameState*       GameState       = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 
-	FText JoinError;
-	if (GameState && GameState->IsJoinable(JoinError) && HasSelectedFriend())
+	if (GameState && GameState->IsJoinable() && HasSelectedFriend())
 	{
 		TSharedRef<FOnlineFriend> SelectedFriend = FriendList[SelectedFriendIndex];
 
@@ -688,8 +687,7 @@ bool SNovaMainMenuGame::IsJoinFriendEnabled() const
 {
 	const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 
-	FText JoinError;
-	if (GameState && GameState->IsJoinable(JoinError) && HasSelectedFriend())
+	if (GameState && GameState->IsJoinable() && HasSelectedFriend())
 	{
 		TSharedRef<FOnlineFriend> SelectedFriend = FriendList[SelectedFriendIndex];
 		return SelectedFriend->GetPresence().bIsJoinable;

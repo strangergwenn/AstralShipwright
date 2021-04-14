@@ -443,6 +443,13 @@ void SNovaMainMenuAssembly::Show()
 	SetCompartmentPanelVisible(false);
 }
 
+void SNovaMainMenuAssembly::Hide()
+{
+	SNovaTabPanel::Hide();
+
+	GetSpacecraftPawn()->SetHighlightCompartment(INDEX_NONE);
+}
+
 void SNovaMainMenuAssembly::ZoomIn()
 {
 	if (SelectedCompartmentIndex != INDEX_NONE)

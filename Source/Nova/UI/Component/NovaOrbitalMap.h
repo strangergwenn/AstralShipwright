@@ -133,10 +133,10 @@ public:
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
 	/** Preview a spacecraft trajectory */
-	void Set(const TSharedPtr<struct FNovaTrajectory>& Trajectory, bool Immediate = false);
+	void ShowTrajectory(const TSharedPtr<struct FNovaTrajectory>& Trajectory, bool Immediate = false);
 
 	/** Remove the trajectory preview */
-	void ClearTrajectoryPreview()
+	void ClearTrajectory()
 	{
 		CurrentPreviewTrajectory.Reset();
 	}

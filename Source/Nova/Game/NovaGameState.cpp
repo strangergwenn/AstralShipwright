@@ -147,9 +147,8 @@ void ANovaGameState::Tick(float DeltaTime)
 	ProcessEvents(DeltaTime);
 
 	// Update sessions
-	FText                 Unused;
 	UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
-	SessionsManager->SetSessionAdvertised(IsJoinable(Unused));
+	SessionsManager->SetSessionAdvertised(IsJoinable());
 }
 
 void ANovaGameState::SetCurrentArea(const UNovaArea* Area)
@@ -167,7 +166,7 @@ FName ANovaGameState::GetCurrentLevelName() const
 	return CurrentArea ? CurrentArea->LevelName : NAME_None;
 }
 
-bool ANovaGameState::IsJoinable(FText& Error) const
+bool ANovaGameState::IsJoinable(FText* Help) const
 {
 	bool AllSpacecraftDocked = true;
 	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
@@ -175,7 +174,10 @@ bool ANovaGameState::IsJoinable(FText& Error) const
 		if (SpacecraftPawn->GetSpacecraftMovement()->GetState() != ENovaMovementState::Docked)
 		{
 			AllSpacecraftDocked = false;
-			Error               = LOCTEXT("AllSpacecraftNotDocked", "The players you are joining are not docked");
+			if (Help)
+			{
+				*Help = LOCTEXT("AllSpacecraftNotDocked", "All players need to be docked to allow joining");
+			}
 			break;
 		}
 	}

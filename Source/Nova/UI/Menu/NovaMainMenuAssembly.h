@@ -41,6 +41,8 @@ public:
 
 	virtual void Show() override;
 
+	virtual void Hide() override;
+
 	virtual void ZoomIn() override;
 
 	virtual void ZoomOut() override;

@@ -128,7 +128,7 @@ public:
 	}
 
 	/** Check whether the game can be joined */
-	bool IsJoinable(FText& Error) const;
+	bool IsJoinable(FText* Help = nullptr) const;
 
 	/*----------------------------------------------------
 	    Spacecraft management

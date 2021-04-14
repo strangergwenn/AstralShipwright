@@ -5,6 +5,7 @@
 #include "NovaMainMenuHome.h"
 #include "NovaMainMenuGame.h"
 #include "NovaMainMenuFlight.h"
+#include "NovaMainMenuNavigation.h"
 #include "NovaMainMenuAssembly.h"
 #include "NovaMainMenuSettings.h"
 
@@ -13,6 +14,9 @@
 #include "Nova/UI/Widget/NovaTabView.h"
 #include "Nova/UI/Widget/NovaWindowManipulator.h"
 #include "Nova/UI/NovaUITypes.h"
+
+#include "Nova/Spacecraft/NovaSpacecraftPawn.h"
+#include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
 
 #include "Nova/Player/NovaPlayerController.h"
 #include "Nova/System/NovaMenuManager.h"
@@ -124,11 +128,23 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 			.MenuManager(MenuManager)
 		]
 
+		// Navigation menu
+		+ SNovaTabView::Slot()
+		.Header(LOCTEXT("NavigationMenuTitle", "Navigation"))
+		.HeaderHelp(LOCTEXT("NavigationMenuTitleHelp", "Plot trajectories"))
+		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::AreGameMenusVisible))
+		.Blur()
+		[
+			SAssignNew(NavigationMenu, SNovaMainMenuNavigation)
+			.Menu(this)
+			.MenuManager(MenuManager)
+		]
+
 		// Assembly menu
 		+ SNovaTabView::Slot()
 		.Header(LOCTEXT("AssemblyMenuTitle", "Assembly"))
 		.HeaderHelp(LOCTEXT("AssemblyMenuTitleHelp", "Edit spacecraft assembly"))
-		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::AreGameMenusVisible))
+		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::IsAssemblyMenuVisible))
 		[
 			SAssignNew(AssemblyMenu, SNovaMainMenuAssembly)
 			.Menu(this)
@@ -269,6 +285,26 @@ FReply SNovaMainMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& Ke
 bool SNovaMainMenu::IsHomeMenuVisible() const
 {
 	return MenuManager->GetPC() && MenuManager->GetPC()->IsOnMainMenu();
+}
+
+bool SNovaMainMenu::IsAssemblyMenuVisible() const
+{
+	if (AreGameMenusVisible())
+	{
+		ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
+		if (IsValid(SpacecraftPawn))
+		{
+			UNovaSpacecraftMovementComponent* Movement = Cast<UNovaSpacecraftMovementComponent>(
+				SpacecraftPawn->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
+
+			if (IsValid(Movement))
+			{
+				return Movement->GetState() == ENovaMovementState::Docked;
+			}
+		}
+	}
+
+	return false;
 }
 
 bool SNovaMainMenu::AreGameMenusVisible() const

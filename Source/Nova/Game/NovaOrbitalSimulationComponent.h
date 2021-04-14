@@ -54,10 +54,10 @@ public:
 	bool IsOnStartedTrajectory(const FGuid& SpacecraftIdentifier) const;
 
 	/** Check if this trajectory can be started */
-	bool CanStartTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory) const;
+	bool CanStartTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, FText* Help = nullptr) const;
 
 	/** Put spacecraft on a new trajectory */
-	void StartTrajectory(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory);
+	void CommitTrajectory(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory);
 
 	/** Complete the current trajectory of spacecraft */
 	void CompleteTrajectory(const TArray<FGuid>& SpacecraftIdentifiers);

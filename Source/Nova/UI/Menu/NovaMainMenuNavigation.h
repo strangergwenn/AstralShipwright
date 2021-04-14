@@ -4,17 +4,18 @@
 
 #include "Nova/UI/NovaUI.h"
 #include "Nova/UI/Widget/NovaTabView.h"
+#include "Nova/UI/Widget/NovaModalListView.h"
 
 #include "Online.h"
 
-/** Flight menu */
-class SNovaMainMenuFlight : public SNovaTabPanel
+/** Navigation menu */
+class SNovaMainMenuNavigation : public SNovaTabPanel
 {
 	/*----------------------------------------------------
 	    Slate arguments
 	----------------------------------------------------*/
 
-	SLATE_BEGIN_ARGS(SNovaMainMenuFlight)
+	SLATE_BEGIN_ARGS(SNovaMainMenuNavigation)
 	{}
 
 	SLATE_ARGUMENT(class SNovaMenu*, Menu)
@@ -23,7 +24,7 @@ class SNovaMainMenuFlight : public SNovaTabPanel
 	SLATE_END_ARGS()
 
 public:
-	SNovaMainMenuFlight()
+	SNovaMainMenuNavigation() : SelectedDestination(nullptr)
 	{}
 
 	void Construct(const FArguments& InArgs);
@@ -42,8 +43,6 @@ public:
 
 	virtual void VerticalAnalogInput(float Value) override;
 
-	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
-
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
@@ -55,16 +54,31 @@ protected:
 	/** Get the spacecraft movement component */
 	class UNovaSpacecraftMovementComponent* GetSpacecraftMovement() const;
 
+	/** Check for trajectory validity */
+	bool CanCommitTrajectoryInternal(FText* Help = nullptr) const;
+
 	/*----------------------------------------------------
 	    Callbacks
 	----------------------------------------------------*/
 
 protected:
-	bool IsUndockEnabled() const;
-	bool IsDockEnabled() const;
+	// Destinations
+	TSharedRef<SWidget> GenerateDestinationItem(const class UNovaArea* Destination);
+	FText               GetDestinationName(const class UNovaArea* Destination) const;
+	const FSlateBrush*  GetDestinationIcon(const class UNovaArea* Destination) const;
+	FText               GenerateDestinationTooltip(const class UNovaArea* Destination);
+	void                OnSelectedDestinationChanged(const class UNovaArea* Destination, int32 Index);
 
-	void OnUndock();
-	void OnDock();
+	// General
+	FText GetLocationText() const;
+	bool  CanFastForward() const;
+	void  FastForward();
+
+	// Trajectory
+	bool  CanCommitTrajectory() const;
+	FText GetCommitTrajectoryHelpText() const;
+	void  OnTrajectoryChanged(TSharedPtr<struct FNovaTrajectory> Trajectory);
+	void  OnCommitTrajectory();
 
 	/*----------------------------------------------------
 	    Data
@@ -74,7 +88,12 @@ protected:
 	// Settings
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 
+	// Destination list
+	const class UNovaArea*                           SelectedDestination;
+	TArray<const class UNovaArea*>                   DestinationList;
+	TSharedPtr<SNovaModalListView<const UNovaArea*>> DestinationListView;
+
 	// Slate widgets
-	TSharedPtr<class SNovaButton> UndockButton;
-	TSharedPtr<class SNovaButton> DockButton;
+	TSharedPtr<class SNovaOrbitalMap>           OrbitalMap;
+	TSharedPtr<class SNovaTrajectoryCalculator> TrajectoryCalculator;
 };

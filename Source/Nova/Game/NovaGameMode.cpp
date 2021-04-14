@@ -93,7 +93,7 @@ void ANovaGameMode::PreLogin(const FString& Options, const FString& Address, con
 	if (ErrorMessage.IsEmpty())
 	{
 		FText Error;
-		GetGameState<ANovaGameState>()->IsJoinable(Error);
+		GetGameState<ANovaGameState>()->IsJoinable(&Error);
 		ErrorMessage = Error.ToString();
 	}
 }

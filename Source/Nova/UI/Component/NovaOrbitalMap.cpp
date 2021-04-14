@@ -187,7 +187,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 #endif
 }
 
-void SNovaOrbitalMap::Set(const TSharedPtr<FNovaTrajectory>& Trajectory, bool Immediate)
+void SNovaOrbitalMap::ShowTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, bool Immediate)
 {
 	CurrentPreviewTrajectory = Trajectory;
 	CurrentPreviewProgress   = Immediate ? TrajectoryPreviewDuration : 0;
