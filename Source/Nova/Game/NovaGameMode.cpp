@@ -251,28 +251,30 @@ void ANovaGameMode::InitializeStateMachine()
 {
 	// Fetch data
 	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
-	NCHECK(IsValid(PC) && PC->IsLocalController());
-	ANovaGameState* NovaGameState = GetGameState<ANovaGameState>();
-	NCHECK(IsValid(NovaGameState));
-	UNovaOrbitalSimulationComponent* OrbitalSimulationComponent = NovaGameState->GetOrbitalSimulation();
-	NCHECK(IsValid(OrbitalSimulationComponent));
-
-	// State initializer
-	auto AddState = [&](ENovaGameStateIdentifier Identifier, TSharedPtr<FNovaGameModeState> State, const FString& Name)
+	if (IsValid(PC) && PC->IsLocalController())
 	{
-		State->Initialize(Name, PC, this, GetGameState<ANovaGameState>(), OrbitalSimulationComponent);
-		StateMap.Add(Identifier, State);
-	};
+		ANovaGameState* NovaGameState = GetGameState<ANovaGameState>();
+		NCHECK(IsValid(NovaGameState));
+		UNovaOrbitalSimulationComponent* OrbitalSimulationComponent = NovaGameState->GetOrbitalSimulation();
+		NCHECK(IsValid(OrbitalSimulationComponent));
 
-	// Create states
-	AddState(ENovaGameStateIdentifier::Area, MakeShared<FNovaAreaState>(), TEXT("Area"));
-	AddState(ENovaGameStateIdentifier::Orbit, MakeShared<FNovaOrbitState>(), TEXT("Orbit"));
-	AddState(ENovaGameStateIdentifier::FastForward, MakeShared<FNovaFastForwardState>(), TEXT("FastForward"));
-	AddState(ENovaGameStateIdentifier::DepartureProximity, MakeShared<FNovaDepartureProximityState>(), TEXT("DepartureProximity"));
-	AddState(ENovaGameStateIdentifier::DepartureCoast, MakeShared<FNovaDepartureCoastState>(), TEXT("DepartureCoast"));
-	AddState(ENovaGameStateIdentifier::ArrivalIntro, MakeShared<FNovaArrivalIntroState>(), TEXT("ArrivalIntro"));
-	AddState(ENovaGameStateIdentifier::ArrivalCoast, MakeShared<FNovaArrivalCoastState>(), TEXT("ArrivalCoast"));
-	AddState(ENovaGameStateIdentifier::ArrivalProximity, MakeShared<FNovaArrivalProximityState>(), TEXT("ArrivalProximity"));
+		// State initializer
+		auto AddState = [&](ENovaGameStateIdentifier Identifier, TSharedPtr<FNovaGameModeState> State, const FString& Name)
+		{
+			State->Initialize(Name, PC, this, GetGameState<ANovaGameState>(), OrbitalSimulationComponent);
+			StateMap.Add(Identifier, State);
+		};
+
+		// Create states
+		AddState(ENovaGameStateIdentifier::Area, MakeShared<FNovaAreaState>(), TEXT("Area"));
+		AddState(ENovaGameStateIdentifier::Orbit, MakeShared<FNovaOrbitState>(), TEXT("Orbit"));
+		AddState(ENovaGameStateIdentifier::FastForward, MakeShared<FNovaFastForwardState>(), TEXT("FastForward"));
+		AddState(ENovaGameStateIdentifier::DepartureProximity, MakeShared<FNovaDepartureProximityState>(), TEXT("DepartureProximity"));
+		AddState(ENovaGameStateIdentifier::DepartureCoast, MakeShared<FNovaDepartureCoastState>(), TEXT("DepartureCoast"));
+		AddState(ENovaGameStateIdentifier::ArrivalIntro, MakeShared<FNovaArrivalIntroState>(), TEXT("ArrivalIntro"));
+		AddState(ENovaGameStateIdentifier::ArrivalCoast, MakeShared<FNovaArrivalCoastState>(), TEXT("ArrivalCoast"));
+		AddState(ENovaGameStateIdentifier::ArrivalProximity, MakeShared<FNovaArrivalProximityState>(), TEXT("ArrivalProximity"));
+	}
 }
 
 void ANovaGameMode::ProcessStateMachine()

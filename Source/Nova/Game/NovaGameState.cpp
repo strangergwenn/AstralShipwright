@@ -367,8 +367,10 @@ void ANovaGameState::ProcessEvents(float DeltaTime)
 		if (!PrimaryText.IsEmpty())
 		{
 			ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetGameInstance()->GetFirstLocalPlayerController());
-			NCHECK(IsValid(PC) && PC->IsLocalController());
-			PC->ShowTitle(PrimaryText, SecondaryText);
+			if (IsValid(PC) && PC->IsLocalController())
+			{
+				PC->ShowTitle(PrimaryText, SecondaryText);
+			}
 		}
 
 		AreaChangeEvents.Empty();
