@@ -62,6 +62,64 @@ struct FNovaTrajectoryParameters
 	double             µ;
 };
 
+/** Results of a maneuver on a fleet of spacecraft */
+struct FNovaSpacecraftFleetManeuver
+{
+	FNovaSpacecraftFleetManeuver(double D, const TArray<float>& PU) : Duration(D), PropellantUsed(PU)
+	{}
+
+	double        Duration;
+	TArray<float> PropellantUsed;
+};
+
+/** Structure representing a fleet of spacecraft */
+struct FNovaSpacecraftFleet
+{
+	struct FNovaSpacecraftFleetEntry
+	{
+		FNovaSpacecraftFleetEntry(const FNovaSpacecraft* Spacecraft)
+		{
+			Metrics           = Spacecraft->GetPropulsionMetrics();
+			CurrentPropellant = Spacecraft->GetRemainingPropellantMass();
+		}
+
+		FNovaSpacecraftPropulsionMetrics Metrics;
+		float                            CurrentPropellant;
+	};
+
+	FNovaSpacecraftFleet(const TArray<FGuid>& SpacecraftIdentifiers, const ANovaGameState* GameState)
+	{
+		for (const FGuid& Identifier : SpacecraftIdentifiers)
+		{
+			const FNovaSpacecraft* NewSpacecraft = GameState->GetSpacecraft(Identifier);
+			NCHECK(NewSpacecraft != nullptr);
+			Fleet.Add(FNovaSpacecraftFleetEntry(NewSpacecraft));
+		}
+	}
+
+	FNovaSpacecraftFleetManeuver AddManeuver(double DeltaV)
+	{
+		double        MaxDuration = 0;
+		TArray<float> PropellantUsed;
+
+		for (FNovaSpacecraftFleetEntry& Entry : Fleet)
+		{
+			float  InitialPropellant = Entry.CurrentPropellant;
+			double Duration          = Entry.Metrics.GetManeuverDurationAndPropellantUsed(DeltaV, Entry.CurrentPropellant);
+			PropellantUsed.Add(InitialPropellant - Entry.CurrentPropellant);
+
+			if (Duration > MaxDuration)
+			{
+				MaxDuration = Duration;
+			}
+		}
+
+		return FNovaSpacecraftFleetManeuver(MaxDuration, PropellantUsed);
+	}
+
+	TArray<FNovaSpacecraftFleetEntry> Fleet;
+};
+
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
@@ -192,32 +250,16 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	const double PhasingAngle        = (PhasingDuration / PhasingOrbitPeriod) * 360.0;
 	const double TotalTravelDuration = TotalTransferDuration + PhasingDuration;
 
-	// Get a list of spacecraft
-	TArray<const FNovaSpacecraft*> Spacecraft;
-	for (const FGuid& Identifier : Parameters->SpacecraftIdentifiers)
-	{
-		const FNovaSpacecraft* NewSpacecraft = Cast<ANovaGameState>(GetOwner())->GetSpacecraft(Identifier);
-		NCHECK(NewSpacecraft != nullptr);
-		Spacecraft.Add(NewSpacecraft);
-	}
-
-	// Sort spacecraft by least acceleration because the fleet will match the least-performing
-	Spacecraft.Sort(
-		[](const FNovaSpacecraft& A, const FNovaSpacecraft& B)
-		{
-			return A.GetPropulsionMetrics().GetLowestAcceleration() < B.GetPropulsionMetrics().GetLowestAcceleration();
-		});
-
 	// Start building trajectory
-	TSharedPtr<FNovaTrajectory>             Trajectory        = MakeShared<FNovaTrajectory>();
-	double                                  CurrentTime       = StartTime + InitialWaitingDuration;
-	double                                  CurrentPhase      = SourcePhase;
-	float                                   CurrentPropellant = Spacecraft[0]->GetRemainingPropellantMass();
-	const FNovaSpacecraftPropulsionMetrics& Metrics           = Spacecraft[0]->GetPropulsionMetrics();
+	FNovaSpacecraftFleet        Fleet(Parameters->SpacecraftIdentifiers, Cast<ANovaGameState>(GetOwner()));
+	TSharedPtr<FNovaTrajectory> Trajectory   = MakeShared<FNovaTrajectory>();
+	double                      CurrentTime  = StartTime + InitialWaitingDuration;
+	double                      CurrentPhase = SourcePhase;
 
 	// Departure burn on first transfer
-	double ManeuverDuration     = Metrics.GetManeuverDurationAndPropellantUsed(TransferA.StartDeltaV, CurrentPropellant);
-	bool   FirstTransferIsValid = Trajectory->Add(FNovaManeuver(TransferA.StartDeltaV, CurrentPhase, CurrentTime, ManeuverDuration));
+	FNovaSpacecraftFleetManeuver FleetManeuver        = Fleet.AddManeuver(TransferA.StartDeltaV);
+	bool                         FirstTransferIsValid = Trajectory->Add(
+        FNovaManeuver(TransferA.StartDeltaV, CurrentPhase, CurrentTime, FleetManeuver.Duration, FleetManeuver.PropellantUsed));
 
 	// First transfer
 	if (FirstTransferIsValid)
@@ -228,10 +270,11 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	CurrentPhase += 180;
 
 	// Circularization burn after first transfer
-	ManeuverDuration          = Metrics.GetManeuverDurationAndPropellantUsed(TransferA.EndDeltaV, CurrentPropellant);
-	double ManeuverPhaseDelta = ((ManeuverDuration / 2.0) / PhasingOrbitPeriod) * 360.0;
-	Trajectory->Add(FNovaManeuver(TransferA.EndDeltaV, CurrentPhase - ManeuverPhaseDelta,
-		CurrentTime + TransferA.Duration - ManeuverDuration / 2.0, ManeuverDuration));
+	FleetManeuver                    = Fleet.AddManeuver(TransferA.EndDeltaV);
+	double        ManeuverPhaseDelta = ((FleetManeuver.Duration / 2.0) / PhasingOrbitPeriod) * 360.0;
+	FNovaManeuver Maneuver           = FNovaManeuver(TransferA.EndDeltaV, CurrentPhase - ManeuverPhaseDelta,
+        CurrentTime + TransferA.Duration - FleetManeuver.Duration / 2.0, FleetManeuver.Duration, FleetManeuver.PropellantUsed);
+	Trajectory->Add(Maneuver);
 	CurrentTime += TransferA.Duration;
 
 	// Phasing orbit
@@ -245,28 +288,31 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	CurrentPhase += PhasingAngle;
 
 	// Departure burn on second transfer, accounting for whether the departure burn occurs in the middle of the arc or just after
-	ManeuverDuration = Metrics.GetManeuverDurationAndPropellantUsed(TransferB.StartDeltaV, CurrentPropellant);
+	FleetManeuver = Fleet.AddManeuver(TransferB.StartDeltaV);
 	if (FirstTransferIsValid)
 	{
-		ManeuverPhaseDelta = ((ManeuverDuration / 2.0) / PhasingOrbitPeriod) * 360.0;
-		Trajectory->Add(FNovaManeuver(
-			TransferB.StartDeltaV, CurrentPhase - ManeuverPhaseDelta, CurrentTime - ManeuverDuration / 2.0, ManeuverDuration));
+		ManeuverPhaseDelta = ((FleetManeuver.Duration / 2.0) / PhasingOrbitPeriod) * 360.0;
+		Maneuver = FNovaManeuver(TransferB.StartDeltaV, CurrentPhase - ManeuverPhaseDelta, CurrentTime - FleetManeuver.Duration / 2.0,
+			FleetManeuver.Duration, FleetManeuver.PropellantUsed);
+		Trajectory->Add(Maneuver);
 	}
 	else
 	{
-		Trajectory->Add(FNovaManeuver(TransferB.StartDeltaV, CurrentPhase, CurrentTime, ManeuverDuration));
+		Maneuver = FNovaManeuver(TransferB.StartDeltaV, CurrentPhase, CurrentTime, FleetManeuver.Duration, FleetManeuver.PropellantUsed);
+		Trajectory->Add(Maneuver);
 	}
 
 	// Second transfer
 	Trajectory->Add(FNovaOrbit(
 		FNovaOrbitGeometry(Parameters->Planet, PhasingAltitude, DestinationAltitude, CurrentPhase, CurrentPhase + 180), CurrentTime));
-	ManeuverDuration = Metrics.GetManeuverDurationAndPropellantUsed(TransferB.EndDeltaV, CurrentPropellant);
+	FleetManeuver = Fleet.AddManeuver(TransferB.EndDeltaV);
 	CurrentPhase += 180;
 
 	// Circularization burn after second transfer
-	ManeuverPhaseDelta = (ManeuverDuration / PhasingOrbitPeriod) * 360.0;
-	Trajectory->Add(FNovaManeuver(
-		TransferB.EndDeltaV, CurrentPhase - ManeuverPhaseDelta, CurrentTime + TransferB.Duration - ManeuverDuration, ManeuverDuration));
+	ManeuverPhaseDelta = (FleetManeuver.Duration / PhasingOrbitPeriod) * 360.0;
+	Maneuver           = FNovaManeuver(TransferB.EndDeltaV, CurrentPhase - ManeuverPhaseDelta,
+        CurrentTime + TransferB.Duration - FleetManeuver.Duration, FleetManeuver.Duration, FleetManeuver.PropellantUsed);
+	Trajectory->Add(Maneuver);
 
 	// Metadata
 	Trajectory->TotalTravelDuration = TotalTravelDuration;

@@ -197,7 +197,8 @@ struct FNovaManeuver
 	FNovaManeuver() : DeltaV(0), Phase(0), Time(0), Duration(0)
 	{}
 
-	FNovaManeuver(float DV, float P, double T, float D) : DeltaV(DV), Phase(P), Time(T), Duration(D)
+	FNovaManeuver(float DV, float P, double T, float D, const TArray<float>& PU)
+		: DeltaV(DV), Phase(P), Time(T), Duration(D), PropellantUsed(PU)
 	{}
 
 	UPROPERTY()
@@ -211,6 +212,9 @@ struct FNovaManeuver
 
 	UPROPERTY()
 	float Duration;
+
+	UPROPERTY()
+	TArray<float> PropellantUsed;
 };
 
 /** Full trajectory data including the last stable orbit */
@@ -509,6 +513,24 @@ struct FNovaTrajectoryDatabase : public FFastArraySerializer
 	{
 		const FNovaTrajectoryDatabaseEntry* Entry = Cache.Get(Identifier, Array);
 		return Entry ? &Entry->Trajectory : nullptr;
+	}
+
+	int32 GetSpacecraftIndex(const FGuid& Identifier) const
+	{
+		const FNovaTrajectoryDatabaseEntry* Entry = Cache.Get(Identifier, Array);
+
+		if (Entry)
+		{
+			for (int32 Index = 0; Index < Entry->Identifiers.Num(); Index++)
+			{
+				if (Entry->Identifiers[Index] == Identifier)
+				{
+					return Index;
+				}
+			}
+		}
+
+		return INDEX_NONE;
 	}
 
 	void UpdateCache()

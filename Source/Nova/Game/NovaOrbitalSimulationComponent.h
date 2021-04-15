@@ -54,7 +54,7 @@ public:
 	bool IsOnStartedTrajectory(const FGuid& SpacecraftIdentifier) const;
 
 	/** Check if this trajectory can be started */
-	bool CanStartTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, FText* Help = nullptr) const;
+	bool CanCommitTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, FText* Help = nullptr) const;
 
 	/** Put spacecraft on a new trajectory */
 	void CommitTrajectory(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory);
@@ -103,6 +103,12 @@ public:
 	const FNovaTrajectory* GetSpacecraftTrajectory(const FGuid& Identifier) const
 	{
 		return SpacecraftTrajectoryDatabase.Get(Identifier);
+	}
+
+	/** Get the fleet index of a spacecraft in a trajectory */
+	int32 GetSpacecraftIndexInTrajectory(const FGuid& Identifier) const
+	{
+		return SpacecraftTrajectoryDatabase.GetSpacecraftIndex(Identifier);
 	}
 
 	/** Get a spacecraft's location */
