@@ -3,6 +3,8 @@
 #include "NovaSpacecraftDriveComponent.h"
 #include "NovaSpacecraftMovementComponent.h"
 #include "Nova/Actor/NovaMeshInterface.h"
+#include "Nova/Game/NovaOrbitalSimulationComponent.h"
+#include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Nova.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
@@ -54,18 +56,20 @@ void UNovaSpacecraftDriveComponent::TickComponent(float DeltaTime, ELevelTick Ti
 
 	if (MovementComponent && IsValid(GetAttachParent()))
 	{
-		INovaMeshInterface* ParentMesh = Cast<INovaMeshInterface>(GetAttachParent());
+		const UNovaOrbitalSimulationComponent* Simulation     = UNovaOrbitalSimulationComponent::Get(this);
+		const ANovaSpacecraftPawn*             SpacecraftPawn = Cast<ANovaSpacecraftPawn>(GetOwner());
+		INovaMeshInterface*                    ParentMesh     = Cast<INovaMeshInterface>(GetAttachParent());
 		NCHECK(ParentMesh);
 
+		// Get the intensity
 		float EngineIntensity = 0.0f;
-
-		if (ParentMesh->IsDematerializing())
+		if (IsValid(Simulation) && IsValid(SpacecraftPawn) && !ParentMesh->IsDematerializing())
 		{
-			EngineIntensity = 0.0f;
-		}
-		else
-		{
-			EngineIntensity = MovementComponent->IsMainDriveRunning() ? 1.0f : 0.0f;
+			TSharedPtr<FNovaSpacecraft> Spacecraft = SpacecraftPawn->GetSpacecraft();
+			if (Spacecraft.IsValid())
+			{
+				EngineIntensity = Simulation->GetCurrentSpacecraftThrustFactor(Spacecraft->Identifier);
+			}
 		}
 
 		// Apply power

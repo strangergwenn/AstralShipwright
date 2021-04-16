@@ -203,11 +203,6 @@ public:
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float AngularAcceleration;
 
-	// Max vectoring angle in degrees
-	// TODO move to asset
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
-	float VectoringAngle;
-
 	// Distance under which we consider stopped
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float LinearDeadDistance;
@@ -261,7 +256,6 @@ protected:
 	// Movement state
 	FVector CurrentLinearVelocity;
 	FVector CurrentAngularVelocity;
-	bool    MainDriveRunning;
 
 	// Measured data
 	bool    LinearAttitudeIdle;
@@ -283,11 +277,6 @@ public:
 	ENovaMovementState GetState() const
 	{
 		return MovementCommand.State;
-	}
-
-	bool IsMainDriveRunning() const
-	{
-		return MainDriveRunning;
 	}
 
 	bool IsMaxVelocity() const

@@ -197,8 +197,8 @@ struct FNovaManeuver
 	FNovaManeuver() : DeltaV(0), Phase(0), Time(0), Duration(0)
 	{}
 
-	FNovaManeuver(float DV, float P, double T, float D, const TArray<float>& PU)
-		: DeltaV(DV), Phase(P), Time(T), Duration(D), PropellantUsed(PU)
+	FNovaManeuver(float DV, float P, double T, float D, const TArray<float>& TF)
+		: DeltaV(DV), Phase(P), Time(T), Duration(D), ThrustFactors(TF)
 	{}
 
 	UPROPERTY()
@@ -214,7 +214,7 @@ struct FNovaManeuver
 	float Duration;
 
 	UPROPERTY()
-	TArray<float> PropellantUsed;
+	TArray<float> ThrustFactors;
 };
 
 /** Full trajectory data including the last stable orbit */

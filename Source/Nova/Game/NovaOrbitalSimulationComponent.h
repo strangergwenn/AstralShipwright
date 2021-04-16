@@ -105,12 +105,6 @@ public:
 		return SpacecraftTrajectoryDatabase.Get(Identifier);
 	}
 
-	/** Get the fleet index of a spacecraft in a trajectory */
-	int32 GetSpacecraftIndexInTrajectory(const FGuid& Identifier) const
-	{
-		return SpacecraftTrajectoryDatabase.GetSpacecraftIndex(Identifier);
-	}
-
 	/** Get a spacecraft's location */
 	const FNovaOrbitalLocation* GetSpacecraftLocation(const FGuid& Identifier) const
 	{
@@ -176,6 +170,25 @@ public:
 		}
 
 		return TPair<const UNovaArea*, float>(nullptr, MAX_FLT);
+	}
+
+	/** Get the current thrust factor for a spacecraft */
+	float GetCurrentSpacecraftThrustFactor(const FGuid& Identifier) const
+	{
+		const FNovaTrajectory* Trajectory = GetSpacecraftTrajectory(Identifier);
+
+		if (Trajectory)
+		{
+			const FNovaManeuver* Maneuver = Trajectory->GetCurrentManeuver(GetCurrentTime());
+			if (Maneuver)
+			{
+				int32 SpacecraftIndex = SpacecraftTrajectoryDatabase.GetSpacecraftIndex(Identifier);
+				NCHECK(SpacecraftIndex != INDEX_NONE && SpacecraftIndex >= 0 && SpacecraftIndex < Maneuver->ThrustFactors.Num());
+				return Maneuver->ThrustFactors[SpacecraftIndex];
+			}
+		}
+
+		return 0;
 	}
 
 	/*----------------------------------------------------

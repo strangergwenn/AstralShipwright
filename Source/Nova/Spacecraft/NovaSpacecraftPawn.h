@@ -71,6 +71,12 @@ public:
 	/** Store a copy of a spacecraft and start editing it */
 	void SetSpacecraft(const FNovaSpacecraft* NewSpacecraft);
 
+	/** Get the local spacecraft copy (not shared with the central database) */
+	const TSharedPtr<FNovaSpacecraft>& GetSpacecraft() const
+	{
+		return Spacecraft;
+	}
+
 	/** Get the spacecraft movement component */
 	UFUNCTION(Category = Nova, BlueprintCallable)
 	class UNovaSpacecraftMovementComponent* GetSpacecraftMovement() const

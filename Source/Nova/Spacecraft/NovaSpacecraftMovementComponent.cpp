@@ -29,7 +29,6 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 
 	, CurrentLinearVelocity(FVector::ZeroVector)
 	, CurrentAngularVelocity(FVector::ZeroVector)
-	, MainDriveRunning(false)
 
 	, LinearAttitudeIdle(false)
 	, AngularAttitudeIdle(false)
@@ -42,7 +41,6 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	// Linear defaults
 	LinearAcceleration  = 8;
 	AngularAcceleration = 30;
-	VectoringAngle      = 7.5f;
 
 	// Angular defaults
 	LinearDeadDistance          = 1;
@@ -123,7 +121,6 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 #endif
 
 	// Initialize state
-	MainDriveRunning                = false;
 	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 
 	// Run high-level processing
@@ -708,8 +705,6 @@ void UNovaSpacecraftMovementComponent::ProcessTrajectoryMovement(float DeltaTime
 		{
 			AttitudeCommand.Location = DockState.Actor->GetWaitingPointLocation();
 		}
-
-		MainDriveRunning = Trajectory->GetCurrentManeuver(GameState->GetCurrentTime()) != nullptr;
 	}
 }
 
