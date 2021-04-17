@@ -331,16 +331,16 @@ public:
 	bool NeedsPiping = false;
 };
 
-/** Description of a fuel module */
+/** Description of a propellant module */
 UCLASS(ClassGroup = (Nova))
 class UNovaPropellantModuleDescription : public UNovaModuleDescription
 {
 	GENERATED_BODY()
 
 public:
-	// Fuel mass in T
+	// Module propellant mass in T
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	float FuelMass = 400;
+	float PropellantMass = 400;
 };
 
 /** Description of a cargo module */

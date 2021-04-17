@@ -349,8 +349,8 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 	PropulsionMetrics = FNovaSpacecraftPropulsionMetrics();
 
 	// Constants
-	constexpr float StandardGravity     = 9.807f;
-	constexpr float FuelSkirtMultiplier = 1.1f;
+	constexpr float StandardGravity           = 9.807f;
+	constexpr float SkirtPropellantMultiplier = 1.1f;
 
 	float TotalEngineISPTimesThrust = 0;
 
@@ -370,18 +370,18 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 				{
 					PropulsionMetrics.DryMass += Module.Description->Mass;
 
-					// Handle fuel modules
-					const UNovaPropellantModuleDescription* FuelModule = Cast<UNovaPropellantModuleDescription>(Module.Description);
-					if (FuelModule)
+					// Handle propellant modules
+					const UNovaPropellantModuleDescription* PropellantModule = Cast<UNovaPropellantModuleDescription>(Module.Description);
+					if (PropellantModule)
 					{
-						float FuelMass = FuelModule->FuelMass;
+						float PropellantMass = PropellantModule->PropellantMass;
 
 						if (IsSameModuleInPreviousCompartment(CompartmentIndex, ModuleIndex))
 						{
-							FuelMass *= FuelSkirtMultiplier;
+							PropellantMass *= SkirtPropellantMultiplier;
 						}
 
-						PropulsionMetrics.PropellantMass += FuelMass;
+						PropulsionMetrics.PropellantMass += PropellantMass;
 					}
 
 					// Handle cargo modules
@@ -425,7 +425,7 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 
 #if 0
 	NLOG("--------------------------------------------------------------------------------");
-	NLOG("Mass specifications : dry %.1fT, fuel %.1fT, cargo %.1fT, total %.1fT", PropulsionMetrics.DryMass, PropulsionMetrics.FuelMass,
+	NLOG("Mass specifications : dry %.1fT, propellant %.1fT, cargo %.1fT, total %.1fT", PropulsionMetrics.DryMass, PropulsionMetrics.PropellantMass,
 		PropulsionMetrics.CargoMass, PropulsionMetrics.TotalMass);
 	NLOG("Engine specifications : thrust %.1fkN, ISP %.1fm/s, EV %.1fm/s", PropulsionMetrics.Thrust, PropulsionMetrics.SpecificImpulse,
 		PropulsionMetrics.ExhaustVelocity);

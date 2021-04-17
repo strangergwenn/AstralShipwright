@@ -99,7 +99,7 @@ struct FNovaSpacecraftFleet
 
 	FNovaSpacecraftFleetManeuver AddManeuver(double DeltaV)
 	{
-		// Update the fuel use and compute individual maneuver durations for each ship
+		// Update the propellant use and compute individual maneuver durations for each ship
 		double        MaxDuration = 0;
 		TArray<float> Durations;
 		for (FNovaSpacecraftFleetEntry& Entry : Fleet)

@@ -106,7 +106,7 @@ struct FNovaSpacecraftPropulsionMetrics
 		return Thrust / (DryMass + PropellantMass + CargoMass);
 	}
 
-	/** Get the duration in minutes & mass of fuel spent in T for a maneuver */
+	/** Get the duration in minutes & mass of propellant spent in T for a maneuver */
 	float GetManeuverDurationAndPropellantUsed(const float DeltaV, float& CurrentPropellantMass) const
 	{
 		NCHECK(Thrust > 0);
@@ -122,10 +122,10 @@ struct FNovaSpacecraftPropulsionMetrics
 		return Duration;
 	}
 
-	// Dry mass before fuel and cargo in T
+	// Dry mass before propellants and cargo in T
 	float DryMass;
 
-	// Maximum fuel mass in T
+	// Maximum propellant mass in T
 	float PropellantMass;
 
 	// Maximum cargo mass in T
@@ -140,7 +140,7 @@ struct FNovaSpacecraftPropulsionMetrics
 	// Maximum thrust in N
 	float Thrust;
 
-	// Fuel mass rate in T/S
+	// Propellant mass rate in T/S
 	float PropellantRate;
 
 	// Engine exhaust velocity in m/s
