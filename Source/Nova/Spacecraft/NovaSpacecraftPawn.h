@@ -38,7 +38,7 @@ public:
 	ANovaSpacecraftPawn();
 
 	/*----------------------------------------------------
-	    Gameplay
+	    General gameplay
 	----------------------------------------------------*/
 
 	virtual void Tick(float DeltaTime) override;
@@ -49,6 +49,35 @@ public:
 	{
 		return TPair<FVector, FVector>(CurrentOrigin, CurrentExtent);
 	}
+
+	/** Return the spacecraft identifier */
+	FGuid GetSpacecraftIdentifier() const
+	{
+		return Spacecraft.IsValid() ? Spacecraft->Identifier : FGuid();
+	}
+
+	/** Get the spacecraft movement component */
+	UFUNCTION(Category = Nova, BlueprintCallable)
+	class UNovaSpacecraftMovementComponent* GetSpacecraftMovement() const
+	{
+		return MovementComponent;
+	}
+
+	/** Dock at a particular location */
+	void Dock(FSimpleDelegate Callback = FSimpleDelegate());
+
+	/** Undock from the current dock */
+	void Undock(FSimpleDelegate Callback = FSimpleDelegate());
+
+	/** Load the persistent state of systems from the spacecraft */
+	void LoadSystems();
+
+	/** Save the persistent state of systems into the spacecraft */
+	void SaveSystems();
+
+	/*----------------------------------------------------
+	    Assembly interface
+	----------------------------------------------------*/
 
 	/** Check if the assembly is idle */
 	bool IsIdle() const
@@ -67,19 +96,6 @@ public:
 
 	/** Save this assembly **/
 	void SaveAssembly();
-
-	/** Return the spacecraft identifier */
-	FGuid GetSpacecraftIdentifier() const
-	{
-		return Spacecraft.IsValid() ? Spacecraft->Identifier : FGuid();
-	}
-
-	/** Get the spacecraft movement component */
-	UFUNCTION(Category = Nova, BlueprintCallable)
-	class UNovaSpacecraftMovementComponent* GetSpacecraftMovement() const
-	{
-		return MovementComponent;
-	}
 
 	/** Insert a new compartment into the assembly */
 	bool InsertCompartment(FNovaCompartment CompartmentRequest, int32 Index);

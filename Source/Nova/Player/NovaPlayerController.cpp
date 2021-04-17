@@ -364,7 +364,7 @@ void ANovaPlayerController::Dock()
 		[=]()
 		{
 			SetCameraState(ENovaPlayerCameraState::CinematicSpacecraft);
-			GetSpacecraftPawn()->GetSpacecraftMovement()->Dock(EndCutscene);
+			GetSpacecraftPawn()->Dock(EndCutscene);
 		});
 
 	GetMenuManager()->CloseMenu(StartCutscene);
@@ -389,7 +389,7 @@ void ANovaPlayerController::Undock()
 		[=]()
 		{
 			SetCameraState(ENovaPlayerCameraState::CinematicSpacecraft);
-			GetSpacecraftPawn()->GetSpacecraftMovement()->Undock(EndCutscene);
+			GetSpacecraftPawn()->Undock(EndCutscene);
 		});
 
 	GetMenuManager()->CloseMenu(StartCutscene);

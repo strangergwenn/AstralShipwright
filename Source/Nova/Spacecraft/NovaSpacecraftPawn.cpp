@@ -47,7 +47,7 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 }
 
 /*----------------------------------------------------
-    Gameplay
+    General gameplay
 ----------------------------------------------------*/
 
 void ANovaSpacecraftPawn::Tick(float DeltaTime)
@@ -115,6 +115,57 @@ void ANovaSpacecraftPawn::PossessedBy(AController* NewController)
 		}
 	}
 }
+
+void ANovaSpacecraftPawn::Dock(FSimpleDelegate Callback)
+{
+	SaveSystems();
+	MovementComponent->Dock(Callback);
+}
+
+void ANovaSpacecraftPawn::Undock(FSimpleDelegate Callback)
+{
+	LoadSystems();
+	MovementComponent->Undock(Callback);
+}
+
+void ANovaSpacecraftPawn::LoadSystems()
+{
+	TArray<UActorComponent*> Components = GetComponentsByInterface(UNovaSpacecraftSystemInterface::StaticClass());
+	for (UActorComponent* Component : Components)
+	{
+		INovaSpacecraftSystemInterface* System = Cast<INovaSpacecraftSystemInterface>(Component);
+		NCHECK(System);
+
+		const FNovaSpacecraft* SystemSpacecraft = System->GetSpacecraft();
+		NCHECK(SystemSpacecraft);
+
+		System->Load(SystemSpacecraft->SystemState);
+	}
+}
+
+void ANovaSpacecraftPawn::SaveSystems()
+{
+	TArray<UActorComponent*> Components = GetComponentsByInterface(UNovaSpacecraftSystemInterface::StaticClass());
+	for (UActorComponent* Component : Components)
+	{
+		INovaSpacecraftSystemInterface* System = Cast<INovaSpacecraftSystemInterface>(Component);
+		NCHECK(System);
+
+		const FNovaSpacecraft* SystemSpacecraft = System->GetSpacecraft();
+		NCHECK(SystemSpacecraft);
+
+		FNovaSpacecraft UpdatedSpacecraft = *SystemSpacecraft;
+		System->Save(UpdatedSpacecraft.SystemState);
+
+		ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+		NCHECK(GameState);
+		GameState->UpdateSpacecraft(UpdatedSpacecraft, false);
+	}
+}
+
+/*----------------------------------------------------
+    Assembly interface
+----------------------------------------------------*/
 
 TArray<const UNovaCompartmentDescription*> ANovaSpacecraftPawn::GetCompatibleCompartments(int32 Index) const
 {

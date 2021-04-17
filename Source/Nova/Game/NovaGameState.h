@@ -138,10 +138,13 @@ public:
 	void UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool IsPlayerSpacecraft);
 
 	/** Return a pointer for a spacecraft by identifier */
-	const FNovaSpacecraft* GetSpacecraft(FGuid Identifier) const
+	const FNovaSpacecraft* GetSpacecraft(const FGuid& Identifier) const
 	{
 		return SpacecraftDatabase.Get(Identifier);
 	}
+
+	/** Get the spacecraft pawn for this identifier */
+	class ANovaSpacecraftPawn* GetSpacecraftPawn(const FGuid& Identifier) const;
 
 	/** Return the identifier of one of the player spacecraft */
 	FGuid GetPlayerSpacecraftIdentifier() const;

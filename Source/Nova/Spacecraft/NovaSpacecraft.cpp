@@ -160,6 +160,10 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 		// Spacecraft
 		JsonData->SetStringField("I", This->Identifier.ToString(EGuidFormats::Short));
 
+		// Systems
+		JsonData->SetNumberField("P", This->SystemState.InitialPropellantMass);
+
+		// Compartments
 		TArray<TSharedPtr<FJsonValue>> SavedCompartments;
 		for (const FNovaCompartment& Compartment : This->Compartments)
 		{
@@ -186,7 +190,6 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 				SavedCompartments.Add(MakeShared<FJsonValueObject>(CompartmentJsonData));
 			}
 		}
-
 		JsonData->SetArrayField("C", SavedCompartments);
 	}
 
@@ -203,6 +206,14 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 			This->Identifier = Identifier;
 		}
 
+		// Systems
+		double InitialPropellantMass = 0;
+		if (JsonData->TryGetNumberField("P", InitialPropellantMass))
+		{
+			This->SystemState.InitialPropellantMass = InitialPropellantMass;
+		}
+
+		// Compartments
 		const TArray<TSharedPtr<FJsonValue>>* SavedCompartments;
 		if (JsonData->TryGetArrayField("C", SavedCompartments))
 		{
@@ -381,14 +392,14 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 							PropellantMass *= SkirtPropellantMultiplier;
 						}
 
-						PropulsionMetrics.PropellantMass += PropellantMass;
+						PropulsionMetrics.MaximumPropellantMass += PropellantMass;
 					}
 
 					// Handle cargo modules
 					const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Module.Description);
 					if (CargoModule)
 					{
-						PropulsionMetrics.CargoMass += CargoModule->CargoMass;
+						PropulsionMetrics.MaximumCargoMass += CargoModule->CargoMass;
 					}
 				}
 			}
@@ -413,14 +424,16 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 	}
 
 	// Compute metrics
-	PropulsionMetrics.TotalMass = PropulsionMetrics.DryMass + PropulsionMetrics.PropellantMass + PropulsionMetrics.CargoMass;
+	PropulsionMetrics.MaximumMass =
+		PropulsionMetrics.DryMass + PropulsionMetrics.MaximumPropellantMass + PropulsionMetrics.MaximumCargoMass;
 	if (PropulsionMetrics.Thrust > 0)
 	{
 		PropulsionMetrics.SpecificImpulse = TotalEngineISPTimesThrust / PropulsionMetrics.Thrust;
 		PropulsionMetrics.ExhaustVelocity = StandardGravity * PropulsionMetrics.SpecificImpulse;
 		PropulsionMetrics.PropellantRate  = PropulsionMetrics.Thrust / PropulsionMetrics.ExhaustVelocity;
-		PropulsionMetrics.TotalDeltaV = PropulsionMetrics.ExhaustVelocity * log((PropulsionMetrics.TotalMass) / PropulsionMetrics.DryMass);
-		PropulsionMetrics.TotalBurnTime = PropulsionMetrics.PropellantMass / PropulsionMetrics.PropellantRate;
+		PropulsionMetrics.MaximumDeltaV =
+			PropulsionMetrics.ExhaustVelocity * log((PropulsionMetrics.MaximumMass) / PropulsionMetrics.DryMass);
+		PropulsionMetrics.MaximumBurnTime = PropulsionMetrics.MaximumPropellantMass / PropulsionMetrics.PropellantRate;
 	}
 
 #if 0

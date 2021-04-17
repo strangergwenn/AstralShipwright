@@ -89,21 +89,21 @@ struct FNovaSpacecraftPropulsionMetrics
 {
 	FNovaSpacecraftPropulsionMetrics()
 		: DryMass(-1)
-		, PropellantMass(0)
-		, CargoMass(0)
-		, TotalMass(0)
+		, MaximumPropellantMass(0)
+		, MaximumCargoMass(0)
+		, MaximumMass(0)
 		, SpecificImpulse(0)
 		, Thrust(0)
 		, PropellantRate(0)
 		, ExhaustVelocity(0)
-		, TotalDeltaV(0)
-		, TotalBurnTime(0)
+		, MaximumDeltaV(0)
+		, MaximumBurnTime(0)
 	{}
 
 	/** Get the worst-case acceleration for this spacecraft in m/s² */
 	float GetLowestAcceleration() const
 	{
-		return Thrust / (DryMass + PropellantMass + CargoMass);
+		return Thrust / (DryMass + MaximumPropellantMass + MaximumCargoMass);
 	}
 
 	/** Get the duration in minutes & mass of propellant spent in T for a maneuver */
@@ -112,7 +112,7 @@ struct FNovaSpacecraftPropulsionMetrics
 		NCHECK(Thrust > 0);
 		NCHECK(ExhaustVelocity > 0);
 
-		float Duration = (((DryMass + CargoMass + CurrentPropellantMass) * 1000.0f * ExhaustVelocity) / (Thrust * 1000.0f)) *
+		float Duration = (((DryMass + MaximumCargoMass + CurrentPropellantMass) * 1000.0f * ExhaustVelocity) / (Thrust * 1000.0f)) *
 						 (1.0f - exp(-abs(DeltaV) / ExhaustVelocity)) / 60.0f;
 		float PropellantUsed = PropellantRate * Duration;
 
@@ -126,31 +126,41 @@ struct FNovaSpacecraftPropulsionMetrics
 	float DryMass;
 
 	// Maximum propellant mass in T
-	float PropellantMass;
+	float MaximumPropellantMass;
 
 	// Maximum cargo mass in T
-	float CargoMass;
+	float MaximumCargoMass;
 
 	// Maximum total mass in T
-	float TotalMass;
+	float MaximumMass;
 
 	// Specific impulse in m/s
 	float SpecificImpulse;
 
-	// Maximum thrust in N
+	// Full-power thrust in N
 	float Thrust;
 
-	// Propellant mass rate in T/S
+	// Propellant mass rate in T/s
 	float PropellantRate;
 
 	// Engine exhaust velocity in m/s
 	float ExhaustVelocity;
 
 	// Total capable Delta-V in m/s
-	float TotalDeltaV;
+	float MaximumDeltaV;
 
 	// Total capable engine burn time in s
-	float TotalBurnTime;
+	float MaximumBurnTime;
+};
+
+/** Spacecraft launch parameters */
+USTRUCT(Atomic)
+struct FNovaSpacecraftSystemState
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	float InitialPropellantMass;
 };
 
 /** Spacecraft class */
@@ -210,11 +220,10 @@ public:
 		return PropulsionMetrics;
 	}
 
-	/** Get the remaining mass of propellant in T */
-	float GetRemainingPropellantMass() const
+	/** Reset completely the propellant amount to the spacecraft's maximum */
+	void Refill()
 	{
-		// TODO : implement
-		return PropulsionMetrics.PropellantMass;
+		SystemState.InitialPropellantMass = PropulsionMetrics.MaximumPropellantMass;
 	}
 
 	/** Get a safe copy of this spacecraft without empty compartments */
@@ -270,6 +279,10 @@ public:
 	// Unique ID
 	UPROPERTY()
 	FGuid Identifier;
+
+	// System state
+	UPROPERTY()
+	FNovaSpacecraftSystemState SystemState;
 
 	// Version index
 	UPROPERTY()

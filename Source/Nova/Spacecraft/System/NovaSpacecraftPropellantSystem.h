@@ -24,47 +24,53 @@ public:
 	    System implementation
 	----------------------------------------------------*/
 
+	virtual void Load(const FNovaSpacecraftSystemState& State) override
+	{
+		NLOG("UNovaSpacecraftPropellantSystem::Load");
+
+		PropellantAmount = State.InitialPropellantMass;
+	}
+
+	virtual void Save(FNovaSpacecraftSystemState& State) override
+	{
+		NLOG("UNovaSpacecraftPropellantSystem::Save");
+
+		State.InitialPropellantMass = PropellantAmount;
+	}
+
 	virtual void Update(double InitialTime, double FinalTime) override;
 
 	/** Get how much propellant remains available in T */
-	float GetAvailablePropellantAmount() const
+	float GetCurrentPropellantAmount() const
 	{
-		const FNovaSpacecraftPropulsionMetrics* PropulsionMetrics = GetPropulsionMetrics();
-
-		if (PropulsionMetrics)
+		if (IsSpacecraftDocked())
 		{
-			return PropulsionMetrics->PropellantMass - GetConsumedPropellantAmount();
+			return GetSpacecraft()->SystemState.InitialPropellantMass;
 		}
 		else
 		{
-			return 0;
+			return PropellantAmount;
 		}
-	}
-
-	/** Get how much propellant has been consumed in T */
-	float GetConsumedPropellantAmount() const
-	{
-		return ConsumedAmount;
 	}
 
 	/** Get how much propellant can be stored in T */
 	float GetTotalPropellantAmount() const
 	{
 		const FNovaSpacecraftPropulsionMetrics* PropulsionMetrics = GetPropulsionMetrics();
-		return PropulsionMetrics ? PropulsionMetrics->PropellantMass : 0;
+		return PropulsionMetrics ? PropulsionMetrics->MaximumPropellantMass : 0;
 	}
 
 	/** Return the current propellant mass rate in T/s */
 	float GetCurrentPropellantRate() const
 	{
-		return CurrentRate;
-	}
-
-	/** Reset completely the consumed amount */
-	void Refill()
-	{
-		NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
-		ConsumedAmount = 0;
+		if (IsSpacecraftDocked())
+		{
+			return 0;
+		}
+		else
+		{
+			return PropellantRate;
+		}
 	}
 
 	/*----------------------------------------------------
@@ -74,9 +80,9 @@ public:
 protected:
 	// Current rate of consumption
 	UPROPERTY(Replicated)
-	float CurrentRate;
+	float PropellantRate;
 
-	// Current consumed amount
+	// Current propellant amount
 	UPROPERTY(Replicated)
-	float ConsumedAmount;
+	float PropellantAmount;
 };

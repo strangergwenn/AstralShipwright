@@ -74,7 +74,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 								Options.MaximumFractionalDigits = 0;
 
 								return FText::FormatNamed(LOCTEXT("PropellantFormat", "Propellant left : {remaining} out of {total}"),
-									TEXT("remaining"), FText::AsNumber(PropellantSystem->GetAvailablePropellantAmount(), &Options),
+									TEXT("remaining"), FText::AsNumber(PropellantSystem->GetCurrentPropellantAmount(), &Options),
 									TEXT("total"), FText::AsNumber(PropellantSystem->GetTotalPropellantAmount(), &Options));
 							}
 
@@ -90,12 +90,15 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.HelpText(LOCTEXT("RefillHelp", "JRefill the spacecraft propellant"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
-							ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
-							if (IsValid(SpacecraftPawn))
+							const FNovaSpacecraft* Spacecraft = MenuManager->GetPC()->GetSpacecraft();
+							if (Spacecraft)
 							{
-								UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
-								NCHECK(PropellantSystem);
-								PropellantSystem->Refill();
+								FNovaSpacecraft UpdatedSpacecraft = *Spacecraft;
+								UpdatedSpacecraft.Refill();
+								
+								ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+								NCHECK(GameState);
+								GameState->UpdateSpacecraft(UpdatedSpacecraft, false);
 							}
 						}))
 					]

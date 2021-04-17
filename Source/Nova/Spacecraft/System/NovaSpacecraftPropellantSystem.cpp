@@ -13,8 +13,8 @@
 UNovaSpacecraftPropellantSystem::UNovaSpacecraftPropellantSystem()
 	: Super()
 
-	, CurrentRate(0)
-	, ConsumedAmount(0)
+	, PropellantRate(0)
+	, PropellantAmount(0)
 {
 	SetIsReplicatedByDefault(true);
 }
@@ -38,7 +38,7 @@ void UNovaSpacecraftPropellantSystem::Update(double InitialTime, double FinalTim
 		const float            FullPropellantRate = PropulsionMetrics->PropellantRate;
 		double                 CurrentTime        = InitialTime;
 
-		CurrentRate = 0;
+		PropellantRate = 0;
 
 		if (Trajectory)
 		{
@@ -50,11 +50,11 @@ void UNovaSpacecraftPropellantSystem::Update(double InitialTime, double FinalTim
 				{
 					int32 SpacecraftIndex = Simulation->GetSpacecraftTrajectoryIndex(Identifier);
 					NCHECK(SpacecraftIndex != INDEX_NONE && SpacecraftIndex >= 0 && SpacecraftIndex < Maneuver.ThrustFactors.Num());
-					CurrentRate = FullPropellantRate * Maneuver.ThrustFactors[SpacecraftIndex];
+					PropellantRate = FullPropellantRate * Maneuver.ThrustFactors[SpacecraftIndex];
 
 					double DeltaTimeSeconds = (ManeuverEndTime - CurrentTime) * 60;
 
-					ConsumedAmount += CurrentRate * DeltaTimeSeconds;
+					PropellantAmount -= PropellantRate * DeltaTimeSeconds;
 
 #if 0
 					NLOG("Rate %f, dt %f, current consumed %f", CurrentRate, DeltaTimeSeconds, ConsumedAmount);
@@ -65,12 +65,12 @@ void UNovaSpacecraftPropellantSystem::Update(double InitialTime, double FinalTim
 			}
 		}
 
-		NCHECK(ConsumedAmount <= PropulsionMetrics->PropellantMass);
+		NCHECK(PropellantAmount >= 0);
 	}
 }
 
 void UNovaSpacecraftPropellantSystem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	DOREPLIFETIME(UNovaSpacecraftPropellantSystem, CurrentRate);
-	DOREPLIFETIME(UNovaSpacecraftPropellantSystem, ConsumedAmount);
+	DOREPLIFETIME(UNovaSpacecraftPropellantSystem, PropellantRate);
+	DOREPLIFETIME(UNovaSpacecraftPropellantSystem, PropellantAmount);
 }

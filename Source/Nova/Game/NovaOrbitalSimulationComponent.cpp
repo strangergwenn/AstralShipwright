@@ -4,6 +4,7 @@
 #include "NovaGameState.h"
 
 #include "Nova/Spacecraft/NovaSpacecraft.h"
+#include "Nova/Spacecraft/System/NovaSpacecraftPropellantSystem.h"
 #include "Nova/System/NovaAssetManager.h"
 #include "Nova/System/NovaGameInstance.h"
 #include "Nova/Nova.h"
@@ -77,13 +78,14 @@ struct FNovaSpacecraftFleet
 {
 	struct FNovaSpacecraftFleetEntry
 	{
-		FNovaSpacecraftFleetEntry(const FNovaSpacecraft* Spacecraft)
+		FNovaSpacecraftFleetEntry(const FNovaSpacecraft* Spacecraft, const ANovaGameState* GameState)
 		{
 			Metrics = Spacecraft->GetPropulsionMetrics();
 
 			// The core assumption here is that only maneuvers consume fuel, and so the current propellant mass won't change until the next
-			// maneuver. The practical consequence is that trajectories can only ever be plotted while docked.
-			CurrentPropellant = Spacecraft->GetRemainingPropellantMass();
+			// maneuver. The practical consequence is that trajectories can only ever be plotted while undocked.
+			const ANovaSpacecraftPawn* SpacecraftPawn = GameState->GetSpacecraftPawn(Spacecraft->Identifier);
+			CurrentPropellant = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>()->GetCurrentPropellantAmount();
 		}
 
 		FNovaSpacecraftPropulsionMetrics Metrics;
@@ -96,7 +98,7 @@ struct FNovaSpacecraftFleet
 		{
 			const FNovaSpacecraft* NewSpacecraft = GameState->GetSpacecraft(Identifier);
 			NCHECK(NewSpacecraft != nullptr);
-			Fleet.Add(FNovaSpacecraftFleetEntry(NewSpacecraft));
+			Fleet.Add(FNovaSpacecraftFleetEntry(NewSpacecraft, GameState));
 		}
 	}
 

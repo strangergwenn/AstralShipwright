@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
+#include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
 
 #include "NovaSpacecraftSystemInterface.generated.h"
 
@@ -26,8 +27,16 @@ public:
 	    System interface
 	----------------------------------------------------*/
 
+	/** Load a system from the state */
+	virtual void Load(const FNovaSpacecraftSystemState& State)
+	{}
+
+	/** Save a system to the state */
+	virtual void Save(FNovaSpacecraftSystemState& State)
+	{}
+
 	/** Update the simulation between InitialTime and FinalTime */
-	virtual void Update(double InitialTime, double FinalTime) = 0;
+	virtual void Update(double InitialTime, double FinalTime){};
 
 	/*----------------------------------------------------
 	    System helpers
@@ -63,5 +72,13 @@ public:
 		const FNovaSpacecraft* Spacecraft = GetSpacecraft();
 
 		return Spacecraft ? &Spacecraft->GetPropulsionMetrics() : nullptr;
+	}
+
+	/** Is the spacecraft docked */
+	bool IsSpacecraftDocked() const
+	{
+		const UActorComponent* ThisComponent = Cast<UActorComponent>(this);
+		NCHECK(ThisComponent);
+		return Cast<ANovaSpacecraftPawn>(ThisComponent->GetOwner())->GetSpacecraftMovement()->GetState() == ENovaMovementState::Docked;
 	}
 };
