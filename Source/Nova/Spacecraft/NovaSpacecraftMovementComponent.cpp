@@ -700,7 +700,7 @@ void UNovaSpacecraftMovementComponent::ProcessTrajectoryMovement(float DeltaTime
 		FVector Location = DockState.Actor->GetWaitingPointLocation() + 100 * CurrentPosition * DockState.Actor->GetOrbitalAxis();
 		UpdatedComponent->SetWorldLocation(Location);
 
-		// Signal the end location we want for when the non(trajectory state machine kicks back in
+		// Signal the end location we want for when the non-trajectory state machine kicks back in
 		if (IsEnteringArea && GetLocalRole() == ROLE_Authority)
 		{
 			AttitudeCommand.Location = DockState.Actor->GetWaitingPointLocation();
@@ -715,10 +715,15 @@ FVector UNovaSpacecraftMovementComponent::GetManeuverDirection() const
 {
 	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 	NCHECK(IsValid(GameState));
-	const FNovaTrajectory* Trajectory   = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
-	const FNovaManeuver*   NextManeuver = Trajectory ? Trajectory->GetNextManeuver(GameState->GetCurrentTime()) : nullptr;
+	const FNovaTrajectory* Trajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
 
-	if (DockState.Actor && NextManeuver)
+	const FNovaManeuver* Maneuver = Trajectory ? Trajectory->GetCurrentManeuver(GameState->GetCurrentTime()) : nullptr;
+	if (Maneuver == nullptr)
+	{
+		Maneuver = Trajectory ? Trajectory->GetNextManeuver(GameState->GetCurrentTime()) : nullptr;
+	}
+
+	if (DockState.Actor && Maneuver)
 	{
 		const double ManeuverStartTime = Trajectory->GetFirstManeuverStartTime();
 		const double ArrivalTime       = Trajectory->GetArrivalTime();
@@ -727,11 +732,11 @@ FVector UNovaSpacecraftMovementComponent::GetManeuverDirection() const
 
 		if (IsEnteringArea)
 		{
-			return DockState.Actor->GetInterfacePointDirection(NextManeuver->DeltaV);
+			return DockState.Actor->GetInterfacePointDirection(Maneuver->DeltaV);
 		}
 		else
 		{
-			return DockState.Actor->GetInterfacePointDirection(NextManeuver->DeltaV);
+			return DockState.Actor->GetInterfacePointDirection(Maneuver->DeltaV);
 		}
 	}
 
@@ -740,8 +745,8 @@ FVector UNovaSpacecraftMovementComponent::GetManeuverDirection() const
 
 FTransform UNovaSpacecraftMovementComponent::GetInitialTransform() const
 {
-	// Start docked or idling in space
-	if (DockState.IsDocked || DockState.Actor->IsInSpace)
+	// Start docked
+	if (DockState.IsDocked)
 	{
 		return DockState.Actor->GetActorTransform();
 	}

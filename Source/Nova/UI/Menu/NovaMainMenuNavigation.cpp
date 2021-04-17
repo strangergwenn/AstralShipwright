@@ -206,22 +206,6 @@ void SNovaMainMenuNavigation::Hide()
 	OrbitalMap->ClearTrajectory();
 }
 
-void SNovaMainMenuNavigation::HorizontalAnalogInput(float Value)
-{
-	if (GetSpacecraftPawn())
-	{
-		GetSpacecraftPawn()->PanInput(Value);
-	}
-}
-
-void SNovaMainMenuNavigation::VerticalAnalogInput(float Value)
-{
-	if (GetSpacecraftPawn())
-	{
-		GetSpacecraftPawn()->TiltInput(Value);
-	}
-}
-
 /*----------------------------------------------------
     Internals
 ----------------------------------------------------*/

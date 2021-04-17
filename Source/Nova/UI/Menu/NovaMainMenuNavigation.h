@@ -39,10 +39,6 @@ public:
 
 	virtual void Hide() override;
 
-	virtual void HorizontalAnalogInput(float Value) override;
-
-	virtual void VerticalAnalogInput(float Value) override;
-
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
