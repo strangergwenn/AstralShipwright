@@ -6,11 +6,12 @@
 #include "NovaOrbitalSimulationComponent.h"
 
 #include "Nova/Actor/NovaActorTools.h"
-
 #include "Nova/Player/NovaPlayerState.h"
 #include "Nova/Player/NovaPlayerController.h"
+
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
+#include "Nova/Spacecraft/System/NovaSpacecraftSystemInterface.h"
 
 #include "Nova/System/NovaAssetManager.h"
 #include "Nova/System/NovaGameInstance.h"
@@ -111,10 +112,7 @@ void ANovaGameState::Tick(float DeltaTime)
 		// Run FastForwardUpdatesPerFrame loops of world updates
 		for (int32 Index = 0; Index < FastForwardUpdatesPerFrame; Index++)
 		{
-			ProcessSpacecraftDatabase();
-			bool ContinueProcessing = ProcessTime(static_cast<double>(FastForwardUpdateTime));
-			OrbitalSimulationComponent->UpdateSimulation();
-
+			bool ContinueProcessing = ProcessGameSimulation(static_cast<double>(FastForwardUpdateTime));
 			if (!ContinueProcessing)
 			{
 				NLOG("ANovaGameState::ProcessTime : fast-forward stopping at %.2f", ServerTime);
@@ -138,13 +136,11 @@ void ANovaGameState::Tick(float DeltaTime)
 	// Process real-time simulation
 	else
 	{
-		ProcessSpacecraftDatabase();
-		ProcessTime(static_cast<double>(DeltaTime) / 60.0);
-		OrbitalSimulationComponent->UpdateSimulation();
+		ProcessGameSimulation(static_cast<double>(DeltaTime) / 60.0);
 	}
 
 	// Update event notification
-	ProcessEvents(DeltaTime);
+	ProcessPlayerEvents(DeltaTime);
 
 	// Update sessions
 	UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
@@ -297,16 +293,38 @@ bool ANovaGameState::CanDilateTime(ENovaTimeDilation Dilation) const
     Internals
 ----------------------------------------------------*/
 
-void ANovaGameState::ProcessSpacecraftDatabase()
+bool ANovaGameState::ProcessGameSimulation(double DeltaTimeMinutes)
 {
+	// Clean up the game database
 	SpacecraftDatabase.UpdateCache();
 	for (FNovaSpacecraft& Spacecraft : SpacecraftDatabase.Get())
 	{
 		Spacecraft.UpdateIfDirty();
 	}
+
+	// Update the time with the base delta time that will be affected by time dilation
+	double InitialTime        = GetCurrentTime();
+	bool   ContinueProcessing = ProcessGameTime(DeltaTimeMinutes);
+
+	// Update the orbital simulation
+	OrbitalSimulationComponent->UpdateSimulation();
+
+	// Update spacecraft systems
+	for (ANovaSpacecraftPawn* Pawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+	{
+		TArray<UActorComponent*> Components = Pawn->GetComponentsByInterface(UNovaSpacecraftSystemInterface::StaticClass());
+		for (UActorComponent* Component : Components)
+		{
+			INovaSpacecraftSystemInterface* System = Cast<INovaSpacecraftSystemInterface>(Component);
+			NCHECK(System);
+			System->Update(InitialTime, GetCurrentTime());
+		}
+	}
+
+	return ContinueProcessing;
 }
 
-bool ANovaGameState::ProcessTime(double DeltaTimeMinutes)
+bool ANovaGameState::ProcessGameTime(double DeltaTimeMinutes)
 {
 	bool         ContinueProcessing = true;
 	const double TimeDilation       = GetCurrentTimeDilationValue();
@@ -340,7 +358,7 @@ bool ANovaGameState::ProcessTime(double DeltaTimeMinutes)
 	return ContinueProcessing;
 }
 
-void ANovaGameState::ProcessEvents(float DeltaTime)
+void ANovaGameState::ProcessPlayerEvents(float DeltaTime)
 {
 	FText PrimaryText, SecondaryText;
 

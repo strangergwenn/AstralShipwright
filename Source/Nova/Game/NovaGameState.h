@@ -204,14 +204,14 @@ public:
 	----------------------------------------------------*/
 
 protected:
-	/** Update the spacecraft database */
-	void ProcessSpacecraftDatabase();
+	/** Run all game processes, returns true if simulation can continue */
+	bool ProcessGameSimulation(double DeltaTimeMinutes);
 
 	/** Process time */
-	bool ProcessTime(double DeltaTimeMinutes);
+	bool ProcessGameTime(double DeltaTimeMinutes);
 
 	/** Notify events to the player*/
-	void ProcessEvents(float DeltaTime);
+	void ProcessPlayerEvents(float DeltaTime);
 
 	/** Server replication event for time reconciliation */
 	UFUNCTION()

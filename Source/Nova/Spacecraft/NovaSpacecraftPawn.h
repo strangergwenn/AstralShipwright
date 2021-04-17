@@ -71,10 +71,10 @@ public:
 	/** Store a copy of a spacecraft and start editing it */
 	void SetSpacecraft(const FNovaSpacecraft* NewSpacecraft);
 
-	/** Get the local spacecraft copy (not shared with the central database) */
-	const TSharedPtr<FNovaSpacecraft>& GetSpacecraft() const
+	/** Return the spacecraft identifier */
+	FGuid GetSpacecraftIdentifier() const
 	{
-		return Spacecraft;
+		return Spacecraft.IsValid() ? Spacecraft->Identifier : FGuid();
 	}
 
 	/** Get the spacecraft movement component */
