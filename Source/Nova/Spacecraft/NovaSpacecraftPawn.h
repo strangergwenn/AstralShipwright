@@ -71,6 +71,12 @@ public:
 	/** Store a copy of a spacecraft and start editing it */
 	void SetSpacecraft(const FNovaSpacecraft* NewSpacecraft);
 
+	/** Get a pointer to the local copy of the spacecraft (not shared with the central database) */
+	const TSharedPtr<FNovaSpacecraft>& GetSpacecraft() const
+	{
+		return Spacecraft;
+	}
+
 	/** Return the spacecraft identifier */
 	FGuid GetSpacecraftIdentifier() const
 	{
@@ -168,6 +174,10 @@ protected:
 	// Camera pitch scene container
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	class UNovaSpacecraftMovementComponent* MovementComponent;
+
+	// Propellant system
+	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
+	class UNovaSpacecraftPropellantSystem* PropellantSystem;
 
 protected:
 	/*----------------------------------------------------

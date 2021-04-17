@@ -10,6 +10,7 @@
 
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
+#include "Nova/Spacecraft/System/NovaSpacecraftPropellantSystem.h"
 
 #include "Nova/System/NovaMenuManager.h"
 #include "Nova/Player/NovaPlayerController.h"
@@ -59,9 +60,52 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
+						SNew(STextBlock)
+						.TextStyle(&Theme.MainFont)
+						.Text_Lambda([this]() -> FText
+						{
+							ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
+							if (IsValid(SpacecraftPawn))
+							{
+								UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+								NCHECK(PropellantSystem);
+
+								FNumberFormattingOptions Options;
+								Options.MaximumFractionalDigits = 0;
+
+								return FText::FormatNamed(LOCTEXT("PropellantFormat", "Propellant left : {remaining} out of {total}"),
+									TEXT("remaining"), FText::AsNumber(PropellantSystem->GetAvailablePropellantAmount(), &Options),
+									TEXT("total"), FText::AsNumber(PropellantSystem->GetTotalPropellantAmount(), &Options));
+							}
+
+							return FText();
+						})
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaNew(SNovaButton)
+						.Text(LOCTEXT("Refill", "Refill spacecraft"))
+						.HelpText(LOCTEXT("RefillHelp", "JRefill the spacecraft propellant"))
+						.OnClicked(FSimpleDelegate::CreateLambda([&]()
+						{
+							ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
+							if (IsValid(SpacecraftPawn))
+							{
+								UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+								NCHECK(PropellantSystem);
+								PropellantSystem->Refill();
+							}
+						}))
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
 						SNovaNew(SNovaButton)
 						.Text(LOCTEXT("TestJoin", "Join random session"))
-						.HelpText(LOCTEXT("HelpTestJoin", "Join random session"))
+						.HelpText(LOCTEXT("TestJoinHelp", "Join random session"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
 							#if WITH_EDITOR

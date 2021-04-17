@@ -4,6 +4,8 @@
 #include "NovaSpacecraftMovementComponent.h"
 #include "NovaSpacecraftCompartmentComponent.h"
 
+#include "System/NovaSpacecraftPropellantSystem.h"
+
 #include "Nova/Actor/NovaMeshInterface.h"
 
 #include "Nova/Game/NovaGameState.h"
@@ -32,6 +34,10 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 	// Setup movement component
 	MovementComponent = CreateDefaultSubobject<UNovaSpacecraftMovementComponent>(TEXT("MovementComponent"));
 	MovementComponent->SetUpdatedComponent(RootComponent);
+
+	// Setup systems
+	PropellantSystem = CreateDefaultSubobject<UNovaSpacecraftPropellantSystem>("PropellantSystem");
+	PropellantSystem->SetupAttachment(RootComponent);
 
 	// Settings
 	bReplicates = true;

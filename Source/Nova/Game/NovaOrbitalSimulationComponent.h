@@ -105,6 +105,12 @@ public:
 		return SpacecraftTrajectoryDatabase.Get(Identifier);
 	}
 
+	/** Get a spacecraft's index in a trajectory */
+	int32 GetSpacecraftTrajectoryIndex(const FGuid& Identifier) const
+	{
+		return SpacecraftTrajectoryDatabase.GetSpacecraftIndex(Identifier);
+	}
+
 	/** Get a spacecraft's location */
 	const FNovaOrbitalLocation* GetSpacecraftLocation(const FGuid& Identifier) const
 	{
@@ -182,7 +188,7 @@ public:
 			const FNovaManeuver* Maneuver = Trajectory->GetCurrentManeuver(GetCurrentTime());
 			if (Maneuver)
 			{
-				int32 SpacecraftIndex = SpacecraftTrajectoryDatabase.GetSpacecraftIndex(Identifier);
+				int32 SpacecraftIndex = GetSpacecraftTrajectoryIndex(Identifier);
 				NCHECK(SpacecraftIndex != INDEX_NONE && SpacecraftIndex >= 0 && SpacecraftIndex < Maneuver->ThrustFactors.Num());
 				return Maneuver->ThrustFactors[SpacecraftIndex];
 			}
