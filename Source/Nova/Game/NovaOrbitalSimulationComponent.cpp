@@ -79,7 +79,10 @@ struct FNovaSpacecraftFleet
 	{
 		FNovaSpacecraftFleetEntry(const FNovaSpacecraft* Spacecraft)
 		{
-			Metrics           = Spacecraft->GetPropulsionMetrics();
+			Metrics = Spacecraft->GetPropulsionMetrics();
+
+			// The core assumption here is that only maneuvers consume fuel, and so the current propellant mass won't change until the next
+			// maneuver. The practical consequence is that trajectories can only ever be plotted while docked.
 			CurrentPropellant = Spacecraft->GetRemainingPropellantMass();
 		}
 

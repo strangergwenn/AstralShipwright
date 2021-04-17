@@ -178,35 +178,6 @@ void ANovaSpacecraftPawn::SaveAssembly()
 	PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
 }
 
-void ANovaSpacecraftPawn::SetSpacecraft(const FNovaSpacecraft* NewSpacecraft)
-{
-	if (AssemblyState == ENovaAssemblyState::Idle)
-	{
-		NCHECK(NewSpacecraft != nullptr);
-		NLOG("ANovaAssembly::SetSpacecraft (%d compartments)", NewSpacecraft->Compartments.Num());
-
-		// Clean up first
-		if (Spacecraft)
-		{
-			for (int32 Index = 0; Index < Spacecraft->Compartments.Num(); Index++)
-			{
-				RemoveCompartment(Index);
-			}
-		}
-
-		// Initialize physical compartments
-		for (const FNovaCompartment& Assembly : NewSpacecraft->Compartments)
-		{
-			NCHECK(Assembly.Description);
-			CompartmentComponents.Add(CreateCompartment(Assembly));
-		}
-
-		// Start assembling, using a copy of the target assembly data
-		Spacecraft = NewSpacecraft->GetSharedCopy();
-		StartAssemblyUpdate();
-	}
-}
-
 bool ANovaSpacecraftPawn::InsertCompartment(FNovaCompartment Compartment, int32 Index)
 {
 	NLOG("ANovaAssembly::InsertCompartment %d", Index);
@@ -296,6 +267,35 @@ void ANovaSpacecraftPawn::SetDisplayFilter(ENovaAssemblyDisplayFilter Filter, in
 /*----------------------------------------------------
     Compartment assembly internals
 ----------------------------------------------------*/
+
+void ANovaSpacecraftPawn::SetSpacecraft(const FNovaSpacecraft* NewSpacecraft)
+{
+	if (AssemblyState == ENovaAssemblyState::Idle)
+	{
+		NCHECK(NewSpacecraft != nullptr);
+		NLOG("ANovaAssembly::SetSpacecraft (%d compartments)", NewSpacecraft->Compartments.Num());
+
+		// Clean up first
+		if (Spacecraft)
+		{
+			for (int32 Index = 0; Index < Spacecraft->Compartments.Num(); Index++)
+			{
+				RemoveCompartment(Index);
+			}
+		}
+
+		// Initialize physical compartments
+		for (const FNovaCompartment& Assembly : NewSpacecraft->Compartments)
+		{
+			NCHECK(Assembly.Description);
+			CompartmentComponents.Add(CreateCompartment(Assembly));
+		}
+
+		// Start assembling, using a copy of the target assembly data
+		Spacecraft = NewSpacecraft->GetSharedCopy();
+		StartAssemblyUpdate();
+	}
+}
 
 void ANovaSpacecraftPawn::StartAssemblyUpdate()
 {

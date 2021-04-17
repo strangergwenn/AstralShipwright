@@ -595,7 +595,7 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 					Alpha = 1.0f;
 				}
 
-				// TODO : for some reason, De Casteljau is not accurate enough and circular orbits allow accurate results instead
+				// For some reason, De Casteljau is not accurate enough and circular orbits allow accurate results instead
 				if (Orbit.Width == Orbit.Height)
 				{
 					Object.Position =

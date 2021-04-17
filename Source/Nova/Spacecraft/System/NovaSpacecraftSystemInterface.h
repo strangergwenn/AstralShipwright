@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "Nova/Game/NovaGameState.h"
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 
 #include "NovaSpacecraftSystemInterface.generated.h"
@@ -41,18 +42,26 @@ public:
 	}
 
 	/** Get the owning spacecraft */
-	const TSharedPtr<FNovaSpacecraft>& GetSpacecraft() const
+	const FNovaSpacecraft* GetSpacecraft() const
 	{
 		const UActorComponent* ThisComponent = Cast<UActorComponent>(this);
 		NCHECK(ThisComponent);
-		return Cast<ANovaSpacecraftPawn>(ThisComponent->GetOwner())->GetSpacecraft();
+
+		ANovaGameState* GameState = ThisComponent->GetWorld()->GetGameState<ANovaGameState>();
+
+		if (IsValid(GameState))
+		{
+			return GameState->GetSpacecraft(GetSpacecraftIdentifier());
+		}
+
+		return nullptr;
 	}
 
 	/** Get the owning spacecraft's propulsion metrics */
 	const FNovaSpacecraftPropulsionMetrics* GetPropulsionMetrics() const
 	{
-		const TSharedPtr<FNovaSpacecraft>& Spacecraft = GetSpacecraft();
+		const FNovaSpacecraft* Spacecraft = GetSpacecraft();
 
-		return Spacecraft.IsValid() ? &Spacecraft->GetPropulsionMetrics() : nullptr;
+		return Spacecraft ? &Spacecraft->GetPropulsionMetrics() : nullptr;
 	}
 };

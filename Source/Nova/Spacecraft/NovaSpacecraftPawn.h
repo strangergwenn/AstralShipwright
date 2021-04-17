@@ -68,15 +68,6 @@ public:
 	/** Save this assembly **/
 	void SaveAssembly();
 
-	/** Store a copy of a spacecraft and start editing it */
-	void SetSpacecraft(const FNovaSpacecraft* NewSpacecraft);
-
-	/** Get a pointer to the local copy of the spacecraft (not shared with the central database) */
-	const TSharedPtr<FNovaSpacecraft>& GetSpacecraft() const
-	{
-		return Spacecraft;
-	}
-
 	/** Return the spacecraft identifier */
 	FGuid GetSpacecraftIdentifier() const
 	{
@@ -143,6 +134,9 @@ public:
 	----------------------------------------------------*/
 
 protected:
+	/** Store a copy of a spacecraft and start editing it */
+	void SetSpacecraft(const FNovaSpacecraft* NewSpacecraft);
+
 	/** Update the assembly after a new compartment has been added or removed */
 	void StartAssemblyUpdate();
 
