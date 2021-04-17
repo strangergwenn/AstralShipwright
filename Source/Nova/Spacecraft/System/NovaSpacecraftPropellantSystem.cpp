@@ -69,8 +69,34 @@ void UNovaSpacecraftPropellantSystem::Update(double InitialTime, double FinalTim
 	}
 }
 
+void UNovaSpacecraftPropellantSystem::Refill()
+{
+	NLOG("UNovaSpacecraftPropellantSystem::Refill ('%s')", *GetRoleString(this));
+
+	if (GetOwner()->GetLocalRole() == ROLE_Authority)
+	{
+		FNovaSpacecraft UpdatedSpacecraft = *GetSpacecraft();
+		UpdatedSpacecraft.RefillPropellant();
+
+		ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+		NCHECK(GameState);
+		GameState->UpdateSpacecraft(UpdatedSpacecraft, false);
+	}
+	else
+	{
+		ServerRefill();
+	}
+}
+
+void UNovaSpacecraftPropellantSystem::ServerRefill_Implementation()
+{
+	Refill();
+}
+
 void UNovaSpacecraftPropellantSystem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
 	DOREPLIFETIME(UNovaSpacecraftPropellantSystem, PropellantRate);
 	DOREPLIFETIME(UNovaSpacecraftPropellantSystem, PropellantAmount);
 }

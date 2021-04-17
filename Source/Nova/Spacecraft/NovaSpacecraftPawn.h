@@ -72,8 +72,14 @@ public:
 	/** Load the persistent state of systems from the spacecraft */
 	void LoadSystems();
 
+	UFUNCTION(Reliable, Server)
+	void ServerLoadSystems();
+
 	/** Save the persistent state of systems into the spacecraft */
 	void SaveSystems();
+
+	UFUNCTION(Reliable, Server)
+	void ServerSaveSystems();
 
 	/*----------------------------------------------------
 	    Assembly interface

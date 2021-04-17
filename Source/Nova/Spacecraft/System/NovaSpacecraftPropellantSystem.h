@@ -26,19 +26,25 @@ public:
 
 	virtual void Load(const FNovaSpacecraftSystemState& State) override
 	{
-		NLOG("UNovaSpacecraftPropellantSystem::Load");
+		NLOG("UNovaSpacecraftPropellantSystem::Load : %f", State.InitialPropellantMass);
 
 		PropellantAmount = State.InitialPropellantMass;
 	}
 
 	virtual void Save(FNovaSpacecraftSystemState& State) override
 	{
-		NLOG("UNovaSpacecraftPropellantSystem::Save");
+		NLOG("UNovaSpacecraftPropellantSystem::Save : %f", PropellantAmount);
 
 		State.InitialPropellantMass = PropellantAmount;
 	}
 
 	virtual void Update(double InitialTime, double FinalTime) override;
+
+	/** Refill the spacecraft propellant, changing the system state directly */
+	void Refill();
+
+	UFUNCTION(Server, Reliable)
+	void ServerRefill();
 
 	/** Get how much propellant remains available in T */
 	float GetCurrentPropellantAmount() const

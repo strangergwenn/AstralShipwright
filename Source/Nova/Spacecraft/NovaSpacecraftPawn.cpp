@@ -130,37 +130,65 @@ void ANovaSpacecraftPawn::Undock(FSimpleDelegate Callback)
 
 void ANovaSpacecraftPawn::LoadSystems()
 {
-	TArray<UActorComponent*> Components = GetComponentsByInterface(UNovaSpacecraftSystemInterface::StaticClass());
-	for (UActorComponent* Component : Components)
+	NLOG("ANovaSpacecraftPawn::LoadSystems ('%s')", *GetRoleString(this));
+
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		INovaSpacecraftSystemInterface* System = Cast<INovaSpacecraftSystemInterface>(Component);
-		NCHECK(System);
+		TArray<UActorComponent*> Components = GetComponentsByInterface(UNovaSpacecraftSystemInterface::StaticClass());
+		for (UActorComponent* Component : Components)
+		{
+			INovaSpacecraftSystemInterface* System = Cast<INovaSpacecraftSystemInterface>(Component);
+			NCHECK(System);
 
-		const FNovaSpacecraft* SystemSpacecraft = System->GetSpacecraft();
-		NCHECK(SystemSpacecraft);
+			const FNovaSpacecraft* SystemSpacecraft = System->GetSpacecraft();
+			NCHECK(SystemSpacecraft);
 
-		System->Load(SystemSpacecraft->SystemState);
+			System->Load(SystemSpacecraft->SystemState);
+		}
 	}
+	else
+	{
+		ServerLoadSystems();
+	}
+}
+
+void ANovaSpacecraftPawn::ServerLoadSystems_Implementation()
+{
+	LoadSystems();
 }
 
 void ANovaSpacecraftPawn::SaveSystems()
 {
-	TArray<UActorComponent*> Components = GetComponentsByInterface(UNovaSpacecraftSystemInterface::StaticClass());
-	for (UActorComponent* Component : Components)
+	NLOG("ANovaSpacecraftPawn::SaveSystems ('%s')", *GetRoleString(this));
+
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		INovaSpacecraftSystemInterface* System = Cast<INovaSpacecraftSystemInterface>(Component);
-		NCHECK(System);
+		TArray<UActorComponent*> Components = GetComponentsByInterface(UNovaSpacecraftSystemInterface::StaticClass());
+		for (UActorComponent* Component : Components)
+		{
+			INovaSpacecraftSystemInterface* System = Cast<INovaSpacecraftSystemInterface>(Component);
+			NCHECK(System);
 
-		const FNovaSpacecraft* SystemSpacecraft = System->GetSpacecraft();
-		NCHECK(SystemSpacecraft);
+			const FNovaSpacecraft* SystemSpacecraft = System->GetSpacecraft();
+			NCHECK(SystemSpacecraft);
 
-		FNovaSpacecraft UpdatedSpacecraft = *SystemSpacecraft;
-		System->Save(UpdatedSpacecraft.SystemState);
+			FNovaSpacecraft UpdatedSpacecraft = *SystemSpacecraft;
+			System->Save(UpdatedSpacecraft.SystemState);
 
-		ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
-		NCHECK(GameState);
-		GameState->UpdateSpacecraft(UpdatedSpacecraft, false);
+			ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+			NCHECK(GameState);
+			GameState->UpdateSpacecraft(UpdatedSpacecraft, false);
+		}
 	}
+	else
+	{
+		ServerSaveSystems();
+	}
+}
+
+void ANovaSpacecraftPawn::ServerSaveSystems_Implementation()
+{
+	SaveSystems();
 }
 
 /*----------------------------------------------------

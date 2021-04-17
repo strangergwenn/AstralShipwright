@@ -90,15 +90,12 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.HelpText(LOCTEXT("RefillHelp", "JRefill the spacecraft propellant"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
-							const FNovaSpacecraft* Spacecraft = MenuManager->GetPC()->GetSpacecraft();
-							if (Spacecraft)
+							ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
+							if (IsValid(SpacecraftPawn))
 							{
-								FNovaSpacecraft UpdatedSpacecraft = *Spacecraft;
-								UpdatedSpacecraft.Refill();
-								
-								ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-								NCHECK(GameState);
-								GameState->UpdateSpacecraft(UpdatedSpacecraft, false);
+								UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+								NCHECK(PropellantSystem);
+								PropellantSystem->Refill();
 							}
 						}))
 					]

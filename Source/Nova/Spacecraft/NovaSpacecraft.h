@@ -221,7 +221,7 @@ public:
 	}
 
 	/** Reset completely the propellant amount to the spacecraft's maximum */
-	void Refill()
+	void RefillPropellant()
 	{
 		SystemState.InitialPropellantMass = PropulsionMetrics.MaximumPropellantMass;
 	}
