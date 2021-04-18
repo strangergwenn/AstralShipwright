@@ -189,7 +189,7 @@ void SNovaTrajectoryCalculator::Tick(const FGeometry& AllottedGeometry, const do
 				double DeltaVAlpha = FMath::Clamp(
 					(Transform(Trajectory->TotalDeltaV) - Transform(MinDeltaV)) / (Transform(MaxDeltaV) - Transform(MinDeltaV)), 0.0f,
 					1.0f);
-				double DurationAlpha = FMath::Clamp((Transform(Trajectory->TotalTravelDuration) - Transform(MinDuration)) /
+				double DurationAlpha = FMath::Clamp((Transform(Trajectory->TotalTravelDuration.ToMinutes()) - Transform(MinDuration)) /
 														(Transform(MaxDuration) - Transform(MinDuration)),
 					0.0f, 1.0f);
 
@@ -255,7 +255,7 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNo
 
 	// Run trajectory calculations over a range of altitudes
 	const TSharedPtr<FNovaTrajectoryParameters>& Parameters =
-		OrbitalSimulation->PrepareTrajectory(Source, Destination, 1, SpacecraftIdentifiers);
+		OrbitalSimulation->PrepareTrajectory(Source, Destination, FNovaTime::FromMinutes(1), SpacecraftIdentifiers);
 	SimulatedTrajectories.Reserve((Slider->GetMaxValue() - Slider->GetMinValue()) / AltitudeStep + 1);
 	for (float Altitude = Slider->GetMinValue(); Altitude <= Slider->GetMaxValue(); Altitude += AltitudeStep)
 	{
@@ -271,7 +271,9 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNo
 		const TSharedPtr<FNovaTrajectory>& Trajectory = AltitudeAndTrajectory.Value;
 		NCHECK(Trajectory.IsValid());
 
-		if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(Trajectory->TotalTravelDuration))
+		double TotalTravelDuration = Trajectory->TotalTravelDuration.ToMinutes();
+
+		if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(TotalTravelDuration))
 		{
 			if (Trajectory->TotalDeltaV < MinDeltaV)
 			{
@@ -281,14 +283,14 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNo
 			{
 				MaxDeltaV = Trajectory->TotalDeltaV;
 			}
-			if (Trajectory->TotalTravelDuration < MinDuration)
+			if (TotalTravelDuration < MinDuration)
 			{
-				MinDuration         = Trajectory->TotalTravelDuration;
+				MinDuration         = TotalTravelDuration;
 				MinDurationAltitude = Altitude;
 			}
-			if (Trajectory->TotalTravelDuration > MaxDuration)
+			if (TotalTravelDuration > MaxDuration)
 			{
-				MaxDuration = Trajectory->TotalTravelDuration;
+				MaxDuration = TotalTravelDuration;
 			}
 		}
 	}
@@ -300,12 +302,12 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNo
 		float                              Altitude   = AltitudeAndTrajectory.Key;
 		const TSharedPtr<FNovaTrajectory>& Trajectory = AltitudeAndTrajectory.Value;
 
-		if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(Trajectory->TotalTravelDuration))
+		if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(Trajectory->TotalTravelDuration.ToMinutes()))
 		{
-			if (Trajectory->TotalDeltaV < 1.001f * MinDeltaV && Trajectory->TotalTravelDuration < MinDurationWithinMinDeltaV)
+			if (Trajectory->TotalDeltaV < 1.001f * MinDeltaV && Trajectory->TotalTravelDuration.ToMinutes() < MinDurationWithinMinDeltaV)
 			{
 				MinDeltaVWithTolerance     = Trajectory->TotalDeltaV;
-				MinDurationWithinMinDeltaV = Trajectory->TotalTravelDuration;
+				MinDurationWithinMinDeltaV = Trajectory->TotalTravelDuration.ToMinutes();
 				MinDeltaVAltitude          = Altitude;
 			}
 		}

@@ -51,13 +51,13 @@ public:
 	/** Get the time spent in this state in minutes */
 	double GetMinutesInState() const
 	{
-		return GameState->GetCurrentTime() - StateStartTime;
+		return (GameState->GetCurrentTime() - StateStartTime).ToMinutes();
 	}
 
 	/** Get the time spent in this state in seconds */
 	double GetSecondsInState() const
 	{
-		return (GameState->GetCurrentTime() - StateStartTime) * 60.0;
+		return (GameState->GetCurrentTime() - StateStartTime).ToSeconds();
 	}
 
 	/** Enter this state from a previous one */
@@ -79,8 +79,8 @@ public:
 
 protected:
 	// Local state
-	FString StateName;
-	double  StateStartTime;
+	FString   StateName;
+	FNovaTime StateStartTime;
 
 	// Outer objects
 	class ANovaPlayerController*           PC;
@@ -116,7 +116,7 @@ public:
 		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
 
 		if (PlayerTrajectory &&
-			PlayerTrajectory->GetFirstManeuverStartTime() <= GameState->GetCurrentTime() + DepartureCutsceneDelay / 60.0)
+			PlayerTrajectory->GetFirstManeuverStartTime() <= GameState->GetCurrentTime() + FNovaTime::FromSeconds(DepartureCutsceneDelay))
 		{
 			return ENovaGameStateIdentifier::DepartureProximity;
 		}
@@ -147,7 +147,8 @@ public:
 	{
 		FNovaGameModeState::UpdateState();
 
-		if (OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver() <= 0 && OrbitalSimulationComponent->IsPlayerNearingLastManeuver())
+		if (OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver() <= FNovaTime() &&
+			OrbitalSimulationComponent->IsPlayerNearingLastManeuver())
 		{
 			return ENovaGameStateIdentifier::ArrivalIntro;
 		}
@@ -260,7 +261,8 @@ public:
 	{
 		FNovaGameModeState::UpdateState();
 
-		if (OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver() <= 0 && OrbitalSimulationComponent->IsPlayerNearingLastManeuver())
+		if (OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver() <= FNovaTime() &&
+			OrbitalSimulationComponent->IsPlayerNearingLastManeuver())
 		{
 			return ENovaGameStateIdentifier::ArrivalIntro;
 		}
@@ -324,7 +326,7 @@ public:
 
 		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
 		if (PlayerTrajectory == nullptr ||
-			(PlayerTrajectory->GetArrivalTime() - GameState->GetCurrentTime()) * 60.0 < ArrivalCutsceneDuration)
+			(PlayerTrajectory->GetArrivalTime() - GameState->GetCurrentTime() < FNovaTime::FromSeconds(ArrivalCutsceneDuration)))
 		{
 			return ENovaGameStateIdentifier::ArrivalProximity;
 		}
@@ -359,7 +361,7 @@ public:
 
 		if (IsWaitingDelay)
 		{
-			if ((GameState->GetCurrentTime() - ArrivalTime) * 60.0 > ArrivalCutsceneDelay)
+			if (GameState->GetCurrentTime() - ArrivalTime > FNovaTime::FromSeconds(ArrivalCutsceneDelay))
 			{
 				return ENovaGameStateIdentifier::Area;
 			}
@@ -374,6 +376,6 @@ public:
 	}
 
 private:
-	bool   IsWaitingDelay;
-	double ArrivalTime;
+	bool      IsWaitingDelay;
+	FNovaTime ArrivalTime;
 };

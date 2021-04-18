@@ -23,7 +23,7 @@ UNovaSpacecraftPropellantSystem::UNovaSpacecraftPropellantSystem()
     System implementation
 ----------------------------------------------------*/
 
-void UNovaSpacecraftPropellantSystem::Update(double InitialTime, double FinalTime)
+void UNovaSpacecraftPropellantSystem::Update(FNovaTime InitialTime, FNovaTime FinalTime)
 {
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 
@@ -36,7 +36,7 @@ void UNovaSpacecraftPropellantSystem::Update(double InitialTime, double FinalTim
 	{
 		const FNovaTrajectory* Trajectory         = Simulation->GetSpacecraftTrajectory(Identifier);
 		const float            FullPropellantRate = PropulsionMetrics->PropellantRate;
-		double                 CurrentTime        = InitialTime;
+		FNovaTime              CurrentTime        = InitialTime;
 
 		PropellantRate = 0;
 
@@ -44,7 +44,7 @@ void UNovaSpacecraftPropellantSystem::Update(double InitialTime, double FinalTim
 		{
 			for (const FNovaManeuver& Maneuver : Trajectory->Maneuvers)
 			{
-				double ManeuverEndTime = FMath::Min(Maneuver.Time + Maneuver.Duration, FinalTime);
+				FNovaTime ManeuverEndTime = FMath::Min(Maneuver.Time + Maneuver.Duration, FinalTime);
 
 				if (CurrentTime >= Maneuver.Time && CurrentTime <= ManeuverEndTime)
 				{
@@ -52,7 +52,7 @@ void UNovaSpacecraftPropellantSystem::Update(double InitialTime, double FinalTim
 					NCHECK(SpacecraftIndex != INDEX_NONE && SpacecraftIndex >= 0 && SpacecraftIndex < Maneuver.ThrustFactors.Num());
 					PropellantRate = FullPropellantRate * Maneuver.ThrustFactors[SpacecraftIndex];
 
-					double DeltaTimeSeconds = (ManeuverEndTime - CurrentTime) * 60;
+					double DeltaTimeSeconds = (ManeuverEndTime - CurrentTime).ToMinutes() * 60;
 
 					PropellantAmount -= PropellantRate * DeltaTimeSeconds;
 

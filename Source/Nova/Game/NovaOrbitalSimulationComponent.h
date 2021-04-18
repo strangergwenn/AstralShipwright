@@ -29,11 +29,11 @@ public:
 	/** Update the simulation */
 	void UpdateSimulation();
 
-	/** Get the current time in minutes */
-	double GetCurrentTime() const;
+	/** Get the current time */
+	FNovaTime GetCurrentTime() const;
 
-	/** Get the time at which the next player maneuver will occur in minutes */
-	double GetTimeOfNextPlayerManeuver() const
+	/** Get the time at which the next player maneuver will occur */
+	FNovaTime GetTimeOfNextPlayerManeuver() const
 	{
 		return TimeOfNextPlayerManeuver;
 	}
@@ -45,7 +45,7 @@ public:
 public:
 	/** Build trajectory parameters from an arbitrary orbit to another  */
 	TSharedPtr<struct FNovaTrajectoryParameters> PrepareTrajectory(const TSharedPtr<FNovaOrbit>& Source,
-		const TSharedPtr<FNovaOrbit>& Destination, double DeltaTime, const TArray<FGuid>& SpacecraftIdentifiers) const;
+		const TSharedPtr<FNovaOrbit>& Destination, FNovaTime DeltaTime, const TArray<FGuid>& SpacecraftIdentifiers) const;
 
 	/** Compute a trajectory */
 	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const TSharedPtr<struct FNovaTrajectoryParameters>& Parameters, float PhasingAltitude);
@@ -78,7 +78,7 @@ public:
 	/** Get the orbital data for an area */
 	TSharedPtr<FNovaOrbit> GetAreaOrbit(const UNovaArea* Area) const
 	{
-		return MakeShared<FNovaOrbit>(FNovaOrbitGeometry(Area->Planet, Area->Altitude, Area->Phase), 0);
+		return MakeShared<FNovaOrbit>(FNovaOrbitGeometry(Area->Planet, Area->Altitude, Area->Phase), FNovaTime());
 	}
 
 	/** Get an area's location */
@@ -137,9 +137,9 @@ public:
 	const FNovaOrbitalLocation* GetPlayerLocation() const;
 
 	/** Get the time left until a maneuver happens */
-	double GetTimeLeftUntilPlayerManeuver() const
+	FNovaTime GetTimeLeftUntilPlayerManeuver() const
 	{
-		return GetTimeOfNextPlayerManeuver() - GetCurrentTime() - TimeMarginBeforeManeuver;
+		return GetTimeOfNextPlayerManeuver() - GetCurrentTime() - FNovaTime::FromMinutes(TimeMarginBeforeManeuver);
 	}
 
 	/** Is the player past the first maneuver of a trajectory */
@@ -214,10 +214,10 @@ protected:
 	/** Update the current trajectory of spacecraft */
 	void ProcessSpacecraftTrajectories();
 
-	/** Compute the period of a stable circular orbit in minutes */
-	static double GetOrbitalPeriod(const double GravitationalParameter, const double SemiMajorAxis)
+	/** Compute the period of a stable circular orbit */
+	static FNovaTime GetOrbitalPeriod(const double GravitationalParameter, const double SemiMajorAxis)
 	{
-		return 2.0 * PI * sqrt(pow(SemiMajorAxis, 3.0) / GravitationalParameter) / 60.0;
+		return FNovaTime::FromMinutes(2.0 * PI * sqrt(pow(SemiMajorAxis, 3.0) / GravitationalParameter) / 60.0);
 	}
 
 	/*----------------------------------------------------
@@ -251,5 +251,5 @@ private:
 	TMap<FGuid, FNovaOrbitalLocation>                  SpacecraftOrbitalLocations;
 
 	// Local state
-	double TimeOfNextPlayerManeuver;
+	FNovaTime TimeOfNextPlayerManeuver;
 };

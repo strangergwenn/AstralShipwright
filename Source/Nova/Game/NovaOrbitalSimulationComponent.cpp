@@ -41,19 +41,19 @@ struct FNovaHohmannTransfer
 
 		TotalDeltaV = abs(StartDeltaV) + abs(EndDeltaV);
 
-		Duration = PI * sqrt(pow(ManeuverRadius + DestinationRadius, 3.0) / (8.0 * µ)) / 60;
+		Duration = FNovaTime::FromMinutes(PI * sqrt(pow(ManeuverRadius + DestinationRadius, 3.0) / (8.0 * µ)) / 60);
 	}
 
-	double StartDeltaV;
-	double EndDeltaV;
-	double TotalDeltaV;
-	double Duration;
+	double    StartDeltaV;
+	double    EndDeltaV;
+	double    TotalDeltaV;
+	FNovaTime Duration;
 };
 
 /** Trajectory computation parameters */
 struct FNovaTrajectoryParameters
 {
-	double        StartTime;
+	FNovaTime     StartTime;
 	FNovaOrbit    Source;
 	double        DestinationAltitude;
 	double        DestinationPhase;
@@ -66,10 +66,10 @@ struct FNovaTrajectoryParameters
 /** Results of a maneuver on a fleet of spacecraft */
 struct FNovaSpacecraftFleetManeuver
 {
-	FNovaSpacecraftFleetManeuver(double D, const TArray<float>& TF) : Duration(D), ThrustFactors(TF)
+	FNovaSpacecraftFleetManeuver(FNovaTime D, const TArray<float>& TF) : Duration(D), ThrustFactors(TF)
 	{}
 
-	double        Duration;
+	FNovaTime     Duration;
 	TArray<float> ThrustFactors;
 };
 
@@ -105,11 +105,11 @@ struct FNovaSpacecraftFleet
 	FNovaSpacecraftFleetManeuver AddManeuver(double DeltaV)
 	{
 		// Update the propellant use and compute individual maneuver durations for each ship
-		double        MaxDuration = 0;
-		TArray<float> Durations;
+		FNovaTime         MaxDuration;
+		TArray<FNovaTime> Durations;
 		for (FNovaSpacecraftFleetEntry& Entry : Fleet)
 		{
-			double Duration = Entry.Metrics.GetManeuverDurationAndPropellantUsed(DeltaV, Entry.CurrentPropellant);
+			FNovaTime Duration = Entry.Metrics.GetManeuverDurationAndPropellantUsed(DeltaV, Entry.CurrentPropellant);
 			Durations.Add(Duration);
 
 			if (Duration > MaxDuration)
@@ -120,7 +120,7 @@ struct FNovaSpacecraftFleet
 
 		// Adapt each ship's thrust to the longest duration
 		TArray<float> ThrustFactors;
-		for (float Duration : Durations)
+		for (FNovaTime Duration : Durations)
 		{
 			ThrustFactors.Add(Duration / MaxDuration);
 		}
@@ -159,7 +159,7 @@ void UNovaOrbitalSimulationComponent::BeginPlay()
 void UNovaOrbitalSimulationComponent::UpdateSimulation()
 {
 	// Clean up our local state
-	TimeOfNextPlayerManeuver = DBL_MAX;
+	TimeOfNextPlayerManeuver = FNovaTime::FromMinutes(DBL_MAX);
 	SpacecraftOrbitDatabase.UpdateCache();
 	SpacecraftTrajectoryDatabase.UpdateCache();
 
@@ -170,7 +170,7 @@ void UNovaOrbitalSimulationComponent::UpdateSimulation()
 	ProcessSpacecraftTrajectories();
 }
 
-double UNovaOrbitalSimulationComponent::GetCurrentTime() const
+FNovaTime UNovaOrbitalSimulationComponent::GetCurrentTime() const
 {
 	return Cast<ANovaGameState>(GetOwner())->GetCurrentTime();
 }
@@ -180,7 +180,7 @@ double UNovaOrbitalSimulationComponent::GetCurrentTime() const
 ----------------------------------------------------*/
 
 TSharedPtr<FNovaTrajectoryParameters> UNovaOrbitalSimulationComponent::PrepareTrajectory(const TSharedPtr<FNovaOrbit>& Source,
-	const TSharedPtr<FNovaOrbit>& Destination, double DeltaTime, const TArray<FGuid>& SpacecraftIdentifiers) const
+	const TSharedPtr<FNovaOrbit>& Destination, FNovaTime DeltaTime, const TArray<FGuid>& SpacecraftIdentifiers) const
 {
 	TSharedPtr<FNovaTrajectoryParameters> Parameters = MakeShared<FNovaTrajectoryParameters>();
 
@@ -209,15 +209,15 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	const TSharedPtr<FNovaTrajectoryParameters>& Parameters, float PhasingAltitude)
 {
 	// Get phase and altitude
-	const double& StartTime           = Parameters->StartTime;
-	double        SourceAltitudeA     = Parameters->Source.Geometry.StartAltitude;
-	double        SourceAltitudeB     = Parameters->Source.Geometry.StartAltitude;
-	double        SourcePhase         = Parameters->Source.GetCurrentPhase<true>(StartTime);
-	const double& DestinationAltitude = Parameters->DestinationAltitude;
-	const double& DestinationPhase    = Parameters->DestinationPhase;
+	const FNovaTime& StartTime           = Parameters->StartTime;
+	double           SourceAltitudeA     = Parameters->Source.Geometry.StartAltitude;
+	double           SourceAltitudeB     = Parameters->Source.Geometry.StartAltitude;
+	double           SourcePhase         = Parameters->Source.GetCurrentPhase<true>(StartTime);
+	const double     DestinationAltitude = Parameters->DestinationAltitude;
+	const double     DestinationPhase    = Parameters->DestinationPhase;
 
 	// if the source orbit isn't circular, circularize to PhasingAltitude at one of the apsides
-	double InitialWaitingDuration = 0;
+	FNovaTime InitialWaitingDuration;
 	if (!Parameters->Source.Geometry.IsCircular())
 	{
 		const FNovaOrbitGeometry& Geometry = Parameters->Source.Geometry;
@@ -243,28 +243,28 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	// Compute both Hohmann transfers as well as the orbital periods
 	const FNovaHohmannTransfer TransferA(Parameters->µ, R1A, R1B, R2);
 	const FNovaHohmannTransfer TransferB(Parameters->µ, R2, R2, R3);
-	const double&              PhasingOrbitPeriod     = GetOrbitalPeriod(Parameters->µ, R2);
-	const double&              DestinationOrbitPeriod = GetOrbitalPeriod(Parameters->µ, R3);
+	const FNovaTime            PhasingOrbitPeriod     = GetOrbitalPeriod(Parameters->µ, R2);
+	const FNovaTime            DestinationOrbitPeriod = GetOrbitalPeriod(Parameters->µ, R3);
 
 	// Compute the new destination parameters after both transfers, ignoring the phasing orbit
-	const double TotalTransferDuration                = InitialWaitingDuration + TransferA.Duration + TransferB.Duration;
-	const double DestinationPhaseChangeDuringTransfer = (TotalTransferDuration / DestinationOrbitPeriod) * 360.0;
-	const double NewDestinationPhaseAfterTransfers    = fmod(DestinationPhase + DestinationPhaseChangeDuringTransfer, 360.0);
-	double       PhaseDelta                           = fmod(NewDestinationPhaseAfterTransfers - SourcePhase + 360.0, 360.0);
+	const FNovaTime TotalTransferDuration                = InitialWaitingDuration + TransferA.Duration + TransferB.Duration;
+	const double    DestinationPhaseChangeDuringTransfer = (TotalTransferDuration / DestinationOrbitPeriod) * 360.0;
+	const double    NewDestinationPhaseAfterTransfers    = fmod(DestinationPhase + DestinationPhaseChangeDuringTransfer, 360.0);
+	double          PhaseDelta                           = fmod(NewDestinationPhaseAfterTransfers - SourcePhase + 360.0, 360.0);
 	if (PhasingOrbitPeriod > DestinationOrbitPeriod)
 	{
 		PhaseDelta = PhaseDelta - 360.0;
 	}
 
 	// Compute the time spent waiting
-	const double PhasingDuration     = PhaseDelta / (360.0 * (1.0 / PhasingOrbitPeriod - 1.0 / DestinationOrbitPeriod));
-	const double PhasingAngle        = (PhasingDuration / PhasingOrbitPeriod) * 360.0;
-	const double TotalTravelDuration = TotalTransferDuration + PhasingDuration;
+	const FNovaTime PhasingDuration     = PhaseDelta / (360.0 * (1.0 / PhasingOrbitPeriod - 1.0 / DestinationOrbitPeriod));
+	const double    PhasingAngle        = (PhasingDuration / PhasingOrbitPeriod) * 360.0;
+	const FNovaTime TotalTravelDuration = TotalTransferDuration + PhasingDuration;
 
 	// Start building trajectory
 	FNovaSpacecraftFleet        Fleet(Parameters->SpacecraftIdentifiers, Cast<ANovaGameState>(GetOwner()));
 	TSharedPtr<FNovaTrajectory> Trajectory   = MakeShared<FNovaTrajectory>();
-	double                      CurrentTime  = StartTime + InitialWaitingDuration;
+	FNovaTime                   CurrentTime  = StartTime + InitialWaitingDuration;
 	double                      CurrentPhase = SourcePhase;
 
 	// Departure burn on first transfer
@@ -342,20 +342,21 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 		DestinationPhase);
 	NLOG("Transfer A : DVS %f, DVE %f, DV %f, T %f", TransferA.StartDeltaV, TransferA.EndDeltaV, TransferA.TotalDeltaV);
 	NLOG("Transfer B : DVS %f, DVE %f, DV %f, T %f", TransferB.StartDeltaV, TransferB.EndDeltaV, TransferB.TotalDeltaV);
+	NLOG("InitialWaitingDuration %f, TotalTransferDuration %f", InitialWaitingDuration.ToMinutes(), TotalTransferDuration.ToMinutes());
 	NLOG("DestinationPhaseChangeDuringTransfer %f, NewDestinationPhaseAfterTransfers %f, PhaseDelta %f",
 		DestinationPhaseChangeDuringTransfer, NewDestinationPhaseAfterTransfers, PhaseDelta);
-	NLOG("PhasingOrbitPeriod = %f, DestinationOrbitPeriod = %f", PhasingOrbitPeriod, DestinationOrbitPeriod);
-	NLOG("PhasingDuration = %f, PhasingAngle = %f", PhasingDuration, PhasingAngle);
+	NLOG("PhasingOrbitPeriod = %f, DestinationOrbitPeriod = %f", PhasingOrbitPeriod.ToMinutes(), DestinationOrbitPeriod.ToMinutes());
+	NLOG("PhasingDuration = %f, PhasingAngle = %f", PhasingDuration.ToMinutes(), PhasingAngle);
 	NLOG("FinalDestinationPhase = %f, FinalSpacecraftPhase = %f", FinalDestinationPhase, FinalSpacecraftPhase);
-	NLOG("Trajectory->GetStartTime() = %f, Parameters->StartTime = %f", FMath::IsFinite(PhasingDuration) ? Trajectory->GetStartTime() : 0,
-		Parameters->StartTime);
+	NLOG("Trajectory->GetStartTime() = %f, Parameters->StartTime = %f",
+		FMath::IsFinite(PhasingDuration.ToMinutes()) ? Trajectory->GetStartTime().ToMinutes() : 0, Parameters->StartTime.ToMinutes());
 	NLOG("--------------------------------------------------------------------------------");
 #endif
 
 	NCHECK(FMath::Abs(FinalSpacecraftPhase - FinalDestinationPhase) < SMALL_NUMBER);
-	if (FMath::IsFinite(PhasingDuration))
+	if (FMath::IsFinite(PhasingDuration.ToMinutes()))
 	{
-		NCHECK(FMath::Abs(Trajectory->GetStartTime() - Parameters->StartTime) * 60.0 < 1);
+		NCHECK(FMath::Abs((Trajectory->GetStartTime() - Parameters->StartTime).ToSeconds()) < 1);
 	}
 
 #endif
@@ -677,7 +678,7 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 		for (const TArray<FGuid>& Identifiers : CompletedTrajectories)
 		{
 			NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories : completing trajectory for %d spacecraft at time %f",
-				Identifiers.Num(), GetCurrentTime());
+				Identifiers.Num(), GetCurrentTime().ToMinutes());
 			CompleteTrajectory(Identifiers);
 		}
 	}

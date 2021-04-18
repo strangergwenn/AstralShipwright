@@ -159,8 +159,8 @@ public:
 	    Time management
 	----------------------------------------------------*/
 
-	/** Get the current game time in minutes */
-	double GetCurrentTime() const;
+	/** Get the current game time */
+	FNovaTime GetCurrentTime() const;
 
 	/** Simulate the world at full speed until an event */
 	void FastForward();
@@ -211,10 +211,10 @@ public:
 
 protected:
 	/** Run all game processes, returns true if simulation can continue */
-	bool ProcessGameSimulation(double DeltaTimeMinutes);
+	bool ProcessGameSimulation(FNovaTime DeltaTime);
 
 	/** Process time */
-	bool ProcessGameTime(double DeltaTimeMinutes);
+	bool ProcessGameTime(FNovaTime DeltaTime);
 
 	/** Notify events to the player*/
 	void ProcessPlayerEvents(float DeltaTime);
@@ -282,7 +282,7 @@ private:
 	UPROPERTY(Replicated)
 	FNovaSpacecraftDatabase SpacecraftDatabase;
 
-	// Replicated world time value
+	// Replicated world time value in minutes
 	UPROPERTY(ReplicatedUsing = OnServerTimeReplicated)
 	double ServerTime;
 
@@ -301,6 +301,6 @@ private:
 
 	// Event observation system
 	float                          TimeSinceEvent;
-	TArray<double>                 TimeJumpEvents;
+	TArray<FNovaTime>              TimeJumpEvents;
 	TArray<const class UNovaArea*> AreaChangeEvents;
 };

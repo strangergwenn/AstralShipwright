@@ -62,8 +62,8 @@ struct FNovaOrbitGeometry
 		return FMath::Max(StartAltitude, OppositeAltitude);
 	}
 
-	/** Compute the period of this orbit geometry in minutes */
-	double GetOrbitalPeriod() const
+	/** Compute the period of this orbit geometry */
+	FNovaTime GetOrbitalPeriod() const
 	{
 		NCHECK(Planet);
 		const double RadiusA = Planet->GetRadius(StartAltitude);
@@ -71,12 +71,12 @@ struct FNovaOrbitGeometry
 		const double µ       = Planet->GetGravitationalParameter();
 
 		const float SemiMajorAxis = 0.5f * (RadiusA + RadiusB);
-		return 2.0 * PI * sqrt(pow(SemiMajorAxis, 3.0) / µ) / 60.0;
+		return FNovaTime::FromMinutes(2.0 * PI * sqrt(pow(SemiMajorAxis, 3.0) / µ) / 60.0);
 	}
 
 	/** Get the current phase on this orbit */
 	template <bool Unwind>
-	double GetCurrentPhase(const double DeltaTime) const
+	double GetCurrentPhase(FNovaTime DeltaTime) const
 	{
 		NCHECK(Planet);
 		const double PhaseDelta = (DeltaTime / GetOrbitalPeriod()) * 360;
@@ -112,10 +112,10 @@ struct FNovaOrbit
 {
 	GENERATED_BODY()
 
-	FNovaOrbit() : Geometry(), InsertionTime(0)
+	FNovaOrbit() : Geometry()
 	{}
 
-	FNovaOrbit(const FNovaOrbitGeometry& G, double T) : Geometry(G), InsertionTime(T)
+	FNovaOrbit(const FNovaOrbitGeometry& G, FNovaTime T) : Geometry(G), InsertionTime(T)
 	{
 		NCHECK(Geometry.Planet != nullptr);
 	}
@@ -133,12 +133,12 @@ struct FNovaOrbit
 	/** Check for validity */
 	bool IsValid() const
 	{
-		return Geometry.IsValid() && InsertionTime >= 0;
+		return Geometry.IsValid() && InsertionTime.IsValid();
 	}
 
 	/** Get the current phase on this orbit */
 	template <bool Unwind>
-	double GetCurrentPhase(double CurrentTime) const
+	double GetCurrentPhase(FNovaTime CurrentTime) const
 	{
 		return Geometry.GetCurrentPhase<Unwind>(CurrentTime - InsertionTime);
 	}
@@ -147,7 +147,7 @@ struct FNovaOrbit
 	FNovaOrbitGeometry Geometry;
 
 	UPROPERTY()
-	double InsertionTime;
+	FNovaTime InsertionTime;
 };
 
 /** Current location of a spacecraft or sector, including orbit + phase */
@@ -194,10 +194,10 @@ struct FNovaManeuver
 {
 	GENERATED_BODY()
 
-	FNovaManeuver() : DeltaV(0), Phase(0), Time(0), Duration(0)
+	FNovaManeuver() : DeltaV(0), Phase(0)
 	{}
 
-	FNovaManeuver(float DV, float P, double T, float D, const TArray<float>& TF)
+	FNovaManeuver(float DV, float P, FNovaTime T, FNovaTime D, const TArray<float>& TF)
 		: DeltaV(DV), Phase(P), Time(T), Duration(D), ThrustFactors(TF)
 	{}
 
@@ -208,10 +208,10 @@ struct FNovaManeuver
 	float Phase;
 
 	UPROPERTY()
-	double Time;
+	FNovaTime Time;
 
 	UPROPERTY()
-	float Duration;
+	FNovaTime Duration;
 
 	UPROPERTY()
 	TArray<float> ThrustFactors;
@@ -223,7 +223,7 @@ struct FNovaTrajectory
 {
 	GENERATED_BODY()
 
-	FNovaTrajectory() : TotalTravelDuration(0), TotalDeltaV(0)
+	FNovaTrajectory() : TotalDeltaV(0)
 	{}
 
 	bool operator==(const FNovaTrajectory& Other) const
@@ -293,35 +293,35 @@ struct FNovaTrajectory
 	FNovaOrbit GetFinalOrbit() const;
 
 	/** Get the start time */
-	double GetStartTime() const
+	FNovaTime GetStartTime() const
 	{
 		NCHECK(IsValid());
-		return GetArrivalTime() - static_cast<double>(TotalTravelDuration);
+		return GetArrivalTime() - TotalTravelDuration;
 	}
 
 	/** Get the start time of the first maneuver */
-	double GetFirstManeuverStartTime() const
+	FNovaTime GetFirstManeuverStartTime() const
 	{
 		NCHECK(IsValid());
 		return Maneuvers[0].Time;
 	}
 
 	/** Get the start time of the next maneuver */
-	double GetNextManeuverStartTime(double CurrentTime) const
+	FNovaTime GetNextManeuverStartTime(FNovaTime CurrentTime) const
 	{
 		const FNovaManeuver* Maneuver = GetNextManeuver(CurrentTime);
-		return Maneuver ? Maneuver->Time : 0;
+		return Maneuver ? Maneuver->Time : FNovaTime();
 	}
 
 	/** Get the arrival time */
-	double GetArrivalTime() const
+	FNovaTime GetArrivalTime() const
 	{
 		const FNovaManeuver& FinalManeuver = Maneuvers[Maneuvers.Num() - 1];
-		return FinalManeuver.Time + static_cast<double>(FinalManeuver.Duration);
+		return FinalManeuver.Time + FinalManeuver.Duration;
 	}
 
 	/** Get the number of remaining maneuvers */
-	int32 GetRemainingManeuverCount(double CurrentTime) const
+	int32 GetRemainingManeuverCount(FNovaTime CurrentTime) const
 	{
 		int32 Count = 0;
 
@@ -337,10 +337,10 @@ struct FNovaTrajectory
 	}
 
 	/** Get the current location in orbit */
-	FNovaOrbitalLocation GetCurrentLocation(double CurrentTime) const;
+	FNovaOrbitalLocation GetCurrentLocation(FNovaTime CurrentTime) const;
 
 	/** Get the current maneuver */
-	const FNovaManeuver* GetCurrentManeuver(double CurrentTime) const
+	const FNovaManeuver* GetCurrentManeuver(FNovaTime CurrentTime) const
 	{
 		for (const FNovaManeuver& Maneuver : Maneuvers)
 		{
@@ -354,7 +354,7 @@ struct FNovaTrajectory
 	}
 
 	/** Get the next maneuver */
-	const FNovaManeuver* GetNextManeuver(double CurrentTime) const
+	const FNovaManeuver* GetNextManeuver(FNovaTime CurrentTime) const
 	{
 		for (const FNovaManeuver& Maneuver : Maneuvers)
 		{
@@ -376,7 +376,7 @@ struct FNovaTrajectory
 	TArray<FNovaManeuver> Maneuvers;
 
 	UPROPERTY()
-	float TotalTravelDuration;
+	FNovaTime TotalTravelDuration;
 
 	UPROPERTY()
 	float TotalDeltaV;

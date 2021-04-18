@@ -106,13 +106,13 @@ void ANovaGameState::Tick(float DeltaTime)
 	// Process fast forward simulation
 	if (IsFastForward)
 	{
-		int64  Cycles      = FPlatformTime::Cycles64();
-		double InitialTime = GetCurrentTime();
+		int64     Cycles      = FPlatformTime::Cycles64();
+		FNovaTime InitialTime = GetCurrentTime();
 
 		// Run FastForwardUpdatesPerFrame loops of world updates
 		for (int32 Index = 0; Index < FastForwardUpdatesPerFrame; Index++)
 		{
-			bool ContinueProcessing = ProcessGameSimulation(static_cast<double>(FastForwardUpdateTime));
+			bool ContinueProcessing = ProcessGameSimulation(FNovaTime::FromMinutes(FastForwardUpdateTime));
 			if (!ContinueProcessing)
 			{
 				NLOG("ANovaGameState::ProcessTime : fast-forward stopping at %.2f", ServerTime);
@@ -122,8 +122,8 @@ void ANovaGameState::Tick(float DeltaTime)
 		}
 
 		// Check the time jump
-		double FastForwardDeltaTime = GetCurrentTime() - InitialTime;
-		if (FastForwardDeltaTime > 1)
+		FNovaTime FastForwardDeltaTime = GetCurrentTime() - InitialTime;
+		if (FastForwardDeltaTime > FNovaTime::FromMinutes(1))
 		{
 			TimeJumpEvents.Add(FastForwardDeltaTime);
 			TimeSinceEvent = 0;
@@ -136,7 +136,7 @@ void ANovaGameState::Tick(float DeltaTime)
 	// Process real-time simulation
 	else
 	{
-		ProcessGameSimulation(static_cast<double>(DeltaTime) / 60.0);
+		ProcessGameSimulation(FNovaTime::FromSeconds(static_cast<double>(DeltaTime)));
 	}
 
 	// Update event notification
@@ -272,15 +272,15 @@ TArray<FGuid> ANovaGameState::GetPlayerSpacecraftIdentifiers() const
     Time management
 ----------------------------------------------------*/
 
-double ANovaGameState::GetCurrentTime() const
+FNovaTime ANovaGameState::GetCurrentTime() const
 {
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		return ServerTime;
+		return FNovaTime::FromMinutes(ServerTime);
 	}
 	else
 	{
-		return ClientTime;
+		return FNovaTime::FromMinutes(ClientTime);
 	}
 }
 
@@ -294,7 +294,7 @@ void ANovaGameState::FastForward()
 bool ANovaGameState::CanFastForward() const
 {
 	return GetLocalRole() == ROLE_Authority && OrbitalSimulationComponent->GetPlayerTrajectory() != nullptr &&
-		   OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver() > 0;
+		   OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver() > FNovaTime();
 }
 
 void ANovaGameState::SetTimeDilation(ENovaTimeDilation Dilation)
@@ -314,7 +314,7 @@ bool ANovaGameState::CanDilateTime(ENovaTimeDilation Dilation) const
     Internals
 ----------------------------------------------------*/
 
-bool ANovaGameState::ProcessGameSimulation(double DeltaTimeMinutes)
+bool ANovaGameState::ProcessGameSimulation(FNovaTime DeltaTime)
 {
 	// Clean up the game database
 	SpacecraftDatabase.UpdateCache();
@@ -324,8 +324,8 @@ bool ANovaGameState::ProcessGameSimulation(double DeltaTimeMinutes)
 	}
 
 	// Update the time with the base delta time that will be affected by time dilation
-	double InitialTime        = GetCurrentTime();
-	bool   ContinueProcessing = ProcessGameTime(DeltaTimeMinutes);
+	FNovaTime InitialTime        = GetCurrentTime();
+	bool      ContinueProcessing = ProcessGameTime(DeltaTime);
 
 	// Update the orbital simulation
 	OrbitalSimulationComponent->UpdateSimulation();
@@ -348,7 +348,7 @@ bool ANovaGameState::ProcessGameSimulation(double DeltaTimeMinutes)
 	return ContinueProcessing;
 }
 
-bool ANovaGameState::ProcessGameTime(double DeltaTimeMinutes)
+bool ANovaGameState::ProcessGameTime(FNovaTime DeltaTime)
 {
 	bool         ContinueProcessing = true;
 	const double TimeDilation       = GetCurrentTimeDilationValue();
@@ -356,20 +356,20 @@ bool ANovaGameState::ProcessGameTime(double DeltaTimeMinutes)
 	// Under fast forward, stop on events
 	if (IsFastForward && GetLocalRole() == ROLE_Authority)
 	{
-		const double MaxAllowedDeltaTime = OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver();
+		const FNovaTime MaxAllowedDeltaTime = OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver();
 
 		NCHECK(TimeDilation == 1.0);
-		NCHECK(MaxAllowedDeltaTime > 0);
+		NCHECK(MaxAllowedDeltaTime > FNovaTime());
 
-		if (DeltaTimeMinutes > MaxAllowedDeltaTime)
+		if (DeltaTime > MaxAllowedDeltaTime)
 		{
-			DeltaTimeMinutes   = MaxAllowedDeltaTime;
+			DeltaTime          = MaxAllowedDeltaTime;
 			ContinueProcessing = false;
 		}
 	}
 
 	// Update the time
-	const double DilatedDeltaTime = TimeDilation * DeltaTimeMinutes;
+	const double DilatedDeltaTime = TimeDilation * DeltaTime.ToMinutes();
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		ServerTime += DilatedDeltaTime;
@@ -438,7 +438,7 @@ void ANovaGameState::OnServerTimeReplicated()
 	{
 		NLOG("ANovaGameState::OnServerTimeReplicated : time jump from %.2f to %.2f", ClientTime, RealServerTime);
 
-		TimeJumpEvents.Add(RealServerTime - ClientTime);
+		TimeJumpEvents.Add(FNovaTime::FromMinutes(RealServerTime - ClientTime));
 		TimeSinceEvent = 0;
 
 		ClientTime                   = RealServerTime;

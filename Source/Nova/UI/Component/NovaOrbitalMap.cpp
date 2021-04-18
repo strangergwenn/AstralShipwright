@@ -19,7 +19,7 @@
     Internal structures
 ----------------------------------------------------*/
 
-FText FNovaOrbitalObject::GetText(double CurrentTime) const
+FText FNovaOrbitalObject::GetText(FNovaTime CurrentTime) const
 {
 	if (Area)
 	{

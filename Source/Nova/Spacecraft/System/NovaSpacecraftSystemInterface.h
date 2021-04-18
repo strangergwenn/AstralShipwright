@@ -36,7 +36,7 @@ public:
 	{}
 
 	/** Update the simulation between InitialTime and FinalTime */
-	virtual void Update(double InitialTime, double FinalTime){};
+	virtual void Update(FNovaTime InitialTime, FNovaTime FinalTime){};
 
 	/*----------------------------------------------------
 	    System helpers

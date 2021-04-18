@@ -38,7 +38,7 @@ public:
 		State.InitialPropellantMass = PropellantAmount;
 	}
 
-	virtual void Update(double InitialTime, double FinalTime) override;
+	virtual void Update(FNovaTime InitialTime, FNovaTime FinalTime) override;
 
 	/** Refill the spacecraft propellant, changing the system state directly */
 	void Refill();

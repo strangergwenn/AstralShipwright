@@ -1,6 +1,7 @@
 // Nova project - Gwennaël Arbona
 
 #include "Nova.h"
+#include "Game/NovaGameTypes.h"
 #include "UI/Style/NovaStyleSet.h"
 
 #include "Engine.h"
@@ -75,10 +76,11 @@ FString GetRoleString(const UActorComponent* Component)
 	return GetEnumText(Component->GetOwnerRole());
 }
 
-FText GetDurationText(float SourceMinutes, int32 MaxComponents)
+FText GetDurationText(FNovaTime Time, int32 MaxComponents)
 {
 	FString Result;
 
+	double SourceMinutes = Time.ToMinutes();
 	if (SourceMinutes > 365 * 24 * 60)
 	{
 		return LOCTEXT("VeryLongTime", "A very long time");

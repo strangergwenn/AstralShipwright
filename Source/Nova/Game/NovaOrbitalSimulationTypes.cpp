@@ -32,7 +32,7 @@ FNovaOrbit FNovaTrajectory::GetFinalOrbit() const
 	return FNovaOrbit(FinalGeometry, GetArrivalTime());
 }
 
-FNovaOrbitalLocation FNovaTrajectory::GetCurrentLocation(double CurrentTime) const
+FNovaOrbitalLocation FNovaTrajectory::GetCurrentLocation(FNovaTime CurrentTime) const
 {
 	FNovaOrbit LastValidTransfer;
 

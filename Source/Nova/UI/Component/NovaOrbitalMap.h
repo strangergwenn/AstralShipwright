@@ -88,7 +88,7 @@ struct FNovaOrbitalObject
 		Phase    = M.Phase;
 	}
 
-	FText GetText(double CurrentTime) const;
+	FText GetText(FNovaTime CurrentTime) const;
 
 	// Object data
 	const class UNovaArea*        Area;

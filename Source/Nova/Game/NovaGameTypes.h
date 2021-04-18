@@ -30,6 +30,137 @@ enum class ENovaSerialize : uint8
 };
 
 /*----------------------------------------------------
+    Time type
+----------------------------------------------------*/
+
+/** Time type */
+USTRUCT()
+struct FNovaTime
+{
+	GENERATED_BODY();
+
+	FNovaTime() : Minutes(0)
+	{}
+
+	FNovaTime(double M) : Minutes(M)
+	{}
+
+	bool IsValid() const
+	{
+		return Minutes >= 0;
+	}
+
+	bool operator==(const FNovaTime Other) const
+	{
+		return Minutes == Other.Minutes;
+	}
+
+	bool operator!=(const FNovaTime Other) const
+	{
+		return !operator==(Other);
+	}
+
+	bool operator<(const FNovaTime Other) const
+	{
+		return Minutes < Other.Minutes;
+	}
+
+	bool operator<=(const FNovaTime Other) const
+	{
+		return Minutes <= Other.Minutes;
+	}
+
+	bool operator>(const FNovaTime Other) const
+	{
+		return Minutes > Other.Minutes;
+	}
+
+	bool operator>=(const FNovaTime Other) const
+	{
+		return Minutes >= Other.Minutes;
+	}
+
+	FNovaTime operator+(const FNovaTime Other) const
+	{
+		return FNovaTime::FromMinutes(Minutes + Other.Minutes);
+	}
+
+	FNovaTime operator+=(const FNovaTime Other)
+	{
+		Minutes += Other.Minutes;
+		return *this;
+	}
+
+	FNovaTime operator-() const
+	{
+		return FNovaTime::FromMinutes(-Minutes);
+	}
+
+	FNovaTime operator-(const FNovaTime Other) const
+	{
+		return FNovaTime::FromMinutes(Minutes - Other.Minutes);
+	}
+
+	FNovaTime operator-=(const FNovaTime Other)
+	{
+		Minutes -= Other.Minutes;
+		return *this;
+	}
+
+	double operator/(const FNovaTime Other) const
+	{
+		return Minutes / Other.Minutes;
+	}
+
+	double ToMinutes() const
+	{
+		return Minutes;
+	}
+
+	double ToSeconds() const
+	{
+		return Minutes * 60.0;
+	}
+
+	static FNovaTime FromMinutes(double Value)
+	{
+		FNovaTime T;
+		T.Minutes = Value;
+		return T;
+	}
+
+	static FNovaTime FromSeconds(double Value)
+	{
+		FNovaTime T;
+		T.Minutes = (Value / 60.0);
+		return T;
+	}
+
+	UPROPERTY()
+	double Minutes;
+};
+
+static FNovaTime operator*(const FNovaTime Time, const double Value)
+{
+	return FNovaTime::FromMinutes(Time.Minutes * Value);
+}
+
+static FNovaTime operator*(const double Value, const FNovaTime Time)
+{
+	return FNovaTime::FromMinutes(Time.Minutes * Value);
+}
+
+static FNovaTime operator/(const FNovaTime Time, const double Value)
+{
+	return FNovaTime::FromMinutes(Time.Minutes / Value);
+}
+
+static FNovaTime operator/(const double Value, const FNovaTime Time)
+{
+	return FNovaTime::FromMinutes(Value / Time.Minutes);
+}
+
+/*----------------------------------------------------
     Description types
 ----------------------------------------------------*/
 

@@ -623,30 +623,31 @@ void UNovaSpacecraftMovementComponent::ProcessTrajectoryMovement(float DeltaTime
 
 	if (DockState.Actor && Trajectory && Trajectory->IsValid())
 	{
-		const double StartTime         = Trajectory->GetStartTime();
-		const double ManeuverStartTime = Trajectory->GetFirstManeuverStartTime();
-		const double ArrivalTime       = Trajectory->GetArrivalTime();
-		const double CurrentTime       = GameState->GetCurrentTime();
-		const bool   IsEnteringArea    = FMath::Abs(CurrentTime - ArrivalTime) < FMath::Abs(CurrentTime - ManeuverStartTime);
+		const FNovaTime StartTime         = Trajectory->GetStartTime();
+		const FNovaTime ManeuverStartTime = Trajectory->GetFirstManeuverStartTime();
+		const FNovaTime ArrivalTime       = Trajectory->GetArrivalTime();
+		const FNovaTime CurrentTime       = GameState->GetCurrentTime();
+		const bool      IsEnteringArea    = FMath::Abs(CurrentTime - ArrivalTime) < FMath::Abs(CurrentTime - ManeuverStartTime);
 
 		double CurrentPosition = 0;
 		double CurrentVelocity = 0;
-		double RemainingTime   = IsEnteringArea ? (ArrivalTime - CurrentTime) * 60.0 : (CurrentTime - StartTime) * 60.0;
+		double RemainingTime   = IsEnteringArea ? (ArrivalTime - CurrentTime).ToSeconds() : (CurrentTime - StartTime).ToSeconds();
 		RemainingTime          = FMath::Max(RemainingTime, 0.0);
 
 		// Decompose the trajectory into segments of acceleration x duration
-		double                        CurrentManeuverTime = Trajectory->GetStartTime();
+		FNovaTime                     CurrentManeuverTime = Trajectory->GetStartTime();
 		TArray<TPair<double, double>> AccelerationsAndDurations;
 		for (const FNovaManeuver& Maneuver : Trajectory->Maneuvers)
 		{
 			if (Maneuver.Time > CurrentManeuverTime)
 			{
-				AccelerationsAndDurations.Add(TPair<double, double>(0, (Maneuver.Time - CurrentManeuverTime) * 60.0));
+				AccelerationsAndDurations.Add(TPair<double, double>(0, (Maneuver.Time - CurrentManeuverTime).ToSeconds()));
 			}
-			AccelerationsAndDurations.Add(TPair<double, double>(Maneuver.DeltaV / (Maneuver.Duration * 60.0), Maneuver.Duration * 60.0));
+			AccelerationsAndDurations.Add(
+				TPair<double, double>(Maneuver.DeltaV / Maneuver.Duration.ToSeconds(), Maneuver.Duration.ToSeconds()));
 			CurrentManeuverTime = Maneuver.Time + Maneuver.Duration;
 		}
-		NCHECK(CurrentManeuverTime = ArrivalTime);
+		NCHECK(CurrentManeuverTime == ArrivalTime);
 
 		// Segment processing function
 		auto ProcessSegment = [&](int32 SegmentIndex)
@@ -725,10 +726,10 @@ FVector UNovaSpacecraftMovementComponent::GetManeuverDirection() const
 
 	if (DockState.Actor && Maneuver)
 	{
-		const double ManeuverStartTime = Trajectory->GetFirstManeuverStartTime();
-		const double ArrivalTime       = Trajectory->GetArrivalTime();
-		const double CurrentTime       = GameState->GetCurrentTime();
-		const bool   IsEnteringArea    = FMath::Abs(CurrentTime - ArrivalTime) < FMath::Abs(CurrentTime - ManeuverStartTime);
+		const FNovaTime ManeuverStartTime = Trajectory->GetFirstManeuverStartTime();
+		const FNovaTime ArrivalTime       = Trajectory->GetArrivalTime();
+		const FNovaTime CurrentTime       = GameState->GetCurrentTime();
+		const bool      IsEnteringArea    = FMath::Abs(CurrentTime - ArrivalTime) < FMath::Abs(CurrentTime - ManeuverStartTime);
 
 		if (IsEnteringArea)
 		{
