@@ -982,7 +982,11 @@ void SNovaMainMenuAssembly::OnSelectedHullTypeChanged(ENovaHullType Type, int32 
 
 void SNovaMainMenuAssembly::OnSaveSpacecraft()
 {
-	GetSpacecraftPawn()->SaveAssembly();
+	ANovaPlayerController* PC = MenuManager->GetPC();
+	NCHECK(PC);
+
+	GetSpacecraftPawn()->ApplyAssembly();
+	PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
 }
 
 void SNovaMainMenuAssembly::OnBackToAssembly()

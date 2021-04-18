@@ -294,13 +294,7 @@ bool SNovaMainMenu::IsAssemblyMenuVisible() const
 		ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
 		if (IsValid(SpacecraftPawn))
 		{
-			UNovaSpacecraftMovementComponent* Movement = Cast<UNovaSpacecraftMovementComponent>(
-				SpacecraftPawn->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
-
-			if (IsValid(Movement))
-			{
-				return Movement->GetState() == ENovaMovementState::Docked;
-			}
+			return SpacecraftPawn->IsDocked();
 		}
 	}
 

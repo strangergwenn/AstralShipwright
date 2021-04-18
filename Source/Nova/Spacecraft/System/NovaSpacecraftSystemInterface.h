@@ -79,6 +79,6 @@ public:
 	{
 		const UActorComponent* ThisComponent = Cast<UActorComponent>(this);
 		NCHECK(ThisComponent);
-		return Cast<ANovaSpacecraftPawn>(ThisComponent->GetOwner())->GetSpacecraftMovement()->GetState() == ENovaMovementState::Docked;
+		return Cast<ANovaSpacecraftPawn>(ThisComponent->GetOwner())->IsDocked();
 	}
 };

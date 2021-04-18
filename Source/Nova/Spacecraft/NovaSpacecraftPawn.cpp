@@ -128,6 +128,11 @@ void ANovaSpacecraftPawn::Undock(FSimpleDelegate Callback)
 	MovementComponent->Undock(Callback);
 }
 
+bool ANovaSpacecraftPawn::IsDocked() const
+{
+	return IsValid(MovementComponent) && MovementComponent->GetState() == ENovaMovementState::Docked;
+}
+
 void ANovaSpacecraftPawn::LoadSystems()
 {
 	NLOG("ANovaSpacecraftPawn::LoadSystems ('%s')", *GetRoleString(this));
@@ -247,14 +252,15 @@ TArray<const UNovaEquipmentDescription*> ANovaSpacecraftPawn::GetCompatibleEquip
 	return EquipmentDescriptions;
 }
 
-void ANovaSpacecraftPawn::SaveAssembly()
+void ANovaSpacecraftPawn::ApplyAssembly()
 {
+	NLOG("ANovaAssembly::ApplyAssembly");
+
+	ANovaPlayerController* PC = GetController<ANovaPlayerController>();
+	NCHECK(IsValid(PC) && PC->IsLocalController());
 	NCHECK(Spacecraft.IsValid());
 
-	// Update the spacecraft and save
-	ANovaPlayerController* PC = GetController<ANovaPlayerController>();
 	PC->UpdateSpacecraft(*Spacecraft.Get());
-	PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
 }
 
 bool ANovaSpacecraftPawn::InsertCompartment(FNovaCompartment Compartment, int32 Index)

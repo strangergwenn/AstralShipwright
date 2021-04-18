@@ -69,6 +69,9 @@ public:
 	/** Undock from the current dock */
 	void Undock(FSimpleDelegate Callback = FSimpleDelegate());
 
+	/** Check the dock state */
+	bool IsDocked() const;
+
 	/** Load the persistent state of systems from the spacecraft */
 	void LoadSystems();
 
@@ -101,7 +104,7 @@ public:
 	TArray<const class UNovaEquipmentDescription*> GetCompatibleEquipments(int32 Index, int32 SlotIndex) const;
 
 	/** Save this assembly **/
-	void SaveAssembly();
+	void ApplyAssembly();
 
 	/** Insert a new compartment into the assembly */
 	bool InsertCompartment(FNovaCompartment CompartmentRequest, int32 Index);

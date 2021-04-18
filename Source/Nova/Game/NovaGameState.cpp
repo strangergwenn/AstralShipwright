@@ -164,16 +164,24 @@ FName ANovaGameState::GetCurrentLevelName() const
 
 bool ANovaGameState::IsJoinable(FText* Help) const
 {
+	bool AllSpacecraftDocked = AreAllSpacecraftDocked();
+
+	if (!AllSpacecraftDocked && Help)
+	{
+		*Help = LOCTEXT("AllSpacecraftNotDocked", "All players need to be docked to allow joining");
+	}
+
+	return AllSpacecraftDocked;
+}
+
+bool ANovaGameState::AreAllSpacecraftDocked() const
+{
 	bool AllSpacecraftDocked = true;
 	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 	{
-		if (SpacecraftPawn->GetSpacecraftMovement()->GetState() != ENovaMovementState::Docked)
+		if (SpacecraftPawn->IsDocked())
 		{
 			AllSpacecraftDocked = false;
-			if (Help)
-			{
-				*Help = LOCTEXT("AllSpacecraftNotDocked", "All players need to be docked to allow joining");
-			}
 			break;
 		}
 	}

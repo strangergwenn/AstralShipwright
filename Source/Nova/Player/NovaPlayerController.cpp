@@ -635,23 +635,24 @@ void ANovaPlayerController::StartGame(FString SaveName, bool Online)
 {
 	NLOG("ANovaPlayerController::StartGame : loading from '%s', online = %d", *SaveName, Online);
 
-	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch, FNovaAsyncAction::CreateLambda(
-																[=]()
-																{
-																	GetGameInstance<UNovaGameInstance>()->StartGame(SaveName, Online);
-																}));
+	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,    //
+		FNovaAsyncAction::CreateLambda(
+			[=]()
+			{
+				GetGameInstance<UNovaGameInstance>()->StartGame(SaveName, Online);
+			}));
 }
 
 void ANovaPlayerController::SetGameOnline(bool Online)
 {
 	NLOG("ANovaPlayerController::SetGameOnline : online = %d", Online);
 
-	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch, FNovaAsyncAction::CreateLambda(
-																[=]()
-																{
-																	GetGameInstance<UNovaGameInstance>()->SetGameOnline(
-																		GetWorld()->GetName(), Online);
-																}));
+	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,    //
+		FNovaAsyncAction::CreateLambda(
+			[=]()
+			{
+				GetGameInstance<UNovaGameInstance>()->SetGameOnline(GetWorld()->GetName(), Online);
+			}));
 }
 
 void ANovaPlayerController::GoToMainMenu()
@@ -660,12 +661,13 @@ void ANovaPlayerController::GoToMainMenu()
 	{
 		NLOG("ANovaPlayerController::GoToMainMenu");
 
-		GetMenuManager()->RunAction(ENovaLoadingScreen::Black, FNovaAsyncAction::CreateLambda(
-																   [=]()
-																   {
-																	   GetGameInstance<UNovaGameInstance>()->SaveGame(this, true);
-																	   GetGameInstance<UNovaGameInstance>()->GoToMainMenu();
-																   }));
+		GetMenuManager()->RunAction(ENovaLoadingScreen::Black,    //
+			FNovaAsyncAction::CreateLambda(
+				[=]()
+				{
+					GetGameInstance<UNovaGameInstance>()->SaveGame(this, true);
+					GetGameInstance<UNovaGameInstance>()->GoToMainMenu();
+				}));
 	}
 }
 
@@ -675,11 +677,12 @@ void ANovaPlayerController::ExitGame()
 	{
 		NLOG("ANovaPlayerController::ExitGame");
 
-		GetMenuManager()->RunAction(ENovaLoadingScreen::Black, FNovaAsyncAction::CreateLambda(
-																   [=]()
-																   {
-																	   FGenericPlatformMisc::RequestExit(false);
-																   }));
+		GetMenuManager()->RunAction(ENovaLoadingScreen::Black,    //
+			FNovaAsyncAction::CreateLambda(
+				[=]()
+				{
+					FGenericPlatformMisc::RequestExit(false);
+				}));
 	}
 }
 
