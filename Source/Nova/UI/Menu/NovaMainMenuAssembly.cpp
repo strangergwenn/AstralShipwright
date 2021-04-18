@@ -338,6 +338,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						.Text(LOCTEXT("CompartmentBack", "Back to assembly"))
 						.HelpText(LOCTEXT("CompartmentBackHelp", "Go back to the main assembly"))
 						.OnClicked(this, &SNovaMainMenuAssembly::OnBackToAssembly)
+						.Enabled(this, &SNovaMainMenuAssembly::IsBackToAssemblyEnabled)
 					]
 				]
 			]
@@ -345,7 +346,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 	];
 
 	// Build the modal panel 
-	ModalPanel = Menu->CreateModalPanel(this);
+	ModalPanel = Menu->CreateModalPanel();
 
 	// Build compartment buttons statically
 	CompartmentBox->AddSlot()
@@ -862,6 +863,11 @@ bool SNovaMainMenuAssembly::IsAddCompartmentEnabled(bool Forward) const
 	{
 		return true;
 	}
+}
+
+bool SNovaMainMenuAssembly::IsBackToAssemblyEnabled() const
+{
+	return EditedCompartmentIndex != INDEX_NONE;
 }
 
 bool SNovaMainMenuAssembly::IsEditCompartmentEnabled() const

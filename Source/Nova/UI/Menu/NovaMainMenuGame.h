@@ -79,8 +79,6 @@ protected:
 	void OnAbandonContract(uint32 Index);
 
 	void OnToggleOnlineGame();
-	void OnGoToMainMenu();
-	void OnQuitGame();
 
 	void OnFriendListReady(TArray<TSharedRef<FOnlineFriend>> NewFriendList);
 	void OnSelectedFriendChanged(TSharedRef<FOnlineFriend> Friend, int32 Index);

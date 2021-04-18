@@ -27,7 +27,7 @@
     Constructor
 ----------------------------------------------------*/
 
-UNovaGameInstance::UNovaGameInstance() : Super(), CurrentSaveData(nullptr)
+UNovaGameInstance::UNovaGameInstance() : Super(), CurrentSaveData(nullptr), TimeOfLastSave(0)
 {}
 
 /*----------------------------------------------------
@@ -41,7 +41,7 @@ struct FNovaGameSave
 	TSharedPtr<struct FNovaContractManagerSave> ContractManagerData;
 };
 
-TSharedPtr<FNovaGameSave> UNovaGameInstance::Save(const ANovaPlayerController* PC) const
+TSharedPtr<FNovaGameSave> UNovaGameInstance::Save(const ANovaPlayerController* PC)
 {
 	TSharedPtr<FNovaGameSave> Save = CurrentSaveData;
 
@@ -61,6 +61,9 @@ TSharedPtr<FNovaGameSave> UNovaGameInstance::Save(const ANovaPlayerController* P
 	// Save contracts
 	Save->ContractManagerData = ContractManager->Save();
 
+	// Reset the save time
+	TimeOfLastSave = FPlatformTime::ToMilliseconds64(FPlatformTime::Cycles64());
+
 	return Save;
 }
 
@@ -70,6 +73,9 @@ void UNovaGameInstance::Load(TSharedPtr<FNovaGameSave> SaveData)
 
 	// Only load contracts right away, other classes will fetch their stuff when they need it
 	ContractManager->Load(GetContractManagerSave());
+
+	// Reset the save time
+	TimeOfLastSave = FPlatformTime::ToMilliseconds64(FPlatformTime::Cycles64());
 }
 
 void UNovaGameInstance::SerializeJson(TSharedPtr<FNovaGameSave>& SaveData, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)

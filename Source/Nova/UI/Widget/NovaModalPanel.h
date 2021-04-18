@@ -15,11 +15,10 @@ class SNovaModalPanel : public SNovaNavigationPanel
 	    Slate arguments
 	----------------------------------------------------*/
 
-	SLATE_BEGIN_ARGS(SNovaModalPanel) : _Menu(nullptr), _ParentPanel(nullptr)
+	SLATE_BEGIN_ARGS(SNovaModalPanel) : _Menu(nullptr)
 	{}
 
 	SLATE_ARGUMENT(class SNovaMenu*, Menu)
-	SLATE_ARGUMENT(SNovaNavigationPanel*, ParentPanel)
 
 	SLATE_ATTRIBUTE(FText, ConfirmText)
 	SLATE_ATTRIBUTE(FText, ConfirmHelpText)

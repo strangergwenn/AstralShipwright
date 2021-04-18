@@ -71,7 +71,7 @@ public:
 		OnGenerateName     = InArgs._OnGenerateName;
 		OnSelectionChanged = InArgs._OnSelectionChanged;
 
-		ListPanel = InArgs._Panel->GetMenu()->CreateModalPanel(InArgs._Panel);
+		ListPanel = InArgs._Panel->GetMenu()->CreateModalPanel();
 
 		SNovaButton::Construct(SNovaButton::FArguments()
 								   .Text(this, &SNovaModalListView::GetButtonText)

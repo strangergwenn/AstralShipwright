@@ -118,6 +118,7 @@ protected:
 	bool WasOnMainMenu;
 
 	// Widgets
+	TSharedPtr<class SNovaModalPanel>         ModalPanel;
 	TSharedPtr<class SNovaTabView>            TabView;
 	TSharedPtr<class SNovaMainMenuHome>       HomeMenu;
 	TSharedPtr<class SNovaMainMenuGame>       GameMenu;

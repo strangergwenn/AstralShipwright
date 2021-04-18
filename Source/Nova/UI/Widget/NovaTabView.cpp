@@ -68,7 +68,7 @@ void SNovaTabPanel::Show()
 	CurrentVisible = true;
 
 	NCHECK(Menu);
-	Menu->SetActiveNavigationPanel(this);
+	Menu->SetNavigationPanel(this);
 }
 
 void SNovaTabPanel::Hide()

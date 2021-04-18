@@ -357,6 +357,7 @@ void ANovaPlayerController::Dock()
 				{
 					SetCameraState(ENovaPlayerCameraState::Default);
 					GetSpacecraftPawn()->ResetView();
+					GetGameInstance<UNovaGameInstance>()->SaveGame(this);
 				}));
 		});
 
@@ -388,6 +389,7 @@ void ANovaPlayerController::Undock()
 	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda(
 		[=]()
 		{
+			GetGameInstance<UNovaGameInstance>()->SaveGame(this);
 			SetCameraState(ENovaPlayerCameraState::CinematicSpacecraft);
 			GetSpacecraftPawn()->Undock(EndCutscene);
 		});
@@ -655,17 +657,22 @@ void ANovaPlayerController::SetGameOnline(bool Online)
 			}));
 }
 
-void ANovaPlayerController::GoToMainMenu()
+void ANovaPlayerController::GoToMainMenu(bool SaveGame)
 {
 	if (GetMenuManager()->IsIdle())
 	{
-		NLOG("ANovaPlayerController::GoToMainMenu");
+		NLOG("ANovaPlayerController::GoToMainMenu %d", SaveGame);
 
 		GetMenuManager()->RunAction(ENovaLoadingScreen::Black,    //
 			FNovaAsyncAction::CreateLambda(
 				[=]()
 				{
-					GetGameInstance<UNovaGameInstance>()->SaveGame(this, true);
+					if (SaveGame)
+					{
+						NLOG("ANovaPlayerController::GoToMainMenu : saving game");
+						GetGameInstance<UNovaGameInstance>()->SaveGame(this, true);
+					}
+
 					GetGameInstance<UNovaGameInstance>()->GoToMainMenu();
 				}));
 	}

@@ -177,7 +177,7 @@ public:
 	void SetGameOnline(bool Online = true);
 
 	/** Exit the session and go to the main menu */
-	void GoToMainMenu();
+	void GoToMainMenu(bool SaveGame);
 
 	/** Exit the game */
 	void ExitGame();

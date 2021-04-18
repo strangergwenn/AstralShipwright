@@ -164,6 +164,8 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 	);
 	// clang-format on
 
+	ModalPanel = CreateModalPanel();
+
 	// Set the default menu
 	WasOnMainMenu = true;
 	TabView->SetTabIndex(static_cast<uint8>(ENovaMainMenuType::Home));
@@ -291,7 +293,7 @@ bool SNovaMainMenu::IsAssemblyMenuVisible() const
 {
 	if (AreGameMenusVisible())
 	{
-		ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
+		const ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
 		if (IsValid(SpacecraftPawn))
 		{
 			return SpacecraftPawn->IsDocked();
@@ -385,7 +387,37 @@ void SNovaMainMenu::OnClose()
 	}
 	else if (MenuManager->GetPC()->IsMenuOnly())
 	{
-		MenuManager->GetPC()->GoToMainMenu();
+		const ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
+
+		// Ship is docked, we will save and quit
+		if (IsValid(SpacecraftPawn) && SpacecraftPawn->IsDocked())
+		{
+			ModalPanel->Show(LOCTEXT("ConfirmQuit", "Quit to menu ?"), LOCTEXT("ConfirmQuitHelp", "Your progression will be saved."),
+				FSimpleDelegate::CreateLambda(
+					[&]()
+					{
+						MenuManager->GetPC()->GoToMainMenu(true);
+					}));
+		}
+
+		// Ship is not docked, some progress will be lost
+		else
+		{
+			const UNovaGameInstance* GameInstance = MenuManager->GetWorld()->GetGameInstance<UNovaGameInstance>();
+			NCHECK(GameInstance);
+			double MinutesSinceLastSave = GameInstance->GetMinutesSinceLastSave();
+
+			ModalPanel->Show(LOCTEXT("ConfirmQuitWithoutSaving", "Quit without saving ?"),
+				FText::FormatNamed(LOCTEXT("ConfirmQuitWithoutSavingHelp",
+									   "You will lose progress since the last save, {minutes} {minutes}|plural(one=minute,other=minutes) "
+			                           "ago. Dock at a station to save the game."),
+					TEXT("minutes"), FText::AsNumber(FMath::CeilToInt(MinutesSinceLastSave))),
+				FSimpleDelegate::CreateLambda(
+					[&]()
+					{
+						MenuManager->GetPC()->GoToMainMenu(false);
+					}));
+		}
 	}
 	else
 	{

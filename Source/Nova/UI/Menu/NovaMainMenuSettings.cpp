@@ -412,7 +412,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 			];
 		}
 
-		ModalPanel = Menu->CreateModalPanel(this);
+		ModalPanel = Menu->CreateModalPanel();
 	}
 	// clang-format on
 }

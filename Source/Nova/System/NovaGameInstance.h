@@ -21,7 +21,7 @@ public:
 	    Loading & saving
 	----------------------------------------------------*/
 
-	TSharedPtr<struct FNovaGameSave> Save(const class ANovaPlayerController* PC) const;
+	TSharedPtr<struct FNovaGameSave> Save(const class ANovaPlayerController* PC);
 
 	void Load(TSharedPtr<struct FNovaGameSave> SaveData);
 
@@ -56,6 +56,14 @@ public:
 
 	/** Check that the current save data is valid */
 	bool HasSave() const;
+
+	/** Get the time in minutes since the last loading or saving */
+	double GetMinutesSinceLastSave() const
+	{
+		double CurrentTime = FPlatformTime::ToMilliseconds64(FPlatformTime::Cycles64());
+
+		return (CurrentTime - TimeOfLastSave) / (1000.0 * 60.0);
+	}
 
 	/** Get the save data for the player */
 	TSharedPtr<struct FNovaPlayerSave> GetPlayerSave();
@@ -132,4 +140,5 @@ private:
 	// Save data
 	TSharedPtr<struct FNovaGameSave> CurrentSaveData;
 	FString                          CurrentSaveFileName;
+	double                           TimeOfLastSave;
 };

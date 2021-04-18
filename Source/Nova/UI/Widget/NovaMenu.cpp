@@ -110,7 +110,7 @@ void SNovaMenu::Tick(const FGeometry& AllottedGeometry, const double CurrentTime
 		float HorizontalInput   = ConstantRateRatio * CurrentAnalogInput.X;
 		float VerticalInput     = ConstantRateRatio * CurrentAnalogInput.Y;
 
-		// Pass analog input when using gamepads
+		// Pass analog input when using gamepad
 		bool                    HorizontalInputConsumed = false;
 		bool                    VerticalInputConsumed   = false;
 		TSharedPtr<SNovaButton> Button                  = GetFocusedButton();
@@ -333,7 +333,7 @@ FReply SNovaMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEve
 	// Trigger action buttons
 	for (TSharedPtr<SNovaButton>& Button : GetActionButtons())
 	{
-		if (Button->GetActionKey() == Key)
+		if (Button->GetActionKey() == Key && Button->IsButtonEnabled())
 		{
 			Button->OnButtonClicked();
 			Result = FReply::Handled();
@@ -398,9 +398,11 @@ bool SNovaMenu::IsAxisKey(FName AxisName, const FKey& Key) const
     Focus handling
 ----------------------------------------------------*/
 
-void SNovaMenu::SetActiveNavigationPanel(SNovaNavigationPanel* Panel)
+void SNovaMenu::SetNavigationPanel(SNovaNavigationPanel* Panel)
 {
-	// NLOG("SNovaMenu::SetActiveNavigationPanel : '%s'", Panel ? *Panel->GetTypeAsString() : TEXT("nullptr"));
+	// NLOG("SNovaMenu::SetNavigationPanel : '%s'", Panel ? *Panel->GetTypeAsString() : TEXT("nullptr"));
+
+	NCHECK(Panel);
 
 	if (Panel != CurrentNavigationPanel)
 	{
@@ -413,14 +415,6 @@ void SNovaMenu::SetActiveNavigationPanel(SNovaNavigationPanel* Panel)
 	else
 	{
 		RefreshNavigationPanel();
-	}
-}
-
-void SNovaMenu::RefreshNavigationPanel()
-{
-	if (CurrentNavigationPanel)
-	{
-		CurrentNavigationButtons = CurrentNavigationPanel->GetNavigationButtons();
 	}
 }
 
@@ -438,13 +432,41 @@ void SNovaMenu::ClearNavigationPanel()
 	CurrentNavigationButtons.Empty();
 }
 
-TSharedPtr<SNovaModalPanel> SNovaMenu::CreateModalPanel(SNovaNavigationPanel* ParentPanel)
+void SNovaMenu::RefreshNavigationPanel()
+{
+	if (CurrentNavigationPanel)
+	{
+		CurrentNavigationButtons = CurrentNavigationPanel->GetNavigationButtons();
+	}
+}
+
+TSharedPtr<SNovaModalPanel> SNovaMenu::CreateModalPanel()
 {
 	TSharedPtr<SNovaModalPanel> Panel;
 
-	MainOverlay->AddSlot()[SAssignNew(Panel, SNovaModalPanel).Menu(this).ParentPanel(ParentPanel)];
+	MainOverlay->AddSlot()[SAssignNew(Panel, SNovaModalPanel).Menu(this)];
 
 	return Panel;
+}
+
+void SNovaMenu::SetModalNavigationPanel(class SNovaNavigationPanel* Panel)
+{
+	NCHECK(CurrentNavigationPanel);
+
+	PreviousNavigationPanel = CurrentNavigationPanel;
+
+	ClearNavigationPanel();
+	SetNavigationPanel(Panel);
+}
+
+void SNovaMenu::ClearModalNavigationPanel()
+{
+	NCHECK(PreviousNavigationPanel);
+
+	ClearNavigationPanel();
+	SetNavigationPanel(PreviousNavigationPanel);
+
+	PreviousNavigationPanel = nullptr;
 }
 
 void SNovaMenu::SetFocusedButton(TSharedPtr<SNovaButton> FocusButton, bool FromNavigation)

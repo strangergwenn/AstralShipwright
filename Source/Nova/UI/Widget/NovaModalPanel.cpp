@@ -20,7 +20,6 @@ void SNovaModalPanel::Construct(const FArguments& InArgs)
 	// Setup
 	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
 	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
-	ParentPanel                         = InArgs._ParentPanel;
 
 	// Parent constructor
 	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
@@ -217,8 +216,7 @@ void SNovaModalPanel::Show(FText Title, FText Text, FSimpleDelegate NewOnConfirm
 
 	if (Menu)
 	{
-		Menu->ClearNavigationPanel();
-		Menu->SetActiveNavigationPanel(this);
+		Menu->SetModalNavigationPanel(this);
 	}
 }
 
@@ -230,9 +228,7 @@ void SNovaModalPanel::Hide()
 
 	if (Menu && Menu->IsActiveNavigationPanel(this))
 	{
-		NCHECK(ParentPanel);
-		Menu->ClearNavigationPanel();
-		Menu->SetActiveNavigationPanel(ParentPanel);
+		Menu->ClearModalNavigationPanel();
 	}
 }
 

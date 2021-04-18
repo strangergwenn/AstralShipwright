@@ -161,31 +161,6 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 					.HelpText(this, &SNovaMainMenuGame::GetOnlineButtonHelpText)
 					.OnClicked(this, &SNovaMainMenuGame::OnToggleOnlineGame)
 				]
-
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(SHorizontalBox)
-
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					[
-						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("QuitMenu", "Quit to main menu"))
-						.HelpText(LOCTEXT("QuitMenuHelp", "Log out of the current game"))
-						.OnClicked(this, &SNovaMainMenuGame::OnGoToMainMenu)
-					]
-
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					[
-						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("QuitGame", "Quit game"))
-						.HelpText(LOCTEXT("QuitGameHelp", "Exit the game"))
-						.OnClicked(this, &SNovaMainMenuGame::OnQuitGame)
-						.Visibility(this, &SNovaMainMenuGame::GetQuitGameVisibility)
-					]
-				]
 			]
 
 			+ SVerticalBox::Slot()
@@ -720,16 +695,6 @@ void SNovaMainMenuGame::OnToggleOnlineGame()
 {
 	const UNovaSessionsManager* SessionsManager = MenuManager->GetGameInstance()->GetSessionsManager();
 	MenuManager->GetPC()->SetGameOnline(!SessionsManager->IsOnline());
-}
-
-void SNovaMainMenuGame::OnGoToMainMenu()
-{
-	MenuManager->GetPC()->GoToMainMenu();
-}
-
-void SNovaMainMenuGame::OnQuitGame()
-{
-	MenuManager->GetPC()->ExitGame();
 }
 
 void SNovaMainMenuGame::OnFriendListReady(TArray<TSharedRef<FOnlineFriend>> NewFriendList)

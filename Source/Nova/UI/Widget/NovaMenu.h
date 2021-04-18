@@ -61,13 +61,13 @@ public:
 	----------------------------------------------------*/
 
 	/** Set the currently active navigation panel */
-	void SetActiveNavigationPanel(class SNovaNavigationPanel* Panel);
-
-	/** Refresh the current navigation panel */
-	void RefreshNavigationPanel();
+	void SetNavigationPanel(class SNovaNavigationPanel* Panel);
 
 	/** Unset the currently active navigation panel */
 	void ClearNavigationPanel();
+
+	/** Refresh the current navigation panel */
+	void RefreshNavigationPanel();
 
 	/** Get the currently active navigation panel */
 	class SNovaNavigationPanel* GetActiveNavigationPanel() const
@@ -82,7 +82,13 @@ public:
 	}
 
 	/** Create a new modal panel */
-	TSharedPtr<class SNovaModalPanel> CreateModalPanel(SNovaNavigationPanel* ParentPanel);
+	TSharedPtr<class SNovaModalPanel> CreateModalPanel();
+
+	/** Set a currently active navigation panel */
+	void SetModalNavigationPanel(class SNovaNavigationPanel* Panel);
+
+	/** Set a currently active navigation panel */
+	void ClearModalNavigationPanel();
 
 	/** Set FocusButton focused, unfocus others*/
 	void SetFocusedButton(TSharedPtr<class SNovaButton> FocusButton, bool FromNavigation);
@@ -146,6 +152,7 @@ protected:
 
 	// Focus data
 	class SNovaNavigationPanel*           CurrentNavigationPanel;
+	class SNovaNavigationPanel*           PreviousNavigationPanel;
 	TArray<TSharedPtr<class SNovaButton>> CurrentNavigationButtons;
 	TArray<TSharedPtr<class SNovaButton>> AdditionalActionButtons;
 	EUINavigation                         CurrentAnalogNavigation;

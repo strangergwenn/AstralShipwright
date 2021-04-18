@@ -116,6 +116,7 @@ protected:
 	const FSlateBrush* GetCompartmentIcon(int32 Index) const;
 	bool               IsSelectCompartmentEnabled(int32 Index) const;
 	bool               IsAddCompartmentEnabled(bool Forward) const;
+	bool               IsBackToAssemblyEnabled() const;
 	bool               IsEditCompartmentEnabled() const;
 	bool               IsToggleHighlightEnabled() const;
 
