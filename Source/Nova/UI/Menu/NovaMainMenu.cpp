@@ -314,11 +314,11 @@ FText SNovaMainMenu::GetCloseText() const
 
 	if (PC && PC->IsOnMainMenu())
 	{
-		return LOCTEXT("Quit", "Quit game");
+		return LOCTEXT("QuitGame", "Quit game");
 	}
 	else if (PC && PC->IsMenuOnly())
 	{
-		return LOCTEXT("Close", "Quit to menu");
+		return LOCTEXT("QuitMenu", "Quit to menu");
 	}
 	else
 	{
@@ -332,11 +332,11 @@ FText SNovaMainMenu::GetCloseHelpText() const
 
 	if (PC && PC->IsOnMainMenu())
 	{
-		return LOCTEXT("QuitHelp", "Exit the game");
+		return LOCTEXT("QuitGameHelp", "Exit the game");
 	}
 	else if (PC && PC->IsMenuOnly())
 	{
-		return LOCTEXT("CloseHelp", "Save and log out of the current game");
+		return LOCTEXT("QuitMenuHelp", "Save and log out of the current game");
 	}
 	else
 	{
@@ -410,7 +410,7 @@ void SNovaMainMenu::OnClose()
 			ModalPanel->Show(LOCTEXT("ConfirmQuitWithoutSaving", "Quit without saving ?"),
 				FText::FormatNamed(LOCTEXT("ConfirmQuitWithoutSavingHelp",
 									   "You will lose progress since the last save, {minutes} {minutes}|plural(one=minute,other=minutes) "
-			                           "ago. Dock at a station to save the game."),
+									   "ago. Dock at a station to save the game."),
 					TEXT("minutes"), FText::AsNumber(FMath::CeilToInt(MinutesSinceLastSave))),
 				FSimpleDelegate::CreateLambda(
 					[&]()

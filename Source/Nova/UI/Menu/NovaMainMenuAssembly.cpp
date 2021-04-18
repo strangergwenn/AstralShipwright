@@ -242,7 +242,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							[
 								SNew(STextBlock)
 								.TextStyle(&Theme.SubtitleFont)
-								.Text(LOCTEXT("CompartmentTitle", "Compartment details"))
+								.Text(LOCTEXT("CompartmentDetailsTitle", "Compartment details"))
 							]
 
 							+ SVerticalBox::Slot()
