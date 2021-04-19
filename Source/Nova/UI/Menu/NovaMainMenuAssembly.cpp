@@ -10,6 +10,8 @@
 #include "Nova/System/NovaGameInstance.h"
 #include "Nova/System/NovaMenuManager.h"
 
+#include "Nova/Spacecraft/NovaSpacecraftPawn.h"
+
 #include "Nova/UI/Widget/NovaSlider.h"
 #include "Nova/UI/Widget/NovaModalPanel.h"
 #include "Nova/UI/Widget/NovaKeyLabel.h"
