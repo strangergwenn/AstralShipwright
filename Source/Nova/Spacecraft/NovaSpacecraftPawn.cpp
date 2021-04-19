@@ -95,6 +95,8 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 						}
 					}));
 		}
+
+		UpdateBounds();
 	}
 }
 
@@ -345,7 +347,6 @@ void ANovaSpacecraftPawn::SetDisplayFilter(ENovaAssemblyDisplayFilter Filter, in
 	if (AssemblyState == ENovaAssemblyState::Idle)
 	{
 		UpdateDisplayFilter();
-		UpdateBounds();
 	}
 }
 
@@ -594,7 +595,6 @@ void ANovaSpacecraftPawn::UpdateAssembly()
 		DisplayFilterIndex = FMath::Min(DisplayFilterIndex, Spacecraft->Compartments.Num() - 1);
 		AssemblyState      = ENovaAssemblyState::Idle;
 		UpdateDisplayFilter();
-		UpdateBounds();
 	}
 }
 
@@ -708,8 +708,8 @@ void ANovaSpacecraftPawn::UpdateBounds()
 		ForEachComponent<UPrimitiveComponent>(false,
 			[&](const UPrimitiveComponent* Prim)
 			{
-				if (Prim->IsRegistered() && Prim->IsVisible() && Prim->IsAttachedTo(CompartmentComponents[DisplayFilterIndex]) &&
-					Prim->Implements<UNovaMeshInterface>())
+				if (Prim->IsRegistered() && Prim->IsAttachedTo(CompartmentComponents[DisplayFilterIndex]) &&
+					Prim->Implements<UNovaMeshInterface>() && !Cast<INovaMeshInterface>(Prim)->IsDematerializing())
 				{
 					Bounds += Prim->Bounds.GetBox();
 				}
