@@ -706,9 +706,16 @@ void SNovaOrbitalMap::ClearBatches()
 int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect,
 	FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
+	// Early abort when no position is available
+	if (CurrentOrigin.Size() == 0)
+	{
+		return SCompoundWidget::OnPaint(
+			PaintArgs, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+	}
+
 #if 0
-	NLOG("Painting %d brushes, %d splines, %d points, %d texts", BatchedBrushes.Num(), BatchedSplines.Num(), BatchedPoints.Num(),
-		BatchedTexts.Num());
+	NLOG("Painting %d brushes, %d splines, %d points, %d texts / pos %f, %f scale %f", BatchedBrushes.Num(), BatchedSplines.Num(),
+		BatchedPoints.Num(), BatchedTexts.Num(), CurrentOrigin.X, CurrentOrigin.Y, CurrentDrawScale);
 #endif
 
 	// Draw batched brushes
