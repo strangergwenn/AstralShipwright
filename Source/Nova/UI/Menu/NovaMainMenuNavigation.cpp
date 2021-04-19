@@ -189,7 +189,7 @@ void SNovaMainMenuNavigation::Show()
 {
 	SNovaTabPanel::Show();
 
-	GetSpacecraftPawn()->SetHighlightCompartment(INDEX_NONE);
+	GetSpacecraftPawn()->SetOutlinedCompartment(INDEX_NONE);
 
 	TrajectoryCalculator->Reset();
 

@@ -26,7 +26,8 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 	: Super()
 	, AssemblyState(ENovaAssemblyState::Idle)
 	, WaitingAssetLoading(false)
-	, CurrentHighlightCompartment(INDEX_NONE)
+	, HighlightedCompartment(ENovaUIConstants::FadeDurationMinimal)
+	, OutlinedCompartment(ENovaUIConstants::FadeDurationMinimal)
 	, DisplayFilterType(ENovaAssemblyDisplayFilter::All)
 	, DisplayFilterIndex(INDEX_NONE)
 	, ImmediateMode(false)
@@ -90,14 +91,40 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 						UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Element.Mesh);
 						if (PrimitiveComponent)
 						{
-							int32 Value = CompartmentIndex == CurrentHighlightCompartment ? 1 : 0;
-							PrimitiveComponent->SetCustomDepthStencilValue(Value);
+							int32 StencilValue = 0;
+
+							// Outline only, no highlight
+							if (CompartmentIndex == OutlinedCompartment.GetCurrent() &&
+								CompartmentIndex != HighlightedCompartment.GetCurrent())
+							{
+								StencilValue = 1;
+							}
+
+							// Outline and highlight
+							else if (CompartmentIndex == OutlinedCompartment.GetCurrent() &&
+									 CompartmentIndex == HighlightedCompartment.GetCurrent())
+							{
+								StencilValue = 2;
+							}
+
+							// Highlight only
+							if (CompartmentIndex != OutlinedCompartment.GetCurrent() &&
+								CompartmentIndex == HighlightedCompartment.GetCurrent())
+							{
+								StencilValue = 3;
+							}
+
+							PrimitiveComponent->SetCustomDepthStencilValue(StencilValue);
 						}
 					}));
 		}
 
 		UpdateBounds();
 	}
+
+	// Update visual effects
+	HighlightedCompartment.Update(DeltaTime);
+	OutlinedCompartment.Update(DeltaTime);
 }
 
 void ANovaSpacecraftPawn::PossessedBy(AController* NewController)

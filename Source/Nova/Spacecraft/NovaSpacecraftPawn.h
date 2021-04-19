@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Nova/Actor/NovaTurntablePawn.h"
+#include "Nova/UI/NovaUITypes.h"
 #include "NovaSpacecraft.h"
 #include "NovaSpacecraftPawn.generated.h"
 
@@ -24,6 +25,55 @@ enum class ENovaAssemblyDisplayFilter : uint8
 	ModulesStructureEquipments,
 	ModulesStructureEquipmentsWiring,
 	All
+};
+
+/** Index system with fading */
+struct FNovaSpacecraftPawnCompartmentIndex
+{
+	FNovaSpacecraftPawnCompartmentIndex() : DesiredIndex(INDEX_NONE), CurrentIndex(INDEX_NONE), CurrentAlpha(0), FadeDuration(0)
+	{}
+
+	FNovaSpacecraftPawnCompartmentIndex(float FD) : DesiredIndex(INDEX_NONE), CurrentIndex(INDEX_NONE), CurrentAlpha(0), FadeDuration(FD)
+	{}
+
+	void Update(float DeltaTime)
+	{
+		if (CurrentIndex != DesiredIndex)
+		{
+			CurrentAlpha -= DeltaTime / FadeDuration;
+		}
+		else
+		{
+			CurrentAlpha += DeltaTime / FadeDuration;
+		}
+		CurrentAlpha = FMath::Clamp(CurrentAlpha, 0.0f, 1.0f);
+
+		if (CurrentAlpha == 0)
+		{
+			CurrentIndex = DesiredIndex;
+		}
+	}
+
+	void SetDesired(int32 Index)
+	{
+		DesiredIndex = Index;
+	}
+
+	int32 GetCurrent() const
+	{
+		return CurrentIndex;
+	}
+
+	float GetAlpha() const
+	{
+		return FMath::InterpEaseInOut(0.0f, 1.0f, CurrentAlpha, ENovaUIConstants::EaseStandard);
+	}
+
+protected:
+	int32 DesiredIndex;
+	int32 CurrentIndex;
+	float CurrentAlpha;
+	float FadeDuration;
 };
 
 /** Main assembly actor that allows building boats */
@@ -149,9 +199,27 @@ public:
 	}
 
 	/** Set the compartment to highlight, none if INDEX_NONE */
-	void SetHighlightCompartment(int32 Index)
+	void SetHighlightedCompartment(int32 Index)
 	{
-		CurrentHighlightCompartment = Index;
+		HighlightedCompartment.SetDesired(Index);
+	}
+
+	/** Set the compartment to outline, none if INDEX_NONE */
+	void SetOutlinedCompartment(int32 Index)
+	{
+		OutlinedCompartment.SetDesired(Index);
+	}
+
+	/** Get the compartment highlight alpha */
+	float GetHighlightAlpha() const
+	{
+		return HighlightedCompartment.GetAlpha();
+	}
+
+	/** Get the compartment outline alpha */
+	float GetOutlineAlpha() const
+	{
+		return OutlinedCompartment.GetAlpha();
 	}
 
 	/*----------------------------------------------------
@@ -213,8 +281,11 @@ protected:
 	TArray<FSoftObjectPath> CurrentAssets;
 	TArray<FSoftObjectPath> RequestedAssets;
 
+	// Outlining
+	FNovaSpacecraftPawnCompartmentIndex HighlightedCompartment;
+	FNovaSpacecraftPawnCompartmentIndex OutlinedCompartment;
+
 	// Display state
-	int32                      CurrentHighlightCompartment;
 	ENovaAssemblyDisplayFilter DisplayFilterType;
 	int32                      DisplayFilterIndex;
 	FVector                    CurrentOrigin;

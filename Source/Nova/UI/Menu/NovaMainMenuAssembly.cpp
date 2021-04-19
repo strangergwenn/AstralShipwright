@@ -105,8 +105,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 					[
 						SNovaAssignNew(HighlightButton, SNovaButton)
 						.Action(FNovaPlayerInput::MenuSecondary)
-						.Text(LOCTEXT("Highlight", "Highlight selection"))
-						.HelpText(LOCTEXT("HighlightHelp", "Toggle the highlighting of the current selection"))
+						.Text(LOCTEXT("Outline", "Outline compartments"))
+						.HelpText(LOCTEXT("OutlineHelp", "Toggle the outlining & highlighting of compartments"))
 						.OnClicked(this, &SNovaMainMenuAssembly::OnToggleHighlight)
 						.Enabled(this, &SNovaMainMenuAssembly::IsToggleHighlightEnabled)
 						.Toggle(true)
@@ -436,7 +436,7 @@ void SNovaMainMenuAssembly::Show()
 	{
 		EditedCompartmentIndex = INDEX_NONE;
 		GetSpacecraftPawn()->SetDisplayFilter(GetSpacecraftPawn()->GetDisplayFilter(), INDEX_NONE);
-		GetSpacecraftPawn()->SetHighlightCompartment(HighlightButton->IsActive() ? SelectedCompartmentIndex : INDEX_NONE);
+		GetSpacecraftPawn()->SetOutlinedCompartment(HighlightButton->IsActive() ? SelectedCompartmentIndex : INDEX_NONE);
 	}
 
 	// Reset compartment data
@@ -448,7 +448,7 @@ void SNovaMainMenuAssembly::Hide()
 {
 	SNovaTabPanel::Hide();
 
-	GetSpacecraftPawn()->SetHighlightCompartment(INDEX_NONE);
+	GetSpacecraftPawn()->SetOutlinedCompartment(INDEX_NONE);
 }
 
 void SNovaMainMenuAssembly::ZoomIn()
@@ -474,7 +474,7 @@ bool SNovaMainMenuAssembly::Cancel()
 		EditedCompartmentIndex = INDEX_NONE;
 
 		GetSpacecraftPawn()->SetDisplayFilter(GetSpacecraftPawn()->GetDisplayFilter(), INDEX_NONE);
-		GetSpacecraftPawn()->SetHighlightCompartment(HighlightButton->IsActive() ? SelectedCompartmentIndex : INDEX_NONE);
+		GetSpacecraftPawn()->SetOutlinedCompartment(HighlightButton->IsActive() ? SelectedCompartmentIndex : INDEX_NONE);
 
 		return true;
 	}
@@ -601,6 +601,15 @@ void SNovaMainMenuAssembly::Tick(const FGeometry& AllottedGeometry, const double
 	{
 		SetCompartmentPanelVisible(WantCompartmentPanelVisible);
 	}
+
+	// Set the hovered compartment
+	int32 HighlightedCompartment = INDEX_NONE;
+	if (HighlightButton->IsActive() && !IsCompartmentPanelVisible && !MenuManager->IsUsingGamepad())
+	{
+		FVector2D MousePosition = Menu->GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos());
+		HighlightedCompartment  = GetCompartmentIndexAtPosition(MenuManager->GetPC(), GetSpacecraftPawn(), MousePosition);
+	}
+	GetSpacecraftPawn()->SetHighlightedCompartment(HighlightedCompartment);
 }
 
 /*----------------------------------------------------
@@ -622,7 +631,7 @@ void SNovaMainMenuAssembly::SetSelectedCompartment(int32 Index)
 {
 	SelectedCompartmentIndex = Index;
 
-	GetSpacecraftPawn()->SetHighlightCompartment(HighlightButton->IsActive() ? SelectedCompartmentIndex : INDEX_NONE);
+	GetSpacecraftPawn()->SetOutlinedCompartment(HighlightButton->IsActive() ? SelectedCompartmentIndex : INDEX_NONE);
 }
 
 void SNovaMainMenuAssembly::SetCompartmentPanelVisible(bool Active)
@@ -903,7 +912,7 @@ void SNovaMainMenuAssembly::OnEditCompartment()
 	EditedCompartmentIndex = SelectedCompartmentIndex;
 
 	GetSpacecraftPawn()->SetDisplayFilter(GetSpacecraftPawn()->GetDisplayFilter(), EditedCompartmentIndex);
-	GetSpacecraftPawn()->SetHighlightCompartment(INDEX_NONE);
+	GetSpacecraftPawn()->SetOutlinedCompartment(INDEX_NONE);
 }
 
 void SNovaMainMenuAssembly::OnRemoveCompartment()
@@ -1002,7 +1011,7 @@ void SNovaMainMenuAssembly::OnBackToAssembly()
 
 void SNovaMainMenuAssembly::OnToggleHighlight()
 {
-	GetSpacecraftPawn()->SetHighlightCompartment(HighlightButton->IsActive() ? SelectedCompartmentIndex : INDEX_NONE);
+	GetSpacecraftPawn()->SetOutlinedCompartment(HighlightButton->IsActive() ? SelectedCompartmentIndex : INDEX_NONE);
 }
 
 #undef LOCTEXT_NAMESPACE
