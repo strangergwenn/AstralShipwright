@@ -62,18 +62,18 @@ ANovaTurntablePawn::ANovaTurntablePawn()
 	PrimaryActorTick.bStartWithTickEnabled = true;
 
 	// Default camera parameters
-	AnimationDuration       = 0.5f;
-	DefaultDistance         = 500.0f;
-	DefaultDistanceFactor   = 2.0f;
-	MinDistanceFactor       = 0.15f;
-	DistanceFactorIncrement = 0.15f;
-	CameraMinTilt           = -80.0f;
-	CameraMaxTilt           = 20.0f;
-	CameraVelocity          = 200.0f;
-	CameraGamepadVelocity   = 100.0f;
-	CameraAcceleration      = 300.0f;
-	CameraResistance        = 1 / 360.0f;
-	CameraInputPower        = 3.0f;
+	AnimationDuration           = 0.5f;
+	DefaultDistance             = 500.0f;
+	DefaultDistanceFactor       = 2.0f;
+	DistanceFactorIncrement     = 0.6f;
+	NumDistanceFactorIncrements = 1;
+	CameraMinTilt               = -80.0f;
+	CameraMaxTilt               = 20.0f;
+	CameraVelocity              = 200.0f;
+	CameraGamepadVelocity       = 100.0f;
+	CameraAcceleration          = 300.0f;
+	CameraResistance            = 1 / 360.0f;
+	CameraInputPower            = 3.0f;
 }
 
 /*----------------------------------------------------
@@ -159,13 +159,20 @@ void ANovaTurntablePawn::TiltInput(float Val)
 void ANovaTurntablePawn::ZoomIn()
 {
 	CurrentDistanceFactor -= DistanceFactorIncrement;
-	CurrentDistanceFactor = FMath::Clamp(CurrentDistanceFactor, MinDistanceFactor, DefaultDistanceFactor);
+	float MinDistanceFactor = DefaultDistanceFactor - NumDistanceFactorIncrements * DistanceFactorIncrement;
+	CurrentDistanceFactor   = FMath::Clamp(CurrentDistanceFactor, MinDistanceFactor, DefaultDistanceFactor);
 }
 
 void ANovaTurntablePawn::ZoomOut()
 {
 	CurrentDistanceFactor += DistanceFactorIncrement;
-	CurrentDistanceFactor = FMath::Clamp(CurrentDistanceFactor, MinDistanceFactor, DefaultDistanceFactor);
+	float MinDistanceFactor = DefaultDistanceFactor - NumDistanceFactorIncrements * DistanceFactorIncrement;
+	CurrentDistanceFactor   = FMath::Clamp(CurrentDistanceFactor, MinDistanceFactor, DefaultDistanceFactor);
+}
+
+void ANovaTurntablePawn::ResetZoom()
+{
+	CurrentDistanceFactor = DefaultDistanceFactor;
 }
 
 /*----------------------------------------------------

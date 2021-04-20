@@ -34,7 +34,7 @@ private:
 		, _ButtonTheme("DefaultButton")
 		, _ButtonSize("DefaultButtonSize")
 		, _ListButtonTheme("DefaultButton")
-		, _ListButtonSize("ListButtonSize")
+		, _ListButtonSize("DoubleButtonSize")
 	{}
 
 	SLATE_ARGUMENT(SNovaNavigationPanel*, Panel)

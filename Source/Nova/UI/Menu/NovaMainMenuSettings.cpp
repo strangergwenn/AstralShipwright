@@ -313,11 +313,11 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		->Action(FNovaPlayerInput::MenuPreviousTab)
 		->Default(EKeys::PageUp)
 	));
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuZoomIn", "Zoom in")))
+	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuZoomIn", "Zoom in / Next")))
 		->Action(FNovaPlayerInput::MenuZoomIn)
 		->Default(EKeys::MouseScrollUp)
 	));
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuZoomOut", "Zoom out")))
+	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuZoomOut", "Zoom out / Previous")))
 		->Action(FNovaPlayerInput::MenuZoomOut)
 		->Default(EKeys::MouseScrollDown)
 	));

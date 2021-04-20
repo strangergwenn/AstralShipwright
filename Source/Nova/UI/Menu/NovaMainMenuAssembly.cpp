@@ -59,75 +59,21 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 			.BorderImage(&Theme.MainMenuBackground)
 			.Padding(Theme.ContentPadding)
 			[
-				SNew(SHorizontalBox)
+				SAssignNew(MenuBox, SVerticalBox)
 
-				// Display options
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
+				// Main compartment panel
+				+ SVerticalBox::Slot()
+				.AutoHeight()
 				[
-					SNew(SVerticalBox)
-
-					+ SVerticalBox::Slot()
-					.AutoHeight()
+					SNew(SBorder)
+					.Padding(0)
+					.BorderImage(new FSlateNoResource)
+					.ColorAndOpacity(this, &SNovaMainMenuAssembly::GetMainColor)
 					[
-						SNew(STextBlock)
-						.TextStyle(&Theme.SubtitleFont)
-						.Text(LOCTEXT("CurrentDisplayFilter", "Display options"))
-					]
+						SNew(SHorizontalBox)
 
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNew(STextBlock)
-						.TextStyle(&Theme.MainFont)
-						.Text(LOCTEXT("DisplayFilter", "Hull display filter"))
-					]
-
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNew(SNovaSlider)
-						.Panel(this)
-						.Value(static_cast<int32>(ENovaAssemblyDisplayFilter::All))
-						.MaxValue(static_cast<int32>(ENovaAssemblyDisplayFilter::All))
-						.HelpText(LOCTEXT("DisplayFilterHelp", "Change which parts of the assembly to display"))
-						.OnValueChanged(this, &SNovaMainMenuAssembly::OnSelectedFilterChanged)
-					]
-
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNew(STextBlock)
-						.TextStyle(&Theme.MainFont)
-						.Text(LOCTEXT("HighlightTitle", "Compartment highlighting"))
-					]
-
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNovaAssignNew(HighlightButton, SNovaButton)
-						.Action(FNovaPlayerInput::MenuSecondary)
-						.Text(LOCTEXT("Outline", "Outline compartments"))
-						.HelpText(LOCTEXT("OutlineHelp", "Toggle the outlining & highlighting of compartments"))
-						.OnClicked(this, &SNovaMainMenuAssembly::OnToggleHighlight)
-						.Enabled(this, &SNovaMainMenuAssembly::IsToggleHighlightEnabled)
-						.Toggle(true)
-					]
-				]
-
-				// Main box
-				+ SHorizontalBox::Slot()
-				[
-					SAssignNew(MenuBox, SVerticalBox)
-
-					// Main assembly panel
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNew(SBorder)
-						.Padding(0)
-						.BorderImage(new FSlateNoResource)
-						.ColorAndOpacity(this, &SNovaMainMenuAssembly::GetMainColor)
+						// Compartment list
+						+ SHorizontalBox::Slot()
 						[
 							SNew(SVerticalBox)
 
@@ -136,14 +82,6 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							[
 								SNew(STextBlock)
 								.TextStyle(&Theme.SubtitleFont)
-								.Text(LOCTEXT("CompartmentTitle", "Compartment assembly"))
-							]
-
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							[
-								SNew(STextBlock)
-								.TextStyle(&Theme.MainFont)
 								.Text(LOCTEXT("CompartmentSelection", "Compartments"))
 							]
 
@@ -152,13 +90,30 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							[
 								SAssignNew(CompartmentBox, SHorizontalBox)
 							]
+						]
+							
+						// Compartment actions
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(SVerticalBox)
 
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
 								SNew(STextBlock)
-								.TextStyle(&Theme.MainFont)
+								.TextStyle(&Theme.SubtitleFont)
 								.Text(LOCTEXT("CompartmentControls", "Compartment controls"))
+							]
+
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNovaAssignNew(SaveCompartmentButton, SNovaButton)
+								.Size("DoubleButtonSize")
+								.Text(LOCTEXT("SaveSpacecraft", "Save spacecraft"))
+								.HelpText(LOCTEXT("SaveSpacecraftHelp", "Save the current state of the spacecraft"))
+								.OnClicked(this, &SNovaMainMenuAssembly::OnSaveSpacecraft)
 							]
 
 							+ SVerticalBox::Slot()
@@ -171,6 +126,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								[
 									SNovaNew(SNovaCompartmentList)
 									.Panel(this)
+									.Action(FNovaPlayerInput::MenuSecondary)
 									.TitleText(LOCTEXT("BuildCompartmentForward", "Add compartment forward"))
 									.HelpText(LOCTEXT("BuildCompartmentForwardelp", "Pick the blueprint for the new compartment"))
 									.OnSelfRefresh(SNovaCompartmentList::FNovaOnSelfRefresh::CreateLambda([&]()
@@ -188,7 +144,32 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								+ SHorizontalBox::Slot()
 								.AutoWidth()
 								[
-									SNovaAssignNew(EditCompartmentButton, SNovaButton)
+									SNovaNew(SNovaCompartmentList)
+									.Panel(this)
+									.TitleText(LOCTEXT("BuildCompartmentAft", "Add compartment aft"))
+									.HelpText(LOCTEXT("BuildCompartmentAftHelp", "Pick the blueprint for the new compartment"))
+									.OnSelfRefresh(SNovaCompartmentList::FNovaOnSelfRefresh::CreateLambda([&]()
+										{
+											int32 NewIndex = GetNewBuildIndex(false);
+											return SNovaCompartmentList::SelfRefreshType(0, GetSpacecraftPawn()->GetCompatibleCompartments(NewIndex));
+										}))
+									.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateCompartmentItem)
+									.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateCompartmentTooltip)
+									.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnSelectedCompartmentChanged, false)
+									.Enabled(this, &SNovaMainMenuAssembly::IsAddCompartmentEnabled, false)
+									.ListButtonSize("LargeListButtonSize")
+								]
+							]
+
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNew(SHorizontalBox)
+
+								+ SHorizontalBox::Slot()
+								.AutoWidth()
+								[
+									SNovaNew(SNovaButton)
 									.Action(FNovaPlayerInput::MenuPrimary)
 									.Text(LOCTEXT("EditCompartment", "Edit compartment"))
 									.HelpText(LOCTEXT("EditCompartmentHelp", "Add modules and equipments to the selected compartment"))
@@ -205,142 +186,134 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 									.Enabled(this, &SNovaMainMenuAssembly::IsEditCompartmentEnabled)
 									.OnClicked(this, &SNovaMainMenuAssembly::OnRemoveCompartment)
 								]
+							]
+						]
+					]
+				]
+				
+				// Compartment edition panel
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SBorder)
+					.Padding(0)
+					.BorderImage(new FSlateNoResource)
+					.ColorAndOpacity(this, &SNovaMainMenuAssembly::GetCompartmentColor)
+					[
+						SNew(SVerticalBox)
 
-								+ SHorizontalBox::Slot()
-								.AutoWidth()
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SNew(STextBlock)
+							.TextStyle(&Theme.SubtitleFont)
+							.Text(LOCTEXT("CompartmentDetailsTitle", "Compartment details"))
+						]
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.VAlign(VAlign_Bottom)
+						[
+							SNew(SHorizontalBox)
+
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
+							[
+								SAssignNew(ModuleBox, SVerticalBox)
+
+								+ SVerticalBox::Slot()
+								.AutoHeight()
 								[
-									SNovaAssignNew(CompartmentListView, SNovaCompartmentList)
+									SNew(STextBlock)
+									.TextStyle(&Theme.MainFont)
+									.Text(LOCTEXT("ModuleTitle", "Modules"))
+								]
+							]
+
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
+							[
+								SAssignNew(EquipmentBox, SVerticalBox)
+
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								[
+									SNew(STextBlock)
+									.TextStyle(&Theme.MainFont)
+									.Text(LOCTEXT("EquipmentTitle", "Equipments"))
+								]
+							]
+
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
+							[
+								SNew(SVerticalBox)
+
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								[
+									SNew(STextBlock)
+									.TextStyle(&Theme.MainFont)
+									.Text(LOCTEXT("FeaturesTitle", "Compartment features"))
+								]
+								
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								[
+									SNovaAssignNew(HullTypeListView, SNovaHullTypeList)
 									.Panel(this)
-									.TitleText(LOCTEXT("BuildCompartmentAft", "Add compartment aft"))
-									.HelpText(LOCTEXT("BuildCompartmentAftHelp", "Pick the blueprint for the new compartment"))
-									.OnSelfRefresh(SNovaCompartmentList::FNovaOnSelfRefresh::CreateLambda([&]()
-										{
-											int32 NewIndex = GetNewBuildIndex(false);
-											return SNovaCompartmentList::SelfRefreshType(0, GetSpacecraftPawn()->GetCompatibleCompartments(NewIndex));
-										}))
-									.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateCompartmentItem)
-									.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateCompartmentTooltip)
-									.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnSelectedCompartmentChanged, false)
-									.Enabled(this, &SNovaMainMenuAssembly::IsAddCompartmentEnabled, false)
+									.ItemsSource(&HullTypeList)
+									.TitleText(LOCTEXT("HullListTitle", "Hull type"))
+									.HelpText(LOCTEXT("HullListHelp", "Change the hull type for this compartment"))
+									.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateHullTypeItem)
+									.OnGenerateName(this, &SNovaMainMenuAssembly::GetHullTypeName)
+									.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateHullTypeTooltip)
+									.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnSelectedHullTypeChanged)
 									.ListButtonSize("LargeListButtonSize")
 								]
 							]
-						]
-					]
-				
-					// Compartment edition panel
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNew(SBorder)
-						.Padding(0)
-						.BorderImage(new FSlateNoResource)
-						.ColorAndOpacity(this, &SNovaMainMenuAssembly::GetCompartmentColor)
-						[
-							SNew(SVerticalBox)
+							
+							+ SHorizontalBox::Slot()
 
-							+ SVerticalBox::Slot()
-							.AutoHeight()
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
 							[
-								SNew(STextBlock)
-								.TextStyle(&Theme.SubtitleFont)
-								.Text(LOCTEXT("CompartmentDetailsTitle", "Compartment details"))
-							]
-
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							.VAlign(VAlign_Bottom)
-							[
-								SNew(SHorizontalBox)
-
-								+ SHorizontalBox::Slot()
-								.AutoWidth()
-								[
-									SAssignNew(ModuleBox, SVerticalBox)
-
-									+ SVerticalBox::Slot()
-									.AutoHeight()
-									[
-										SNew(STextBlock)
-										.TextStyle(&Theme.MainFont)
-										.Text(LOCTEXT("ModuleTitle", "Modules"))
-									]
-								]
-
-								+ SHorizontalBox::Slot()
-								.AutoWidth()
-								[
-									SAssignNew(EquipmentBox, SVerticalBox)
-
-									+ SVerticalBox::Slot()
-									.AutoHeight()
-									[
-										SNew(STextBlock)
-										.TextStyle(&Theme.MainFont)
-										.Text(LOCTEXT("EquipmentTitle", "Equipments"))
-									]
-								]
-
-								+ SHorizontalBox::Slot()
-								.AutoWidth()
-								[
-									SNew(SVerticalBox)
-
-									+ SVerticalBox::Slot()
-									.AutoHeight()
-									[
-										SNew(STextBlock)
-										.TextStyle(&Theme.MainFont)
-										.Text(LOCTEXT("FeaturesTitle", "Compartment features"))
-									]
-								
-									+ SVerticalBox::Slot()
-									.AutoHeight()
-									[
-										SNovaAssignNew(HullTypeListView, SNovaHullTypeList)
-										.Panel(this)
-										.ItemsSource(&HullTypeList)
-										.TitleText(LOCTEXT("HullListTitle", "Hull type"))
-										.HelpText(LOCTEXT("HullListHelp", "Change the hull type for this compartment"))
-										.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateHullTypeItem)
-										.OnGenerateName(this, &SNovaMainMenuAssembly::GetHullTypeName)
-										.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateHullTypeTooltip)
-										.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnSelectedHullTypeChanged)
-										.ListButtonSize("LargeListButtonSize")
-									]
-								]
+								SNovaNew(SNovaButton)
+								.Action(FNovaPlayerInput::MenuCancel)
+								.Text(LOCTEXT("CompartmentBack", "Back to assembly"))
+								.HelpText(LOCTEXT("CompartmentBackHelp", "Go back to the main assembly"))
+								.OnClicked(this, &SNovaMainMenuAssembly::OnBackToAssembly)
+								.Enabled(this, &SNovaMainMenuAssembly::IsBackToAssemblyEnabled)
 							]
 						]
 					]
-				]				
+				]
 
-				+ SHorizontalBox::Slot()
-
-				+ SHorizontalBox::Slot()
-				.HAlign(HAlign_Right)
-				.VAlign(VAlign_Bottom)
-				.AutoWidth()
+				// Display options panel
+				+ SVerticalBox::Slot()
+				.AutoHeight()
 				[
-					SNew(SVerticalBox)
+					SNew(SHorizontalBox)
 
-					+ SVerticalBox::Slot()
-					.AutoHeight()
+					+ SHorizontalBox::Slot()
+
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
 					[
 						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("SaveSpacecraft", "Save spacecraft"))
-						.HelpText(LOCTEXT("SaveSpacecraftHelp", "Save the current state of the spacecraft"))
-						.OnClicked(this, &SNovaMainMenuAssembly::OnSaveSpacecraft)
+						.Text(LOCTEXT("PhotoMode", "Photo mode"))
+						.HelpText(LOCTEXT("PhotoModeHelp", "Hide the interface to get a better view of your ship"))
 					]
 
-					+ SVerticalBox::Slot()
-					.AutoHeight()
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
 					[
-						SNovaNew(SNovaButton)
-						.Action(FNovaPlayerInput::MenuCancel)
-						.Text(LOCTEXT("CompartmentBack", "Back to assembly"))
-						.HelpText(LOCTEXT("CompartmentBackHelp", "Go back to the main assembly"))
-						.OnClicked(this, &SNovaMainMenuAssembly::OnBackToAssembly)
-						.Enabled(this, &SNovaMainMenuAssembly::IsBackToAssemblyEnabled)
+						SNew(SNovaSlider)
+						.Panel(this)
+						.Value(static_cast<int32>(ENovaAssemblyDisplayFilter::All))
+						.MaxValue(static_cast<int32>(ENovaAssemblyDisplayFilter::All))
+						.HelpText(LOCTEXT("DisplayFilterHelp", "Change which parts of the assembly to display"))
+						.OnValueChanged(this, &SNovaMainMenuAssembly::OnSelectedFilterChanged)
 					]
 				]
 			]
@@ -362,13 +335,14 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 		CompartmentBox->AddSlot()
 		.AutoWidth()
 		[
-			SNovaNew(SNovaButton)
+			SNew(SNovaButton) // No navigation
 			.Text(FText::AsNumber(Index + 1))
 			.HelpText(LOCTEXT("SelectCompartmentHelp", "Select this compartment for editing"))
 			.Icon(this, &SNovaMainMenuAssembly::GetCompartmentIcon, Index)
 			.Enabled(this, &SNovaMainMenuAssembly::IsSelectCompartmentEnabled, Index)
 			.OnClicked(this, &SNovaMainMenuAssembly::OnCompartmentSelected, Index)
 			.Size("CompartmentButtonSize")
+			.Focusable(false)
 		];
 	}
 	CompartmentBox->AddSlot()
@@ -421,7 +395,6 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 	// clang-format on
 
 	// Default settings
-	HighlightButton->SetActive(true);
 	SetCompartmentPanelVisible(false);
 }
 
@@ -438,7 +411,7 @@ void SNovaMainMenuAssembly::Show()
 	{
 		EditedCompartmentIndex = INDEX_NONE;
 		GetSpacecraftPawn()->SetDisplayFilter(GetSpacecraftPawn()->GetDisplayFilter(), INDEX_NONE);
-		GetSpacecraftPawn()->SetOutlinedCompartment(HighlightButton->IsActive() ? SelectedCompartmentIndex : INDEX_NONE);
+		GetSpacecraftPawn()->SetOutlinedCompartment(SelectedCompartmentIndex);
 	}
 
 	// Reset compartment data
@@ -455,17 +428,31 @@ void SNovaMainMenuAssembly::Hide()
 
 void SNovaMainMenuAssembly::ZoomIn()
 {
-	if (SelectedCompartmentIndex != INDEX_NONE)
+	if (!IsCompartmentPanelVisible)
 	{
-		SetSelectedCompartment(FMath::Min(SelectedCompartmentIndex + 1, GetSpacecraftPawn()->GetCompartmentCount() - 1));
+		if (SelectedCompartmentIndex != INDEX_NONE)
+		{
+			SetSelectedCompartment(FMath::Min(SelectedCompartmentIndex + 1, GetSpacecraftPawn()->GetCompartmentCount() - 1));
+		}
+	}
+	else
+	{
+		GetSpacecraftPawn()->ZoomIn();
 	}
 }
 
 void SNovaMainMenuAssembly::ZoomOut()
 {
-	if (SelectedCompartmentIndex != INDEX_NONE)
+	if (!IsCompartmentPanelVisible)
 	{
-		SetSelectedCompartment(FMath::Max(SelectedCompartmentIndex - 1, 0));
+		if (SelectedCompartmentIndex != INDEX_NONE)
+		{
+			SetSelectedCompartment(FMath::Max(SelectedCompartmentIndex - 1, 0));
+		}
+	}
+	else
+	{
+		GetSpacecraftPawn()->ZoomOut();
 	}
 }
 
@@ -476,7 +463,7 @@ bool SNovaMainMenuAssembly::Cancel()
 		EditedCompartmentIndex = INDEX_NONE;
 
 		GetSpacecraftPawn()->SetDisplayFilter(GetSpacecraftPawn()->GetDisplayFilter(), INDEX_NONE);
-		GetSpacecraftPawn()->SetOutlinedCompartment(HighlightButton->IsActive() ? SelectedCompartmentIndex : INDEX_NONE);
+		GetSpacecraftPawn()->SetOutlinedCompartment(SelectedCompartmentIndex);
 
 		return true;
 	}
@@ -568,13 +555,9 @@ TSharedPtr<SNovaButton> SNovaMainMenuAssembly::GetDefaultFocusButton() const
 	{
 		return EquipmentListViews[0];
 	}
-	else if (CompartmentListView->IsButtonEnabled())
+	else if (SaveCompartmentButton->IsButtonEnabled())
 	{
-		return CompartmentListView;
-	}
-	else if (EditCompartmentButton->IsButtonEnabled())
-	{
-		return EditCompartmentButton;
+		return SaveCompartmentButton;
 	}
 	else
 	{
@@ -606,7 +589,7 @@ void SNovaMainMenuAssembly::Tick(const FGeometry& AllottedGeometry, const double
 
 	// Set the hovered compartment
 	int32 HighlightedCompartment = INDEX_NONE;
-	if (HighlightButton->IsActive() && !IsCompartmentPanelVisible && !MenuManager->IsUsingGamepad())
+	if (!IsCompartmentPanelVisible && !MenuManager->IsUsingGamepad())
 	{
 		FVector2D MousePosition = Menu->GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos());
 		HighlightedCompartment  = GetCompartmentIndexAtPosition(MenuManager->GetPC(), GetSpacecraftPawn(), MousePosition);
@@ -633,7 +616,7 @@ void SNovaMainMenuAssembly::SetSelectedCompartment(int32 Index)
 {
 	SelectedCompartmentIndex = Index;
 
-	GetSpacecraftPawn()->SetOutlinedCompartment(HighlightButton->IsActive() ? SelectedCompartmentIndex : INDEX_NONE);
+	GetSpacecraftPawn()->SetOutlinedCompartment(SelectedCompartmentIndex);
 }
 
 void SNovaMainMenuAssembly::SetCompartmentPanelVisible(bool Active)
@@ -664,9 +647,14 @@ void SNovaMainMenuAssembly::SetCompartmentPanelVisible(bool Active)
 		}
 	}
 
+	// Change visibility
 	MenuBox->GetChildren()->GetChildAt(0)->SetVisibility(IsCompartmentPanelVisible ? EVisibility::Collapsed : EVisibility::Visible);
 	MenuBox->GetChildren()->GetChildAt(1)->SetVisibility(IsCompartmentPanelVisible ? EVisibility::Visible : EVisibility::Collapsed);
+
+	// Update UI state
 	ResetNavigation();
+	SlatePrepass(FSlateApplicationBase::Get().GetApplicationScale());
+	GetSpacecraftPawn()->ResetZoom();
 }
 
 /*----------------------------------------------------
@@ -886,11 +874,6 @@ bool SNovaMainMenuAssembly::IsEditCompartmentEnabled() const
 	return SelectedCompartmentIndex >= 0;
 }
 
-bool SNovaMainMenuAssembly::IsToggleHighlightEnabled() const
-{
-	return EditedCompartmentIndex == INDEX_NONE;
-}
-
 FKey SNovaMainMenuAssembly::GetPreviousCompartmentKey() const
 {
 	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuZoomOut);
@@ -1009,11 +992,6 @@ void SNovaMainMenuAssembly::OnSaveSpacecraft()
 void SNovaMainMenuAssembly::OnBackToAssembly()
 {
 	Cancel();
-}
-
-void SNovaMainMenuAssembly::OnToggleHighlight()
-{
-	GetSpacecraftPawn()->SetOutlinedCompartment(HighlightButton->IsActive() ? SelectedCompartmentIndex : INDEX_NONE);
 }
 
 #undef LOCTEXT_NAMESPACE

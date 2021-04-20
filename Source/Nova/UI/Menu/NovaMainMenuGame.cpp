@@ -156,7 +156,7 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 				.AutoHeight()
 				[
 					SNovaDefaultNew(SNovaButton) // Default navigation
-					.Size("ListButtonSize")
+					.Size("DoubleButtonSize")
 					.Text(this, &SNovaMainMenuGame::GetOnlineButtonText)
 					.HelpText(this, &SNovaMainMenuGame::GetOnlineButtonHelpText)
 					.OnClicked(this, &SNovaMainMenuGame::OnToggleOnlineGame)

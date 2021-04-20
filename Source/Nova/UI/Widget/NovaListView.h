@@ -22,7 +22,7 @@ class SNovaListView : public SCompoundWidget
 	    Slate arguments
 	----------------------------------------------------*/
 
-	SLATE_BEGIN_ARGS(SNovaListView<ItemType>) : _ButtonTheme("DefaultButton"), _ButtonSize("ListButtonSize")
+	SLATE_BEGIN_ARGS(SNovaListView<ItemType>) : _ButtonTheme("DefaultButton"), _ButtonSize("DoubleButtonSize")
 	{}
 
 	SLATE_ARGUMENT(SNovaNavigationPanel*, Panel)

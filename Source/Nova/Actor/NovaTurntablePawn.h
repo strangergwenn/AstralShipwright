@@ -42,6 +42,9 @@ public:
 	/** Zoom out of the actor */
 	void ZoomOut();
 
+	/** Reset to the default actor zoom */
+	void ResetZoom();
+
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
@@ -63,17 +66,17 @@ public:
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float DefaultDistance;
 
-	// Distance multiplier
+	// Distance multiplier (zoom)
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float DefaultDistanceFactor;
-
-	// Minimum distance multiplier
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float MinDistanceFactor;
 
 	// Distance factor stepping value
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float DistanceFactorIncrement;
+
+	// Number of distance increment steps
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	int32 NumDistanceFactorIncrements;
 
 	// Minimum allowed tilt in degrees (down)
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
