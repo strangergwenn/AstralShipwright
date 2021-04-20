@@ -595,8 +595,7 @@ TSharedPtr<SNovaSlider> SNovaMainMenuSettings::AddSettingSlider(TSharedPtr<SVert
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 
 	// clang-format off
-	TSharedPtr<SNovaSlider> Slider = SNew(SNovaSlider)
-		.Panel(this)
+	TSharedPtr<SNovaSlider> Slider = SNovaNew(SNovaSlider)
 		.MinValue(MinValue)
 		.MaxValue(MaxValue)
 		.ValueStep(ValueStep)

@@ -60,9 +60,8 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 
 		+ SOverlay::Slot()
 		[
-			SAssignNew(Slider, SNovaSlider)
-			.Panel(InArgs._Panel)
-			.Size("LargeSliderSize")
+			InArgs._Panel->SNovaAssignNew(Slider, SNovaSlider)
+			.Size("DoubleButtonSize")
 			.Value((InArgs._MaxAltitude - InArgs._MinAltitude) / 2)
 			.MinValue(InArgs._MinAltitude)
 			.MaxValue(InArgs._MaxAltitude)
@@ -101,7 +100,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 					.HeightOverride(32)
 					[
 						SNew(SBorder)
-						.BorderImage(&SliderTheme.Border)
+						.BorderImage(&ButtonTheme.Border)
 						.BorderBackgroundColor(this, &SNovaTrajectoryCalculator::GetBorderColor)
 						[
 							SNew(SComplexGradient)
@@ -122,7 +121,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 					.HeightOverride(32)
 					[
 						SNew(SBorder)
-						.BorderImage(&SliderTheme.Border)
+						.BorderImage(&ButtonTheme.Border)
 						.BorderBackgroundColor(this, &SNovaTrajectoryCalculator::GetBorderColor)
 						[
 							SNew(SComplexGradient)

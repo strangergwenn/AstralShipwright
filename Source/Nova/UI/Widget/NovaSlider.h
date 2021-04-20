@@ -3,22 +3,19 @@
 #pragma once
 
 #include "Nova/Nova.h"
-#include "Nova/UI/NovaUI.h"
-
-#include "Widgets/SCompoundWidget.h"
+#include "Nova/UI/Widget/NovaButton.h"
 
 /** Slider control class */
-class SNovaSlider : public SCompoundWidget
+class SNovaSlider : public SNovaButton
 {
 	/*----------------------------------------------------
 	    Slate arguments
 	----------------------------------------------------*/
 
 	SLATE_BEGIN_ARGS(SNovaSlider)
-		: _Theme("DefaultSlider")
-		, _Size("DefaultSliderSize")
-		, _ControlsTheme("DefaultButton")
-		, _ControlsSize("SmallButtonSize")
+		: _Theme("DefaultButton")
+		, _SliderTheme("DefaultSlider")
+		, _Size("DefaultButtonSize")
 		, _Enabled(true)
 		, _Analog(false)
 		, _Value(0)
@@ -27,12 +24,10 @@ class SNovaSlider : public SCompoundWidget
 		, _ValueStep(1)
 	{}
 
-	SLATE_ARGUMENT(class SNovaNavigationPanel*, Panel)
 	SLATE_ATTRIBUTE(FText, HelpText)
 	SLATE_ARGUMENT(FName, Theme)
+	SLATE_ARGUMENT(FName, SliderTheme)
 	SLATE_ARGUMENT(FName, Size)
-	SLATE_ARGUMENT(FName, ControlsTheme)
-	SLATE_ARGUMENT(FName, ControlsSize)
 
 	SLATE_NAMED_SLOT(FArguments, Header)
 	SLATE_NAMED_SLOT(FArguments, Footer)
@@ -57,6 +52,8 @@ public:
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
+	bool HorizontalAnalogInput(float Value) override;
+
 	/** Get the current value */
 	float GetCurrentValue() const;
 
@@ -68,9 +65,6 @@ public:
 
 	/** Set the current value */
 	void SetCurrentValue(float Value);
-
-	/** Analog input from a joystick */
-	void HorizontalAnalogInput(float Value);
 
 	/*----------------------------------------------------
 	    Callbacks
@@ -107,7 +101,7 @@ protected:
 	----------------------------------------------------*/
 
 	// Settings & attributes
-	FName ThemeName;
+	FName SliderThemeName;
 	float SliderSpeed;
 	float SliderAnalogSpeed;
 	bool  Analog;
