@@ -40,9 +40,10 @@ struct FNovaButtonTheme : public FSlateWidgetStyle
 
 	UPROPERTY(EditDefaultsOnly, Category = Button) FTextBlockStyle MainFont;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FTextBlockStyle SmallFont;
-	UPROPERTY(EditDefaultsOnly, Category = Button) FMargin AnimationPadding;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FMargin IconPadding;
-	UPROPERTY(EditDefaultsOnly, Category = Button) FVector2D DisabledOffset;
+	UPROPERTY(EditDefaultsOnly, Category = Button) FMargin HoverAnimationPadding;
+	UPROPERTY(EditDefaultsOnly, Category = Button) FVector2D DisabledAnimationSize;
+	UPROPERTY(EditDefaultsOnly, Category = Button) FVector2D UserAnimationSize;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FSlateBrush Border;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FSlateBrush Background;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FLinearColor DisabledColor;

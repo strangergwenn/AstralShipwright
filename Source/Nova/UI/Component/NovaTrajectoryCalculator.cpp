@@ -61,7 +61,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 		+ SOverlay::Slot()
 		[
 			InArgs._Panel->SNovaAssignNew(Slider, SNovaSlider)
-			.Size("DoubleButtonSize")
+			.Size("WideButtonSize")
 			.Value((InArgs._MaxAltitude - InArgs._MinAltitude) / 2)
 			.MinValue(InArgs._MinAltitude)
 			.MaxValue(InArgs._MaxAltitude)
@@ -94,7 +94,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 
 				+ SVerticalBox::Slot()
 				.AutoHeight()
-				.Padding(Theme.VerticalContentPadding + FMargin(0, 0, 0, ButtonTheme.AnimationPadding.Top))
+				.Padding(Theme.VerticalContentPadding + FMargin(0, 0, 0, ButtonTheme.HoverAnimationPadding.Top))
 				[
 					SNew(SBox)
 					.HeightOverride(32)
@@ -115,7 +115,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 
 				+ SVerticalBox::Slot()
 				.AutoHeight()
-				.Padding(Theme.VerticalContentPadding + FMargin(0, ButtonTheme.AnimationPadding.Bottom, 0, 0))
+				.Padding(Theme.VerticalContentPadding + FMargin(0, ButtonTheme.HoverAnimationPadding.Bottom, 0, 0))
 				[
 					SNew(SBox)
 					.HeightOverride(32)

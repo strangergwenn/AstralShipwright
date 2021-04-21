@@ -20,7 +20,7 @@
 ----------------------------------------------------*/
 
 class SNovaNotification
-	: public SNovaFadingWidget
+	: public SNovaFadingWidget<>
 	, public FGCObject
 {
 public:
@@ -186,7 +186,7 @@ private:
     Title card widget
 ----------------------------------------------------*/
 
-class SNovaTitleCard : public SNovaFadingWidget
+class SNovaTitleCard : public SNovaFadingWidget<>
 {
 public:
 	void Construct(const FArguments& InArgs)

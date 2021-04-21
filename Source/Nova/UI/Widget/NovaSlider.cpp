@@ -30,7 +30,7 @@ void SNovaSlider::Construct(const FArguments& InArgs)
 	SliderAnalogSpeed                   = 0.01f;
 
 	// Border padding
-	FMargin HeaderBorderPadding = FMargin(Theme.SliderStyle.NormalThumbImage.GetImageSize().X + ButtonTheme.AnimationPadding.Left, 0);
+	FMargin HeaderBorderPadding = FMargin(Theme.SliderStyle.NormalThumbImage.GetImageSize().X + ButtonTheme.HoverAnimationPadding.Left, 0);
 
 	// Parent constructor
 	SNovaButton::Construct(SNovaButton::FArguments()

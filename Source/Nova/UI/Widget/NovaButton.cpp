@@ -18,19 +18,20 @@
 void SNovaButton::Construct(const FArguments& InArgs)
 {
 	// Arguments
-	Text            = InArgs._Text;
-	HelpText        = InArgs._HelpText;
-	Action          = InArgs._Action;
-	ThemeName       = InArgs._Theme;
-	SizeName        = InArgs._Size;
-	Icon            = InArgs._Icon;
-	ButtonEnabled   = InArgs._Enabled;
-	ButtonFocusable = InArgs._Action.Get() != NAME_None ? false : InArgs._Focusable;
-	BorderRotation  = InArgs._BorderRotation;
-	IsToggle        = InArgs._Toggle;
-	OnFocused       = InArgs._OnFocused;
-	OnClicked       = InArgs._OnClicked;
-	OnDoubleClicked = InArgs._OnDoubleClicked;
+	Text             = InArgs._Text;
+	HelpText         = InArgs._HelpText;
+	Action           = InArgs._Action;
+	ThemeName        = InArgs._Theme;
+	SizeName         = InArgs._Size;
+	Icon             = InArgs._Icon;
+	ButtonEnabled    = InArgs._Enabled;
+	ButtonFocusable  = InArgs._Action.Get() != NAME_None ? false : InArgs._Focusable;
+	BorderRotation   = InArgs._BorderRotation;
+	IsToggle         = InArgs._Toggle;
+	OnFocused        = InArgs._OnFocused;
+	OnClicked        = InArgs._OnClicked;
+	OnDoubleClicked  = InArgs._OnDoubleClicked;
+	UserSizeCallback = InArgs._UserSizeCallback;
 
 	// Setup
 	Focused                       = false;
@@ -97,12 +98,15 @@ void SNovaButton::Construct(const FArguments& InArgs)
 				SNew(SBox)
 				.WidthOverride(this, &SNovaButton::GetLayoutWidth)
 				.HeightOverride(this, &SNovaButton::GetLayoutHeight)
-				.Padding(Theme.AnimationPadding)
+				.Padding(Theme.HoverAnimationPadding)
 				[
 					SAssignNew(InnerContainer, SBorder)
 					.HAlign(HAlign_Fill)
 					.VAlign(VAlign_Fill)
 					.BorderImage(new FSlateNoResource)
+					[
+						InArgs._Content.Widget
+					]
 				]
 			]
 		]
@@ -209,10 +213,12 @@ void SNovaButton::Tick(const FGeometry& AllottedGeometry, const double CurrentTi
 
 	bIsFocusable = ButtonFocusable.Get();
 
-	// Decide how animations should evolve
 	float TargetColorAnim    = 0;
 	float TargetSizeAnim     = 0;
+	float TargetUserSizeAnim = 0;
 	float TargetDisabledAnim = 0;
+
+	// Decide how animations should evolve
 	if (IsButtonEnabled())
 	{
 		if (IsFocused())
@@ -233,6 +239,10 @@ void SNovaButton::Tick(const FGeometry& AllottedGeometry, const double CurrentTi
 	{
 		TargetSizeAnim = 1.0f;
 	}
+	if (UserSizeCallback.IsBound())
+	{
+		TargetUserSizeAnim = UserSizeCallback.Execute() ? 1.0f : 0.0f;
+	}
 
 	// Update function to control an animation state based on a target
 	auto UpdateAlpha = [&](float& CurrentValue, float TargetValue)
@@ -249,6 +259,7 @@ void SNovaButton::Tick(const FGeometry& AllottedGeometry, const double CurrentTi
 	// Update the timings
 	UpdateAlpha(State.CurrentColorAnimationAlpha, TargetColorAnim);
 	UpdateAlpha(State.CurrentSizeAnimationAlpha, TargetSizeAnim);
+	UpdateAlpha(State.CurrentUserSizeAnimationAlpha, TargetUserSizeAnim);
 	UpdateAlpha(State.CurrentDisabledAnimationAlpha, TargetDisabledAnim);
 	State.CurrentTimeSinceClicked += DeltaTime;
 }
@@ -387,11 +398,13 @@ FOptionalSize SNovaButton::GetVisualWidth() const
 	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
 
 	float DisabledOffset =
-		FMath::InterpEaseInOut(0.0f, Theme.DisabledOffset.X, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
-	float Width = Size.Width + DisabledOffset;
+		FMath::InterpEaseInOut(0.0f, Theme.DisabledAnimationSize.X, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+	float FocusedOffset =
+		FMath::InterpEaseInOut(0.0f, Theme.UserAnimationSize.X, State.CurrentUserSizeAnimationAlpha, ENovaUIConstants::EaseLight);
+	float Width = Size.Width + DisabledOffset + FocusedOffset;
 
-	float Offset = FMath::InterpEaseInOut(
-		Theme.AnimationPadding.Left + Theme.AnimationPadding.Right, 0.0f, State.CurrentSizeAnimationAlpha, ENovaUIConstants::EaseLight);
+	float Offset = FMath::InterpEaseInOut(Theme.HoverAnimationPadding.Left + Theme.HoverAnimationPadding.Right, 0.0f,
+		State.CurrentSizeAnimationAlpha, ENovaUIConstants::EaseLight);
 
 	float RotationFactor = FMath::Abs(FMath::Cos(FMath::DegreesToRadians(BorderRotation)));
 
@@ -404,11 +417,13 @@ FOptionalSize SNovaButton::GetVisualHeight() const
 	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
 
 	float DisabledOffset =
-		FMath::InterpEaseInOut(0.0f, Theme.DisabledOffset.Y, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
-	float Height = Size.Height + DisabledOffset;
+		FMath::InterpEaseInOut(0.0f, Theme.DisabledAnimationSize.Y, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+	float FocusedOffset =
+		FMath::InterpEaseInOut(0.0f, Theme.UserAnimationSize.Y, State.CurrentUserSizeAnimationAlpha, ENovaUIConstants::EaseLight);
+	float Height = Size.Height + DisabledOffset + FocusedOffset;
 
-	float Offset = FMath::InterpEaseInOut(
-		Theme.AnimationPadding.Top + Theme.AnimationPadding.Bottom, 0.0f, State.CurrentSizeAnimationAlpha, ENovaUIConstants::EaseLight);
+	float Offset = FMath::InterpEaseInOut(Theme.HoverAnimationPadding.Top + Theme.HoverAnimationPadding.Bottom, 0.0f,
+		State.CurrentSizeAnimationAlpha, ENovaUIConstants::EaseLight);
 
 	float RotationFactor = FMath::Abs(FMath::Cos(FMath::DegreesToRadians(BorderRotation)));
 
@@ -421,9 +436,11 @@ FOptionalSize SNovaButton::GetLayoutWidth() const
 	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
 
 	float DisabledOffset =
-		FMath::InterpEaseInOut(0.0f, Theme.DisabledOffset.X, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+		FMath::InterpEaseInOut(0.0f, Theme.DisabledAnimationSize.X, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+	float FocusedOffset =
+		FMath::InterpEaseInOut(0.0f, Theme.UserAnimationSize.X, State.CurrentUserSizeAnimationAlpha, ENovaUIConstants::EaseLight);
 
-	return Size.Width + DisabledOffset;
+	return Size.Width + DisabledOffset + FocusedOffset;
 }
 
 FOptionalSize SNovaButton::GetLayoutHeight() const
@@ -432,9 +449,11 @@ FOptionalSize SNovaButton::GetLayoutHeight() const
 	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
 
 	float DisabledOffset =
-		FMath::InterpEaseInOut(0.0f, Theme.DisabledOffset.Y, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+		FMath::InterpEaseInOut(0.0f, Theme.DisabledAnimationSize.Y, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+	float FocusedOffset =
+		FMath::InterpEaseInOut(0.0f, Theme.UserAnimationSize.Y, State.CurrentUserSizeAnimationAlpha, ENovaUIConstants::EaseLight);
 
-	return Size.Height + DisabledOffset;
+	return Size.Height + DisabledOffset + FocusedOffset;
 }
 
 FSlateFontInfo SNovaButton::GetFont() const

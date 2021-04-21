@@ -7,6 +7,7 @@
 #include "Widgets/SCompoundWidget.h"
 
 /** Simple widget that can be displayed with fade-in and fade-out */
+template <bool FadeOut = true>
 class SNovaFadingWidget : public SCompoundWidget
 {
 	/*----------------------------------------------------
@@ -52,7 +53,7 @@ public:
 		SCompoundWidget::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
 		// Update time
-		if (CurrentDisplayTime > DisplayDuration || IsDirty())
+		if ((FadeOut && CurrentDisplayTime > DisplayDuration) || IsDirty())
 		{
 			CurrentFadeTime -= DeltaTime;
 		}
@@ -63,7 +64,7 @@ public:
 		CurrentFadeTime = FMath::Clamp(CurrentFadeTime, 0.0f, FadeDuration);
 		CurrentAlpha    = FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard);
 
-		// Update notification text & icon when invisible
+		// Update when invisible
 		if (CurrentFadeTime <= 0 && IsDirty())
 		{
 			CurrentDisplayTime = 0;

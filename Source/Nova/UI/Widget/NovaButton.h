@@ -6,15 +6,23 @@
 
 #include "Widgets/Input/SButton.h"
 
+/** User callback type to alter the button size */
+DECLARE_DELEGATE_RetVal(bool, FNovaButtonUserSizeCondition);
+
 /** Animation state used by lists to seamlessly animate on refresh */
 struct FNovaButtonState
 {
 	FNovaButtonState()
-		: CurrentColorAnimationAlpha(0), CurrentSizeAnimationAlpha(0), CurrentDisabledAnimationAlpha(0), CurrentTimeSinceClicked(10000)
+		: CurrentColorAnimationAlpha(0)
+		, CurrentSizeAnimationAlpha(0)
+		, CurrentUserSizeAnimationAlpha(0)
+		, CurrentDisabledAnimationAlpha(0)
+		, CurrentTimeSinceClicked(10000)
 	{}
 
 	float CurrentColorAnimationAlpha;
 	float CurrentSizeAnimationAlpha;
+	float CurrentUserSizeAnimationAlpha;
 	float CurrentDisabledAnimationAlpha;
 
 	float CurrentTimeSinceClicked;
@@ -28,14 +36,7 @@ class SNovaButton : public SButton
 	----------------------------------------------------*/
 
 	SLATE_BEGIN_ARGS(SNovaButton)
-		: _Theme("DefaultButton")
-		, _Size("DefaultButtonSize")
-		, _BorderRotation(0)
-		, _Enabled(true)
-		, _Focusable(true)
-		, _Toggle(false)
-		, _Header()
-		, _Footer()
+		: _Theme("DefaultButton"), _Size("DefaultButtonSize"), _BorderRotation(0), _Enabled(true), _Focusable(true), _Toggle(false)
 	{}
 
 	SLATE_ATTRIBUTE(FText, Text)
@@ -44,6 +45,7 @@ class SNovaButton : public SButton
 	SLATE_ATTRIBUTE(const FSlateBrush*, Icon)
 	SLATE_ARGUMENT(FName, Theme)
 	SLATE_ARGUMENT(FName, Size)
+	SLATE_ARGUMENT(FNovaButtonUserSizeCondition, UserSizeCallback)
 	SLATE_ARGUMENT(float, BorderRotation)
 
 	SLATE_ATTRIBUTE(bool, Enabled)
@@ -52,6 +54,7 @@ class SNovaButton : public SButton
 
 	SLATE_NAMED_SLOT(FArguments, Header)
 	SLATE_NAMED_SLOT(FArguments, Footer)
+	SLATE_NAMED_SLOT(FArguments, Content)
 
 	SLATE_EVENT(FSimpleDelegate, OnFocused)
 	SLATE_EVENT(FSimpleDelegate, OnClicked)
@@ -177,9 +180,12 @@ protected:
 	float                                 BorderRotation;
 	bool                                  IsToggle;
 	float                                 AnimationDuration;
-	FSimpleDelegate                       OnFocused;
-	FSimpleDelegate                       OnClicked;
-	FSimpleDelegate                       OnDoubleClicked;
+
+	// Callbacks
+	FSimpleDelegate              OnFocused;
+	FSimpleDelegate              OnClicked;
+	FSimpleDelegate              OnDoubleClicked;
+	FNovaButtonUserSizeCondition UserSizeCallback;
 
 	// State
 	bool             Focused;

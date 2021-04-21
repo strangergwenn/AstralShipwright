@@ -160,8 +160,8 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 				.MenuManager(MenuManager)
 				.Panel(this)
 				.CurrentAlpha(TAttribute<float>::Create(TAttribute<float>::FGetter::CreateSP(this, &SNovaTabPanel::GetCurrentAlpha)))
-				.DeltaVActionName(FNovaPlayerInput::MenuPrimary)
-				.DurationActionName(FNovaPlayerInput::MenuSecondary)
+				.DurationActionName(FNovaPlayerInput::MenuPrimary)
+				.DeltaVActionName(FNovaPlayerInput::MenuSecondary)
 				.OnTrajectoryChanged(this, &SNovaMainMenuNavigation::OnTrajectoryChanged)
 			]
 		]
