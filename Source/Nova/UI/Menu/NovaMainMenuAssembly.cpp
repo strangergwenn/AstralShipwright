@@ -26,75 +26,6 @@
 #define LOCTEXT_NAMESPACE "SNovaMainMenuAssembly"
 
 /*----------------------------------------------------
-    Simple SImage analog that fades smoothly when the image changes
-----------------------------------------------------*/
-
-DECLARE_DELEGATE_RetVal(const FSlateBrush*, SNovaCompartmentBrushGetter);
-
-class SNovaCompartmentBrush : public SNovaFadingWidget<false>
-{
-	SLATE_BEGIN_ARGS(SNovaCompartmentBrush)
-	{}
-
-	SLATE_ARGUMENT(SNovaCompartmentBrushGetter, Image)
-
-	SLATE_END_ARGS()
-
-public:
-	void Construct(const FArguments& InArgs)
-	{
-		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-
-		Getter = InArgs._Image;
-
-		// clang-format off
-		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments()
-			.FadeDuration(ENovaUIConstants::FadeDurationShort)
-			.DisplayDuration(4.0f)
-		);
-
-		ChildSlot
-		[
-			SNew(SImage)
-			.Image(this, &SNovaCompartmentBrush::GetImage)
-			.ColorAndOpacity(this, &SNovaFadingWidget::GetSlateColor)
-
-		];
-		// clang-format on
-	}
-
-	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
-	{
-		SNovaFadingWidget::Tick(AllottedGeometry, CurrentTime, DeltaTime);
-
-		if (Getter.IsBound())
-		{
-			DesiredImage = Getter.Execute();
-		}
-	}
-
-	virtual bool IsDirty() const
-	{
-		return DesiredImage != CurrentImage;
-	}
-
-	virtual void OnUpdate() override
-	{
-		CurrentImage = DesiredImage;
-	}
-
-	const FSlateBrush* GetImage() const
-	{
-		return CurrentImage;
-	}
-
-private:
-	const FSlateBrush*          DesiredImage;
-	const FSlateBrush*          CurrentImage;
-	SNovaCompartmentBrushGetter Getter;
-};
-
-/*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
@@ -127,13 +58,13 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 		[
 			SNew(SBorder)
 			.BorderImage(&Theme.MainMenuBackground)
-			.Padding(Theme.ContentPadding)
 			[
 				SAssignNew(MenuBox, SVerticalBox)
 
 				// Main compartment panel
 				+ SVerticalBox::Slot()
 				.AutoHeight()
+				.Padding(Theme.ContentPadding)
 				[
 					SNew(SBorder)
 					.Padding(0)
@@ -174,7 +105,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							[
 								SNew(STextBlock)
 								.TextStyle(&Theme.SubtitleFont)
-								.Text(LOCTEXT("CompartmentControls", "Compartment controls"))
+								.Text(LOCTEXT("CompartmentControls", "Assembly controls"))
 							]
 
 							+ SVerticalBox::Slot()
@@ -265,6 +196,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 				// Compartment edition panel
 				+ SVerticalBox::Slot()
 				.AutoHeight()
+				.Padding(Theme.ContentPadding)
 				[
 					SNew(SBorder)
 					.Padding(0)
@@ -348,21 +280,49 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 				// Display options panel
 				+ SVerticalBox::Slot()
 				[
-					SNew(SHorizontalBox)
-
-					+ SHorizontalBox::Slot()
-
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
+					SNew(SBorder)
+					.BorderImage(&Theme.MainMenuGenericBorder)
 					[
-						SNovaNew(SNovaSlider)
-						.Value(static_cast<int32>(ENovaAssemblyDisplayFilter::All))
-						.MaxValue(static_cast<int32>(ENovaAssemblyDisplayFilter::All))
-						.HelpText(LOCTEXT("DisplayFilterHelp", "Change which parts of the assembly to display"))
-						.OnValueChanged(this, &SNovaMainMenuAssembly::OnSelectedFilterChanged)
-					]
+						SNew(SHorizontalBox)
 
-					+ SHorizontalBox::Slot()
+						+ SHorizontalBox::Slot()
+
+						+ SHorizontalBox::Slot()
+						.VAlign(VAlign_Center)
+						.AutoWidth()
+						[
+							SNew(STextBlock)
+							.Text(LOCTEXT("DisplayFilter", "Display filter"))
+							.TextStyle(&Theme.MainFont)
+						]
+
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNovaNew(SNovaSlider)
+							.Action(FNovaPlayerInput::MenuAltSecondary)
+							.Value(static_cast<int32>(ENovaAssemblyDisplayFilter::All))
+							.MaxValue(static_cast<int32>(ENovaAssemblyDisplayFilter::All))
+							.HelpText(LOCTEXT("DisplayFilterHelp", "Change which parts of the assembly to display"))
+							.OnValueChanged(this, &SNovaMainMenuAssembly::OnSelectedFilterChanged)
+						]
+
+						+ SHorizontalBox::Slot()
+						.VAlign(VAlign_Center)
+						.AutoWidth()
+						[
+							SNew(SBox)
+							.WidthOverride(250)
+							[
+								SNew(SNovaText)
+								.Text(SNovaTextGetter::CreateSP(this, &SNovaMainMenuAssembly::GetSelectedFilterText))
+								.TextStyle(&Theme.MainFont)
+								.WrapTextAt(250)
+							]
+						]
+
+						+ SHorizontalBox::Slot()
+					]
 				]
 			]
 		]
@@ -408,19 +368,20 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 					SNew(SScaleBox)
 					.Stretch(EStretch::ScaleToFill)
 					[
-						SNew(SNovaCompartmentBrush)
-						.Image(SNovaCompartmentBrushGetter::CreateLambda([=]() -> const FSlateBrush*
+						SNew(SNovaImage)
+						.Image(SNovaImageGetter::CreateLambda([=]() -> const FSlateBrush*
 						{
 							ANovaSpacecraftPawn*    SpacecraftPawn = GetSpacecraftPawn();
 							if (Index >= 0 && Index < SpacecraftPawn->GetCompartmentCount())
 							{
 								const FNovaCompartment& Compartment    = SpacecraftPawn->GetCompartment(Index);
-								return &Compartment.Description->AssetRender;
+								if (IsValid(Compartment.Description))
+								{
+									return &Compartment.Description->AssetRender;
+								}
 							}
-							else
-							{
-								return nullptr;
-							}
+
+							return nullptr;
 						}))
 					]
 				]
@@ -1041,15 +1002,38 @@ void SNovaMainMenuAssembly::OnSelectedCompartmentChanged(const UNovaCompartmentD
 	}
 }
 
+void SNovaMainMenuAssembly::OnCompartmentSelected(int32 Index)
+{
+	NCHECK(Index >= 0 && Index < ENovaConstants::MaxCompartmentCount);
+	SetSelectedCompartment(Index);
+}
+
 void SNovaMainMenuAssembly::OnSelectedFilterChanged(float Value)
 {
 	GetSpacecraftPawn()->SetDisplayFilter(static_cast<ENovaAssemblyDisplayFilter>(Value), EditedCompartmentIndex);
 }
 
-void SNovaMainMenuAssembly::OnCompartmentSelected(int32 Index)
+FText SNovaMainMenuAssembly::GetSelectedFilterText() const
 {
-	NCHECK(Index >= 0 && Index < ENovaConstants::MaxCompartmentCount);
-	SetSelectedCompartment(Index);
+	switch (GetSpacecraftPawn()->GetDisplayFilter())
+	{
+		case ENovaAssemblyDisplayFilter::ModulesOnly:
+			return LOCTEXT("ModulesOnly", "Modules only");
+			break;
+		case ENovaAssemblyDisplayFilter::ModulesStructure:
+			return LOCTEXT("ModulesStructure", "Modules & structure");
+			break;
+		case ENovaAssemblyDisplayFilter::ModulesStructureEquipments:
+			return LOCTEXT("ModulesStructureEquipments", "Modules, structure, equipments");
+			break;
+		case ENovaAssemblyDisplayFilter::ModulesStructureEquipmentsWiring:
+			return LOCTEXT("ModulesStructureEquipmentsWiring", "All internal systems");
+			break;
+		case ENovaAssemblyDisplayFilter::All:
+		default:
+			return LOCTEXT("FilterAll", "Full spacecraft");
+			break;
+	}
 }
 
 void SNovaMainMenuAssembly::OnSelectedModuleChanged(const UNovaModuleDescription* Module, int32 Index, int32 SlotIndex)

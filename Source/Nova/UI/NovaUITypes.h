@@ -49,6 +49,8 @@ public:
 	// Game-specific menu actions
 	static const FName MenuPrimary;
 	static const FName MenuSecondary;
+	static const FName MenuAltPrimary;
+	static const FName MenuAltSecondary;
 	static const FName MenuNextTab;
 	static const FName MenuPreviousTab;
 	static const FName MenuToggle;

@@ -335,7 +335,15 @@ FReply SNovaMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEve
 	{
 		if (Button->GetActionKey() == Key && Button->IsButtonEnabled())
 		{
+			bool WasFocused = Button->IsFocused();
+
 			Button->OnButtonClicked();
+
+			if (CurrentNavigationPanel && WasFocused && Button->IsButtonActionFocusable())
+			{
+				CurrentNavigationPanel->ResetNavigation();
+			}
+
 			Result = FReply::Handled();
 			break;
 		}

@@ -54,10 +54,9 @@ public:
 				.Padding(0)
 				[
 					SNew(SBorder)
-					.BorderImage(&Theme.MainMenuGenericBorder)
+					.BorderImage(new FSlateNoResource)
 					.ColorAndOpacity(this, &SNovaFadingWidget::GetLinearColor)
-					.BorderBackgroundColor(this, &SNovaFadingWidget::GetSlateColor)
-					.Padding(FMargin(0, 1))
+					.Padding(0)
 					[
 						SNew(SBackgroundBlur)
 						.BlurRadius(Theme.BlurRadius)
@@ -67,9 +66,7 @@ public:
 						[
 							SNew(SBorder)
 							.Padding(0)
-							.BorderImage(&Theme.MainMenuGenericBackground)
-							.ColorAndOpacity(this, &SNovaFadingWidget::GetLinearColor)
-							.BorderBackgroundColor(this, &SNovaFadingWidget::GetSlateColor)
+							.BorderImage(&Theme.MainMenuGenericBorder)
 							.HAlign(HAlign_Center)
 							.VAlign(VAlign_Center)
 							[

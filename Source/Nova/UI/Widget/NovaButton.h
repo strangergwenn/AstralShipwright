@@ -36,7 +36,13 @@ class SNovaButton : public SButton
 	----------------------------------------------------*/
 
 	SLATE_BEGIN_ARGS(SNovaButton)
-		: _Theme("DefaultButton"), _Size("DefaultButtonSize"), _BorderRotation(0), _Enabled(true), _Focusable(true), _Toggle(false)
+		: _Theme("DefaultButton")
+		, _Size("DefaultButtonSize")
+		, _BorderRotation(0)
+		, _Enabled(true)
+		, _Focusable(true)
+		, _ActionFocusable(false)
+		, _Toggle(false)
 	{}
 
 	SLATE_ATTRIBUTE(FText, Text)
@@ -50,6 +56,7 @@ class SNovaButton : public SButton
 
 	SLATE_ATTRIBUTE(bool, Enabled)
 	SLATE_ATTRIBUTE(bool, Focusable)
+	SLATE_ARGUMENT(bool, ActionFocusable)
 	SLATE_ARGUMENT(bool, Toggle)
 
 	SLATE_NAMED_SLOT(FArguments, Header)
@@ -90,16 +97,34 @@ public:
 	void SetFocused(bool State);
 
 	/** Get the focused state */
-	bool IsFocused() const;
+	bool IsFocused() const
+	{
+		return Focused;
+	}
+
+	/** Check if this button can toggle focus through its action button */
+	bool IsButtonActionFocusable() const
+	{
+		return ButtonActionFocusable;
+	}
 
 	/** Check if this button is locked */
-	bool IsButtonEnabled() const;
+	bool IsButtonEnabled() const
+	{
+		return ButtonEnabled.Get(true);
+	}
 
 	/** Set the active state */
-	void SetActive(bool State);
+	void SetActive(bool ActiveState)
+	{
+		Active = ActiveState;
+	}
 
 	/** Get the active state */
-	bool IsActive() const;
+	bool IsActive() const
+	{
+		return Active;
+	}
 
 	/** Force a new text */
 	void SetText(FText NewText);
@@ -120,7 +145,10 @@ public:
 	}
 
 	/** Get the current help text */
-	FText GetHelpText();
+	FText GetHelpText()
+	{
+		return HelpText.Get();
+	}
 
 	/** Get the internal state */
 	FNovaButtonState& GetState()
@@ -171,6 +199,7 @@ protected:
 	// Settings & attributes
 	TAttribute<bool>                      ButtonEnabled;
 	TAttribute<bool>                      ButtonFocusable;
+	bool                                  ButtonActionFocusable;
 	TAttribute<FText>                     Text;
 	TAttribute<FText>                     HelpText;
 	TAttribute<FName>                     Action;

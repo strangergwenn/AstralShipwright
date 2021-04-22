@@ -130,3 +130,141 @@ protected:
 	float CurrentDisplayTime;
 	float CurrentAlpha;
 };
+
+/** Image callback */
+DECLARE_DELEGATE_RetVal(const FSlateBrush*, SNovaImageGetter);
+
+/** Simple SImage analog that fades smoothly when the image changes */
+class SNovaImage : public SNovaFadingWidget<false>
+{
+	SLATE_BEGIN_ARGS(SNovaImage)
+	{}
+
+	SLATE_ARGUMENT(SNovaImageGetter, Image)
+
+	SLATE_END_ARGS()
+
+public:
+	void Construct(const FArguments& InArgs)
+	{
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+		Getter = InArgs._Image;
+
+		// clang-format off
+		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments()
+			.FadeDuration(ENovaUIConstants::FadeDurationShort)
+			.DisplayDuration(4.0f)
+		);
+
+		ChildSlot
+		[
+			SNew(SImage)
+			.Image(this, &SNovaImage::GetImage)
+			.ColorAndOpacity(this, &SNovaFadingWidget::GetSlateColor)
+
+		];
+		// clang-format on
+	}
+
+	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
+	{
+		SNovaFadingWidget::Tick(AllottedGeometry, CurrentTime, DeltaTime);
+
+		if (Getter.IsBound())
+		{
+			DesiredImage = Getter.Execute();
+		}
+	}
+
+	virtual bool IsDirty() const
+	{
+		return DesiredImage != CurrentImage;
+	}
+
+	virtual void OnUpdate() override
+	{
+		CurrentImage = DesiredImage;
+	}
+
+	const FSlateBrush* GetImage() const
+	{
+		return CurrentImage;
+	}
+
+private:
+	const FSlateBrush* DesiredImage;
+	const FSlateBrush* CurrentImage;
+	SNovaImageGetter   Getter;
+};
+
+/** Text callback */
+DECLARE_DELEGATE_RetVal(FText, SNovaTextGetter);
+
+/** Simple STextBlock analog that fades smoothly when the text changes */
+class SNovaText : public SNovaFadingWidget<false>
+{
+	SLATE_BEGIN_ARGS(SNovaText)
+	{}
+
+	SLATE_ARGUMENT(SNovaTextGetter, Text)
+	SLATE_STYLE_ARGUMENT(FTextBlockStyle, TextStyle)
+	SLATE_ATTRIBUTE(float, WrapTextAt)
+
+	SLATE_END_ARGS()
+
+public:
+	void Construct(const FArguments& InArgs)
+	{
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+		Getter = InArgs._Text;
+
+		// clang-format off
+		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments()
+			.FadeDuration(ENovaUIConstants::FadeDurationShort)
+			.DisplayDuration(4.0f)
+		);
+
+		ChildSlot
+		[
+			SNew(STextBlock)
+			.Text(this, &SNovaText::GetText)
+			.TextStyle(InArgs._TextStyle)
+			.WrapTextAt(InArgs._WrapTextAt)
+			.ColorAndOpacity(this, &SNovaFadingWidget::GetSlateColor)
+
+		];
+		// clang-format on
+	}
+
+	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
+	{
+		SNovaFadingWidget::Tick(AllottedGeometry, CurrentTime, DeltaTime);
+
+		if (Getter.IsBound())
+		{
+			DesiredText = Getter.Execute();
+		}
+	}
+
+	virtual bool IsDirty() const
+	{
+		return !DesiredText.EqualTo(CurrentText);
+	}
+
+	virtual void OnUpdate() override
+	{
+		CurrentText = DesiredText;
+	}
+
+	FText GetText() const
+	{
+		return CurrentText;
+	}
+
+private:
+	FText           DesiredText;
+	FText           CurrentText;
+	SNovaTextGetter Getter;
+};

@@ -2,6 +2,7 @@
 
 #include "NovaSlider.h"
 #include "NovaButton.h"
+#include "NovaKeyLabel.h"
 #include "Nova/System/NovaMenuManager.h"
 #include "Nova/Nova.h"
 
@@ -32,26 +33,63 @@ void SNovaSlider::Construct(const FArguments& InArgs)
 	// Border padding
 	FMargin HeaderBorderPadding = FMargin(Theme.SliderStyle.NormalThumbImage.GetImageSize().X + ButtonTheme.HoverAnimationPadding.Left, 0);
 
-	// Parent constructor
+	// clang-format off
 	SNovaButton::Construct(SNovaButton::FArguments()
-							   .HelpText(InArgs._HelpText)
-							   .Size(InArgs._Size)
-							   .Theme(InArgs._Theme)
-							   .Enabled(InArgs._Enabled)
-							   .Header()[SNew(SBox).Padding(HeaderBorderPadding)[InArgs._Header.Widget]]
-							   .Footer()[SNew(SBox).Padding(HeaderBorderPadding)[InArgs._Footer.Widget]]);
+		.HelpText(InArgs._HelpText)
+		.Action(InArgs._Action)
+		.Size(InArgs._Size)
+		.Theme(InArgs._Theme)
+		.Enabled(InArgs._Enabled)
+		.ActionFocusable(true)
+		.Header()
+		[
+			SNew(SBox)
+			.Padding(HeaderBorderPadding)
+			[
+				InArgs._Header.Widget
+			]
+		]
+		.Footer()
+		[
+			SNew(SBox)
+			.Padding(HeaderBorderPadding)
+			[
+				InArgs._Footer.Widget
+			]
+		]);
 
-	// Internal content
-	InnerContainer->SetContent(SAssignNew(Slider, SSlider)
-								   .IsFocusable(false)
-								   .Value(InArgs._Value)
-								   .MinValue(InArgs._MinValue)
-								   .MaxValue(InArgs._MaxValue)
-								   .OnValueChanged(this, &SNovaSlider::OnSliderValueChanged)
-								   .OnMouseCaptureBegin(this, &SNovaSlider::OnMouseCaptured)
-								   .OnMouseCaptureEnd(this, &SNovaSlider::OnMouseReleased)
-								   .Style(&Theme.SliderStyle)
-								   .SliderBarColor(FLinearColor(0, 0, 0, 0)));
+	// Add the internal layout
+	TSharedPtr<SHorizontalBox> Box;
+	InnerContainer->SetContent(SAssignNew(Box, SHorizontalBox));
+
+	// Add the action if any
+	if (InArgs._Action.IsSet() || InArgs._Action.IsBound())
+	{
+		Box->AddSlot()
+		.AutoWidth()
+		.Padding(ButtonTheme.IconPadding)
+		[
+			SNew(SNovaKeyLabel)
+			.Key(this, &SNovaButton::GetActionKey)
+		];
+	}
+	
+	// Add the slider
+	Box->AddSlot()
+	[
+		SAssignNew(Slider, SSlider)
+		.IsFocusable(false)
+		.Value(InArgs._Value)
+		.MinValue(InArgs._MinValue)
+		.MaxValue(InArgs._MaxValue)
+		.OnValueChanged(this, &SNovaSlider::OnSliderValueChanged)
+		.OnMouseCaptureBegin(this, &SNovaSlider::OnMouseCaptured)
+		.OnMouseCaptureEnd(this, &SNovaSlider::OnMouseReleased)
+		.Style(&Theme.SliderStyle)
+		.SliderBarColor(FLinearColor(0, 0, 0, 0))
+	];
+
+	// clang-format on
 }
 
 /*----------------------------------------------------
@@ -196,6 +234,8 @@ void SNovaSlider::OnDecrement()
 void SNovaSlider::OnMouseCaptured()
 {
 	IsMouseCaptured = true;
+
+	OnButtonClicked();
 }
 
 void SNovaSlider::OnMouseReleased()

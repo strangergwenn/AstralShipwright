@@ -137,8 +137,11 @@ protected:
 
 	// Compartment selection
 	void OnSelectedCompartmentChanged(const class UNovaCompartmentDescription* Compartment, int32 Index, bool Forward);
-	void OnSelectedFilterChanged(float Value);
 	void OnCompartmentSelected(int32 Index);
+
+	// Filter
+	void  OnSelectedFilterChanged(float Value);
+	FText GetSelectedFilterText() const;
 
 	// Modules & equipments
 	void OnSelectedModuleChanged(const class UNovaModuleDescription* Module, int32 Index, int32 SlotIndex);

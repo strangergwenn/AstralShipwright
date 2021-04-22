@@ -9,11 +9,13 @@
 ----------------------------------------------------*/
 
 // Game-specific menu actions
-const FName FNovaPlayerInput::MenuPrimary     = "MenuPrimary";
-const FName FNovaPlayerInput::MenuSecondary   = "MenuSecondary";
-const FName FNovaPlayerInput::MenuNextTab     = "MenuNextTab";
-const FName FNovaPlayerInput::MenuPreviousTab = "MenuPreviousTab";
-const FName FNovaPlayerInput::MenuToggle      = "MenuToggle";
+const FName FNovaPlayerInput::MenuPrimary      = "MenuPrimary";
+const FName FNovaPlayerInput::MenuSecondary    = "MenuSecondary";
+const FName FNovaPlayerInput::MenuAltPrimary   = "MenuAltPrimary";
+const FName FNovaPlayerInput::MenuAltSecondary = "MenuAltSecondary";
+const FName FNovaPlayerInput::MenuNextTab      = "MenuNextTab";
+const FName FNovaPlayerInput::MenuPreviousTab  = "MenuPreviousTab";
+const FName FNovaPlayerInput::MenuToggle       = "MenuToggle";
 
 // Common actions
 const FName FNovaPlayerInput::MenuMoveHorizontal   = "MenuMoveHorizontal";

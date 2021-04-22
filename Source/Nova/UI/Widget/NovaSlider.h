@@ -25,6 +25,7 @@ class SNovaSlider : public SNovaButton
 	{}
 
 	SLATE_ATTRIBUTE(FText, HelpText)
+	SLATE_ATTRIBUTE(FName, Action)
 	SLATE_ARGUMENT(FName, Theme)
 	SLATE_ARGUMENT(FName, SliderTheme)
 	SLATE_ARGUMENT(FName, Size)

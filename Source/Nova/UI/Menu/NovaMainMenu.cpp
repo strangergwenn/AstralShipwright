@@ -262,7 +262,7 @@ FReply SNovaMainMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& Ke
 		const FKey Key = KeyEvent.GetKey();
 
 		// Move between tabs
-		if (!CurrentNavigationPanel->IsModal())
+		if (CurrentNavigationPanel && !CurrentNavigationPanel->IsModal())
 		{
 			if (IsActionKey(FNovaPlayerInput::MenuPreviousTab, Key))
 			{

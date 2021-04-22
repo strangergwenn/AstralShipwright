@@ -18,20 +18,21 @@
 void SNovaButton::Construct(const FArguments& InArgs)
 {
 	// Arguments
-	Text             = InArgs._Text;
-	HelpText         = InArgs._HelpText;
-	Action           = InArgs._Action;
-	ThemeName        = InArgs._Theme;
-	SizeName         = InArgs._Size;
-	Icon             = InArgs._Icon;
-	ButtonEnabled    = InArgs._Enabled;
-	ButtonFocusable  = InArgs._Action.Get() != NAME_None ? false : InArgs._Focusable;
-	BorderRotation   = InArgs._BorderRotation;
-	IsToggle         = InArgs._Toggle;
-	OnFocused        = InArgs._OnFocused;
-	OnClicked        = InArgs._OnClicked;
-	OnDoubleClicked  = InArgs._OnDoubleClicked;
-	UserSizeCallback = InArgs._UserSizeCallback;
+	Text                  = InArgs._Text;
+	HelpText              = InArgs._HelpText;
+	Action                = InArgs._Action;
+	ThemeName             = InArgs._Theme;
+	SizeName              = InArgs._Size;
+	Icon                  = InArgs._Icon;
+	ButtonEnabled         = InArgs._Enabled;
+	ButtonFocusable       = (InArgs._Action.Get() != NAME_None && !InArgs._ActionFocusable) ? false : InArgs._Focusable;
+	ButtonActionFocusable = InArgs._ActionFocusable;
+	BorderRotation        = InArgs._BorderRotation;
+	IsToggle              = InArgs._Toggle;
+	OnFocused             = InArgs._OnFocused;
+	OnClicked             = InArgs._OnClicked;
+	OnDoubleClicked       = InArgs._OnDoubleClicked;
+	UserSizeCallback      = InArgs._UserSizeCallback;
 
 	// Setup
 	Focused                       = false;
@@ -307,26 +308,6 @@ void SNovaButton::SetFocused(bool FocusedState)
 	}
 }
 
-bool SNovaButton::IsFocused() const
-{
-	return Focused;
-}
-
-bool SNovaButton::IsButtonEnabled() const
-{
-	return ButtonEnabled.Get(true);
-}
-
-void SNovaButton::SetActive(bool ActiveState)
-{
-	Active = ActiveState;
-}
-
-bool SNovaButton::IsActive() const
-{
-	return Active;
-}
-
 void SNovaButton::SetText(FText NewText)
 {
 	if (TextBlock.IsValid())
@@ -339,11 +320,6 @@ void SNovaButton::SetText(FText NewText)
 void SNovaButton::SetHelpText(FText NewText)
 {
 	HelpText.Set(NewText);
-}
-
-FText SNovaButton::GetHelpText()
-{
-	return HelpText.Get();
 }
 
 FKey SNovaButton::GetActionKey() const
