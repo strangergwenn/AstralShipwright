@@ -333,7 +333,7 @@ FReply SNovaMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEve
 	// Trigger action buttons
 	for (TSharedPtr<SNovaButton>& Button : GetActionButtons())
 	{
-		if (Button->GetActionKey() == Key && Button->IsButtonEnabled())
+		if (Button->GetActionKey() == Key && Button->IsButtonEnabled() && Button->GetVisibility() == EVisibility::Visible)
 		{
 			bool WasFocused = Button->IsFocused();
 

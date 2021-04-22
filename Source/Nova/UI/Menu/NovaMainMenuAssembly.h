@@ -77,8 +77,60 @@ protected:
 	/** Select a compartment index */
 	void SetSelectedCompartment(int32 Index);
 
+	/** Select a module or equipment */
+	void SetSelectedModuleOrEquipment(int32 Index);
+
 	/** Set whether the compartment sub-menu is active */
 	void SetCompartmentPanelVisible(bool Active);
+
+	/*----------------------------------------------------
+	    Module / equipment index helpers
+	----------------------------------------------------*/
+
+	int32 GetMaxCommonIndex() const
+	{
+		return ENovaConstants::MaxModuleCount + ENovaConstants::MaxEquipmentCount - 1;
+	}
+
+	bool IsModuleIndex(int32 Index) const
+	{
+		return Index < ENovaConstants::MaxModuleCount;
+	}
+
+	int32 GetModuleIndex(int32 Index) const
+	{
+		return Index;
+	}
+
+	int32 GetEquipmentIndex(int32 Index) const
+	{
+		return Index - ENovaConstants::MaxModuleCount;
+	}
+
+	int32 GetCommonIndexFromModule(int32 Index) const
+	{
+		return Index;
+	}
+
+	int32 GetCommonIndexFromEquipment(int32 Index) const
+	{
+		return Index + ENovaConstants::MaxModuleCount;
+	}
+
+	bool IsModuleSelected() const
+	{
+		return IsModuleIndex(SelectedModuleOrEquipmentIndex);
+	}
+
+	int32 GetSelectedModuleIndex() const
+	{
+		return GetModuleIndex(SelectedModuleOrEquipmentIndex);
+	}
+
+	int32 GetSelectedEquipmentIndex() const
+	{
+		return GetEquipmentIndex(SelectedModuleOrEquipmentIndex);
+	}
 
 	/*----------------------------------------------------
 	    Content callbacks
@@ -98,32 +150,37 @@ protected:
 	FText               GenerateCompartmentTooltip(const class UNovaCompartmentDescription* Description) const;
 
 	// Compartment module list
-	bool                IsModuleListEnabled(int32 ModuleIndex) const;
+	EVisibility         GetModuleListVisibility() const;
 	TSharedRef<SWidget> GenerateModuleItem(const class UNovaModuleDescription* Module) const;
-	FText               GetModuleName(const class UNovaModuleDescription* Module) const;
+	FText               GetModuleListTitle(const class UNovaModuleDescription* Module) const;
 	FText               GenerateModuleTooltip(const class UNovaModuleDescription* Module) const;
 
 	// Compartment equipment list
-	bool                IsEquipmentListEnabled(int32 EquipmentIndex) const;
+	EVisibility         GetEquipmentListVisibility() const;
 	TSharedRef<SWidget> GenerateEquipmentItem(const class UNovaEquipmentDescription* Equipment) const;
-	FText               GetEquipmentName(const class UNovaEquipmentDescription* Equipment) const;
+	FText               GetEquipmentListTitle(const class UNovaEquipmentDescription* Equipment) const;
 	FText               GenerateEquipmentTooltip(const class UNovaEquipmentDescription* Equipment) const;
 
 	// Compartment hull types list
 	TSharedRef<SWidget> GenerateHullTypeItem(ENovaHullType Type) const;
+	FText               GetHullTypeListTitle(ENovaHullType Type) const;
 	FText               GetHullTypeName(ENovaHullType Type) const;
 	FText               GenerateHullTypeTooltip(ENovaHullType Type) const;
 
-	// General callbacks
+	// Assembly callbacks
 	const FSlateBrush* GetCompartmentIcon(int32 Index) const;
 	bool               IsSelectCompartmentEnabled(int32 Index) const;
 	bool               IsAddCompartmentEnabled(bool Forward) const;
-	bool               IsBackToAssemblyEnabled() const;
 	bool               IsEditCompartmentEnabled() const;
 
+	// Compartment callbacks
+	bool IsBackToAssemblyEnabled() const;
+	bool IsModuleEnabled(int32 ModuleIndex) const;
+	bool IsEquipmentEnabled(int32 EquipmentIndex) const;
+
 	// Key bindings
-	FKey GetPreviousCompartmentKey() const;
-	FKey GetNextCompartmentKey() const;
+	FKey GetPreviousItemKey() const;
+	FKey GetNextItemKey() const;
 
 	/*----------------------------------------------------
 	    Callbacks
@@ -144,8 +201,8 @@ protected:
 	FText GetSelectedFilterText() const;
 
 	// Modules & equipments
-	void OnSelectedModuleChanged(const class UNovaModuleDescription* Module, int32 Index, int32 SlotIndex);
-	void OnSelectedEquipmentChanged(const class UNovaEquipmentDescription* Equipment, int32 Index, int32 SlotIndex);
+	void OnSelectedModuleChanged(const class UNovaModuleDescription* Module, int32 Index);
+	void OnSelectedEquipmentChanged(const class UNovaEquipmentDescription* Equipment, int32 Index);
 	void OnSelectedHullTypeChanged(ENovaHullType Type, int32 Index);
 
 	// Save the spacecraft
@@ -164,8 +221,8 @@ protected:
 
 	// Widgets
 	TSharedPtr<SHorizontalBox>        CompartmentBox;
-	TSharedPtr<SVerticalBox>          ModuleBox;
-	TSharedPtr<SVerticalBox>          EquipmentBox;
+	TSharedPtr<SHorizontalBox>        ModuleBox;
+	TSharedPtr<SHorizontalBox>        EquipmentBox;
 	TSharedPtr<class SNovaButton>     SaveCompartmentButton;
 	TSharedPtr<class SNovaModalPanel> ModalPanel;
 	TSharedPtr<SVerticalBox>          MenuBox;
@@ -178,16 +235,17 @@ protected:
 	// Assembly data
 	int32 SelectedCompartmentIndex;
 	int32 EditedCompartmentIndex;
+	int32 SelectedModuleOrEquipmentIndex;
 
-	// Compartment hull  list
+	// Compartment list
 	TArray<ENovaHullType>         HullTypeList;
 	TSharedPtr<SNovaHullTypeList> HullTypeListView;
 
-	// Compartment module lists
-	TArray<const class UNovaModuleDescription*> ModuleLists[ENovaConstants::MaxModuleCount];
-	TSharedPtr<SNovaModuleList>                 ModuleListViews[ENovaConstants::MaxModuleCount];
+	// Compartment module list
+	TArray<const class UNovaModuleDescription*> ModuleList;
+	TSharedPtr<SNovaModuleList>                 ModuleListView;
 
-	// Compartment equipment lists
-	TArray<const class UNovaEquipmentDescription*> EquipmentLists[ENovaConstants::MaxEquipmentCount];
-	TSharedPtr<SNovaEquipmentList>                 EquipmentListViews[ENovaConstants::MaxEquipmentCount];
+	// Compartment equipment list
+	TArray<const class UNovaEquipmentDescription*> EquipmentList;
+	TSharedPtr<SNovaEquipmentList>                 EquipmentListView;
 };

@@ -45,6 +45,7 @@ private:
 	SLATE_ATTRIBUTE(bool, Enabled)
 	SLATE_ATTRIBUTE(bool, Focusable)
 
+	SLATE_ARGUMENT(FSimpleDelegate, OnDoubleClicked)
 	SLATE_ARGUMENT(FNovaOnSelfRefresh, OnSelfRefresh)
 	SLATE_EVENT(FNovaOnGenerateItem, OnGenerateItem)
 	SLATE_EVENT(FNovaOnGenerateName, OnGenerateName)
@@ -55,6 +56,8 @@ private:
 	SLATE_ARGUMENT(FName, ButtonSize)
 	SLATE_ARGUMENT(FName, ListButtonTheme)
 	SLATE_ARGUMENT(FName, ListButtonSize)
+	SLATE_ARGUMENT(FNovaButtonUserSizeCondition, UserSizeCallback)
+	SLATE_NAMED_SLOT(FArguments, ButtonContent)
 
 	SLATE_END_ARGS()
 
@@ -73,15 +76,21 @@ public:
 
 		ListPanel = InArgs._Panel->GetMenu()->CreateModalPanel();
 
-		SNovaButton::Construct(SNovaButton::FArguments()
-								   .Text(this, &SNovaModalListView::GetButtonText)
-								   .HelpText(HelpText)
-								   .Action(InArgs._Action)
-								   .Theme(InArgs._ButtonTheme)
-								   .Size(InArgs._ButtonSize)
-								   .Enabled(InArgs._Enabled)
-								   .Focusable(InArgs._Focusable)
-								   .OnClicked(this, &SNovaModalListView::OnOpenList));
+		SNovaButton::Construct(
+			SNovaButton::FArguments()
+				.Text((OnGenerateName.IsBound() || TitleText.IsSet() || TitleText.IsBound())
+						  ? TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateSP(this, &SNovaModalListView::GetButtonText))
+						  : TAttribute<FText>())
+				.HelpText(HelpText)
+				.Action(InArgs._Action)
+				.Theme(InArgs._ButtonTheme)
+				.UserSizeCallback(InArgs._UserSizeCallback)
+				.Size(InArgs._ButtonSize)
+				.Enabled(InArgs._Enabled)
+				.Focusable(InArgs._Focusable)
+				.OnClicked(this, &SNovaModalListView::OnOpenList)
+				.OnDoubleClicked(InArgs._OnDoubleClicked)
+				.Content()[InArgs._ButtonContent.Widget]);
 
 		SAssignNew(ListView, SNovaListView<ItemType>)
 			.Panel(ListPanel.Get())
@@ -104,6 +113,12 @@ public:
 	{
 		ListView->Refresh(SelectedIndex);
 		CurrentConfirmed = ListView->GetSelectedItem();
+	}
+
+	/** Show the list */
+	void Show()
+	{
+		OnOpenList();
 	}
 
 	/*----------------------------------------------------
