@@ -229,58 +229,6 @@ void ANovaSpacecraftPawn::ServerSaveSystems_Implementation()
     Assembly interface
 ----------------------------------------------------*/
 
-TArray<const UNovaCompartmentDescription*> ANovaSpacecraftPawn::GetCompatibleCompartments(int32 Index) const
-{
-	TArray<const UNovaCompartmentDescription*> CompartmentDescriptions;
-
-	for (const UNovaCompartmentDescription* Description : UNovaAssetManager::Get()->GetAssets<UNovaCompartmentDescription>())
-	{
-		CompartmentDescriptions.Add(Description);
-	}
-
-	return CompartmentDescriptions;
-}
-
-TArray<const class UNovaModuleDescription*> ANovaSpacecraftPawn::GetCompatibleModules(int32 Index, int32 SlotIndex) const
-{
-	TArray<const UNovaModuleDescription*> ModuleDescriptions;
-	TArray<const UNovaModuleDescription*> AllModuleDescriptions = UNovaAssetManager::Get()->GetAssets<UNovaModuleDescription>();
-	const FNovaCompartment&               Compartment           = Spacecraft->Compartments[Index];
-
-	ModuleDescriptions.Add(nullptr);
-	if (Compartment.IsValid() && SlotIndex < Compartment.Description->ModuleSlots.Num())
-	{
-		for (const UNovaModuleDescription* ModuleDescription : AllModuleDescriptions)
-		{
-			ModuleDescriptions.AddUnique(ModuleDescription);
-		}
-	}
-
-	return ModuleDescriptions;
-}
-
-TArray<const UNovaEquipmentDescription*> ANovaSpacecraftPawn::GetCompatibleEquipments(int32 Index, int32 SlotIndex) const
-{
-	TArray<const UNovaEquipmentDescription*> EquipmentDescriptions;
-	TArray<const UNovaEquipmentDescription*> AllEquipmentDescriptions = UNovaAssetManager::Get()->GetAssets<UNovaEquipmentDescription>();
-	const FNovaCompartment&                  Compartment              = Spacecraft->Compartments[Index];
-
-	EquipmentDescriptions.Add(nullptr);
-	if (Compartment.IsValid() && SlotIndex < Compartment.Description->EquipmentSlots.Num())
-	{
-		for (const UNovaEquipmentDescription* EquipmentDescription : AllEquipmentDescriptions)
-		{
-			const TArray<ENovaEquipmentType>& SupportedTypes = Compartment.Description->EquipmentSlots[SlotIndex].SupportedTypes;
-			if (SupportedTypes.Num() == 0 || SupportedTypes.Contains(EquipmentDescription->EquipmentType))
-			{
-				EquipmentDescriptions.AddUnique(EquipmentDescription);
-			}
-		}
-	}
-
-	return EquipmentDescriptions;
-}
-
 void ANovaSpacecraftPawn::ApplyAssembly()
 {
 	NLOG("ANovaAssembly::ApplyAssembly");

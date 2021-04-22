@@ -145,13 +145,22 @@ public:
 	}
 
 	/** Get a list of compartment kits that can be added at a (new) index */
-	TArray<const class UNovaCompartmentDescription*> GetCompatibleCompartments(int32 Index) const;
+	TArray<const class UNovaCompartmentDescription*> GetCompatibleCompartments(int32 CompartmentIndex) const
+	{
+		return Spacecraft->GetCompatibleCompartments(CompartmentIndex);
+	}
 
-	/** get a list of compatible modules that can be added at a compartment index, and a module slot index */
-	TArray<const class UNovaModuleDescription*> GetCompatibleModules(int32 Index, int32 SlotIndex) const;
+	/** Get a list of compatible modules that can be added at a compartment index, and a module slot index */
+	TArray<const class UNovaModuleDescription*> GetCompatibleModules(int32 CompartmentIndex, int32 SlotIndex) const
+	{
+		return Spacecraft->GetCompatibleModules(CompartmentIndex, SlotIndex);
+	}
 
-	/** get a list of compatible equipments that can be added at a compartment index, and an equipment slot index */
-	TArray<const class UNovaEquipmentDescription*> GetCompatibleEquipments(int32 Index, int32 SlotIndex) const;
+	/** Get a list of compatible equipments that can be added at a compartment index, and an equipment slot index */
+	TArray<const class UNovaEquipmentDescription*> GetCompatibleEquipments(int32 CompartmentIndex, int32 SlotIndex) const
+	{
+		return Spacecraft->GetCompatibleEquipments(CompartmentIndex, SlotIndex);
+	}
 
 	/** Save this assembly **/
 	void ApplyAssembly();

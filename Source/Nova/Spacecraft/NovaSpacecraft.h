@@ -254,6 +254,15 @@ public:
 	/** Serialize the spacecraft */
 	static void SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
 
+	/** Get a list of compartment kits that can be added at a (new) index */
+	TArray<const class UNovaCompartmentDescription*> GetCompatibleCompartments(int32 CompartmentIndex) const;
+
+	/** Get a list of compatible modules that can be added at a compartment index, and a module slot index */
+	TArray<const class UNovaModuleDescription*> GetCompatibleModules(int32 CompartmentIndex, int32 SlotIndex) const;
+
+	/** Get a list of compatible equipments that can be added at a compartment index, and an equipment slot index */
+	TArray<const class UNovaEquipmentDescription*> GetCompatibleEquipments(int32 InCompartmentIndexdex, int32 SlotIndex) const;
+
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
@@ -264,6 +273,12 @@ protected:
 
 	/** Update the spacecraft's metrics */
 	void UpdatePropulsionMetrics();
+
+	/** Check whether this is the first (head) compartment */
+	bool IsFirstCompartment(int32 CompartmentIndex) const;
+
+	/** Check whether this is the last (engine) compartment */
+	bool IsLastCompartment(int32 CompartmentIndex) const;
 
 	/** Check whether the module at CompartmentIndex.ModuleIndex has a matching clone behind it */
 	bool IsSameModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex) const;

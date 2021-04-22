@@ -120,7 +120,7 @@ bool FNovaSpacecraft::operator==(const FNovaSpacecraft& Other) const
 }
 
 /*----------------------------------------------------
-    Interface
+    Spacecraft interface
 ----------------------------------------------------*/
 
 void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
@@ -249,6 +249,65 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 	}
 }
 
+TArray<const UNovaCompartmentDescription*> FNovaSpacecraft::GetCompatibleCompartments(int32 CompartmentIndex) const
+{
+	TArray<const UNovaCompartmentDescription*> CompartmentDescriptions;
+
+	for (const UNovaCompartmentDescription* Description : UNovaAssetManager::Get()->GetAssets<UNovaCompartmentDescription>())
+	{
+		CompartmentDescriptions.Add(Description);
+	}
+
+	return CompartmentDescriptions;
+}
+
+TArray<const class UNovaModuleDescription*> FNovaSpacecraft::GetCompatibleModules(int32 CompartmentIndex, int32 SlotIndex) const
+{
+	TArray<const UNovaModuleDescription*> ModuleDescriptions;
+	TArray<const UNovaModuleDescription*> AllModuleDescriptions = UNovaAssetManager::Get()->GetAssets<UNovaModuleDescription>();
+	const FNovaCompartment&               Compartment           = Compartments[CompartmentIndex];
+
+	ModuleDescriptions.Add(nullptr);
+	if (Compartment.IsValid() && SlotIndex < Compartment.Description->ModuleSlots.Num())
+	{
+		for (const UNovaModuleDescription* ModuleDescription : AllModuleDescriptions)
+		{
+			ModuleDescriptions.AddUnique(ModuleDescription);
+		}
+	}
+
+	return ModuleDescriptions;
+}
+
+TArray<const UNovaEquipmentDescription*> FNovaSpacecraft::GetCompatibleEquipments(int32 CompartmentIndex, int32 SlotIndex) const
+{
+	TArray<const UNovaEquipmentDescription*> EquipmentDescriptions;
+	TArray<const UNovaEquipmentDescription*> AllEquipmentDescriptions = UNovaAssetManager::Get()->GetAssets<UNovaEquipmentDescription>();
+	const FNovaCompartment&                  Compartment              = Compartments[CompartmentIndex];
+
+	EquipmentDescriptions.Add(nullptr);
+	if (Compartment.IsValid() && SlotIndex < Compartment.Description->EquipmentSlots.Num())
+	{
+		for (const UNovaEquipmentDescription* EquipmentDescription : AllEquipmentDescriptions)
+		{
+			const TArray<ENovaEquipmentType>& SupportedTypes = Compartment.Description->EquipmentSlots[SlotIndex].SupportedTypes;
+			if (SupportedTypes.Num() == 0 || SupportedTypes.Contains(EquipmentDescription->EquipmentType))
+			{
+				if (EquipmentDescription->EquipmentType == ENovaEquipmentType::Engine && !IsLastCompartment(CompartmentIndex))
+				{
+					continue;
+				}
+				else
+				{
+					EquipmentDescriptions.AddUnique(EquipmentDescription);
+				}
+			}
+		}
+	}
+
+	return EquipmentDescriptions;
+}
+
 /*----------------------------------------------------
     Internals
 ----------------------------------------------------*/
@@ -258,30 +317,6 @@ void FNovaSpacecraft::UpdateProceduralElements()
 	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
 	{
 		FNovaCompartment& Compartment = Compartments[CompartmentIndex];
-
-		auto IsFirstCompartment = [&]()
-		{
-			for (int32 Index = 0; Index < CompartmentIndex; Index++)
-			{
-				if (Compartments[Index].IsValid())
-				{
-					return false;
-				}
-			}
-			return true;
-		};
-
-		auto IsLastCompartment = [&]()
-		{
-			for (int32 Index = CompartmentIndex + 1; Index < Compartments.Num(); Index++)
-			{
-				if (Compartments[Index].IsValid())
-				{
-					return false;
-				}
-			}
-			return true;
-		};
 
 		if (Compartment.IsValid())
 		{
@@ -315,7 +350,7 @@ void FNovaSpacecraft::UpdateProceduralElements()
 					// NLOG("FNovaSpacecraft::UpdateProceduralElements : compartment %d, module %d", CompartmentIndex, ModuleIndex);
 
 					// Define bulkheads
-					if (IsFirstCompartment())
+					if (IsFirstCompartment(CompartmentIndex))
 					{
 						Module.ForwardBulkheadType = ENovaBulkheadType::Outer;
 						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> forward is Outer");
@@ -327,7 +362,7 @@ void FNovaSpacecraft::UpdateProceduralElements()
 						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> forward is Connected");
 					}
 
-					if (IsLastCompartment())
+					if (IsLastCompartment(CompartmentIndex))
 					{
 						Module.AftBulkheadType = ENovaBulkheadType::Outer;
 						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> aft is Outer");
@@ -445,6 +480,30 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 	NLOG("Delta-V specifications : total %.1fm/s, burn time %.1fs", PropulsionMetrics.TotalDeltaV, PropulsionMetrics.TotalBurnTime);
 	NLOG("--------------------------------------------------------------------------------");
 #endif
+}
+
+bool FNovaSpacecraft::IsFirstCompartment(int32 CompartmentIndex) const
+{
+	for (int32 Index = 0; Index < CompartmentIndex; Index++)
+	{
+		if (Compartments[Index].IsValid())
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+bool FNovaSpacecraft::IsLastCompartment(int32 CompartmentIndex) const
+{
+	for (int32 Index = CompartmentIndex + 1; Index < Compartments.Num(); Index++)
+	{
+		if (Compartments[Index].IsValid())
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 bool FNovaSpacecraft::IsSameModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex) const
