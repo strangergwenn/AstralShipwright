@@ -26,7 +26,8 @@ class SNovaNotification
 public:
 	void Construct(const FArguments& InArgs)
 	{
-		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+		const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
+		const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
 
 		// Create material
 		auto DynamicBrush        = FNovaStyleSet::GetDynamicBrush("Notification/SB_NotificationIcon_Base");
@@ -54,9 +55,10 @@ public:
 				.Padding(0)
 				[
 					SNew(SBorder)
-					.BorderImage(new FSlateNoResource)
+					.BorderImage(&ButtonTheme.Border)
 					.ColorAndOpacity(this, &SNovaFadingWidget::GetLinearColor)
-					.Padding(0)
+					.BorderBackgroundColor(this, &SNovaFadingWidget::GetSlateColor)
+					.Padding(FMargin(0, 1))
 					[
 						SNew(SBackgroundBlur)
 						.BlurRadius(Theme.BlurRadius)
@@ -66,7 +68,7 @@ public:
 						[
 							SNew(SBorder)
 							.Padding(0)
-							.BorderImage(&Theme.MainMenuGenericBorder)
+							.BorderImage(&Theme.MainMenuGenericBackground)
 							.HAlign(HAlign_Center)
 							.VAlign(VAlign_Center)
 							[
