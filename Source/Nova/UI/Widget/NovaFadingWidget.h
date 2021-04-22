@@ -132,7 +132,7 @@ protected:
 };
 
 /** Image callback */
-DECLARE_DELEGATE_RetVal(const FSlateBrush*, SNovaImageGetter);
+DECLARE_DELEGATE_RetVal(const FSlateBrush*, FNovaImageGetter);
 
 /** Simple SImage analog that fades smoothly when the image changes */
 class SNovaImage : public SNovaFadingWidget<false>
@@ -140,7 +140,7 @@ class SNovaImage : public SNovaFadingWidget<false>
 	SLATE_BEGIN_ARGS(SNovaImage)
 	{}
 
-	SLATE_ARGUMENT(SNovaImageGetter, Image)
+	SLATE_ARGUMENT(FNovaImageGetter, Image)
 
 	SLATE_END_ARGS()
 
@@ -195,11 +195,11 @@ public:
 private:
 	const FSlateBrush* DesiredImage;
 	const FSlateBrush* CurrentImage;
-	SNovaImageGetter   Getter;
+	FNovaImageGetter   Getter;
 };
 
 /** Text callback */
-DECLARE_DELEGATE_RetVal(FText, SNovaTextGetter);
+DECLARE_DELEGATE_RetVal(FText, FNovaTextGetter);
 
 /** Simple STextBlock analog that fades smoothly when the text changes */
 class SNovaText : public SNovaFadingWidget<false>
@@ -207,7 +207,7 @@ class SNovaText : public SNovaFadingWidget<false>
 	SLATE_BEGIN_ARGS(SNovaText)
 	{}
 
-	SLATE_ARGUMENT(SNovaTextGetter, Text)
+	SLATE_ARGUMENT(FNovaTextGetter, Text)
 	SLATE_STYLE_ARGUMENT(FTextBlockStyle, TextStyle)
 	SLATE_ATTRIBUTE(float, WrapTextAt)
 
@@ -266,5 +266,5 @@ public:
 private:
 	FText           DesiredText;
 	FText           CurrentText;
-	SNovaTextGetter Getter;
+	FNovaTextGetter Getter;
 };

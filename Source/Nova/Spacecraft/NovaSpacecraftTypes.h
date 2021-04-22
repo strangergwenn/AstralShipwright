@@ -132,6 +132,10 @@ struct FNovaModuleSlot
 	GENERATED_BODY()
 
 public:
+	// Slot name in menus
+	UPROPERTY(Category = Compartment, EditDefaultsOnly)
+	FText DisplayName;
+
 	// Socket to attach to on the structure mesh
 	UPROPERTY(Category = Compartment, EditDefaultsOnly)
 	FName SocketName;
@@ -148,6 +152,10 @@ struct FNovaEquipmentSlot
 	GENERATED_BODY()
 
 public:
+	// Slot name in menus
+	UPROPERTY(Category = Compartment, EditDefaultsOnly)
+	FText DisplayName;
+
 	// Socket to attach to on the structure mesh
 	UPROPERTY(Category = Compartment, EditDefaultsOnly)
 	FName SocketName;
