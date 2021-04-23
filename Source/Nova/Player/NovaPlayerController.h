@@ -21,7 +21,8 @@ enum class ENovaPlayerCameraState : uint8
 	Chase,
 	CinematicSpacecraft,
 	CinematicEnvironment,
-	FastForward
+	FastForward,
+	PhotoMode
 };
 
 /** High level post processing targets */
@@ -219,6 +220,18 @@ public:
 	/** Show a title on the screen */
 	void ShowTitle(const FText& Title, const FText& Subtitle);
 
+	/** Start the photo mode with a transition and wait for ActionName */
+	void EnterPhotoMode(FName ActionName);
+
+	/** Exit the photo mode and return to menu */
+	void ExitPhotoMode();
+
+	/** Check if we are in photo mode */
+	bool IsInPhotoMode() const
+	{
+		return PhotoModeAction != NAME_None;
+	}
+
 	/*----------------------------------------------------
 	    Input
 	----------------------------------------------------*/
@@ -259,6 +272,7 @@ private:
 	ENovaNetworkError      LastNetworkError;
 	ENovaPlayerCameraState CurrentCameraState;
 	float                  CurrentTimeInCameraState;
+	FName                  PhotoModeAction;
 
 	// Transitions
 	bool                SharedTransitionActive;

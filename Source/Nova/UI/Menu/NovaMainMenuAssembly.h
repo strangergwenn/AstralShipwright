@@ -45,9 +45,9 @@ public:
 
 	virtual void Hide() override;
 
-	virtual void ZoomIn() override;
+	virtual void Next() override;
 
-	virtual void ZoomOut() override;
+	virtual void Previous() override;
 
 	virtual bool Cancel() override;
 
@@ -137,14 +137,6 @@ protected:
 	----------------------------------------------------*/
 
 protected:
-	// Helpers
-	TSharedRef<SWidget> GenerateAssetItem(const class UNovaAssetDescription* Asset) const;
-	FText               GetAssetName(const class UNovaAssetDescription* Asset) const;
-
-	// Panels
-	FLinearColor GetMainColor() const;
-	FLinearColor GetCompartmentColor() const;
-
 	// Compartment template list
 	TSharedRef<SWidget> GenerateCompartmentItem(const class UNovaCompartmentDescription* Description) const;
 	FText               GenerateCompartmentTooltip(const class UNovaCompartmentDescription* Description) const;
@@ -167,11 +159,19 @@ protected:
 	FText               GetHullTypeName(ENovaHullType Type) const;
 	FText               GenerateHullTypeTooltip(ENovaHullType Type) const;
 
+	// Helpers
+	TSharedRef<SWidget> GenerateAssetItem(const class UNovaAssetDescription* Asset) const;
+	FText               GetAssetName(const class UNovaAssetDescription* Asset) const;
+
+	// Panels
+	FLinearColor GetMainColor() const;
+	FLinearColor GetCompartmentColor() const;
+
 	// Assembly callbacks
-	const FSlateBrush* GetCompartmentIcon(int32 Index) const;
-	bool               IsSelectCompartmentEnabled(int32 Index) const;
-	bool               IsAddCompartmentEnabled(bool Forward) const;
-	bool               IsEditCompartmentEnabled() const;
+	FText GetSelectedFilterText() const;
+	bool  IsSelectCompartmentEnabled(int32 Index) const;
+	bool  IsAddCompartmentEnabled(bool Forward) const;
+	bool  IsEditCompartmentEnabled() const;
 
 	// Compartment callbacks
 	bool IsBackToAssemblyEnabled() const;
@@ -196,9 +196,9 @@ protected:
 	void OnSelectedCompartmentChanged(const class UNovaCompartmentDescription* Compartment, int32 Index, bool Forward);
 	void OnCompartmentSelected(int32 Index);
 
-	// Filter
-	void  OnSelectedFilterChanged(float Value);
-	FText GetSelectedFilterText() const;
+	// Display filters
+	void OnEnterPhotoMode(FName ActionName);
+	void OnSelectedFilterChanged(float Value);
 
 	// Modules & equipments
 	void OnSelectedModuleChanged(const class UNovaModuleDescription* Module, int32 Index);

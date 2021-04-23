@@ -19,12 +19,12 @@ void SNovaNavigationPanel::Construct(const FArguments& InArgs)
     Interaction
 ----------------------------------------------------*/
 
-void SNovaNavigationPanel::ZoomIn()
+void SNovaNavigationPanel::Next()
 {
 	NLOG("SNovaNavigationPanel::ZoomIn");
 }
 
-void SNovaNavigationPanel::ZoomOut()
+void SNovaNavigationPanel::Previous()
 {
 	NLOG("SNovaNavigationPanel::ZoomOut");
 }

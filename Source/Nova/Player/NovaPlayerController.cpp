@@ -23,6 +23,7 @@
 #include "Nova/System/NovaSessionsManager.h"
 
 #include "Nova/UI/Menu/NovaOverlay.h"
+#include "Nova/UI/Widget/NovaMenu.h"
 #include "Nova/Nova.h"
 
 #include "Framework/Application/SlateApplication.h"
@@ -62,6 +63,7 @@ ANovaPlayerController::ANovaPlayerController()
 	, LastNetworkError(ENovaNetworkError::Success)
 	, CurrentCameraState(ENovaPlayerCameraState::Default)
 	, CurrentTimeInCameraState(0)
+	, PhotoModeAction(NAME_None)
 	, SharedTransitionActive(false)
 {
 	// Create the post-processing manager
@@ -281,6 +283,14 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 		for (ASkyLight* Light : TActorRange<ASkyLight>(GetWorld()))
 		{
 			Light->GetLightComponent()->SetCastRaytracedShadow(GameUserSettings->EnableRaytracedShadows);
+		}
+
+		// Disable overlays in photo mode
+		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+		if (IsValid(SpacecraftPawn) && IsInPhotoMode())
+		{
+			SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
+			SpacecraftPawn->SetHighlightedCompartment(INDEX_NONE);
 		}
 
 		CurrentTimeInCameraState += DeltaTime;
@@ -783,6 +793,32 @@ void ANovaPlayerController::ShowTitle(const FText& Title, const FText& Subtitle)
 	GetMenuManager()->GetOverlay()->ShowTitle(Title, Subtitle);
 }
 
+void ANovaPlayerController::EnterPhotoMode(FName ActionName)
+{
+	NLOG("ANovaPlayerController::EnterPhotoMode");
+
+	GetMenuManager()->CloseMenu(FNovaAsyncAction::CreateLambda(
+		[=]()
+		{
+			PhotoModeAction = ActionName;
+			GetSpacecraftPawn()->ZoomIn();
+			SetCameraState(ENovaPlayerCameraState::PhotoMode);
+		}));
+}
+
+void ANovaPlayerController::ExitPhotoMode()
+{
+	NLOG("ANovaPlayerController::ExitPhotoMode");
+
+	GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda(
+		[=]()
+		{
+			PhotoModeAction = NAME_None;
+			GetSpacecraftPawn()->ZoomOut();
+			SetCameraState(ENovaPlayerCameraState::Default);
+		}));
+}
+
 /*----------------------------------------------------
     Input
 ----------------------------------------------------*/
@@ -837,6 +873,16 @@ void ANovaPlayerController::ToggleMenuOrQuit()
 void ANovaPlayerController::AnyKey(FKey Key)
 {
 	GetMenuManager()->SetUsingGamepad(Key.IsGamepadKey());
+
+	// Exit photo mode
+	if (IsInPhotoMode())
+	{
+		if (GetMenuManager()->GetMenu()->IsActionKey(PhotoModeAction, Key) ||
+			GetMenuManager()->GetMenu()->IsActionKey(FNovaPlayerInput::MenuCancel, Key))
+		{
+			ExitPhotoMode();
+		}
+	}
 }
 
 /*----------------------------------------------------

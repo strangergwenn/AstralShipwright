@@ -64,8 +64,8 @@ public:
 	static const FName MenuDown;
 	static const FName MenuLeft;
 	static const FName MenuRight;
-	static const FName MenuZoomIn;
-	static const FName MenuZoomOut;
+	static const FName MenuNext;
+	static const FName MenuPrevious;
 	static const FName MenuAnalogHorizontal;
 	static const FName MenuAnalogVertical;
 };

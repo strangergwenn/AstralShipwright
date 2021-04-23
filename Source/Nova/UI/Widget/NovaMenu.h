@@ -37,6 +37,8 @@ public:
 
 	virtual FReply OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
+	virtual FReply OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+
 	virtual void OnMouseLeave(const FPointerEvent& MouseEvent) override;
 
 	virtual FReply OnAnalogValueChanged(const FGeometry& MyGeometry, const FAnalogInputEvent& AnalogInputEvent) override;
@@ -116,6 +118,9 @@ protected:
 		Result.Append(AdditionalActionButtons);
 		return Result;
 	}
+
+	/** Trigger actions bounds to this key */
+	FReply HandleKeyPress(FKey Key);
 
 	/** Get the next button to focus in a specific direction */
 	static TSharedPtr<class SNovaButton> GetNextButton(TSharedRef<class SWidget> Widget, TSharedPtr<const class SWidget> Current,

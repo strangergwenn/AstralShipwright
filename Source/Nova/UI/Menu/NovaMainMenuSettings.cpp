@@ -301,7 +301,21 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		->Axis(FNovaPlayerInput::MoveY, 1.0f)
 		->Default(EKeys::D)
 	));*/
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuToggle", "Toggle menu / exit game")))
+	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuPrimary", "Primary action")))
+		->Action(FNovaPlayerInput::MenuPrimary)
+		->Default(EKeys::E)
+	));
+	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuSecondary", "Secondary action")))
+		->Action(FNovaPlayerInput::MenuSecondary)
+		->Default(EKeys::A)
+	));
+	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuAltPrimary", "Primary option")))
+		->Action(FNovaPlayerInput::MenuAltPrimary)
+	));
+	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuAltSecondary", "Secondary option")))
+		->Action(FNovaPlayerInput::MenuAltSecondary)
+	));
+	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuToggle", "Exit menu / Exit game")))
 		->Action(FNovaPlayerInput::MenuToggle)
 		->Default(EKeys::Escape)
 	));
@@ -313,13 +327,13 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		->Action(FNovaPlayerInput::MenuPreviousTab)
 		->Default(EKeys::PageUp)
 	));
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuZoomIn", "Zoom in / Next")))
-		->Action(FNovaPlayerInput::MenuZoomIn)
-		->Default(EKeys::MouseScrollUp)
-	));
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuZoomOut", "Zoom out / Previous")))
-		->Action(FNovaPlayerInput::MenuZoomOut)
+	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuZoomIn", "Next item")))
+		->Action(FNovaPlayerInput::MenuNext)
 		->Default(EKeys::MouseScrollDown)
+	));
+	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuZoomOut", "Previous item")))
+		->Action(FNovaPlayerInput::MenuPrevious)
+		->Default(EKeys::MouseScrollUp)
 	));
 
 	// Build culture list

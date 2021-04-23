@@ -51,11 +51,11 @@ public:
 		NavigationButtons.Remove(Button);
 	}
 
-	/** Zoom in */
-	virtual void ZoomIn();
+	/** Next item */
+	virtual void Next();
 
-	/** Zoom out */
-	virtual void ZoomOut();
+	/** Previous item */
+	virtual void Previous();
 
 	/** Pass the confirm input to this menu, return true if used */
 	virtual bool Confirm();

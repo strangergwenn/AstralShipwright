@@ -174,6 +174,13 @@ FReply SNovaMenu::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FP
 	return Result;
 }
 
+FReply SNovaMenu::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	FReply Result = SCompoundWidget::OnMouseWheel(MyGeometry, MouseEvent);
+
+	return HandleKeyPress(MouseEvent.GetWheelDelta() > 0 ? EKeys::MouseScrollUp : EKeys::MouseScrollDown);
+}
+
 void SNovaMenu::OnMouseLeave(const FPointerEvent& MouseEvent)
 {
 	SCompoundWidget::OnMouseLeave(MouseEvent);
@@ -264,7 +271,6 @@ FReply SNovaMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEve
 	const FKey              Key           = KeyEvent.GetKey();
 	FReply                  Result        = FReply::Unhandled();
 	TSharedPtr<SNovaButton> FocusedButton = GetFocusedButton();
-	TSharedPtr<SNovaButton> DestinationButton;
 
 	// Set gamepad used
 	MenuManager->SetUsingGamepad(Key.IsGamepadKey());
@@ -275,95 +281,7 @@ FReply SNovaMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEve
 		Result = FocusedButton->OnKeyDown(FocusedButton->GetCachedGeometry(), KeyEvent);
 	}
 
-	// Handle menu keys
-	if (CurrentNavigationPanel)
-	{
-		// Handle navigation
-		if (IsActionKey(FNovaPlayerInput::MenuUp, Key))
-		{
-			DestinationButton =
-				GetNextButton(SharedThis(CurrentNavigationPanel), FocusedButton, CurrentNavigationButtons, EUINavigation::Up);
-		}
-		else if (IsActionKey(FNovaPlayerInput::MenuDown, Key))
-		{
-			DestinationButton =
-				GetNextButton(SharedThis(CurrentNavigationPanel), FocusedButton, CurrentNavigationButtons, EUINavigation::Down);
-		}
-		else if (IsActionKey(FNovaPlayerInput::MenuLeft, Key))
-		{
-			DestinationButton =
-				GetNextButton(SharedThis(CurrentNavigationPanel), FocusedButton, CurrentNavigationButtons, EUINavigation::Left);
-		}
-		else if (IsActionKey(FNovaPlayerInput::MenuRight, Key))
-		{
-			DestinationButton =
-				GetNextButton(SharedThis(CurrentNavigationPanel), FocusedButton, CurrentNavigationButtons, EUINavigation::Right);
-		}
-
-		// Handle menu actions
-		else if (IsActionKey(FNovaPlayerInput::MenuZoomIn, Key))
-		{
-			CurrentNavigationPanel->ZoomIn();
-			Result = FReply::Handled();
-		}
-		else if (IsActionKey(FNovaPlayerInput::MenuZoomOut, Key))
-		{
-			CurrentNavigationPanel->ZoomOut();
-			Result = FReply::Handled();
-		}
-	}
-
-	// Update focus destination
-	if (DestinationButton.IsValid() && DestinationButton->SupportsKeyboardFocus())
-	{
-		SetFocusedButton(DestinationButton, true);
-		Result = FReply::Handled();
-	}
-
-	// Cancel action has priority over remaining actions but can be ignored
-	if (IsActionKey(FNovaPlayerInput::MenuCancel, Key))
-	{
-		if (CurrentNavigationPanel && CurrentNavigationPanel->Cancel())
-		{
-			Result = FReply::Handled();
-			return Result;
-		}
-	}
-
-	// Trigger action buttons
-	for (TSharedPtr<SNovaButton>& Button : GetActionButtons())
-	{
-		if (Button->GetActionKey() == Key && Button->IsButtonEnabled() && Button->GetVisibility() == EVisibility::Visible)
-		{
-			bool WasFocused = Button->IsFocused();
-
-			Button->OnButtonClicked();
-
-			if (CurrentNavigationPanel && WasFocused && Button->IsButtonActionFocusable())
-			{
-				CurrentNavigationPanel->ResetNavigation();
-			}
-
-			Result = FReply::Handled();
-			break;
-		}
-	}
-
-	// Activate focused button
-	if (IsActionKey(FNovaPlayerInput::MenuConfirm, Key))
-	{
-		if (CurrentNavigationPanel && CurrentNavigationPanel->Confirm())
-		{
-			Result = FReply::Handled();
-		}
-		else if (FocusedButton.IsValid())
-		{
-			FocusedButton->OnButtonClicked();
-			Result = FReply::Handled();
-		}
-	}
-
-	return Result;
+	return HandleKeyPress(Key);
 }
 
 /*----------------------------------------------------
@@ -509,6 +427,103 @@ TSharedPtr<SNovaButton> SNovaMenu::GetFocusedButton()
 	}
 
 	return TSharedPtr<SNovaButton>();
+}
+
+FReply SNovaMenu::HandleKeyPress(FKey Key)
+{
+	FReply                  Result        = FReply::Unhandled();
+	TSharedPtr<SNovaButton> FocusedButton = GetFocusedButton();
+	TSharedPtr<SNovaButton> DestinationButton;
+
+	// Handle menu keys
+	if (CurrentNavigationPanel)
+	{
+		// Handle navigation
+		if (IsActionKey(FNovaPlayerInput::MenuUp, Key))
+		{
+			DestinationButton =
+				GetNextButton(SharedThis(CurrentNavigationPanel), FocusedButton, CurrentNavigationButtons, EUINavigation::Up);
+		}
+		else if (IsActionKey(FNovaPlayerInput::MenuDown, Key))
+		{
+			DestinationButton =
+				GetNextButton(SharedThis(CurrentNavigationPanel), FocusedButton, CurrentNavigationButtons, EUINavigation::Down);
+		}
+		else if (IsActionKey(FNovaPlayerInput::MenuLeft, Key))
+		{
+			DestinationButton =
+				GetNextButton(SharedThis(CurrentNavigationPanel), FocusedButton, CurrentNavigationButtons, EUINavigation::Left);
+		}
+		else if (IsActionKey(FNovaPlayerInput::MenuRight, Key))
+		{
+			DestinationButton =
+				GetNextButton(SharedThis(CurrentNavigationPanel), FocusedButton, CurrentNavigationButtons, EUINavigation::Right);
+		}
+
+		// Handle menu actions
+		else if (IsActionKey(FNovaPlayerInput::MenuNext, Key))
+		{
+			CurrentNavigationPanel->Next();
+			Result = FReply::Handled();
+		}
+		else if (IsActionKey(FNovaPlayerInput::MenuPrevious, Key))
+		{
+			CurrentNavigationPanel->Previous();
+			Result = FReply::Handled();
+		}
+	}
+
+	// Update focus destination
+	if (DestinationButton.IsValid() && DestinationButton->SupportsKeyboardFocus())
+	{
+		SetFocusedButton(DestinationButton, true);
+		Result = FReply::Handled();
+	}
+
+	// Cancel action has priority over remaining actions but can be ignored
+	if (IsActionKey(FNovaPlayerInput::MenuCancel, Key))
+	{
+		if (CurrentNavigationPanel && CurrentNavigationPanel->Cancel())
+		{
+			Result = FReply::Handled();
+			return Result;
+		}
+	}
+
+	// Trigger action buttons
+	for (TSharedPtr<SNovaButton>& Button : GetActionButtons())
+	{
+		if (Button->GetActionKey() == Key && Button->IsButtonEnabled() && Button->GetVisibility() == EVisibility::Visible)
+		{
+			bool WasFocused = Button->IsFocused();
+
+			Button->OnButtonClicked();
+
+			if (CurrentNavigationPanel && WasFocused && Button->IsButtonActionFocusable())
+			{
+				CurrentNavigationPanel->ResetNavigation();
+			}
+
+			Result = FReply::Handled();
+			break;
+		}
+	}
+
+	// Activate focused button
+	if (IsActionKey(FNovaPlayerInput::MenuConfirm, Key))
+	{
+		if (CurrentNavigationPanel && CurrentNavigationPanel->Confirm())
+		{
+			Result = FReply::Handled();
+		}
+		else if (FocusedButton.IsValid())
+		{
+			FocusedButton->OnButtonClicked();
+			Result = FReply::Handled();
+		}
+	}
+
+	return Result;
 }
 
 TSharedPtr<SNovaButton> SNovaMenu::GetNextButton(

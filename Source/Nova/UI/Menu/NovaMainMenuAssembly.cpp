@@ -381,6 +381,18 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						+ SHorizontalBox::Slot()
 
 						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNovaNew(SNovaButton)
+							.Action(FNovaPlayerInput::MenuAltPrimary)
+							.Text(LOCTEXT("PhotoMode", "Toggle photo mode"))
+							.HelpText(LOCTEXT("PhotoModeHelp", "Hide the interface to show off your spacecraft"))
+							.OnClicked(this, &SNovaMainMenuAssembly::OnEnterPhotoMode, FNovaPlayerInput::MenuAltPrimary)
+						]
+
+						+ SHorizontalBox::Slot()
+
+						+ SHorizontalBox::Slot()
 						.VAlign(VAlign_Center)
 						.AutoWidth()
 						[
@@ -683,9 +695,10 @@ void SNovaMainMenuAssembly::Hide()
 	SNovaTabPanel::Hide();
 
 	GetSpacecraftPawn()->SetOutlinedCompartment(INDEX_NONE);
+	GetSpacecraftPawn()->SetHighlightedCompartment(INDEX_NONE);
 }
 
-void SNovaMainMenuAssembly::ZoomIn()
+void SNovaMainMenuAssembly::Next()
 {
 	if (!IsCompartmentPanelVisible)
 	{
@@ -700,7 +713,7 @@ void SNovaMainMenuAssembly::ZoomIn()
 	}
 }
 
-void SNovaMainMenuAssembly::ZoomOut()
+void SNovaMainMenuAssembly::Previous()
 {
 	if (!IsCompartmentPanelVisible)
 	{
@@ -844,7 +857,7 @@ void SNovaMainMenuAssembly::Tick(const FGeometry& AllottedGeometry, const double
 
 	// Set the hovered compartment
 	int32 HighlightedCompartment = INDEX_NONE;
-	if (!IsCompartmentPanelVisible && !MenuManager->IsUsingGamepad())
+	if (!IsCompartmentPanelVisible && !MenuManager->IsUsingGamepad() && !MenuManager->GetPC()->IsInPhotoMode())
 	{
 		FVector2D MousePosition = Menu->GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos());
 		HighlightedCompartment  = GetCompartmentIndexAtPosition(MenuManager->GetPC(), GetSpacecraftPawn(), MousePosition);
@@ -1141,9 +1154,27 @@ FLinearColor SNovaMainMenuAssembly::GetCompartmentColor() const
 	return FLinearColor(1, 1, 1, Alpha);
 }
 
-const FSlateBrush* SNovaMainMenuAssembly::GetCompartmentIcon(int32 Index) const
+FText SNovaMainMenuAssembly::GetSelectedFilterText() const
 {
-	return FNovaStyleSet::GetBrush(Index == SelectedCompartmentIndex ? "Icon/SB_ListOn" : "Icon/SB_ListOff");
+	switch (GetSpacecraftPawn()->GetDisplayFilter())
+	{
+		case ENovaAssemblyDisplayFilter::ModulesOnly:
+			return LOCTEXT("ModulesOnly", "Modules only");
+			break;
+		case ENovaAssemblyDisplayFilter::ModulesStructure:
+			return LOCTEXT("ModulesStructure", "Modules & structure");
+			break;
+		case ENovaAssemblyDisplayFilter::ModulesStructureEquipments:
+			return LOCTEXT("ModulesStructureEquipments", "Modules, structure, equipments");
+			break;
+		case ENovaAssemblyDisplayFilter::ModulesStructureEquipmentsWiring:
+			return LOCTEXT("ModulesStructureEquipmentsWiring", "All internal systems");
+			break;
+		case ENovaAssemblyDisplayFilter::All:
+		default:
+			return LOCTEXT("FilterAll", "Full spacecraft");
+			break;
+	}
 }
 
 bool SNovaMainMenuAssembly::IsSelectCompartmentEnabled(int32 Index) const
@@ -1215,12 +1246,12 @@ bool SNovaMainMenuAssembly::IsEquipmentEnabled(int32 EquipmentIndex) const
 
 FKey SNovaMainMenuAssembly::GetPreviousItemKey() const
 {
-	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuZoomOut);
+	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuPrevious);
 }
 
 FKey SNovaMainMenuAssembly::GetNextItemKey() const
 {
-	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuZoomIn);
+	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuNext);
 }
 
 /*----------------------------------------------------
@@ -1288,32 +1319,14 @@ void SNovaMainMenuAssembly::OnCompartmentSelected(int32 Index)
 	SetSelectedCompartment(Index);
 }
 
+void SNovaMainMenuAssembly::OnEnterPhotoMode(FName ActionName)
+{
+	MenuManager->GetPC()->EnterPhotoMode(ActionName);
+}
+
 void SNovaMainMenuAssembly::OnSelectedFilterChanged(float Value)
 {
 	GetSpacecraftPawn()->SetDisplayFilter(static_cast<ENovaAssemblyDisplayFilter>(Value), EditedCompartmentIndex);
-}
-
-FText SNovaMainMenuAssembly::GetSelectedFilterText() const
-{
-	switch (GetSpacecraftPawn()->GetDisplayFilter())
-	{
-		case ENovaAssemblyDisplayFilter::ModulesOnly:
-			return LOCTEXT("ModulesOnly", "Modules only");
-			break;
-		case ENovaAssemblyDisplayFilter::ModulesStructure:
-			return LOCTEXT("ModulesStructure", "Modules & structure");
-			break;
-		case ENovaAssemblyDisplayFilter::ModulesStructureEquipments:
-			return LOCTEXT("ModulesStructureEquipments", "Modules, structure, equipments");
-			break;
-		case ENovaAssemblyDisplayFilter::ModulesStructureEquipmentsWiring:
-			return LOCTEXT("ModulesStructureEquipmentsWiring", "All internal systems");
-			break;
-		case ENovaAssemblyDisplayFilter::All:
-		default:
-			return LOCTEXT("FilterAll", "Full spacecraft");
-			break;
-	}
 }
 
 void SNovaMainMenuAssembly::OnSelectedModuleChanged(const UNovaModuleDescription* Module, int32 Index)
