@@ -81,6 +81,7 @@ protected:
 
 	FSlateColor GetBorderColor() const;
 
+	bool  CanEditTrajectory() const;
 	FText GetDeltaVText() const;
 	FText GetDurationText() const;
 

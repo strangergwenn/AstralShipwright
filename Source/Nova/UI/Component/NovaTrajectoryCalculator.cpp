@@ -68,6 +68,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 			.ValueStep(50)
 			.Analog(true)
 			.HelpText(LOCTEXT("AltitudeSliderHelp", "Change the intermediate altitude used to synchronize orbits"))
+			.Enabled(this, &SNovaTrajectoryCalculator::CanEditTrajectory)
 			.Header()
 			[
 				SNew(SVerticalBox)
@@ -90,6 +91,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 					.HelpText(LOCTEXT("MinimizeDeltaVHelp", "Configure the trajectory to minimize the Delta-V cost"))
 					.Action(InArgs._DeltaVActionName)
 					.OnClicked(this, &SNovaTrajectoryCalculator::OptimizeForDeltaV)
+					.Enabled(this, &SNovaTrajectoryCalculator::CanEditTrajectory)
 				]
 
 				+ SVerticalBox::Slot()
@@ -139,6 +141,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 					.HelpText(LOCTEXT("MinimizeTravelTimeHelp", "Configure the trajectory to minimize the travel tile"))
 					.Action(InArgs._DurationActionName)
 					.OnClicked(this, &SNovaTrajectoryCalculator::OptimizeForDuration)
+					.Enabled(this, &SNovaTrajectoryCalculator::CanEditTrajectory)
 				]
 
 				+ SVerticalBox::Slot()
@@ -349,6 +352,11 @@ void SNovaTrajectoryCalculator::OptimizeForDuration()
 FSlateColor SNovaTrajectoryCalculator::GetBorderColor() const
 {
 	return MenuManager->GetInterfaceColor();
+}
+
+bool SNovaTrajectoryCalculator::CanEditTrajectory() const
+{
+	return SimulatedTrajectories.Num() > 0;
 }
 
 FText SNovaTrajectoryCalculator::GetDeltaVText() const

@@ -17,7 +17,6 @@ void SNovaSlider::Construct(const FArguments& InArgs)
 {
 	// Arguments
 	SliderThemeName = InArgs._SliderTheme;
-	EnabledState    = InArgs._Enabled;
 	ValueStep       = InArgs._ValueStep;
 	Analog          = InArgs._Analog;
 	CurrentValue    = InArgs._Value;
@@ -79,6 +78,17 @@ void SNovaSlider::Construct(const FArguments& InArgs)
 	[
 		SAssignNew(Slider, SSlider)
 		.IsFocusable(false)
+		.Locked(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
+		{
+			if (InArgs._Enabled.IsSet() || InArgs._Enabled.IsBound())
+			{
+				return !InArgs._Enabled.Get();
+			}
+			else
+			{
+				return false;
+			}
+		})))
 		.Value(InArgs._Value)
 		.MinValue(InArgs._MinValue)
 		.MaxValue(InArgs._MaxValue)
