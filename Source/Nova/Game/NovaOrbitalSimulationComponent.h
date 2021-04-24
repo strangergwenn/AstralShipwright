@@ -111,6 +111,9 @@ public:
 		return SpacecraftTrajectoryDatabase.GetSpacecraftIndex(Identifier);
 	}
 
+	/** Get a player spacecraft's index in a trajectory */
+	int32 GetPlayerSpacecraftIndex(const FGuid& Identifier) const;
+
 	/** Get a spacecraft's location */
 	const FNovaOrbitalLocation* GetSpacecraftLocation(const FGuid& Identifier) const
 	{
@@ -196,6 +199,16 @@ public:
 
 		return 0;
 	}
+
+	/** Get how much fuel a player spacecraft still needs to be used for the current trajectory */
+	float GetPlayerRemainingFuelRequired(const FGuid& Identifier) const;
+
+	/** Get how much fuel a player spacecraft still needs to be used for a trajectory */
+	float GetPlayerRemainingFuelRequired(const FNovaTrajectory& Trajectory, const FGuid& Identifier) const;
+
+	/** Get how much fuel a spacecraft still needs to be used for a trajectory */
+	float GetRemainingFuelRequired(
+		const FNovaTrajectory& Trajectory, const struct FNovaSpacecraftPropulsionMetrics& Metrics, int32 SpacecraftIndex) const;
 
 	/*----------------------------------------------------
 	    Internals

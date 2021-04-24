@@ -47,9 +47,6 @@ protected:
 	/** Get the spacecraft pawn */
 	class ANovaSpacecraftPawn* GetSpacecraftPawn() const;
 
-	/** Get the spacecraft movement component */
-	class UNovaSpacecraftMovementComponent* GetSpacecraftMovement() const;
-
 	/** Check for trajectory validity */
 	bool CanCommitTrajectoryInternal(FText* Help = nullptr) const;
 
@@ -92,4 +89,7 @@ protected:
 	// Slate widgets
 	TSharedPtr<class SNovaOrbitalMap>           OrbitalMap;
 	TSharedPtr<class SNovaTrajectoryCalculator> TrajectoryCalculator;
+
+	// Local state
+	TSharedPtr<FNovaTrajectory> CurrentSimulatedTrajectory;
 };

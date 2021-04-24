@@ -468,6 +468,30 @@ void UNovaOrbitalSimulationComponent::MergeOrbit(const TArray<FGuid>& Spacecraft
 }
 
 /*----------------------------------------------------
+    Simple trajectory & orbiting getters
+----------------------------------------------------*/
+
+int32 UNovaOrbitalSimulationComponent::GetPlayerSpacecraftIndex(const FGuid& Identifier) const
+{
+	int32 Index = 0;
+
+	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	for (FGuid SpacecraftIdentifier : GameState->GetPlayerSpacecraftIdentifiers())
+	{
+		if (SpacecraftIdentifier == Identifier)
+		{
+			return Index;
+		}
+		else
+		{
+			Index++;
+		}
+	}
+
+	return INDEX_NONE;
+}
+
+/*----------------------------------------------------
     Trajectory & orbiting getters
 ----------------------------------------------------*/
 
@@ -547,6 +571,57 @@ TPair<const UNovaArea*, float> UNovaOrbitalSimulationComponent::GetNearestAreaAn
 	}
 
 	return TPair<const UNovaArea*, float>(ClosestArea, ClosestDistance);
+}
+
+float UNovaOrbitalSimulationComponent::GetPlayerRemainingFuelRequired(const FGuid& Identifier) const
+{
+	const FNovaTrajectory* Trajectory = GetPlayerTrajectory();
+
+	if (Trajectory)
+	{
+		return GetPlayerRemainingFuelRequired(*Trajectory, Identifier);
+	}
+
+	return 0;
+}
+
+float UNovaOrbitalSimulationComponent::GetPlayerRemainingFuelRequired(const FNovaTrajectory& Trajectory, const FGuid& Identifier) const
+{
+	const ANovaGameState*  GameState  = GetOwner<ANovaGameState>();
+	const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Identifier);
+
+	if (Spacecraft)
+	{
+		return GetRemainingFuelRequired(Trajectory, Spacecraft->GetPropulsionMetrics(), GetPlayerSpacecraftIndex(Identifier));
+	}
+
+	return 0;
+}
+
+float UNovaOrbitalSimulationComponent::GetRemainingFuelRequired(
+	const FNovaTrajectory& Trajectory, const FNovaSpacecraftPropulsionMetrics& Metrics, int32 SpacecraftIndex) const
+{
+	float     Fuel        = 0;
+	FNovaTime CurrentTime = GetCurrentTime();
+
+	for (const FNovaManeuver& Maneuver : Trajectory.Maneuvers)
+	{
+		NCHECK(SpacecraftIndex != INDEX_NONE && SpacecraftIndex >= 0 && SpacecraftIndex < Maneuver.ThrustFactors.Num());
+		float ManeuverFuelUse = Metrics.PropellantRate * Maneuver.ThrustFactors[SpacecraftIndex] * Maneuver.Duration.ToSeconds();
+
+		if (CurrentTime < Maneuver.Time)
+		{
+			Fuel += ManeuverFuelUse;
+		}
+		else if (CurrentTime <= Maneuver.Time + Maneuver.Duration)
+		{
+			float FuelUseAlpha = (CurrentTime - Maneuver.Time) / Maneuver.Duration;
+			NCHECK(FuelUseAlpha >= 0.0f && FuelUseAlpha <= 1.0f);
+			Fuel += FuelUseAlpha * ManeuverFuelUse;
+		}
+	}
+
+	return Fuel;
 }
 
 /*----------------------------------------------------

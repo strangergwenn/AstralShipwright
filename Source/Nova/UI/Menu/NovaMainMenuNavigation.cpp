@@ -10,7 +10,7 @@
 #include "Nova/Game/NovaOrbitalSimulationComponent.h"
 
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
-#include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
+#include "Nova/Spacecraft/System/NovaSpacecraftPropellantSystem.h"
 
 #include "Nova/System/NovaAssetManager.h"
 #include "Nova/System/NovaGameInstance.h"
@@ -19,6 +19,7 @@
 #include "Nova/Player/NovaPlayerController.h"
 #include "Nova/UI/Component/NovaOrbitalMap.h"
 #include "Nova/UI/Component/NovaTrajectoryCalculator.h"
+#include "Nova/UI/Widget/NovaFadingWidget.h"
 #include "Nova/UI/Widget/NovaSlider.h"
 #include "Nova/Nova.h"
 
@@ -153,8 +154,7 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 			
 			// Delta-V trade-off slider
 			+ SVerticalBox::Slot()
-			.VAlign(VAlign_Center)
-			.Padding(Theme.ContentPadding)
+			.AutoHeight()
 			[
 				SAssignNew(TrajectoryCalculator, SNovaTrajectoryCalculator)
 				.MenuManager(MenuManager)
@@ -164,6 +164,41 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 				.DeltaVActionName(FNovaPlayerInput::MenuSecondary)
 				.OnTrajectoryChanged(this, &SNovaMainMenuNavigation::OnTrajectoryChanged)
 			]
+
+			// Fuel use
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.HAlign(HAlign_Center)
+			[
+				SNew(SNovaText)
+				.Text(FNovaTextGetter::CreateLambda([&]()
+				{
+					const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+					const UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+					const ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
+					
+					if (IsValid(GameState) && IsValid(OrbitalSimulation) && IsValid(SpacecraftPawn) && CurrentSimulatedTrajectory.IsValid())
+					{
+						UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+						NCHECK(PropellantSystem);
+						float FuelToBeUsed = OrbitalSimulation->GetPlayerRemainingFuelRequired(*CurrentSimulatedTrajectory, SpacecraftPawn->GetSpacecraftIdentifier());
+						float FuelRemaining = PropellantSystem->GetCurrentPropellantAmount();
+
+						FNumberFormattingOptions Options;
+						Options.MaximumFractionalDigits = 1;
+
+						return FText::FormatNamed(LOCTEXT("TrajectoryFuelFormat", "{used}T of propellant will be used ({remaining}T remaining)"),
+							TEXT("used"), FText::AsNumber(FuelToBeUsed, &Options),
+							TEXT("remaining"), FText::AsNumber(FuelRemaining, &Options));
+					}
+
+					return FText();
+				}))
+				.TextStyle(&Theme.MainFont)
+				.WrapTextAt(500)
+			]
+
+			+ SVerticalBox::Slot()
 		]
 
 		// Map slot
@@ -204,6 +239,8 @@ void SNovaMainMenuNavigation::Hide()
 	SNovaTabPanel::Hide();
 
 	OrbitalMap->ClearTrajectory();
+	TrajectoryCalculator->Reset();
+	CurrentSimulatedTrajectory.Reset();
 }
 
 /*----------------------------------------------------
@@ -215,25 +252,12 @@ ANovaSpacecraftPawn* SNovaMainMenuNavigation::GetSpacecraftPawn() const
 	return MenuManager->GetPC() ? MenuManager->GetPC()->GetSpacecraftPawn() : nullptr;
 }
 
-UNovaSpacecraftMovementComponent* SNovaMainMenuNavigation::GetSpacecraftMovement() const
-{
-	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-	if (IsValid(SpacecraftPawn))
-	{
-		return Cast<UNovaSpacecraftMovementComponent>(SpacecraftPawn->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
-	}
-	else
-	{
-		return nullptr;
-	}
-}
-
 bool SNovaMainMenuNavigation::CanCommitTrajectoryInternal(FText* Help) const
 {
 	const ANovaGameState*            GameState         = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
-	if (OrbitalSimulation)
+	if (IsValid(OrbitalSimulation))
 	{
 		if (SelectedDestination == GameState->GetCurrentArea())
 		{
@@ -337,7 +361,7 @@ FText SNovaMainMenuNavigation::GetLocationText() const
 {
 	const UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
-	if (OrbitalSimulation)
+	if (IsValid(OrbitalSimulation))
 	{
 		const FNovaTrajectory*      Trajectory = OrbitalSimulation->GetPlayerTrajectory();
 		const FNovaOrbitalLocation* Location   = OrbitalSimulation->GetPlayerLocation();
@@ -391,6 +415,7 @@ FText SNovaMainMenuNavigation::GetCommitTrajectoryHelpText() const
 
 void SNovaMainMenuNavigation::OnTrajectoryChanged(TSharedPtr<FNovaTrajectory> Trajectory)
 {
+	CurrentSimulatedTrajectory = Trajectory;
 	OrbitalMap->ShowTrajectory(Trajectory, false);
 }
 
@@ -401,11 +426,12 @@ void SNovaMainMenuNavigation::OnCommitTrajectory()
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
 	const TSharedPtr<FNovaTrajectory>& Trajectory = OrbitalMap->GetPreviewTrajectory();
-	if (OrbitalSimulation && OrbitalSimulation->CanCommitTrajectory(Trajectory))
+	if (IsValid(OrbitalSimulation) && OrbitalSimulation->CanCommitTrajectory(Trajectory))
 	{
 		OrbitalSimulation->CommitTrajectory(GameState->GetPlayerSpacecraftIdentifiers(), Trajectory);
 		OrbitalMap->ClearTrajectory();
 		TrajectoryCalculator->Reset();
+		CurrentSimulatedTrajectory.Reset();
 	}
 }
 

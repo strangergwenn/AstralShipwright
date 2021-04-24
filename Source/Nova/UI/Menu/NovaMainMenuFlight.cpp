@@ -65,17 +65,30 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.Text_Lambda([this]() -> FText
 						{
 							ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
-							if (IsValid(SpacecraftPawn))
+							const UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+							
+							if (IsValid(SpacecraftPawn) && OrbitalSimulation)
 							{
 								UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
 								NCHECK(PropellantSystem);
+								
+								float TrajectoryFuelRemaining = OrbitalSimulation->GetPlayerRemainingFuelRequired(SpacecraftPawn->GetSpacecraftIdentifier());
 
 								FNumberFormattingOptions Options;
 								Options.MaximumFractionalDigits = 0;
 
-								return FText::FormatNamed(LOCTEXT("PropellantFormat", "Propellant left : {remaining} out of {total}"),
+								FText PropellantLine = FText::FormatNamed(LOCTEXT("PropellantFormat", "Propellant : {remaining}T remaining out of {total}T"),
 									TEXT("remaining"), FText::AsNumber(PropellantSystem->GetCurrentPropellantAmount(), &Options),
 									TEXT("total"), FText::AsNumber(PropellantSystem->GetTotalPropellantAmount(), &Options));
+								
+								FText TrajectoryLine;
+								if (TrajectoryFuelRemaining > 0)
+								{
+									TrajectoryLine = FText::FormatNamed(LOCTEXT("TrajectoryFormat", "Trajectory : {remaining}T of propellant still needed"),
+										TEXT("remaining"), FText::AsNumber(TrajectoryFuelRemaining, &Options));
+								}
+
+								return FText::FromString(PropellantLine.ToString() + "\n" + TrajectoryLine.ToString());
 							}
 
 							return FText();
