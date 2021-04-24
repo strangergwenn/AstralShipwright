@@ -44,11 +44,11 @@ TPair<FText, const FSlateBrush*> FNovaStyleSet::GetKeyDisplay(const FKey& Key)
 		// Special keyboard keys
 		if (Key == EKeys::LeftShift)
 		{
-			DisplayName = FText::FromString("SFT");
+			DisplayName = FText::FromString("SHFT");
 		}
 		else if (Key == EKeys::RightShift)
 		{
-			DisplayName = FText::FromString("RSFT");
+			DisplayName = FText::FromString("RSHF");
 		}
 		else if (Key == EKeys::LeftControl)
 		{
@@ -114,15 +114,18 @@ TPair<FText, const FSlateBrush*> FNovaStyleSet::GetKeyDisplay(const FKey& Key)
 		// Mouse keys
 		else if (Key == EKeys::LeftMouseButton)
 		{
-			DisplayName = FText::FromString("LM");
+			// TODO
+			DisplayName = FText::FromString("LMB");
 		}
 		else if (Key == EKeys::RightMouseButton)
 		{
-			DisplayName = FText::FromString("RM");
+			// TODO
+			DisplayName = FText::FromString("RMB");
 		}
 		else if (Key == EKeys::MiddleMouseButton)
 		{
-			DisplayName = FText::FromString("MM");
+			// TODO
+			DisplayName = FText::FromString("MMB");
 		}
 		else if (Key == EKeys::MouseScrollDown)
 		{
@@ -176,19 +179,31 @@ TPair<FText, const FSlateBrush*> FNovaStyleSet::GetKeyDisplay(const FKey& Key)
 		}
 		else if (Key == EKeys::Gamepad_LeftShoulder)
 		{
+			// TODO
 			DisplayName = FText::FromString("LB");
 		}
 		else if (Key == EKeys::Gamepad_RightShoulder)
 		{
+			// TODO
 			DisplayName = FText::FromString("RB");
+		}
+		else if (Key == EKeys::Gamepad_Special_Left)
+		{
+			DisplayBrushName = "View";
 		}
 		else if (Key == EKeys::Gamepad_Special_Right)
 		{
 			DisplayBrushName = "Menu";
 		}
-		else if (Key == EKeys::Gamepad_Special_Left)
+		else if (Key == EKeys::Gamepad_LeftThumbstick)
 		{
-			DisplayBrushName = "View";
+			// TODO
+			DisplayName = FText::FromString("LTHMB");
+		}
+		else if (Key == EKeys::Gamepad_RightThumbstick)
+		{
+			// TODO
+			DisplayName = FText::FromString("RTHMB");
 		}
 
 		// Defaults : default brush if no brush set, uppercase name if no text set

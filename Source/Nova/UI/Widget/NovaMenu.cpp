@@ -158,6 +158,8 @@ FReply SNovaMenu::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEve
 
 	MousePressed = false;
 
+	HandleKeyPress(MouseEvent.GetEffectingButton());
+
 	return FReply::Handled().SetUserFocus(SharedThis(this), EFocusCause::SetDirectly);
 }
 

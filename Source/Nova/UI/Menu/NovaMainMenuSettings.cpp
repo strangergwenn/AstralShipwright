@@ -311,6 +311,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 	));
 	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuAltPrimary", "Primary option")))
 		->Action(FNovaPlayerInput::MenuAltPrimary)
+		->Default(EKeys::RightMouseButton)
 	));
 	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuAltSecondary", "Secondary option")))
 		->Action(FNovaPlayerInput::MenuAltSecondary)

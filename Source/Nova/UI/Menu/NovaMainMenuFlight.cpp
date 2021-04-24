@@ -86,9 +86,11 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 								{
 									TrajectoryLine = FText::FormatNamed(LOCTEXT("TrajectoryFormat", "Trajectory : {remaining}T of propellant still needed"),
 										TEXT("remaining"), FText::AsNumber(TrajectoryFuelRemaining, &Options));
+
+									return FText::FromString(PropellantLine.ToString() + "\n" + TrajectoryLine.ToString());
 								}
 
-								return FText::FromString(PropellantLine.ToString() + "\n" + TrajectoryLine.ToString());
+								return PropellantLine;
 							}
 
 							return FText();
