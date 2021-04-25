@@ -183,6 +183,13 @@ void SNovaMainMenu::Show()
 	if (IsOnMenu != WasOnMainMenu)
 	{
 		ENovaMainMenuType DesiredMenu = IsOnMenu ? ENovaMainMenuType::Home : ENovaMainMenuType::Flight;
+
+		const ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
+		if (IsValid(SpacecraftPawn) && SpacecraftPawn->GetCompartmentCount() == 0)
+		{
+			DesiredMenu = ENovaMainMenuType::Assembly;
+		}
+
 		TabView->SetTabIndex(static_cast<uint8>(DesiredMenu));
 		WasOnMainMenu = IsOnMenu;
 	}

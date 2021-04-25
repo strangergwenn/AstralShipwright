@@ -176,6 +176,10 @@ protected:
 	FText GetCompartmentText();
 
 	// Compartment callbacks
+	bool IsCompartmentPanelVisible() const
+	{
+		return CompartmentPanelVisible;
+	}
 	bool  IsBackToAssemblyEnabled() const;
 	bool  IsModuleEnabled(int32 ModuleIndex) const;
 	bool  IsEquipmentEnabled(int32 EquipmentIndex) const;
@@ -196,7 +200,7 @@ protected:
 	void OnRemoveCompartmentConfirmed();
 
 	// Compartment selection
-	void OnSelectedCompartmentChanged(const class UNovaCompartmentDescription* Compartment, int32 Index, bool Forward);
+	void OnAddCompartment(const class UNovaCompartmentDescription* Compartment, int32 Index, bool Forward);
 	void OnCompartmentSelected(int32 Index);
 
 	// Display filters
@@ -233,7 +237,7 @@ protected:
 	// Panel fading system
 	float FadeDuration;
 	float CurrentFadeTime;
-	bool  IsCompartmentPanelVisible;
+	bool  CompartmentPanelVisible;
 
 	// Assembly data
 	int32 SelectedCompartmentIndex;
