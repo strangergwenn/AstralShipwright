@@ -121,14 +121,24 @@ void SNovaButton::Construct(const FArguments& InArgs)
 		]
 	];
 	InnerContainer->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+	
+	// Get text & icon data
+	const bool HasIcon = IsToggle || InArgs._Icon.IsSet() || InArgs._Icon.IsBound();
+	const bool HasAction = InArgs._Action.IsSet() || InArgs._Action.IsBound();
+	const bool IsFullWidthText = !HasIcon && !HasAction && !Theme.Centered;
+	WrapSize = Size.Width - Theme.WrapMargin / 2;
+	if (HasIcon)
+	{
+		WrapSize -= Theme.WrapMargin;
+	}
+	if (HasAction)
+	{
+		WrapSize -= Theme.WrapMargin;
+	}
 
 	// Construct the default internal layout
 	if (InArgs._Text.IsSet() || InArgs._Icon.IsSet())
 	{
-		const bool HasIcon = IsToggle || InArgs._Icon.IsSet() || InArgs._Icon.IsBound();
-		const bool HasAction = InArgs._Action.IsSet() || InArgs._Action.IsBound();
-		const bool IsFullWidthText = !HasIcon && !HasAction && !Theme.Centered;
-		
 		// Create the box
 		TSharedPtr<SHorizontalBox> Box;
 		SAssignNew(Box, SHorizontalBox);
@@ -161,9 +171,10 @@ void SNovaButton::Construct(const FArguments& InArgs)
 		.Padding(IsFullWidthText ? Theme.IconPadding : Theme.Centered ? FMargin(-1, 0, 0, 0) : FMargin())
 		[
 			SAssignNew(TextBlock, STextBlock)
-			.TextStyle(&Theme.MainFont)
+			.TextStyle(&Theme.Font)
 			.Font(this, &SNovaButton::GetFont)
 			.Text(InArgs._Text)
+			.WrapTextAt(WrapSize)
 		];
 		
 		// Centering
@@ -435,19 +446,21 @@ FOptionalSize SNovaButton::GetLayoutHeight() const
 FSlateFontInfo SNovaButton::GetFont() const
 {
 	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
+	FSlateFontInfo          Font  = Theme.Font.Font;
 
 	if (Text.IsSet() || Text.IsBound())
 	{
-		float TextLength  = Text.Get().ToString().Len();
-		float ButtonWidth = GetDesiredSize().X;
+		const TSharedRef<FSlateFontMeasure> FontMeasureService = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
 
-		if (TextLength > 0.09 * ButtonWidth)
+		float TextSize = FontMeasureService->Measure(Text.Get(), Theme.Font.Font).X;
+		if (TextSize > WrapSize)
 		{
-			return Theme.SmallFont.Font;
+			float Ratio = FMath::Max(WrapSize / TextSize, 0.75f);
+			Font.Size *= Ratio;
 		}
 	}
 
-	return Theme.MainFont.Font;
+	return Font;
 }
 
 TOptional<FSlateRenderTransform> SNovaButton::GetBorderRenderTransform() const

@@ -209,6 +209,7 @@ protected:
 	float                                 BorderRotation;
 	bool                                  IsToggle;
 	float                                 AnimationDuration;
+	float                                 WrapSize;
 
 	// Callbacks
 	FSimpleDelegate              OnFocused;

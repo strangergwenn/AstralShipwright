@@ -50,7 +50,7 @@ public:
 				.Padding(FMargin(0, 10))
 				[
 					SAssignNew(TextBlock, STextBlock)
-					.TextStyle(&Theme.MainFont)
+					.TextStyle(&Theme.Font)
 					.Text(InArgs._Text)
 				]
 			]
