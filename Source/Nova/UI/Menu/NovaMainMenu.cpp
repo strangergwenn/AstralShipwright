@@ -195,8 +195,6 @@ void SNovaMainMenu::Show()
 	}
 
 	SetVisibility(EVisibility::Visible);
-
-	TabView->Refresh();
 }
 
 void SNovaMainMenu::Hide()

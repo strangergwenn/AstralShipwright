@@ -65,7 +65,7 @@ ANovaTurntablePawn::ANovaTurntablePawn()
 	AnimationDuration           = 0.5f;
 	DefaultDistance             = 500.0f;
 	DefaultDistanceFactor       = 2.0f;
-	DistanceFactorIncrement     = 0.6f;
+	DistanceFactorIncrement     = 0.5f;
 	NumDistanceFactorIncrements = 1;
 	CameraMinTilt               = -80.0f;
 	CameraMaxTilt               = 20.0f;

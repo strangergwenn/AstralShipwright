@@ -158,9 +158,6 @@ public:
 		return *(new SNovaTabView::FSlot());
 	}
 
-	/** Re-show the current tab because the game world may have changed */
-	void Refresh();
-
 	/** Set the next tab index */
 	void ShowPreviousTab();
 

@@ -715,8 +715,10 @@ void SNovaMainMenuAssembly::Show()
 	if (CompartmentPanelVisible)
 	{
 		EditedCompartmentIndex = INDEX_NONE;
-		GetSpacecraftPawn()->SetDisplayFilter(GetSpacecraftPawn()->GetDisplayFilter(), INDEX_NONE);
-		GetSpacecraftPawn()->SetOutlinedCompartment(SelectedCompartmentIndex);
+
+		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+		SpacecraftPawn->SetDisplayFilter(GetSpacecraftPawn()->GetDisplayFilter(), INDEX_NONE);
+		SpacecraftPawn->SetOutlinedCompartment(SelectedCompartmentIndex);
 	}
 
 	// Reset compartment data
@@ -728,8 +730,11 @@ void SNovaMainMenuAssembly::Hide()
 {
 	SNovaTabPanel::Hide();
 
-	GetSpacecraftPawn()->SetOutlinedCompartment(INDEX_NONE);
-	GetSpacecraftPawn()->SetHighlightedCompartment(INDEX_NONE);
+	// Reset the pawn
+	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+	SpacecraftPawn->SetDisplayFilter(ENovaAssemblyDisplayFilter::All, INDEX_NONE);
+	SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
+	SpacecraftPawn->SetHighlightedCompartment(INDEX_NONE);
 }
 
 void SNovaMainMenuAssembly::Next()

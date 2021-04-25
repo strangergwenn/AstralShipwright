@@ -313,15 +313,6 @@ void SNovaTabView::Tick(const FGeometry& AllottedGeometry, const double CurrentT
 	CurrentBlurAlpha = FMath::Clamp(CurrentBlurAlpha, 0.0f, 1.0f);
 }
 
-void SNovaTabView::Refresh()
-{
-	if (CurrentTabIndex == DesiredTabIndex)
-	{
-		GetCurrentTabContent()->Hide();
-		GetCurrentTabContent()->Show();
-	}
-}
-
 void SNovaTabView::ShowPreviousTab()
 {
 	for (int32 Index = CurrentTabIndex - 1; Index >= 0; Index--)
