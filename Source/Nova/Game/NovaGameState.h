@@ -254,7 +254,7 @@ protected:
 
 	// Time to wait in seconds after an event before notifying it with possible others in between
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	int32 EventNotificationDelay;
+	float EventNotificationDelay;
 
 	/*----------------------------------------------------
 	    Components

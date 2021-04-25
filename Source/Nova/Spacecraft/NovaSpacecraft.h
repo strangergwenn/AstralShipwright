@@ -205,7 +205,7 @@ public:
 	/** Create a new spacecraft */
 	void Create()
 	{
-		Identifier = FGuid();
+		Identifier = FGuid::NewGuid();
 	}
 
 	/** Trigger a rebuilding of the local state on all clients */
@@ -230,7 +230,6 @@ public:
 	/** Get propulsion characteristics for this spacecraft */
 	const FNovaSpacecraftPropulsionMetrics& GetPropulsionMetrics() const
 	{
-		NCHECK(PropulsionMetrics.DryMass >= 0);
 		return PropulsionMetrics;
 	}
 

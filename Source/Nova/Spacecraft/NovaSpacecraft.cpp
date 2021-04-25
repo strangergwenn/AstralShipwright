@@ -185,10 +185,10 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 		FString IdentifierString;
 		if (Save->TryGetStringField(Name, IdentifierString))
 		{
-			FGuid Identifier;
-			if (FGuid::Parse(IdentifierString, Identifier))
+			FGuid AssetIdentifier;
+			if (FGuid::Parse(IdentifierString, AssetIdentifier))
 			{
-				Asset = UNovaAssetManager::Get()->GetAsset(Identifier);
+				Asset = UNovaAssetManager::Get()->GetAsset(AssetIdentifier);
 			}
 		}
 

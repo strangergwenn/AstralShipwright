@@ -902,7 +902,9 @@ void SNovaMainMenuAssembly::Tick(const FGeometry& AllottedGeometry, const double
 
 ANovaSpacecraftPawn* SNovaMainMenuAssembly::GetSpacecraftPawn() const
 {
-	return MenuManager->GetPC() ? MenuManager->GetPC()->GetSpacecraftPawn() : nullptr;
+	ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC() ? MenuManager->GetPC()->GetSpacecraftPawn() : nullptr;
+	NCHECK(SpacecraftPawn);
+	return SpacecraftPawn;
 }
 
 int32 SNovaMainMenuAssembly::GetNewBuildIndex(bool Forward) const
@@ -999,11 +1001,12 @@ void SNovaMainMenuAssembly::SetCompartmentPanelVisible(bool Active)
 {
 	IsCompartmentPanelVisible = Active;
 
+	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+
 	// Refresh the hull type list
-	if (IsCompartmentPanelVisible)
+	if (IsCompartmentPanelVisible && IsValid(SpacecraftPawn))
 	{
-		ANovaSpacecraftPawn*    SpacecraftPawn = GetSpacecraftPawn();
-		const FNovaCompartment& Compartment    = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
+		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
 
 		HullTypeList = Compartment.Description->GetSupportedHullTypes();
 		HullTypeListView->Refresh(HullTypeList.Find(Compartment.HullType));
@@ -1022,7 +1025,10 @@ void SNovaMainMenuAssembly::SetCompartmentPanelVisible(bool Active)
 	// Update UI state
 	ResetNavigation();
 	SlatePrepass(FSlateApplicationBase::Get().GetApplicationScale());
-	GetSpacecraftPawn()->ResetZoom();
+	if (IsValid(SpacecraftPawn))
+	{
+		SpacecraftPawn->ResetZoom();
+	}
 }
 
 /*----------------------------------------------------
