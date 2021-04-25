@@ -7,7 +7,7 @@
 #include "Engine/Engine.h"
 
 /*----------------------------------------------------
-    Public methods
+    Asset description
 ----------------------------------------------------*/
 
 void UNovaAssetDescription::UpdateAssetRender()
@@ -32,4 +32,21 @@ void UNovaAssetDescription::UpdateAssetRender()
 	CaptureActor->RenderAsset(this, AssetRender);
 
 #endif
+}
+
+FText INovaDescriptibleInterface::GetFormattedDescription(FString Delimiter) const
+{
+	FString Result;
+
+	for (const FText& Text : GetDescription())
+	{
+		if (Result.Len() > 0)
+		{
+			Result += Delimiter;
+		}
+
+		Result += Text.ToString();
+	}
+
+	return FText::FromString(Result);
 }

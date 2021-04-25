@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Nova/Game/NovaGameTypes.h"
 #include "NovaSpacecraftTypes.h"
 #include "NovaSpacecraft.generated.h"
 
@@ -82,6 +83,19 @@ struct FNovaCompartment
 	bool NeedsMainPiping;
 
 	bool NeedsMainWiring;
+};
+
+/** Wrapper class that allows inheriting from INovaDescriptibleInterface despite USTRUCT */
+struct FNovaCompartmentHelper : public INovaDescriptibleInterface
+{
+	FNovaCompartmentHelper(const FNovaCompartment& C)
+	{
+		Compartment = C;
+	}
+
+	TArray<FText> GetDescription() const override;
+
+	FNovaCompartment Compartment;
 };
 
 /** Metrics of the spacecraft's propulsion system */

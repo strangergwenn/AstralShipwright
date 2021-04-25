@@ -68,9 +68,9 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 				.Padding(Theme.ContentPadding)
 				[
 					SNew(SBorder)
-					.Padding(0)
 					.BorderImage(new FSlateNoResource)
 					.ColorAndOpacity(this, &SNovaMainMenuAssembly::GetMainColor)
+					.Padding(0)
 					[
 						SNew(SHorizontalBox)
 
@@ -101,6 +101,15 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							.AutoHeight()
 							[
 								SAssignNew(CompartmentBox, SHorizontalBox)
+							]
+
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							.VAlign(VAlign_Center)
+							[
+								SNew(SNovaRichText)
+								.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuAssembly::GetCompartmentText))
+								.TextStyle(&Theme.InfoFont)
 							]
 						]
 
@@ -220,9 +229,9 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 				.Padding(Theme.ContentPadding)
 				[
 					SNew(SBorder)
-					.Padding(0)
 					.BorderImage(new FSlateNoResource)
 					.ColorAndOpacity(this, &SNovaMainMenuAssembly::GetCompartmentColor)
+					.Padding(0)
 					[
 						SNew(SHorizontalBox)
 						
@@ -234,8 +243,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							SNew(SNovaKeyLabel)
 							.Key(this, &SNovaMainMenuAssembly::GetPreviousItemKey)
 						]
-
-						// Module list
+				
+						// Compartment selection
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						[
@@ -244,37 +253,59 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SNew(STextBlock)
-								.TextStyle(&Theme.SubtitleFont)
-								.Text(LOCTEXT("ModulesTitle", "Modules"))
+								SNew(SHorizontalBox)
+
+								// Module list
+								+ SHorizontalBox::Slot()
+								.AutoWidth()
+								[
+									SNew(SVerticalBox)
+
+									+ SVerticalBox::Slot()
+									.AutoHeight()
+									[
+										SNew(STextBlock)
+										.TextStyle(&Theme.SubtitleFont)
+										.Text(LOCTEXT("ModulesTitle", "Modules"))
+									]
+
+									+ SVerticalBox::Slot()
+									.AutoHeight()
+									[
+										SAssignNew(ModuleBox, SHorizontalBox)
+									]
+								]
+
+								// Equipment list
+								+ SHorizontalBox::Slot()
+								.AutoWidth()
+								[
+									SNew(SVerticalBox)
+
+									+ SVerticalBox::Slot()
+									.AutoHeight()
+									[
+										SNew(STextBlock)
+										.TextStyle(&Theme.SubtitleFont)
+										.Text(LOCTEXT("EquipmentsTitle", "Equipments"))
+									]
+
+									+ SVerticalBox::Slot()
+									.AutoHeight()
+									[
+										SAssignNew(EquipmentBox, SHorizontalBox)
+									]
+								]
 							]
 
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SAssignNew(ModuleBox, SHorizontalBox)
-							]
-						]
-
-						// Equipment list
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
-						[
-							SNew(SVerticalBox)
-
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							[
-								SNew(STextBlock)
-								.TextStyle(&Theme.SubtitleFont)
-								.Text(LOCTEXT("EquipmentsTitle", "Equipments"))
+								SNew(SNovaText)
+								.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuAssembly::GetModuleOrEquipmentText))
+								.TextStyle(&Theme.InfoFont)
 							]
 
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							[
-								SAssignNew(EquipmentBox, SHorizontalBox)
-							]
 						]
 
 						+ SHorizontalBox::Slot()
@@ -1126,16 +1157,53 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateAssetItem(const UNovaAssetDes
 {
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 
-	return SNew(SOverlay).Clipping(EWidgetClipping::ClipToBoundsAlways)
+	// clang-format off
+	return SNew(SOverlay)
+		.Clipping(EWidgetClipping::ClipToBoundsAlways)
 
-		 + SOverlay::Slot()[SNew(SScaleBox)[SNew(SImage).Image(Asset ? &Asset->AssetRender : new FSlateNoResource)]]
+		 + SOverlay::Slot()
+		[
+			SNew(SScaleBox)
+			[
+				SNew(SImage).Image(Asset ? &Asset->AssetRender : new FSlateNoResource)
+			]
+		]
 
-		 + SOverlay::Slot().Padding(Theme.ContentPadding)[SNew(STextBlock).TextStyle(&Theme.MainFont).Text(GetAssetName(Asset))];
+		 + SOverlay::Slot()
+		.Padding(Theme.ContentPadding)
+		[
+			SNew(SVerticalBox)
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.TextStyle(&Theme.MainFont)
+				 .Text(GetAssetName(Asset))
+			 ]
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SRichTextBlock)
+				.Text(GetAssetDescription(Asset))
+				.TextStyle(&Theme.MainFont)
+				.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
+				+ SRichTextBlock::ImageDecorator()
+			 ]
+		];
+
+	// clang-format on
 }
 
 FText SNovaMainMenuAssembly::GetAssetName(const UNovaAssetDescription* Asset) const
 {
 	return Asset ? Asset->Name : LOCTEXT("Empty", "Empty");
+}
+
+FText SNovaMainMenuAssembly::GetAssetDescription(const UNovaAssetDescription* Asset) const
+{
+	return Asset ? Asset->GetParagraphDescription() : FText();
 }
 
 FLinearColor SNovaMainMenuAssembly::GetMainColor() const
@@ -1213,6 +1281,20 @@ bool SNovaMainMenuAssembly::IsEditCompartmentEnabled() const
 	return SelectedCompartmentIndex >= 0;
 }
 
+FText SNovaMainMenuAssembly::GetCompartmentText()
+{
+	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+
+	if (IsValid(SpacecraftPawn) && SelectedCompartmentIndex != INDEX_NONE)
+	{
+		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
+
+		return FNovaCompartmentHelper(Compartment).GetInlineDescription();
+	}
+
+	return FText();
+}
+
 bool SNovaMainMenuAssembly::IsModuleEnabled(int32 ModuleIndex) const
 {
 	if (IsCompartmentPanelVisible)
@@ -1242,6 +1324,37 @@ bool SNovaMainMenuAssembly::IsEquipmentEnabled(int32 EquipmentIndex) const
 	}
 
 	return false;
+}
+
+FText SNovaMainMenuAssembly::GetModuleOrEquipmentText()
+{
+	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+
+	if (IsCompartmentPanelVisible && IsValid(SpacecraftPawn))
+	{
+		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
+
+		if (IsModuleSelected())
+		{
+			int32 ModuleIndex = GetSelectedModuleIndex();
+			if (ModuleIndex < Compartment.Description->ModuleSlots.Num())
+			{
+				const UNovaModuleDescription* Module = Compartment.Modules[ModuleIndex].Description;
+				return Module ? Module->GetInlineDescription() : LOCTEXT("EmptyModule", "Empty module slot");
+			}
+		}
+		else
+		{
+			int32 EquipmentIndex = GetSelectedEquipmentIndex();
+			if (EquipmentIndex < Compartment.Description->EquipmentSlots.Num())
+			{
+				const UNovaEquipmentDescription* Equipment = Compartment.Equipments[EquipmentIndex];
+				return Equipment ? Equipment->GetInlineDescription() : LOCTEXT("EmptyEquipment", "Empty equipment slot");
+			}
+		}
+	}
+
+	return FText();
 }
 
 FKey SNovaMainMenuAssembly::GetPreviousItemKey() const

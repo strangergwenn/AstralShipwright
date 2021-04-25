@@ -29,6 +29,32 @@ enum class ENovaSerialize : uint8
 	DataToJson
 };
 
+/** Interface for objects that will provide a description interface */
+class INovaDescriptibleInterface
+{
+public:
+	/** Return the full description of this asset as inline text */
+	FText GetInlineDescription() const
+	{
+		return GetFormattedDescription(" - ");
+	}
+
+	/** Return the full description of this asset as paragraph text */
+	FText GetParagraphDescription() const
+	{
+		return GetFormattedDescription("\n");
+	}
+
+	/** Return the formatted description of this asset */
+	FText GetFormattedDescription(FString Delimiter) const;
+
+	/** Return details on this asset */
+	virtual TArray<FText> GetDescription() const
+	{
+		return TArray<FText>();
+	}
+};
+
 /*----------------------------------------------------
     Time type
 ----------------------------------------------------*/
@@ -166,7 +192,9 @@ static FNovaTime operator/(const double Value, const FNovaTime Time)
 
 /** Component description */
 UCLASS(ClassGroup = (Nova))
-class UNovaAssetDescription : public UDataAsset
+class UNovaAssetDescription
+	: public UDataAsset
+	, public INovaDescriptibleInterface
 {
 	GENERATED_BODY()
 

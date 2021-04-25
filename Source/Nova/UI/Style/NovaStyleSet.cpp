@@ -6,8 +6,8 @@
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
-#define GAIA_STYLE_INSTANCE_NAME "NovaStyle"
-#define GAIA_STYLE_PATH "/Game/UI"
+#define NOVA_STYLE_INSTANCE_NAME "NovaStyle"
+#define NOVA_STYLE_PATH "/Game/UI"
 
 /*----------------------------------------------------
     Singleton
@@ -17,7 +17,7 @@ TSharedPtr<FSlateStyleSet> FNovaStyleSet::Instance = NULL;
 
 void FNovaStyleSet::Initialize()
 {
-	FSlateStyleRegistry::UnRegisterSlateStyle(GAIA_STYLE_INSTANCE_NAME);
+	FSlateStyleRegistry::UnRegisterSlateStyle(NOVA_STYLE_INSTANCE_NAME);
 
 	if (!Instance.IsValid())
 	{
@@ -524,7 +524,7 @@ FLinearColor FNovaStyleSet::GetViridisColor(float Alpha)
 
 TSharedRef<FSlateStyleSet> FNovaStyleSet::Create()
 {
-	TSharedRef<FSlateStyleSet> StyleRef = FSlateGameResources::New(FName(GAIA_STYLE_INSTANCE_NAME), GAIA_STYLE_PATH, GAIA_STYLE_PATH);
+	TSharedRef<FSlateStyleSet> StyleRef = FSlateGameResources::New(FName(NOVA_STYLE_INSTANCE_NAME), NOVA_STYLE_PATH, NOVA_STYLE_PATH);
 	FSlateStyleSet&            Style    = StyleRef.Get();
 
 	Style.Set("Nova.Button", FButtonStyle()

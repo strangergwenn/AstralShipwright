@@ -2,8 +2,30 @@
 
 #include "NovaSpacecraftTypes.h"
 
+#define LOCTEXT_NAMESPACE "NovaSpacecraftTypes"
+
 /*----------------------------------------------------
-    Module data asset
+    Compartment data asset
+----------------------------------------------------*/
+
+TArray<FText> UNovaCompartmentDescription::GetDescription() const
+{
+	TArray<FText> Result = Super::GetDescription();
+
+	Result.Add(
+		FText::FormatNamed(LOCTEXT("CompartmentDescriptionMassFormat", "{mass}T"), TEXT("mass"), FText::AsNumber(FMath::RoundToInt(Mass))));
+
+	Result.Add(FText::FormatNamed(
+		LOCTEXT("CompartmentDescriptionModulesFormat", "{modules} module slots"), TEXT("modules"), FText::AsNumber(ModuleSlots.Num())));
+
+	Result.Add(FText::FormatNamed(LOCTEXT("CompartmentDescriptionEquipmentsFormat", "{equipments} equipment slots"), TEXT("equipments"),
+		FText::AsNumber(EquipmentSlots.Num())));
+
+	return Result;
+}
+
+/*----------------------------------------------------
+    Module data assets
 ----------------------------------------------------*/
 
 TSoftObjectPtr<class UStaticMesh> UNovaModuleDescription::GetBulkhead(ENovaBulkheadType Style, bool Forward) const
@@ -21,6 +43,34 @@ TSoftObjectPtr<class UStaticMesh> UNovaModuleDescription::GetBulkhead(ENovaBulkh
 		default:
 			return nullptr;
 	}
+}
+
+TArray<FText> UNovaModuleDescription::GetDescription() const
+{
+	TArray<FText> Result = Super::GetDescription();
+
+	Result.Add(FText::FormatNamed(LOCTEXT("ModuleDescriptionFormat", "{mass}T"), TEXT("mass"), FText::AsNumber(Mass)));
+
+	return Result;
+}
+
+TArray<FText> UNovaPropellantModuleDescription::GetDescription() const
+{
+	TArray<FText> Result = Super::GetDescription();
+
+	Result.Add(FText::FormatNamed(
+		LOCTEXT("PropellantModuleDescriptionFormat", "{propellant}T capacity"), TEXT("propellant"), FText::AsNumber(PropellantMass)));
+
+	return Result;
+}
+
+TArray<FText> UNovaCargoModuleDescription::GetDescription() const
+{
+	TArray<FText> Result = Super::GetDescription();
+
+	Result.Add(FText::FormatNamed(LOCTEXT("CargoModuleDescriptionFormat", "{cargo}T capacity"), TEXT("cargo"), FText::AsNumber(CargoMass)));
+
+	return Result;
 }
 
 /*----------------------------------------------------
@@ -42,3 +92,24 @@ TSoftObjectPtr<UObject> UNovaEquipmentDescription::GetMesh() const
 		return nullptr;
 	}
 }
+
+TArray<FText> UNovaEquipmentDescription::GetDescription() const
+{
+	TArray<FText> Result = Super::GetDescription();
+
+	Result.Add(FText::FormatNamed(LOCTEXT("EquipmenteDescriptionFormat", "{mass}T"), TEXT("mass"), FText::AsNumber(Mass)));
+
+	return Result;
+}
+
+TArray<FText> UNovaEngineDescription::GetDescription() const
+{
+	TArray<FText> Result = Super::GetDescription();
+
+	Result.Add(FText::FormatNamed(
+		LOCTEXT("EngineDescriptionFormat", "{thrust}KN max thrust"), TEXT("thrust"), FText::AsNumber(FMath::RoundToInt(Thrust))));
+
+	return Result;
+}
+
+#undef LOCTEXT_NAMESPACE

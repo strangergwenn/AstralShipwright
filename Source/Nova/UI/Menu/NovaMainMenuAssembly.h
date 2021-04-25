@@ -162,6 +162,7 @@ protected:
 	// Helpers
 	TSharedRef<SWidget> GenerateAssetItem(const class UNovaAssetDescription* Asset) const;
 	FText               GetAssetName(const class UNovaAssetDescription* Asset) const;
+	FText               GetAssetDescription(const UNovaAssetDescription* Asset) const;
 
 	// Panels
 	FLinearColor GetMainColor() const;
@@ -172,11 +173,13 @@ protected:
 	bool  IsSelectCompartmentEnabled(int32 Index) const;
 	bool  IsAddCompartmentEnabled(bool Forward) const;
 	bool  IsEditCompartmentEnabled() const;
+	FText GetCompartmentText();
 
 	// Compartment callbacks
-	bool IsBackToAssemblyEnabled() const;
-	bool IsModuleEnabled(int32 ModuleIndex) const;
-	bool IsEquipmentEnabled(int32 EquipmentIndex) const;
+	bool  IsBackToAssemblyEnabled() const;
+	bool  IsModuleEnabled(int32 ModuleIndex) const;
+	bool  IsEquipmentEnabled(int32 EquipmentIndex) const;
+	FText GetModuleOrEquipmentText();
 
 	// Key bindings
 	FKey GetPreviousItemKey() const;

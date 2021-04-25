@@ -241,6 +241,8 @@ public:
 		return Enabled ? ConnectionWiring : nullptr;
 	}
 
+	TArray<FText> GetDescription() const override;
+
 public:
 	// Main structural element
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
@@ -305,6 +307,8 @@ public:
 	/** Get the appropriate bulkhead mesh */
 	TSoftObjectPtr<class UStaticMesh> GetBulkhead(ENovaBulkheadType Style, bool Forward) const;
 
+	TArray<FText> GetDescription() const override;
+
 public:
 	// Main module segment
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
@@ -346,6 +350,9 @@ class UNovaPropellantModuleDescription : public UNovaModuleDescription
 	GENERATED_BODY()
 
 public:
+	TArray<FText> GetDescription() const override;
+
+public:
 	// Module propellant mass in T
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float PropellantMass = 400;
@@ -356,6 +363,9 @@ UCLASS(ClassGroup = (Nova))
 class UNovaCargoModuleDescription : public UNovaModuleDescription
 {
 	GENERATED_BODY()
+
+public:
+	TArray<FText> GetDescription() const override;
 
 public:
 	// Cargo mass in T
@@ -376,6 +386,8 @@ class UNovaEquipmentDescription : public UNovaAssetDescription
 public:
 	/** Get the mesh for this equipment */
 	TSoftObjectPtr<UObject> GetMesh() const;
+
+	TArray<FText> GetDescription() const override;
 
 	virtual TArray<FSoftObjectPath> GetAsyncAssets() const override
 	{
@@ -415,6 +427,8 @@ UCLASS(ClassGroup = (Nova))
 class UNovaEngineDescription : public UNovaEquipmentDescription
 {
 	GENERATED_BODY()
+public:
+	TArray<FText> GetDescription() const override;
 
 public:
 	// Engine thrust in kN

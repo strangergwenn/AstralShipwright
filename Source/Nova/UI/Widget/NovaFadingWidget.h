@@ -263,8 +263,53 @@ public:
 		return CurrentText;
 	}
 
-private:
+protected:
 	FText           DesiredText;
 	FText           CurrentText;
 	FNovaTextGetter Getter;
+};
+
+/** Simple SRichTextBlock analog that fades smoothly when the text changes */
+class SNovaRichText : public SNovaText
+{
+	SLATE_BEGIN_ARGS(SNovaRichText)
+	{}
+
+	SLATE_ARGUMENT(FNovaTextGetter, Text)
+	SLATE_STYLE_ARGUMENT(FTextBlockStyle, TextStyle)
+	SLATE_ATTRIBUTE(float, WrapTextAt)
+
+	SLATE_END_ARGS()
+
+public:
+	void Construct(const FArguments& InArgs)
+	{
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+		Getter = InArgs._Text;
+
+		// clang-format off
+		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments()
+			.FadeDuration(ENovaUIConstants::FadeDurationShort)
+			.DisplayDuration(4.0f)
+		);
+
+		ChildSlot
+		[
+			SNew(SBorder)
+			.BorderImage(new FSlateNoResource)
+			.ColorAndOpacity(this, &SNovaFadingWidget::GetLinearColor)
+			.Padding(0)
+			[
+				SNew(SRichTextBlock)
+				.Text(this, &SNovaText::GetText)
+				.TextStyle(InArgs._TextStyle)
+				.WrapTextAt(InArgs._WrapTextAt)
+				.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
+				+ SRichTextBlock::ImageDecorator()
+			]
+
+		];
+		// clang-format on
+	}
 };

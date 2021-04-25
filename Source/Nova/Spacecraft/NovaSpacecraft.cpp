@@ -7,6 +7,8 @@
 
 #include "Dom/JsonObject.h"
 
+#define LOCTEXT_NAMESPACE "NovaSpacecraft"
+
 /*----------------------------------------------------
     Spacecraft compartment
 ----------------------------------------------------*/
@@ -89,6 +91,47 @@ const UNovaEquipmentDescription* FNovaCompartment::GetEquipmentySocket(FName Soc
 		}
 	}
 	return nullptr;
+}
+
+TArray<FText> FNovaCompartmentHelper::GetDescription() const
+{
+	TArray<FText> Result = INovaDescriptibleInterface::GetDescription();
+
+	NCHECK(IsValid(Compartment.Description));
+	float TotalMass = Compartment.Description->Mass;
+
+	// Modules
+	int32 ModuleCount = 0;
+	for (const FNovaCompartmentModule& Module : Compartment.Modules)
+	{
+		if (IsValid(Module.Description))
+		{
+			TotalMass += Module.Description->Mass;
+			ModuleCount++;
+		}
+	}
+
+	// Equipments
+	int32 EquipmentCount = 0;
+	for (const UNovaEquipmentDescription* Equipment : Compartment.Equipments)
+	{
+		if (IsValid(Equipment))
+		{
+			TotalMass += Equipment->Mass;
+			EquipmentCount++;
+		}
+	}
+
+	Result.Add(
+		FText::FormatNamed(LOCTEXT("CompartmentMassFormat", "{mass}T"), TEXT("mass"), FText::AsNumber(FMath::RoundToInt(TotalMass))));
+
+	Result.Add(FText::FormatNamed(LOCTEXT("CompartmentModulesFormat", "{current}/{total} modules"), TEXT("current"),
+		FText::AsNumber(ModuleCount), TEXT("total"), FText::AsNumber(Compartment.Description->ModuleSlots.Num())));
+
+	Result.Add(FText::FormatNamed(LOCTEXT("CompartmentEquipmentsFormat", "{current}/{total} equipments"), TEXT("current"),
+		FText::AsNumber(EquipmentCount), TEXT("total"), FText::AsNumber(Compartment.Description->EquipmentSlots.Num())));
+
+	return Result;
 }
 
 /*----------------------------------------------------
@@ -541,3 +584,5 @@ bool FNovaSpacecraft::IsSameModuleInNextCompartment(int32 CompartmentIndex, int3
 
 	return false;
 };
+
+#undef LOCTEXT_NAMESPACE

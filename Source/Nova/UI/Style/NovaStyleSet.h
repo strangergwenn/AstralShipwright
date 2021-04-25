@@ -73,7 +73,8 @@ public:
 		NCHECK(Instance);
 #endif
 		{
-			return GetStyle().GetWidgetStyle<T>(Name);
+			FString Path = FString(TEXT("/Style/")) + Name.ToString();
+			return GetStyle().GetWidgetStyle<T>(*Path);
 		}
 #if WITH_EDITOR
 		else
