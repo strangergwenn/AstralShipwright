@@ -850,6 +850,7 @@ TSharedRef<SWidget> SNovaMainMenuSettings::GenerateCultureItem(TSharedPtr<FStrin
 			.BorderImage(new FSlateNoResource)
 			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Center)
+			.Padding(0)
 			[
 				SNew(SImage)
 				.Image(this, &SNovaMainMenuSettings::GetCultureIcon, Culture)

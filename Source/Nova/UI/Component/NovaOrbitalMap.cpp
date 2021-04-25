@@ -744,7 +744,7 @@ int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& All
 	// Draw batched points
 	for (const FNovaBatchedPoint& Point : BatchedPoints)
 	{
-		const FSlateBrush* Brush     = FNovaStyleSet::GetBrush("Game/SB_OrbitalObject");
+		const FSlateBrush* Brush     = FNovaStyleSet::GetBrush("Map/SB_OrbitalObject");
 		FVector2D          BrushSize = Brush->GetImageSize() * Point.Scale;
 
 		FSlateDrawElement::MakeBox(OutDrawElements, LayerId,

@@ -296,6 +296,7 @@ TSharedRef<SWidget> SNovaMainMenuNavigation::GenerateDestinationItem(const UNova
 			.BorderImage(new FSlateNoResource)
 			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Center)
+			.Padding(0)
 			[
 				SNew(SImage)
 				.Image(this, &SNovaMainMenuNavigation::GetDestinationIcon, Destination)

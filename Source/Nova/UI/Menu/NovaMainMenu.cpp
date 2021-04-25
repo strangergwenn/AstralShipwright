@@ -78,6 +78,7 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 			.Padding(Theme.ContentPadding)
 			.BorderImage(new FSlateNoResource)
 			.ColorAndOpacity(this, &SNovaMainMenu::GetTooltipColor)
+			.Padding(0)
 			[
 				SNew(STextBlock)
 				.TextStyle(&Theme.SubtitleFont)
