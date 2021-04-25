@@ -93,12 +93,18 @@ const UNovaEquipmentDescription* FNovaCompartment::GetEquipmentySocket(FName Soc
 	return nullptr;
 }
 
+/*----------------------------------------------------
+    Spacecraft compartment helper
+----------------------------------------------------*/
+
 TArray<FText> FNovaCompartmentHelper::GetDescription() const
 {
 	TArray<FText> Result = INovaDescriptibleInterface::GetDescription();
 
 	NCHECK(IsValid(Compartment.Description));
-	float TotalMass = Compartment.Description->Mass;
+	float DryMass            = Compartment.Description->Mass;
+	float CargoCapacity      = 0;
+	float PropellantCapacity = 0;
 
 	// Modules
 	int32 ModuleCount = 0;
@@ -106,7 +112,20 @@ TArray<FText> FNovaCompartmentHelper::GetDescription() const
 	{
 		if (IsValid(Module.Description))
 		{
-			TotalMass += Module.Description->Mass;
+			const UNovaCargoModuleDescription*      CargoModule      = Cast<UNovaCargoModuleDescription>(Module.Description);
+			const UNovaPropellantModuleDescription* PropellandModule = Cast<UNovaPropellantModuleDescription>(Module.Description);
+
+			DryMass += Module.Description->Mass;
+
+			if (CargoModule)
+			{
+				CargoCapacity += CargoModule->CargoMass;
+			}
+			else if (PropellandModule)
+			{
+				PropellantCapacity += PropellandModule->PropellantMass;
+			}
+
 			ModuleCount++;
 		}
 	}
@@ -117,19 +136,37 @@ TArray<FText> FNovaCompartmentHelper::GetDescription() const
 	{
 		if (IsValid(Equipment))
 		{
-			TotalMass += Equipment->Mass;
+			DryMass += Equipment->Mass;
 			EquipmentCount++;
 		}
 	}
 
-	Result.Add(
-		FText::FormatNamed(LOCTEXT("CompartmentMassFormat", "{mass}T"), TEXT("mass"), FText::AsNumber(FMath::RoundToInt(TotalMass))));
+	Result.Add(FText::FormatNamed(LOCTEXT("CompartmentMassFormat", "{mass}T"), TEXT("mass"), FText::AsNumber(FMath::RoundToInt(DryMass))));
 
-	Result.Add(FText::FormatNamed(LOCTEXT("CompartmentModulesFormat", "{current}/{total} modules"), TEXT("current"),
-		FText::AsNumber(ModuleCount), TEXT("total"), FText::AsNumber(Compartment.Description->ModuleSlots.Num())));
+	if (ModuleCount)
+	{
+		Result.Add(FText::FormatNamed(LOCTEXT("CompartmentModulesFormat", "{modules} {modules}|plural(one=module,other=modules)"),
+			TEXT("modules"), FText::AsNumber(ModuleCount)));
+	}
 
-	Result.Add(FText::FormatNamed(LOCTEXT("CompartmentEquipmentsFormat", "{current}/{total} equipments"), TEXT("current"),
-		FText::AsNumber(EquipmentCount), TEXT("total"), FText::AsNumber(Compartment.Description->EquipmentSlots.Num())));
+	if (EquipmentCount)
+	{
+		Result.Add(
+			FText::FormatNamed(LOCTEXT("CompartmentEquipmentsFormat", "{equipments} {equipments}|plural(one=equipment,other=equipments)"),
+				TEXT("equipments"), FText::AsNumber(EquipmentCount)));
+	}
+
+	if (PropellantCapacity)
+	{
+		Result.Add(FText::FormatNamed(LOCTEXT("CompartmentPropellantFormat", "{propellant}T capacity"), TEXT("propellant"),
+			FText::AsNumber(FMath::RoundToInt(PropellantCapacity))));
+	}
+
+	if (CargoCapacity)
+	{
+		Result.Add(FText::FormatNamed(
+			LOCTEXT("CompartmentCargoFormat", "{cargo}T capacity"), TEXT("cargo"), FText::AsNumber(FMath::RoundToInt(CargoCapacity))));
+	}
 
 	return Result;
 }
