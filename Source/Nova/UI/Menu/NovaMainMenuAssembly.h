@@ -230,7 +230,8 @@ protected:
 	TSharedPtr<SHorizontalBox>        CompartmentBox;
 	TSharedPtr<SHorizontalBox>        ModuleBox;
 	TSharedPtr<SHorizontalBox>        EquipmentBox;
-	TSharedPtr<class SNovaButton>     SaveCompartmentButton;
+	TSharedPtr<class SNovaSlider>     DisplayFilter;
+	TSharedPtr<class SNovaButton>     SaveButton;
 	TSharedPtr<class SNovaModalPanel> ModalPanel;
 	TSharedPtr<SVerticalBox>          MenuBox;
 

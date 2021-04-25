@@ -15,11 +15,12 @@ TArray<FText> UNovaCompartmentDescription::GetDescription() const
 	Result.Add(FText::FormatNamed(LOCTEXT("CompartmentDescriptionMassFormat", "<img src=\"/Text/Mass\"/> {mass}T"), TEXT("mass"),
 		FText::AsNumber(FMath::RoundToInt(Mass))));
 
-	Result.Add(FText::FormatNamed(
-		LOCTEXT("CompartmentDescriptionModulesFormat", "{modules} module slots"), TEXT("modules"), FText::AsNumber(ModuleSlots.Num())));
+	Result.Add(FText::FormatNamed(LOCTEXT("CompartmentDescriptionModulesFormat", "<img src=\"/Text/Module\"/> {modules} module slots"),
+		TEXT("modules"), FText::AsNumber(ModuleSlots.Num())));
 
-	Result.Add(FText::FormatNamed(LOCTEXT("CompartmentDescriptionEquipmentsFormat", "{equipments} equipment slots"), TEXT("equipments"),
-		FText::AsNumber(EquipmentSlots.Num())));
+	Result.Add(
+		FText::FormatNamed(LOCTEXT("CompartmentDescriptionEquipmentsFormat", "<img src=\"/Text/Equipment\"/> {equipments} equipment slots"),
+			TEXT("equipments"), FText::AsNumber(EquipmentSlots.Num())));
 
 	return Result;
 }

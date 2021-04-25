@@ -139,7 +139,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SNovaAssignNew(SaveCompartmentButton, SNovaButton)
+								SNovaAssignNew(SaveButton, SNovaButton)
 								.Size("DoubleButtonSize")
 								.Text(LOCTEXT("SaveSpacecraft", "Save spacecraft"))
 								.HelpText(LOCTEXT("SaveSpacecraftHelp", "Save the current state of the spacecraft"))
@@ -438,7 +438,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						[
-							SNovaNew(SNovaSlider)
+							SNovaAssignNew(DisplayFilter, SNovaSlider)
 							.Action(FNovaPlayerInput::MenuAltSecondary)
 							.Value(static_cast<int32>(ENovaAssemblyDisplayFilter::All))
 							.MaxValue(static_cast<int32>(ENovaAssemblyDisplayFilter::All))
@@ -735,6 +735,8 @@ void SNovaMainMenuAssembly::Hide()
 	SpacecraftPawn->SetDisplayFilter(ENovaAssemblyDisplayFilter::All, INDEX_NONE);
 	SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
 	SpacecraftPawn->SetHighlightedCompartment(INDEX_NONE);
+
+	DisplayFilter->SetCurrentValue(static_cast<float>(ENovaAssemblyDisplayFilter::All));
 }
 
 void SNovaMainMenuAssembly::Next()
@@ -862,9 +864,9 @@ TSharedPtr<SNovaButton> SNovaMainMenuAssembly::GetDefaultFocusButton() const
 	{
 		return EquipmentListView;
 	}
-	else if (SaveCompartmentButton->IsButtonEnabled())
+	else if (SaveButton->IsButtonEnabled())
 	{
-		return SaveCompartmentButton;
+		return SaveButton;
 	}
 	else
 	{
