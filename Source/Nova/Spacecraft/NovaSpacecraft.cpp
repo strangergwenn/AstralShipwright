@@ -172,31 +172,35 @@ TArray<FText> FNovaSpacecraftCompartmentMetrics::GetDescription() const
 {
 	TArray<FText> Result = INovaDescriptibleInterface::GetDescription();
 
-	Result.Add(FText::FormatNamed(LOCTEXT("CompartmentMassFormat", "{mass}T"), TEXT("mass"), FText::AsNumber(FMath::RoundToInt(DryMass))));
+	Result.Add(FText::FormatNamed(
+		LOCTEXT("CompartmentMassFormat", "<img src=\"/Text/Mass\"/> {mass}T"), TEXT("mass"), FText::AsNumber(FMath::RoundToInt(DryMass))));
 
 	if (ModuleCount)
 	{
-		Result.Add(FText::FormatNamed(LOCTEXT("CompartmentModulesFormat", "{modules} {modules}|plural(one=module,other=modules)"),
+		Result.Add(FText::FormatNamed(
+			LOCTEXT("CompartmentModulesFormat", "<img src=\"/Text/Module\"/> {modules} {modules}|plural(one=module,other=modules)"),
 			TEXT("modules"), FText::AsNumber(ModuleCount)));
 	}
 
 	if (EquipmentCount)
 	{
 		Result.Add(
-			FText::FormatNamed(LOCTEXT("CompartmentEquipmentsFormat", "{equipments} {equipments}|plural(one=equipment,other=equipments)"),
+			FText::FormatNamed(LOCTEXT("CompartmentEquipmentsFormat",
+								   "<img src=\"/Text/Equipment\"/> {equipments} {equipments}|plural(one=equipment,other=equipments)"),
 				TEXT("equipments"), FText::AsNumber(EquipmentCount)));
 	}
 
 	if (PropellantMassCapacity)
 	{
-		Result.Add(FText::FormatNamed(LOCTEXT("CompartmentPropellantFormat", "{propellant}T capacity"), TEXT("propellant"),
-			FText::AsNumber(FMath::RoundToInt(PropellantMassCapacity))));
+		Result.Add(
+			FText::FormatNamed(LOCTEXT("CompartmentPropellantFormat", "<img src=\"/Text/Propellant\"/> {propellant}T propellant capacity"),
+				TEXT("propellant"), FText::AsNumber(FMath::RoundToInt(PropellantMassCapacity))));
 	}
 
 	if (CargoMassCapacity)
 	{
-		Result.Add(FText::FormatNamed(
-			LOCTEXT("CompartmentCargoFormat", "{cargo}T capacity"), TEXT("cargo"), FText::AsNumber(FMath::RoundToInt(CargoMassCapacity))));
+		Result.Add(FText::FormatNamed(LOCTEXT("CompartmentCargoFormat", "<img src=\"/Text/Cargo\"/> {cargo}T cargo capacity"),
+			TEXT("cargo"), FText::AsNumber(FMath::RoundToInt(CargoMassCapacity))));
 	}
 
 	return Result;

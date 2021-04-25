@@ -301,7 +301,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SNew(SNovaText)
+								SNew(SNovaRichText)
 								.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuAssembly::GetModuleOrEquipmentText))
 								.TextStyle(&Theme.InfoFont)
 							]
