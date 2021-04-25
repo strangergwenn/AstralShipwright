@@ -281,6 +281,20 @@ FNovaCompartment& ANovaSpacecraftPawn::GetCompartment(int32 Index)
 	return Spacecraft->Compartments[Index];
 }
 
+const FNovaCompartment& ANovaSpacecraftPawn::GetCompartment(int32 Index) const
+{
+	NCHECK(Spacecraft.IsValid());
+	NCHECK(Index >= 0 && Index < Spacecraft->Compartments.Num());
+	return Spacecraft->Compartments[Index];
+}
+
+FNovaSpacecraftCompartmentMetrics ANovaSpacecraftPawn::GetCompartmentHelper(int32 Index) const
+{
+	NCHECK(Spacecraft.IsValid());
+
+	return FNovaSpacecraftCompartmentMetrics(*Spacecraft, Index);
+}
+
 int32 ANovaSpacecraftPawn::GetCompartmentCount() const
 {
 	int32 Count = 0;

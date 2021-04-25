@@ -183,6 +183,12 @@ public:
 	/** Get a compartment */
 	FNovaCompartment& GetCompartment(int32 Index);
 
+	/** Get a compartment */
+	const FNovaCompartment& GetCompartment(int32 Index) const;
+
+	/** Get a compartment description */
+	FNovaSpacecraftCompartmentMetrics GetCompartmentHelper(int32 Index) const;
+
 	/** Get the current number of compartments */
 	int32 GetCompartmentCount() const;
 

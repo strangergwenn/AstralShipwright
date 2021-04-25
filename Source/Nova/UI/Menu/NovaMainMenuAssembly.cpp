@@ -1303,9 +1303,7 @@ FText SNovaMainMenuAssembly::GetCompartmentText()
 
 	if (IsValid(SpacecraftPawn) && SelectedCompartmentIndex != INDEX_NONE)
 	{
-		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
-
-		return FNovaCompartmentHelper(Compartment).GetInlineDescription();
+		return SpacecraftPawn->GetCompartmentHelper(SelectedCompartmentIndex).GetInlineDescription();
 	}
 
 	return FText();

@@ -63,7 +63,7 @@ public:
 	float GetTotalPropellantAmount() const
 	{
 		const FNovaSpacecraftPropulsionMetrics* PropulsionMetrics = GetPropulsionMetrics();
-		return PropulsionMetrics ? PropulsionMetrics->MaximumPropellantMass : 0;
+		return PropulsionMetrics ? PropulsionMetrics->PropellantMassCapacity : 0;
 	}
 
 	/** Return the current propellant mass rate in T/s */

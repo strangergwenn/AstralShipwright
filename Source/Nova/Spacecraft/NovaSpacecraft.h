@@ -85,17 +85,21 @@ struct FNovaCompartment
 	bool NeedsMainWiring;
 };
 
-/** Wrapper class that allows inheriting from INovaDescriptibleInterface despite USTRUCT */
-struct FNovaCompartmentHelper : public INovaDescriptibleInterface
+/** Metrics for a spacecraft compartment */
+struct FNovaSpacecraftCompartmentMetrics : public INovaDescriptibleInterface
 {
-	FNovaCompartmentHelper(const FNovaCompartment& C)
-	{
-		Compartment = C;
-	}
+	FNovaSpacecraftCompartmentMetrics(const struct FNovaSpacecraft& Spacecraft, int32 CompartmentIndex);
 
 	TArray<FText> GetDescription() const override;
 
-	FNovaCompartment Compartment;
+public:
+	int32 ModuleCount;
+	int32 EquipmentCount;
+	float DryMass;
+	float PropellantMassCapacity;
+	float CargoMassCapacity;
+	float Thrust;
+	float TotalEngineISPTimesThrust;
 };
 
 /** Metrics of the spacecraft's propulsion system */
@@ -103,8 +107,8 @@ struct FNovaSpacecraftPropulsionMetrics
 {
 	FNovaSpacecraftPropulsionMetrics()
 		: DryMass(-1)
-		, MaximumPropellantMass(0)
-		, MaximumCargoMass(0)
+		, PropellantMassCapacity(0)
+		, CargoMassCapacity(0)
 		, MaximumMass(0)
 		, SpecificImpulse(0)
 		, Thrust(0)
@@ -117,7 +121,7 @@ struct FNovaSpacecraftPropulsionMetrics
 	/** Get the worst-case acceleration for this spacecraft in m/s² */
 	float GetLowestAcceleration() const
 	{
-		return Thrust / (DryMass + MaximumPropellantMass + MaximumCargoMass);
+		return Thrust / (DryMass + PropellantMassCapacity + CargoMassCapacity);
 	}
 
 	/** Get the duration & mass of propellant spent in T for a maneuver */
@@ -126,7 +130,7 @@ struct FNovaSpacecraftPropulsionMetrics
 		NCHECK(Thrust > 0);
 		NCHECK(ExhaustVelocity > 0);
 
-		float Duration = (((DryMass + MaximumCargoMass + CurrentPropellantMass) * 1000.0f * ExhaustVelocity) / (Thrust * 1000.0f)) *
+		float Duration = (((DryMass + CargoMassCapacity + CurrentPropellantMass) * 1000.0f * ExhaustVelocity) / (Thrust * 1000.0f)) *
 						 (1.0f - exp(-abs(DeltaV) / ExhaustVelocity)) / 60.0f;
 		float PropellantUsed = PropellantRate * Duration;
 
@@ -140,10 +144,10 @@ struct FNovaSpacecraftPropulsionMetrics
 	float DryMass;
 
 	// Maximum propellant mass in T
-	float MaximumPropellantMass;
+	float PropellantMassCapacity;
 
 	// Maximum cargo mass in T
-	float MaximumCargoMass;
+	float CargoMassCapacity;
 
 	// Maximum total mass in T
 	float MaximumMass;
@@ -182,6 +186,8 @@ USTRUCT(Atomic)
 struct FNovaSpacecraft : public FFastArraySerializerItem
 {
 	GENERATED_BODY()
+
+	friend struct FNovaSpacecraftCompartmentMetrics;
 
 public:
 	/*----------------------------------------------------
@@ -236,7 +242,7 @@ public:
 	/** Reset completely the propellant amount to the spacecraft's maximum */
 	void RefillPropellant()
 	{
-		SystemState.InitialPropellantMass = PropulsionMetrics.MaximumPropellantMass;
+		SystemState.InitialPropellantMass = PropulsionMetrics.PropellantMassCapacity;
 	}
 
 	/** Get a safe copy of this spacecraft without empty compartments */

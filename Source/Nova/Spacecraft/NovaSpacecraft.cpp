@@ -9,6 +9,10 @@
 
 #define LOCTEXT_NAMESPACE "NovaSpacecraft"
 
+// Constants
+constexpr float StandardGravity           = 9.807f;
+constexpr float SkirtPropellantMultiplier = 1.1f;
+
 /*----------------------------------------------------
     Spacecraft compartment
 ----------------------------------------------------*/
@@ -94,52 +98,79 @@ const UNovaEquipmentDescription* FNovaCompartment::GetEquipmentySocket(FName Soc
 }
 
 /*----------------------------------------------------
-    Spacecraft compartment helper
+    Spacecraft compartment metrics
 ----------------------------------------------------*/
 
-TArray<FText> FNovaCompartmentHelper::GetDescription() const
+FNovaSpacecraftCompartmentMetrics::FNovaSpacecraftCompartmentMetrics(const FNovaSpacecraft& Spacecraft, int32 CompartmentIndex)
+	: ModuleCount(0)
+	, EquipmentCount(0)
+	, DryMass(0.0f)
+	, PropellantMassCapacity(0.0f)
+	, CargoMassCapacity(0.0f)
+	, Thrust(0.0f)
+	, TotalEngineISPTimesThrust(0.0f)
+{
+	const FNovaCompartment& Compartment = Spacecraft.Compartments[CompartmentIndex];
+
+	if (Compartment.IsValid())
+	{
+		DryMass = Compartment.Description->Mass;
+
+		// Iterate over modules
+		for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+		{
+			const FNovaCompartmentModule& Module = Compartment.Modules[ModuleIndex];
+			if (IsValid(Module.Description))
+			{
+				ModuleCount++;
+				DryMass += Module.Description->Mass;
+
+				// Handle propellant modules
+				const UNovaPropellantModuleDescription* PropellantModule = Cast<UNovaPropellantModuleDescription>(Module.Description);
+				if (PropellantModule)
+				{
+					float PropellantMass = PropellantModule->PropellantMass;
+
+					if (Spacecraft.IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
+					{
+						PropellantMass *= SkirtPropellantMultiplier;
+					}
+
+					PropellantMassCapacity += PropellantMass;
+				}
+
+				// Handle cargo modules
+				const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Module.Description);
+				if (CargoModule)
+				{
+					CargoMassCapacity += CargoModule->CargoMass;
+				}
+			}
+		}
+
+		// Iterate over equipments
+		for (const UNovaEquipmentDescription* Equipment : Compartment.Equipments)
+		{
+			if (IsValid(Equipment))
+			{
+				EquipmentCount++;
+				DryMass += Equipment->Mass;
+
+				// Handle engine equipments
+				const UNovaEngineDescription* Engine = Cast<UNovaEngineDescription>(Equipment);
+				if (Engine)
+				{
+					Thrust += Engine->Thrust;
+					TotalEngineISPTimesThrust += Engine->SpecificImpulse * Engine->Thrust;
+				}
+			}
+		}
+	}
+}
+
+TArray<FText> FNovaSpacecraftCompartmentMetrics::GetDescription() const
 {
 	TArray<FText> Result = INovaDescriptibleInterface::GetDescription();
-
-	NCHECK(IsValid(Compartment.Description));
-	float DryMass            = Compartment.Description->Mass;
-	float CargoCapacity      = 0;
-	float PropellantCapacity = 0;
-
-	// Modules
-	int32 ModuleCount = 0;
-	for (const FNovaCompartmentModule& Module : Compartment.Modules)
-	{
-		if (IsValid(Module.Description))
-		{
-			const UNovaCargoModuleDescription*      CargoModule      = Cast<UNovaCargoModuleDescription>(Module.Description);
-			const UNovaPropellantModuleDescription* PropellandModule = Cast<UNovaPropellantModuleDescription>(Module.Description);
-
-			DryMass += Module.Description->Mass;
-
-			if (CargoModule)
-			{
-				CargoCapacity += CargoModule->CargoMass;
-			}
-			else if (PropellandModule)
-			{
-				PropellantCapacity += PropellandModule->PropellantMass;
-			}
-
-			ModuleCount++;
-		}
-	}
-
-	// Equipments
-	int32 EquipmentCount = 0;
-	for (const UNovaEquipmentDescription* Equipment : Compartment.Equipments)
-	{
-		if (IsValid(Equipment))
-		{
-			DryMass += Equipment->Mass;
-			EquipmentCount++;
-		}
-	}
 
 	Result.Add(FText::FormatNamed(LOCTEXT("CompartmentMassFormat", "{mass}T"), TEXT("mass"), FText::AsNumber(FMath::RoundToInt(DryMass))));
 
@@ -156,16 +187,16 @@ TArray<FText> FNovaCompartmentHelper::GetDescription() const
 				TEXT("equipments"), FText::AsNumber(EquipmentCount)));
 	}
 
-	if (PropellantCapacity)
+	if (PropellantMassCapacity)
 	{
 		Result.Add(FText::FormatNamed(LOCTEXT("CompartmentPropellantFormat", "{propellant}T capacity"), TEXT("propellant"),
-			FText::AsNumber(FMath::RoundToInt(PropellantCapacity))));
+			FText::AsNumber(FMath::RoundToInt(PropellantMassCapacity))));
 	}
 
-	if (CargoCapacity)
+	if (CargoMassCapacity)
 	{
 		Result.Add(FText::FormatNamed(
-			LOCTEXT("CompartmentCargoFormat", "{cargo}T capacity"), TEXT("cargo"), FText::AsNumber(FMath::RoundToInt(CargoCapacity))));
+			LOCTEXT("CompartmentCargoFormat", "{cargo}T capacity"), TEXT("cargo"), FText::AsNumber(FMath::RoundToInt(CargoMassCapacity))));
 	}
 
 	return Result;
@@ -472,75 +503,24 @@ void FNovaSpacecraft::UpdateProceduralElements()
 
 void FNovaSpacecraft::UpdatePropulsionMetrics()
 {
-	PropulsionMetrics = FNovaSpacecraftPropulsionMetrics();
-
-	// Constants
-	constexpr float StandardGravity           = 9.807f;
-	constexpr float SkirtPropellantMultiplier = 1.1f;
-
+	PropulsionMetrics               = FNovaSpacecraftPropulsionMetrics();
 	float TotalEngineISPTimesThrust = 0;
 
 	// Iterate over compartments
 	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
 	{
-		FNovaCompartment& Compartment = Compartments[CompartmentIndex];
-		if (Compartment.IsValid())
-		{
-			PropulsionMetrics.DryMass += Compartment.Description->Mass;
+		FNovaSpacecraftCompartmentMetrics Metrics(*this, CompartmentIndex);
 
-			// Iterate over modules
-			for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
-			{
-				FNovaCompartmentModule& Module = Compartment.Modules[ModuleIndex];
-				if (Module.Description)
-				{
-					PropulsionMetrics.DryMass += Module.Description->Mass;
-
-					// Handle propellant modules
-					const UNovaPropellantModuleDescription* PropellantModule = Cast<UNovaPropellantModuleDescription>(Module.Description);
-					if (PropellantModule)
-					{
-						float PropellantMass = PropellantModule->PropellantMass;
-
-						if (IsSameModuleInPreviousCompartment(CompartmentIndex, ModuleIndex))
-						{
-							PropellantMass *= SkirtPropellantMultiplier;
-						}
-
-						PropulsionMetrics.MaximumPropellantMass += PropellantMass;
-					}
-
-					// Handle cargo modules
-					const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Module.Description);
-					if (CargoModule)
-					{
-						PropulsionMetrics.MaximumCargoMass += CargoModule->CargoMass;
-					}
-				}
-			}
-
-			// Iterate over equipments
-			for (const UNovaEquipmentDescription* Equipment : Compartment.Equipments)
-			{
-				if (Equipment)
-				{
-					PropulsionMetrics.DryMass += Equipment->Mass;
-
-					// Handle engine equipments
-					const UNovaEngineDescription* Engine = Cast<UNovaEngineDescription>(Equipment);
-					if (Engine)
-					{
-						PropulsionMetrics.Thrust += Engine->Thrust;
-						TotalEngineISPTimesThrust += Engine->SpecificImpulse * Engine->Thrust;
-					}
-				}
-			}
-		}
+		PropulsionMetrics.DryMass += Metrics.DryMass;
+		PropulsionMetrics.PropellantMassCapacity += Metrics.PropellantMassCapacity;
+		PropulsionMetrics.CargoMassCapacity += Metrics.CargoMassCapacity;
+		PropulsionMetrics.Thrust += Metrics.Thrust;
+		TotalEngineISPTimesThrust += Metrics.TotalEngineISPTimesThrust;
 	}
 
 	// Compute metrics
 	PropulsionMetrics.MaximumMass =
-		PropulsionMetrics.DryMass + PropulsionMetrics.MaximumPropellantMass + PropulsionMetrics.MaximumCargoMass;
+		PropulsionMetrics.DryMass + PropulsionMetrics.PropellantMassCapacity + PropulsionMetrics.CargoMassCapacity;
 	if (PropulsionMetrics.Thrust > 0)
 	{
 		PropulsionMetrics.SpecificImpulse = TotalEngineISPTimesThrust / PropulsionMetrics.Thrust;
@@ -548,7 +528,7 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 		PropulsionMetrics.PropellantRate  = PropulsionMetrics.Thrust / PropulsionMetrics.ExhaustVelocity;
 		PropulsionMetrics.MaximumDeltaV =
 			PropulsionMetrics.ExhaustVelocity * log((PropulsionMetrics.MaximumMass) / PropulsionMetrics.DryMass);
-		PropulsionMetrics.MaximumBurnTime = PropulsionMetrics.MaximumPropellantMass / PropulsionMetrics.PropellantRate;
+		PropulsionMetrics.MaximumBurnTime = PropulsionMetrics.PropellantMassCapacity / PropulsionMetrics.PropellantRate;
 	}
 
 #if 0
