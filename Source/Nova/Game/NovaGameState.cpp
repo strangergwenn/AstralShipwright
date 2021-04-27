@@ -166,7 +166,11 @@ bool ANovaGameState::IsJoinable(FText* Help) const
 {
 	bool AllSpacecraftDocked = AreAllSpacecraftDocked();
 
-	if (!AllSpacecraftDocked && Help)
+	if (GetWorld()->WorldType == EWorldType::PIE)
+	{
+		return true;
+	}
+	else if (!AllSpacecraftDocked && Help)
 	{
 		*Help = LOCTEXT("AllSpacecraftNotDocked", "All players need to be docked to allow joining");
 	}
