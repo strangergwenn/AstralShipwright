@@ -16,8 +16,8 @@ namespace ENovaConstants
 constexpr int32 MaxContractsCount   = 5;
 constexpr int32 MaxPlayerCount      = 3;
 constexpr int32 MaxCompartmentCount = 10;
-constexpr int32 MaxModuleCount      = 4;
-constexpr int32 MaxEquipmentCount   = 4;
+constexpr int32 MaxModuleCount      = 5;
+constexpr int32 MaxEquipmentCount   = 8;
 
 const FString DefaultLevel = TEXT("Space");
 };    // namespace ENovaConstants
@@ -36,7 +36,7 @@ public:
 	/** Return the full description of this asset as inline text */
 	FText GetInlineDescription() const
 	{
-		return GetFormattedDescription(" - ");
+		return GetFormattedDescription("  ");
 	}
 
 	/** Return the full description of this asset as paragraph text */

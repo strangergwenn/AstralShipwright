@@ -111,7 +111,7 @@ TArray<FText> UNovaEngineDescription::GetDescription() const
 {
 	TArray<FText> Result = Super::GetDescription();
 
-	Result.Add(FText::FormatNamed(LOCTEXT("EngineDescriptionFormat", "<img src=\"/Text/Thrust\"/> {thrust}KN max thrust"), TEXT("thrust"),
+	Result.Add(FText::FormatNamed(LOCTEXT("EngineDescriptionFormat", "<img src=\"/Text/Thrust\"/> {thrust}kN max thrust"), TEXT("thrust"),
 		FText::AsNumber(FMath::RoundToInt(Thrust))));
 
 	return Result;
