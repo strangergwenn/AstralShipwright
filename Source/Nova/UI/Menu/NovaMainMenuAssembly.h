@@ -212,8 +212,8 @@ protected:
 	void OnSelectedEquipmentChanged(const class UNovaEquipmentDescription* Equipment, int32 Index);
 	void OnSelectedHullTypeChanged(ENovaHullType Type, int32 Index);
 
-	// Save the spacecraft
-	void OnSaveSpacecraft();
+	// Save or reset the spacecraft
+	void OnReviewSpacecraft();
 
 	// Exit compartment details
 	void OnBackToAssembly();
@@ -232,7 +232,8 @@ protected:
 	TSharedPtr<SHorizontalBox>        EquipmentBox;
 	TSharedPtr<class SNovaSlider>     DisplayFilter;
 	TSharedPtr<class SNovaButton>     SaveButton;
-	TSharedPtr<class SNovaModalPanel> ModalPanel;
+	TSharedPtr<class SNovaModalPanel> PrimaryModalPanel;
+	TSharedPtr<class SNovaModalPanel> SecondaryModalPanel;
 	TSharedPtr<SVerticalBox>          MenuBox;
 
 	// Panel fading system

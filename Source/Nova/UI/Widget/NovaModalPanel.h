@@ -8,6 +8,19 @@
 
 #include "Widgets/SCompoundWidget.h"
 
+/** Text parameters for this panel */
+struct FNovaModalPanelTextData
+{
+	FNovaModalPanelTextData();
+
+	FText Confirm;
+	FText ConfirmHelp;
+	FText Dismiss;
+	FText DismissHelp;
+	FText Cancel;
+	FText CancelHelp;
+};
+
 /** Modal panel that blocks input, steals focus and blurs the background */
 class SNovaModalPanel : public SNovaNavigationPanel
 {
@@ -19,13 +32,6 @@ class SNovaModalPanel : public SNovaNavigationPanel
 	{}
 
 	SLATE_ARGUMENT(class SNovaMenu*, Menu)
-
-	SLATE_ATTRIBUTE(FText, ConfirmText)
-	SLATE_ATTRIBUTE(FText, ConfirmHelpText)
-	SLATE_ATTRIBUTE(FText, DismissText)
-	SLATE_ATTRIBUTE(FText, DismissHelpText)
-	SLATE_ATTRIBUTE(FText, CancelText)
-	SLATE_ATTRIBUTE(FText, CancelHelpText)
 
 	SLATE_END_ARGS()
 
@@ -44,7 +50,8 @@ public:
 
 	/** Show the panel and take focus, with optional callbacks and an optional content block */
 	void Show(FText Title, FText Text, FSimpleDelegate NewOnConfirmed, FSimpleDelegate NewOnIgnore = FSimpleDelegate(),
-		FSimpleDelegate NewOnCancel = FSimpleDelegate(), TSharedPtr<SWidget> Content = TSharedPtr<SWidget>());
+		FSimpleDelegate NewOnCancel = FSimpleDelegate(), TSharedPtr<SWidget> Content = TSharedPtr<SWidget>(),
+		FNovaModalPanelTextData Data = FNovaModalPanelTextData());
 
 	/** Hide the panel, set focus back to the parent */
 	void Hide();
@@ -65,6 +72,8 @@ public:
 	----------------------------------------------------*/
 
 protected:
+	EVisibility GetConfirmVisibility() const;
+
 	EVisibility GetDismissVisibility() const;
 
 	FLinearColor GetColor() const;
@@ -94,10 +103,11 @@ protected:
 	SNovaNavigationPanel* ParentPanel;
 
 	// Settings
-	float           FadeDuration;
-	FSimpleDelegate OnConfirmed;
-	FSimpleDelegate OnDismissed;
-	FSimpleDelegate OnCancelled;
+	float                   FadeDuration;
+	FSimpleDelegate         OnConfirmed;
+	FSimpleDelegate         OnDismissed;
+	FSimpleDelegate         OnCancelled;
+	FNovaModalPanelTextData TextData;
 
 	// Widgets
 	TSharedPtr<STextBlock> TitleText;

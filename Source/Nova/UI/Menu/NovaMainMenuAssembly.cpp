@@ -12,6 +12,7 @@
 
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 
+#include "Nova/UI/Component/NovaSpacecraftDatasheet.h"
 #include "Nova/UI/Widget/NovaFadingWidget.h"
 #include "Nova/UI/Widget/NovaModalPanel.h"
 #include "Nova/UI/Widget/NovaKeyLabel.h"
@@ -141,9 +142,9 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							[
 								SNovaAssignNew(SaveButton, SNovaButton)
 								.Size("DoubleButtonSize")
-								.Text(LOCTEXT("SaveSpacecraft", "Save spacecraft"))
-								.HelpText(LOCTEXT("SaveSpacecraftHelp", "Save the current state of the spacecraft"))
-								.OnClicked(this, &SNovaMainMenuAssembly::OnSaveSpacecraft)
+								.Text(LOCTEXT("ReviewSpacecraft", "Review spacecraft"))
+								.HelpText(LOCTEXT("ReviewSpacecraftHelp", "Review the spacecraft design and changes made to it"))
+								.OnClicked(this, &SNovaMainMenuAssembly::OnReviewSpacecraft)
 							]
 
 							+ SVerticalBox::Slot()
@@ -463,8 +464,9 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 		]
 	];
 
-	// Build the modal panel 
-	ModalPanel = Menu->CreateModalPanel();
+	// Build the modal panels
+	PrimaryModalPanel = Menu->CreateModalPanel();
+	SecondaryModalPanel = Menu->CreateModalPanel();
 
 	// Build compartment buttons
 	for (int32 Index = 0; Index < ENovaConstants::MaxCompartmentCount; Index++)
@@ -894,7 +896,8 @@ void SNovaMainMenuAssembly::Tick(const FGeometry& AllottedGeometry, const double
 
 	// Set the hovered compartment
 	int32 HighlightedCompartment = INDEX_NONE;
-	if (!CompartmentPanelVisible && !MenuManager->IsUsingGamepad() && !MenuManager->GetPC()->IsInPhotoMode())
+	if (!CompartmentPanelVisible && !MenuManager->IsUsingGamepad() && !MenuManager->GetPC()->IsInPhotoMode() &&
+		Menu->IsActiveNavigationPanel(this))
 	{
 		FVector2D MousePosition = Menu->GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos());
 		HighlightedCompartment  = GetCompartmentIndexAtPosition(MenuManager->GetPC(), GetSpacecraftPawn(), MousePosition);
@@ -1399,7 +1402,7 @@ void SNovaMainMenuAssembly::OnRemoveCompartment()
 {
 	NCHECK(SelectedCompartmentIndex >= 0 && SelectedCompartmentIndex < ENovaConstants::MaxCompartmentCount);
 
-	ModalPanel->Show(LOCTEXT("ScrapCompartmentConfirm", "Scrap compartment"),
+	PrimaryModalPanel->Show(LOCTEXT("ScrapCompartmentConfirm", "Scrap compartment"),
 		LOCTEXT("ScrapCompartmentConfirmHelp", "Confirm the scrapping of this compartment"),
 		FSimpleDelegate::CreateSP(this, &SNovaMainMenuAssembly::OnRemoveCompartmentConfirmed), FSimpleDelegate(), FSimpleDelegate());
 }
@@ -1483,13 +1486,78 @@ void SNovaMainMenuAssembly::OnSelectedHullTypeChanged(ENovaHullType Type, int32 
 	GetSpacecraftPawn()->RequestAssemblyUpdate();
 }
 
-void SNovaMainMenuAssembly::OnSaveSpacecraft()
+void SNovaMainMenuAssembly::OnReviewSpacecraft()
 {
 	ANovaPlayerController* PC = MenuManager->GetPC();
 	NCHECK(PC);
+	const FNovaSpacecraft* CurrentSpacecraft = PC->GetSpacecraft();
+	NCHECK(CurrentSpacecraft);
+	FNovaSpacecraft ModifiedSpacecraft = PC->GetSpacecraftPawn()->GetSpacecraftCopy().GetSafeCopy();
 
-	GetSpacecraftPawn()->ApplyAssembly();
-	PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
+	// Tweak the button names on the modal panel
+	FNovaModalPanelTextData ModalTextData;
+	ModalTextData.Dismiss     = LOCTEXT("ResetSpacecraft", "Revert changes");
+	ModalTextData.DismissHelp = LOCTEXT("ResetSpacecraftHelp", "Revert all changes to the spacecraft's design");
+	ModalTextData.Cancel      = LOCTEXT("CancelSpacecraft", "Close");
+	ModalTextData.CancelHelp  = LOCTEXT("CancelSpacecraftHelp", "Close without doing anything");
+
+	// Confirmation callback
+
+	// Reversal callback
+	FSimpleDelegate ConfirmRevertChanges = FSimpleDelegate::CreateLambda(
+		[=]()
+		{
+			PC->GetSpacecraftPawn()->ResetSpacecraft();
+		});
+
+	// Reversal confirmation callback
+	FSimpleDelegate ConfirmChanges;
+	FSimpleDelegate RevertChanges;
+	if (ModifiedSpacecraft != *CurrentSpacecraft)
+	{
+		ConfirmChanges = FSimpleDelegate::CreateLambda(
+			[=]()
+			{
+				GetSpacecraftPawn()->ApplyAssembly();
+				PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
+			});
+
+		RevertChanges = FSimpleDelegate::CreateLambda(
+			[=]()
+			{
+				SecondaryModalPanel->Show(LOCTEXT("RevertChanges", "Revert changes"),
+					LOCTEXT("RevertChangesHelp", "Confirm the reversal of all changes to the spacecraft"), ConfirmRevertChanges);
+			});
+	}
+
+	// clang-format off
+	TSharedPtr<SHorizontalBox> SpacecraftDiffBox;
+	SAssignNew(SpacecraftDiffBox, SHorizontalBox)
+
+		// Left panel
+		+ SHorizontalBox::Slot()
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		[
+			SNew(SNovaSpacecraftDatasheet)
+			.TargetSpacecraft(*CurrentSpacecraft)
+		]
+
+		// Right panel
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		[
+			SNew(SNovaSpacecraftDatasheet)
+			.TargetSpacecraft(ModifiedSpacecraft)
+			.ComparisonSpacecraft(CurrentSpacecraft)
+		]
+		+ SHorizontalBox::Slot();
+	// clang-format on
+
+	// Show the modal dialog
+	PrimaryModalPanel->Show(LOCTEXT("ReviewChangesConfirm", "Review changes"),
+		LOCTEXT("ReviewChangesConfirmHelp", "Confirm changes to the spacecraft or revert to the previous design"), ConfirmChanges,
+		RevertChanges, FSimpleDelegate(), SpacecraftDiffBox, ModalTextData);
 }
 
 void SNovaMainMenuAssembly::OnBackToAssembly()

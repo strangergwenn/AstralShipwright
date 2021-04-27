@@ -101,6 +101,7 @@ public:
 	}
 
 	/** Return the spacecraft identifier */
+	UFUNCTION(Category = Nova, BlueprintCallable)
 	FGuid GetSpacecraftIdentifier() const
 	{
 		return Spacecraft.IsValid() ? Spacecraft->Identifier : FGuid();
@@ -111,6 +112,18 @@ public:
 	class UNovaSpacecraftMovementComponent* GetSpacecraftMovement() const
 	{
 		return MovementComponent;
+	}
+
+	/** Return a copy of the local spacecraft */
+	FNovaSpacecraft GetSpacecraftCopy() const
+	{
+		return Spacecraft.IsValid() ? Spacecraft->GetSafeCopy() : FNovaSpacecraft();
+	}
+
+	/** Revert the pawn to the game state version */
+	void ResetSpacecraft()
+	{
+		Spacecraft.Reset();
 	}
 
 	/** Dock at a particular location */

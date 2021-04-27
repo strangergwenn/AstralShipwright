@@ -20,14 +20,10 @@ void SNovaNavigationPanel::Construct(const FArguments& InArgs)
 ----------------------------------------------------*/
 
 void SNovaNavigationPanel::Next()
-{
-	NLOG("SNovaNavigationPanel::ZoomIn");
-}
+{}
 
 void SNovaNavigationPanel::Previous()
-{
-	NLOG("SNovaNavigationPanel::ZoomOut");
-}
+{}
 
 bool SNovaNavigationPanel::Confirm()
 {
