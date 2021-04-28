@@ -47,8 +47,11 @@ protected:
 	/** Get the spacecraft pawn */
 	class ANovaSpacecraftPawn* GetSpacecraftPawn() const;
 
+	/** Check for destination validity */
+	bool CanSelectDestinationInternal(FText* Details = nullptr) const;
+
 	/** Check for trajectory validity */
-	bool CanCommitTrajectoryInternal(FText* Help = nullptr) const;
+	bool CanCommitTrajectoryInternal(FText* Details = nullptr) const;
 
 	/*----------------------------------------------------
 	    Callbacks
@@ -56,10 +59,12 @@ protected:
 
 protected:
 	// Destinations
+	bool                CanSelectDestination() const;
 	TSharedRef<SWidget> GenerateDestinationItem(const class UNovaArea* Destination);
 	FText               GetDestinationName(const class UNovaArea* Destination) const;
 	const FSlateBrush*  GetDestinationIcon(const class UNovaArea* Destination) const;
 	FText               GenerateDestinationTooltip(const class UNovaArea* Destination);
+	FText               GetDestinationHelpText() const;
 	void                OnSelectedDestinationChanged(const class UNovaArea* Destination, int32 Index);
 
 	// General

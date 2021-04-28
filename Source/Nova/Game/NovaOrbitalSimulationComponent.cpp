@@ -373,6 +373,8 @@ bool UNovaOrbitalSimulationComponent::IsOnStartedTrajectory(const FGuid& Spacecr
 
 bool UNovaOrbitalSimulationComponent::CanCommitTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, FText* Help) const
 {
+	const ANovaGameState* GameState = GetOwner<ANovaGameState>();
+
 	if (GetOwner()->GetLocalRole() != ROLE_Authority)
 	{
 		if (Help)
@@ -394,6 +396,14 @@ bool UNovaOrbitalSimulationComponent::CanCommitTrajectory(const TSharedPtr<FNova
 		if (Help)
 		{
 			*Help = LOCTEXT("CannotCommitTrajectoryTime", "The selected trajectory starts in the past");
+		}
+		return false;
+	}
+	else if (GameState->IsAnySpacecraftDocked())
+	{
+		if (Help)
+		{
+			*Help = LOCTEXT("CannotCommitTrajectoryDocked", "A spacecraft is still docked");
 		}
 		return false;
 	}
@@ -475,7 +485,7 @@ int32 UNovaOrbitalSimulationComponent::GetPlayerSpacecraftIndex(const FGuid& Ide
 {
 	int32 Index = 0;
 
-	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	const ANovaGameState* GameState = GetOwner<ANovaGameState>();
 	for (FGuid SpacecraftIdentifier : GameState->GetPlayerSpacecraftIdentifiers())
 	{
 		if (SpacecraftIdentifier == Identifier)

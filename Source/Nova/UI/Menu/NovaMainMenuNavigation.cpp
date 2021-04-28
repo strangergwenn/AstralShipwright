@@ -66,12 +66,13 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 				SNovaAssignNew(DestinationListView, SNovaModalListView<const UNovaArea*>)
 				.Panel(this)
 				.TitleText(LOCTEXT("DestinationList", "Destinations"))
-				.HelpText(LOCTEXT("DestinationListHelp", "Plan a trajectory toward a destination"))
+				.HelpText(this, &SNovaMainMenuNavigation::GetDestinationHelpText)
 				.ItemsSource(&DestinationList)
 				.OnGenerateItem(this, &SNovaMainMenuNavigation::GenerateDestinationItem)
 				.OnGenerateName(this, &SNovaMainMenuNavigation::GetDestinationName)
 				.OnGenerateTooltip(this, &SNovaMainMenuNavigation::GenerateDestinationTooltip)
 				.OnSelectionChanged(this, &SNovaMainMenuNavigation::OnSelectedDestinationChanged)
+				.Enabled(this, &SNovaMainMenuNavigation::CanSelectDestination)
 			]
 			
 			+ SVerticalBox::Slot()
@@ -252,7 +253,24 @@ ANovaSpacecraftPawn* SNovaMainMenuNavigation::GetSpacecraftPawn() const
 	return MenuManager->GetPC() ? MenuManager->GetPC()->GetSpacecraftPawn() : nullptr;
 }
 
-bool SNovaMainMenuNavigation::CanCommitTrajectoryInternal(FText* Help) const
+bool SNovaMainMenuNavigation::CanSelectDestinationInternal(FText* Details) const
+{
+	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(GameState);
+
+	for (FGuid Identifier : GameState->GetPlayerSpacecraftIdentifiers())
+	{
+		const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Identifier);
+		if (Spacecraft == nullptr || !Spacecraft->IsValid(Details))
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool SNovaMainMenuNavigation::CanCommitTrajectoryInternal(FText* Details) const
 {
 	const ANovaGameState*            GameState         = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
@@ -261,13 +279,13 @@ bool SNovaMainMenuNavigation::CanCommitTrajectoryInternal(FText* Help) const
 	{
 		if (SelectedDestination == GameState->GetCurrentArea())
 		{
-			if (Help)
+			if (Details)
 			{
-				*Help = LOCTEXT("CanCommitTrajectoryIdentical", "The selected trajectory goes to your current location");
+				*Details = LOCTEXT("CanCommitTrajectoryIdentical", "The selected trajectory goes to your current location");
 			}
 			return false;
 		}
-		else if (!OrbitalSimulation->CanCommitTrajectory(OrbitalMap->GetPreviewTrajectory(), Help))
+		else if (!OrbitalSimulation->CanCommitTrajectory(OrbitalMap->GetPreviewTrajectory(), Details))
 		{
 			return false;
 		}
@@ -279,6 +297,11 @@ bool SNovaMainMenuNavigation::CanCommitTrajectoryInternal(FText* Help) const
 /*----------------------------------------------------
     Callbacks (destination)
 ----------------------------------------------------*/
+
+bool SNovaMainMenuNavigation::CanSelectDestination() const
+{
+	return CanSelectDestinationInternal();
+}
 
 TSharedRef<SWidget> SNovaMainMenuNavigation::GenerateDestinationItem(const UNovaArea* Destination)
 {
@@ -334,6 +357,19 @@ const FSlateBrush* SNovaMainMenuNavigation::GetDestinationIcon(const UNovaArea* 
 FText SNovaMainMenuNavigation::GenerateDestinationTooltip(const UNovaArea* Destination)
 {
 	return FText::FormatNamed(LOCTEXT("DestinationHelp", "Set course for {area}"), TEXT("area"), Destination->Name);
+}
+
+FText SNovaMainMenuNavigation::GetDestinationHelpText() const
+{
+	FText Details;
+	if (CanSelectDestinationInternal(&Details))
+	{
+		return LOCTEXT("DestinationListHelp", "Plan a trajectory toward a destination");
+	}
+	else
+	{
+		return Details;
+	}
 }
 
 void SNovaMainMenuNavigation::OnSelectedDestinationChanged(const UNovaArea* Destination, int32 Index)

@@ -178,6 +178,19 @@ bool ANovaGameState::IsJoinable(FText* Help) const
 	return AllSpacecraftDocked;
 }
 
+bool ANovaGameState::IsAnySpacecraftDocked() const
+{
+	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+	{
+		if (SpacecraftPawn->IsDocked())
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 bool ANovaGameState::AreAllSpacecraftDocked() const
 {
 	bool AllSpacecraftDocked = true;

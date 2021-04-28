@@ -130,6 +130,9 @@ public:
 	/** Check whether the game can be joined */
 	bool IsJoinable(FText* Help = nullptr) const;
 
+	/** Check whether any spacecraft is docked */
+	bool IsAnySpacecraftDocked() const;
+
 	/** Check whether all spacecraft are docked */
 	bool AreAllSpacecraftDocked() const;
 
