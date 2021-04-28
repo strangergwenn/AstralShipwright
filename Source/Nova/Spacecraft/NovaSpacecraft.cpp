@@ -242,17 +242,26 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 {
 	if (PropulsionMetrics.Thrust <= 0)
 	{
-		*Details = LOCTEXT("InsufficientThrust", "This spacecraft has no engine");
+		if (Details)
+		{
+			*Details = LOCTEXT("InsufficientThrust", "This spacecraft has no engine");
+		}
 		return false;
 	}
 	else if (PropulsionMetrics.PropellantMassCapacity <= 0)
 	{
-		*Details = LOCTEXT("InsufficientPropellant", "This spacecraft has no propellant tank");
+		if (Details)
+		{
+			*Details = LOCTEXT("InsufficientPropellant", "This spacecraft has no propellant tank");
+		}
 		return false;
 	}
 	else if (PropulsionMetrics.MaximumDeltaV < 100)
 	{
-		*Details = LOCTEXT("InsufficientDeltaV", "This spacecraft does not have enough Delta-V");
+		if (Details)
+		{
+			*Details = LOCTEXT("InsufficientDeltaV", "This spacecraft does not have enough Delta-V");
+		}
 		return false;
 	}
 
@@ -273,11 +282,14 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 					{
 						if (Compartment.Equipments[GroupedIndex] != Equipment)
 						{
-							*Details = FText::FormatNamed(LOCTEXT("InvalidPairing",
-															  "The equipment in slot {slot} of compartment {compartment} is not "
-															  "correctly paired with identical equipments"),
-								TEXT("slot"), Compartment.Description->GetEquipmentSlot(EquipmentIndex).DisplayName, TEXT("compartment"),
-								FText::AsNumber(CompartmentIndex + 1));
+							if (Details)
+							{
+								*Details = FText::FormatNamed(LOCTEXT("InvalidPairing",
+																  "The equipment in slot {slot} of compartment {compartment} is not "
+																  "correctly paired with identical equipments"),
+									TEXT("slot"), Compartment.Description->GetEquipmentSlot(EquipmentIndex).DisplayName,
+									TEXT("compartment"), FText::AsNumber(CompartmentIndex + 1));
+							}
 							return false;
 						}
 					}

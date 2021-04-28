@@ -230,12 +230,12 @@ UNovaSpacecraftMovementComponent* SNovaMainMenuFlight::GetSpacecraftMovement() c
 
 bool SNovaMainMenuFlight::IsUndockEnabled() const
 {
-	return GetSpacecraftMovement() && GetSpacecraftMovement()->CanUndock();
+	return !GetSpacecraftPawn()->HasModifications() && GetSpacecraftPawn()->IsSpacecraftValid() && GetSpacecraftMovement()->CanUndock();
 }
 
 bool SNovaMainMenuFlight::IsDockEnabled() const
 {
-	return GetSpacecraftMovement() && GetSpacecraftMovement()->CanDock();
+	return GetSpacecraftMovement()->CanDock();
 }
 
 void SNovaMainMenuFlight::OnUndock()

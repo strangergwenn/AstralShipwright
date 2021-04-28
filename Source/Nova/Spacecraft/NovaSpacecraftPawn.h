@@ -120,15 +120,6 @@ public:
 		return Spacecraft.IsValid() ? Spacecraft->GetSafeCopy() : FNovaSpacecraft();
 	}
 
-	/** Check for modifications against the player ship */
-	bool HasModifications() const;
-
-	/** Revert the pawn to the game state version */
-	void ResetSpacecraft()
-	{
-		Spacecraft.Reset();
-	}
-
 	/** Dock at a particular location */
 	void Dock(FSimpleDelegate Callback = FSimpleDelegate());
 
@@ -153,6 +144,21 @@ public:
 	/*----------------------------------------------------
 	    Assembly interface
 	----------------------------------------------------*/
+
+	/** Check for modifications against the player ship */
+	bool HasModifications() const;
+
+	/** Revert the pawn to the game state version */
+	void ResetSpacecraft()
+	{
+		Spacecraft.Reset();
+	}
+
+	/** Revert the pawn to the game state version */
+	bool IsSpacecraftValid(FText* Details = nullptr)
+	{
+		return Spacecraft.IsValid() && Spacecraft->IsValid(Details);
+	}
 
 	/** Check if the assembly is idle */
 	bool IsIdle() const
