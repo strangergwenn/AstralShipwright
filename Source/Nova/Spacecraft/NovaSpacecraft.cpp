@@ -193,13 +193,13 @@ TArray<FText> FNovaSpacecraftCompartmentMetrics::GetDescription() const
 	if (PropellantMassCapacity)
 	{
 		Result.Add(
-			FText::FormatNamed(LOCTEXT("CompartmentPropellantFormat", "<img src=\"/Text/Propellant\"/> {propellant}T propellant capacity"),
+			FText::FormatNamed(LOCTEXT("CompartmentPropellantFormat", "<img src=\"/Text/Propellant\"/> {propellant} T propellant capacity"),
 				TEXT("propellant"), FText::AsNumber(FMath::RoundToInt(PropellantMassCapacity))));
 	}
 
 	if (CargoMassCapacity)
 	{
-		Result.Add(FText::FormatNamed(LOCTEXT("CompartmentCargoFormat", "<img src=\"/Text/Cargo\"/> {cargo}T cargo capacity"),
+		Result.Add(FText::FormatNamed(LOCTEXT("CompartmentCargoFormat", "<img src=\"/Text/Cargo\"/> {cargo} T cargo capacity"),
 			TEXT("cargo"), FText::AsNumber(FMath::RoundToInt(CargoMassCapacity))));
 	}
 
@@ -237,6 +237,27 @@ bool FNovaSpacecraft::operator==(const FNovaSpacecraft& Other) const
 /*----------------------------------------------------
     Spacecraft interface
 ----------------------------------------------------*/
+
+bool FNovaSpacecraft::IsValid(FText* Details) const
+{
+	if (PropulsionMetrics.Thrust <= 0)
+	{
+		*Details = LOCTEXT("InsufficientThrust", "This spacecraft does not have engines");
+		return false;
+	}
+	else if (PropulsionMetrics.PropellantMassCapacity <= 0)
+	{
+		*Details = LOCTEXT("InsufficientPropellant", "This spacecraft does not have propellant tanks");
+		return false;
+	}
+	else if (PropulsionMetrics.MaximumDeltaV < 100)
+	{
+		*Details = LOCTEXT("InsufficientDeltaV", "This spacecraft does not have enough Delta-V");
+		return false;
+	}
+
+	return true;
+}
 
 void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
 {

@@ -145,6 +145,18 @@ void ANovaSpacecraftPawn::PossessedBy(AController* NewController)
 	}
 }
 
+bool ANovaSpacecraftPawn::HasModifications() const
+{
+	ANovaPlayerController* PC = GetController<ANovaPlayerController>();
+	NCHECK(IsValid(PC) && PC->IsLocalController());
+
+	const FNovaSpacecraft* CurrentSpacecraft = PC->GetSpacecraft();
+	NCHECK(CurrentSpacecraft);
+	NCHECK(Spacecraft.IsValid());
+
+	return *Spacecraft != *CurrentSpacecraft;
+}
+
 void ANovaSpacecraftPawn::Dock(FSimpleDelegate Callback)
 {
 	SaveSystems();

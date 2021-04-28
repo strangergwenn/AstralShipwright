@@ -102,6 +102,7 @@ void SNovaModalPanel::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							[
 								SAssignNew(ContentBox, SBox)
+								.MaxDesiredHeight(750)
 							]
 						]
 
@@ -225,6 +226,7 @@ void SNovaModalPanel::Show(FText Title, FText Text, FSimpleDelegate NewOnConfirm
 
 	TitleText->SetText(Title);
 	InformationText->SetText(Text);
+	InformationText->SetVisibility(Text.IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible);
 
 	if (Content.IsValid())
 	{

@@ -233,6 +233,9 @@ public:
 		}
 	}
 
+	/** Get the spacecraft validity */
+	bool IsValid(FText* Details) const;
+
 	/** Get propulsion characteristics for this spacecraft */
 	const FNovaSpacecraftPropulsionMetrics& GetPropulsionMetrics() const
 	{

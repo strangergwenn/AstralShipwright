@@ -120,6 +120,9 @@ public:
 		return Spacecraft.IsValid() ? Spacecraft->GetSafeCopy() : FNovaSpacecraft();
 	}
 
+	/** Check for modifications against the player ship */
+	bool HasModifications() const;
+
 	/** Revert the pawn to the game state version */
 	void ResetSpacecraft()
 	{

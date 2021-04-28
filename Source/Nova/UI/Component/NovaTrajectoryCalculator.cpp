@@ -30,7 +30,6 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 	// Get data
 	const FNovaMainTheme&   Theme           = FNovaStyleSet::GetMainTheme();
 	const FNovaButtonTheme& ButtonTheme     = FNovaStyleSet::GetButtonTheme();
-	const FNovaSliderTheme& SliderTheme     = FNovaStyleSet::GetTheme<FNovaSliderTheme>("DefaultSlider");
 	const FSlateBrush*      BackgroundBrush = FNovaStyleSet::GetBrush("Map/SB_TrajectoryCalculator");
 	MenuManager                             = InArgs._MenuManager;
 	CurrentAlpha                            = InArgs._CurrentAlpha;

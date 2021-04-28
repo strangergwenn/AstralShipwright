@@ -12,7 +12,7 @@ TArray<FText> UNovaCompartmentDescription::GetDescription() const
 {
 	TArray<FText> Result = Super::GetDescription();
 
-	Result.Add(FText::FormatNamed(LOCTEXT("CompartmentDescriptionMassFormat", "<img src=\"/Text/Mass\"/> {mass}T"), TEXT("mass"),
+	Result.Add(FText::FormatNamed(LOCTEXT("CompartmentDescriptionMassFormat", "<img src=\"/Text/Mass\"/> {mass} T"), TEXT("mass"),
 		FText::AsNumber(FMath::RoundToInt(Mass))));
 
 	Result.Add(FText::FormatNamed(LOCTEXT("CompartmentDescriptionModulesFormat", "<img src=\"/Text/Module\"/> {modules} module slots"),
@@ -61,7 +61,7 @@ TArray<FText> UNovaPropellantModuleDescription::GetDescription() const
 	TArray<FText> Result = Super::GetDescription();
 
 	Result.Add(FText::FormatNamed(
-		LOCTEXT("PropellantModuleDescriptionFormat", "<img src=\"/Text/Propellant\"/> {propellant}T propellant capacity"),
+		LOCTEXT("PropellantModuleDescriptionFormat", "<img src=\"/Text/Propellant\"/> {propellant} T propellant capacity"),
 		TEXT("propellant"), FText::AsNumber(PropellantMass)));
 
 	return Result;
@@ -71,7 +71,7 @@ TArray<FText> UNovaCargoModuleDescription::GetDescription() const
 {
 	TArray<FText> Result = Super::GetDescription();
 
-	Result.Add(FText::FormatNamed(LOCTEXT("CargoModuleDescriptionFormat", "<img src=\"/Text/Cargo\"/> {cargo}T cargo capacity"),
+	Result.Add(FText::FormatNamed(LOCTEXT("CargoModuleDescriptionFormat", "<img src=\"/Text/Cargo\"/> {cargo} T cargo capacity"),
 		TEXT("cargo"), FText::AsNumber(CargoMass)));
 
 	return Result;
@@ -102,7 +102,7 @@ TArray<FText> UNovaEquipmentDescription::GetDescription() const
 	TArray<FText> Result = Super::GetDescription();
 
 	Result.Add(FText::FormatNamed(
-		LOCTEXT("EquipmenteDescriptionFormat", "<img src=\"/Text/Mass\"/> {mass}T"), TEXT("mass"), FText::AsNumber(Mass)));
+		LOCTEXT("EquipmenteDescriptionFormat", "<img src=\"/Text/Mass\"/> {mass} T"), TEXT("mass"), FText::AsNumber(Mass)));
 
 	return Result;
 }
@@ -111,7 +111,7 @@ TArray<FText> UNovaEngineDescription::GetDescription() const
 {
 	TArray<FText> Result = Super::GetDescription();
 
-	Result.Add(FText::FormatNamed(LOCTEXT("EngineDescriptionFormat", "<img src=\"/Text/Thrust\"/> {thrust}kN max thrust"), TEXT("thrust"),
+	Result.Add(FText::FormatNamed(LOCTEXT("EngineDescriptionFormat", "<img src=\"/Text/Thrust\"/> {thrust} kN max thrust"), TEXT("thrust"),
 		FText::AsNumber(FMath::RoundToInt(Thrust))));
 
 	return Result;

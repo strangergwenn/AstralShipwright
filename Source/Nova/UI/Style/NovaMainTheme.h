@@ -33,6 +33,9 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 		OutBrushes.Add(&MainMenuGenericBackground);
 		OutBrushes.Add(&MainMenuGenericBorder);
 		OutBrushes.Add(&MainMenuManipulator);
+		OutBrushes.Add(&TableHeaderBackground);
+		OutBrushes.Add(&TableOddBackground);
+		OutBrushes.Add(&TableEvenBackground);
 	}
 
 	/*----------------------------------------------------
@@ -40,18 +43,26 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 	----------------------------------------------------*/
 
 	// Main
-	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuBackground;
-	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuGenericBackground;
-	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuGenericBorder;
-	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuManipulator;
+	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush MainMenuBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush MainMenuGenericBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush MainMenuGenericBorder;
+	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush MainMenuManipulator;
+	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush TableHeaderBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush TableOddBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush TableEvenBackground;
 
 	// General
 	UPROPERTY(EditDefaultsOnly, Category = General) FMargin ContentPadding;
 	UPROPERTY(EditDefaultsOnly, Category = General) FMargin VerticalContentPadding;
-	UPROPERTY(EditDefaultsOnly, Category = General) FScrollBoxStyle ScrollBoxStyle;
-	UPROPERTY(EditDefaultsOnly, Category = General) FProgressBarStyle ProgressBarStyle;
 	UPROPERTY(EditDefaultsOnly, Category = General) float BlurRadius;
 	UPROPERTY(EditDefaultsOnly, Category = General) float BlurStrength;
+	UPROPERTY(EditDefaultsOnly, Category = General) FLinearColor PositiveColor;
+	UPROPERTY(EditDefaultsOnly, Category = General) FLinearColor NegativeColor;
+
+	// Widget styles
+	UPROPERTY(EditDefaultsOnly, Category = Widget) FSliderStyle SliderStyle;
+	UPROPERTY(EditDefaultsOnly, Category = Widget) FScrollBoxStyle ScrollBoxStyle;
+	UPROPERTY(EditDefaultsOnly, Category = Widget) FProgressBarStyle ProgressBarStyle;
 
 	// Fonts
 	UPROPERTY(EditDefaultsOnly, Category = Font) FTextBlockStyle TitleFont;

@@ -16,15 +16,14 @@
 void SNovaSlider::Construct(const FArguments& InArgs)
 {
 	// Arguments
-	SliderThemeName = InArgs._SliderTheme;
-	ValueStep       = InArgs._ValueStep;
-	Analog          = InArgs._Analog;
-	CurrentValue    = InArgs._Value;
-	ValueChanged    = InArgs._OnValueChanged;
+	ValueStep    = InArgs._ValueStep;
+	Analog       = InArgs._Analog;
+	CurrentValue = InArgs._Value;
+	ValueChanged = InArgs._OnValueChanged;
 
 	// Setup
 	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
-	const FNovaSliderTheme& Theme       = FNovaStyleSet::GetTheme<FNovaSliderTheme>(SliderThemeName);
+	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
 	const FNovaButtonSize&  Size        = FNovaStyleSet::GetButtonSize(InArgs._Size);
 	SliderSpeed                         = 2.0f;
 	SliderAnalogSpeed                   = 0.01f;
@@ -183,7 +182,7 @@ FSlateColor SNovaSlider::GetSlateColor() const
 
 const FSlateBrush* SNovaSlider::GetBackgroundBrush() const
 {
-	const FNovaSliderTheme& Theme = FNovaStyleSet::GetTheme<FNovaSliderTheme>(SliderThemeName);
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 
 	if (!IsEnabled())
 	{

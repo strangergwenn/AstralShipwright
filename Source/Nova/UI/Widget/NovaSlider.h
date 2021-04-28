@@ -14,7 +14,6 @@ class SNovaSlider : public SNovaButton
 
 	SLATE_BEGIN_ARGS(SNovaSlider)
 		: _Theme("DefaultButton")
-		, _SliderTheme("DefaultSlider")
 		, _Size("DefaultButtonSize")
 		, _Enabled(true)
 		, _Analog(false)
@@ -27,7 +26,6 @@ class SNovaSlider : public SNovaButton
 	SLATE_ATTRIBUTE(FText, HelpText)
 	SLATE_ATTRIBUTE(FName, Action)
 	SLATE_ARGUMENT(FName, Theme)
-	SLATE_ARGUMENT(FName, SliderTheme)
 	SLATE_ARGUMENT(FName, Size)
 
 	SLATE_NAMED_SLOT(FArguments, Header)
@@ -102,7 +100,6 @@ protected:
 	----------------------------------------------------*/
 
 	// Settings & attributes
-	FName SliderThemeName;
 	float SliderSpeed;
 	float SliderAnalogSpeed;
 	bool  Analog;
