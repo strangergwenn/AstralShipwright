@@ -142,8 +142,9 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							[
 								SNovaAssignNew(SaveButton, SNovaButton)
 								.Size("DoubleButtonSize")
-								.Text(LOCTEXT("ReviewSpacecraft", "Review spacecraft"))
-								.HelpText(LOCTEXT("ReviewSpacecraftHelp", "Review the spacecraft design and changes made to it"))
+								.Icon(FNovaStyleSet::GetBrush("Icon/SB_Review"))
+								.Text(LOCTEXT("ReviewSpacecraft", "Review & save spacecraft"))
+								.HelpText(LOCTEXT("ReviewSpacecraftHelp", "Review the spacecraft design and changes made to it before saving"))
 								.OnClicked(this, &SNovaMainMenuAssembly::OnReviewSpacecraft)
 							]
 
@@ -494,6 +495,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 			[
 				SNew(SOverlay)
 
+				// Compartment picture
 				+ SOverlay::Slot()
 				[
 					SNew(SScaleBox)
@@ -517,6 +519,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 					]
 				]
 
+				// Compartment index
 				+ SOverlay::Slot()
 				.VAlign(VAlign_Top)
 				[
@@ -532,6 +535,20 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 			]
 		];
 	}
+
+	// Get the currently edited compartment
+	auto GetEditedCompartment = [this]() -> const FNovaCompartment*
+	{
+		if (EditedCompartmentIndex != INDEX_NONE)
+		{
+			ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+			return &SpacecraftPawn->GetCompartment(EditedCompartmentIndex);
+		}
+		else
+		{
+			return nullptr;
+		}
+	};
 
 	// Build module buttons
 	for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
@@ -559,6 +576,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 			[
 				SNew(SOverlay)
 
+				// Module picture
 				+ SOverlay::Slot()
 				[
 					SNew(SScaleBox)
@@ -567,12 +585,10 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						SNew(SNovaImage)
 						.Image(FNovaImageGetter::CreateLambda([=]() -> const FSlateBrush*
 						{
-							if (EditedCompartmentIndex != INDEX_NONE)
+							const FNovaCompartment* Compartment = GetEditedCompartment();
+							if (Compartment)
 							{
-								ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-								const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(EditedCompartmentIndex);
-								const FNovaCompartmentModule& Module = Compartment.Modules[ModuleIndex];
-
+								const FNovaCompartmentModule& Module = Compartment->Modules[ModuleIndex];
 								if (IsValid(Module.Description))
 								{
 									return &Module.Description->AssetRender;
@@ -584,6 +600,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 					]
 				]
 
+				// Module slot name
 				+ SOverlay::Slot()
 				.VAlign(VAlign_Top)
 				[
@@ -594,15 +611,11 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						SNew(SNovaText)
 						.Text(FNovaTextGetter::CreateLambda([=]() -> FText
 						{
-							if (EditedCompartmentIndex != INDEX_NONE)
+							const FNovaCompartment* Compartment = GetEditedCompartment();
+							if (Compartment && IsValid(Compartment->Description) && ModuleIndex < Compartment->Description->ModuleSlots.Num())
 							{
-								ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-								const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(EditedCompartmentIndex);
-								if (IsValid(Compartment.Description) && ModuleIndex < Compartment.Description->ModuleSlots.Num())
-								{
-									const FNovaModuleSlot& Slot = Compartment.Description->ModuleSlots[ModuleIndex];
-									return Slot.DisplayName;
-								}
+								const FNovaModuleSlot& Slot = Compartment->Description->ModuleSlots[ModuleIndex];
+								return Slot.DisplayName;
 							}
 						
 							return FText();
@@ -640,6 +653,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 			[
 				SNew(SOverlay)
 
+				// Equipment picture
 				+ SOverlay::Slot()
 				[
 					SNew(SScaleBox)
@@ -648,12 +662,10 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						SNew(SNovaImage)
 						.Image(FNovaImageGetter::CreateLambda([=]() -> const FSlateBrush*
 						{
-							if (EditedCompartmentIndex != INDEX_NONE)
+							const FNovaCompartment* Compartment = GetEditedCompartment();
+							if (Compartment)
 							{
-								ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-								const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(EditedCompartmentIndex);
-								const UNovaEquipmentDescription* Equipment = Compartment.Equipments[EquipmentIndex];
-
+								const UNovaEquipmentDescription* Equipment = Compartment->Equipments[EquipmentIndex];
 								if (IsValid(Equipment))
 								{
 									return &Equipment->AssetRender;
@@ -665,30 +677,87 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 					]
 				]
 
+				// Equipment slot name and pairing information
 				+ SOverlay::Slot()
-				.VAlign(VAlign_Top)
 				[
-					SNew(SBorder)
-					.BorderImage(&Theme.MainMenuGenericBackground)
-					.Padding(Theme.ContentPadding)
+					SNew(SVerticalBox)
+
+					// Name
+					+ SVerticalBox::Slot()
+					.AutoHeight()
 					[
-						SNew(SNovaText)
-						.Text(FNovaTextGetter::CreateLambda([=]() -> FText
-						{
-							if (EditedCompartmentIndex != INDEX_NONE)
+						SNew(SBorder)
+						.BorderImage(&Theme.MainMenuGenericBackground)
+						.Padding(Theme.ContentPadding)
+						[
+							SNew(SNovaText)
+							.Text(FNovaTextGetter::CreateLambda([=]() -> FText
 							{
-								ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-								const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(EditedCompartmentIndex);
-								if (IsValid(Compartment.Description) && EquipmentIndex < Compartment.Description->EquipmentSlots.Num())
+								const FNovaCompartment* Compartment = GetEditedCompartment();
+								if (Compartment && IsValid(Compartment->Description) && EquipmentIndex < Compartment->Description->EquipmentSlots.Num())
 								{
-									const FNovaEquipmentSlot& Slot = Compartment.Description->EquipmentSlots[EquipmentIndex];
+									const FNovaEquipmentSlot& Slot = Compartment->Description->EquipmentSlots[EquipmentIndex];
 									return Slot.DisplayName;
 								}
-							}
 							
-							return FText();
-						}))
-						.TextStyle(&Theme.MainFont)
+								return FText();
+							}))
+							.TextStyle(&Theme.MainFont)
+						]
+					]
+
+					+ SVerticalBox::Slot()
+
+					// Pairing
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(SBorder)
+						.BorderImage(&Theme.MainMenuGenericBackground)
+						.Padding(Theme.ContentPadding)
+						.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([=]()
+						{
+							const FNovaCompartment* Compartment = GetEditedCompartment();
+							if (Compartment && IsValid(Compartment->Description) && EquipmentIndex < Compartment->Description->EquipmentSlots.Num())
+							{
+								TArray<const FNovaEquipmentSlot*> PairedSlots = Compartment->Description->GetGroupedEquipmentSlots(EquipmentIndex);
+								if (PairedSlots.Num())
+								{
+									return EVisibility::Visible;
+								}
+							}
+
+							return EVisibility::Collapsed;
+						})))
+						[
+							SNew(SNovaRichText)
+							.Text(FNovaTextGetter::CreateLambda([=]() -> FText
+							{
+								const FNovaCompartment* Compartment = GetEditedCompartment();
+								if (Compartment && IsValid(Compartment->Description) && EquipmentIndex < Compartment->Description->EquipmentSlots.Num())
+								{
+									TArray<const FNovaEquipmentSlot*> PairedSlots = Compartment->Description->GetGroupedEquipmentSlots(EquipmentIndex);
+									if (PairedSlots.Num())
+									{
+										FString PairedList;
+										for (const FNovaEquipmentSlot* PairedSlot : PairedSlots)
+										{
+											if (PairedList.Len())
+											{
+												PairedList += TEXT(", ");
+											}
+											PairedList += PairedSlot->DisplayName.ToString();
+										}
+
+										return FText::FormatNamed(LOCTEXT("PairingFormat", "<img src=\"/Text/Paired\"/> paired with {slot}"), TEXT("slot"), FText::FromString(PairedList));
+									}
+								}
+							
+								return FText();
+							}))
+							.TextStyle(&Theme.MainFont)
+							.WrapTextAt(1.9f * FNovaStyleSet::GetButtonSize("CompartmentButtonSize").Width)
+						]
 					]
 				]
 			]
@@ -1560,9 +1629,11 @@ void SNovaMainMenuAssembly::OnReviewSpacecraft()
 				.BorderBackgroundColor(ValidSpacecraft ? Theme.PositiveColor : Theme.NegativeColor)
 				.Padding(Theme.ContentPadding)
 				[
-					SNew(STextBlock)
+					SNew(SRichTextBlock)
 					.Text(DetailsText)
 					.TextStyle(&Theme.MainFont)
+					.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
+					+ SRichTextBlock::ImageDecorator()
 				]
 			]
 

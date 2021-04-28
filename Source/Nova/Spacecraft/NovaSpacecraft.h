@@ -106,7 +106,7 @@ public:
 struct FNovaSpacecraftPropulsionMetrics
 {
 	FNovaSpacecraftPropulsionMetrics()
-		: DryMass(-1)
+		: DryMass(0)
 		, PropellantMassCapacity(0)
 		, CargoMassCapacity(0)
 		, MaximumMass(0)

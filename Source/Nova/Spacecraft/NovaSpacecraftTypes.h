@@ -165,6 +165,18 @@ public:
 	TArray<ENovaEquipmentType> SupportedTypes;
 };
 
+/** Equipment slot group metadata */
+USTRUCT()
+struct FNovaEquipmentSlotGroup
+{
+	GENERATED_BODY()
+
+public:
+	// Socket names
+	UPROPERTY(Category = Compartment, EditDefaultsOnly)
+	TArray<FName> SocketNames;
+};
+
 /** Description of a main compartment asset */
 UCLASS(ClassGroup = (Nova))
 class UNovaCompartmentDescription : public UNovaAssetDescription
@@ -195,6 +207,15 @@ public:
 	{
 		return Index < EquipmentSlots.Num() ? EquipmentSlots[Index] : FNovaEquipmentSlot();
 	}
+
+	/** Get a list of equipment slot names grouped with the slot at Index */
+	TArray<FName> GetGroupedEquipmentSlotsNames(int32 Index) const;
+
+	/** Get a list of equipment slot metadata grouped with the slot at Index */
+	TArray<const FNovaEquipmentSlot*> GetGroupedEquipmentSlots(int32 Index) const;
+
+	/** Get a list of equipment slot indices grouped with the slot at Index */
+	TArray<int32> GetGroupedEquipmentSlotsIndices(int32 Index) const;
 
 	/** Return the appropriate main piping mesh */
 	TSoftObjectPtr<class UStaticMesh> GetMainPiping(bool Enabled) const
@@ -291,6 +312,10 @@ public:
 	// Metadata for equipment slots
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	TArray<FNovaEquipmentSlot> EquipmentSlots;
+
+	// Groups of equipment slot that require identical equipments
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	TArray<FNovaEquipmentSlotGroup> EquipmentSlotsGroups;
 };
 
 /*----------------------------------------------------

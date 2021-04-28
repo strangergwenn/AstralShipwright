@@ -8,6 +8,74 @@
     Compartment data asset
 ----------------------------------------------------*/
 
+TArray<FName> UNovaCompartmentDescription::GetGroupedEquipmentSlotsNames(int32 Index) const
+{
+	TArray<FName> GroupedSocketNames;
+
+	if (Index >= 0 && Index < EquipmentSlots.Num())
+	{
+		FName CurrentSocketName = EquipmentSlots[Index].SocketName;
+
+		for (int32 GroupIndex = 0; GroupIndex < EquipmentSlotsGroups.Num(); GroupIndex++)
+		{
+			const TArray<FName>& GroupSocketNames = EquipmentSlotsGroups[GroupIndex].SocketNames;
+
+			for (FName SocketName : GroupSocketNames)
+			{
+				if (SocketName == CurrentSocketName)
+				{
+					TArray<FName> OtherSocketNames = GroupSocketNames;
+					OtherSocketNames.Remove(CurrentSocketName);
+					GroupedSocketNames.Append(OtherSocketNames);
+					break;
+				}
+			}
+		}
+	}
+
+	return GroupedSocketNames;
+}
+
+TArray<int32> UNovaCompartmentDescription::GetGroupedEquipmentSlotsIndices(int32 Index) const
+{
+	TArray<int32> GroupedSlotsIndices;
+
+	for (FName SocketName : GetGroupedEquipmentSlotsNames(Index))
+	{
+		for (int32 SlotIndex = 0; SlotIndex < EquipmentSlots.Num(); SlotIndex++)
+		{
+			const FNovaEquipmentSlot& Slot = EquipmentSlots[SlotIndex];
+
+			if (Slot.SocketName == SocketName)
+			{
+				GroupedSlotsIndices.Add(SlotIndex);
+			}
+		}
+	}
+
+	return GroupedSlotsIndices;
+}
+
+TArray<const FNovaEquipmentSlot*> UNovaCompartmentDescription::GetGroupedEquipmentSlots(int32 Index) const
+{
+	TArray<const FNovaEquipmentSlot*> GroupedSlots;
+
+	for (FName SocketName : GetGroupedEquipmentSlotsNames(Index))
+	{
+		for (int32 SlotIndex = 0; SlotIndex < EquipmentSlots.Num(); SlotIndex++)
+		{
+			const FNovaEquipmentSlot& Slot = EquipmentSlots[SlotIndex];
+
+			if (Slot.SocketName == SocketName)
+			{
+				GroupedSlots.Add(&Slot);
+			}
+		}
+	}
+
+	return GroupedSlots;
+}
+
 TArray<FText> UNovaCompartmentDescription::GetDescription() const
 {
 	TArray<FText> Result = Super::GetDescription();
