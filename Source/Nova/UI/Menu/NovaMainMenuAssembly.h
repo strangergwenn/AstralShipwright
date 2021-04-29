@@ -204,6 +204,7 @@ protected:
 	void OnCompartmentSelected(int32 Index);
 
 	// Display filters
+	void OnSpacecraftNameChanged(const FText& InText);
 	void OnEnterPhotoMode(FName ActionName);
 	void OnSelectedFilterChanged(float Value);
 
@@ -212,10 +213,8 @@ protected:
 	void OnSelectedEquipmentChanged(const class UNovaEquipmentDescription* Equipment, int32 Index);
 	void OnSelectedHullTypeChanged(ENovaHullType Type, int32 Index);
 
-	// Save or reset the spacecraft
+	// Save & exit
 	void OnReviewSpacecraft();
-
-	// Exit compartment details
 	void OnBackToAssembly();
 
 	/*----------------------------------------------------
@@ -230,6 +229,7 @@ protected:
 	TSharedPtr<SHorizontalBox>        CompartmentBox;
 	TSharedPtr<SHorizontalBox>        ModuleBox;
 	TSharedPtr<SHorizontalBox>        EquipmentBox;
+	TSharedPtr<SEditableText>         SpacecraftNameText;
 	TSharedPtr<class SNovaSlider>     DisplayFilter;
 	TSharedPtr<class SNovaButton>     SaveButton;
 	TSharedPtr<class SNovaModalPanel> PrimaryModalPanel;

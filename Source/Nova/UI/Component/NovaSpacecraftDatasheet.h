@@ -56,6 +56,9 @@ public:
 
 		// Build the mass table
 		AddHeader(LOCTEXT("Overview", "<img src=\"/Text/Module\"/> Overview"));
+		AddEntry(LOCTEXT("Name", "Name"), Target.GetName(), Comparison ? Comparison->GetName() : FText());
+		AddEntry(LOCTEXT("Classification", "Classification"), Target.GetClassification(),
+			Comparison ? Comparison->GetClassification() : FText());
 		AddEntry(LOCTEXT("Compartments", "Compartments"), Target.Compartments.Num(), Comparison ? Comparison->Compartments.Num() : -1);
 
 		// Build the mass table
@@ -77,7 +80,7 @@ public:
 			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->Thrust : -1, KiloNewtons);
 		AddEntry(LOCTEXT("PropellantRate", "Propellant mass rate"), TargetPropulsionMetrics.PropellantRate,
 			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->PropellantRate : -1, TonnesPerSecond);
-		AddEntry(LOCTEXT("MaximumDeltaV", "Full-load Delta-V"), TargetPropulsionMetrics.MaximumDeltaV,
+		AddEntry(LOCTEXT("MaximumDeltaV", "Full-load delta-v"), TargetPropulsionMetrics.MaximumDeltaV,
 			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->MaximumDeltaV : -1, MetersPerSeconds);
 		AddEntry(LOCTEXT("MaximumBurnTime", "Full-load burn time"), TargetPropulsionMetrics.MaximumBurnTime,
 			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->MaximumBurnTime : -1, Seconds);
@@ -121,8 +124,8 @@ public:
 		EvenRow = false;
 	}
 
-	/** Add a table entry */
-	void AddEntry(FText Label, float Value, float ComparisonValue = -1, FText Unit = FText())
+	/** Add a numerical table entry */
+	void AddEntry(FText Label, float CurrentValue, float PreviousValue = -1, FText Unit = FText())
 	{
 		// Fetch the style data
 		const FNovaMainTheme&    Theme = FNovaStyleSet::GetMainTheme();
@@ -132,14 +135,39 @@ public:
 		DifferenceOptions.AlwaysSign               = true;
 
 		// Build the comparison data
-		FLinearColor Color     = FLinearColor::White;
-		FText        ValueText = FText::FromString(FText::AsNumber(Value, &Options).ToString() + " " + Unit.ToString());
-		if (ComparisonValue >= 0 && Value != ComparisonValue)
+		FLinearColor Color = FLinearColor::White;
+		FText        Text  = FText::FromString(FText::AsNumber(CurrentValue, &Options).ToString() + " " + Unit.ToString());
+		if (PreviousValue >= 0 && CurrentValue != PreviousValue)
 		{
-			Color     = Value > ComparisonValue ? Theme.PositiveColor : Theme.NegativeColor;
-			ValueText = FText::FromString(
-				ValueText.ToString() + " (" + FText::AsNumber(Value - ComparisonValue, &DifferenceOptions).ToString() + ")");
+			Color = CurrentValue > PreviousValue ? Theme.PositiveColor : Theme.NegativeColor;
+			Text  = FText::FromString(
+                Text.ToString() + " (" + FText::AsNumber(CurrentValue - PreviousValue, &DifferenceOptions).ToString() + ")");
 		}
+
+		AddRow(Label, Text, Color);
+	}
+
+	/** Add a textual table entry */
+	void AddEntry(FText Label, FText CurrentText, FText PreviousText = FText(), FText Unit = FText())
+	{
+		// Fetch the style data
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+		// Build the comparison data
+		FLinearColor Color = FLinearColor::White;
+		if (!PreviousText.IsEmpty() && !CurrentText.EqualTo(PreviousText))
+		{
+			Color = Theme.PositiveColor;
+		}
+
+		AddRow(Label, CurrentText, Color);
+	}
+
+protected:
+	/** Add a generic row to the table */
+	void AddRow(FText Label, FText Value, FLinearColor Color = FLinearColor::White)
+	{
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 
 		// clang-format off
 		TableBox->AddSlot()
@@ -161,7 +189,7 @@ public:
 				+ SHorizontalBox::Slot()
 				[
 					SNew(STextBlock)
-					.Text(ValueText)
+					.Text(Value)
 					.TextStyle(&Theme.MainFont)
 					.ColorAndOpacity(Color)
 				]

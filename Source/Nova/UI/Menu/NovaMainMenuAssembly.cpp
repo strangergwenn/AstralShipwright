@@ -425,6 +425,28 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						+ SHorizontalBox::Slot()
 
 						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(SNovaButton) // No navigation
+							.Focusable(false)
+							.Content()
+							[
+								SNew(SBox)
+								.Padding(FNovaStyleSet::GetButtonTheme().IconPadding)
+								.VAlign(VAlign_Center)
+								[
+									SAssignNew(SpacecraftNameText, SEditableText)
+									.HintText(LOCTEXT("SpacecraftHint", "Spacecraft name"))
+									.Font(Theme.MainFont.Font)
+									.ColorAndOpacity(Theme.MainFont.ColorAndOpacity)
+									.OnTextChanged(this, &SNovaMainMenuAssembly::OnSpacecraftNameChanged)
+								]
+							]
+						]
+
+						+ SHorizontalBox::Slot()
+
+						+ SHorizontalBox::Slot()
 						.VAlign(VAlign_Center)
 						.AutoWidth()
 						[
@@ -749,7 +771,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 											PairedList += PairedSlot->DisplayName.ToString();
 										}
 
-										return FText::FormatNamed(LOCTEXT("PairingFormat", "<img src=\"/Text/Paired\"/> paired with {slot}"), TEXT("slot"), FText::FromString(PairedList));
+										return FText::FormatNamed(LOCTEXT("PairingFormat", "<img src=\"/Text/Paired\"/> Paired with {slot}"), TEXT("slot"), FText::FromString(PairedList));
 									}
 								}
 							
@@ -777,6 +799,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 void SNovaMainMenuAssembly::Show()
 {
 	SNovaTabPanel::Show();
+
+	SpacecraftNameText->SetText(GetSpacecraftPawn()->GetSpacecraftCopy().GetName());
 
 	// Reset the compartment view
 	if (CompartmentPanelVisible)
@@ -1452,7 +1476,7 @@ FKey SNovaMainMenuAssembly::GetNextItemKey() const
 }
 
 /*----------------------------------------------------
-    Callbacks
+    Compartment callbacks
 ----------------------------------------------------*/
 
 void SNovaMainMenuAssembly::OnEditCompartment()
@@ -1515,6 +1539,23 @@ void SNovaMainMenuAssembly::OnCompartmentSelected(int32 Index)
 	SetSelectedCompartment(Index);
 }
 
+/*----------------------------------------------------
+    Display filters
+----------------------------------------------------*/
+
+void SNovaMainMenuAssembly::OnSpacecraftNameChanged(const FText& InText)
+{
+	constexpr int32 MaxSpacecraftNameLength = 25;
+
+	FString SpacecraftName = InText.ToString().Left(MaxSpacecraftNameLength);
+	if (InText.ToString().Len() > MaxSpacecraftNameLength)
+	{
+		SpacecraftNameText->SetText(FText::FromString(SpacecraftName));
+	}
+
+	GetSpacecraftPawn()->RenameSpacecraft(SpacecraftName);
+}
+
 void SNovaMainMenuAssembly::OnEnterPhotoMode(FName ActionName)
 {
 	MenuManager->GetPC()->EnterPhotoMode(ActionName);
@@ -1524,6 +1565,10 @@ void SNovaMainMenuAssembly::OnSelectedFilterChanged(float Value)
 {
 	GetSpacecraftPawn()->SetDisplayFilter(static_cast<ENovaAssemblyDisplayFilter>(Value), EditedCompartmentIndex);
 }
+
+/*----------------------------------------------------
+    Modules & equipments
+----------------------------------------------------*/
 
 void SNovaMainMenuAssembly::OnSelectedModuleChanged(const UNovaModuleDescription* Module, int32 Index)
 {
@@ -1555,6 +1600,10 @@ void SNovaMainMenuAssembly::OnSelectedHullTypeChanged(ENovaHullType Type, int32 
 	GetSpacecraftPawn()->RequestAssemblyUpdate();
 }
 
+/*----------------------------------------------------
+    Save & exit
+----------------------------------------------------*/
+
 void SNovaMainMenuAssembly::OnReviewSpacecraft()
 {
 	// Get spacecraft
@@ -1571,10 +1620,6 @@ void SNovaMainMenuAssembly::OnReviewSpacecraft()
 	if (HasModifiedDesign)
 	{
 		ValidSpacecraft = ModifiedSpacecraft.IsValid(&DetailsText);
-		if (ValidSpacecraft)
-		{
-			DetailsText = LOCTEXT("Changes", "This spacecraft has a valid design");
-		}
 	}
 
 	// Reversal callback

@@ -27,16 +27,7 @@ FText FNovaOrbitalObject::GetText(FNovaTime CurrentTime) const
 	}
 	else if (Spacecraft)
 	{
-		FString IDentifier = Spacecraft->Identifier.ToString(EGuidFormats::DigitsWithHyphens);
-		int32   Index;
-		if (IDentifier.FindLastChar('-', Index))
-		{
-			return FText::FromString(IDentifier.RightChop(Index + 1));
-		}
-		else
-		{
-			return FText();
-		}
+		return Spacecraft->GetName();
 	}
 	else if (Maneuver)
 	{

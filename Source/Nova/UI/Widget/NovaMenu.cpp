@@ -139,7 +139,10 @@ FReply SNovaMenu::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerE
 {
 	SCompoundWidget::OnMouseButtonDown(MyGeometry, MouseEvent);
 
-	MousePressed = true;
+	if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+	{
+		MousePressed = true;
+	}
 
 	MenuManager->SetUsingGamepad(false);
 

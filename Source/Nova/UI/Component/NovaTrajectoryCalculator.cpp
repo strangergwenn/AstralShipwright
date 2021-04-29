@@ -86,8 +86,8 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 				.AutoHeight()
 				[
 					InArgs._Panel->SNovaNew(SNovaButton)
-					.Text(LOCTEXT("MinimizeDeltaV", "Minimize Delta-V"))
-					.HelpText(LOCTEXT("MinimizeDeltaVHelp", "Configure the trajectory to minimize the Delta-V cost"))
+					.Text(LOCTEXT("MinimizeDeltaV", "Minimize Delta-v"))
+					.HelpText(LOCTEXT("MinimizeDeltaVHelp", "Configure the trajectory to minimize the delta-v cost"))
 					.Action(InArgs._DeltaVActionName)
 					.OnClicked(this, &SNovaTrajectoryCalculator::OptimizeForDeltaV)
 					.Enabled(this, &SNovaTrajectoryCalculator::CanEditTrajectory)
@@ -296,7 +296,7 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNo
 		}
 	}
 
-	// Pre-process the trajectory data again for a smarter minimum Delta-V
+	// Pre-process the trajectory data again for a smarter minimum delta-V
 	float MinDurationWithinMinDeltaV = FLT_MAX;
 	for (const TPair<float, TSharedPtr<FNovaTrajectory>>& AltitudeAndTrajectory : SimulatedTrajectories)
 	{

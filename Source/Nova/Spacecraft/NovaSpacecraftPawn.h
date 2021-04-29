@@ -160,6 +160,13 @@ public:
 		return Spacecraft.IsValid() && Spacecraft->IsValid(Details);
 	}
 
+	/** Rename the spacecraft */
+	void RenameSpacecraft(FString Name)
+	{
+		NCHECK(Spacecraft.IsValid());
+		Spacecraft->Name = Name;
+	}
+
 	/** Check if the assembly is idle */
 	bool IsIdle() const
 	{

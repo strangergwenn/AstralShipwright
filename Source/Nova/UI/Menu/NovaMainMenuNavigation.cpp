@@ -153,7 +153,7 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 				.Enabled(this, &SNovaMainMenuNavigation::CanFastForward)
 			]
 			
-			// Delta-V trade-off slider
+			// Delta-v trade-off slider
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[

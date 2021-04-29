@@ -164,7 +164,7 @@ struct FNovaSpacecraftPropulsionMetrics
 	// Engine exhaust velocity in m/s
 	float ExhaustVelocity;
 
-	// Total capable Delta-V in m/s
+	// Total capable delta-v in m/s
 	float MaximumDeltaV;
 
 	// Total capable engine burn time in s
@@ -209,9 +209,10 @@ public:
 	----------------------------------------------------*/
 
 	/** Create a new spacecraft */
-	void Create()
+	void Create(FString SpacecraftName)
 	{
 		Identifier = FGuid::NewGuid();
+		Name       = SpacecraftName;
 	}
 
 	/** Trigger a rebuilding of the local state on all clients */
@@ -235,6 +236,15 @@ public:
 
 	/** Get the spacecraft validity */
 	bool IsValid(FText* Details) const;
+
+	/** Get this spacecraft's name */
+	FText GetName() const
+	{
+		return FText::FromString(Name);
+	}
+
+	/** Get this spacecraft's classification */
+	FText GetClassification() const;
 
 	/** Get propulsion characteristics for this spacecraft */
 	const FNovaSpacecraftPropulsionMetrics& GetPropulsionMetrics() const
@@ -316,6 +326,10 @@ public:
 	// Unique ID
 	UPROPERTY()
 	FGuid Identifier;
+
+	// Name
+	UPROPERTY()
+	FString Name;
 
 	// System state
 	UPROPERTY()

@@ -216,6 +216,10 @@ bool FNovaSpacecraft::operator==(const FNovaSpacecraft& Other) const
 	{
 		return false;
 	}
+	else if (Name != Other.Name)
+	{
+		return false;
+	}
 	else if (Compartments.Num() != Other.Compartments.Num())
 	{
 		return false;
@@ -240,85 +244,118 @@ bool FNovaSpacecraft::operator==(const FNovaSpacecraft& Other) const
 
 bool FNovaSpacecraft::IsValid(FText* Details) const
 {
+	TArray<FText> Issues;
+
+	// Check for simple issues
+	if (Name.Len() == 0)
+	{
+		Issues.Add(LOCTEXT("NoName", "This spacecraft is unnamed"));
+	}
 	if (PropulsionMetrics.Thrust <= 0)
 	{
-		if (Details)
-		{
-			*Details = LOCTEXT("InsufficientThrust", "This spacecraft has no engine");
-		}
-		return false;
+		Issues.Add(LOCTEXT("InsufficientThrust", "This spacecraft has no engine"));
 	}
-	else if (PropulsionMetrics.PropellantMassCapacity <= 0)
+	if (PropulsionMetrics.PropellantMassCapacity <= 0)
 	{
-		if (Details)
-		{
-			*Details = LOCTEXT("InsufficientPropellant", "This spacecraft has no propellant tank");
-		}
-		return false;
+		Issues.Add(LOCTEXT("InsufficientPropellant", "This spacecraft has no propellant tank"));
 	}
-	else if (PropulsionMetrics.MaximumDeltaV < 100)
+	if (PropulsionMetrics.MaximumDeltaV < 100)
 	{
-		if (Details)
-		{
-			*Details = LOCTEXT("InsufficientDeltaV", "This spacecraft does not have enough Delta-V");
-		}
-		return false;
+		Issues.Add(LOCTEXT("InsufficientDeltaV", "This spacecraft does not have enough delta-v"));
 	}
 
 	// Check for invalid equipment pairings
-	else
+	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
 	{
-		for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
-		{
-			const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
-			NCHECK(::IsValid(Compartment.Description));
+		const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
+		NCHECK(::IsValid(Compartment.Description));
 
-			for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
+		for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
+		{
+			const UNovaEquipmentDescription* Equipment = Compartment.Equipments[EquipmentIndex];
+			if (Equipment)
 			{
-				const UNovaEquipmentDescription* Equipment = Compartment.Equipments[EquipmentIndex];
-				if (Equipment)
+				for (int32 GroupedIndex : Compartment.Description->GetGroupedEquipmentSlotsIndices(EquipmentIndex))
 				{
-					for (int32 GroupedIndex : Compartment.Description->GetGroupedEquipmentSlotsIndices(EquipmentIndex))
+					if (Compartment.Equipments[GroupedIndex] != Equipment)
 					{
-						if (Compartment.Equipments[GroupedIndex] != Equipment)
-						{
-							if (Details)
-							{
-								*Details = FText::FormatNamed(LOCTEXT("InvalidPairing",
-																  "The equipment in slot {slot} of compartment {compartment} is not "
-																  "correctly paired with identical equipments"),
-									TEXT("slot"), Compartment.Description->GetEquipmentSlot(EquipmentIndex).DisplayName,
-									TEXT("compartment"), FText::AsNumber(CompartmentIndex + 1));
-							}
-							return false;
-						}
+						Issues.Add(FText::FormatNamed(LOCTEXT("InvalidPairing",
+														  "The equipment in slot {slot} of compartment {compartment} is not "
+														  "correctly paired with identical equipments"),
+							TEXT("slot"), Compartment.Description->GetEquipmentSlot(EquipmentIndex).DisplayName, TEXT("compartment"),
+							FText::AsNumber(CompartmentIndex + 1)));
 					}
 				}
 			}
 		}
 	}
 
-	return true;
+	if (Issues.Num() == 0)
+	{
+		if (Details)
+		{
+			*Details = LOCTEXT("Changes", "This spacecraft has a valid design");
+		}
+		return true;
+	}
+	else
+	{
+		if (Details)
+		{
+			FString IssueText;
+			for (const FText& Issue : Issues)
+			{
+				if (IssueText.Len())
+				{
+					IssueText += "\n";
+				}
+				IssueText += Issue.ToString();
+			}
+			*Details = FText::FromString(IssueText);
+		}
+
+		return false;
+	}
+}
+
+FText FNovaSpacecraft::GetClassification() const
+{
+	if (Compartments.Num() == 0)
+	{
+		return LOCTEXT("Blank", "N/A");
+	}
+	else if (PropulsionMetrics.CargoMassCapacity == 0)
+	{
+		return LOCTEXT("Tug", "Tug");
+	}
+	else if (PropulsionMetrics.CargoMassCapacity < 500)
+	{
+		return LOCTEXT("LightFreighter", "Light freighter");
+	}
+	else
+	{
+		return LOCTEXT("HeavyFreighter", "Heavy freighter");
+	}
 }
 
 void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
 {
 	// Write an asset description to JSON
-	auto SaveAsset = [](TSharedPtr<FJsonObject> Save, FString Name, const UNovaAssetDescription* Asset)
+	auto SaveAsset = [](TSharedPtr<FJsonObject> Save, FString AssetName, const UNovaAssetDescription* Asset)
 	{
 		if (Asset)
 		{
-			Save->SetStringField(Name, Asset->Identifier.ToString(EGuidFormats::Short));
+			Save->SetStringField(AssetName, Asset->Identifier.ToString(EGuidFormats::Short));
 		}
 	};
 
 	// Get an asset description from JSON
-	auto LoadAsset = [](TSharedPtr<FJsonObject> Save, FString Name)
+	auto LoadAsset = [](TSharedPtr<FJsonObject> Save, FString AssetName)
 	{
 		const UNovaAssetDescription* Asset = nullptr;
 
 		FString IdentifierString;
-		if (Save->TryGetStringField(Name, IdentifierString))
+		if (Save->TryGetStringField(AssetName, IdentifierString))
 		{
 			FGuid AssetIdentifier;
 			if (FGuid::Parse(IdentifierString, AssetIdentifier))
@@ -337,6 +374,7 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 
 		// Spacecraft
 		JsonData->SetStringField("I", This->Identifier.ToString(EGuidFormats::Short));
+		JsonData->SetStringField("N", This->Name);
 
 		// Systems
 		JsonData->SetNumberField("P", This->SystemState.InitialPropellantMass);
@@ -375,13 +413,18 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 	else
 	{
 		This = MakeShared<FNovaSpacecraft>();
-		This->Create();
+		This->Create(LOCTEXT("UnnamedSpacecraft", "Unnamed Spacecraft").ToString());
 
 		// Spacecraft
 		FGuid Identifier;
 		if (FGuid::Parse(JsonData->GetStringField("I"), Identifier))
 		{
 			This->Identifier = Identifier;
+		}
+		FString Name;
+		if (JsonData->TryGetStringField("N", Name))
+		{
+			This->Name = Name;
 		}
 
 		// Systems
@@ -604,7 +647,7 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 		PropulsionMetrics.CargoMass, PropulsionMetrics.TotalMass);
 	NLOG("Engine specifications : thrust %.1fkN, ISP %.1fm/s, EV %.1fm/s", PropulsionMetrics.Thrust, PropulsionMetrics.SpecificImpulse,
 		PropulsionMetrics.ExhaustVelocity);
-	NLOG("Delta-V specifications : total %.1fm/s, burn time %.1fs", PropulsionMetrics.TotalDeltaV, PropulsionMetrics.TotalBurnTime);
+	NLOG("Delta-v specifications : total %.1fm/s, burn time %.1fs", PropulsionMetrics.TotalDeltaV, PropulsionMetrics.TotalBurnTime);
 	NLOG("--------------------------------------------------------------------------------");
 #endif
 }

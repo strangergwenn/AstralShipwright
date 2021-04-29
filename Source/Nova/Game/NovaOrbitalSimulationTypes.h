@@ -264,7 +264,7 @@ struct FNovaTrajectory
 		return true;
 	}
 
-	/** Add a maneuver if it's not zero Delta-V */
+	/** Add a maneuver if it's not zero delta-v */
 	bool Add(const FNovaManeuver& Maneuver)
 	{
 		if (Maneuver.DeltaV != 0)
