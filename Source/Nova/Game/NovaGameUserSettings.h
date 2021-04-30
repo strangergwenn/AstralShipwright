@@ -18,6 +18,12 @@ public:
 	/** Apply custom graphics settings that the engine doesn't know to apply */
 	void ApplyCustomGraphicsSettings();
 
+	/** Check if HDR is supported */
+	bool IsHDRSupported() const;
+
+	/** Check if DLSS is supported */
+	bool IsDLSSSupported() const;
+
 	/*----------------------------------------------------
 	    Inherited
 	----------------------------------------------------*/
@@ -49,6 +55,10 @@ public:
 	/** Enable SSGI */
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	bool EnableSSGI;
+
+	/** Enable DLSS */
+	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
+	bool EnableDLSS;
 
 	/** Enable DXR reflections */
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)

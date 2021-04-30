@@ -178,7 +178,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
 				]
 				
-				+ SVerticalBox::Slot()
+				/*+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
 					SNovaAssignNew(HDRButton, SNovaButton)
@@ -187,7 +187,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 					.HelpText(LOCTEXT("HDRHelp", "Enable HDR output if your system is compatible, requires fullscreen"))
 					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
 					.Enabled(this, &SNovaMainMenuSettings::IsHDRSupported)
-				]
+				]*/
 			]
 
 			// Graphics settings
@@ -212,6 +212,18 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 				.AutoHeight()
 				[
 					SAssignNew(GraphicsContainer, SVerticalBox)
+				]
+				
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNovaAssignNew(DLSSButton, SNovaButton)
+					.Toggle(true)
+					.Text(LOCTEXT("DLSS", "Enable DLSS"))
+					.HelpText(LOCTEXT("DLSSHelp", "Enable DLSS support to improve performance on NVIDIA RTX hardware"))
+					.OnClicked(this, &SNovaMainMenuSettings::OnDLSSToggled)
+					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+					.Enabled(this, &SNovaMainMenuSettings::IsDLSSSupported)
 				]
 
 				+ SVerticalBox::Slot()
@@ -372,7 +384,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		ScreenPercentageSlider = AddSettingSlider(GraphicsContainer, LOCTEXT("ScreenPercentage", "Screen percentage ({value}%)"),
 			LOCTEXT("ScreenPercentageHelp", "Render the game at a higher or lower resolution compared to the display"),
 			FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnScreenPercentageChanged),
-			50, 150, 10);
+			50, 150, 10, TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenuSettings::IsScreenPercentageSupported)));
 
 		// Build key bindings title
 		BindingsContainer->ClearChildren();
@@ -452,6 +464,7 @@ void SNovaMainMenuSettings::Show()
 		AntiAliasingSlider->SetCurrentValue(GameUserSettings->GetAntiAliasingQuality());
 		ScreenPercentageSlider->SetCurrentValue(GameUserSettings->ScreenPercentage);
 
+		DLSSButton->SetActive(GameUserSettings->EnableDLSS);
 		RaytracedShadowsButton->SetActive(GameUserSettings->EnableRaytracedShadows);
 		RaytracedAOutton->SetActive(GameUserSettings->EnableRaytracedAO);
 		// RaytracedReflectionsButton->SetActive(GameUserSettings->EnableRaytracedReflections);
@@ -605,7 +618,7 @@ bool SNovaMainMenuSettings::IsAlreadyUsed(
 ----------------------------------------------------*/
 
 TSharedPtr<SNovaSlider> SNovaMainMenuSettings::AddSettingSlider(TSharedPtr<SVerticalBox> Container, FText Text, FText HelpText,
-	FOnFloatValueChanged Callback, float MinValue, float MaxValue, float ValueStep)
+	FOnFloatValueChanged Callback, float MinValue, float MaxValue, float ValueStep, TAttribute<bool> Enabled)
 {
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 
@@ -615,7 +628,8 @@ TSharedPtr<SNovaSlider> SNovaMainMenuSettings::AddSettingSlider(TSharedPtr<SVert
 		.MaxValue(MaxValue)
 		.ValueStep(ValueStep)
 		.HelpText(HelpText)
-		.OnValueChanged(Callback);
+		.OnValueChanged(Callback)
+		.Enabled(Enabled);
 
 	Container->AddSlot()
 	.AutoHeight()
@@ -651,7 +665,7 @@ void SNovaMainMenuSettings::UpdateResolutionList()
 	LastConfirmedFullscreenMode  = GameUserSettings->GetLastConfirmedFullscreenMode();
 	FullscreenButton->SetActive(LastConfirmedFullscreenMode != EWindowMode::Windowed);
 	VSyncButton->SetActive(GameUserSettings->IsVSyncEnabled());
-	HDRButton->SetActive(IsHDRSupported() && GameUserSettings->IsHDREnabled());
+	// HDRButton->SetActive(IsHDRSupported() && GameUserSettings->IsHDREnabled());
 
 	// Get all resolution settings
 	ResolutionList.Empty();
@@ -740,10 +754,19 @@ bool SNovaMainMenuSettings::IsRaytracingSupported() const
 	return IsRayTracingEnabled();
 }
 
+bool SNovaMainMenuSettings::IsScreenPercentageSupported() const
+{
+	return !GameUserSettings->EnableDLSS;
+}
+
+bool SNovaMainMenuSettings::IsDLSSSupported() const
+{
+	return GameUserSettings->IsDLSSSupported();
+}
+
 bool SNovaMainMenuSettings::IsHDRSupported() const
 {
-	return GameUserSettings->GetFullscreenMode() == EWindowMode::Fullscreen && GameUserSettings->SupportsHDRDisplayOutput() &&
-		   IsHDRAllowed();
+	return GameUserSettings->IsHDRSupported();
 }
 
 void SNovaMainMenuSettings::OnFOVChanged(float Value)
@@ -799,21 +822,31 @@ void SNovaMainMenuSettings::OnScreenPercentageChanged(float Value)
 	GameUserSettings->SaveSettings();
 }
 
+void SNovaMainMenuSettings::OnDLSSToggled()
+{
+	GameUserSettings->EnableDLSS = DLSSButton->IsActive();
+	GameUserSettings->ApplySettings(false);
+	GameUserSettings->SaveSettings();
+}
+
 void SNovaMainMenuSettings::OnRaytracedShadowsToggled()
 {
 	GameUserSettings->EnableRaytracedShadows = RaytracedShadowsButton->IsActive();
+	GameUserSettings->ApplySettings(false);
 	GameUserSettings->SaveSettings();
 }
 
 void SNovaMainMenuSettings::OnRaytracedAOToggled()
 {
 	GameUserSettings->EnableRaytracedAO = RaytracedAOutton->IsActive();
+	GameUserSettings->ApplySettings(false);
 	GameUserSettings->SaveSettings();
 }
 
 void SNovaMainMenuSettings::OnRaytracedReflectionsToggled()
 {
 	GameUserSettings->EnableRaytracedReflections = RaytracedReflectionsButton->IsActive();
+	GameUserSettings->ApplySettings(false);
 	GameUserSettings->SaveSettings();
 }
 
@@ -971,11 +1004,11 @@ bool SNovaMainMenuSettings::IsApplyVideoSettingsEnabled() const
 {
 	bool IsFullscreen = LastConfirmedFullscreenMode != EWindowMode::Windowed;
 	bool IsVsync      = GameUserSettings->IsVSyncEnabled();
-	bool IsHDR        = GameUserSettings->IsHDREnabled();
+	// bool IsHDR        = GameUserSettings->IsHDREnabled();
 
 	return ((SelectedResolution.IsValid() && (SelectedResolution->Width != LastConfirmedVideoResolution.X ||
 												 SelectedResolution->Height != LastConfirmedVideoResolution.Y)) ||
-			FullscreenButton->IsActive() != IsFullscreen || VSyncButton->IsActive() != IsVsync || HDRButton->IsActive() != IsHDR);
+			FullscreenButton->IsActive() != IsFullscreen || VSyncButton->IsActive() != IsVsync /* || HDRButton->IsActive() != IsHDR*/);
 }
 
 void SNovaMainMenuSettings::OnApplyVideoSettings()
@@ -990,7 +1023,7 @@ void SNovaMainMenuSettings::OnApplyVideoSettings()
 	UpdateResolution(Resolution, FullscreenButton->IsActive());
 
 	GameUserSettings->SetVSyncEnabled(VSyncButton->IsActive());
-	GameUserSettings->EnableHDRDisplayOutput(HDRButton->IsActive());
+	// GameUserSettings->EnableHDRDisplayOutput(HDRButton->IsActive());
 	GameUserSettings->ApplySettings(false);
 	GameUserSettings->SaveSettings();
 }

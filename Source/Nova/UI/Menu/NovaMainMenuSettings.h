@@ -49,7 +49,7 @@ public:
 	----------------------------------------------------*/
 
 	TSharedPtr<class SNovaSlider> AddSettingSlider(TSharedPtr<class SVerticalBox> Container, FText Text, FText HelpText,
-		FOnFloatValueChanged Callback, float MinValue = 0, float MaxValue = 4, float ValueStep = 1);
+		FOnFloatValueChanged Callback, float MinValue = 0, float MaxValue = 4, float ValueStep = 1, TAttribute<bool> Enabled = true);
 
 	void UpdateResolutionList();
 
@@ -66,6 +66,8 @@ protected:
 	// Are we on the PC platform
 	EVisibility GetPCVisibility() const;
 	bool        IsRaytracingSupported() const;
+	bool        IsScreenPercentageSupported() const;
+	bool        IsDLSSSupported() const;
 	bool        IsHDRSupported() const;
 
 	// Gameplay settings callbacks
@@ -79,6 +81,7 @@ protected:
 	void OnPostProcessChanged(float Value);
 	void OnAntiAliasingChanged(float Value);
 	void OnScreenPercentageChanged(float Value);
+	void OnDLSSToggled();
 	void OnRaytracedShadowsToggled();
 	void OnRaytracedAOToggled();
 	void OnRaytracedReflectionsToggled();
@@ -146,6 +149,7 @@ protected:
 	TSharedPtr<class SNovaSlider> PostProcessSlider;
 	TSharedPtr<class SNovaSlider> AntiAliasingSlider;
 	TSharedPtr<class SNovaSlider> ScreenPercentageSlider;
+	TSharedPtr<class SNovaButton> DLSSButton;
 	TSharedPtr<class SNovaButton> RaytracedShadowsButton;
 	TSharedPtr<class SNovaButton> RaytracedAOutton;
 	TSharedPtr<class SNovaButton> RaytracedReflectionsButton;

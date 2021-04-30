@@ -3,6 +3,13 @@
 #include "NovaGameUserSettings.h"
 #include "Nova/Nova.h"
 
+#include "Modules/ModuleManager.h"
+#include "RenderCore.h"
+
+#if PLATFORM_WINDOWS
+#include "DLSS.h"
+#endif    // PLATFORM_WINDOWS
+
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
@@ -16,9 +23,38 @@ UNovaGameUserSettings::UNovaGameUserSettings()
 
 void UNovaGameUserSettings::ApplyCustomGraphicsSettings()
 {
+	// Toggle SSGI
 	IConsoleVariable* SSGIVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.SSGI.Enable"));
-	NCHECK(SSGIVar);
-	SSGIVar->Set(EnableSSGI ? 1 : 0, ECVF_SetByConsole);
+	if (SSGIVar)
+	{
+		SSGIVar->Set(EnableSSGI ? 1 : 0, ECVF_SetByConsole);
+	}
+
+	// Toggle DLSS
+	EnableDLSS                = EnableDLSS && IsDLSSSupported();
+	IConsoleVariable* DLSSVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.NGX.DLSS.Enable"));
+	if (DLSSVar)
+	{
+		DLSSVar->Set(EnableDLSS ? 1 : 0, ECVF_SetByConsole);
+	}
+}
+
+bool UNovaGameUserSettings::IsHDRSupported() const
+{
+	return GetFullscreenMode() == EWindowMode::Fullscreen && SupportsHDRDisplayOutput() && IsHDRAllowed();
+}
+
+bool UNovaGameUserSettings::IsDLSSSupported() const
+{
+#if PLATFORM_WINDOWS
+	IDLSSModuleInterface* DLSSModule = &FModuleManager::LoadModuleChecked<IDLSSModuleInterface>(TEXT("DLSS"));
+	if (DLSSModule)
+	{
+		return DLSSModule->QueryDLSSSupport() == EDLSSSupport::Supported;
+	}
+#endif    // PLATFORM_WINDOWS
+
+	return false;
 }
 
 /*----------------------------------------------------
@@ -39,6 +75,7 @@ void UNovaGameUserSettings::SetToDefaults()
 
 	// Graphics
 	EnableSSGI                 = false;
+	EnableDLSS                 = false;
 	EnableRaytracedReflections = false;
 	EnableRaytracedShadows     = false;
 	EnableRaytracedAO          = false;
