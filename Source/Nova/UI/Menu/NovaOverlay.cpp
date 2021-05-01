@@ -75,7 +75,6 @@ public:
 								SNew(STextBlock)
 								.Text(this, &SNovaNotification::GetNotifyText)
 								.TextStyle(&Theme.SubtitleFont)
-								.ColorAndOpacity(this, &SNovaNotification::GetTextColor)
 							]
 						]
 					]
@@ -164,12 +163,6 @@ public:
 		return CurrentNotifyText;
 	}
 
-	FSlateColor GetTextColor() const
-	{
-		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-		return SNovaFadingWidget::GetTextColor(Theme.SubtitleFont);
-	}
-
 private:
 	// Notification icon
 	TSharedPtr<FSlateBrush>         NotificationIconBrush;
@@ -204,28 +197,33 @@ public:
 			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Center)
 			[
-				SNew(SVerticalBox)
-
-				+ SVerticalBox::Slot()
-				.AutoHeight()
+				SNew(SBorder)
+				.Padding(Theme.ContentPadding)
+				.BorderImage(new FSlateNoResource)
+				.ColorAndOpacity(this, &SNovaFadingWidget::GetLinearColor)
+				.Padding(0)
 				[
-					SNew(STextBlock)
-					.Text(this, &SNovaTitleCard::GetTitleText)
-					.TextStyle(&Theme.TitleFont)
-					.ColorAndOpacity(this, &SNovaTitleCard::GetTitleColor)
-					.WrapTextAt(2000)
-					.Justification(ETextJustify::Center)
-				]
+					SNew(SVerticalBox)
 
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(STextBlock)
-					.Text(this, &SNovaTitleCard::GetSubtitleText)
-					.TextStyle(&Theme.SubtitleFont)
-					.ColorAndOpacity(this, &SNovaTitleCard::GetSubtitleColor)
-					.WrapTextAt(2000)
-					.Justification(ETextJustify::Center)
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(STextBlock)
+						.Text(this, &SNovaTitleCard::GetTitleText)
+						.TextStyle(&Theme.TitleFont)
+						.WrapTextAt(2000)
+						.Justification(ETextJustify::Center)
+					]
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(STextBlock)
+						.Text(this, &SNovaTitleCard::GetSubtitleText)
+						.TextStyle(&Theme.SubtitleFont)
+						.WrapTextAt(2000)
+						.Justification(ETextJustify::Center)
+					]
 				]
 			]
 		];
@@ -265,18 +263,6 @@ public:
 		return CurrentSubtitle.ToUpper();
 	}
 
-	FSlateColor GetTitleColor() const
-	{
-		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-		return SNovaFadingWidget::GetTextColor(Theme.TitleFont);
-	}
-
-	FSlateColor GetSubtitleColor() const
-	{
-		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-		return SNovaFadingWidget::GetTextColor(Theme.SubtitleFont);
-	}
-
 private:
 	// Title state
 	FText DesiredTitle;
@@ -309,12 +295,12 @@ void SNovaOverlay::Construct(const FArguments& InArgs)
 
 		+ SOverlay::Slot()
 		[
-			SAssignNew(Notification, SNovaNotification)
+			SAssignNew(TitleCard, SNovaTitleCard)
 		]
 
 		+ SOverlay::Slot()
 		[
-			SAssignNew(TitleCard, SNovaTitleCard)
+			SAssignNew(Notification, SNovaNotification)
 		]
 	];
 	// clang-format on
