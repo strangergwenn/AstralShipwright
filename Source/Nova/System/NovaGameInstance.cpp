@@ -80,6 +80,7 @@ void UNovaGameInstance::Load(TSharedPtr<FNovaGameSave> SaveData)
 
 void UNovaGameInstance::SerializeJson(TSharedPtr<FNovaGameSave>& SaveData, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
 {
+	// Writing to save
 	if (Direction == ENovaSerialize::DataToJson)
 	{
 		JsonData = MakeShared<FJsonObject>();
@@ -96,6 +97,8 @@ void UNovaGameInstance::SerializeJson(TSharedPtr<FNovaGameSave>& SaveData, TShar
 		UNovaContractManager::SerializeJson(SaveData->ContractManagerData, ContractManagerJsonData, ENovaSerialize::DataToJson);
 		JsonData->SetObjectField("ContractManager", ContractManagerJsonData);
 	}
+
+	// Reading from save
 	else
 	{
 		SaveData = MakeShared<FNovaGameSave>();

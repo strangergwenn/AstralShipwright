@@ -203,6 +203,12 @@ public:
 	UFUNCTION(Category = Nova, BlueprintCallable, CallInEditor)
 	void UpdateAssetRender();
 
+	// Write an asset description to JSON
+	static void SaveAsset(TSharedPtr<class FJsonObject> Save, FString AssetName, const UNovaAssetDescription* Asset);
+
+	// Get an asset description from JSON
+	static const UNovaAssetDescription* LoadAsset(TSharedPtr<class FJsonObject> Save, FString AssetName);
+
 	/** Get a list of assets to load before use*/
 	virtual TArray<FSoftObjectPath> GetAsyncAssets() const
 	{

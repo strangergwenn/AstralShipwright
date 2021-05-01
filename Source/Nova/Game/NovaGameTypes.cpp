@@ -2,9 +2,11 @@
 
 #include "NovaGameTypes.h"
 #include "Nova/Spacecraft/NovaCaptureActor.h"
+#include "Nova/System/NovaAssetManager.h"
 #include "Nova/Nova.h"
 
 #include "Engine/Engine.h"
+#include "Dom/JsonObject.h"
 
 /*----------------------------------------------------
     Asset description
@@ -33,6 +35,31 @@ void UNovaAssetDescription::UpdateAssetRender()
 
 #endif
 }
+
+void UNovaAssetDescription::SaveAsset(TSharedPtr<FJsonObject> Save, FString AssetName, const UNovaAssetDescription* Asset)
+{
+	if (Asset)
+	{
+		Save->SetStringField(AssetName, Asset->Identifier.ToString(EGuidFormats::Short));
+	}
+};
+
+const UNovaAssetDescription* UNovaAssetDescription::LoadAsset(TSharedPtr<FJsonObject> Save, FString AssetName)
+{
+	const UNovaAssetDescription* Asset = nullptr;
+
+	FString IdentifierString;
+	if (Save->TryGetStringField(AssetName, IdentifierString))
+	{
+		FGuid AssetIdentifier;
+		if (FGuid::Parse(IdentifierString, AssetIdentifier))
+		{
+			Asset = UNovaAssetManager::Get()->GetAsset(AssetIdentifier);
+		}
+	}
+
+	return Asset;
+};
 
 FText INovaDescriptibleInterface::GetFormattedDescription(FString Delimiter) const
 {

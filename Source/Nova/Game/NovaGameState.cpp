@@ -20,6 +20,7 @@
 #include "Nova/Nova.h"
 
 #include "Net/UnrealNetwork.h"
+#include "Dom/JsonObject.h"
 #include "EngineUtils.h"
 
 #define LOCTEXT_NAMESPACE "ANovaGameState"
@@ -68,21 +69,81 @@ ANovaGameState::ANovaGameState()
 
 struct FNovaGameStateSave
 {
+	double           TimeAsMinutes;
+	const UNovaArea* CurrentArea;
 };
 
 TSharedPtr<struct FNovaGameStateSave> ANovaGameState::Save() const
 {
+	NCHECK(GetLocalRole() == ROLE_Authority);
+
 	TSharedPtr<FNovaGameStateSave> SaveData = MakeShared<FNovaGameStateSave>();
+
+	// Save time & area
+	SaveData->TimeAsMinutes = GetCurrentTime().ToMinutes();
+	SaveData->CurrentArea   = GetCurrentArea();
+
+	// Ensure consistency
+	NCHECK(SaveData->TimeAsMinutes > 0);
+	NCHECK(IsValid(SaveData->CurrentArea));
 
 	return SaveData;
 }
 
 void ANovaGameState::Load(TSharedPtr<struct FNovaGameStateSave> SaveData)
-{}
+{
+	NCHECK(GetLocalRole() == ROLE_Authority);
+
+	NLOG("ANovaGameState::Load");
+
+	// Ensure consistency
+	NCHECK(SaveData != nullptr);
+	NCHECK(SaveData->TimeAsMinutes >= 0);
+
+	// Ensure area exists
+	if (!IsValid(SaveData->CurrentArea))
+	{
+		SaveData->CurrentArea =
+			GetGameInstance<UNovaGameInstance>()->GetAssetManager()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
+	}
+	NCHECK(IsValid(SaveData->CurrentArea));
+
+	// Load time & area
+	ServerTime = SaveData->TimeAsMinutes;
+	SetCurrentArea(SaveData->CurrentArea);
+}
 
 void ANovaGameState::SerializeJson(
 	TSharedPtr<struct FNovaGameStateSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction)
-{}
+{
+	// Writing to save
+	if (Direction == ENovaSerialize::DataToJson)
+	{
+		JsonData = MakeShared<FJsonObject>();
+
+		// Time
+		JsonData->SetNumberField("TimeAsMinutes", SaveData->TimeAsMinutes);
+
+		// Area
+		UNovaAssetDescription::SaveAsset(JsonData, "CurrentArea", SaveData->CurrentArea);
+	}
+
+	// Reading from save
+	else
+	{
+		SaveData = MakeShared<FNovaGameStateSave>();
+
+		// Time
+		double Time;
+		if (JsonData->TryGetNumberField("TimeAsMinutes", Time))
+		{
+			SaveData->TimeAsMinutes = Time;
+		}
+
+		// Area
+		SaveData->CurrentArea = Cast<UNovaArea>(UNovaAssetDescription::LoadAsset(JsonData, "CurrentArea"));
+	}
+}
 
 /*----------------------------------------------------
     General game state
@@ -238,16 +299,7 @@ void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool Is
 		// Load a default
 		if (!HasMergedOrbits)
 		{
-			// TODO : should first look into de-serialized save data, and then if nothing, fetch the default location from game mode
-
-			const class UNovaArea* StationA = GetGameInstance<UNovaGameInstance>()->GetAssetManager()->GetAsset<UNovaArea>(
-				FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
-#if 0
-			OrbitalSimulationComponent->SetOrbit(
-				{Spacecraft.Identifier}, MakeShared<FNovaOrbit>(FNovaOrbitGeometry(StationA->Planet, 300, 200, 0, 360), 0));
-#else
-			OrbitalSimulationComponent->SetOrbit({Spacecraft.Identifier}, OrbitalSimulationComponent->GetAreaOrbit(StationA));
-#endif
+			OrbitalSimulationComponent->SetOrbit({Spacecraft.Identifier}, OrbitalSimulationComponent->GetAreaOrbit(GetCurrentArea()));
 		}
 	}
 }

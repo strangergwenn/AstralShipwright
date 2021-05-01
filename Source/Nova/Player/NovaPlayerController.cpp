@@ -583,16 +583,6 @@ void ANovaPlayerController::ClientLoadPlayer()
 	UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
 	NCHECK(GameInstance);
 
-#if WITH_EDITOR
-
-	// Ensure valid save data exists even if the game was loaded directly
-	if (!IsOnMainMenu() && !GameInstance->HasSave())
-	{
-		GameInstance->LoadGame(GetLocalRole() == ROLE_Authority ? "1" : "PIE");
-	}
-
-#endif
-
 	// Serialize the save data and spawn the player actors on the server
 	TSharedPtr<FJsonObject>     JsonData;
 	TSharedPtr<FNovaPlayerSave> PlayerSaveData = GameInstance->GetPlayerSave();
