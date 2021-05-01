@@ -141,7 +141,7 @@ public:
 	----------------------------------------------------*/
 
 	/** Register or update a spacecraft */
-	void UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool IsPlayerSpacecraft);
+	void UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool MergeWithPlayer);
 
 	/** Return a pointer for a spacecraft by identifier */
 	const FNovaSpacecraft* GetSpacecraft(const FGuid& Identifier) const

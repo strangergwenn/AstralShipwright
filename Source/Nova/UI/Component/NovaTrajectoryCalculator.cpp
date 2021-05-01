@@ -190,7 +190,7 @@ void SNovaTrajectoryCalculator::Tick(const FGeometry& AllottedGeometry, const do
 				double DeltaVAlpha = FMath::Clamp(
 					(Transform(Trajectory->TotalDeltaV) - Transform(MinDeltaV)) / (Transform(MaxDeltaV) - Transform(MinDeltaV)), 0.0f,
 					1.0f);
-				double DurationAlpha = FMath::Clamp((Transform(Trajectory->TotalTravelDuration.ToMinutes()) - Transform(MinDuration)) /
+				double DurationAlpha = FMath::Clamp((Transform(Trajectory->TotalTravelDuration.AsMinutes()) - Transform(MinDuration)) /
 														(Transform(MaxDuration) - Transform(MinDuration)),
 					0.0f, 1.0f);
 
@@ -272,7 +272,7 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNo
 		const TSharedPtr<FNovaTrajectory>& Trajectory = AltitudeAndTrajectory.Value;
 		NCHECK(Trajectory.IsValid());
 
-		double TotalTravelDuration = Trajectory->TotalTravelDuration.ToMinutes();
+		double TotalTravelDuration = Trajectory->TotalTravelDuration.AsMinutes();
 
 		if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(TotalTravelDuration))
 		{
@@ -303,12 +303,12 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNo
 		float                              Altitude   = AltitudeAndTrajectory.Key;
 		const TSharedPtr<FNovaTrajectory>& Trajectory = AltitudeAndTrajectory.Value;
 
-		if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(Trajectory->TotalTravelDuration.ToMinutes()))
+		if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(Trajectory->TotalTravelDuration.AsMinutes()))
 		{
-			if (Trajectory->TotalDeltaV < 1.001f * MinDeltaV && Trajectory->TotalTravelDuration.ToMinutes() < MinDurationWithinMinDeltaV)
+			if (Trajectory->TotalDeltaV < 1.001f * MinDeltaV && Trajectory->TotalTravelDuration.AsMinutes() < MinDurationWithinMinDeltaV)
 			{
 				MinDeltaVWithTolerance     = Trajectory->TotalDeltaV;
-				MinDurationWithinMinDeltaV = Trajectory->TotalTravelDuration.ToMinutes();
+				MinDurationWithinMinDeltaV = Trajectory->TotalTravelDuration.AsMinutes();
 				MinDeltaVAltitude          = Altitude;
 			}
 		}

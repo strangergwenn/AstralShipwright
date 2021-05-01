@@ -80,7 +80,7 @@ TSharedPtr<struct FNovaGameStateSave> ANovaGameState::Save() const
 	TSharedPtr<FNovaGameStateSave> SaveData = MakeShared<FNovaGameStateSave>();
 
 	// Save time & area
-	SaveData->TimeAsMinutes = GetCurrentTime().ToMinutes();
+	SaveData->TimeAsMinutes = GetCurrentTime().AsMinutes();
 	SaveData->CurrentArea   = GetCurrentArea();
 
 	// Ensure consistency
@@ -271,7 +271,7 @@ bool ANovaGameState::AreAllSpacecraftDocked() const
     Spacecraft management
 ----------------------------------------------------*/
 
-void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool IsPlayerSpacecraft)
+void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool MergeWithPlayer)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 
@@ -282,8 +282,8 @@ void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool Is
 	if (IsNew)
 	{
 		// Attempt orbit merging for player spacecraft joining the game
-		bool HasMergedOrbits = false;
-		if (IsPlayerSpacecraft)
+		bool WasMergedWithPlayer = false;
+		if (MergeWithPlayer)
 		{
 			ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 			NCHECK(GameState);
@@ -292,12 +292,12 @@ void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool Is
 			if (CurrentOrbit)
 			{
 				OrbitalSimulationComponent->MergeOrbit(GameState->GetPlayerSpacecraftIdentifiers(), MakeShared<FNovaOrbit>(*CurrentOrbit));
-				HasMergedOrbits = true;
+				WasMergedWithPlayer = true;
 			}
 		}
 
 		// Load a default
-		if (!HasMergedOrbits)
+		if (!WasMergedWithPlayer)
 		{
 			OrbitalSimulationComponent->SetOrbit({Spacecraft.Identifier}, OrbitalSimulationComponent->GetAreaOrbit(GetCurrentArea()));
 		}
@@ -438,7 +438,7 @@ bool ANovaGameState::ProcessGameTime(FNovaTime DeltaTime)
 	}
 
 	// Update the time
-	const double DilatedDeltaTime = TimeDilation * DeltaTime.ToMinutes();
+	const double DilatedDeltaTime = TimeDilation * DeltaTime.AsMinutes();
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		ServerTime += DilatedDeltaTime;

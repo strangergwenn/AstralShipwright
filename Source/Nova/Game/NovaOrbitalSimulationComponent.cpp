@@ -342,21 +342,21 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 		DestinationPhase);
 	NLOG("Transfer A : DVS %f, DVE %f, DV %f, T %f", TransferA.StartDeltaV, TransferA.EndDeltaV, TransferA.TotalDeltaV);
 	NLOG("Transfer B : DVS %f, DVE %f, DV %f, T %f", TransferB.StartDeltaV, TransferB.EndDeltaV, TransferB.TotalDeltaV);
-	NLOG("InitialWaitingDuration %f, TotalTransferDuration %f", InitialWaitingDuration.ToMinutes(), TotalTransferDuration.ToMinutes());
+	NLOG("InitialWaitingDuration %f, TotalTransferDuration %f", InitialWaitingDuration.AsMinutes(), TotalTransferDuration.AsMinutes());
 	NLOG("DestinationPhaseChangeDuringTransfer %f, NewDestinationPhaseAfterTransfers %f, PhaseDelta %f",
 		DestinationPhaseChangeDuringTransfer, NewDestinationPhaseAfterTransfers, PhaseDelta);
-	NLOG("PhasingOrbitPeriod = %f, DestinationOrbitPeriod = %f", PhasingOrbitPeriod.ToMinutes(), DestinationOrbitPeriod.ToMinutes());
-	NLOG("PhasingDuration = %f, PhasingAngle = %f", PhasingDuration.ToMinutes(), PhasingAngle);
+	NLOG("PhasingOrbitPeriod = %f, DestinationOrbitPeriod = %f", PhasingOrbitPeriod.AsMinutes(), DestinationOrbitPeriod.AsMinutes());
+	NLOG("PhasingDuration = %f, PhasingAngle = %f", PhasingDuration.AsMinutes(), PhasingAngle);
 	NLOG("FinalDestinationPhase = %f, FinalSpacecraftPhase = %f", FinalDestinationPhase, FinalSpacecraftPhase);
 	NLOG("Trajectory->GetStartTime() = %f, Parameters->StartTime = %f",
-		FMath::IsFinite(PhasingDuration.ToMinutes()) ? Trajectory->GetStartTime().ToMinutes() : 0, Parameters->StartTime.ToMinutes());
+		FMath::IsFinite(PhasingDuration.AsMinutes()) ? Trajectory->GetStartTime().AsMinutes() : 0, Parameters->StartTime.AsMinutes());
 	NLOG("--------------------------------------------------------------------------------");
 #endif
 
 	NCHECK(FMath::Abs(FinalSpacecraftPhase - FinalDestinationPhase) < SMALL_NUMBER);
-	if (FMath::IsFinite(PhasingDuration.ToMinutes()))
+	if (FMath::IsFinite(PhasingDuration.AsMinutes()))
 	{
-		NCHECK(FMath::Abs((Trajectory->GetStartTime() - Parameters->StartTime).ToSeconds()) < 1);
+		NCHECK(FMath::Abs((Trajectory->GetStartTime() - Parameters->StartTime).AsSeconds()) < 1);
 	}
 
 #endif
@@ -617,7 +617,7 @@ float UNovaOrbitalSimulationComponent::GetRemainingFuelRequired(
 	for (const FNovaManeuver& Maneuver : Trajectory.Maneuvers)
 	{
 		NCHECK(SpacecraftIndex != INDEX_NONE && SpacecraftIndex >= 0 && SpacecraftIndex < Maneuver.ThrustFactors.Num());
-		float ManeuverFuelUse = Metrics.PropellantRate * Maneuver.ThrustFactors[SpacecraftIndex] * Maneuver.Duration.ToSeconds();
+		float ManeuverFuelUse = Metrics.PropellantRate * Maneuver.ThrustFactors[SpacecraftIndex] * Maneuver.Duration.AsSeconds();
 
 		if (CurrentTime < Maneuver.Time)
 		{
@@ -763,7 +763,7 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 		for (const TArray<FGuid>& Identifiers : CompletedTrajectories)
 		{
 			NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories : completing trajectory for %d spacecraft at time %f",
-				Identifiers.Num(), GetCurrentTime().ToMinutes());
+				Identifiers.Num(), GetCurrentTime().AsMinutes());
 			CompleteTrajectory(Identifiers);
 		}
 	}

@@ -51,13 +51,13 @@ public:
 	/** Get the time spent in this state in minutes */
 	double GetMinutesInState() const
 	{
-		return (GameState->GetCurrentTime() - StateStartTime).ToMinutes();
+		return (GameState->GetCurrentTime() - StateStartTime).AsMinutes();
 	}
 
 	/** Get the time spent in this state in seconds */
 	double GetSecondsInState() const
 	{
-		return (GameState->GetCurrentTime() - StateStartTime).ToSeconds();
+		return (GameState->GetCurrentTime() - StateStartTime).AsSeconds();
 	}
 
 	/** Enter this state from a previous one */

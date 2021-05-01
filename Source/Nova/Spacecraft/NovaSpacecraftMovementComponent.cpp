@@ -631,7 +631,7 @@ void UNovaSpacecraftMovementComponent::ProcessTrajectoryMovement(float DeltaTime
 
 		double CurrentPosition = 0;
 		double CurrentVelocity = 0;
-		double RemainingTime   = IsEnteringArea ? (ArrivalTime - CurrentTime).ToSeconds() : (CurrentTime - StartTime).ToSeconds();
+		double RemainingTime   = IsEnteringArea ? (ArrivalTime - CurrentTime).AsSeconds() : (CurrentTime - StartTime).AsSeconds();
 		RemainingTime          = FMath::Max(RemainingTime, 0.0);
 
 		// Decompose the trajectory into segments of acceleration x duration
@@ -641,10 +641,10 @@ void UNovaSpacecraftMovementComponent::ProcessTrajectoryMovement(float DeltaTime
 		{
 			if (Maneuver.Time > CurrentManeuverTime)
 			{
-				AccelerationsAndDurations.Add(TPair<double, double>(0, (Maneuver.Time - CurrentManeuverTime).ToSeconds()));
+				AccelerationsAndDurations.Add(TPair<double, double>(0, (Maneuver.Time - CurrentManeuverTime).AsSeconds()));
 			}
 			AccelerationsAndDurations.Add(
-				TPair<double, double>(Maneuver.DeltaV / Maneuver.Duration.ToSeconds(), Maneuver.Duration.ToSeconds()));
+				TPair<double, double>(Maneuver.DeltaV / Maneuver.Duration.AsSeconds(), Maneuver.Duration.AsSeconds()));
 			CurrentManeuverTime = Maneuver.Time + Maneuver.Duration;
 		}
 		NCHECK(CurrentManeuverTime == ArrivalTime);

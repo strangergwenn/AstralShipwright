@@ -80,7 +80,7 @@ FText GetDurationText(FNovaTime Time, int32 MaxComponents)
 {
 	FString Result;
 
-	double SourceMinutes = Time.ToMinutes();
+	double SourceMinutes = Time.AsMinutes();
 	if (SourceMinutes > 365 * 24 * 60)
 	{
 		return LOCTEXT("VeryLongTime", "A very long time");

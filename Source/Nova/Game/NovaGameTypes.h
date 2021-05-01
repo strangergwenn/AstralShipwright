@@ -138,12 +138,12 @@ struct FNovaTime
 		return Minutes / Other.Minutes;
 	}
 
-	double ToMinutes() const
+	double AsMinutes() const
 	{
 		return Minutes;
 	}
 
-	double ToSeconds() const
+	double AsSeconds() const
 	{
 		return Minutes * 60.0;
 	}

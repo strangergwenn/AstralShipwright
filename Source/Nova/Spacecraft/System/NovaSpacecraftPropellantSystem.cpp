@@ -52,7 +52,7 @@ void UNovaSpacecraftPropellantSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 					NCHECK(SpacecraftIndex != INDEX_NONE && SpacecraftIndex >= 0 && SpacecraftIndex < Maneuver.ThrustFactors.Num());
 					PropellantRate = FullPropellantRate * Maneuver.ThrustFactors[SpacecraftIndex];
 
-					double DeltaTimeSeconds = (ManeuverEndTime - CurrentTime).ToMinutes() * 60;
+					double DeltaTimeSeconds = (ManeuverEndTime - CurrentTime).AsMinutes() * 60;
 
 					PropellantAmount -= PropellantRate * DeltaTimeSeconds;
 
