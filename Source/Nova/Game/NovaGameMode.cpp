@@ -60,34 +60,22 @@ void ANovaGameMode::InitGameState()
 void ANovaGameMode::StartPlay()
 {
 	NLOG("ANovaGameMode::StartPlay");
+	Super::StartPlay();
 
-	ANovaGameState* NovaGameState = GetGameState<ANovaGameState>();
-	NCHECK(IsValid(NovaGameState));
-	UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
-	NCHECK(GameInstance);
-
-#if WITH_EDITOR
-
-	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
-	NCHECK(IsValid(PC) && PC->IsLocalController());
-
-	// Ensure valid save data exists even if the game was loaded directly
-	if (!PC->IsOnMainMenu() && !GameInstance->HasSave())
-	{
-		GameInstance->LoadGame(GetLocalRole() == ROLE_Authority ? "1" : "PIE");
-	}
-
-#endif
-
-	// Load the game world
-	if (GameInstance->HasSave())
-	{
-		NovaGameState->Load(GameInstance->GetWorldSave());
-	}
-
-	// Start the game mode
 	if (!Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMainMenuMap())
 	{
+		ANovaGameState* NovaGameState = GetGameState<ANovaGameState>();
+		NCHECK(IsValid(NovaGameState));
+		UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
+		NCHECK(GameInstance);
+
+		// Load the game world
+		if (NovaGameState->GetCurrentArea() == nullptr)
+		{
+			NCHECK(GameInstance->HasSave())
+			NovaGameState->Load(GameInstance->GetWorldSave());
+		}
+
 		// Load the level
 		const UNovaArea* CurrentArea = NovaGameState->GetCurrentArea();
 		NCHECK(IsValid(CurrentArea) && CurrentArea != OrbitArea);
@@ -96,8 +84,6 @@ void ANovaGameMode::StartPlay()
 		// Startup the state machine
 		InitializeStateMachine();
 	}
-
-	Super::StartPlay();
 }
 
 void ANovaGameMode::PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage)

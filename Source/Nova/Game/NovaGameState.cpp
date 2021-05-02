@@ -254,17 +254,14 @@ bool ANovaGameState::IsAnySpacecraftDocked() const
 
 bool ANovaGameState::AreAllSpacecraftDocked() const
 {
-	bool AllSpacecraftDocked = true;
 	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 	{
-		if (SpacecraftPawn->IsDocked())
+		if (!SpacecraftPawn->IsDocked())
 		{
-			AllSpacecraftDocked = false;
-			break;
+			return false;
 		}
 	}
-
-	return AllSpacecraftDocked;
+	return true;
 }
 
 /*----------------------------------------------------
@@ -299,6 +296,7 @@ void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool Me
 		// Load a default
 		if (!WasMergedWithPlayer)
 		{
+			NCHECK(IsValid(CurrentArea));
 			OrbitalSimulationComponent->SetOrbit({Spacecraft.Identifier}, OrbitalSimulationComponent->GetAreaOrbit(GetCurrentArea()));
 		}
 	}
@@ -385,11 +383,11 @@ bool ANovaGameState::CanDilateTime(ENovaTimeDilation Dilation) const
 
 bool ANovaGameState::ProcessGameSimulation(FNovaTime DeltaTime)
 {
-	// Clean up the game database
+	// Update spacecraft
 	SpacecraftDatabase.UpdateCache();
 	for (FNovaSpacecraft& Spacecraft : SpacecraftDatabase.Get())
 	{
-		Spacecraft.UpdateIfDirty();
+		Spacecraft.UpdatePropulsionMetrics();
 	}
 
 	// Update the time with the base delta time that will be affected by time dilation

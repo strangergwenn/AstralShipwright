@@ -157,6 +157,20 @@ void ANovaPlayerController::Load(TSharedPtr<FNovaPlayerSave> SaveData)
 	NCHECK(GetLocalRole() == ROLE_Authority);
 	NLOG("ANovaPlayerController::Load");
 
+#if WITH_EDITOR
+
+	// The player is responsible for loading the game in some cases (direct-to-map debugging)
+	ANovaGameState* NovaGameState = GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(IsValid(NovaGameState));
+	if (NovaGameState->GetCurrentArea() == nullptr)
+	{
+		UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
+		NCHECK(GameInstance);
+		NovaGameState->Load(GameInstance->GetWorldSave());
+	}
+
+#endif    // WITH_EDITOR
+
 	// Store the save data so that the spacecraft pawn can fetch it later when it spawns
 	UpdateSpacecraft(*SaveData->Spacecraft.Get());
 }
@@ -225,7 +239,7 @@ void ANovaPlayerController::BeginPlay()
 		SessionsManager->StartSession(ENovaConstants::DefaultLevel, ENovaConstants::MaxPlayerCount, true);
 	}
 
-#endif
+#endif    // WITH_EDITOR
 }
 
 void ANovaPlayerController::PawnLeavingGame()
@@ -582,6 +596,21 @@ void ANovaPlayerController::ClientLoadPlayer()
 	NLOG("ANovaPlayerController::ClientLoadPlayer");
 	UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
 	NCHECK(GameInstance);
+
+#if WITH_EDITOR
+
+	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetWorld()->GetFirstPlayerController());
+	NCHECK(IsValid(PC) && PC->IsLocalController());
+
+	// Ensure valid save data exists even if the game was loaded directly
+	if (!PC->IsOnMainMenu() && !GameInstance->HasSave())
+	{
+		GameInstance->LoadGame(GetLocalRole() == ROLE_Authority ? "1" : "PIE");
+	}
+
+#endif    // WITH_EDITOR
+
+	NCHECK(GameInstance->HasSave());
 
 	// Serialize the save data and spawn the player actors on the server
 	TSharedPtr<FJsonObject>     JsonData;

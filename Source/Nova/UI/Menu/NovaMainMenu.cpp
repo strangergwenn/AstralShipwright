@@ -292,7 +292,7 @@ FReply SNovaMainMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& Ke
 
 bool SNovaMainMenu::IsHomeMenuVisible() const
 {
-	return MenuManager->GetPC() && MenuManager->GetPC()->IsOnMainMenu();
+	return AreMenusVisible() && MenuManager->GetPC()->IsOnMainMenu();
 }
 
 bool SNovaMainMenu::IsAssemblyMenuVisible() const
@@ -311,7 +311,12 @@ bool SNovaMainMenu::IsAssemblyMenuVisible() const
 
 bool SNovaMainMenu::AreGameMenusVisible() const
 {
-	return !IsHomeMenuVisible();
+	return AreMenusVisible() && !IsHomeMenuVisible();
+}
+
+bool SNovaMainMenu::AreMenusVisible() const
+{
+	return MenuManager.IsValid() && IsValid(MenuManager->GetPC());
 }
 
 FText SNovaMainMenu::GetCloseText() const

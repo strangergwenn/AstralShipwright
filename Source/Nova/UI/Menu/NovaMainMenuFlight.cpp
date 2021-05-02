@@ -137,7 +137,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.HelpText(LOCTEXT("DockHelp", "Dock at the station"))
 						.OnClicked(this, &SNovaMainMenuFlight::OnDock)
 						.Enabled(this, &SNovaMainMenuFlight::IsDockEnabled)
-					]			
+					]
 			
 					+ SVerticalBox::Slot()
 					.AutoHeight()
@@ -230,12 +230,13 @@ UNovaSpacecraftMovementComponent* SNovaMainMenuFlight::GetSpacecraftMovement() c
 
 bool SNovaMainMenuFlight::IsUndockEnabled() const
 {
-	return !GetSpacecraftPawn()->HasModifications() && GetSpacecraftPawn()->IsSpacecraftValid() && GetSpacecraftMovement()->CanUndock();
+	return IsValid(GetSpacecraftPawn()) && !GetSpacecraftPawn()->HasModifications() && GetSpacecraftPawn()->IsSpacecraftValid() &&
+		   GetSpacecraftMovement()->CanUndock();
 }
 
 bool SNovaMainMenuFlight::IsDockEnabled() const
 {
-	return GetSpacecraftMovement()->CanDock();
+	return IsValid(GetSpacecraftMovement()) && GetSpacecraftMovement()->CanDock();
 }
 
 void SNovaMainMenuFlight::OnUndock()

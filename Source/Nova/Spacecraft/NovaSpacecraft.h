@@ -194,7 +194,7 @@ public:
 	    Constructor & operators
 	----------------------------------------------------*/
 
-	FNovaSpacecraft() : Identifier(0, 0, 0, 0), ServerVersion(0), LocalVersion(0)
+	FNovaSpacecraft() : Identifier(0, 0, 0, 0)
 	{}
 
 	bool operator==(const FNovaSpacecraft& Other) const;
@@ -215,25 +215,6 @@ public:
 		Name       = SpacecraftName;
 	}
 
-	/** Trigger a rebuilding of the local state on all clients */
-	void SetDirty()
-	{
-		ServerVersion++;
-
-		UpdateIfDirty();
-	}
-
-	/** Update this spacecraft */
-	void UpdateIfDirty()
-	{
-		if (LocalVersion < ServerVersion)
-		{
-			UpdateProceduralElements();
-			UpdatePropulsionMetrics();
-			LocalVersion = ServerVersion;
-		}
-	}
-
 	/** Get the spacecraft validity */
 	bool IsValid(FText* Details) const;
 
@@ -251,6 +232,12 @@ public:
 	{
 		return PropulsionMetrics;
 	}
+
+	/** Update bulkheads, pipes, wiring, based on the current state */
+	void UpdateProceduralElements();
+
+	/** Update the spacecraft's metrics */
+	void UpdatePropulsionMetrics();
 
 	/** Reset completely the propellant amount to the spacecraft's maximum */
 	void RefillPropellant()
@@ -300,12 +287,6 @@ public:
 	----------------------------------------------------*/
 
 protected:
-	/** Update bulkheads, pipes, wiring, based on the current state */
-	void UpdateProceduralElements();
-
-	/** Update the spacecraft's metrics */
-	void UpdatePropulsionMetrics();
-
 	/** Check whether this is the first (head) compartment */
 	bool IsFirstCompartment(int32 CompartmentIndex) const;
 
@@ -335,11 +316,6 @@ public:
 	UPROPERTY()
 	FNovaSpacecraftSystemState SystemState;
 
-	// Version index
-	UPROPERTY()
-	int16 ServerVersion;
-
 	// Local state
 	FNovaSpacecraftPropulsionMetrics PropulsionMetrics;
-	int16                            LocalVersion;
 };
