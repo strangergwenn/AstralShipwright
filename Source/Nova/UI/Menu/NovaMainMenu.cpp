@@ -301,12 +301,12 @@ FReply SNovaMainMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& Ke
 
 bool SNovaMainMenu::IsHomeMenuVisible() const
 {
-	return AreMenusVisible() && MenuManager->GetPC()->IsOnMainMenu();
+	return MenuManager.IsValid() && IsValid(MenuManager->GetPC()) && MenuManager->GetPC()->IsOnMainMenu();
 }
 
 bool SNovaMainMenu::IsAssemblyMenuVisible() const
 {
-	if (AreGameMenusVisible())
+	if (AreGameMenusVisible() && IsValid(MenuManager->GetPC()))
 	{
 		const ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
 		if (IsValid(SpacecraftPawn))
@@ -320,12 +320,7 @@ bool SNovaMainMenu::IsAssemblyMenuVisible() const
 
 bool SNovaMainMenu::AreGameMenusVisible() const
 {
-	return AreMenusVisible() && !IsHomeMenuVisible();
-}
-
-bool SNovaMainMenu::AreMenusVisible() const
-{
-	return MenuManager.IsValid() && IsValid(MenuManager->GetPC());
+	return !IsHomeMenuVisible();
 }
 
 FText SNovaMainMenu::GetCloseText() const

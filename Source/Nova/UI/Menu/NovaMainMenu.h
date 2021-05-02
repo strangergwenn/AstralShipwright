@@ -69,9 +69,6 @@ protected:
 	/** Check if we can display the game menus */
 	bool AreGameMenusVisible() const;
 
-	/** Check if we can display any menu */
-	bool AreMenusVisible() const;
-
 	/** Get the close button text */
 	FText GetCloseText() const;
 
