@@ -25,6 +25,7 @@
 ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 	: Super()
 	, AssemblyState(ENovaAssemblyState::Idle)
+	, SelfDestruct(false)
 	, WaitingAssetLoading(false)
 	, HighlightedCompartment(ENovaUIConstants::FadeDurationMinimal)
 	, OutlinedCompartment(ENovaUIConstants::FadeDurationMinimal)
@@ -64,19 +65,39 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 	// Idle processing
 	else
 	{
+		if (SelfDestruct)
+		{
+			NLOG("ANovaSpacecraftPawn::Tick : self-destructing spacecraft");
+			Destroy();
+		}
+
 		// Fetch the spacecraft from the player state when we are remotely controlled OR no spacecraft was ever set
-		if (!Spacecraft.IsValid() || !IsLocallyControlled())
+		else if (!Spacecraft.IsValid() || !IsLocallyControlled())
 		{
 			const ANovaGameState*   GameState         = GetWorld()->GetGameState<ANovaGameState>();
 			const ANovaPlayerState* OwningPlayerState = GetPlayerState<ANovaPlayerState>();
 
-			if (IsValid(GameState) && IsValid(OwningPlayerState) && OwningPlayerState->GetSpacecraftIdentifier().IsValid())
+			if (IsValid(GameState))
 			{
-				const FNovaSpacecraft* NewSpacecraft = GameState->GetSpacecraft(OwningPlayerState->GetSpacecraftIdentifier());
-				if (NewSpacecraft && (!Spacecraft.IsValid() || *NewSpacecraft != *Spacecraft.Get()))
+				// Creating or updating spacecraft
+				if (IsValid(OwningPlayerState) && OwningPlayerState->GetSpacecraftIdentifier().IsValid())
 				{
-					NLOG("ANovaSpacecraftPawn::Tick : updating spacecraft");
-					SetSpacecraft(NewSpacecraft);
+					const FNovaSpacecraft* NewSpacecraft = GameState->GetSpacecraft(OwningPlayerState->GetSpacecraftIdentifier());
+					if (NewSpacecraft && (!Spacecraft.IsValid() || *NewSpacecraft != *Spacecraft.Get()))
+					{
+						NLOG("ANovaSpacecraftPawn::Tick : updating spacecraft");
+						SetSpacecraft(NewSpacecraft);
+						SelfDestruct = false;
+					}
+				}
+
+				// Destroying spacecraft
+				else if (Spacecraft.IsValid() && !IsValid(GetOwner()))
+				{
+					NLOG("ANovaSpacecraftPawn::Tick : removing spacecraft");
+					FNovaSpacecraft EmptySpacecraft;
+					SetSpacecraft(&EmptySpacecraft);
+					SelfDestruct = true;
 				}
 			}
 		}

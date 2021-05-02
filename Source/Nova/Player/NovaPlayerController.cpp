@@ -246,6 +246,13 @@ void ANovaPlayerController::PawnLeavingGame()
 {
 	NLOG("ANovaPlayerController::PawnLeavingGame");
 
+	ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	if (IsValid(GameState))
+	{
+		FGuid PlayerSpacecraftIdentifier = GetPlayerState<ANovaPlayerState>()->GetSpacecraftIdentifier();
+		GameState->RemoveSpacecraft(PlayerSpacecraftIdentifier);
+	}
+
 	SetPawn(nullptr);
 }
 
@@ -947,12 +954,14 @@ void ANovaPlayerController::OnJoinRandomSession(TArray<FOnlineSessionSearchResul
 	{
 		if (Result.Session.OwningUserId != GetLocalPlayer()->GetPreferredUniqueNetId())
 		{
-			GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,
+			UNovaMenuManager* MenuManager = GetMenuManager();
+
+			MenuManager->RunAction(ENovaLoadingScreen::Launch,
 				FNovaAsyncAction::CreateLambda(
 					[=]()
 					{
-						Notify(FText::FormatNamed(LOCTEXT("JoinFriend", "Joining {session}"), TEXT("session"),
-								   FText::FromString(*Result.Session.GetSessionIdStr())),
+						MenuManager->GetOverlay()->Notify(FText::FormatNamed(LOCTEXT("JoinFriend", "Joining {session}"), TEXT("session"),
+															  FText::FromString(*Result.Session.GetSessionIdStr())),
 							ENovaNotificationType::Info);
 
 						UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();

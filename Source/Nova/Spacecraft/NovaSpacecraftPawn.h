@@ -322,6 +322,7 @@ protected:
 	TSharedPtr<FNovaSpacecraft>                        Spacecraft;
 	ENovaAssemblyState                                 AssemblyState;
 	TArray<class UNovaSpacecraftCompartmentComponent*> CompartmentComponents;
+	bool                                               SelfDestruct;
 
 	// Asset loading
 	bool                    WaitingAssetLoading;

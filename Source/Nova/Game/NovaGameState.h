@@ -143,6 +143,12 @@ public:
 	/** Register or update a spacecraft */
 	void UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool MergeWithPlayer);
 
+	/** Remove a spacecraft */
+	void RemoveSpacecraft(const FGuid& Identifier)
+	{
+		SpacecraftDatabase.Remove(Identifier);
+	}
+
 	/** Return a pointer for a spacecraft by identifier */
 	const FNovaSpacecraft* GetSpacecraft(const FGuid& Identifier) const
 	{
