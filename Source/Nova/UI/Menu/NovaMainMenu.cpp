@@ -165,7 +165,16 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 	);
 	// clang-format on
 
+	// Create ourselves a modal panel
 	ModalPanel = CreateModalPanel();
+
+	// Register menus
+	MenuManager->RegisterGameMenu(HomeMenu);
+	MenuManager->RegisterGameMenu(GameMenu);
+	MenuManager->RegisterGameMenu(FlightMenu);
+	MenuManager->RegisterGameMenu(NavigationMenu);
+	MenuManager->RegisterGameMenu(AssemblyMenu);
+	MenuManager->RegisterGameMenu(SettingsMenu);
 
 	// Set the default menu
 	WasOnMainMenu = true;

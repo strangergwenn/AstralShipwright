@@ -64,10 +64,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.TextStyle(&Theme.MainFont)
 						.Text_Lambda([this]() -> FText
 						{
-							ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
-							const UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-							
-							if (IsValid(SpacecraftPawn) && OrbitalSimulation)
+							if (IsValid(SpacecraftPawn) && IsValid(OrbitalSimulation))
 							{
 								UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
 								NCHECK(PropellantSystem);
@@ -105,7 +102,6 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.HelpText(LOCTEXT("RefillHelp", "JRefill the spacecraft propellant"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
-							ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
 							if (IsValid(SpacecraftPawn))
 							{
 								UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
@@ -124,7 +120,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
 							#if WITH_EDITOR
-								MenuManager->GetPC()->TestJoin();
+								PC->TestJoin();
 							#endif
 						}))
 					]
@@ -174,19 +170,27 @@ void SNovaMainMenuFlight::Hide()
 	SNovaTabPanel::Hide();
 }
 
+void SNovaMainMenuFlight::UpdateGameObjects()
+{
+	PC                 = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
+	SpacecraftPawn     = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
+	SpacecraftMovement = IsValid(SpacecraftPawn) ? SpacecraftPawn->GetSpacecraftMovement() : nullptr;
+	OrbitalSimulation  = MenuManager.IsValid() ? UNovaOrbitalSimulationComponent::Get(MenuManager.Get()) : nullptr;
+}
+
 void SNovaMainMenuFlight::HorizontalAnalogInput(float Value)
 {
-	if (GetSpacecraftPawn())
+	if (IsValid(SpacecraftPawn))
 	{
-		GetSpacecraftPawn()->PanInput(Value);
+		SpacecraftPawn->PanInput(Value);
 	}
 }
 
 void SNovaMainMenuFlight::VerticalAnalogInput(float Value)
 {
-	if (GetSpacecraftPawn())
+	if (IsValid(SpacecraftPawn))
 	{
-		GetSpacecraftPawn()->TiltInput(Value);
+		SpacecraftPawn->TiltInput(Value);
 	}
 }
 
@@ -203,54 +207,34 @@ TSharedPtr<SNovaButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 }
 
 /*----------------------------------------------------
-    Internals
-----------------------------------------------------*/
-
-ANovaSpacecraftPawn* SNovaMainMenuFlight::GetSpacecraftPawn() const
-{
-	return MenuManager->GetPC() ? MenuManager->GetPC()->GetSpacecraftPawn() : nullptr;
-}
-
-UNovaSpacecraftMovementComponent* SNovaMainMenuFlight::GetSpacecraftMovement() const
-{
-	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-	if (IsValid(SpacecraftPawn))
-	{
-		return Cast<UNovaSpacecraftMovementComponent>(SpacecraftPawn->GetComponentByClass(UNovaSpacecraftMovementComponent::StaticClass()));
-	}
-	else
-	{
-		return nullptr;
-	}
-}
-
-/*----------------------------------------------------
     Callbacks
 ----------------------------------------------------*/
 
 bool SNovaMainMenuFlight::IsUndockEnabled() const
 {
-	return IsValid(GetSpacecraftPawn()) && !GetSpacecraftPawn()->HasModifications() && GetSpacecraftPawn()->IsSpacecraftValid() &&
-		   GetSpacecraftMovement()->CanUndock();
+	return IsValid(PC) && IsValid(SpacecraftPawn) && !SpacecraftPawn->HasModifications() && SpacecraftPawn->IsSpacecraftValid() &&
+		   SpacecraftMovement->CanUndock();
 }
 
 bool SNovaMainMenuFlight::IsDockEnabled() const
 {
-	return IsValid(GetSpacecraftMovement()) && GetSpacecraftMovement()->CanDock();
+	return IsValid(PC) && IsValid(SpacecraftMovement) && SpacecraftMovement->CanDock();
 }
 
 void SNovaMainMenuFlight::OnUndock()
 {
-	NCHECK(IsUndockEnabled());
-
-	MenuManager->GetPC()->Undock();
+	if (IsUndockEnabled())
+	{
+		PC->Undock();
+	}
 }
 
 void SNovaMainMenuFlight::OnDock()
 {
-	NCHECK(IsDockEnabled());
-
-	MenuManager->GetPC()->Dock();
+	if (IsDockEnabled())
+	{
+		PC->Dock();
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

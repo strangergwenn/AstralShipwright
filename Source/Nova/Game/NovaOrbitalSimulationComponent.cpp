@@ -507,13 +507,16 @@ int32 UNovaOrbitalSimulationComponent::GetPlayerSpacecraftIndex(const FGuid& Ide
 
 UNovaOrbitalSimulationComponent* UNovaOrbitalSimulationComponent::Get(const UObject* Outer)
 {
-	const ANovaGameState* GameState = Outer->GetWorld()->GetGameState<ANovaGameState>();
-	if (IsValid(GameState))
+	if (IsValid(Outer) && IsValid(Outer->GetWorld()))
 	{
-		UNovaOrbitalSimulationComponent* SimulationComponent = GameState->GetOrbitalSimulation();
-		if (IsValid(SimulationComponent))
+		const ANovaGameState* GameState = Outer->GetWorld()->GetGameState<ANovaGameState>();
+		if (IsValid(GameState))
 		{
-			return SimulationComponent;
+			UNovaOrbitalSimulationComponent* SimulationComponent = GameState->GetOrbitalSimulation();
+			if (IsValid(SimulationComponent))
+			{
+				return SimulationComponent;
+			}
 		}
 	}
 

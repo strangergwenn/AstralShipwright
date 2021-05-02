@@ -9,7 +9,9 @@
 #include "Online.h"
 
 /** Navigation menu */
-class SNovaMainMenuNavigation : public SNovaTabPanel
+class SNovaMainMenuNavigation
+	: public SNovaTabPanel
+	, public INovaGameMenu
 {
 	/*----------------------------------------------------
 	    Slate arguments
@@ -39,14 +41,13 @@ public:
 
 	virtual void Hide() override;
 
+	virtual void UpdateGameObjects() override;
+
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
 
 protected:
-	/** Get the spacecraft pawn */
-	class ANovaSpacecraftPawn* GetSpacecraftPawn() const;
-
 	/** Check for destination validity */
 	bool CanSelectDestinationInternal(FText* Details = nullptr) const;
 
@@ -83,8 +84,12 @@ protected:
 	----------------------------------------------------*/
 
 protected:
-	// Settings
-	TWeakObjectPtr<UNovaMenuManager> MenuManager;
+	// Game objects
+	TWeakObjectPtr<UNovaMenuManager>       MenuManager;
+	class ANovaPlayerController*           PC;
+	const class ANovaGameState*            GameState;
+	class ANovaSpacecraftPawn*             SpacecraftPawn;
+	class UNovaOrbitalSimulationComponent* OrbitalSimulation;
 
 	// Destination list
 	const class UNovaArea*                           SelectedDestination;

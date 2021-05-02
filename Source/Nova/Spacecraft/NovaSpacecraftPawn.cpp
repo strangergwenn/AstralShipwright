@@ -151,10 +151,7 @@ bool ANovaSpacecraftPawn::HasModifications() const
 	NCHECK(IsValid(PC) && PC->IsLocalController());
 
 	const FNovaSpacecraft* CurrentSpacecraft = PC->GetSpacecraft();
-	NCHECK(CurrentSpacecraft);
-	NCHECK(Spacecraft.IsValid());
-
-	return *Spacecraft != *CurrentSpacecraft;
+	return CurrentSpacecraft && Spacecraft.IsValid() && *Spacecraft != *CurrentSpacecraft;
 }
 
 void ANovaSpacecraftPawn::Dock(FSimpleDelegate Callback)
@@ -300,11 +297,14 @@ const FNovaCompartment& ANovaSpacecraftPawn::GetCompartment(int32 Index) const
 	return Spacecraft->Compartments[Index];
 }
 
-FNovaSpacecraftCompartmentMetrics ANovaSpacecraftPawn::GetCompartmentHelper(int32 Index) const
+FNovaSpacecraftCompartmentMetrics ANovaSpacecraftPawn::GetCompartmentMetrics(int32 Index) const
 {
-	NCHECK(Spacecraft.IsValid());
+	if (Spacecraft.IsValid())
+	{
+		return FNovaSpacecraftCompartmentMetrics(*Spacecraft, Index);
+	}
 
-	return FNovaSpacecraftCompartmentMetrics(*Spacecraft, Index);
+	return FNovaSpacecraftCompartmentMetrics();
 }
 
 int32 ANovaSpacecraftPawn::GetCompartmentCount() const

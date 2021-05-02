@@ -51,7 +51,15 @@ public:
 	{
 		if (IsSpacecraftDocked())
 		{
-			return GetSpacecraft()->SystemState.InitialPropellantMass;
+			const FNovaSpacecraft* Spacecraft = GetSpacecraft();
+			if (Spacecraft)
+			{
+				return Spacecraft->SystemState.InitialPropellantMass;
+			}
+			else
+			{
+				return 0;
+			}
 		}
 		else
 		{

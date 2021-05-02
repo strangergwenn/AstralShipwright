@@ -6,7 +6,9 @@
 #include "Nova/UI/Widget/NovaTabView.h"
 #include "Nova/UI/Widget/NovaModalListView.h"
 
-class SNovaMainMenuSettings : public SNovaTabPanel
+class SNovaMainMenuSettings
+	: public SNovaTabPanel
+	, public INovaGameMenu
 {
 	/*----------------------------------------------------
 	    Slate arguments

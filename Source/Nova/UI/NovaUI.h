@@ -32,3 +32,14 @@
 #define SNovaDefaultAssignNew(ExposeAs, WidgetType, ...)                                                                               \
 	NewNovaButton<WidgetType>(#WidgetType, __FILE__, __LINE__, RequiredArgs::MakeRequiredArgs(__VA_ARGS__), true).Expose(ExposeAs) <<= \
 		TYPENAME_OUTSIDE_TEMPLATE WidgetType::FArguments()
+
+/*----------------------------------------------------
+    Menu types
+----------------------------------------------------*/
+
+/** Game menu interface */
+class INovaGameMenu
+{
+public:
+	virtual void UpdateGameObjects(){};
+};

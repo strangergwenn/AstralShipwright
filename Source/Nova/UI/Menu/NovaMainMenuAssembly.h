@@ -12,7 +12,9 @@
 enum class ENovaAssemblyDisplayFilter : uint8;
 enum class ENovaHullType : uint8;
 
-class SNovaMainMenuAssembly : public SNovaTabPanel
+class SNovaMainMenuAssembly
+	: public SNovaTabPanel
+	, public INovaGameMenu
 {
 	typedef SNovaModalListView<const class UNovaCompartmentDescription*> SNovaCompartmentList;
 	typedef SNovaModalListView<const class UNovaModuleDescription*>      SNovaModuleList;
@@ -41,9 +43,13 @@ public:
 	    Inherited
 	----------------------------------------------------*/
 
+	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
+
 	virtual void Show() override;
 
 	virtual void Hide() override;
+
+	virtual void UpdateGameObjects() override;
 
 	virtual void Next() override;
 
@@ -61,16 +67,11 @@ public:
 
 	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
 
-	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
-
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
 
 protected:
-	/** Get the spacecraft pawn used to display the assembly */
-	class ANovaSpacecraftPawn* GetSpacecraftPawn() const;
-
 	/** Get the index of the next compartment to build */
 	int32 GetNewBuildIndex(bool Forward) const;
 
@@ -222,8 +223,10 @@ protected:
 	----------------------------------------------------*/
 
 protected:
-	// Menu manager
+	// Game objects
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
+	class ANovaPlayerController*     PC;
+	class ANovaSpacecraftPawn*       SpacecraftPawn;
 
 	// Widgets
 	TSharedPtr<SHorizontalBox>        CompartmentBox;

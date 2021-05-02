@@ -8,7 +8,9 @@
 #include "Online.h"
 
 /** Flight menu */
-class SNovaMainMenuFlight : public SNovaTabPanel
+class SNovaMainMenuFlight
+	: public SNovaTabPanel
+	, public INovaGameMenu
 {
 	/*----------------------------------------------------
 	    Slate arguments
@@ -38,22 +40,13 @@ public:
 
 	virtual void Hide() override;
 
+	virtual void UpdateGameObjects() override;
+
 	virtual void HorizontalAnalogInput(float Value) override;
 
 	virtual void VerticalAnalogInput(float Value) override;
 
 	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
-
-	/*----------------------------------------------------
-	    Internals
-	----------------------------------------------------*/
-
-protected:
-	/** Get the spacecraft pawn */
-	class ANovaSpacecraftPawn* GetSpacecraftPawn() const;
-
-	/** Get the spacecraft movement component */
-	class UNovaSpacecraftMovementComponent* GetSpacecraftMovement() const;
 
 	/*----------------------------------------------------
 	    Callbacks
@@ -71,8 +64,12 @@ protected:
 	----------------------------------------------------*/
 
 protected:
-	// Settings
-	TWeakObjectPtr<UNovaMenuManager> MenuManager;
+	// Game objects
+	TWeakObjectPtr<UNovaMenuManager>             MenuManager;
+	class ANovaPlayerController*                 PC;
+	class ANovaSpacecraftPawn*                   SpacecraftPawn;
+	class UNovaSpacecraftMovementComponent*      SpacecraftMovement;
+	const class UNovaOrbitalSimulationComponent* OrbitalSimulation;
 
 	// Slate widgets
 	TSharedPtr<class SNovaButton> UndockButton;

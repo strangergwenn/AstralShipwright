@@ -174,10 +174,6 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 				SNew(SNovaText)
 				.Text(FNovaTextGetter::CreateLambda([&]()
 				{
-					const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-					const UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-					const ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
-					
 					if (IsValid(GameState) && IsValid(OrbitalSimulation) && IsValid(SpacecraftPawn) && CurrentSimulatedTrajectory.IsValid())
 					{
 						UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
@@ -225,7 +221,10 @@ void SNovaMainMenuNavigation::Show()
 {
 	SNovaTabPanel::Show();
 
-	GetSpacecraftPawn()->SetOutlinedCompartment(INDEX_NONE);
+	if (IsValid(SpacecraftPawn))
+	{
+		SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
+	}
 
 	TrajectoryCalculator->Reset();
 
@@ -244,38 +243,40 @@ void SNovaMainMenuNavigation::Hide()
 	CurrentSimulatedTrajectory.Reset();
 }
 
+void SNovaMainMenuNavigation::UpdateGameObjects()
+{
+	PC                = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
+	GameState         = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
+	SpacecraftPawn    = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
+	OrbitalSimulation = IsValid(GameState) ? GameState->GetOrbitalSimulation() : nullptr;
+}
+
 /*----------------------------------------------------
     Internals
 ----------------------------------------------------*/
 
-ANovaSpacecraftPawn* SNovaMainMenuNavigation::GetSpacecraftPawn() const
-{
-	return MenuManager->GetPC() ? MenuManager->GetPC()->GetSpacecraftPawn() : nullptr;
-}
-
 bool SNovaMainMenuNavigation::CanSelectDestinationInternal(FText* Details) const
 {
-	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-	NCHECK(GameState);
-
-	for (FGuid Identifier : GameState->GetPlayerSpacecraftIdentifiers())
+	if (IsValid(GameState))
 	{
-		const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Identifier);
-		if (Spacecraft == nullptr || !Spacecraft->IsValid(Details))
+		for (FGuid Identifier : GameState->GetPlayerSpacecraftIdentifiers())
 		{
-			return false;
+			const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Identifier);
+			if (Spacecraft == nullptr || !Spacecraft->IsValid(Details))
+			{
+				return false;
+			}
 		}
+
+		return true;
 	}
 
-	return true;
+	return false;
 }
 
 bool SNovaMainMenuNavigation::CanCommitTrajectoryInternal(FText* Details) const
 {
-	const ANovaGameState*            GameState         = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-
-	if (IsValid(OrbitalSimulation))
+	if (IsValid(OrbitalSimulation) && IsValid(GameState))
 	{
 		if (SelectedDestination == GameState->GetCurrentArea())
 		{
@@ -378,13 +379,8 @@ void SNovaMainMenuNavigation::OnSelectedDestinationChanged(const UNovaArea* Dest
 
 	SelectedDestination = Destination;
 
-	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-	NCHECK(GameState);
-
-	if (SelectedDestination != GameState->GetCurrentArea())
+	if (IsValid(GameState) && IsValid(OrbitalSimulation) && SelectedDestination != GameState->GetCurrentArea())
 	{
-		UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-
 		TrajectoryCalculator->SimulateTrajectories(MakeShared<FNovaOrbit>(*OrbitalSimulation->GetPlayerOrbit()),
 			OrbitalSimulation->GetAreaOrbit(Destination), GameState->GetPlayerSpacecraftIdentifiers());
 	}
@@ -396,8 +392,6 @@ void SNovaMainMenuNavigation::OnSelectedDestinationChanged(const UNovaArea* Dest
 
 FText SNovaMainMenuNavigation::GetLocationText() const
 {
-	const UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-
 	if (IsValid(OrbitalSimulation))
 	{
 		const FNovaTrajectory*      Trajectory = OrbitalSimulation->GetPlayerTrajectory();
@@ -424,12 +418,12 @@ FText SNovaMainMenuNavigation::GetLocationText() const
 bool SNovaMainMenuNavigation::CanFastForward() const
 {
 	const ANovaGameMode* GameMode = MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>();
-	return GameMode && GameMode->CanFastForward();
+	return IsValid(GameMode) && GameMode->CanFastForward();
 }
 
 void SNovaMainMenuNavigation::FastForward()
 {
-	MenuManager->GetPC()->GetWorld()->GetAuthGameMode<ANovaGameMode>()->FastForward();
+	MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->FastForward();
 }
 
 bool SNovaMainMenuNavigation::CanCommitTrajectory() const
@@ -458,10 +452,6 @@ void SNovaMainMenuNavigation::OnTrajectoryChanged(TSharedPtr<FNovaTrajectory> Tr
 
 void SNovaMainMenuNavigation::OnCommitTrajectory()
 {
-	ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-	NCHECK(GameState);
-	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-
 	const TSharedPtr<FNovaTrajectory>& Trajectory = OrbitalMap->GetPreviewTrajectory();
 	if (IsValid(OrbitalSimulation) && OrbitalSimulation->CanCommitTrajectory(Trajectory))
 	{

@@ -8,7 +8,9 @@
 
 #include "Online.h"
 
-class SNovaMainMenuHome : public SNovaTabPanel
+class SNovaMainMenuHome
+	: public SNovaTabPanel
+	, public INovaGameMenu
 {
 	/*----------------------------------------------------
 	    Slate arguments

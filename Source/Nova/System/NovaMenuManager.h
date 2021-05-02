@@ -120,6 +120,12 @@ public:
 	    Menu tools
 	----------------------------------------------------*/
 
+	/** Register a menu **/
+	void RegisterGameMenu(TSharedPtr<class INovaGameMenu> GameMenu)
+	{
+		GameMenus.Add(GameMenu.Get());
+	}
+
 	/** Get the menu manager instance */
 	static UNovaMenuManager* Get();
 
@@ -159,6 +165,14 @@ public:
 	void MaximizeOrRestore();
 
 	/*----------------------------------------------------
+	    Internal
+	----------------------------------------------------*/
+
+protected:
+	/** World was cleaned up, warn menus */
+	void OnWorldCleanup(UWorld* World, bool bSessionEnded, bool bCleanupResources);
+
+	/*----------------------------------------------------
 	    Properties
 	----------------------------------------------------*/
 
@@ -188,12 +202,15 @@ protected:
 	TSharedPtr<class SNovaOverlay>  Overlay;
 	TSharedPtr<class SWidget>       DesiredFocusWidget;
 
-	// Data
-	bool                            LoadingScreenFrozen;
-	static bool                     UsingGamepad;
-	FNovaAsyncCommand               CurrentCommand;
-	TQueue<FNovaAsyncCommand>       CommandStack;
-	ENovaFadeState                  CurrentMenuState;
+	// Current menu state
+	bool                         LoadingScreenFrozen;
+	static bool                  UsingGamepad;
+	FNovaAsyncCommand            CurrentCommand;
+	TQueue<FNovaAsyncCommand>    CommandStack;
+	ENovaFadeState               CurrentMenuState;
+	TArray<class INovaGameMenu*> GameMenus;
+
+	// Current color state
 	float                           CurrentFadingTime;
 	FLinearColor                    DesiredInterfaceColor;
 	TNovaTimedAverage<FLinearColor> CurrentInterfaceColor;

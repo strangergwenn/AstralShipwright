@@ -61,6 +61,7 @@ void UNovaMenuManager::Initialize(UNovaGameInstance* NewGameInstance)
 	Singleton    = this;
 	GameInstance = NewGameInstance;
 	FSlateApplication::Get().SetNavigationConfig(MakeShared<FNovaNavigationConfig>());
+	FWorldDelegates::OnWorldCleanup.AddUObject(this, &UNovaMenuManager::OnWorldCleanup);
 }
 
 void UNovaMenuManager::BeginPlay(ANovaPlayerController* PC)
@@ -222,6 +223,12 @@ void UNovaMenuManager::Tick(float DeltaTime)
 
 	// Update UI color
 	CurrentInterfaceColor.Set(DesiredInterfaceColor, DeltaTime);
+
+	// Update game menus
+	for (INovaGameMenu* GameMenu : GameMenus)
+	{
+		GameMenu->UpdateGameObjects();
+	}
 }
 
 /*----------------------------------------------------
@@ -461,5 +468,19 @@ void UNovaMenuManager::MaximizeOrRestore()
 	else
 	{
 		Window->Restore();
+	}
+}
+
+/*----------------------------------------------------
+    Internal
+----------------------------------------------------*/
+
+void UNovaMenuManager::OnWorldCleanup(UWorld* World, bool bSessionEnded, bool bCleanupResources)
+{
+	NLOG("UNovaMenuManager::OnWorldCleanup");
+
+	for (INovaGameMenu* GameMenu : GameMenus)
+	{
+		GameMenu->UpdateGameObjects();
 	}
 }

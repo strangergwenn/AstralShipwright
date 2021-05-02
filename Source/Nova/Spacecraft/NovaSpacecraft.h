@@ -88,6 +88,16 @@ struct FNovaCompartment
 /** Metrics for a spacecraft compartment */
 struct FNovaSpacecraftCompartmentMetrics : public INovaDescriptibleInterface
 {
+	FNovaSpacecraftCompartmentMetrics()
+		: ModuleCount(0)
+		, EquipmentCount(0)
+		, DryMass(0)
+		, PropellantMassCapacity(0)
+		, CargoMassCapacity(0)
+		, Thrust(0)
+		, TotalEngineISPTimesThrust(0)
+	{}
+
 	FNovaSpacecraftCompartmentMetrics(const struct FNovaSpacecraft& Spacecraft, int32 CompartmentIndex);
 
 	TArray<FText> GetDescription() const override;
