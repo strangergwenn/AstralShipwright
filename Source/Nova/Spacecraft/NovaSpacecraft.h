@@ -8,7 +8,7 @@
 #include "NovaSpacecraft.generated.h"
 
 /** Compartment module data */
-USTRUCT(Atomic)
+USTRUCT()
 struct FNovaCompartmentModule
 {
 	GENERATED_BODY()
@@ -38,7 +38,7 @@ struct FNovaCompartmentModule
 };
 
 /** Compartment data */
-USTRUCT(Atomic)
+USTRUCT()
 struct FNovaCompartment
 {
 	GENERATED_BODY()
@@ -182,7 +182,7 @@ struct FNovaSpacecraftPropulsionMetrics
 };
 
 /** Spacecraft launch parameters */
-USTRUCT(Atomic)
+USTRUCT()
 struct FNovaSpacecraftSystemState
 {
 	GENERATED_BODY()
@@ -192,7 +192,7 @@ struct FNovaSpacecraftSystemState
 };
 
 /** Spacecraft class */
-USTRUCT(Atomic)
+USTRUCT()
 struct FNovaSpacecraft : public FFastArraySerializerItem
 {
 	GENERATED_BODY()
