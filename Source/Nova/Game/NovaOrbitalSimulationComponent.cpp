@@ -82,14 +82,17 @@ struct FNovaSpacecraftFleet
 		{
 			Metrics = Spacecraft->GetPropulsionMetrics();
 
-			// The core assumption here is that only maneuvers consume fuel, and so the current propellant mass won't change until the next
-			// maneuver. The practical consequence is that trajectories can only ever be plotted while undocked.
+			// The core assumption here is that only maneuvers can modify mass, and so the current mass won't change until the next
+			// maneuver. The practical consequence is that trajectories can only ever be plotted while undocked
+			// and any non-propulsion-related transfer of mass should abort the trajectory
 			const ANovaSpacecraftPawn* SpacecraftPawn = GameState->GetSpacecraftPawn(Spacecraft->Identifier);
-			CurrentPropellant = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>()->GetCurrentPropellantAmount();
+			CurrentCargoMass                          = Spacecraft->GetCurrentCargoMass();
+			CurrentPropellantMass = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>()->GetCurrentPropellantAmount();
 		}
 
 		FNovaSpacecraftPropulsionMetrics Metrics;
-		float                            CurrentPropellant;
+		float                            CurrentCargoMass;
+		float                            CurrentPropellantMass;
 	};
 
 	FNovaSpacecraftFleet(const TArray<FGuid>& SpacecraftIdentifiers, const ANovaGameState* GameState)
@@ -109,7 +112,8 @@ struct FNovaSpacecraftFleet
 		TArray<FNovaTime> Durations;
 		for (FNovaSpacecraftFleetEntry& Entry : Fleet)
 		{
-			FNovaTime Duration = Entry.Metrics.GetManeuverDurationAndPropellantUsed(DeltaV, Entry.CurrentPropellant);
+			FNovaTime Duration =
+				Entry.Metrics.GetManeuverDurationAndPropellantUsed(DeltaV, Entry.CurrentCargoMass, Entry.CurrentPropellantMass);
 			Durations.Add(Duration);
 
 			if (Duration > MaxDuration)

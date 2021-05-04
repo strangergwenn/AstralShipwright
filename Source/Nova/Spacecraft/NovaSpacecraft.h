@@ -7,6 +7,10 @@
 #include "NovaSpacecraftTypes.h"
 #include "NovaSpacecraft.generated.h"
 
+/*----------------------------------------------------
+    Spacecraft sub-structures
+----------------------------------------------------*/
+
 /** Compartment module data */
 USTRUCT()
 struct FNovaCompartmentModule
@@ -128,17 +132,13 @@ struct FNovaSpacecraftPropulsionMetrics
 		, MaximumBurnTime(0)
 	{}
 
-	/** Get the worst-case acceleration for this spacecraft in m/s² */
-	float GetLowestAcceleration() const
-	{
-		return Thrust / (DryMass + PropellantMassCapacity + CargoMassCapacity);
-	}
-
 	/** Get the duration & mass of propellant spent in T for a maneuver */
-	FNovaTime GetManeuverDurationAndPropellantUsed(const float DeltaV, float& CurrentPropellantMass) const
+	FNovaTime GetManeuverDurationAndPropellantUsed(const float DeltaV, float CurrentCargoMass, float& CurrentPropellantMass) const
 	{
 		NCHECK(Thrust > 0);
 		NCHECK(ExhaustVelocity > 0);
+
+		// TODO cargo mass
 
 		float Duration = (((DryMass + CargoMassCapacity + CurrentPropellantMass) * 1000.0f * ExhaustVelocity) / (Thrust * 1000.0f)) *
 						 (1.0f - exp(-abs(DeltaV) / ExhaustVelocity)) / 60.0f;
@@ -181,15 +181,22 @@ struct FNovaSpacecraftPropulsionMetrics
 	float MaximumBurnTime;
 };
 
-/** Spacecraft launch parameters */
+/** Spacecraft cargo entry */
 USTRUCT()
-struct FNovaSpacecraftSystemState
+struct FNovaSpacecraftCargo
 {
 	GENERATED_BODY()
 
 	UPROPERTY()
-	float InitialPropellantMass;
+	UNovaResourceDescription* Resource;
+
+	UPROPERTY()
+	float Amount;
 };
+
+/*----------------------------------------------------
+    Spacecraft implementation
+----------------------------------------------------*/
 
 /** Spacecraft class */
 USTRUCT()
@@ -215,7 +222,7 @@ public:
 	}
 
 	/*----------------------------------------------------
-	    Interface
+	    Basic interface
 	----------------------------------------------------*/
 
 	/** Create a new spacecraft */
@@ -227,33 +234,6 @@ public:
 
 	/** Get the spacecraft validity */
 	bool IsValid(FText* Details) const;
-
-	/** Get this spacecraft's name */
-	FText GetName() const
-	{
-		return FText::FromString(Name);
-	}
-
-	/** Get this spacecraft's classification */
-	FText GetClassification() const;
-
-	/** Get propulsion characteristics for this spacecraft */
-	const FNovaSpacecraftPropulsionMetrics& GetPropulsionMetrics() const
-	{
-		return PropulsionMetrics;
-	}
-
-	/** Update bulkheads, pipes, wiring, based on the current state */
-	void UpdateProceduralElements();
-
-	/** Update the spacecraft's metrics */
-	void UpdatePropulsionMetrics();
-
-	/** Reset completely the propellant amount to the spacecraft's maximum */
-	void RefillPropellant()
-	{
-		SystemState.InitialPropellantMass = PropulsionMetrics.PropellantMassCapacity;
-	}
 
 	/** Get a safe copy of this spacecraft without empty compartments */
 	FNovaSpacecraft GetSafeCopy() const
@@ -280,8 +260,51 @@ public:
 		return NewSpacecraft;
 	}
 
+	/** Get this spacecraft's name */
+	FText GetName() const
+	{
+		return FText::FromString(Name);
+	}
+
+	/** Get this spacecraft's classification */
+	FText GetClassification() const;
+
 	/** Serialize the spacecraft */
 	static void SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
+
+	/*----------------------------------------------------
+	    Propulsion metrics & cargo hold
+	----------------------------------------------------*/
+
+	/** Get propulsion characteristics for this spacecraft */
+	const FNovaSpacecraftPropulsionMetrics& GetPropulsionMetrics() const
+	{
+		return PropulsionMetrics;
+	}
+
+	/** Update bulkheads, pipes, wiring, based on the current state */
+	void UpdateProceduralElements();
+
+	/** Update the spacecraft's metrics */
+	void UpdatePropulsionMetrics();
+
+	/** Reset completely the propellant amount to the spacecraft's maximum */
+	void RefillPropellant()
+	{
+		PropellantMassAtLaunch = PropulsionMetrics.PropellantMassCapacity;
+	}
+
+	/** Get the current cargo mass */
+	float GetCurrentCargoMass() const
+	{
+		// TODO
+
+		return PropulsionMetrics.CargoMassCapacity;
+	}
+
+	/*----------------------------------------------------
+	    UI helpers
+	----------------------------------------------------*/
 
 	/** Get a list of compartment kits that can be added at a (new) index */
 	TArray<const class UNovaCompartmentDescription*> GetCompatibleCompartments(int32 CompartmentIndex) const;
@@ -322,9 +345,14 @@ public:
 	UPROPERTY()
 	FString Name;
 
-	// System state
+	// Propellant mass while docked - serves as persistent storage
+	// The real-time value while flying is handled by the propellant system
 	UPROPERTY()
-	FNovaSpacecraftSystemState SystemState;
+	float PropellantMassAtLaunch;
+
+	// Cargo hold
+	UPROPERTY()
+	TArray<FNovaSpacecraftCargo> Cargo;
 
 	// Local state
 	FNovaSpacecraftPropulsionMetrics PropulsionMetrics;

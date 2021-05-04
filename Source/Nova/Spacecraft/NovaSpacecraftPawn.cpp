@@ -207,7 +207,7 @@ void ANovaSpacecraftPawn::LoadSystems()
 			const FNovaSpacecraft* SystemSpacecraft = System->GetSpacecraft();
 			NCHECK(SystemSpacecraft);
 
-			System->Load(SystemSpacecraft->SystemState);
+			System->Load(*SystemSpacecraft);
 		}
 	}
 	else
@@ -237,7 +237,7 @@ void ANovaSpacecraftPawn::SaveSystems()
 			NCHECK(SystemSpacecraft);
 
 			FNovaSpacecraft UpdatedSpacecraft = *SystemSpacecraft;
-			System->Save(UpdatedSpacecraft.SystemState);
+			System->Save(UpdatedSpacecraft);
 
 			ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 			NCHECK(GameState);

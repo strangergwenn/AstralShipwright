@@ -24,18 +24,18 @@ public:
 	    System implementation
 	----------------------------------------------------*/
 
-	virtual void Load(const FNovaSpacecraftSystemState& State) override
+	virtual void Load(const FNovaSpacecraft& Spacecraft) override
 	{
-		NLOG("UNovaSpacecraftPropellantSystem::Load : %f", State.InitialPropellantMass);
+		NLOG("UNovaSpacecraftPropellantSystem::Load : %f", Spacecraft.PropellantMassAtLaunch);
 
-		PropellantAmount = State.InitialPropellantMass;
+		PropellantAmount = Spacecraft.PropellantMassAtLaunch;
 	}
 
-	virtual void Save(FNovaSpacecraftSystemState& State) override
+	virtual void Save(FNovaSpacecraft& Spacecraft) override
 	{
 		NLOG("UNovaSpacecraftPropellantSystem::Save : %f", PropellantAmount);
 
-		State.InitialPropellantMass = PropellantAmount;
+		Spacecraft.PropellantMassAtLaunch = PropellantAmount;
 	}
 
 	virtual void Update(FNovaTime InitialTime, FNovaTime FinalTime) override;
@@ -54,7 +54,7 @@ public:
 			const FNovaSpacecraft* Spacecraft = GetSpacecraft();
 			if (Spacecraft)
 			{
-				return Spacecraft->SystemState.InitialPropellantMass;
+				return Spacecraft->PropellantMassAtLaunch;
 			}
 			else
 			{

@@ -338,6 +338,111 @@ FText FNovaSpacecraft::GetClassification() const
 	}
 }
 
+void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
+{
+	// Writing to JSON
+	if (Direction == ENovaSerialize::DataToJson)
+	{
+		JsonData = MakeShared<FJsonObject>();
+
+		// Spacecraft
+		JsonData->SetStringField("I", This->Identifier.ToString(EGuidFormats::Short));
+		JsonData->SetStringField("N", This->Name);
+
+		// Systems
+		JsonData->SetNumberField("P", This->PropellantMassAtLaunch);
+
+		// Compartments
+		TArray<TSharedPtr<FJsonValue>> SavedCompartments;
+		for (const FNovaCompartment& Compartment : This->Compartments)
+		{
+			TSharedPtr<FJsonObject> CompartmentJsonData = MakeShared<FJsonObject>();
+
+			if (Compartment.Description)
+			{
+				// Compartment
+				UNovaAssetDescription::SaveAsset(CompartmentJsonData, "D", Compartment.Description);
+				CompartmentJsonData->SetNumberField("H", static_cast<uint8>(Compartment.HullType));
+
+				// Modules
+				for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
+				{
+					UNovaAssetDescription::SaveAsset(
+						CompartmentJsonData, FString("M") + FString::FromInt(Index), Compartment.Modules[Index].Description);
+				}
+
+				// Equipments
+				for (int32 Index = 0; Index < ENovaConstants::MaxEquipmentCount; Index++)
+				{
+					UNovaAssetDescription::SaveAsset(
+						CompartmentJsonData, FString("E") + FString::FromInt(Index), Compartment.Equipments[Index]);
+				}
+
+				SavedCompartments.Add(MakeShared<FJsonValueObject>(CompartmentJsonData));
+			}
+		}
+		JsonData->SetArrayField("C", SavedCompartments);
+	}
+
+	// Reading from JSON
+	else
+	{
+		This = MakeShared<FNovaSpacecraft>();
+		This->Create(LOCTEXT("UnnamedSpacecraft", "Unnamed Spacecraft").ToString());
+
+		// Spacecraft
+		FGuid Identifier;
+		if (FGuid::Parse(JsonData->GetStringField("I"), Identifier))
+		{
+			This->Identifier = Identifier;
+		}
+		FString Name;
+		if (JsonData->TryGetStringField("N", Name))
+		{
+			This->Name = Name;
+		}
+
+		// Systems
+		double InitialPropellantMass = 0;
+		if (JsonData->TryGetNumberField("P", InitialPropellantMass))
+		{
+			This->PropellantMassAtLaunch = InitialPropellantMass;
+		}
+
+		// Compartments
+		const TArray<TSharedPtr<FJsonValue>>* SavedCompartments;
+		if (JsonData->TryGetArrayField("C", SavedCompartments))
+		{
+			for (TSharedPtr<FJsonValue> CompartmentObject : *SavedCompartments)
+			{
+				FNovaCompartment        Compartment;
+				TSharedPtr<FJsonObject> CompartmentJsonData = CompartmentObject->AsObject();
+
+				// Compartment
+				Compartment.Description = Cast<UNovaCompartmentDescription>(UNovaAssetDescription::LoadAsset(CompartmentJsonData, "D"));
+				NCHECK(Compartment.Description);
+				Compartment.HullType = static_cast<ENovaHullType>(CompartmentJsonData->GetNumberField("H"));
+
+				// Modules
+				for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
+				{
+					Compartment.Modules[Index].Description = Cast<UNovaModuleDescription>(
+						UNovaAssetDescription::LoadAsset(CompartmentJsonData, FString("M") + FString::FromInt(Index)));
+				}
+
+				// Equipments
+				for (int32 Index = 0; Index < ENovaConstants::MaxEquipmentCount; Index++)
+				{
+					Compartment.Equipments[Index] = Cast<UNovaEquipmentDescription>(
+						UNovaAssetDescription::LoadAsset(CompartmentJsonData, FString("E") + FString::FromInt(Index)));
+				}
+
+				This->Compartments.Add(Compartment);
+			}
+		}
+	}
+}
+
 /*----------------------------------------------------
     Internals
 ----------------------------------------------------*/
@@ -459,111 +564,6 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 	NLOG("Delta-v specifications : total %.1fm/s, burn time %.1fs", PropulsionMetrics.TotalDeltaV, PropulsionMetrics.TotalBurnTime);
 	NLOG("--------------------------------------------------------------------------------");
 #endif
-}
-
-void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
-{
-	// Writing to JSON
-	if (Direction == ENovaSerialize::DataToJson)
-	{
-		JsonData = MakeShared<FJsonObject>();
-
-		// Spacecraft
-		JsonData->SetStringField("I", This->Identifier.ToString(EGuidFormats::Short));
-		JsonData->SetStringField("N", This->Name);
-
-		// Systems
-		JsonData->SetNumberField("P", This->SystemState.InitialPropellantMass);
-
-		// Compartments
-		TArray<TSharedPtr<FJsonValue>> SavedCompartments;
-		for (const FNovaCompartment& Compartment : This->Compartments)
-		{
-			TSharedPtr<FJsonObject> CompartmentJsonData = MakeShared<FJsonObject>();
-
-			if (Compartment.Description)
-			{
-				// Compartment
-				UNovaAssetDescription::SaveAsset(CompartmentJsonData, "D", Compartment.Description);
-				CompartmentJsonData->SetNumberField("H", static_cast<uint8>(Compartment.HullType));
-
-				// Modules
-				for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
-				{
-					UNovaAssetDescription::SaveAsset(
-						CompartmentJsonData, FString("M") + FString::FromInt(Index), Compartment.Modules[Index].Description);
-				}
-
-				// Equipments
-				for (int32 Index = 0; Index < ENovaConstants::MaxEquipmentCount; Index++)
-				{
-					UNovaAssetDescription::SaveAsset(
-						CompartmentJsonData, FString("E") + FString::FromInt(Index), Compartment.Equipments[Index]);
-				}
-
-				SavedCompartments.Add(MakeShared<FJsonValueObject>(CompartmentJsonData));
-			}
-		}
-		JsonData->SetArrayField("C", SavedCompartments);
-	}
-
-	// Reading from JSON
-	else
-	{
-		This = MakeShared<FNovaSpacecraft>();
-		This->Create(LOCTEXT("UnnamedSpacecraft", "Unnamed Spacecraft").ToString());
-
-		// Spacecraft
-		FGuid Identifier;
-		if (FGuid::Parse(JsonData->GetStringField("I"), Identifier))
-		{
-			This->Identifier = Identifier;
-		}
-		FString Name;
-		if (JsonData->TryGetStringField("N", Name))
-		{
-			This->Name = Name;
-		}
-
-		// Systems
-		double InitialPropellantMass = 0;
-		if (JsonData->TryGetNumberField("P", InitialPropellantMass))
-		{
-			This->SystemState.InitialPropellantMass = InitialPropellantMass;
-		}
-
-		// Compartments
-		const TArray<TSharedPtr<FJsonValue>>* SavedCompartments;
-		if (JsonData->TryGetArrayField("C", SavedCompartments))
-		{
-			for (TSharedPtr<FJsonValue> CompartmentObject : *SavedCompartments)
-			{
-				FNovaCompartment        Compartment;
-				TSharedPtr<FJsonObject> CompartmentJsonData = CompartmentObject->AsObject();
-
-				// Compartment
-				Compartment.Description = Cast<UNovaCompartmentDescription>(UNovaAssetDescription::LoadAsset(CompartmentJsonData, "D"));
-				NCHECK(Compartment.Description);
-				Compartment.HullType = static_cast<ENovaHullType>(CompartmentJsonData->GetNumberField("H"));
-
-				// Modules
-				for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
-				{
-					Compartment.Modules[Index].Description = Cast<UNovaModuleDescription>(
-						UNovaAssetDescription::LoadAsset(CompartmentJsonData, FString("M") + FString::FromInt(Index)));
-				}
-
-				// Equipments
-				for (int32 Index = 0; Index < ENovaConstants::MaxEquipmentCount; Index++)
-				{
-					Compartment.Equipments[Index] = Cast<UNovaEquipmentDescription>(
-						UNovaAssetDescription::LoadAsset(CompartmentJsonData, FString("E") + FString::FromInt(Index)));
-				}
-
-				This->Compartments.Add(Compartment);
-			}
-		}
-	}
 }
 
 TArray<const UNovaCompartmentDescription*> FNovaSpacecraft::GetCompatibleCompartments(int32 CompartmentIndex) const

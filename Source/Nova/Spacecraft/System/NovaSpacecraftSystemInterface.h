@@ -27,12 +27,12 @@ public:
 	    System interface
 	----------------------------------------------------*/
 
-	/** Load a system from the state */
-	virtual void Load(const FNovaSpacecraftSystemState& State)
+	/** Load a system from the spacecraft */
+	virtual void Load(const FNovaSpacecraft& Spacecraft)
 	{}
 
-	/** Save a system to the state */
-	virtual void Save(FNovaSpacecraftSystemState& State)
+	/** Save a system state into the spacecraft */
+	virtual void Save(FNovaSpacecraft& Spacecraft)
 	{}
 
 	/** Update the simulation between InitialTime and FinalTime */
