@@ -208,7 +208,6 @@ protected:
 	FName                                 SizeName;
 	float                                 BorderRotation;
 	bool                                  IsToggle;
-	float                                 AnimationDuration;
 	float                                 WrapSize;
 
 	// Callbacks

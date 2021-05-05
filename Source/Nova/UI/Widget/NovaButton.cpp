@@ -41,9 +41,6 @@ void SNovaButton::Construct(const FArguments& InArgs)
 	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
 	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
 
-	// Settings
-	AnimationDuration = 0.2f;
-
 	// Parent constructor
 	SButton::Construct(SButton::FArguments()
 						   .ButtonStyle(FNovaStyleSet::GetStyle(), "Nova.Button")
@@ -223,6 +220,8 @@ void SNovaButton::Tick(const FGeometry& AllottedGeometry, const double CurrentTi
 {
 	SButton::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
+	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
+
 	bIsFocusable = ButtonFocusable.Get();
 
 	float TargetColorAnim    = 0;
@@ -236,7 +235,7 @@ void SNovaButton::Tick(const FGeometry& AllottedGeometry, const double CurrentTi
 		if (IsFocused())
 		{
 			TargetColorAnim = 1.0f;
-			TargetSizeAnim  = 0.5f;
+			TargetSizeAnim  = 1.0f;
 		}
 		if (IsHovered())
 		{
@@ -247,9 +246,9 @@ void SNovaButton::Tick(const FGeometry& AllottedGeometry, const double CurrentTi
 	{
 		TargetDisabledAnim = 1.0f;
 	}
-	if (State.CurrentTimeSinceClicked < AnimationDuration)
+	if (State.CurrentTimeSinceClicked < Theme.AnimationDuration)
 	{
-		TargetSizeAnim = 1.0f;
+		TargetSizeAnim = 0.5f;
 	}
 	if (UserSizeCallback.IsBound())
 	{
@@ -263,7 +262,7 @@ void SNovaButton::Tick(const FGeometry& AllottedGeometry, const double CurrentTi
 		if (Difference != 0)
 		{
 			float PreviousValue = CurrentValue;
-			CurrentValue += (CurrentValue < TargetValue ? 1 : -1) * (DeltaTime / AnimationDuration);
+			CurrentValue += (CurrentValue < TargetValue ? 1 : -1) * (DeltaTime / Theme.AnimationDuration);
 			CurrentValue = FMath::Clamp(CurrentValue, PreviousValue - FMath::Abs(Difference), PreviousValue + FMath::Abs(Difference));
 		}
 	};

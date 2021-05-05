@@ -76,49 +76,60 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						SNew(SHorizontalBox)
 
 						+ SHorizontalBox::Slot()
-
+		
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						[
-							SNew(SNovaKeyLabel)
-							.Key(this, &SNovaMainMenuAssembly::GetPreviousItemKey)
-						]
-
-						// Compartment list
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
-						[
-							SNew(SVerticalBox)
-
-							+ SVerticalBox::Slot()
-							.AutoHeight()
+							// Hack : prevent layout issues when iterating quickly on entries
+							SNew(SBox)
+							.MinDesiredWidth((ENovaConstants::MaxModuleCount + ENovaConstants::MaxEquipmentCount) * 1.2 * FNovaStyleSet::GetButtonSize("CompartmentButtonSize").Width)
 							[
-								SNew(STextBlock)
-								.TextStyle(&Theme.SubtitleFont)
-								.Text(LOCTEXT("CompartmentTitle", "Compartments"))
-							]
+								SNew(SHorizontalBox)
 
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							[
-								SAssignNew(CompartmentBox, SHorizontalBox)
-							]
+								+ SHorizontalBox::Slot()
+								.AutoWidth()
+								[
+									SNew(SNovaKeyLabel)
+									.Key(this, &SNovaMainMenuAssembly::GetPreviousItemKey)
+								]
 
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							.VAlign(VAlign_Center)
-							[
-								SNew(SNovaRichText)
-								.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuAssembly::GetCompartmentText))
-								.TextStyle(&Theme.InfoFont)
-							]
-						]
+								// Compartment list
+								+ SHorizontalBox::Slot()
+								.AutoWidth()
+								[
+									SNew(SVerticalBox)
 
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
-						[
-							SNew(SNovaKeyLabel)
-							.Key(this, &SNovaMainMenuAssembly::GetNextItemKey)
+									+ SVerticalBox::Slot()
+									.AutoHeight()
+									[
+										SNew(STextBlock)
+										.TextStyle(&Theme.SubtitleFont)
+										.Text(LOCTEXT("CompartmentTitle", "Compartments"))
+									]
+
+									+ SVerticalBox::Slot()
+									.AutoHeight()
+									[
+										SAssignNew(CompartmentBox, SHorizontalBox)
+									]
+
+									+ SVerticalBox::Slot()
+									.AutoHeight()
+									.VAlign(VAlign_Center)
+									[
+										SNew(SNovaRichText)
+										.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuAssembly::GetCompartmentText))
+										.TextStyle(&Theme.InfoFont)
+									]
+								]
+
+								+ SHorizontalBox::Slot()
+								.AutoWidth()
+								[
+									SNew(SNovaKeyLabel)
+									.Key(this, &SNovaMainMenuAssembly::GetNextItemKey)
+								]
+							]
 						]
 
 						+ SHorizontalBox::Slot()
@@ -242,22 +253,20 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						[
-							SNew(SNovaKeyLabel)
-							.Key(this, &SNovaMainMenuAssembly::GetPreviousItemKey)
-						]
-				
-						// Compartment selection
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
-						[
-							SNew(SVerticalBox)
-
-							+ SVerticalBox::Slot()
-							.AutoHeight()
+							// Hack : prevent layout issues when iterating quickly on entries
+							SNew(SBox)
+							.MinDesiredWidth((ENovaConstants::MaxModuleCount + ENovaConstants::MaxEquipmentCount) * 1.2 * FNovaStyleSet::GetButtonSize("CompartmentButtonSize").Width)
 							[
 								SNew(SHorizontalBox)
-
-								// Module list
+								
+								+ SHorizontalBox::Slot()
+								.AutoWidth()
+								[
+									SNew(SNovaKeyLabel)
+									.Key(this, &SNovaMainMenuAssembly::GetPreviousItemKey)
+								]
+				
+								// Compartment selection
 								+ SHorizontalBox::Slot()
 								.AutoWidth()
 								[
@@ -266,55 +275,67 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 									+ SVerticalBox::Slot()
 									.AutoHeight()
 									[
-										SNew(STextBlock)
-										.TextStyle(&Theme.SubtitleFont)
-										.Text(LOCTEXT("ModulesTitle", "Modules"))
+										SNew(SHorizontalBox)
+
+										// Module list
+										+ SHorizontalBox::Slot()
+										.AutoWidth()
+										[
+											SNew(SVerticalBox)
+
+											+ SVerticalBox::Slot()
+											.AutoHeight()
+											[
+												SNew(STextBlock)
+												.TextStyle(&Theme.SubtitleFont)
+												.Text(LOCTEXT("ModulesTitle", "Modules"))
+											]
+
+											+ SVerticalBox::Slot()
+											.AutoHeight()
+											[
+												SAssignNew(ModuleBox, SHorizontalBox)
+											]
+										]
+
+										// Equipment list
+										+ SHorizontalBox::Slot()
+										.AutoWidth()
+										[
+											SNew(SVerticalBox)
+
+											+ SVerticalBox::Slot()
+											.AutoHeight()
+											[
+												SNew(STextBlock)
+												.TextStyle(&Theme.SubtitleFont)
+												.Text(LOCTEXT("EquipmentsTitle", "Equipments"))
+											]
+
+											+ SVerticalBox::Slot()
+											.AutoHeight()
+											[
+												SAssignNew(EquipmentBox, SHorizontalBox)
+											]
+										]
 									]
 
 									+ SVerticalBox::Slot()
 									.AutoHeight()
 									[
-										SAssignNew(ModuleBox, SHorizontalBox)
+										SNew(SNovaRichText)
+										.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuAssembly::GetModuleOrEquipmentText))
+										.TextStyle(&Theme.InfoFont)
 									]
 								]
 
-								// Equipment list
 								+ SHorizontalBox::Slot()
 								.AutoWidth()
 								[
-									SNew(SVerticalBox)
-
-									+ SVerticalBox::Slot()
-									.AutoHeight()
-									[
-										SNew(STextBlock)
-										.TextStyle(&Theme.SubtitleFont)
-										.Text(LOCTEXT("EquipmentsTitle", "Equipments"))
-									]
-
-									+ SVerticalBox::Slot()
-									.AutoHeight()
-									[
-										SAssignNew(EquipmentBox, SHorizontalBox)
-									]
+									SNew(SNovaKeyLabel)
+									.Key(this, &SNovaMainMenuAssembly::GetNextItemKey)
 								]
 							]
-
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							[
-								SNew(SNovaRichText)
-								.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuAssembly::GetModuleOrEquipmentText))
-								.TextStyle(&Theme.InfoFont)
-							]
-
-						]
-
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
-						[
-							SNew(SNovaKeyLabel)
-							.Key(this, &SNovaMainMenuAssembly::GetNextItemKey)
 						]
 						
 						+ SHorizontalBox::Slot()

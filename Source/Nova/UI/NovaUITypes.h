@@ -18,7 +18,7 @@ constexpr float EaseStandard        = 2.0f;
 constexpr float EaseStrong          = 4.0f;
 constexpr float FadeDurationMinimal = 0.1f;
 constexpr float FadeDurationShort   = 0.25f;
-constexpr float FadeDurationLong    = 0.5f;
+constexpr float FadeDurationLong    = 0.4f;
 }    // namespace ENovaUIConstants
 
 /** Notification type */

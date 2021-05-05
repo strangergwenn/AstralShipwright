@@ -47,7 +47,8 @@ struct FNovaButtonTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = Button) FSlateBrush Background;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FLinearColor DisabledColor;
 	UPROPERTY(EditDefaultsOnly, Category = Button) bool Centered;
-	UPROPERTY(EditDefaultsOnly, Category = Button) int32 WrapMargin = 48;
+	UPROPERTY(EditDefaultsOnly, Category = Button) int32 WrapMargin        = 48;
+	UPROPERTY(EditDefaultsOnly, Category = Button) float AnimationDuration = 0.2f;
 };
 
 /** Theme structure storing dimensional elements of a button */
