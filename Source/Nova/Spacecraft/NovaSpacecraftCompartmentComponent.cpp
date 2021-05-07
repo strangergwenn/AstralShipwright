@@ -368,6 +368,8 @@ void UNovaSpacecraftCompartmentComponent::BuildElement(
 			AdditionalMeshComponent->RegisterComponent();
 		}
 	}
+
+	RequestParameter(Element, "DirtyIntensity", 0.5f);
 }
 
 /*----------------------------------------------------
