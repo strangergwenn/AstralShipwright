@@ -184,6 +184,8 @@ void UNovaMenuManager::Tick(float DeltaTime)
 					// NLOG("UNovaMenuManager::Tick : action finished with no condition");
 				}
 
+				GEngine->ForceGarbageCollection(true);
+
 				break;
 			}
 
