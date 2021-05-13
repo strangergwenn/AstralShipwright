@@ -6,6 +6,7 @@
 #include "NovaMainMenuGame.h"
 #include "NovaMainMenuFlight.h"
 #include "NovaMainMenuNavigation.h"
+#include "NovaMainMenuInventory.h"
 #include "NovaMainMenuAssembly.h"
 #include "NovaMainMenuSettings.h"
 
@@ -141,6 +142,18 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 			.MenuManager(MenuManager)
 		]
 
+		// Inventory menu
+		+ SNovaTabView::Slot()
+		.Header(LOCTEXT("InventoryMenuTitle", "Inventory"))
+		.HeaderHelp(LOCTEXT("InventoryMenuTitleHelp", "Manage your spacecraft's fuel and cargo"))
+		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::AreGameMenusVisible))
+		.Blur()
+		[
+			SAssignNew(InventoryMenu, SNovaMainMenuInventory)
+			.Menu(this)
+			.MenuManager(MenuManager)
+		]
+
 		// Assembly menu
 		+ SNovaTabView::Slot()
 		.Header(LOCTEXT("AssemblyMenuTitle", "Assembly"))
@@ -173,6 +186,7 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 	MenuManager->RegisterGameMenu(GameMenu);
 	MenuManager->RegisterGameMenu(FlightMenu);
 	MenuManager->RegisterGameMenu(NavigationMenu);
+	MenuManager->RegisterGameMenu(InventoryMenu);
 	MenuManager->RegisterGameMenu(AssemblyMenu);
 	MenuManager->RegisterGameMenu(SettingsMenu);
 

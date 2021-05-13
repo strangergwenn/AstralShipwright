@@ -12,6 +12,7 @@ enum class ENovaMainMenuType : uint8
 	Game,
 	Flight,
 	Navigation,
+	Inventory,
 	Assembly,
 	Settings
 };
@@ -124,6 +125,7 @@ protected:
 	TSharedPtr<class SNovaMainMenuGame>       GameMenu;
 	TSharedPtr<class SNovaMainMenuFlight>     FlightMenu;
 	TSharedPtr<class SNovaMainMenuNavigation> NavigationMenu;
+	TSharedPtr<class SNovaMainMenuInventory>  InventoryMenu;
 	TSharedPtr<class SNovaMainMenuAssembly>   AssemblyMenu;
 	TSharedPtr<class SNovaMainMenuSettings>   SettingsMenu;
 };
