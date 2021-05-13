@@ -41,6 +41,22 @@ struct FNovaCompartmentModule
 	bool NeedsWiring;
 };
 
+/** Compartment cargo entry */
+USTRUCT()
+struct FNovaSpacecraftCargo
+{
+	GENERATED_BODY()
+
+	FNovaSpacecraftCargo() : Resource(nullptr), Amount(0)
+	{}
+
+	UPROPERTY()
+	const UNovaResourceDescription* Resource;
+
+	UPROPERTY()
+	float Amount;
+};
+
 /** Compartment data */
 USTRUCT()
 struct FNovaCompartment
@@ -81,6 +97,15 @@ struct FNovaCompartment
 
 	UPROPERTY()
 	const class UNovaEquipmentDescription* Equipments[ENovaConstants::MaxEquipmentCount];
+
+	UPROPERTY()
+	FNovaSpacecraftCargo GeneralCargo;
+
+	UPROPERTY()
+	FNovaSpacecraftCargo BulkCargo;
+
+	UPROPERTY()
+	FNovaSpacecraftCargo LiquidCargo;
 
 	bool NeedsOuterSkirt;
 
@@ -138,9 +163,7 @@ struct FNovaSpacecraftPropulsionMetrics
 		NCHECK(Thrust > 0);
 		NCHECK(ExhaustVelocity > 0);
 
-		// TODO cargo mass
-
-		float Duration = (((DryMass + CargoMassCapacity + CurrentPropellantMass) * 1000.0f * ExhaustVelocity) / (Thrust * 1000.0f)) *
+		float Duration = (((DryMass + CurrentCargoMass + CurrentPropellantMass) * 1000.0f * ExhaustVelocity) / (Thrust * 1000.0f)) *
 						 (1.0f - exp(-abs(DeltaV) / ExhaustVelocity)) / 60.0f;
 		float PropellantUsed = PropellantRate * Duration;
 
@@ -179,19 +202,6 @@ struct FNovaSpacecraftPropulsionMetrics
 
 	// Total capable engine burn time in s
 	float MaximumBurnTime;
-};
-
-/** Spacecraft cargo entry */
-USTRUCT()
-struct FNovaSpacecraftCargo
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	UNovaResourceDescription* Resource;
-
-	UPROPERTY()
-	float Amount;
 };
 
 /*----------------------------------------------------
@@ -297,9 +307,16 @@ public:
 	/** Get the current cargo mass */
 	float GetCurrentCargoMass() const
 	{
-		// TODO
+		float CargoMass = 0;
 
-		return PropulsionMetrics.CargoMassCapacity;
+		for (const FNovaCompartment& Compartment : Compartments)
+		{
+			CargoMass += Compartment.GeneralCargo.Amount;
+			CargoMass += Compartment.BulkCargo.Amount;
+			CargoMass += Compartment.LiquidCargo.Amount;
+		}
+
+		return CargoMass;
 	}
 
 	/*----------------------------------------------------
@@ -349,10 +366,6 @@ public:
 	// The real-time value while flying is handled by the propellant system
 	UPROPERTY()
 	float PropellantMassAtLaunch;
-
-	// Cargo hold
-	UPROPERTY()
-	TArray<FNovaSpacecraftCargo> Cargo;
 
 	// Local state
 	FNovaSpacecraftPropulsionMetrics PropulsionMetrics;
