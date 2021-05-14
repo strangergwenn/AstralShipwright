@@ -520,7 +520,6 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 		[
 			SNew(SNovaButton) // No navigation
 			.Focusable(false)
-			.Theme("CompartmentButton")
 			.Size("CompartmentButtonSize")
 			.HelpText(LOCTEXT("SelectCompartmentHelp", "Select this compartment for editing"))
 			.Enabled(this, &SNovaMainMenuAssembly::IsSelectCompartmentEnabled, Index)
@@ -599,7 +598,6 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 		[
 			SNew(SNovaButton) // No navigation
 			.Focusable(false)
-			.Theme("CompartmentButton")
 			.Size("CompartmentButtonSize")
 			.HelpText(FText::FormatNamed(LOCTEXT("ModuleSlotFormat", "Select module slot {slot}"), TEXT("slot"), FText::AsNumber(ModuleIndex + 1)))
 			.Enabled(this, &SNovaMainMenuAssembly::IsModuleEnabled, ModuleIndex)
@@ -676,7 +674,6 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 		[
 			SNew(SNovaButton) // No navigation
 			.Focusable(false)
-			.Theme("CompartmentButton")
 			.Size("CompartmentButtonSize")
 			.HelpText(FText::FormatNamed(LOCTEXT("EquipmentSlotFormat", "Select equipment slot {slot}"), TEXT("slot"), FText::AsNumber(EquipmentIndex + 1)))
 			.Enabled(this, &SNovaMainMenuAssembly::IsEquipmentEnabled, EquipmentIndex)

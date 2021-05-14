@@ -41,8 +41,6 @@ struct FNovaButtonTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = Button) FTextBlockStyle Font;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FMargin IconPadding;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FMargin HoverAnimationPadding;
-	UPROPERTY(EditDefaultsOnly, Category = Button) FVector2D DisabledAnimationSize;
-	UPROPERTY(EditDefaultsOnly, Category = Button) FVector2D UserAnimationSize;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FSlateBrush Border;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FSlateBrush Background;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FLinearColor DisabledColor;
@@ -79,6 +77,8 @@ struct FNovaButtonSize : public FSlateWidgetStyle
 
 	UPROPERTY(EditDefaultsOnly, Category = Button) int32 Width;
 	UPROPERTY(EditDefaultsOnly, Category = Button) int32 Height;
+	UPROPERTY(EditDefaultsOnly, Category = Button) FVector2D DisabledAnimationSize;
+	UPROPERTY(EditDefaultsOnly, Category = Button) FVector2D UserAnimationSize;
 };
 
 /*----------------------------------------------------
