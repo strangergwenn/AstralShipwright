@@ -29,21 +29,60 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 	// Parent constructor
 	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
 
+	// Local data
+	TSharedPtr<SVerticalBox> CargoBox;
+
 	// clang-format off
 	ChildSlot
-	.HAlign(HAlign_Left)
-	.VAlign(VAlign_Bottom)
 	[
-		SNew(SBackgroundBlur)
-		.BlurRadius(this, &SNovaTabPanel::GetBlurRadius)
-		.BlurStrength(this, &SNovaTabPanel::GetBlurStrength)
-		.bApplyAlphaToBlur(true)
-		.Padding(0)
-		[
-			SNew(SHorizontalBox)
-		]
+		SAssignNew(CargoBox, SVerticalBox)
 	];
+
+	// Cargo line generator
+	auto BuildCargoLine = [&](FText Title)
+	{
+		TSharedPtr<SHorizontalBox> CargoLineBox;
+
+		CargoBox->AddSlot()
+		.AutoHeight()
+		.Padding(Theme.ContentPadding)
+		[
+			SNew(SVerticalBox)
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.TextStyle(&Theme.SubtitleFont)
+				.Text(Title)
+			]
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SAssignNew(CargoLineBox, SHorizontalBox)
+			]
+		];
+
+		for (int32 Index = 0; Index < ENovaConstants::MaxCompartmentCount; Index++)
+		{
+			CargoLineBox->AddSlot()
+			.AutoWidth()
+			[
+				SNovaNew(SNovaButton)
+				.Size("CompartmentButtonSize")
+				//.HelpText()
+				//.Enabled(this, &SNovaMainMenuAssembly::IsSelectCompartmentEnabled, Index)
+				//.OnClicked(this, &SNovaMainMenuAssembly::OnCompartmentSelected, Index)
+			];
+		}
+	};
 	// clang-format on
+
+	// BUild the procedural cargo lines
+	BuildCargoLine(LOCTEXT("GeneralCargoTitle", "General cargo"));
+	BuildCargoLine(LOCTEXT("BulkCargoTitle", "Bulk cargo"));
+	BuildCargoLine(LOCTEXT("LiquidCargoTitle", "Liquid cargo"));
 }
 
 /*----------------------------------------------------
