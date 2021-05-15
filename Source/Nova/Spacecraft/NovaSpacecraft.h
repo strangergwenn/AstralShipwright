@@ -221,7 +221,7 @@ public:
 	    Constructor & operators
 	----------------------------------------------------*/
 
-	FNovaSpacecraft() : Identifier(0, 0, 0, 0)
+	FNovaSpacecraft() : Identifier(0, 0, 0, 0), PropellantMassAtLaunch(0)
 	{}
 
 	bool operator==(const FNovaSpacecraft& Other) const;
