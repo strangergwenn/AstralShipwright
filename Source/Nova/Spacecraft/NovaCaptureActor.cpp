@@ -32,8 +32,15 @@
     Constructor
 ----------------------------------------------------*/
 
-ANovaCaptureActor::ANovaCaptureActor() : Super(), SpacecraftPawn(nullptr), AssetManager(nullptr)
+ANovaCaptureActor::ANovaCaptureActor()
+	: Super()
+#if WITH_EDITORONLY_DATA
+	, SpacecraftPawn(nullptr)
+	, AssetManager(nullptr)
+#endif    // WITH_EDITORONLY_DATA
 {
+#if WITH_EDITORONLY_DATA
+
 	// Create root component
 	RootComponent                = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 	RootComponent->bIsEditorOnly = true;
@@ -61,6 +68,8 @@ ANovaCaptureActor::ANovaCaptureActor() : Super(), SpacecraftPawn(nullptr), Asset
 	bIsEditorOnlyActor  = true;
 	RenderUpscaleFactor = 4;
 	ResultUpscaleFactor = 2;
+
+#endif    // WITH_EDITORONLY_DATA
 }
 
 /*----------------------------------------------------
@@ -144,7 +153,7 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 	Asset->MarkPackageDirty();
 	TargetActor->Destroy();
 
-#endif
+#endif    // WITH_EDITOR
 }
 
 #if WITH_EDITOR
@@ -263,6 +272,6 @@ FVector2D ANovaCaptureActor::GetDesiredSize() const
 	return FVector2D(ListButtonSize.Width, ListButtonSize.Height);
 }
 
-#endif
+#endif    // WITH_EDITOR
 
 #undef LOCTEXT_NAMESPACE

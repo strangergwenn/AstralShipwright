@@ -47,11 +47,13 @@ protected:
 	/** Get the texture desired size */
 	FVector2D GetDesiredSize() const;
 
-#endif
+#endif    // WITH_EDITOR
 
 	/*----------------------------------------------------
 	    Properties
 	----------------------------------------------------*/
+
+#if WITH_EDITORONLY_DATA
 
 public:
 	// Empty compartment kit
@@ -106,4 +108,6 @@ protected:
 
 	// General data
 	TSharedPtr<struct FNovaSpacecraft> Spacecraft;
+
+#endif    // WITH_EDITORONLY_DATA
 };
