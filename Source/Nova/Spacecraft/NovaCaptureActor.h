@@ -27,7 +27,10 @@ protected:
 #if WITH_EDITOR
 
 	/** Spawn the assembly */
-	void CreateSpacecraftPawn();
+	void CreateSpacecraft();
+
+	/** Spawn the mesh viewer */
+	void CreateMeshActor();
 
 	/** Get a catalog instance if not already existing */
 	void CreateAssetManager();
@@ -84,6 +87,14 @@ protected:
 	// Spacecraft pawn
 	UPROPERTY()
 	class ANovaSpacecraftPawn* SpacecraftPawn;
+
+	// Simple mesh
+	UPROPERTY()
+	class AStaticMeshActor* MeshActor;
+
+	// Simple mesh
+	UPROPERTY()
+	class AActor* TargetActor;
 
 	// Asset manager
 	UPROPERTY(Transient)

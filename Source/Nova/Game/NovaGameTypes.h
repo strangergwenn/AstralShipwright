@@ -246,6 +246,43 @@ public:
 };
 
 /*----------------------------------------------------
+    Resources
+----------------------------------------------------*/
+
+/** Possible cargo types */
+UENUM()
+enum class ENovaResourceType : uint8
+{
+	Bulk,
+	Liquid,
+	Pressurized
+};
+
+/** Description of a resource */
+UCLASS(ClassGroup = (Nova))
+class UNovaResource : public UNovaAssetDescription
+{
+	GENERATED_BODY()
+
+public:
+	// Type of cargo hold that will be required for this resource
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	ENovaResourceType CargoType = ENovaResourceType::Bulk;
+
+#if WITH_EDITORONLY_DATA
+
+	// Mesh to use to render the resource
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	class UStaticMesh* ResourceMesh;
+
+	// Material to use to render the resource
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	class UMaterialInterface* ResourceMaterial;
+
+#endif    // WITH_EDITORONLY_DATA
+};
+
+/*----------------------------------------------------
     Cache maps for fast lookup net serialized arrays
 ----------------------------------------------------*/
 

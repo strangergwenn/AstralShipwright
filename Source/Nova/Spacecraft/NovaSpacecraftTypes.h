@@ -46,15 +46,6 @@ enum class ENovaHullType : uint8
 	MetalFabric
 };
 
-/** Possible cargo types */
-UENUM()
-enum class ENovaCargoType : uint8
-{
-	Bulk,
-	Liquid,
-	Pressurized
-};
-
 /** Possible construction element types */
 enum class ENovaAssemblyElementType : uint8
 {
@@ -404,7 +395,7 @@ public:
 public:
 	// Cargo type that describes which kind of stuff it can carry
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	ENovaCargoType CargoType = ENovaCargoType::Bulk;
+	ENovaResourceType CargoType = ENovaResourceType::Bulk;
 
 	// Cargo mass in T
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
@@ -485,20 +476,4 @@ class UNovaThrusterDescription : public UNovaEquipmentDescription
 	GENERATED_BODY()
 
 public:
-};
-
-/*----------------------------------------------------
-    Resources
-----------------------------------------------------*/
-
-/** Resource object */
-UCLASS(ClassGroup = (Nova))
-class UNovaResourceDescription : public UNovaAssetDescription
-{
-	GENERATED_BODY()
-
-public:
-	// Type of cargo hold that will be required for this resource
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	ENovaCargoType CargoType = ENovaCargoType::Bulk;
 };

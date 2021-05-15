@@ -51,7 +51,7 @@ struct FNovaSpacecraftCargo
 	{}
 
 	UPROPERTY()
-	const UNovaResourceDescription* Resource;
+	const UNovaResource* Resource;
 
 	UPROPERTY()
 	float Amount;
