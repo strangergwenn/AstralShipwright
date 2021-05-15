@@ -1,10 +1,8 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaCaptureActor.h"
-#include "NovaSpacecraftPawn.h"
-
-#include "Nova/Actor/NovaStaticMeshComponent.h"
-#include "Nova/Actor/NovaSkeletalMeshComponent.h"
+#include "NovaStaticMeshComponent.h"
+#include "NovaSkeletalMeshComponent.h"
 
 #include "Nova/Game/NovaGameTypes.h"
 #include "Nova/System/NovaAssetManager.h"
@@ -17,7 +15,6 @@
 #if WITH_EDITOR
 
 #include "Engine/TextureRenderTarget2D.h"
-#include "Engine/StaticMeshActor.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "AssetRegistryModule.h"
 #include "ObjectTools.h"
@@ -35,7 +32,6 @@
 ANovaCaptureActor::ANovaCaptureActor()
 	: Super()
 #if WITH_EDITORONLY_DATA
-	, SpacecraftPawn(nullptr)
 	, AssetManager(nullptr)
 #endif    // WITH_EDITORONLY_DATA
 {
@@ -103,47 +99,13 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 		ScreenshotPath.InsertAt(SeparatorIndex + 1, TEXT("T_"));
 	}
 
-	// Define the content to load
-	if (Asset->IsA<UNovaCompartmentDescription>())
-	{
-		CreateSpacecraft();
-
-		Spacecraft->Compartments.Add(FNovaCompartment(Cast<UNovaCompartmentDescription>(Asset)));
-	}
-	else if (Asset->IsA<UNovaModuleDescription>())
-	{
-		CreateSpacecraft();
-
-		FNovaCompartment Compartment(EmptyCompartmentDescription);
-		Compartment.Modules[0].Description = Cast<UNovaModuleDescription>(Asset);
-		Spacecraft->Compartments.Add(Compartment);
-	}
-	else if (Asset->IsA<UNovaEquipmentDescription>())
-	{
-		CreateSpacecraft();
-
-		FNovaCompartment Compartment(EmptyCompartmentDescription);
-		Compartment.Equipments[0] = Cast<UNovaEquipmentDescription>(Asset);
-		Spacecraft->Compartments.Add(Compartment);
-	}
-	else if (Asset->IsA<UNovaResource>())
-	{
-		CreateMeshActor();
-
-		const UNovaResource* Resource = Cast<UNovaResource>(Asset);
-		MeshActor->GetStaticMeshComponent()->SetStaticMesh(Resource->ResourceMesh);
-		MeshActor->GetStaticMeshComponent()->SetMaterial(0, Resource->ResourceMaterial);
-	}
-
-	// Set up the scene
-	if (SpacecraftPawn)
-	{
-		SpacecraftPawn->SetSpacecraft(Spacecraft.Get());
-		SpacecraftPawn->UpdateAssembly();
-	}
+	// Create the actor
+	const FNovaAssetPreviewSettings& Settings = Asset->GetPreviewSettings();
+	CreateActor(Settings.Class);
+	Asset->ConfigurePreviewActor(PreviewActor);
 
 	// Proceed with the screenshot
-	PlaceCamera();
+	ConfigureScene(Settings.RequireCustomPrimitives, Settings.UsePowerfulLight);
 	CameraCapture->CaptureScene();
 	UTexture2D* AssetRenderTexture = SaveTexture(ScreenshotPath);
 	AssetRender.SetResourceObject(AssetRenderTexture);
@@ -151,33 +113,20 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 
 	// Clean up
 	Asset->MarkPackageDirty();
-	TargetActor->Destroy();
+	PreviewActor->Destroy();
 
 #endif    // WITH_EDITOR
 }
 
 #if WITH_EDITOR
 
-void ANovaCaptureActor::CreateSpacecraft()
+void ANovaCaptureActor::CreateActor(TSubclassOf<AActor> ActorClass)
 {
-	Spacecraft = MakeShared<FNovaSpacecraft>();
+	PreviewActor = Cast<AActor>(GetWorld()->SpawnActor(ActorClass));
+	NCHECK(PreviewActor);
 
-	SpacecraftPawn = Cast<ANovaSpacecraftPawn>(GetWorld()->SpawnActor(ANovaSpacecraftPawn::StaticClass()));
-	NCHECK(SpacecraftPawn);
-	SpacecraftPawn->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-	SpacecraftPawn->SetImmediateMode(true);
-
-	TargetActor = SpacecraftPawn;
-}
-
-void ANovaCaptureActor::CreateMeshActor()
-{
-	MeshActor = Cast<AStaticMeshActor>(GetWorld()->SpawnActor(AStaticMeshActor::StaticClass()));
-	NCHECK(MeshActor);
-	MeshActor->SetActorLocation(GetActorLocation());
-	MeshActor->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-
-	TargetActor = MeshActor;
+	PreviewActor->SetActorLocation(GetActorLocation());
+	PreviewActor->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 }
 
 void ANovaCaptureActor::CreateAssetManager()
@@ -204,23 +153,22 @@ void ANovaCaptureActor::CreateRenderTarget()
 	CameraCapture->TextureTarget = RenderTarget;
 }
 
-void ANovaCaptureActor::PlaceCamera()
+void ANovaCaptureActor::ConfigureScene(bool RequireCustomPrimitives, bool UsePowerfulLight)
 {
 	FVector CurrentOrigin = FVector::ZeroVector;
 	FVector CurrentExtent = FVector::ZeroVector;
 
-	NCHECK(TargetActor);
-	bool IsSpacecraft = TargetActor == SpacecraftPawn;
+	NCHECK(PreviewActor);
 
 	// Compute bounds
 	FBox Bounds(ForceInit);
-	TargetActor->ForEachComponent<UPrimitiveComponent>(false,
+	PreviewActor->ForEachComponent<UPrimitiveComponent>(false,
 		[&](const UPrimitiveComponent* Prim)
 		{
 			if (Prim->IsRegistered())
 			{
 				bool IsValidPrimitive = Prim->IsA<UStaticMeshComponent>() || Prim->IsA<USkeletalMeshComponent>();
-				if (IsSpacecraft)
+				if (RequireCustomPrimitives)
 				{
 					IsValidPrimitive = Prim->IsA<UNovaStaticMeshComponent>() || Prim->IsA<UNovaSkeletalMeshComponent>();
 				}
@@ -243,10 +191,10 @@ void ANovaCaptureActor::PlaceCamera()
 	CameraCapture->SetRelativeLocation(ProjectedOffset);
 
 	// Set lights
-	TargetActor->ForEachComponent<USpotLightComponent>(false,
+	PreviewActor->ForEachComponent<USpotLightComponent>(false,
 		[&](USpotLightComponent* SpotLight)
 		{
-			SpotLight->SetLightBrightness(IsSpacecraft ? 10000000 : 100000);
+			SpotLight->SetLightBrightness(UsePowerfulLight ? 10000000 : 100000);
 		});
 }
 

@@ -8,7 +8,7 @@
 #include "NovaCaptureActor.generated.h"
 
 /** Camera control pawn for the factory view */
-UCLASS(Config = Game, ClassGroup = (Nova))
+UCLASS(ClassGroup = (Nova))
 class ANovaCaptureActor : public AActor
 {
 	GENERATED_BODY()
@@ -26,11 +26,8 @@ public:
 protected:
 #if WITH_EDITOR
 
-	/** Spawn the assembly */
-	void CreateSpacecraft();
-
-	/** Spawn the mesh viewer */
-	void CreateMeshActor();
+	/** Spawn the preview actor */
+	void CreateActor(TSubclassOf<AActor> ActorClass);
 
 	/** Get a catalog instance if not already existing */
 	void CreateAssetManager();
@@ -38,8 +35,8 @@ protected:
 	/** Spawn a new render target */
 	void CreateRenderTarget();
 
-	/** Set the camera to a better location */
-	void PlaceCamera();
+	/** Set the camera to the ideal location */
+	void ConfigureScene(bool RequireCustomPrimitives, bool UsePowerfulLight);
 
 	/** Save the render target to a texture */
 	class UTexture2D* SaveTexture(FString TextureName);
@@ -56,10 +53,6 @@ protected:
 #if WITH_EDITORONLY_DATA
 
 public:
-	// Empty compartment kit
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	class UNovaCompartmentDescription* EmptyCompartmentDescription;
-
 	// Upscale factor to apply to rendering
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	int32 RenderUpscaleFactor;
@@ -86,17 +79,9 @@ protected:
 	    Data
 	----------------------------------------------------*/
 
-	// Spacecraft pawn
+	// Preview actor
 	UPROPERTY()
-	class ANovaSpacecraftPawn* SpacecraftPawn;
-
-	// Simple mesh
-	UPROPERTY()
-	class AStaticMeshActor* MeshActor;
-
-	// Simple mesh
-	UPROPERTY()
-	class AActor* TargetActor;
+	class AActor* PreviewActor;
 
 	// Asset manager
 	UPROPERTY(Transient)
@@ -105,9 +90,6 @@ protected:
 	// Render target used for rendering the assets
 	UPROPERTY(Transient)
 	class UTextureRenderTarget2D* RenderTarget;
-
-	// General data
-	TSharedPtr<struct FNovaSpacecraft> Spacecraft;
 
 #endif    // WITH_EDITORONLY_DATA
 };

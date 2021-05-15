@@ -77,10 +77,12 @@ protected:
 };
 
 /** Main assembly actor that allows building boats */
-UCLASS(Config = Game, ClassGroup = (Nova))
+UCLASS(ClassGroup = (Nova))
 class ANovaSpacecraftPawn : public ANovaTurntablePawn
 {
-	friend class ANovaCaptureActor;
+	friend class UNovaCompartmentDescription;
+	friend class UNovaModuleDescription;
+	friend class UNovaEquipmentDescription;
 
 	GENERATED_BODY()
 
@@ -299,6 +301,15 @@ protected:
 
 	/** Update the bounds */
 	void UpdateBounds();
+
+	/*----------------------------------------------------
+	    Properties
+	----------------------------------------------------*/
+
+public:
+	/** Empty compartment kit */
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	class UNovaCompartmentDescription* EmptyCompartmentDescription;
 
 	/*----------------------------------------------------
 	    Components

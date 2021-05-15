@@ -262,6 +262,10 @@ public:
 		return Enabled ? ConnectionWiring : nullptr;
 	}
 
+	virtual FNovaAssetPreviewSettings GetPreviewSettings() const override;
+
+	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
+
 	TArray<FText> GetDescription() const override;
 
 public:
@@ -331,6 +335,10 @@ class UNovaModuleDescription : public UNovaAssetDescription
 public:
 	/** Get the appropriate bulkhead mesh */
 	TSoftObjectPtr<class UStaticMesh> GetBulkhead(ENovaBulkheadType Style, bool Forward) const;
+
+	virtual FNovaAssetPreviewSettings GetPreviewSettings() const override;
+
+	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
 
 	TArray<FText> GetDescription() const override;
 
@@ -416,14 +424,18 @@ public:
 	/** Get the mesh for this equipment */
 	TSoftObjectPtr<UObject> GetMesh() const;
 
-	TArray<FText> GetDescription() const override;
-
 	virtual TArray<FSoftObjectPath> GetAsyncAssets() const override
 	{
 		TArray<FSoftObjectPath> Result = Super::GetAsyncAssets();
 		Result.Append(AdditionalComponent.GetAsyncAssets());
 		return Result;
 	}
+
+	virtual FNovaAssetPreviewSettings GetPreviewSettings() const override;
+
+	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
+
+	TArray<FText> GetDescription() const override;
 
 public:
 	// Animated equipment variant

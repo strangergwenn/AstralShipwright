@@ -1,16 +1,42 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaGameTypes.h"
-#include "Nova/Spacecraft/NovaCaptureActor.h"
+#include "Nova/Actor/NovaCaptureActor.h"
 #include "Nova/System/NovaAssetManager.h"
 #include "Nova/Nova.h"
 
 #include "Engine/Engine.h"
+#include "Engine/StaticMeshActor.h"
 #include "Dom/JsonObject.h"
+
+/*----------------------------------------------------
+    General purpose types
+----------------------------------------------------*/
+
+FText INovaDescriptibleInterface::GetFormattedDescription(FString Delimiter) const
+{
+	FString Result;
+
+	for (const FText& Text : GetDescription())
+	{
+		if (Result.Len() > 0)
+		{
+			Result += Delimiter;
+		}
+
+		Result += Text.ToString();
+	}
+
+	return FText::FromString(Result);
+}
 
 /*----------------------------------------------------
     Asset description
 ----------------------------------------------------*/
+
+FNovaAssetPreviewSettings::FNovaAssetPreviewSettings()
+	: Class(AStaticMeshActor::StaticClass()), RequireCustomPrimitives(false), UsePowerfulLight(false)
+{}
 
 void UNovaAssetDescription::UpdateAssetRender()
 {
@@ -61,19 +87,15 @@ const UNovaAssetDescription* UNovaAssetDescription::LoadAsset(TSharedPtr<FJsonOb
 	return Asset;
 };
 
-FText INovaDescriptibleInterface::GetFormattedDescription(FString Delimiter) const
+/*----------------------------------------------------
+    Resources
+----------------------------------------------------*/
+
+void UNovaResource::ConfigurePreviewActor(class AActor* Actor) const
 {
-	FString Result;
+	NCHECK(Actor->GetClass() == AStaticMeshActor::StaticClass());
 
-	for (const FText& Text : GetDescription())
-	{
-		if (Result.Len() > 0)
-		{
-			Result += Delimiter;
-		}
-
-		Result += Text.ToString();
-	}
-
-	return FText::FromString(Result);
+	AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor);
+	MeshActor->GetStaticMeshComponent()->SetStaticMesh(ResourceMesh);
+	MeshActor->GetStaticMeshComponent()->SetMaterial(0, ResourceMaterial);
 }

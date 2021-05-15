@@ -1,6 +1,8 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaSpacecraftTypes.h"
+#include "NovaSpacecraftPawn.h"
+#include "Nova/Game/NovaGameMode.h"
 
 #define LOCTEXT_NAMESPACE "NovaSpacecraftTypes"
 
@@ -76,6 +78,30 @@ TArray<const FNovaEquipmentSlot*> UNovaCompartmentDescription::GetGroupedEquipme
 	return GroupedSlots;
 }
 
+FNovaAssetPreviewSettings UNovaCompartmentDescription::GetPreviewSettings() const
+{
+	FNovaAssetPreviewSettings Settings;
+
+	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
+	Settings.RequireCustomPrimitives = true;
+	Settings.UsePowerfulLight        = true;
+
+	return Settings;
+}
+
+void UNovaCompartmentDescription::ConfigurePreviewActor(AActor* Actor) const
+{
+	NCHECK(Actor->GetClass() == ANovaSpacecraftPawn::StaticClass());
+
+	TSharedPtr<FNovaSpacecraft> Spacecraft = MakeShared<FNovaSpacecraft>();
+	Spacecraft->Compartments.Add(FNovaCompartment(this));
+
+	ANovaSpacecraftPawn* SpacecraftPawn = Cast<ANovaSpacecraftPawn>(Actor);
+	SpacecraftPawn->SetImmediateMode(true);
+	SpacecraftPawn->SetSpacecraft(Spacecraft.Get());
+	SpacecraftPawn->UpdateAssembly();
+}
+
 TArray<FText> UNovaCompartmentDescription::GetDescription() const
 {
 	TArray<FText> Result = Super::GetDescription();
@@ -114,6 +140,32 @@ TSoftObjectPtr<class UStaticMesh> UNovaModuleDescription::GetBulkhead(ENovaBulkh
 	}
 }
 
+FNovaAssetPreviewSettings UNovaModuleDescription::GetPreviewSettings() const
+{
+	FNovaAssetPreviewSettings Settings;
+
+	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
+	Settings.RequireCustomPrimitives = true;
+	Settings.UsePowerfulLight        = true;
+
+	return Settings;
+}
+
+void UNovaModuleDescription::ConfigurePreviewActor(AActor* Actor) const
+{
+	NCHECK(Actor->GetClass() == ANovaSpacecraftPawn::StaticClass());
+	ANovaSpacecraftPawn* SpacecraftPawn = Cast<ANovaSpacecraftPawn>(Actor);
+
+	TSharedPtr<FNovaSpacecraft> Spacecraft = MakeShared<FNovaSpacecraft>();
+	FNovaCompartment            Compartment(SpacecraftPawn->EmptyCompartmentDescription);
+	Compartment.Modules[0].Description = this;
+	Spacecraft->Compartments.Add(Compartment);
+
+	SpacecraftPawn->SetImmediateMode(true);
+	SpacecraftPawn->SetSpacecraft(Spacecraft.Get());
+	SpacecraftPawn->UpdateAssembly();
+}
+
 TArray<FText> UNovaModuleDescription::GetDescription() const
 {
 	TArray<FText> Result = Super::GetDescription();
@@ -123,6 +175,10 @@ TArray<FText> UNovaModuleDescription::GetDescription() const
 
 	return Result;
 }
+
+/*----------------------------------------------------
+    Module subclasses
+----------------------------------------------------*/
 
 TArray<FText> UNovaPropellantModuleDescription::GetDescription() const
 {
@@ -165,6 +221,32 @@ TSoftObjectPtr<UObject> UNovaEquipmentDescription::GetMesh() const
 	}
 }
 
+FNovaAssetPreviewSettings UNovaEquipmentDescription::GetPreviewSettings() const
+{
+	FNovaAssetPreviewSettings Settings;
+
+	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
+	Settings.RequireCustomPrimitives = true;
+	Settings.UsePowerfulLight        = true;
+
+	return Settings;
+}
+
+void UNovaEquipmentDescription::ConfigurePreviewActor(AActor* Actor) const
+{
+	NCHECK(Actor->GetClass() == ANovaSpacecraftPawn::StaticClass());
+	ANovaSpacecraftPawn* SpacecraftPawn = Cast<ANovaSpacecraftPawn>(Actor);
+
+	TSharedPtr<FNovaSpacecraft> Spacecraft = MakeShared<FNovaSpacecraft>();
+	FNovaCompartment            Compartment(SpacecraftPawn->EmptyCompartmentDescription);
+	Compartment.Equipments[0] = this;
+	Spacecraft->Compartments.Add(Compartment);
+
+	SpacecraftPawn->SetImmediateMode(true);
+	SpacecraftPawn->SetSpacecraft(Spacecraft.Get());
+	SpacecraftPawn->UpdateAssembly();
+}
+
 TArray<FText> UNovaEquipmentDescription::GetDescription() const
 {
 	TArray<FText> Result = Super::GetDescription();
@@ -174,6 +256,10 @@ TArray<FText> UNovaEquipmentDescription::GetDescription() const
 
 	return Result;
 }
+
+/*----------------------------------------------------
+    Equipment subclasses
+----------------------------------------------------*/
 
 TArray<FText> UNovaEngineDescription::GetDescription() const
 {

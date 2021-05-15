@@ -190,6 +190,16 @@ static FNovaTime operator/(const double Value, const FNovaTime Time)
     Description types
 ----------------------------------------------------*/
 
+struct FNovaAssetPreviewSettings
+{
+	FNovaAssetPreviewSettings();
+
+	TSubclassOf<class AActor> Class;
+
+	bool RequireCustomPrimitives;
+	bool UsePowerfulLight;
+};
+
 /** Component description */
 UCLASS(ClassGroup = (Nova))
 class UNovaAssetDescription
@@ -227,6 +237,16 @@ public:
 		return Result;
 	}
 
+	/** Get the desired display settings when taking shots of this asset */
+	virtual FNovaAssetPreviewSettings GetPreviewSettings() const
+	{
+		return FNovaAssetPreviewSettings();
+	}
+
+	/** Configure the target actor for taking shots of this asset */
+	virtual void ConfigurePreviewActor(class AActor* Actor) const
+	{}
+
 public:
 	// Identifier
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
@@ -263,6 +283,8 @@ UCLASS(ClassGroup = (Nova))
 class UNovaResource : public UNovaAssetDescription
 {
 	GENERATED_BODY()
+
+	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
 
 public:
 	// Type of cargo hold that will be required for this resource
