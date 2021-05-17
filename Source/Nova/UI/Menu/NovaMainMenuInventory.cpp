@@ -10,9 +10,13 @@
 
 #include "Nova/System/NovaMenuManager.h"
 #include "Nova/Player/NovaPlayerController.h"
+
+#include "Nova/UI/Widget/NovaFadingWidget.h"
+
 #include "Nova/Nova.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
+#include "Widgets/Layout/SScaleBox.h"
 
 #define LOCTEXT_NAMESPACE "SNovaMainMenuInventory"
 
@@ -74,6 +78,47 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 				//.HelpText()
 				//.Enabled(this, &SNovaMainMenuAssembly::IsSelectCompartmentEnabled, Index)
 				//.OnClicked(this, &SNovaMainMenuAssembly::OnCompartmentSelected, Index)
+				.Content()
+				[
+					SNew(SOverlay)
+
+					// Resource picture
+					+ SOverlay::Slot()
+					[
+						SNew(SScaleBox)
+						.Stretch(EStretch::ScaleToFill)
+						[
+							SNew(SNovaImage)
+							.Image(FNovaImageGetter::CreateLambda([=]() -> const FSlateBrush*
+							{
+								if (IsValid(SpacecraftPawn) && Index >= 0 && Index < SpacecraftPawn->GetCompartmentCount())
+								{
+									const FNovaCompartment& Compartment    = SpacecraftPawn->GetCompartment(Index);
+									if (IsValid(Compartment.Description))
+									{
+										return &Compartment.Description->AssetRender;
+									}
+								}
+
+								return nullptr;
+							}))
+						]
+					]
+
+					// Compartment index
+					+ SOverlay::Slot()
+					.VAlign(VAlign_Top)
+					[
+						SNew(SBorder)
+						.BorderImage(&Theme.MainMenuGenericBackground)
+						.Padding(Theme.ContentPadding)
+						[
+							SNew(STextBlock)
+							.Text(FText::AsNumber(Index + 1))
+							.TextStyle(&Theme.MainFont)
+						]
+					]
+				]
 			];
 		}
 	};
