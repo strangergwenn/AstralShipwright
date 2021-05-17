@@ -36,7 +36,7 @@ protected:
 	void CreateRenderTarget();
 
 	/** Set the camera to the ideal location */
-	void ConfigureScene(bool RequireCustomPrimitives, bool UsePowerfulLight);
+	void ConfigureScene(bool RequireCustomPrimitives, bool UsePowerfulLight, float Scale);
 
 	/** Save the render target to a texture */
 	class UTexture2D* SaveTexture(FString TextureName);

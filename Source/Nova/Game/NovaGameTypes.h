@@ -196,8 +196,9 @@ struct FNovaAssetPreviewSettings
 
 	TSubclassOf<class AActor> Class;
 
-	bool RequireCustomPrimitives;
-	bool UsePowerfulLight;
+	bool  RequireCustomPrimitives;
+	bool  UsePowerfulLight;
+	float Scale;
 };
 
 /** Component description */
@@ -284,6 +285,8 @@ class UNovaResource : public UNovaAssetDescription
 {
 	GENERATED_BODY()
 
+	virtual FNovaAssetPreviewSettings GetPreviewSettings() const override;
+
 	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
 
 public:
@@ -292,6 +295,10 @@ public:
 	ENovaResourceType CargoType = ENovaResourceType::Bulk;
 
 #if WITH_EDITORONLY_DATA
+
+	// Preview scale for the resource render
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	float PreviewScale = 4.25f;
 
 	// Mesh to use to render the resource
 	UPROPERTY(Category = Properties, EditDefaultsOnly)

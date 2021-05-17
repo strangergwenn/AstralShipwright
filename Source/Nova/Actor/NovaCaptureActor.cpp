@@ -105,7 +105,7 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 	Asset->ConfigurePreviewActor(PreviewActor);
 
 	// Proceed with the screenshot
-	ConfigureScene(Settings.RequireCustomPrimitives, Settings.UsePowerfulLight);
+	ConfigureScene(Settings.RequireCustomPrimitives, Settings.UsePowerfulLight, Settings.Scale);
 	CameraCapture->CaptureScene();
 	UTexture2D* AssetRenderTexture = SaveTexture(ScreenshotPath);
 	AssetRender.SetResourceObject(AssetRenderTexture);
@@ -153,7 +153,7 @@ void ANovaCaptureActor::CreateRenderTarget()
 	CameraCapture->TextureTarget = RenderTarget;
 }
 
-void ANovaCaptureActor::ConfigureScene(bool RequireCustomPrimitives, bool UsePowerfulLight)
+void ANovaCaptureActor::ConfigureScene(bool RequireCustomPrimitives, bool UsePowerfulLight, float Scale)
 {
 	FVector CurrentOrigin = FVector::ZeroVector;
 	FVector CurrentExtent = FVector::ZeroVector;
@@ -189,12 +189,13 @@ void ANovaCaptureActor::ConfigureScene(bool RequireCustomPrimitives, bool UsePow
 	// Apply offset
 	CameraArmComponent->SetRelativeLocation(FVector(CurrentOrigin.X, 0, 0));
 	CameraCapture->SetRelativeLocation(ProjectedOffset);
+	PreviewActor->SetActorScale3D(Scale * FVector(1.0f, 1.0f, 1.0f));
 
 	// Set lights
 	PreviewActor->ForEachComponent<USpotLightComponent>(false,
 		[&](USpotLightComponent* SpotLight)
 		{
-			SpotLight->SetLightBrightness(UsePowerfulLight ? 10000000 : 100000);
+			SpotLight->SetLightBrightness(UsePowerfulLight ? 10000000 : 500000);
 		});
 }
 
