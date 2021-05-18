@@ -190,17 +190,6 @@ static FNovaTime operator/(const double Value, const FNovaTime Time)
     Description types
 ----------------------------------------------------*/
 
-struct FNovaAssetPreviewSettings
-{
-	FNovaAssetPreviewSettings();
-
-	TSubclassOf<class AActor> Class;
-
-	bool  RequireCustomPrimitives;
-	bool  UsePowerfulLight;
-	float Scale;
-};
-
 /** Component description */
 UCLASS(ClassGroup = (Nova))
 class UNovaAssetDescription
@@ -239,10 +228,7 @@ public:
 	}
 
 	/** Get the desired display settings when taking shots of this asset */
-	virtual FNovaAssetPreviewSettings GetPreviewSettings() const
-	{
-		return FNovaAssetPreviewSettings();
-	}
+	virtual struct FNovaAssetPreviewSettings GetPreviewSettings() const;
 
 	/** Configure the target actor for taking shots of this asset */
 	virtual void ConfigurePreviewActor(class AActor* Actor) const
@@ -285,7 +271,7 @@ class UNovaResource : public UNovaAssetDescription
 {
 	GENERATED_BODY()
 
-	virtual FNovaAssetPreviewSettings GetPreviewSettings() const override;
+	virtual struct FNovaAssetPreviewSettings GetPreviewSettings() const override;
 
 	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
 
@@ -296,10 +282,6 @@ public:
 
 #if WITH_EDITORONLY_DATA
 
-	// Preview scale for the resource render
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	float PreviewScale = 4.25f;
-
 	// Mesh to use to render the resource
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	class UStaticMesh* ResourceMesh;
@@ -307,6 +289,18 @@ public:
 	// Material to use to render the resource
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	class UMaterialInterface* ResourceMaterial;
+
+	// Preview offset for the resource render, in units
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	FVector PreviewOffset = FVector(25.0f, -25.0f, 0.0f);
+
+	// Preview rotation for the resource render
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	FRotator PreviewRotation = FRotator::ZeroRotator;
+
+	// Preview scale for the resource render
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	float PreviewScale = 4.25f;
 
 #endif    // WITH_EDITORONLY_DATA
 };

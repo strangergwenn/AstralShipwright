@@ -7,6 +7,20 @@
 
 #include "NovaCaptureActor.generated.h"
 
+/** Asset capture settings **/
+struct FNovaAssetPreviewSettings
+{
+	FNovaAssetPreviewSettings();
+
+	TSubclassOf<class AActor> Class;
+
+	bool     RequireCustomPrimitives;
+	bool     UsePowerfulLight;
+	FVector  Offset;
+	FRotator Rotation;
+	float    Scale;
+};
+
 /** Camera control pawn for the factory view */
 UCLASS(ClassGroup = (Nova))
 class ANovaCaptureActor : public AActor
@@ -36,7 +50,7 @@ protected:
 	void CreateRenderTarget();
 
 	/** Set the camera to the ideal location */
-	void ConfigureScene(bool RequireCustomPrimitives, bool UsePowerfulLight, float Scale);
+	void ConfigureScene(const struct FNovaAssetPreviewSettings& Settings);
 
 	/** Save the render target to a texture */
 	class UTexture2D* SaveTexture(FString TextureName);

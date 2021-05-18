@@ -2,6 +2,7 @@
 
 #include "NovaSpacecraftTypes.h"
 #include "NovaSpacecraftPawn.h"
+#include "Nova/Actor/NovaCaptureActor.h"
 #include "Nova/Game/NovaGameMode.h"
 
 #define LOCTEXT_NAMESPACE "NovaSpacecraftTypes"

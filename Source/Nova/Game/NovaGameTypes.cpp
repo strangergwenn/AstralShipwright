@@ -34,10 +34,6 @@ FText INovaDescriptibleInterface::GetFormattedDescription(FString Delimiter) con
     Asset description
 ----------------------------------------------------*/
 
-FNovaAssetPreviewSettings::FNovaAssetPreviewSettings()
-	: Class(AStaticMeshActor::StaticClass()), RequireCustomPrimitives(false), UsePowerfulLight(false), Scale(1.0f)
-{}
-
 void UNovaAssetDescription::UpdateAssetRender()
 {
 #if WITH_EDITOR
@@ -87,6 +83,11 @@ const UNovaAssetDescription* UNovaAssetDescription::LoadAsset(TSharedPtr<FJsonOb
 	return Asset;
 };
 
+struct FNovaAssetPreviewSettings UNovaAssetDescription::GetPreviewSettings() const
+{
+	return FNovaAssetPreviewSettings();
+}
+
 /*----------------------------------------------------
     Resources
 ----------------------------------------------------*/
@@ -95,7 +96,9 @@ FNovaAssetPreviewSettings UNovaResource::GetPreviewSettings() const
 {
 	FNovaAssetPreviewSettings Settings;
 
-	Settings.Scale = PreviewScale;
+	Settings.Offset   = PreviewOffset;
+	Settings.Rotation = PreviewRotation;
+	Settings.Scale    = PreviewScale;
 
 	return Settings;
 }

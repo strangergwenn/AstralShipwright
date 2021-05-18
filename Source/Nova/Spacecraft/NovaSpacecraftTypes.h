@@ -262,7 +262,7 @@ public:
 		return Enabled ? ConnectionWiring : nullptr;
 	}
 
-	virtual FNovaAssetPreviewSettings GetPreviewSettings() const override;
+	virtual struct FNovaAssetPreviewSettings GetPreviewSettings() const override;
 
 	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
 

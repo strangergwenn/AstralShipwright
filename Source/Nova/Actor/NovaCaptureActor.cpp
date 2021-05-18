@@ -11,6 +11,7 @@
 
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Engine/StaticMeshActor.h"
 
 #if WITH_EDITOR
 
@@ -26,8 +27,17 @@
 #define LOCTEXT_NAMESPACE "ANovaCaptureActor"
 
 /*----------------------------------------------------
-    Constructor
+    Constructors
 ----------------------------------------------------*/
+
+FNovaAssetPreviewSettings::FNovaAssetPreviewSettings()
+	: Class(AStaticMeshActor::StaticClass())
+	, RequireCustomPrimitives(false)
+	, UsePowerfulLight(false)
+	, Offset(FVector::ZeroVector)
+	, Rotation(FRotator::ZeroRotator)
+	, Scale(1.0f)
+{}
 
 ANovaCaptureActor::ANovaCaptureActor()
 	: Super()
@@ -105,7 +115,7 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 	Asset->ConfigurePreviewActor(PreviewActor);
 
 	// Proceed with the screenshot
-	ConfigureScene(Settings.RequireCustomPrimitives, Settings.UsePowerfulLight, Settings.Scale);
+	ConfigureScene(Settings);
 	CameraCapture->CaptureScene();
 	UTexture2D* AssetRenderTexture = SaveTexture(ScreenshotPath);
 	AssetRender.SetResourceObject(AssetRenderTexture);
@@ -125,7 +135,6 @@ void ANovaCaptureActor::CreateActor(TSubclassOf<AActor> ActorClass)
 	PreviewActor = Cast<AActor>(GetWorld()->SpawnActor(ActorClass));
 	NCHECK(PreviewActor);
 
-	PreviewActor->SetActorLocation(GetActorLocation());
 	PreviewActor->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 }
 
@@ -153,7 +162,7 @@ void ANovaCaptureActor::CreateRenderTarget()
 	CameraCapture->TextureTarget = RenderTarget;
 }
 
-void ANovaCaptureActor::ConfigureScene(bool RequireCustomPrimitives, bool UsePowerfulLight, float Scale)
+void ANovaCaptureActor::ConfigureScene(const FNovaAssetPreviewSettings& Settings)
 {
 	FVector CurrentOrigin = FVector::ZeroVector;
 	FVector CurrentExtent = FVector::ZeroVector;
@@ -168,7 +177,7 @@ void ANovaCaptureActor::ConfigureScene(bool RequireCustomPrimitives, bool UsePow
 			if (Prim->IsRegistered())
 			{
 				bool IsValidPrimitive = Prim->IsA<UStaticMeshComponent>() || Prim->IsA<USkeletalMeshComponent>();
-				if (RequireCustomPrimitives)
+				if (Settings.RequireCustomPrimitives)
 				{
 					IsValidPrimitive = Prim->IsA<UNovaStaticMeshComponent>() || Prim->IsA<UNovaSkeletalMeshComponent>();
 				}
@@ -189,13 +198,15 @@ void ANovaCaptureActor::ConfigureScene(bool RequireCustomPrimitives, bool UsePow
 	// Apply offset
 	CameraArmComponent->SetRelativeLocation(FVector(CurrentOrigin.X, 0, 0));
 	CameraCapture->SetRelativeLocation(ProjectedOffset);
-	PreviewActor->SetActorScale3D(Scale * FVector(1.0f, 1.0f, 1.0f));
+	PreviewActor->SetActorLocation(GetActorLocation() + Settings.Offset);
+	PreviewActor->SetActorRelativeRotation(Settings.Rotation);
+	PreviewActor->SetActorScale3D(Settings.Scale * FVector(1.0f, 1.0f, 1.0f));
 
 	// Set lights
 	PreviewActor->ForEachComponent<USpotLightComponent>(false,
 		[&](USpotLightComponent* SpotLight)
 		{
-			SpotLight->SetLightBrightness(UsePowerfulLight ? 10000000 : 500000);
+			SpotLight->SetLightBrightness(Settings.UsePowerfulLight ? 10000000 : 500000);
 		});
 }
 
