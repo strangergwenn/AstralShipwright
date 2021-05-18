@@ -42,8 +42,9 @@ SNovaMainMenuAssembly::SNovaMainMenuAssembly()
 void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 {
 	// Data
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	MenuManager                 = InArgs._MenuManager;
+	const FNovaMainTheme&  Theme                 = FNovaStyleSet::GetMainTheme();
+	const FNovaButtonSize& CompartmentButtonSize = FNovaStyleSet::GetButtonSize("CompartmentButtonSize");
+	MenuManager                                  = InArgs._MenuManager;
 
 	// Parent constructor
 	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
@@ -82,7 +83,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						[
 							// Hack : prevent layout issues when iterating quickly on entries
 							SNew(SBox)
-							.MinDesiredWidth((ENovaConstants::MaxModuleCount + ENovaConstants::MaxEquipmentCount) * 1.2 * FNovaStyleSet::GetButtonSize("CompartmentButtonSize").Width)
+							.MinDesiredWidth((ENovaConstants::MaxModuleCount + ENovaConstants::MaxEquipmentCount + 1) * CompartmentButtonSize.Width + CompartmentButtonSize.UserAnimationSize.X)
 							[
 								SNew(SHorizontalBox)
 
@@ -255,7 +256,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						[
 							// Hack : prevent layout issues when iterating quickly on entries
 							SNew(SBox)
-							.MinDesiredWidth((ENovaConstants::MaxModuleCount + ENovaConstants::MaxEquipmentCount) * 1.2 * FNovaStyleSet::GetButtonSize("CompartmentButtonSize").Width)
+							.MinDesiredWidth((ENovaConstants::MaxModuleCount + ENovaConstants::MaxEquipmentCount + 1) * CompartmentButtonSize.Width + CompartmentButtonSize.UserAnimationSize.X)
 							[
 								SNew(SHorizontalBox)
 								
@@ -924,11 +925,11 @@ void SNovaMainMenuAssembly::Next()
 	if (!CompartmentPanelVisible)
 	{
 		if (SelectedCompartmentIndex != INDEX_NONE)
-		{
-			SetSelectedCompartment(FMath::Min(SelectedCompartmentIndex + 1, SpacecraftPawn->GetCompartmentCount() - 1));
+			{
+				SetSelectedCompartment(FMath::Min(SelectedCompartmentIndex + 1, SpacecraftPawn->GetCompartmentCount() - 1));
+			}
 		}
-	}
-	else
+		else
 	{
 		SetSelectedModuleOrEquipment(FMath::Min(SelectedModuleOrEquipmentIndex + 1, GetMaxCommonIndex()));
 	}
@@ -939,11 +940,11 @@ void SNovaMainMenuAssembly::Previous()
 	if (!CompartmentPanelVisible)
 	{
 		if (SelectedCompartmentIndex != INDEX_NONE)
-		{
-			SetSelectedCompartment(FMath::Max(SelectedCompartmentIndex - 1, 0));
+			{
+				SetSelectedCompartment(FMath::Max(SelectedCompartmentIndex - 1, 0));
+			}
 		}
-	}
-	else
+		else
 	{
 		SetSelectedModuleOrEquipment(FMath::Max(SelectedModuleOrEquipmentIndex - 1, 0));
 	}

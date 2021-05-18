@@ -248,6 +248,7 @@ protected:
 	int32 SelectedCompartmentIndex;
 	int32 EditedCompartmentIndex;
 	int32 SelectedModuleOrEquipmentIndex;
+	float TimeSinceLeftIndexChange;
 
 	// Compartment list
 	TArray<ENovaHullType>         HullTypeList;
