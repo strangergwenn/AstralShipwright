@@ -31,6 +31,10 @@
     Constructor
 ----------------------------------------------------*/
 
+SNovaMainMenuNavigation::SNovaMainMenuNavigation()
+	: PC(nullptr), GameState(nullptr), SpacecraftPawn(nullptr), OrbitalSimulation(nullptr), SelectedDestination(nullptr)
+{}
+
 void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 {
 	// Data

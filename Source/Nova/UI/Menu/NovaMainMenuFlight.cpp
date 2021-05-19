@@ -24,6 +24,9 @@
     Constructor
 ----------------------------------------------------*/
 
+SNovaMainMenuFlight::SNovaMainMenuFlight() : PC(nullptr), SpacecraftPawn(nullptr), SpacecraftMovement(nullptr), OrbitalSimulation(nullptr)
+{}
+
 void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 {
 	// Data

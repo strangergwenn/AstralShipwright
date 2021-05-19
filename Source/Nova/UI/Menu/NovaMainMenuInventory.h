@@ -25,8 +25,7 @@ class SNovaMainMenuInventory
 	SLATE_END_ARGS()
 
 public:
-	SNovaMainMenuInventory()
-	{}
+	SNovaMainMenuInventory();
 
 	void Construct(const FArguments& InArgs);
 

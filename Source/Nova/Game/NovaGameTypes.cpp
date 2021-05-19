@@ -96,18 +96,26 @@ FNovaAssetPreviewSettings UNovaResource::GetPreviewSettings() const
 {
 	FNovaAssetPreviewSettings Settings;
 
+#if WITH_EDITORONLY_DATA
+
 	Settings.Offset   = PreviewOffset;
 	Settings.Rotation = PreviewRotation;
 	Settings.Scale    = PreviewScale;
+
+#endif    // WITH_EDITORONLY_DATA
 
 	return Settings;
 }
 
 void UNovaResource::ConfigurePreviewActor(class AActor* Actor) const
 {
+#if WITH_EDITORONLY_DATA
+
 	NCHECK(Actor->GetClass() == AStaticMeshActor::StaticClass());
 
 	AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor);
 	MeshActor->GetStaticMeshComponent()->SetStaticMesh(ResourceMesh);
 	MeshActor->GetStaticMeshComponent()->SetMaterial(0, ResourceMaterial);
+
+#endif    // WITH_EDITORONLY_DATA
 }

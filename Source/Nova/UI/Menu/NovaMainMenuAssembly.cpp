@@ -31,7 +31,9 @@
 ----------------------------------------------------*/
 
 SNovaMainMenuAssembly::SNovaMainMenuAssembly()
-	: FadeDuration(ENovaUIConstants::FadeDurationShort)
+	: PC(nullptr)
+	, SpacecraftPawn(nullptr)
+	, FadeDuration(ENovaUIConstants::FadeDurationShort)
 	, CurrentFadeTime(ENovaUIConstants::FadeDurationShort)
 	, CompartmentPanelVisible(false)
 	, SelectedCompartmentIndex(INDEX_NONE)

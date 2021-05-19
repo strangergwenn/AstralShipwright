@@ -24,6 +24,9 @@
     Constructor
 ----------------------------------------------------*/
 
+SNovaMainMenuInventory::SNovaMainMenuInventory() : PC(nullptr), SpacecraftPawn(nullptr)
+{}
+
 void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 {
 	// Data

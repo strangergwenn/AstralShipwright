@@ -26,8 +26,7 @@ class SNovaMainMenuNavigation
 	SLATE_END_ARGS()
 
 public:
-	SNovaMainMenuNavigation() : SelectedDestination(nullptr)
-	{}
+	SNovaMainMenuNavigation();
 
 	void Construct(const FArguments& InArgs);
 

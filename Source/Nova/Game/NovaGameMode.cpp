@@ -60,21 +60,40 @@ void ANovaGameMode::InitGameState()
 void ANovaGameMode::StartPlay()
 {
 	NLOG("ANovaGameMode::StartPlay");
-	Super::StartPlay();
 
-	if (!Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMainMenuMap())
+	// Menu level
+	if (Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMainMenuMap())
+	{
+		Super::StartPlay();
+	}
+
+	// Game level
+	else
 	{
 		ANovaGameState* NovaGameState = GetGameState<ANovaGameState>();
 		NCHECK(IsValid(NovaGameState));
 		UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
 		NCHECK(GameInstance);
 
+#if WITH_EDITOR
+
+		// Ensure valid save data exists even if the game was loaded directly on a map (PIE server)
+		if (GetLocalRole() == ROLE_Authority && !GameInstance->HasSave())
+		{
+			GameInstance->LoadGame("1");
+		}
+
+#endif    // WITH_EDITOR
+
 		// Load the game world
-		if (NovaGameState->GetCurrentArea() == nullptr)
+		if (!IsValid(NovaGameState->GetCurrentArea()))
 		{
 			NCHECK(GameInstance->HasSave())
 			NovaGameState->Load(GameInstance->GetWorldSave());
 		}
+
+		// Start players
+		Super::StartPlay();
 
 		// Load the level
 		const UNovaArea* CurrentArea = NovaGameState->GetCurrentArea();

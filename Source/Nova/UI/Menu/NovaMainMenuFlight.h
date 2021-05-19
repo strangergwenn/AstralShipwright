@@ -25,8 +25,7 @@ class SNovaMainMenuFlight
 	SLATE_END_ARGS()
 
 public:
-	SNovaMainMenuFlight()
-	{}
+	SNovaMainMenuFlight();
 
 	void Construct(const FArguments& InArgs);
 
