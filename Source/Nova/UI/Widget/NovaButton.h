@@ -7,7 +7,7 @@
 #include "Widgets/Input/SButton.h"
 
 /** User callback type to alter the button size */
-DECLARE_DELEGATE_RetVal(bool, FNovaButtonUserSizeCondition);
+DECLARE_DELEGATE_RetVal(float, FNovaButtonUserSizeCallback);
 
 /** Animation state used by lists to seamlessly animate on refresh */
 struct FNovaButtonState
@@ -51,7 +51,7 @@ class SNovaButton : public SButton
 	SLATE_ATTRIBUTE(const FSlateBrush*, Icon)
 	SLATE_ARGUMENT(FName, Theme)
 	SLATE_ARGUMENT(FName, Size)
-	SLATE_ARGUMENT(FNovaButtonUserSizeCondition, UserSizeCallback)
+	SLATE_ARGUMENT(FNovaButtonUserSizeCallback, UserSizeCallback)
 	SLATE_ARGUMENT(float, BorderRotation)
 
 	SLATE_ATTRIBUTE(bool, Enabled)
@@ -211,10 +211,10 @@ protected:
 	float                                 WrapSize;
 
 	// Callbacks
-	FSimpleDelegate              OnFocused;
-	FSimpleDelegate              OnClicked;
-	FSimpleDelegate              OnDoubleClicked;
-	FNovaButtonUserSizeCondition UserSizeCallback;
+	FSimpleDelegate             OnFocused;
+	FSimpleDelegate             OnClicked;
+	FSimpleDelegate             OnDoubleClicked;
+	FNovaButtonUserSizeCallback UserSizeCallback;
 
 	// State
 	bool             Focused;

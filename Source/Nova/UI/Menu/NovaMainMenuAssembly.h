@@ -12,6 +12,61 @@
 enum class ENovaAssemblyDisplayFilter : uint8;
 enum class ENovaHullType : uint8;
 
+template <int Size>
+struct FNovaCarouselAnimation
+{
+	FNovaCarouselAnimation() : AnimationDuration(0.0f)
+	{}
+
+	FNovaCarouselAnimation(float Duration, float EaseValue)
+	{
+		Initialize(Duration, EaseValue);
+	}
+
+	void Initialize(float Duration, float EaseValue)
+	{
+		AnimationDuration = Duration;
+		AnimationEase     = EaseValue;
+		CurrentTotalAlpha = 1.0f;
+
+		FMemory::Memset(AlphaValues, 0, Size);
+		FMemory::Memset(InterpolatedAlphaValues, 0, Size);
+	}
+
+	void Update(int32 SelectedIndex, float DeltaTime)
+	{
+		NCHECK(AnimationDuration > 0);
+
+		CurrentTotalAlpha = 0.0f;
+		for (int32 Index = 0; Index < Size; Index++)
+		{
+			if (Index == SelectedIndex)
+			{
+				AlphaValues[Index] += DeltaTime / AnimationDuration;
+			}
+			else
+			{
+				AlphaValues[Index] -= DeltaTime / AnimationDuration;
+			}
+			AlphaValues[Index] = FMath::Clamp(AlphaValues[Index], 0.0f, 1.0f);
+
+			InterpolatedAlphaValues[Index] = FMath::InterpEaseInOut(0.0f, 1.0f, AlphaValues[Index], AnimationEase);
+			CurrentTotalAlpha += InterpolatedAlphaValues[Index];
+		}
+	}
+
+	float GetAlpha(int32 Index) const
+	{
+		return InterpolatedAlphaValues[Index] / CurrentTotalAlpha;
+	}
+
+	float AnimationDuration;
+	float AnimationEase;
+	float CurrentTotalAlpha;
+	float AlphaValues[Size];
+	float InterpolatedAlphaValues[Size];
+};
+
 class SNovaMainMenuAssembly
 	: public SNovaTabPanel
 	, public INovaGameMenu
@@ -249,6 +304,10 @@ protected:
 	int32 EditedCompartmentIndex;
 	int32 SelectedModuleOrEquipmentIndex;
 	float TimeSinceLeftIndexChange;
+
+	// Carousel animations
+	FNovaCarouselAnimation<ENovaConstants::MaxCompartmentCount>                                CompartmentAnimation;
+	FNovaCarouselAnimation<ENovaConstants::MaxModuleCount + ENovaConstants::MaxEquipmentCount> ModuleEquipmentAnimation;
 
 	// Compartment list
 	TArray<ENovaHullType>         HullTypeList;

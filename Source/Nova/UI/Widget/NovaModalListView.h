@@ -56,7 +56,7 @@ private:
 	SLATE_ARGUMENT(FName, ButtonSize)
 	SLATE_ARGUMENT(FName, ListButtonTheme)
 	SLATE_ARGUMENT(FName, ListButtonSize)
-	SLATE_ARGUMENT(FNovaButtonUserSizeCondition, UserSizeCallback)
+	SLATE_ARGUMENT(FNovaButtonUserSizeCallback, UserSizeCallback)
 	SLATE_NAMED_SLOT(FArguments, ButtonContent)
 
 	SLATE_END_ARGS()
