@@ -97,6 +97,71 @@ const UNovaEquipmentDescription* FNovaCompartment::GetEquipmentySocket(FName Soc
 	return nullptr;
 }
 
+float FNovaCompartment::GetAvailableCargoMass(const UNovaResource* Resource) const
+{
+	// Get the relevant cargo slot
+	const FNovaSpacecraftCargo* Cargo = nullptr;
+	switch (Resource->Type)
+	{
+		case ENovaResourceType::General:
+			Cargo = &GeneralCargo;
+			break;
+		case ENovaResourceType::Bulk:
+			Cargo = &BulkCargo;
+			break;
+		case ENovaResourceType::Liquid:
+			Cargo = &LiquidCargo;
+			break;
+	}
+
+	NCHECK(Cargo != nullptr);
+	NCHECK(Cargo->Amount >= 0);
+
+	// Get the current available amount
+	if (::IsValid(Cargo->Resource) && Cargo->Resource != Resource)
+	{
+		return 0.0f;
+	}
+	else
+	{
+		float RemainingAmount = 0;
+
+		const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Description);
+		if (CargoModule)
+		{
+			RemainingAmount = CargoModule->CargoMass;
+		}
+
+		return FMath::Max(RemainingAmount - Cargo->Amount, 0.0f);
+	}
+};
+
+void FNovaCompartment::ModifyCargo(const class UNovaResource* Resource, float& MassDelta)
+{
+	const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Description);
+
+	NCHECK(::IsValid(Resource));
+	FNovaSpacecraftCargo& Cargo = GetCargo(Resource->Type);
+
+	// Run sanity checks
+	NCHECK(CargoModule);
+	NCHECK(Cargo.Amount >= 0);
+	if (::IsValid(Cargo.Resource))
+	{
+		NCHECK(Cargo.Resource == Resource);
+	}
+
+	// Actually update the amount and null the resource if necessary
+	const float PreviousAmount = Cargo.Amount;
+	Cargo.Amount               = FMath::Clamp(Cargo.Amount + MassDelta, 0.0f, CargoModule->CargoMass);
+	if (Cargo.Amount == 0)
+	{
+		Cargo.Resource = nullptr;
+	}
+
+	MassDelta -= (Cargo.Amount - PreviousAmount);
+}
+
 /*----------------------------------------------------
     Spacecraft compartment metrics
 ----------------------------------------------------*/
@@ -380,6 +445,14 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 
 				SavedCompartments.Add(MakeShared<FJsonValueObject>(CompartmentJsonData));
 			}
+
+			// Cargo
+			UNovaAssetDescription::SaveAsset(CompartmentJsonData, "GR", Compartment.GeneralCargo.Resource);
+			CompartmentJsonData->SetNumberField("GA", Compartment.GeneralCargo.Amount);
+			UNovaAssetDescription::SaveAsset(CompartmentJsonData, "BR", Compartment.BulkCargo.Resource);
+			CompartmentJsonData->SetNumberField("BA", Compartment.BulkCargo.Amount);
+			UNovaAssetDescription::SaveAsset(CompartmentJsonData, "LR", Compartment.LiquidCargo.Resource);
+			CompartmentJsonData->SetNumberField("LA", Compartment.LiquidCargo.Amount);
 		}
 		JsonData->SetArrayField("C", SavedCompartments);
 	}
@@ -419,22 +492,40 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 				TSharedPtr<FJsonObject> CompartmentJsonData = CompartmentObject->AsObject();
 
 				// Compartment
-				Compartment.Description = Cast<UNovaCompartmentDescription>(UNovaAssetDescription::LoadAsset(CompartmentJsonData, "D"));
+				Compartment.Description = UNovaAssetDescription::LoadAsset<UNovaCompartmentDescription>(CompartmentJsonData, "D");
 				NCHECK(Compartment.Description);
 				Compartment.HullType = static_cast<ENovaHullType>(CompartmentJsonData->GetNumberField("H"));
 
 				// Modules
 				for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
 				{
-					Compartment.Modules[Index].Description = Cast<UNovaModuleDescription>(
-						UNovaAssetDescription::LoadAsset(CompartmentJsonData, FString("M") + FString::FromInt(Index)));
+					Compartment.Modules[Index].Description = UNovaAssetDescription::LoadAsset<UNovaModuleDescription>(
+						CompartmentJsonData, FString("M") + FString::FromInt(Index));
 				}
 
 				// Equipments
 				for (int32 Index = 0; Index < ENovaConstants::MaxEquipmentCount; Index++)
 				{
-					Compartment.Equipments[Index] = Cast<UNovaEquipmentDescription>(
-						UNovaAssetDescription::LoadAsset(CompartmentJsonData, FString("E") + FString::FromInt(Index)));
+					Compartment.Equipments[Index] = UNovaAssetDescription::LoadAsset<UNovaEquipmentDescription>(
+						CompartmentJsonData, FString("E") + FString::FromInt(Index));
+				}
+
+				// Cargo
+				double Amount;
+				if (CompartmentJsonData->TryGetNumberField("GA", Amount))
+				{
+					Compartment.GeneralCargo.Amount   = Amount;
+					Compartment.GeneralCargo.Resource = UNovaAssetDescription::LoadAsset<UNovaResource>(CompartmentJsonData, "GR");
+				}
+				if (CompartmentJsonData->TryGetNumberField("BA", Amount))
+				{
+					Compartment.BulkCargo.Amount   = Amount;
+					Compartment.BulkCargo.Resource = UNovaAssetDescription::LoadAsset<UNovaResource>(CompartmentJsonData, "BR");
+				}
+				if (CompartmentJsonData->TryGetNumberField("LA", Amount))
+				{
+					Compartment.LiquidCargo.Amount   = Amount;
+					Compartment.LiquidCargo.Resource = UNovaAssetDescription::LoadAsset<UNovaResource>(CompartmentJsonData, "LR");
 				}
 
 				This->Compartments.Add(Compartment);
@@ -444,7 +535,7 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 }
 
 /*----------------------------------------------------
-    Internals
+    Propulsion metrics
 ----------------------------------------------------*/
 
 void FNovaSpacecraft::UpdateProceduralElements()
@@ -565,6 +656,56 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 	NLOG("--------------------------------------------------------------------------------");
 #endif
 }
+
+/*----------------------------------------------------
+    Cargo
+----------------------------------------------------*/
+
+float FNovaSpacecraft::GetAvailableCargoMass(const UNovaResource* Resource, int32 CompartmentIndex) const
+{
+	if (CompartmentIndex != INDEX_NONE)
+	{
+		NCHECK(CompartmentIndex >= 0 && CompartmentIndex < Compartments.Num());
+		return Compartments[CompartmentIndex].GetAvailableCargoMass(Resource);
+	}
+	else
+	{
+		float CargoMass = 0;
+
+		for (const FNovaCompartment& Compartment : Compartments)
+		{
+			CargoMass += Compartment.GetAvailableCargoMass(Resource);
+		}
+
+		return CargoMass;
+	}
+}
+
+void FNovaSpacecraft::ModifyCargo(const class UNovaResource* Resource, float MassDelta, int32 CompartmentIndex)
+{
+	if (CompartmentIndex != INDEX_NONE)
+	{
+		NCHECK(CompartmentIndex >= 0 && CompartmentIndex < Compartments.Num());
+		Compartments[CompartmentIndex].ModifyCargo(Resource, MassDelta);
+	}
+	else
+	{
+		for (FNovaCompartment& Compartment : Compartments)
+		{
+			Compartment.ModifyCargo(Resource, MassDelta);
+			if (MassDelta == 0)
+			{
+				break;
+			}
+		}
+
+		NCHECK(MassDelta == 0);
+	}
+}
+
+/*----------------------------------------------------
+    UI helpers
+----------------------------------------------------*/
 
 TArray<const UNovaCompartmentDescription*> FNovaSpacecraft::GetCompatibleCompartments(int32 CompartmentIndex) const
 {

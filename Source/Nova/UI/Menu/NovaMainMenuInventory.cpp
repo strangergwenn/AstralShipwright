@@ -8,6 +8,8 @@
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Spacecraft/System/NovaSpacecraftPropellantSystem.h"
 
+#include "Nova/System/NovaAssetManager.h"
+#include "Nova/System/NovaGameInstance.h"
 #include "Nova/System/NovaMenuManager.h"
 #include "Nova/Player/NovaPlayerController.h"
 
@@ -46,7 +48,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 	];
 
 	// Cargo line generator
-	auto BuildCargoLine = [&](FText Title)
+	auto BuildCargoLine = [&](FText Title, ENovaResourceType Type)
 	{
 		TSharedPtr<SHorizontalBox> CargoLineBox;
 
@@ -77,7 +79,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 			.AutoWidth()
 			[
 				SNovaNew(SNovaButton)
-				.Size("CompartmentButtonSize")
+				.Size("InventoryButtonSize")
 				//.HelpText()
 				//.Enabled(this, &SNovaMainMenuAssembly::IsSelectCompartmentEnabled, Index)
 				//.OnClicked(this, &SNovaMainMenuAssembly::OnCompartmentSelected, Index)
@@ -96,10 +98,12 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 							{
 								if (IsValid(SpacecraftPawn) && Index >= 0 && Index < SpacecraftPawn->GetCompartmentCount())
 								{
-									const FNovaCompartment& Compartment    = SpacecraftPawn->GetCompartment(Index);
-									if (IsValid(Compartment.Description))
+									FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(Index);
+									FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(Type);
+
+									if (IsValid(Cargo.Resource))
 									{
-										return &Compartment.Description->AssetRender;
+										return &Cargo.Resource->AssetRender;
 									}
 								}
 
@@ -128,9 +132,9 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 	// clang-format on
 
 	// BUild the procedural cargo lines
-	BuildCargoLine(LOCTEXT("GeneralCargoTitle", "General cargo"));
-	BuildCargoLine(LOCTEXT("BulkCargoTitle", "Bulk cargo"));
-	BuildCargoLine(LOCTEXT("LiquidCargoTitle", "Liquid cargo"));
+	BuildCargoLine(LOCTEXT("GeneralCargoTitle", "General cargo"), ENovaResourceType::General);
+	BuildCargoLine(LOCTEXT("BulkCargoTitle", "Bulk cargo"), ENovaResourceType::Bulk);
+	BuildCargoLine(LOCTEXT("LiquidCargoTitle", "Liquid cargo"), ENovaResourceType::Bulk);
 }
 
 /*----------------------------------------------------

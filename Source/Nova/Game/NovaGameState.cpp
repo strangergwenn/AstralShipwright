@@ -141,7 +141,7 @@ void ANovaGameState::SerializeJson(
 		}
 
 		// Area
-		SaveData->CurrentArea = Cast<UNovaArea>(UNovaAssetDescription::LoadAsset(JsonData, "CurrentArea"));
+		SaveData->CurrentArea = UNovaAssetDescription::LoadAsset<UNovaArea>(JsonData, "CurrentArea");
 	}
 }
 

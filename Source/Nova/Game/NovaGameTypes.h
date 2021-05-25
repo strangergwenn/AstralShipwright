@@ -209,6 +209,12 @@ public:
 	// Get an asset description from JSON
 	static const UNovaAssetDescription* LoadAsset(TSharedPtr<class FJsonObject> Save, FString AssetName);
 
+	template <typename T>
+	static const T* LoadAsset(TSharedPtr<class FJsonObject> Save, FString AssetName)
+	{
+		return Cast<T>(LoadAsset(Save, AssetName));
+	}
+
 	/** Get a list of assets to load before use*/
 	virtual TArray<FSoftObjectPath> GetAsyncAssets() const
 	{
@@ -260,9 +266,9 @@ public:
 UENUM()
 enum class ENovaResourceType : uint8
 {
+	General,
 	Bulk,
-	Liquid,
-	Pressurized
+	Liquid
 };
 
 /** Description of a resource */
@@ -278,7 +284,7 @@ class UNovaResource : public UNovaAssetDescription
 public:
 	// Type of cargo hold that will be required for this resource
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	ENovaResourceType CargoType = ENovaResourceType::Bulk;
+	ENovaResourceType Type = ENovaResourceType::Bulk;
 
 #if WITH_EDITORONLY_DATA
 

@@ -86,6 +86,29 @@ struct FNovaCompartment
 	/** Get the description of the equipment residing at a particular socket name */
 	const UNovaEquipmentDescription* GetEquipmentySocket(FName SocketName) const;
 
+	/** Get the cargo for a particular type */
+	FNovaSpacecraftCargo& GetCargo(ENovaResourceType Type)
+	{
+		switch (Type)
+		{
+			case ENovaResourceType::General:
+				return GeneralCargo;
+			case ENovaResourceType::Bulk:
+				return BulkCargo;
+			case ENovaResourceType::Liquid:
+				return LiquidCargo;
+		}
+
+		NCHECK(false);
+		return GeneralCargo;
+	}
+
+	/** Get the amount of cargo mass available for one resource */
+	float GetAvailableCargoMass(const UNovaResource* Resource) const;
+
+	/** Add a (possibly negative) amount of resources to the spacecraft */
+	void ModifyCargo(const class UNovaResource* Resource, float& MassDelta);
+
 	UPROPERTY()
 	const class UNovaCompartmentDescription* Description;
 
@@ -318,6 +341,19 @@ public:
 
 		return CargoMass;
 	}
+
+	/** Get the cargo hold for a particular type */
+	FNovaSpacecraftCargo& GetCargo(ENovaResourceType Type, int32 CompartmentIndex)
+	{
+		NCHECK(CompartmentIndex >= 0 && CompartmentIndex < Compartments.Num());
+		return Compartments[CompartmentIndex].GetCargo(Type);
+	}
+
+	/** Get the amount of cargo mass available for one resource, across the ship or in a specific compartment */
+	float GetAvailableCargoMass(const class UNovaResource* Resource, int32 CompartmentIndex = INDEX_NONE) const;
+
+	/** Add a (possibly negative) amount of resources to the spacecraft, across the ship or in a specific compartment */
+	void ModifyCargo(const class UNovaResource* Resource, float MassDelta, int32 CompartmentIndex = INDEX_NONE);
 
 	/*----------------------------------------------------
 	    UI helpers

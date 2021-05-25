@@ -144,6 +144,45 @@ public:
 	void ServerSaveSystems();
 
 	/*----------------------------------------------------
+	    Spacecraft pass-through
+	----------------------------------------------------*/
+
+	/** Get a list of compartment kits that can be added at a (new) index */
+	TArray<const class UNovaCompartmentDescription*> GetCompatibleCompartments(int32 CompartmentIndex) const
+	{
+		NCHECK(Spacecraft.IsValid());
+		return Spacecraft->GetCompatibleCompartments(CompartmentIndex);
+	}
+
+	/** Get a list of compatible modules that can be added at a compartment index, and a module slot index */
+	TArray<const class UNovaModuleDescription*> GetCompatibleModules(int32 CompartmentIndex, int32 SlotIndex) const
+	{
+		NCHECK(Spacecraft.IsValid());
+		return Spacecraft->GetCompatibleModules(CompartmentIndex, SlotIndex);
+	}
+
+	/** Get a list of compatible equipments that can be added at a compartment index, and an equipment slot index */
+	TArray<const class UNovaEquipmentDescription*> GetCompatibleEquipments(int32 CompartmentIndex, int32 SlotIndex) const
+	{
+		NCHECK(Spacecraft.IsValid());
+		return Spacecraft->GetCompatibleEquipments(CompartmentIndex, SlotIndex);
+	}
+
+	/** Get the amount of cargo mass available for one resource, across the ship or in a specific compartment */
+	float GetAvailableCargoMass(const class UNovaResource* Resource, int32 CompartmentIndex = INDEX_NONE) const
+	{
+		NCHECK(Spacecraft.IsValid());
+		return GetAvailableCargoMass(Resource, CompartmentIndex);
+	}
+
+	/** Add a (possibly negative) amount of resources to the spacecraft, across the ship or in a specific compartment */
+	void ModifyCargo(const class UNovaResource* Resource, float MassDelta, int32 CompartmentIndex = INDEX_NONE)
+	{
+		NCHECK(Spacecraft.IsValid());
+		return ModifyCargo(Resource, MassDelta, CompartmentIndex);
+	}
+
+	/*----------------------------------------------------
 	    Assembly interface
 	----------------------------------------------------*/
 
@@ -173,27 +212,6 @@ public:
 	bool IsIdle() const
 	{
 		return AssemblyState == ENovaAssemblyState::Idle;
-	}
-
-	/** Get a list of compartment kits that can be added at a (new) index */
-	TArray<const class UNovaCompartmentDescription*> GetCompatibleCompartments(int32 CompartmentIndex) const
-	{
-		NCHECK(Spacecraft.IsValid());
-		return Spacecraft->GetCompatibleCompartments(CompartmentIndex);
-	}
-
-	/** Get a list of compatible modules that can be added at a compartment index, and a module slot index */
-	TArray<const class UNovaModuleDescription*> GetCompatibleModules(int32 CompartmentIndex, int32 SlotIndex) const
-	{
-		NCHECK(Spacecraft.IsValid());
-		return Spacecraft->GetCompatibleModules(CompartmentIndex, SlotIndex);
-	}
-
-	/** Get a list of compatible equipments that can be added at a compartment index, and an equipment slot index */
-	TArray<const class UNovaEquipmentDescription*> GetCompatibleEquipments(int32 CompartmentIndex, int32 SlotIndex) const
-	{
-		NCHECK(Spacecraft.IsValid());
-		return Spacecraft->GetCompatibleEquipments(CompartmentIndex, SlotIndex);
 	}
 
 	/** Save this assembly **/
