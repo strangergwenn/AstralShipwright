@@ -250,29 +250,6 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 					.Enabled(this, &SNovaMainMenuSettings::IsRaytracingSupported)
 				]
 
-				/*+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNovaAssignNew(RaytracedReflectionsButton, SNovaButton)
-					.Toggle(true)
-					.Text(LOCTEXT("EnableRaytracedReflections", "Enable raytraced reflections"))
-					.HelpText(LOCTEXT("EnableRaytracedReflectionsHelp", "Enable the use of DXR hardware for raytraced reflections"))
-					.OnClicked(this, &SNovaMainMenuSettings::OnRaytracedReflectionsToggled)
-					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
-					.Enabled(this, &SNovaMainMenuSettings::IsRaytracingSupported)
-				]*/
-
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNovaAssignNew(SSGIButton, SNovaButton)
-					.Toggle(true)
-					.Text(LOCTEXT("EnableSSGI", "Enable SSGI"))
-					.HelpText(LOCTEXT("EnableSSGIHelp", "Enable Screen-Space Global Illumination for improved lighting"))
-					.OnClicked(this, &SNovaMainMenuSettings::OnSSGIToggled)
-					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
-				]
-
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
@@ -467,8 +444,6 @@ void SNovaMainMenuSettings::Show()
 		DLSSButton->SetActive(GameUserSettings->EnableDLSS);
 		RaytracedShadowsButton->SetActive(GameUserSettings->EnableRaytracedShadows);
 		RaytracedAOutton->SetActive(GameUserSettings->EnableRaytracedAO);
-		// RaytracedReflectionsButton->SetActive(GameUserSettings->EnableRaytracedReflections);
-		SSGIButton->SetActive(GameUserSettings->EnableSSGI);
 		CinematicBloomButton->SetActive(GameUserSettings->EnableCinematicBloom);
 
 		UpdateResolutionList();
@@ -839,20 +814,6 @@ void SNovaMainMenuSettings::OnRaytracedShadowsToggled()
 void SNovaMainMenuSettings::OnRaytracedAOToggled()
 {
 	GameUserSettings->EnableRaytracedAO = RaytracedAOutton->IsActive();
-	GameUserSettings->ApplySettings(false);
-	GameUserSettings->SaveSettings();
-}
-
-void SNovaMainMenuSettings::OnRaytracedReflectionsToggled()
-{
-	GameUserSettings->EnableRaytracedReflections = RaytracedReflectionsButton->IsActive();
-	GameUserSettings->ApplySettings(false);
-	GameUserSettings->SaveSettings();
-}
-
-void SNovaMainMenuSettings::OnSSGIToggled()
-{
-	GameUserSettings->EnableSSGI = SSGIButton->IsActive();
 	GameUserSettings->ApplySettings(false);
 	GameUserSettings->SaveSettings();
 }

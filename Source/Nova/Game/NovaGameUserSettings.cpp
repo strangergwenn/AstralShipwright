@@ -23,13 +23,6 @@ UNovaGameUserSettings::UNovaGameUserSettings()
 
 void UNovaGameUserSettings::ApplyCustomGraphicsSettings()
 {
-	// Toggle SSGI
-	IConsoleVariable* SSGIVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.SSGI.Enable"));
-	if (SSGIVar)
-	{
-		SSGIVar->Set(EnableSSGI ? 1 : 0, ECVF_SetByConsole);
-	}
-
 	// Toggle DLSS
 	EnableDLSS                = EnableDLSS && IsDLSSSupported();
 	IConsoleVariable* DLSSVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.NGX.DLSS.Enable"));
@@ -74,13 +67,11 @@ void UNovaGameUserSettings::SetToDefaults()
 	FOV                = 90.0f;
 
 	// Graphics
-	EnableSSGI                 = false;
-	EnableDLSS                 = false;
-	EnableRaytracedReflections = false;
-	EnableRaytracedShadows     = false;
-	EnableRaytracedAO          = false;
-	EnableCinematicBloom       = false;
-	ScreenPercentage           = 100.0f;
+	EnableDLSS             = false;
+	EnableRaytracedShadows = false;
+	EnableRaytracedAO      = false;
+	EnableCinematicBloom   = false;
+	ScreenPercentage       = 100.0f;
 }
 
 void UNovaGameUserSettings::ApplySettings(bool bCheckForCommandLineOverrides)

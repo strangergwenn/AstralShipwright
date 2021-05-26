@@ -97,12 +97,9 @@ ANovaPlayerController::ANovaPlayerController()
 				// Config-driven settings
 				Volume->Settings.bOverride_BloomMethod      = true;
 				Volume->Settings.bOverride_ScreenPercentage = true;
-				Volume->Settings.bOverride_ReflectionsType  = true;
 				Volume->Settings.BloomMethod                = GameUserSettings->EnableCinematicBloom ? BM_FFT : BM_SOG;
 				Volume->Settings.ScreenPercentage           = GameUserSettings->ScreenPercentage;
-				Volume->Settings.ReflectionsType =
-					GameUserSettings->EnableRaytracedReflections ? EReflectionsType::RayTracing : EReflectionsType::ScreenSpace;
-				Volume->Settings.RayTracingAO = GameUserSettings->EnableRaytracedAO;
+				Volume->Settings.RayTracingAO               = GameUserSettings->EnableRaytracedAO;
 
 				// Custom settings
 				ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();

@@ -52,17 +52,9 @@ public:
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	float FOV;
 
-	/** Enable SSGI */
-	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
-	bool EnableSSGI;
-
 	/** Enable DLSS */
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	bool EnableDLSS;
-
-	/** Enable DXR reflections */
-	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
-	bool EnableRaytracedReflections;
 
 	/** Enable DXR shadows */
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)

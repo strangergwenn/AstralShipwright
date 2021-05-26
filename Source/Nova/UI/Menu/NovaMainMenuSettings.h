@@ -86,8 +86,6 @@ protected:
 	void OnDLSSToggled();
 	void OnRaytracedShadowsToggled();
 	void OnRaytracedAOToggled();
-	void OnRaytracedReflectionsToggled();
-	void OnSSGIToggled();
 	void OnCinematicBloomToggled();
 
 	// Culture list
@@ -154,7 +152,5 @@ protected:
 	TSharedPtr<class SNovaButton> DLSSButton;
 	TSharedPtr<class SNovaButton> RaytracedShadowsButton;
 	TSharedPtr<class SNovaButton> RaytracedAOutton;
-	TSharedPtr<class SNovaButton> RaytracedReflectionsButton;
-	TSharedPtr<class SNovaButton> SSGIButton;
 	TSharedPtr<class SNovaButton> CinematicBloomButton;
 };
