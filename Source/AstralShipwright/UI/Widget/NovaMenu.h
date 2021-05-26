@@ -109,10 +109,11 @@ public:
 protected:
 	/** Create a new button that can be triggered by actions */
 	template <typename WidgetType, typename RequiredArgsPayloadType>
-	TDecl<WidgetType, RequiredArgsPayloadType> NewNovaButton(
+	TSlateDecl<WidgetType, RequiredArgsPayloadType> NewNovaButton(
 		const ANSICHAR* InType, const ANSICHAR* InFile, int32 OnLine, RequiredArgsPayloadType&& InRequiredArgs, bool DefaultFocus)
 	{
-		auto Button = TDecl<WidgetType, RequiredArgsPayloadType>(InType, InFile, OnLine, Forward<RequiredArgsPayloadType>(InRequiredArgs));
+		auto Button =
+			TSlateDecl<WidgetType, RequiredArgsPayloadType>(InType, InFile, OnLine, Forward<RequiredArgsPayloadType>(InRequiredArgs));
 
 		AdditionalActionButtons.Add(Button._Widget);
 

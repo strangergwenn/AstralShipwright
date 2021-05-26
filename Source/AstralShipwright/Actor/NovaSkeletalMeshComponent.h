@@ -54,7 +54,7 @@ public:
 	virtual void SetSkeletalMesh(USkeletalMesh* Mesh, bool bReinitPose = true) override
 	{
 		USkeletalMeshComponent::SetSkeletalMesh(Mesh, bReinitPose);
-		FNovaMeshInterfaceBehavior::SetupMaterial(this, Mesh->Materials[0].MaterialInterface);
+		FNovaMeshInterfaceBehavior::SetupMaterial(this, Mesh->GetMaterials()[0].MaterialInterface);
 	}
 
 	virtual void Materialize(bool Force = false) override
