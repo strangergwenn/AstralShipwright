@@ -554,7 +554,7 @@ bool ANovaPlayerController::IsLevelStreamingComplete() const
 		else if (Level->IsLevelLoaded())
 		{
 			FString LoadedLevelName = Level->GetWorldAssetPackageFName().ToString();
-			LoadedLevelName.EndsWith(GameState->GetCurrentLevelName().ToString());
+			return LoadedLevelName.EndsWith(GameState->GetCurrentLevelName().ToString());
 		}
 	}
 
