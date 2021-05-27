@@ -64,7 +64,8 @@ protected:
 	----------------------------------------------------*/
 
 	// Data
-	TSharedPtr<FDeferredCleanupSlateBrush> LoadingScreenBrush;
+	TSharedPtr<FDeferredCleanupSlateBrush> LoadingScreenBackgroundBrush;
+	TSharedPtr<FDeferredCleanupSlateBrush> LoadingScreenAnimatedBrush;
 	class UMaterialInstanceDynamic*        AnimatedMaterialInstance;
 	float                                  LoadingScreenTime;
 	float                                  CurrentAlpha;
