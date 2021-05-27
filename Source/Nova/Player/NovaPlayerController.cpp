@@ -181,7 +181,8 @@ void ANovaPlayerController::SerializeJson(
 		SaveData = MakeShared<FNovaPlayerSave>();
 
 		// Spacecraft
-		TSharedPtr<FJsonObject> SpacecraftJsonData = JsonData->GetObjectField("Spacecraft");
+		TSharedPtr<FJsonObject> SpacecraftJsonData =
+			JsonData->HasTypedField<EJson::Object>("Spacecraft") ? JsonData->GetObjectField("Spacecraft") : MakeShared<FJsonObject>();
 		FNovaSpacecraft::SerializeJson(SaveData->Spacecraft, SpacecraftJsonData, ENovaSerialize::JsonToData);
 	}
 }

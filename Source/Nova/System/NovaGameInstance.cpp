@@ -103,13 +103,17 @@ void UNovaGameInstance::SerializeJson(TSharedPtr<FNovaGameSave>& SaveData, TShar
 	{
 		SaveData = MakeShared<FNovaGameSave>();
 
-		TSharedPtr<FJsonObject> PlayerJsonData = JsonData->GetObjectField("Player");
+		TSharedPtr<FJsonObject> PlayerJsonData =
+			JsonData->HasTypedField<EJson::Object>("Player") ? JsonData->GetObjectField("Player") : MakeShared<FJsonObject>();
 		ANovaPlayerController::SerializeJson(SaveData->PlayerData, PlayerJsonData, ENovaSerialize::JsonToData);
 
-		TSharedPtr<FJsonObject> GameStateJsonData = JsonData->GetObjectField("GameState");
+		TSharedPtr<FJsonObject> GameStateJsonData =
+			JsonData->HasTypedField<EJson::Object>("GameState") ? JsonData->GetObjectField("GameState") : MakeShared<FJsonObject>();
 		ANovaGameState::SerializeJson(SaveData->GameStateData, GameStateJsonData, ENovaSerialize::JsonToData);
 
-		TSharedPtr<FJsonObject> ContractManagerJsonData = JsonData->GetObjectField("ContractManager");
+		TSharedPtr<FJsonObject> ContractManagerJsonData = JsonData->HasTypedField<EJson::Object>("ContractManager")
+															? JsonData->GetObjectField("ContractManager")
+															: MakeShared<FJsonObject>();
 		UNovaContractManager::SerializeJson(SaveData->ContractManagerData, ContractManagerJsonData, ENovaSerialize::JsonToData);
 	}
 }
@@ -190,14 +194,7 @@ void UNovaGameInstance::LoadGame(FString SaveName)
 	CurrentSaveFileName = SaveName;
 
 	// Read and de-serialize all data, without actually loading objects
-	if (SaveManager->DoesSaveExist(SaveName))
-	{
-		CurrentSaveData = SaveManager->LoadGame(SaveName);
-	}
-	else
-	{
-		CurrentSaveData = MakeShared<FNovaGameSave>();
-	}
+	CurrentSaveData = SaveManager->LoadGame(SaveName);
 	NCHECK(CurrentSaveData);
 
 	Load(CurrentSaveData);

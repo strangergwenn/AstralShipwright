@@ -57,7 +57,7 @@ struct FNovaCarouselAnimation
 
 	float GetAlpha(int32 Index) const
 	{
-		return InterpolatedAlphaValues[Index] / CurrentTotalAlpha;
+		return CurrentTotalAlpha > 0.0f ? InterpolatedAlphaValues[Index] / CurrentTotalAlpha : 0.0f;
 	}
 
 	float AnimationDuration;

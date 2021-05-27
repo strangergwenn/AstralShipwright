@@ -464,10 +464,14 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 		This->Create(LOCTEXT("UnnamedSpacecraft", "Unnamed Spacecraft").ToString());
 
 		// Spacecraft
-		FGuid Identifier;
-		if (FGuid::Parse(JsonData->GetStringField("I"), Identifier))
+		FGuid   Identifier;
+		FString IdentifierString;
+		if (JsonData->TryGetStringField("I", IdentifierString))
 		{
-			This->Identifier = Identifier;
+			if (FGuid::Parse(JsonData->GetStringField("I"), Identifier))
+			{
+				This->Identifier = Identifier;
+			}
 		}
 		FString Name;
 		if (JsonData->TryGetStringField("N", Name))

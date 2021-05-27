@@ -99,13 +99,6 @@ void ANovaGameState::Load(TSharedPtr<struct FNovaGameStateSave> SaveData)
 	// Ensure consistency
 	NCHECK(SaveData != nullptr);
 	NCHECK(SaveData->TimeAsMinutes >= 0);
-
-	// Ensure area exists
-	if (!IsValid(SaveData->CurrentArea))
-	{
-		SaveData->CurrentArea =
-			GetGameInstance<UNovaGameInstance>()->GetAssetManager()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
-	}
 	NCHECK(IsValid(SaveData->CurrentArea));
 
 	// Load time & area
@@ -142,6 +135,10 @@ void ANovaGameState::SerializeJson(
 
 		// Area
 		SaveData->CurrentArea = UNovaAssetDescription::LoadAsset<UNovaArea>(JsonData, "CurrentArea");
+		if (!IsValid(SaveData->CurrentArea))
+		{
+			SaveData->CurrentArea = UNovaAssetManager::Get()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
+		}
 	}
 }
 
