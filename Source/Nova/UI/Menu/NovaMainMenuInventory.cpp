@@ -39,12 +39,49 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
 
 	// Local data
-	TSharedPtr<SVerticalBox> CargoBox;
+	TSharedPtr<SVerticalBox> MainLayoutBox;
 
 	// clang-format off
 	ChildSlot
+	.HAlign(HAlign_Center)
 	[
-		SAssignNew(CargoBox, SVerticalBox)
+		SAssignNew(MainLayoutBox, SVerticalBox)
+
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(Theme.ContentPadding)
+		[
+			SNew(SVerticalBox)
+			
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(Theme.VerticalContentPadding)
+			[
+				SNew(STextBlock)
+				.TextStyle(&Theme.SubtitleFont)
+				.Text(LOCTEXT("Propellant", "Propellant"))
+			]
+			
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SHorizontalBox)
+
+				+ SHorizontalBox::Slot()
+				[
+					SNew(SProgressBar)
+					.Style(&Theme.ProgressBarStyle)
+					.Percent(0.5f)
+				]
+			
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNovaNew(SNovaButton)
+					.Text(LOCTEXT("RefillPropellant", "Refuel"))
+				]
+			]
+		]
 	];
 
 	// Cargo line generator
@@ -52,7 +89,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 	{
 		TSharedPtr<SHorizontalBox> CargoLineBox;
 
-		CargoBox->AddSlot()
+		MainLayoutBox->AddSlot()
 		.AutoHeight()
 		.Padding(Theme.ContentPadding)
 		[
@@ -60,6 +97,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 
 			+ SVerticalBox::Slot()
 			.AutoHeight()
+			.Padding(Theme.VerticalContentPadding)
 			[
 				SNew(STextBlock)
 				.TextStyle(&Theme.SubtitleFont)

@@ -100,6 +100,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 
 								+ SVerticalBox::Slot()
 								.AutoHeight()
+								.Padding(Theme.VerticalContentPadding)
 								[
 									SNew(STextBlock)
 									.TextStyle(&Theme.SubtitleFont)
@@ -140,6 +141,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 
 							+ SVerticalBox::Slot()
 							.AutoHeight()
+							.Padding(Theme.VerticalContentPadding)
 							[
 								SNew(STextBlock)
 								.TextStyle(&Theme.SubtitleFont)
@@ -279,6 +281,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 
 										+ SVerticalBox::Slot()
 										.AutoHeight()
+										.Padding(Theme.VerticalContentPadding)
 										[
 											SNew(STextBlock)
 											.TextStyle(&Theme.SubtitleFont)
@@ -300,6 +303,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 
 										+ SVerticalBox::Slot()
 										.AutoHeight()
+										.Padding(Theme.VerticalContentPadding)
 										[
 											SNew(STextBlock)
 											.TextStyle(&Theme.SubtitleFont)
@@ -341,6 +345,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 
 							+ SVerticalBox::Slot()
 							.AutoHeight()
+							.Padding(Theme.VerticalContentPadding)
 							[
 								SNew(STextBlock)
 								.TextStyle(&Theme.SubtitleFont)
