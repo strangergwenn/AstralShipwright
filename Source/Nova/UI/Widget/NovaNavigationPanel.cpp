@@ -62,11 +62,18 @@ TArray<TSharedPtr<SNovaButton>>& SNovaNavigationPanel::GetNavigationButtons()
 
 void SNovaNavigationPanel::ResetNavigation()
 {
-	TSharedPtr<SNovaButton> FocusButton = GetDefaultFocusButton();
-	if (Menu && FocusButton && FocusButton->SupportsKeyboardFocus())
+	if (Menu)
 	{
-		NLOG("SNovaNavigationPanel::ResetNavigation : reset to '%s'", *FocusButton->ToString());
-		Menu->SetFocusedButton(FocusButton, true);
+		TSharedPtr<SNovaButton> FocusButton = GetDefaultFocusButton();
+		if (FocusButton && FocusButton->SupportsKeyboardFocus())
+		{
+			NLOG("SNovaNavigationPanel::ResetNavigation : reset to '%s'", *FocusButton->ToString());
+			Menu->SetFocusedButton(FocusButton, true);
+		}
+		else
+		{
+			Menu->SetFocusedButton(nullptr, true);
+		}
 	}
 }
 

@@ -1011,21 +1011,13 @@ void SNovaMainMenuAssembly::VerticalAnalogInput(float Value)
 
 TSharedPtr<SNovaButton> SNovaMainMenuAssembly::GetDefaultFocusButton() const
 {
-	if (CompartmentPanelVisible && GetModuleListVisibility() == EVisibility::Visible)
-	{
-		return ModuleListView;
-	}
-	else if (CompartmentPanelVisible && GetEquipmentListVisibility() == EVisibility::Visible)
-	{
-		return EquipmentListView;
-	}
-	else if (SaveButton->IsButtonEnabled())
+	if (!CompartmentPanelVisible && SaveButton->IsButtonEnabled())
 	{
 		return SaveButton;
 	}
 	else
 	{
-		return SNovaTabPanel::GetDefaultFocusButton();
+		return nullptr;
 	}
 }
 

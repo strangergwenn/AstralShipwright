@@ -419,6 +419,21 @@ void SNovaMenu::SetFocusedButton(TSharedPtr<SNovaButton> FocusButton, bool FromN
 			CurrentNavigationPanel->OnFocusChanged(FocusButton);
 		}
 	}
+	else if (!FocusButton.IsValid())
+	{
+		for (TSharedPtr<SNovaButton> Button : CurrentNavigationButtons)
+		{
+			if (Button != FocusButton && Button->IsFocused())
+			{
+				Button->SetFocused(false);
+			}
+		}
+
+		if (FromNavigation)
+		{
+			CurrentNavigationPanel->OnFocusChanged(FocusButton);
+		}
+	}
 }
 
 TSharedPtr<SNovaButton> SNovaMenu::GetFocusedButton()
