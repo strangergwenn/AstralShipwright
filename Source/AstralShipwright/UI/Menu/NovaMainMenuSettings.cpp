@@ -217,6 +217,17 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
+					SNovaAssignNew(LumenButton, SNovaButton)
+					.Toggle(true)
+					.Text(LOCTEXT("Lumen", "Enable Lumen"))
+					.HelpText(LOCTEXT("LumenHelp", "Enable the high-quality Lumen lighting"))
+					.OnClicked(this, &SNovaMainMenuSettings::OnLumenToggled)
+					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+				]
+				
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
 					SNovaAssignNew(DLSSButton, SNovaButton)
 					.Toggle(true)
 					.Text(LOCTEXT("DLSS", "Enable DLSS"))
@@ -442,6 +453,7 @@ void SNovaMainMenuSettings::Show()
 		ScreenPercentageSlider->SetCurrentValue(GameUserSettings->ScreenPercentage);
 
 		DLSSButton->SetActive(GameUserSettings->EnableDLSS);
+		LumenButton->SetActive(GameUserSettings->EnableLumen);
 		RaytracedShadowsButton->SetActive(GameUserSettings->EnableRaytracedShadows);
 		RaytracedAOutton->SetActive(GameUserSettings->EnableRaytracedAO);
 		CinematicBloomButton->SetActive(GameUserSettings->EnableCinematicBloom);
@@ -794,6 +806,13 @@ void SNovaMainMenuSettings::OnScreenPercentageChanged(float Value)
 void SNovaMainMenuSettings::OnDLSSToggled()
 {
 	GameUserSettings->EnableDLSS = DLSSButton->IsActive();
+	GameUserSettings->ApplySettings(false);
+	GameUserSettings->SaveSettings();
+}
+
+void SNovaMainMenuSettings::OnLumenToggled()
+{
+	GameUserSettings->EnableLumen = LumenButton->IsActive();
 	GameUserSettings->ApplySettings(false);
 	GameUserSettings->SaveSettings();
 }

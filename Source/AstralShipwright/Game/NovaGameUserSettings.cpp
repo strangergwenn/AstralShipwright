@@ -68,6 +68,7 @@ void UNovaGameUserSettings::SetToDefaults()
 
 	// Graphics
 	EnableDLSS             = false;
+	EnableLumen            = false;
 	EnableRaytracedShadows = false;
 	EnableRaytracedAO      = false;
 	EnableCinematicBloom   = false;
