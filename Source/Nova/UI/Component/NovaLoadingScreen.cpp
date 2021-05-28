@@ -22,9 +22,7 @@ void SNovaLoadingScreen::Construct(const FArguments& InArgs)
 	uint32_t Height = InArgs._Settings->Height;
 
 	// Build the top loading brush
-	LoadingScreenBackgroundBrush = FDeferredCleanupSlateBrush::CreateBrush(*FNovaStyleSet::GetBrush("Common/SB_Black"));
-	LoadingScreenAnimatedBrush   = FDeferredCleanupSlateBrush::CreateBrush(AnimatedMaterialInstance, FVector2D(Width, Height));
-	NCHECK(LoadingScreenBackgroundBrush.IsValid());
+	LoadingScreenAnimatedBrush = FDeferredCleanupSlateBrush::CreateBrush(AnimatedMaterialInstance, FVector2D(Width, Height));
 	NCHECK(LoadingScreenAnimatedBrush.IsValid());
 
 	// clang-format off
@@ -42,7 +40,7 @@ void SNovaLoadingScreen::Construct(const FArguments& InArgs)
 			.HAlign(HAlign_Fill)
 			[
 				SNew(SBorder)
-				.BorderImage(LoadingScreenBackgroundBrush->GetSlateBrush())
+				.BorderImage(FCoreStyle::Get().GetBrush("BlackBrush"))
 				.BorderBackgroundColor(this, &SNovaLoadingScreen::GetColor)
 			]
 

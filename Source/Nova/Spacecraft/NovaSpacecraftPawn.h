@@ -172,14 +172,14 @@ public:
 	float GetAvailableCargoMass(const class UNovaResource* Resource, int32 CompartmentIndex = INDEX_NONE) const
 	{
 		NCHECK(Spacecraft.IsValid());
-		return GetAvailableCargoMass(Resource, CompartmentIndex);
+		return Spacecraft->GetAvailableCargoMass(Resource, CompartmentIndex);
 	}
 
 	/** Add a (possibly negative) amount of resources to the spacecraft, across the ship or in a specific compartment */
 	void ModifyCargo(const class UNovaResource* Resource, float MassDelta, int32 CompartmentIndex = INDEX_NONE)
 	{
 		NCHECK(Spacecraft.IsValid());
-		return ModifyCargo(Resource, MassDelta, CompartmentIndex);
+		return Spacecraft->ModifyCargo(Resource, MassDelta, CompartmentIndex);
 	}
 
 	/*----------------------------------------------------
