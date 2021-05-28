@@ -977,9 +977,16 @@ void SNovaMainMenuSettings::OnApplyVideoSettings()
 	NLOG("SNovaMainMenuSettings::OnApplyVideoSettings");
 
 	FIntPoint Resolution;
-	NCHECK(SelectedResolution.IsValid());
-	Resolution.X = SelectedResolution->Width;
-	Resolution.Y = SelectedResolution->Height;
+	if (SelectedResolution.IsValid())
+	{
+		Resolution.X = SelectedResolution->Width;
+		Resolution.Y = SelectedResolution->Height;
+	}
+	else
+	{
+		Resolution.X = LastConfirmedVideoResolution.X;
+		Resolution.Y = LastConfirmedVideoResolution.Y;
+	}
 
 	UpdateResolution(Resolution, FullscreenButton->IsActive());
 

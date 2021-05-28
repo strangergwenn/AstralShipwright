@@ -64,6 +64,11 @@ public:
 
 		Moving = false;
 
+		if (FSlateApplication::Get().GetCursorPos().Y <= 0)
+		{
+			UNovaMenuManager::Get()->MaximizeOrRestore();
+		}
+
 		return FReply::Handled();
 	}
 

@@ -63,13 +63,31 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		// Close button
 		.End()
 		[
-			SNovaNew(SNovaButton)
-			.Theme("TabButton")
-			.Size("TabButtonSize")
-			.Action(FNovaPlayerInput::MenuToggle)
-			.Text(this, &SNovaMainMenu::GetCloseText)
-			.HelpText(this, &SNovaMainMenu::GetCloseHelpText)
-			.OnClicked(this, &SNovaMainMenu::OnClose)
+			SNew(SHorizontalBox)
+
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNovaNew(SNovaButton)
+				.Theme("TabButton")
+				.Size("SmallButtonSize")
+				.Icon(FNovaStyleSet::GetBrush("Icon/SB_Maximize"))
+				.HelpText(LOCTEXT("MaximizeRestore", "Maximize or restore the window"))
+				.OnClicked(this, &SNovaMainMenu::OnMaximizeRestore)
+				.Visibility(this, &SNovaMainMenu::GetMaximizeVisibility)
+			]
+
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNovaNew(SNovaButton)
+				.Theme("TabButton")
+				.Size("TabButtonSize")
+				.Action(FNovaPlayerInput::MenuToggle)
+				.Text(this, &SNovaMainMenu::GetCloseText)
+				.HelpText(this, &SNovaMainMenu::GetCloseHelpText)
+				.OnClicked(this, &SNovaMainMenu::OnClose)
+			]
 		]
 
 		// Header widget
@@ -337,6 +355,11 @@ bool SNovaMainMenu::AreGameMenusVisible() const
 	return !IsHomeMenuVisible();
 }
 
+EVisibility SNovaMainMenu::GetMaximizeVisibility() const
+{
+	return GEngine->GetGameUserSettings()->GetFullscreenMode() == EWindowMode::Windowed ? EVisibility::Visible : EVisibility::Collapsed;
+}
+
 FText SNovaMainMenu::GetCloseText() const
 {
 	ANovaPlayerController* PC = MenuManager->GetPC();
@@ -407,6 +430,11 @@ FKey SNovaMainMenu::GetNextTabKey() const
 /*----------------------------------------------------
     Action callbacks
 ----------------------------------------------------*/
+
+void SNovaMainMenu::OnMaximizeRestore()
+{
+	MenuManager->MaximizeOrRestore();
+}
 
 void SNovaMainMenu::OnClose()
 {

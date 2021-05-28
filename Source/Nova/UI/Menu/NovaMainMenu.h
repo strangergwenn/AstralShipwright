@@ -70,6 +70,9 @@ protected:
 	/** Check if we can display the game menus */
 	bool AreGameMenusVisible() const;
 
+	/** Get the visibility of the window control */
+	EVisibility GetMaximizeVisibility() const;
+
 	/** Get the close button text */
 	FText GetCloseText() const;
 
@@ -96,6 +99,9 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+	/** Maximize or restore the window */
+	void OnMaximizeRestore();
+
 	/** Quit the game */
 	void OnClose();
 
