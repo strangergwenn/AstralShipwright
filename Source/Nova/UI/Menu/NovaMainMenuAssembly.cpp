@@ -1694,7 +1694,7 @@ void SNovaMainMenuAssembly::OnReviewSpacecraft()
 			+ SHorizontalBox::Slot()
 		
 			+ SHorizontalBox::Slot()
-			. AutoWidth()
+			.AutoWidth()
 			[
 				SNew(SVerticalBox)
 

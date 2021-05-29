@@ -7,6 +7,8 @@
 
 #include "Online.h"
 
+enum class ENovaResourceType : uint8;
+
 /** Inventory menu */
 class SNovaMainMenuInventory
 	: public SNovaTabPanel
@@ -47,6 +49,8 @@ public:
 	    Callbacks
 	----------------------------------------------------*/
 
+	void OnTradeWithSlot(int32 Index, ENovaResourceType Type);
+
 protected:
 	/*----------------------------------------------------
 	    Data
@@ -59,4 +63,6 @@ protected:
 	class ANovaSpacecraftPawn*       SpacecraftPawn;
 
 	// Slate widgets
+	TSharedPtr<class SNovaModalPanel>   ModalPanel;
+	TSharedPtr<class SNovaTradingPanel> TradingPanel;
 };

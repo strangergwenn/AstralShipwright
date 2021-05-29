@@ -13,7 +13,9 @@
 #include "Nova/System/NovaMenuManager.h"
 #include "Nova/Player/NovaPlayerController.h"
 
+#include "Nova/UI/Component/NovaTradingPanel.h"
 #include "Nova/UI/Widget/NovaFadingWidget.h"
+#include "Nova/UI/Widget/NovaModalPanel.h"
 
 #include "Nova/Nova.h"
 
@@ -135,7 +137,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 				{
 					return IsValidCompartment();
 				})))
-				//.OnClicked(this, &SNovaMainMenuAssembly::OnCompartmentSelected, Index)
+				.OnClicked(this, &SNovaMainMenuInventory::OnTradeWithSlot, Index, Type)
 				.Content()
 				[
 					SNew(SOverlay)
@@ -236,6 +238,10 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 	};
 	// clang-format on
 
+	// Build the trading panel
+	ModalPanel = Menu->CreateModalPanel();
+	SAssignNew(TradingPanel, SNovaTradingPanel).Panel(this);
+
 	// BUild the procedural cargo lines
 	BuildCargoLine(LOCTEXT("GeneralCargoTitle", "General cargo"), ENovaResourceType::General);
 	BuildCargoLine(LOCTEXT("BulkCargoTitle", "Bulk cargo"), ENovaResourceType::Bulk);
@@ -275,5 +281,13 @@ TSharedPtr<SNovaButton> SNovaMainMenuInventory::GetDefaultFocusButton() const
 /*----------------------------------------------------
     Callbacks
 ----------------------------------------------------*/
+
+void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type)
+{
+	FNovaModalPanelTextData ModalTextData;
+
+	ModalPanel->Show(
+		LOCTEXT("Trade", "Trade"), FText(), FSimpleDelegate(), FSimpleDelegate(), FSimpleDelegate(), TradingPanel, ModalTextData);
+}
 
 #undef LOCTEXT_NAMESPACE
