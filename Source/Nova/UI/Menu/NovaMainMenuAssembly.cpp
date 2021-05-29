@@ -793,6 +793,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							}))
 							.TextStyle(&Theme.MainFont)
 							.WrapTextAt(1.9f * FNovaStyleSet::GetButtonSize("CompartmentButtonSize").Width)
+							.AutoWrapText(false)
 						]
 					]
 				]

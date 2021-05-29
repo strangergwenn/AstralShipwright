@@ -97,6 +97,22 @@ const UNovaEquipmentDescription* FNovaCompartment::GetEquipmentySocket(FName Soc
 	return nullptr;
 }
 
+float FNovaCompartment::GetCargoCapacity(ENovaResourceType Type) const
+{
+	float Capacity = 0;
+
+	for (const FNovaCompartmentModule& Module : Modules)
+	{
+		const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Module.Description);
+		if (CargoModule && CargoModule->CargoType == Type)
+		{
+			Capacity += CargoModule->CargoMass;
+		}
+	}
+
+	return Capacity;
+}
+
 float FNovaCompartment::GetAvailableCargoMass(const UNovaResource* Resource) const
 {
 	// Get the relevant cargo slot
@@ -125,11 +141,13 @@ float FNovaCompartment::GetAvailableCargoMass(const UNovaResource* Resource) con
 	else
 	{
 		float RemainingAmount = 0;
-
-		const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Description);
-		if (CargoModule)
+		for (const FNovaCompartmentModule& Module : Modules)
 		{
-			RemainingAmount = CargoModule->CargoMass;
+			const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Module.Description);
+			if (CargoModule && CargoModule->CargoType == Resource->Type)
+			{
+				RemainingAmount += CargoModule->CargoMass;
+			}
 		}
 
 		return FMath::Max(RemainingAmount - Cargo->Amount, 0.0f);
@@ -138,13 +156,10 @@ float FNovaCompartment::GetAvailableCargoMass(const UNovaResource* Resource) con
 
 void FNovaCompartment::ModifyCargo(const class UNovaResource* Resource, float& MassDelta)
 {
-	const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Description);
-
 	NCHECK(::IsValid(Resource));
 	FNovaSpacecraftCargo& Cargo = GetCargo(Resource->Type);
 
 	// Run sanity checks
-	NCHECK(CargoModule);
 	NCHECK(Cargo.Amount >= 0);
 	if (::IsValid(Cargo.Resource))
 	{
@@ -153,7 +168,7 @@ void FNovaCompartment::ModifyCargo(const class UNovaResource* Resource, float& M
 
 	// Actually update the amount and null the resource if necessary
 	const float PreviousAmount = Cargo.Amount;
-	Cargo.Amount               = FMath::Clamp(Cargo.Amount + MassDelta, 0.0f, CargoModule->CargoMass);
+	Cargo.Amount               = FMath::Clamp(Cargo.Amount + MassDelta, 0.0f, GetCargoCapacity(Resource->Type));
 	if (Cargo.Amount == 0)
 	{
 		Cargo.Resource = nullptr;

@@ -204,12 +204,13 @@ DECLARE_DELEGATE_RetVal(FText, FNovaTextGetter);
 /** Simple STextBlock analog that fades smoothly when the text changes */
 class SNovaText : public SNovaFadingWidget<false>
 {
-	SLATE_BEGIN_ARGS(SNovaText)
+	SLATE_BEGIN_ARGS(SNovaText) : _AutoWrapText(true)
 	{}
 
 	SLATE_ARGUMENT(FNovaTextGetter, Text)
 	SLATE_STYLE_ARGUMENT(FTextBlockStyle, TextStyle)
 	SLATE_ATTRIBUTE(float, WrapTextAt)
+	SLATE_ATTRIBUTE(bool, AutoWrapText)
 
 	SLATE_END_ARGS()
 
@@ -232,6 +233,7 @@ public:
 			.Text(this, &SNovaText::GetText)
 			.TextStyle(InArgs._TextStyle)
 			.WrapTextAt(InArgs._WrapTextAt)
+				.AutoWrapText(InArgs._AutoWrapText)
 			.ColorAndOpacity(this, &SNovaFadingWidget::GetSlateColor)
 
 		];
@@ -272,12 +274,13 @@ protected:
 /** Simple SRichTextBlock analog that fades smoothly when the text changes */
 class SNovaRichText : public SNovaText
 {
-	SLATE_BEGIN_ARGS(SNovaRichText)
+	SLATE_BEGIN_ARGS(SNovaRichText) : _AutoWrapText(true)
 	{}
 
 	SLATE_ARGUMENT(FNovaTextGetter, Text)
 	SLATE_STYLE_ARGUMENT(FTextBlockStyle, TextStyle)
 	SLATE_ATTRIBUTE(float, WrapTextAt)
+	SLATE_ATTRIBUTE(bool, AutoWrapText)
 
 	SLATE_END_ARGS()
 
@@ -305,6 +308,7 @@ public:
 				.Text(this, &SNovaText::GetText)
 				.TextStyle(InArgs._TextStyle)
 				.WrapTextAt(InArgs._WrapTextAt)
+				.AutoWrapText(InArgs._AutoWrapText)
 				.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
 				+ SRichTextBlock::ImageDecorator()
 			]

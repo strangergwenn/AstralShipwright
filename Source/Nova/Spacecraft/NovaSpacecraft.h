@@ -87,6 +87,23 @@ struct FNovaCompartment
 	const UNovaEquipmentDescription* GetEquipmentySocket(FName SocketName) const;
 
 	/** Get the cargo for a particular type */
+	const FNovaSpacecraftCargo& GetCargo(ENovaResourceType Type) const
+	{
+		switch (Type)
+		{
+			case ENovaResourceType::General:
+				return GeneralCargo;
+			case ENovaResourceType::Bulk:
+				return BulkCargo;
+			case ENovaResourceType::Liquid:
+				return LiquidCargo;
+		}
+
+		NCHECK(false);
+		return GeneralCargo;
+	}
+
+	/** Get the cargo for a particular type */
 	FNovaSpacecraftCargo& GetCargo(ENovaResourceType Type)
 	{
 		switch (Type)
@@ -102,6 +119,9 @@ struct FNovaCompartment
 		NCHECK(false);
 		return GeneralCargo;
 	}
+
+	/** Get the cargo capacity for a particular type */
+	float GetCargoCapacity(ENovaResourceType Typee) const;
 
 	/** Get the amount of cargo mass available for one resource */
 	float GetAvailableCargoMass(const UNovaResource* Resource) const;
