@@ -286,6 +286,10 @@ public:
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	ENovaResourceType Type = ENovaResourceType::Bulk;
 
+	// Resource description
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	FText Description;
+
 #if WITH_EDITORONLY_DATA
 
 	// Mesh to use to render the resource

@@ -283,7 +283,7 @@ TSharedPtr<SNovaButton> SNovaMainMenuInventory::GetDefaultFocusButton() const
 
 void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type)
 {
-	TradingModalPanel->Show(LOCTEXT("Trade", "Trade"), FText(), FSimpleDelegate(), FSimpleDelegate(), FSimpleDelegate());
+	TradingModalPanel->StartTrade();
 }
 
 #undef LOCTEXT_NAMESPACE

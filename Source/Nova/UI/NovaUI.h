@@ -43,3 +43,32 @@ class INovaGameMenu
 public:
 	virtual void UpdateGameObjects(){};
 };
+
+/** Button-width class */
+class SNovaButtonLayout : public SBox
+{
+	SLATE_BEGIN_ARGS(SNovaButtonLayout) : _Theme("DefaultButton"), _Size("DefaultButtonSize")
+	{}
+
+	SLATE_ARGUMENT(FName, Theme)
+	SLATE_ARGUMENT(FName, Size)
+	SLATE_DEFAULT_SLOT(FArguments, Content)
+
+	SLATE_END_ARGS()
+
+	void Construct(const FArguments& InArgs)
+	{
+		const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(InArgs._Theme);
+		const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(InArgs._Size);
+
+		// clang-format off
+		SBox::Construct(SBox::FArguments()
+			.WidthOverride(Size.Width)
+			.Padding(Theme.HoverAnimationPadding + 1)
+			[
+				InArgs._Content.Widget
+			]
+		);
+		// clang-format on
+	}
+};
