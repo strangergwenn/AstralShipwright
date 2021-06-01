@@ -84,7 +84,15 @@ public:
 	}
 
 	/** Create a new modal panel */
-	TSharedPtr<class SNovaModalPanel> CreateModalPanel();
+	template <typename T = SNovaModalPanel>
+	TSharedPtr<T> CreateModalPanel()
+	{
+		TSharedPtr<T> Panel;
+
+		MainOverlay->AddSlot()[SAssignNew(Panel, T).Menu(this)];
+
+		return Panel;
+	}
 
 	/** Set a currently active navigation panel */
 	void SetModalNavigationPanel(class SNovaNavigationPanel* Panel);

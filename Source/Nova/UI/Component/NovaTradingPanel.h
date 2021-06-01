@@ -3,9 +3,10 @@
 #pragma once
 
 #include "Nova/UI/Widget/NovaButton.h"
+#include "Nova/UI/Widget/NovaModalPanel.h"
 
 /** Heavyweight button class */
-class SNovaTradingPanel : public SCompoundWidget
+class SNovaTradingPanel : public SNovaModalPanel
 {
 	/*----------------------------------------------------
 	    Slate args
@@ -13,8 +14,8 @@ class SNovaTradingPanel : public SCompoundWidget
 
 	SLATE_BEGIN_ARGS(SNovaTradingPanel)
 	{}
-	SLATE_ARGUMENT(TWeakObjectPtr<class UNovaMenuManager>, MenuManager)
-	SLATE_ARGUMENT(class SNovaNavigationPanel*, Panel)
+
+	SLATE_ARGUMENT(class SNovaMenu*, Menu)
 
 	SLATE_END_ARGS()
 
@@ -25,6 +26,8 @@ public:
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+		SNovaModalPanel::Construct(SNovaModalPanel::FArguments().Menu(InArgs._Menu));
 
 		// clang-format off
 		// clang-format on

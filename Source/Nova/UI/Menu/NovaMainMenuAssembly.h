@@ -284,15 +284,15 @@ protected:
 	class ANovaSpacecraftPawn*       SpacecraftPawn;
 
 	// Widgets
-	TSharedPtr<SHorizontalBox>        CompartmentBox;
-	TSharedPtr<SHorizontalBox>        ModuleBox;
-	TSharedPtr<SHorizontalBox>        EquipmentBox;
-	TSharedPtr<SEditableText>         SpacecraftNameText;
-	TSharedPtr<class SNovaSlider>     DisplayFilter;
-	TSharedPtr<class SNovaButton>     SaveButton;
-	TSharedPtr<class SNovaModalPanel> PrimaryModalPanel;
-	TSharedPtr<class SNovaModalPanel> SecondaryModalPanel;
-	TSharedPtr<SVerticalBox>          MenuBox;
+	TSharedPtr<SHorizontalBox>                CompartmentBox;
+	TSharedPtr<SHorizontalBox>                ModuleBox;
+	TSharedPtr<SHorizontalBox>                EquipmentBox;
+	TSharedPtr<SEditableText>                 SpacecraftNameText;
+	TSharedPtr<class SNovaSlider>             DisplayFilter;
+	TSharedPtr<class SNovaButton>             SaveButton;
+	TSharedPtr<class SNovaModalPanel>         GenericModalPanel;
+	TSharedPtr<class SNovaAssemblyModalPanel> AssemblyModalPanel;
+	TSharedPtr<SVerticalBox>                  MenuBox;
 
 	// Panel fading system
 	float FadeDuration;

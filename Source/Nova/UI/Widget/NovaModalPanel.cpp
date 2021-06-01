@@ -12,20 +12,6 @@
 #define LOCTEXT_NAMESPACE "SNovaModalPanel"
 
 /*----------------------------------------------------
-    TExt data constructor
-----------------------------------------------------*/
-
-FNovaModalPanelTextData::FNovaModalPanelTextData()
-{
-	Confirm     = LOCTEXT("Confirm", "Confirm");
-	ConfirmHelp = LOCTEXT("ConfirmHelp", "Confirm the current action");
-	Dismiss     = LOCTEXT("Ignore", "Ignore");
-	DismissHelp = LOCTEXT("IgnoreHelp", "Ignore and close this message");
-	Cancel      = LOCTEXT("Cancel", "Cancel");
-	CancelHelp  = LOCTEXT("CancelHelp", "Cancel the current action");
-}
-
-/*----------------------------------------------------
     Construct
 ----------------------------------------------------*/
 
@@ -119,30 +105,28 @@ void SNovaModalPanel::Construct(const FArguments& InArgs)
 
 								+ SHorizontalBox::Slot()
 								[
-									SNovaNew(SNovaButton)
+									SAssignNew(ConfirmButton, SNovaButton)
+									.Text(FText())
 									.Action(FNovaPlayerInput::MenuConfirm)
-									.Text(TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([=](){ return TextData.Confirm;})))
-									.HelpText(TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([=](){ return TextData.ConfirmHelp;})))
 									.OnClicked(this, &SNovaModalPanel::OnConfirmPanel)
 									.Visibility(this, &SNovaModalPanel::GetConfirmVisibility)
+									.Enabled(this, &SNovaModalPanel::IsConfirmEnabled)
 								]
 
 								+ SHorizontalBox::Slot()
 								[
-									SNovaNew(SNovaButton)
+									SAssignNew(DismissButton, SNovaButton)
+									.Text(FText())
 									.Action(FNovaPlayerInput::MenuSecondary)
-									.Text(TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([=](){ return TextData.Dismiss;})))
-									.HelpText(TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([=](){ return TextData.DismissHelp;})))
 									.OnClicked(this, &SNovaModalPanel::OnDismissPanel)
 									.Visibility(this, &SNovaModalPanel::GetDismissVisibility)
 								]
 
 								+ SHorizontalBox::Slot()
 								[
-									SNovaNew(SNovaButton)
+									SAssignNew(CancelButton, SNovaButton)
+									.Text(FText())
 									.Action(FNovaPlayerInput::MenuCancel)
-									.Text(TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([=](){ return TextData.Cancel;})))
-									.HelpText(TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([=](){ return TextData.CancelHelp;})))
 									.OnClicked(this, &SNovaModalPanel::OnCancelPanel)
 								]
 							]
@@ -156,7 +140,7 @@ void SNovaModalPanel::Construct(const FArguments& InArgs)
 	];
 	// clang-format on
 
-	SAssignNew(EmptyWidget, SBox);
+	SAssignNew(InternalWidget, SBox);
 
 	// Defaults
 	FadeDuration = ENovaUIConstants::FadeDurationShort;
@@ -214,7 +198,7 @@ bool SNovaModalPanel::Cancel()
 }
 
 void SNovaModalPanel::Show(FText Title, FText Text, FSimpleDelegate NewOnConfirmed, FSimpleDelegate NewOnDismissed,
-	FSimpleDelegate NewOnCancelled, TSharedPtr<SWidget> Content, FNovaModalPanelTextData Data)
+	FSimpleDelegate NewOnCancelled, TSharedPtr<SWidget> Content)
 {
 	NLOG("SNovaModalPanel::Show");
 
@@ -222,8 +206,8 @@ void SNovaModalPanel::Show(FText Title, FText Text, FSimpleDelegate NewOnConfirm
 	OnConfirmed = NewOnConfirmed;
 	OnDismissed = NewOnDismissed;
 	OnCancelled = NewOnCancelled;
-	TextData    = Data;
 
+	UpdateButtons();
 	TitleText->SetText(Title);
 	InformationText->SetText(Text);
 	InformationText->SetVisibility(Text.IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible);
@@ -234,7 +218,7 @@ void SNovaModalPanel::Show(FText Title, FText Text, FSimpleDelegate NewOnConfirm
 	}
 	else
 	{
-		ContentBox->SetContent(EmptyWidget.ToSharedRef());
+		ContentBox->SetContent(InternalWidget.ToSharedRef());
 	}
 
 	if (Menu)
@@ -255,6 +239,16 @@ void SNovaModalPanel::Hide()
 	}
 }
 
+void SNovaModalPanel::UpdateButtons()
+{
+	ConfirmButton->SetText(LOCTEXT("Confirm", "Confirm"));
+	ConfirmButton->SetHelpText(LOCTEXT("ConfirmHelp", "Confirm the current action"));
+	DismissButton->SetText(LOCTEXT("Ignore", "Ignore"));
+	DismissButton->SetHelpText(LOCTEXT("IgnoreHelp", "Ignore and close this message"));
+	CancelButton->SetText(LOCTEXT("Cancel", "Cancel"));
+	CancelButton->SetHelpText(LOCTEXT("CancelHelp", "Cancel the current action"));
+}
+
 /*----------------------------------------------------
     Content callbacks
 ----------------------------------------------------*/
@@ -262,6 +256,11 @@ void SNovaModalPanel::Hide()
 EVisibility SNovaModalPanel::GetConfirmVisibility() const
 {
 	return OnConfirmed.IsBound() ? EVisibility::Visible : EVisibility::Collapsed;
+}
+
+bool SNovaModalPanel::IsConfirmEnabled() const
+{
+	return true;
 }
 
 EVisibility SNovaModalPanel::GetDismissVisibility() const

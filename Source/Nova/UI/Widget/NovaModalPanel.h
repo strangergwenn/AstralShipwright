@@ -8,19 +8,6 @@
 
 #include "Widgets/SCompoundWidget.h"
 
-/** Text parameters for this panel */
-struct FNovaModalPanelTextData
-{
-	FNovaModalPanelTextData();
-
-	FText Confirm;
-	FText ConfirmHelp;
-	FText Dismiss;
-	FText DismissHelp;
-	FText Cancel;
-	FText CancelHelp;
-};
-
 /** Modal panel that blocks input, steals focus and blurs the background */
 class SNovaModalPanel : public SNovaNavigationPanel
 {
@@ -50,8 +37,7 @@ public:
 
 	/** Show the panel and take focus, with optional callbacks and an optional content block */
 	void Show(FText Title, FText Text, FSimpleDelegate NewOnConfirmed, FSimpleDelegate NewOnIgnore = FSimpleDelegate(),
-		FSimpleDelegate NewOnCancel = FSimpleDelegate(), TSharedPtr<SWidget> Content = TSharedPtr<SWidget>(),
-		FNovaModalPanelTextData Data = FNovaModalPanelTextData());
+		FSimpleDelegate NewOnCancel = FSimpleDelegate(), TSharedPtr<SWidget> Content = TSharedPtr<SWidget>());
 
 	/** Hide the panel, set focus back to the parent */
 	void Hide();
@@ -67,14 +53,19 @@ public:
 		return true;
 	}
 
+	/** Set the text data on buttons */
+	virtual void UpdateButtons();
+
 	/*----------------------------------------------------
 	    Content callbacks
 	----------------------------------------------------*/
 
 protected:
-	EVisibility GetConfirmVisibility() const;
+	virtual EVisibility GetConfirmVisibility() const;
 
-	EVisibility GetDismissVisibility() const;
+	virtual bool IsConfirmEnabled() const;
+
+	virtual EVisibility GetDismissVisibility() const;
 
 	FLinearColor GetColor() const;
 
@@ -103,17 +94,19 @@ protected:
 	SNovaNavigationPanel* ParentPanel;
 
 	// Settings
-	float                   FadeDuration;
-	FSimpleDelegate         OnConfirmed;
-	FSimpleDelegate         OnDismissed;
-	FSimpleDelegate         OnCancelled;
-	FNovaModalPanelTextData TextData;
+	float           FadeDuration;
+	FSimpleDelegate OnConfirmed;
+	FSimpleDelegate OnDismissed;
+	FSimpleDelegate OnCancelled;
 
 	// Widgets
-	TSharedPtr<STextBlock> TitleText;
-	TSharedPtr<STextBlock> InformationText;
-	TSharedPtr<SBox>       ContentBox;
-	TSharedPtr<SWidget>    EmptyWidget;
+	TSharedPtr<STextBlock>        TitleText;
+	TSharedPtr<STextBlock>        InformationText;
+	TSharedPtr<SBox>              ContentBox;
+	TSharedPtr<SWidget>           InternalWidget;
+	TSharedPtr<class SNovaButton> ConfirmButton;
+	TSharedPtr<class SNovaButton> DismissButton;
+	TSharedPtr<class SNovaButton> CancelButton;
 
 	// Data
 	bool  ShouldShow;

@@ -190,58 +190,61 @@ FNovaSpacecraftCompartmentMetrics::FNovaSpacecraftCompartmentMetrics(const FNova
 	, Thrust(0.0f)
 	, TotalEngineISPTimesThrust(0.0f)
 {
-	const FNovaCompartment& Compartment = Spacecraft.Compartments[CompartmentIndex];
-
-	if (Compartment.IsValid())
+	if (CompartmentIndex >= 0 && CompartmentIndex < Spacecraft.Compartments.Num())
 	{
-		DryMass = Compartment.Description->Mass;
+		const FNovaCompartment& Compartment = Spacecraft.Compartments[CompartmentIndex];
 
-		// Iterate over modules
-		for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+		if (Compartment.IsValid())
 		{
-			const FNovaCompartmentModule& Module = Compartment.Modules[ModuleIndex];
-			if (IsValid(Module.Description))
+			DryMass = Compartment.Description->Mass;
+
+			// Iterate over modules
+			for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
 			{
-				ModuleCount++;
-				DryMass += Module.Description->Mass;
-
-				// Handle propellant modules
-				const UNovaPropellantModuleDescription* PropellantModule = Cast<UNovaPropellantModuleDescription>(Module.Description);
-				if (PropellantModule)
+				const FNovaCompartmentModule& Module = Compartment.Modules[ModuleIndex];
+				if (IsValid(Module.Description))
 				{
-					float PropellantMass = PropellantModule->PropellantMass;
+					ModuleCount++;
+					DryMass += Module.Description->Mass;
 
-					if (Spacecraft.IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
+					// Handle propellant modules
+					const UNovaPropellantModuleDescription* PropellantModule = Cast<UNovaPropellantModuleDescription>(Module.Description);
+					if (PropellantModule)
 					{
-						PropellantMass *= SkirtPropellantMultiplier;
+						float PropellantMass = PropellantModule->PropellantMass;
+
+						if (Spacecraft.IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
+						{
+							PropellantMass *= SkirtPropellantMultiplier;
+						}
+
+						PropellantMassCapacity += PropellantMass;
 					}
 
-					PropellantMassCapacity += PropellantMass;
-				}
-
-				// Handle cargo modules
-				const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Module.Description);
-				if (CargoModule)
-				{
-					CargoMassCapacity += CargoModule->CargoMass;
+					// Handle cargo modules
+					const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Module.Description);
+					if (CargoModule)
+					{
+						CargoMassCapacity += CargoModule->CargoMass;
+					}
 				}
 			}
-		}
 
-		// Iterate over equipments
-		for (const UNovaEquipmentDescription* Equipment : Compartment.Equipments)
-		{
-			if (IsValid(Equipment))
+			// Iterate over equipments
+			for (const UNovaEquipmentDescription* Equipment : Compartment.Equipments)
 			{
-				EquipmentCount++;
-				DryMass += Equipment->Mass;
-
-				// Handle engine equipments
-				const UNovaEngineDescription* Engine = Cast<UNovaEngineDescription>(Equipment);
-				if (Engine)
+				if (IsValid(Equipment))
 				{
-					Thrust += Engine->Thrust;
-					TotalEngineISPTimesThrust += Engine->SpecificImpulse * Engine->Thrust;
+					EquipmentCount++;
+					DryMass += Equipment->Mass;
+
+					// Handle engine equipments
+					const UNovaEngineDescription* Engine = Cast<UNovaEngineDescription>(Equipment);
+					if (Engine)
+					{
+						Thrust += Engine->Thrust;
+						TotalEngineISPTimesThrust += Engine->SpecificImpulse * Engine->Thrust;
+					}
 				}
 			}
 		}

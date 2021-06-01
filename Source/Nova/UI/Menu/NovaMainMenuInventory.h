@@ -63,6 +63,5 @@ protected:
 	class ANovaSpacecraftPawn*       SpacecraftPawn;
 
 	// Slate widgets
-	TSharedPtr<class SNovaModalPanel>   ModalPanel;
-	TSharedPtr<class SNovaTradingPanel> TradingPanel;
+	TSharedPtr<class SNovaTradingPanel> TradingModalPanel;
 };

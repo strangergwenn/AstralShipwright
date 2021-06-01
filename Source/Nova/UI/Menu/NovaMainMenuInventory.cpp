@@ -239,8 +239,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 	// clang-format on
 
 	// Build the trading panel
-	ModalPanel = Menu->CreateModalPanel();
-	SAssignNew(TradingPanel, SNovaTradingPanel).Panel(this);
+	TradingModalPanel = Menu->CreateModalPanel<SNovaTradingPanel>();
 
 	// BUild the procedural cargo lines
 	BuildCargoLine(LOCTEXT("GeneralCargoTitle", "General cargo"), ENovaResourceType::General);
@@ -284,10 +283,7 @@ TSharedPtr<SNovaButton> SNovaMainMenuInventory::GetDefaultFocusButton() const
 
 void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type)
 {
-	FNovaModalPanelTextData ModalTextData;
-
-	ModalPanel->Show(
-		LOCTEXT("Trade", "Trade"), FText(), FSimpleDelegate(), FSimpleDelegate(), FSimpleDelegate(), TradingPanel, ModalTextData);
+	TradingModalPanel->Show(LOCTEXT("Trade", "Trade"), FText(), FSimpleDelegate(), FSimpleDelegate(), FSimpleDelegate());
 }
 
 #undef LOCTEXT_NAMESPACE

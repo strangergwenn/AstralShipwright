@@ -27,6 +27,146 @@
 #define LOCTEXT_NAMESPACE "SNovaMainMenuAssembly"
 
 /*----------------------------------------------------
+    Diff widget
+----------------------------------------------------*/
+
+class SNovaAssemblyModalPanel : public SNovaModalPanel
+{
+public:
+	void ReviewAndSaveSpacecraft(
+		ANovaPlayerController* PC, ANovaSpacecraftPawn* SpacecraftPawn, TSharedPtr<SNovaModalPanel> GenericModalPanel)
+	{
+		const FNovaSpacecraft* CurrentSpacecraft = PC->GetSpacecraft();
+		NCHECK(CurrentSpacecraft);
+		FNovaSpacecraft ModifiedSpacecraft = SpacecraftPawn->GetSpacecraftCopy();
+		bool            HasModifiedDesign  = SpacecraftPawn->HasModifications();
+
+		// Analyze changes
+		HasValidSpacecraft = true;
+		FText DetailsText  = LOCTEXT("NoChanges", "No changes were made to the current design");
+		if (HasModifiedDesign)
+		{
+			HasValidSpacecraft = ModifiedSpacecraft.IsValid(&DetailsText);
+		}
+
+		// Reversal callback
+		FSimpleDelegate ConfirmRevertChanges = FSimpleDelegate::CreateLambda(
+			[=]()
+			{
+				SpacecraftPawn->ResetSpacecraft();
+			});
+
+		// Reversal confirmation callback
+		FSimpleDelegate ConfirmChanges;
+		FSimpleDelegate RevertChanges;
+		if (HasModifiedDesign)
+		{
+			ConfirmChanges = FSimpleDelegate::CreateLambda(
+				[=]()
+				{
+					SpacecraftPawn->ApplyAssembly();
+					PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
+				});
+
+			RevertChanges = FSimpleDelegate::CreateLambda(
+				[=]()
+				{
+					GenericModalPanel->Show(LOCTEXT("RevertChanges", "Revert changes"),
+						LOCTEXT("RevertChangesHelp", "Confirm the reversal of all changes to the spacecraft"), ConfirmRevertChanges);
+				});
+		}
+
+		// Prepare Slate data
+		const FNovaMainTheme&      Theme = FNovaStyleSet::GetMainTheme();
+		TSharedPtr<SHorizontalBox> SpacecraftDiffBox;
+
+		// clang-format off
+		SAssignNew(InternalWidget, SHorizontalBox)
+
+			+ SHorizontalBox::Slot()
+		
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNew(SVerticalBox)
+
+				// Changes box
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SBorder)
+					.BorderImage(FNovaStyleSet::GetBrush("Common/SB_White"))
+					.BorderBackgroundColor(HasValidSpacecraft ? Theme.PositiveColor : Theme.NegativeColor)
+					.Padding(Theme.ContentPadding)
+					[
+						SNew(SRichTextBlock)
+						.Text(DetailsText)
+						.TextStyle(&Theme.MainFont)
+						.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
+						+ SRichTextBlock::ImageDecorator()
+					]
+				]
+
+				// Diff box
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(Theme.VerticalContentPadding)
+				[
+					SAssignNew(SpacecraftDiffBox, SHorizontalBox)
+				
+					// Left panel
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNew(SNovaSpacecraftDatasheet)
+						.Title(LOCTEXT("CurrentSpacecraftTitle", "Current design"))
+						.TargetSpacecraft(*CurrentSpacecraft)
+					]
+				]
+			]
+
+			+ SHorizontalBox::Slot();
+
+		// Add the modification panel if relevant
+		if (HasModifiedDesign)
+		{
+			SpacecraftDiffBox->AddSlot()
+				.AutoWidth()
+				[
+					SNew(SNovaSpacecraftDatasheet)
+					.Title(LOCTEXT("ModifiedSpacecraftTitle", "Modified design"))
+					.TargetSpacecraft(ModifiedSpacecraft)
+					.ComparisonSpacecraft(CurrentSpacecraft)
+				];
+		}
+
+		// clang-format on
+
+		// Show the modal dialog
+		Show(LOCTEXT("ReviewChangesConfirm", "Review changes"), FText(), ConfirmChanges, RevertChanges);
+	}
+
+protected:
+	virtual bool IsConfirmEnabled() const
+	{
+		return HasValidSpacecraft;
+	}
+
+	virtual void UpdateButtons() override
+	{
+		ConfirmButton->SetText(LOCTEXT("ConfirmSpacecraft", "Apply changes"));
+		ConfirmButton->SetHelpText(LOCTEXT("ConfirmSpacecraftHelp", "Apply the changes to the spacecraft's design"));
+		DismissButton->SetText(LOCTEXT("ResetSpacecraft", "Revert changes"));
+		DismissButton->SetHelpText(LOCTEXT("ResetSpacecraftHelp", "Revert all changes to the spacecraft's design"));
+		CancelButton->SetText(LOCTEXT("CancelSpacecraft", "Close"));
+		CancelButton->SetHelpText(LOCTEXT("CancelSpacecraftHelp", "Close without doing anything"));
+	}
+
+protected:
+	bool HasValidSpacecraft;
+};
+
+/*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
@@ -507,8 +647,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 	];
 
 	// Build the modal panels
-	PrimaryModalPanel = Menu->CreateModalPanel();
-	SecondaryModalPanel = Menu->CreateModalPanel();
+	GenericModalPanel = Menu->CreateModalPanel();
+	AssemblyModalPanel = Menu->CreateModalPanel<SNovaAssemblyModalPanel>();
 
 	// Build compartment buttons
 	for (int32 Index = 0; Index < ENovaConstants::MaxCompartmentCount; Index++)
@@ -1510,9 +1650,9 @@ void SNovaMainMenuAssembly::OnRemoveCompartment()
 {
 	NCHECK(SelectedCompartmentIndex >= 0 && SelectedCompartmentIndex < ENovaConstants::MaxCompartmentCount);
 
-	PrimaryModalPanel->Show(LOCTEXT("ScrapCompartmentConfirm", "Scrap compartment"),
+	GenericModalPanel->Show(LOCTEXT("ScrapCompartmentConfirm", "Scrap compartment"),
 		LOCTEXT("ScrapCompartmentConfirmHelp", "Confirm the scrapping of this compartment"),
-		FSimpleDelegate::CreateSP(this, &SNovaMainMenuAssembly::OnRemoveCompartmentConfirmed), FSimpleDelegate(), FSimpleDelegate());
+		FSimpleDelegate::CreateSP(this, &SNovaMainMenuAssembly::OnRemoveCompartmentConfirmed));
 }
 
 void SNovaMainMenuAssembly::OnRemoveCompartmentConfirmed()
@@ -1639,129 +1779,9 @@ void SNovaMainMenuAssembly::OnSelectedHullTypeChanged(ENovaHullType Type, int32 
 
 void SNovaMainMenuAssembly::OnReviewSpacecraft()
 {
-	// Get spacecraft
-	if (IsValid(PC))
+	if (IsValid(PC) && IsValid(SpacecraftPawn))
 	{
-		const FNovaSpacecraft* CurrentSpacecraft = PC->GetSpacecraft();
-		NCHECK(CurrentSpacecraft);
-		FNovaSpacecraft ModifiedSpacecraft = SpacecraftPawn->GetSpacecraftCopy();
-		bool            HasModifiedDesign  = SpacecraftPawn->HasModifications();
-
-		// Analyze changes
-		bool  ValidSpacecraft = true;
-		FText DetailsText     = LOCTEXT("NoChanges", "No changes were made to the current design");
-		if (HasModifiedDesign)
-		{
-			ValidSpacecraft = ModifiedSpacecraft.IsValid(&DetailsText);
-		}
-
-		// Reversal callback
-		FSimpleDelegate ConfirmRevertChanges = FSimpleDelegate::CreateLambda(
-			[=]()
-			{
-				SpacecraftPawn->ResetSpacecraft();
-			});
-
-		// Reversal confirmation callback
-		FSimpleDelegate ConfirmChanges;
-		FSimpleDelegate RevertChanges;
-		if (HasModifiedDesign)
-		{
-			if (ValidSpacecraft)
-			{
-				ConfirmChanges = FSimpleDelegate::CreateLambda(
-					[=]()
-					{
-						SpacecraftPawn->ApplyAssembly();
-						PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
-					});
-			}
-
-			RevertChanges = FSimpleDelegate::CreateLambda(
-				[=]()
-				{
-					SecondaryModalPanel->Show(LOCTEXT("RevertChanges", "Revert changes"),
-						LOCTEXT("RevertChangesHelp", "Confirm the reversal of all changes to the spacecraft"), ConfirmRevertChanges);
-				});
-		}
-
-		// clang-format off
-		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-		TSharedPtr<SHorizontalBox> SpacecraftChangesBox;
-		TSharedPtr<SHorizontalBox> SpacecraftDiffBox;
-		SAssignNew(SpacecraftChangesBox, SHorizontalBox)
-
-			+ SHorizontalBox::Slot()
-		
-			+ SHorizontalBox::Slot()
-			.AutoWidth()
-			[
-				SNew(SVerticalBox)
-
-				// Changes box
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(SBorder)
-					.BorderImage(FNovaStyleSet::GetBrush("Common/SB_White"))
-					.BorderBackgroundColor(ValidSpacecraft ? Theme.PositiveColor : Theme.NegativeColor)
-					.Padding(Theme.ContentPadding)
-					[
-						SNew(SRichTextBlock)
-						.Text(DetailsText)
-						.TextStyle(&Theme.MainFont)
-						.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
-						+ SRichTextBlock::ImageDecorator()
-					]
-				]
-
-				// Diff box
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				.Padding(Theme.VerticalContentPadding)
-				[
-					SAssignNew(SpacecraftDiffBox, SHorizontalBox)
-				
-					// Left panel
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					[
-						SNew(SNovaSpacecraftDatasheet)
-						.Title(LOCTEXT("CurrentSpacecraftTitle", "Current design"))
-						.TargetSpacecraft(*CurrentSpacecraft)
-					]
-				]
-			]
-
-			+ SHorizontalBox::Slot();
-
-		// Add the modification panel if relevant
-		if (HasModifiedDesign)
-		{
-			SpacecraftDiffBox->AddSlot()
-				.AutoWidth()
-				[
-					SNew(SNovaSpacecraftDatasheet)
-					.Title(LOCTEXT("ModifiedSpacecraftTitle", "Modified design"))
-					.TargetSpacecraft(ModifiedSpacecraft)
-					.ComparisonSpacecraft(CurrentSpacecraft)
-				];
-		}
-
-		// clang-format on
-
-		// Tweak the button names on the modal panel
-		FNovaModalPanelTextData ModalTextData;
-		ModalTextData.Confirm     = LOCTEXT("ConfirmSpacecraft", "Apply changes");
-		ModalTextData.ConfirmHelp = LOCTEXT("ConfirmSpacecraftHelp", "Apply the changes to the spacecraft's design");
-		ModalTextData.Dismiss     = LOCTEXT("ResetSpacecraft", "Revert changes");
-		ModalTextData.DismissHelp = LOCTEXT("ResetSpacecraftHelp", "Revert all changes to the spacecraft's design");
-		ModalTextData.Cancel      = LOCTEXT("CancelSpacecraft", "Close");
-		ModalTextData.CancelHelp  = LOCTEXT("CancelSpacecraftHelp", "Close without doing anything");
-
-		// Show the modal dialog
-		PrimaryModalPanel->Show(LOCTEXT("ReviewChangesConfirm", "Review changes"), FText(), ConfirmChanges, RevertChanges,
-			FSimpleDelegate(), SpacecraftChangesBox, ModalTextData);
+		AssemblyModalPanel->ReviewAndSaveSpacecraft(PC, SpacecraftPawn, GenericModalPanel);
 	}
 }
 

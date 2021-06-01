@@ -371,15 +371,6 @@ void SNovaMenu::RefreshNavigationPanel()
 	}
 }
 
-TSharedPtr<SNovaModalPanel> SNovaMenu::CreateModalPanel()
-{
-	TSharedPtr<SNovaModalPanel> Panel;
-
-	MainOverlay->AddSlot()[SAssignNew(Panel, SNovaModalPanel).Menu(this)];
-
-	return Panel;
-}
-
 void SNovaMenu::SetModalNavigationPanel(class SNovaNavigationPanel* Panel)
 {
 	NCHECK(CurrentNavigationPanel);
