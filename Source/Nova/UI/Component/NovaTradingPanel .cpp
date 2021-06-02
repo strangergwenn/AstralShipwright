@@ -79,6 +79,15 @@ void SNovaTradingPanel::Construct(const FArguments& InArgs)
 					.AutoHeight()
 					.Padding(Theme.VerticalContentPadding)
 					[
+						SNew(SProgressBar)
+						.Style(&Theme.ProgressBarStyle)
+						.Percent(this, &SNovaTradingPanel::GetCargoProgress)
+					]
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					.Padding(Theme.VerticalContentPadding)
+					[
 						SNew(SHorizontalBox)
 
 						+ SHorizontalBox::Slot()
@@ -197,6 +206,11 @@ FText SNovaTradingPanel::GetResourceDetails() const
 	return FText();
 }
 
+TOptional<float> SNovaTradingPanel::GetCargoProgress() const
+{
+	return InitialAmount / Capacity;
+}
+
 FText SNovaTradingPanel::GetCargoAmount() const
 {
 	return FText::FormatNamed(
@@ -212,15 +226,18 @@ FText SNovaTradingPanel::GetCargoDetails() const
 {
 	if (CompartmentIndex == INDEX_NONE)
 	{
-		return FText::FormatNamed(LOCTEXT("CargoDetailsFormat", "Currently holding {amount}T out of {capacity}T across the spacecraft"),
-			TEXT("amount"), FText::AsNumber(InitialAmount), TEXT("capacity"), FText::AsNumber(Capacity));
+		return FText::FormatNamed(
+			LOCTEXT("CargoDetailsFormat", "Currently holding {amount}T out of {capacity}T across the spacecraft ({remaining}T remaining)"),
+			TEXT("amount"), FText::AsNumber(InitialAmount), TEXT("capacity"), FText::AsNumber(Capacity), TEXT("remaining"),
+			FText::AsNumber(Capacity - InitialAmount));
 	}
 	else
 	{
 		return FText::FormatNamed(
-			LOCTEXT("CargoDetailsFormat", "Currently holding {amount}T out of {capacity}T in compartment {compartment}"), TEXT("amount"),
-			FText::AsNumber(InitialAmount), TEXT("capacity"), FText::AsNumber(Capacity), TEXT("compartment"),
-			FText::AsNumber(CompartmentIndex + 1));
+			LOCTEXT("CargoDetailsFormat",
+				"Currently holding {amount}T out of {capacity}T in compartment {compartment} ({remaining}T remaining)"),
+			TEXT("amount"), FText::AsNumber(InitialAmount), TEXT("capacity"), FText::AsNumber(Capacity), TEXT("compartment"),
+			FText::AsNumber(CompartmentIndex + 1), TEXT("remaining"), FText::AsNumber(Capacity - InitialAmount));
 	}
 }
 

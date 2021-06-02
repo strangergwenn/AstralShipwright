@@ -43,6 +43,8 @@ protected:
 	const FSlateBrush* GetResourceImage() const;
 	FText              GetResourceDetails() const;
 
+	TOptional<float> GetCargoProgress() const;
+
 	FText GetCargoAmount() const;
 	FText GetCargoCapacity() const;
 	FText GetCargoDetails() const;
