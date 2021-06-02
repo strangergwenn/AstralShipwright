@@ -1565,9 +1565,9 @@ bool SNovaMainMenuAssembly::IsEquipmentEnabled(int32 EquipmentIndex) const
 
 FText SNovaMainMenuAssembly::GetModuleOrEquipmentText()
 {
-	if (CompartmentPanelVisible && IsValid(SpacecraftPawn))
+	if (IsValid(SpacecraftPawn) && EditedCompartmentIndex != INDEX_NONE)
 	{
-		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
+		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(EditedCompartmentIndex);
 
 		if (IsModuleSelected())
 		{
