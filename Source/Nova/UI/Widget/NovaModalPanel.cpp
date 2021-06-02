@@ -105,7 +105,7 @@ void SNovaModalPanel::Construct(const FArguments& InArgs)
 
 								+ SHorizontalBox::Slot()
 								[
-									SAssignNew(ConfirmButton, SNovaButton)
+									SNovaAssignNew(ConfirmButton, SNovaButton)
 									.Text(FText())
 									.Action(FNovaPlayerInput::MenuConfirm)
 									.OnClicked(this, &SNovaModalPanel::OnConfirmPanel)
@@ -115,7 +115,7 @@ void SNovaModalPanel::Construct(const FArguments& InArgs)
 
 								+ SHorizontalBox::Slot()
 								[
-									SAssignNew(DismissButton, SNovaButton)
+									SNovaAssignNew(DismissButton, SNovaButton)
 									.Text(FText())
 									.Action(FNovaPlayerInput::MenuSecondary)
 									.OnClicked(this, &SNovaModalPanel::OnDismissPanel)
@@ -124,7 +124,7 @@ void SNovaModalPanel::Construct(const FArguments& InArgs)
 
 								+ SHorizontalBox::Slot()
 								[
-									SAssignNew(CancelButton, SNovaButton)
+									SNovaAssignNew(CancelButton, SNovaButton)
 									.Text(FText())
 									.Action(FNovaPlayerInput::MenuCancel)
 									.OnClicked(this, &SNovaModalPanel::OnCancelPanel)
@@ -181,20 +181,6 @@ void SNovaModalPanel::Tick(const FGeometry& AllottedGeometry, const double Curre
 	{
 		SetVisibility(EVisibility::HitTestInvisible);
 	}
-}
-
-bool SNovaModalPanel::Confirm()
-{
-	OnConfirmPanel();
-
-	return true;
-}
-
-bool SNovaModalPanel::Cancel()
-{
-	OnCancelPanel();
-
-	return true;
 }
 
 void SNovaModalPanel::Show(FText Title, FText Text, FSimpleDelegate NewOnConfirmed, FSimpleDelegate NewOnDismissed,

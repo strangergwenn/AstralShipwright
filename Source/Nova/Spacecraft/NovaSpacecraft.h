@@ -121,10 +121,13 @@ struct FNovaCompartment
 	}
 
 	/** Get the cargo capacity for a particular type */
-	float GetCargoCapacity(ENovaResourceType Typee) const;
+	float GetCargoCapacity(ENovaResourceType Type) const;
+
+	/** Get the amount of cargo mass used by one resource */
+	float GetCargoMass(const class UNovaResource* Resource) const;
 
 	/** Get the amount of cargo mass available for one resource */
-	float GetAvailableCargoMass(const UNovaResource* Resource) const;
+	float GetAvailableCargoMass(const class UNovaResource* Resource) const;
 
 	/** Add a (possibly negative) amount of resources to the spacecraft */
 	void ModifyCargo(const class UNovaResource* Resource, float& MassDelta);
@@ -368,6 +371,12 @@ public:
 		NCHECK(CompartmentIndex >= 0 && CompartmentIndex < Compartments.Num());
 		return Compartments[CompartmentIndex].GetCargo(Type);
 	}
+
+	/** Get the cargo capacity for a particular type, across the ship or in a specific compartment */
+	float GetCargoCapacity(ENovaResourceType Type, int32 CompartmentIndex = INDEX_NONE) const;
+
+	/** Get the amount of cargo mass used by one resource, across the ship or in a specific compartment */
+	float GetCargoMass(const class UNovaResource* Resource, int32 CompartmentIndex = INDEX_NONE) const;
 
 	/** Get the amount of cargo mass available for one resource, across the ship or in a specific compartment */
 	float GetAvailableCargoMass(const class UNovaResource* Resource, int32 CompartmentIndex = INDEX_NONE) const;

@@ -110,8 +110,6 @@ public:
 
 	virtual void Previous() override;
 
-	virtual bool Cancel() override;
-
 	virtual void OnClicked(const FVector2D& Position) override;
 
 	virtual void OnDoubleClicked(const FVector2D& Position) override;

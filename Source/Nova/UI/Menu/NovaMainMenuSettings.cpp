@@ -463,13 +463,6 @@ void SNovaMainMenuSettings::Show()
 	FOVSlider->SetCurrentValue(GameUserSettings->FOV);
 }
 
-void SNovaMainMenuSettings::Hide()
-{
-	ModalPanel->Cancel();
-
-	SNovaTabPanel::Hide();
-}
-
 TSharedPtr<SNovaButton> SNovaMainMenuSettings::GetDefaultFocusButton() const
 {
 	if (MenuManager->IsOnConsole())

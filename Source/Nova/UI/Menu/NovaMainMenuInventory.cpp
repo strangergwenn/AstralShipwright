@@ -71,9 +71,12 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 
 				+ SHorizontalBox::Slot()
 				[
-					SNew(SProgressBar)
-					.Style(&Theme.ProgressBarStyle)
-					.Percent(0.5f)
+					SNew(SNovaButtonLayout)
+					[
+						SNew(SProgressBar)
+						.Style(&Theme.ProgressBarStyle)
+						.Percent(0.5f)
+					]
 				]
 			
 				+ SHorizontalBox::Slot()
@@ -132,7 +135,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 			[
 				SNovaNew(SNovaButton)
 				.Size("InventoryButtonSize")
-				//.HelpText()
+				//.HelpText() // TODO
 				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
 				{
 					return IsValidCompartment();
@@ -168,7 +171,6 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 
 					// Compartment index
 					+ SOverlay::Slot()
-					.VAlign(VAlign_Top)
 					[
 						SNew(SVerticalBox)
 
@@ -283,7 +285,15 @@ TSharedPtr<SNovaButton> SNovaMainMenuInventory::GetDefaultFocusButton() const
 
 void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type)
 {
-	TradingModalPanel->StartTrade();
+	const FNovaCompartment&     Compartment = SpacecraftPawn->GetCompartment(Index);
+	const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(Type);
+	// Cargo.Resource
+
+	// TODO
+	const UNovaResource* Resource = UNovaAssetManager::Get()->GetAsset<UNovaResource>(FGuid("{42C31723-4E30-F22F-1932-EAB2E0E0A3C7}"));
+	NCHECK(Resource);
+
+	TradingModalPanel->StartTrade(SpacecraftPawn, Resource, Index);
 }
 
 #undef LOCTEXT_NAMESPACE

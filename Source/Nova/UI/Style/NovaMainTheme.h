@@ -58,6 +58,7 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = General) float BlurStrength;
 	UPROPERTY(EditDefaultsOnly, Category = General) FLinearColor PositiveColor;
 	UPROPERTY(EditDefaultsOnly, Category = General) FLinearColor NegativeColor;
+	UPROPERTY(EditDefaultsOnly, Category = General) FLinearColor NeutralColor;
 
 	// Widget styles
 	UPROPERTY(EditDefaultsOnly, Category = Widget) FSliderStyle SliderStyle;

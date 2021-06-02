@@ -94,17 +94,9 @@ public:
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNew(SBorder)
-					.BorderImage(FNovaStyleSet::GetBrush("Common/SB_White"))
-					.BorderBackgroundColor(HasValidSpacecraft ? Theme.PositiveColor : Theme.NegativeColor)
-					.Padding(Theme.ContentPadding)
-					[
-						SNew(SRichTextBlock)
-						.Text(DetailsText)
-						.TextStyle(&Theme.MainFont)
-						.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
-						+ SRichTextBlock::ImageDecorator()
-					]
+					SNew(SNovaInfoText)
+					.Text(DetailsText)
+					.Type(HasValidSpacecraft ? ENovaInfoBoxType::Positive : ENovaInfoBoxType::Negative)
 				]
 
 				// Diff box
@@ -1093,23 +1085,6 @@ void SNovaMainMenuAssembly::Previous()
 	}
 }
 
-bool SNovaMainMenuAssembly::Cancel()
-{
-	if (CompartmentPanelVisible)
-	{
-		EditedCompartmentIndex = INDEX_NONE;
-
-		SpacecraftPawn->SetDisplayFilter(SpacecraftPawn->GetDisplayFilter(), INDEX_NONE);
-		SpacecraftPawn->SetOutlinedCompartment(SelectedCompartmentIndex);
-
-		return true;
-	}
-	else
-	{
-		return SNovaTabPanel::Cancel();
-	}
-}
-
 void SNovaMainMenuAssembly::OnClicked(const FVector2D& Position)
 {
 	if (!CompartmentPanelVisible && Menu->IsActiveNavigationPanel(this))
@@ -1787,7 +1762,13 @@ void SNovaMainMenuAssembly::OnReviewSpacecraft()
 
 void SNovaMainMenuAssembly::OnBackToAssembly()
 {
-	Cancel();
+	if (CompartmentPanelVisible)
+	{
+		EditedCompartmentIndex = INDEX_NONE;
+
+		SpacecraftPawn->SetDisplayFilter(SpacecraftPawn->GetDisplayFilter(), INDEX_NONE);
+		SpacecraftPawn->SetOutlinedCompartment(SelectedCompartmentIndex);
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -25,16 +25,6 @@ void SNovaNavigationPanel::Next()
 void SNovaNavigationPanel::Previous()
 {}
 
-bool SNovaNavigationPanel::Confirm()
-{
-	return false;
-}
-
-bool SNovaNavigationPanel::Cancel()
-{
-	return false;
-}
-
 TSharedPtr<SNovaButton> SNovaNavigationPanel::GetDefaultFocusButton() const
 {
 	if (DefaultNavigationButton && DefaultNavigationButton->IsButtonEnabled())

@@ -2,15 +2,9 @@
 
 #pragma once
 
-#include "Nova/UI/Widget/NovaButton.h"
 #include "Nova/UI/Widget/NovaModalPanel.h"
-#include "Nova/UI/Widget/NovaSlider.h"
 
-#include "Widgets/Layout/SScaleBox.h"
-
-#define LOCTEXT_NAMESPACE "SNovaTradingPanel"
-
-/** Heavyweight button class */
+/** Trading panel */
 class SNovaTradingPanel : public SNovaModalPanel
 {
 	/*----------------------------------------------------
@@ -25,90 +19,10 @@ class SNovaTradingPanel : public SNovaModalPanel
 	SLATE_END_ARGS()
 
 public:
-	SNovaTradingPanel()
+	SNovaTradingPanel() : SpacecraftPawn(nullptr), Resource(nullptr), CompartmentIndex(INDEX_NONE)
 	{}
 
-	void Construct(const FArguments& InArgs)
-	{
-		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-
-		// TODO
-		const UNovaResource* TestResource =
-			UNovaAssetManager::Get()->GetAsset<UNovaResource>(FGuid("{42C31723-4E30-F22F-1932-EAB2E0E0A3C7}"));
-		NCHECK(TestResource);
-
-		SNovaModalPanel::Construct(SNovaModalPanel::FArguments().Menu(InArgs._Menu));
-
-		// clang-format off
-		SAssignNew(InternalWidget, SHorizontalBox)
-
-		+ SHorizontalBox::Slot()
-
-		+ SHorizontalBox::Slot()
-		.AutoWidth()
-		[
-			SNew(SVerticalBox)
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(SNovaButtonLayout)
-				.Size("DoubleButtonSize")
-				[
-					SNew(SVerticalBox)
-
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNew(STextBlock)
-						.TextStyle(&Theme.MainFont)
-						.Text(TestResource->Description)
-						.AutoWrapText(true)
-						.WrapTextAt(FNovaStyleSet::GetButtonSize("DoubleButtonSize").Width)
-					]
-
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNew(SScaleBox)
-						.Stretch(EStretch::ScaleToFill)
-						[
-							SNew(SImage)
-							.Image(&TestResource->AssetRender)
-						]
-					]
-				]
-			]
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(SNovaSlider)
-				.Size("DoubleButtonSize")
-			]
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNew(SNovaButtonLayout)
-				.Size("DoubleButtonSize")
-				[
-					SNew(SBorder)
-					.BorderImage(FNovaStyleSet::GetBrush("Common/SB_White"))
-					.BorderBackgroundColor(Theme.PositiveColor)
-					.Padding(Theme.ContentPadding)
-					[
-						SNew(STextBlock)
-						.TextStyle(&Theme.InfoFont)
-						.Text(LOCTEXT("TestText", "This transaction will cost you 156 $currency"))
-					]
-				]
-			]
-		]
-		
-		+ SHorizontalBox::Slot();
-		// clang-format on
-	}
+	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
 	    Interface
@@ -116,26 +30,46 @@ public:
 
 public:
 	/** Start trading */
-	void StartTrade()
-	{
-		// TODO
-		const UNovaResource* TestResource =
-			UNovaAssetManager::Get()->GetAsset<UNovaResource>(FGuid("{42C31723-4E30-F22F-1932-EAB2E0E0A3C7}"));
-		NCHECK(TestResource);
+	void StartTrade(
+		class ANovaSpacecraftPawn* TargetSpacecraftPawn, const class UNovaResource* TargetResource, int32 TargetCompartmentIndex);
 
-		Show(TestResource->Name, FText(), FSimpleDelegate(), FSimpleDelegate(), FSimpleDelegate());
-	}
+	/*----------------------------------------------------
+	    Content callbacks
+	----------------------------------------------------*/
+
+protected:
+	bool IsConfirmEnabled() const override;
+
+	const FSlateBrush* GetResourceImage() const;
+	FText              GetResourceDetails() const;
+
+	FText GetCargoAmount() const;
+	FText GetCargoCapacity() const;
+	FText GetCargoDetails() const;
+
+	FText            GetTransactionDetails() const;
+	ENovaInfoBoxType GetTransactionType() const;
 
 	/*----------------------------------------------------
 	    Callbacks
 	----------------------------------------------------*/
 
 protected:
+	/** Confirm the trade and proceed */
+	void OnConfirmTrade();
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
 
 protected:
-};
+	// Slate widgets
+	TSharedPtr<class SNovaSlider> AmountSlider;
 
-#undef LOCTEXT_NAMESPACE
+	// Data
+	class ANovaSpacecraftPawn* SpacecraftPawn;
+	const UNovaResource*       Resource;
+	float                      InitialAmount;
+	float                      Capacity;
+	int32                      CompartmentIndex;
+};

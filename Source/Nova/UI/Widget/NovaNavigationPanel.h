@@ -57,12 +57,6 @@ public:
 	/** Previous item */
 	virtual void Previous();
 
-	/** Pass the confirm input to this menu, return true if used */
-	virtual bool Confirm();
-
-	/** Pass the cancel input to this menu, return true if used */
-	virtual bool Cancel();
-
 	/** Clicked */
 	virtual void OnClicked(const FVector2D& Position)
 	{}

@@ -168,6 +168,20 @@ public:
 		return Spacecraft->GetCompatibleEquipments(CompartmentIndex, SlotIndex);
 	}
 
+	/** Get the cargo capacity for a particular type, across the ship or in a specific compartment */
+	float GetCargoCapacity(ENovaResourceType Type, int32 CompartmentIndex = INDEX_NONE) const
+	{
+		NCHECK(Spacecraft.IsValid());
+		return Spacecraft->GetCargoCapacity(Type, CompartmentIndex);
+	}
+
+	/** Get the amount of cargo mass used by one resource, across the ship or in a specific compartment */
+	float GetCargoMass(const class UNovaResource* Resource, int32 CompartmentIndex = INDEX_NONE) const
+	{
+		NCHECK(Spacecraft.IsValid());
+		return Spacecraft->GetCargoMass(Resource, CompartmentIndex);
+	}
+
 	/** Get the amount of cargo mass available for one resource, across the ship or in a specific compartment */
 	float GetAvailableCargoMass(const class UNovaResource* Resource, int32 CompartmentIndex = INDEX_NONE) const
 	{

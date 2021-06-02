@@ -31,10 +31,6 @@ public:
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
-	virtual bool Confirm() override;
-
-	virtual bool Cancel() override;
-
 	/** Show the panel and take focus, with optional callbacks and an optional content block */
 	void Show(FText Title, FText Text, FSimpleDelegate NewOnConfirmed, FSimpleDelegate NewOnIgnore = FSimpleDelegate(),
 		FSimpleDelegate NewOnCancel = FSimpleDelegate(), TSharedPtr<SWidget> Content = TSharedPtr<SWidget>());

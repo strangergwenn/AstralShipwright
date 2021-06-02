@@ -491,16 +491,6 @@ FReply SNovaMenu::HandleKeyPress(FKey Key)
 		Result = FReply::Handled();
 	}
 
-	// Cancel action has priority over remaining actions but can be ignored
-	if (IsActionKey(FNovaPlayerInput::MenuCancel, Key))
-	{
-		if (CurrentNavigationPanel && CurrentNavigationPanel->Cancel())
-		{
-			Result = FReply::Handled();
-			return Result;
-		}
-	}
-
 	// Trigger action buttons
 	for (TSharedPtr<SNovaButton>& Button : GetActionButtons())
 	{
@@ -523,11 +513,7 @@ FReply SNovaMenu::HandleKeyPress(FKey Key)
 	// Activate focused button
 	if (IsActionKey(FNovaPlayerInput::MenuConfirm, Key))
 	{
-		if (CurrentNavigationPanel && CurrentNavigationPanel->Confirm())
-		{
-			Result = FReply::Handled();
-		}
-		else if (FocusedButton.IsValid())
+		if (FocusedButton.IsValid())
 		{
 			FocusedButton->OnButtonClicked();
 			Result = FReply::Handled();

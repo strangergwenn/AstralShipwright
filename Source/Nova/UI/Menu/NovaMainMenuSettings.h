@@ -31,8 +31,6 @@ public:
 
 	virtual void Show() override;
 
-	virtual void Hide() override;
-
 	TSharedPtr<class SNovaButton> GetDefaultFocusButton() const override;
 
 	/*----------------------------------------------------
