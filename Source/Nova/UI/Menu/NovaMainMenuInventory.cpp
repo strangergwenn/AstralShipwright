@@ -215,7 +215,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 							.BorderImage(&Theme.MainMenuGenericBackground)
 							.Padding(Theme.ContentPadding)
 							[
-								SNew(SNovaText)
+								SNew(SNovaRichText)
 								.Text(FNovaTextGetter::CreateLambda([=]() -> FText
 								{
 									if (IsValidCompartment())
@@ -225,7 +225,9 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 										int32 Amount = Cargo.Amount;
 										int32 Capacity = Compartment.GetCargoCapacity(Type);
 
-										return FText::FromString(FText::AsNumber(Amount).ToString() + " / " + FText::AsNumber(Capacity).ToString());
+										return FText::FormatNamed(LOCTEXT("CargoAmountFormat", "<img src=\"/Text/Cargo\"/> {amount}T / {capacity}T"),
+											TEXT("amount"), FText::AsNumber(Amount),
+											TEXT("capacity"), FText::AsNumber(Capacity));
 									}
 
 									return FText();
