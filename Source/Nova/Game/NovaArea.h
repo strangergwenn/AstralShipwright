@@ -63,6 +63,18 @@ public:
 	FNovaPlanetMass Mass;
 };
 
+/** Sold resource */
+USTRUCT()
+struct FNovaResourceSale
+{
+	GENERATED_BODY()
+
+public:
+	// Resource being sold here
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	const class UNovaResource* Resource;
+};
+
 /** World area description */
 UCLASS(ClassGroup = (Nova))
 class UNovaArea : public UNovaAssetDescription
@@ -85,4 +97,8 @@ public:
 	// Initial phase on the orbit in degrees
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Phase;
+
+	// Resources sold in this area
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	TArray<FNovaResourceSale> ResourcesSold;
 };
