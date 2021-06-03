@@ -84,7 +84,7 @@ public:
 	}
 
 	/** Create a new modal panel */
-	template <typename T = SNovaModalPanel>
+	template <typename T = class SNovaModalPanel>
 	TSharedPtr<T> CreateModalPanel()
 	{
 		TSharedPtr<T> Panel;
