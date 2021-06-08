@@ -4,6 +4,7 @@
 
 #include "Nova/UI/NovaUI.h"
 #include "Nova/UI/Widget/NovaTabView.h"
+#include "Nova/UI/Widget/NovaListView.h"
 
 #include "Online.h"
 
@@ -46,6 +47,16 @@ public:
 	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
 
 	/*----------------------------------------------------
+	    Resource list
+	----------------------------------------------------*/
+
+	TSharedRef<SWidget> GenerateResourceItem(const class UNovaResource* Resource);
+
+	const FSlateBrush* GetResourceIcon(const class UNovaResource* Resource) const;
+
+	FText GenerateResourceTooltip(const class UNovaResource* Resource);
+
+	/*----------------------------------------------------
 	    Callbacks
 	----------------------------------------------------*/
 
@@ -61,7 +72,14 @@ protected:
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 	class ANovaPlayerController*     PC;
 	class ANovaSpacecraftPawn*       SpacecraftPawn;
+	class ANovaGameState*            GameState;
+
+	// Resource list
+	TArray<const class UNovaResource*>                    ResourceList;
+	TSharedPtr<SNovaListView<const class UNovaResource*>> ResourceListView;
 
 	// Slate widgets
+	TSharedPtr<class SNovaModalPanel>   GenericModalPanel;
 	TSharedPtr<class SNovaTradingPanel> TradingModalPanel;
+	TSharedPtr<class SNovaButton>       RefuelButton;
 };

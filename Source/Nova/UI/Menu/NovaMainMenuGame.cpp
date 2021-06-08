@@ -547,7 +547,7 @@ TSharedRef<SWidget> SNovaMainMenuGame::GenerateFriendItem(TSharedRef<FOnlineFrie
 
 const FSlateBrush* SNovaMainMenuGame::GetFriendIcon(TSharedRef<FOnlineFriend> Friend) const
 {
-	return FNovaStyleSet::GetBrush(HasSelectedFriend() && Friend == FriendList[SelectedFriendIndex] ? "Icon/SB_ListOn" : "Icon/SB_ListOff");
+	return FriendListView->GetSelectionIcon(Friend);
 }
 
 FText SNovaMainMenuGame::GenerateFriendTooltip(TSharedRef<FOnlineFriend> Friend)

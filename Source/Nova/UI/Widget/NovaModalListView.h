@@ -31,6 +31,7 @@ private:
 		: _Panel(nullptr)
 		, _ItemsSource(nullptr)
 		, _Enabled(true)
+		, _Horizontal(false)
 		, _ButtonTheme("DefaultButton")
 		, _ButtonSize("DefaultButtonSize")
 		, _ListButtonTheme("DefaultButton")
@@ -52,6 +53,7 @@ private:
 	SLATE_EVENT(FNovaOnGenerateTooltip, OnGenerateTooltip)
 	SLATE_EVENT(FNovaListSelectionChanged, OnSelectionChanged)
 
+	SLATE_ARGUMENT(bool, Horizontal)
 	SLATE_ARGUMENT(FName, ButtonTheme)
 	SLATE_ARGUMENT(FName, ButtonSize)
 	SLATE_ARGUMENT(FName, ListButtonTheme)
@@ -73,8 +75,7 @@ public:
 		OnSelfRefresh      = InArgs._OnSelfRefresh;
 		OnGenerateName     = InArgs._OnGenerateName;
 		OnSelectionChanged = InArgs._OnSelectionChanged;
-
-		ListPanel = InArgs._Panel->GetMenu()->CreateModalPanel();
+		ListPanel          = InArgs._Panel->GetMenu()->CreateModalPanel();
 
 		SNovaButton::Construct(
 			SNovaButton::FArguments()
@@ -119,6 +120,24 @@ public:
 	void Show()
 	{
 		OnOpenList();
+	}
+
+	/** Check if an item is currently selected */
+	bool IsCurrentlySelected(const ItemType& Item) const
+	{
+		return Item == ListView->GetSelectedItem();
+	}
+
+	/** Get the selection icon */
+	const FSlateBrush* GetSelectionIcon(const ItemType& Item) const
+	{
+		return ListView->GetSelectionIcon(Item);
+	}
+
+	/** Get the currently selected item */
+	const ItemType& GetSelectedItem() const
+	{
+		return ListView->GetSelectedItem();
 	}
 
 	/*----------------------------------------------------

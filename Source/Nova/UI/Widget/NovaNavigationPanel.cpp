@@ -27,7 +27,7 @@ void SNovaNavigationPanel::Previous()
 
 TSharedPtr<SNovaButton> SNovaNavigationPanel::GetDefaultFocusButton() const
 {
-	if (DefaultNavigationButton && DefaultNavigationButton->IsButtonEnabled())
+	if (DefaultNavigationButton && DefaultNavigationButton->IsButtonEnabled() && DefaultNavigationButton->SupportsKeyboardFocus())
 	{
 		return DefaultNavigationButton;
 	}
@@ -35,7 +35,7 @@ TSharedPtr<SNovaButton> SNovaNavigationPanel::GetDefaultFocusButton() const
 	{
 		for (TSharedPtr<SNovaButton> Button : NavigationButtons)
 		{
-			if (Button->IsButtonEnabled())
+			if (Button->IsButtonEnabled() && Button->SupportsKeyboardFocus())
 			{
 				return Button;
 			}

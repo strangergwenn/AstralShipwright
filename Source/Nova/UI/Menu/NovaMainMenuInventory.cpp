@@ -28,7 +28,7 @@
     Constructor
 ----------------------------------------------------*/
 
-SNovaMainMenuInventory::SNovaMainMenuInventory() : PC(nullptr), SpacecraftPawn(nullptr)
+SNovaMainMenuInventory::SNovaMainMenuInventory() : PC(nullptr), SpacecraftPawn(nullptr), GameState(nullptr)
 {}
 
 void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
@@ -82,7 +82,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					SNovaNew(SNovaButton)
+					SNovaAssignNew(RefuelButton, SNovaButton)
 					.Text(LOCTEXT("RefillPropellant", "Refuel"))
 				]
 			]
@@ -242,10 +242,21 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 	};
 	// clang-format on
 
-	// Build the trading panel
+	// Build the trading panels
+	GenericModalPanel = Menu->CreateModalPanel();
 	TradingModalPanel = Menu->CreateModalPanel<SNovaTradingPanel>();
 
-	// BUild the procedural cargo lines
+	// Build the resource list panel
+	// clang-format off
+	SAssignNew(ResourceListView, SNovaListView<const UNovaResource*>)
+	.Panel(GenericModalPanel.Get())
+	.ItemsSource(&ResourceList)
+	.OnGenerateItem(this, &SNovaMainMenuInventory::GenerateResourceItem)
+	.OnGenerateTooltip(this, &SNovaMainMenuInventory::GenerateResourceTooltip)
+	.Horizontal(true);
+	// clang-format on
+
+	// Build the procedural cargo lines
 	BuildCargoLine(LOCTEXT("GeneralCargoTitle", "General cargo"), ENovaResourceType::General);
 	BuildCargoLine(LOCTEXT("BulkCargoTitle", "Bulk cargo"), ENovaResourceType::Bulk);
 	BuildCargoLine(LOCTEXT("LiquidCargoTitle", "Liquid cargo"), ENovaResourceType::Liquid);
@@ -274,11 +285,60 @@ void SNovaMainMenuInventory::UpdateGameObjects()
 {
 	PC             = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
 	SpacecraftPawn = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
+	GameState      = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
 }
 
 TSharedPtr<SNovaButton> SNovaMainMenuInventory::GetDefaultFocusButton() const
 {
-	return nullptr;
+	return RefuelButton;
+}
+
+/*----------------------------------------------------
+    Resource list
+----------------------------------------------------*/
+
+TSharedRef<SWidget> SNovaMainMenuInventory::GenerateResourceItem(const UNovaResource* Resource)
+{
+	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
+	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
+
+	// clang-format off
+	return SNew(SHorizontalBox)
+
+		+ SHorizontalBox::Slot()
+		.Padding(ButtonTheme.IconPadding)
+		.AutoWidth()
+		[
+			SNew(SBorder)
+			.BorderImage(new FSlateNoResource)
+			.HAlign(HAlign_Center)
+			.VAlign(VAlign_Center)
+			.Padding(0)
+			[
+				SNew(SImage)
+				.Image(this, &SNovaMainMenuInventory::GetResourceIcon, Resource)
+			]
+		]
+
+		+ SHorizontalBox::Slot()
+		.HAlign(HAlign_Left)
+		.VAlign(VAlign_Center)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.MainFont)
+			.Text(Resource->Name)
+		];
+	// clang-format on
+}
+
+const FSlateBrush* SNovaMainMenuInventory::GetResourceIcon(const UNovaResource* Resource) const
+{
+	return ResourceListView->GetSelectionIcon(Resource);
+}
+
+FText SNovaMainMenuInventory::GenerateResourceTooltip(const UNovaResource* Resource)
+{
+	return FText::FormatNamed(LOCTEXT("ResourceHelp", "Buy {resource}"), TEXT("resource"), Resource->Name);
 }
 
 /*----------------------------------------------------
@@ -287,15 +347,54 @@ TSharedPtr<SNovaButton> SNovaMainMenuInventory::GetDefaultFocusButton() const
 
 void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type)
 {
+	NCHECK(IsValid(SpacecraftPawn));
+	NCHECK(IsValid(GameState));
+	NCHECK(IsValid(GameState->GetCurrentArea()));
+
 	const FNovaCompartment&     Compartment = SpacecraftPawn->GetCompartment(Index);
 	const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(Type);
-	// Cargo.Resource
 
-	// TODO
-	const UNovaResource* Resource = UNovaAssetManager::Get()->GetAsset<UNovaResource>(FGuid("{42C31723-4E30-F22F-1932-EAB2E0E0A3C7}"));
-	NCHECK(Resource);
+	// Valid resource in hold - allow trading it directly
+	if (IsValid(Cargo.Resource))
+	{
+		TradingModalPanel->StartTrade(SpacecraftPawn, Cargo.Resource, Index);
+	}
 
-	TradingModalPanel->StartTrade(SpacecraftPawn, Resource, Index);
+	// Cargo hold is empty, pick a resource to buy first
+	else
+	{
+		TSharedPtr<SHorizontalBox> TradeBox;
+
+		auto BuyResource = [=]()
+		{
+			TradingModalPanel->StartTrade(SpacecraftPawn, ResourceListView->GetSelectedItem(), Index);
+		};
+
+		// clang-format off
+		SAssignNew(TradeBox, SHorizontalBox)
+
+			+ SHorizontalBox::Slot()
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				ResourceListView.ToSharedRef()
+			]
+
+			+ SHorizontalBox::Slot();
+		// clang-format on
+
+		//	Fill the resource list
+		ResourceList.Empty();
+		for (const FNovaResourceSale& Sale : GameState->GetCurrentArea()->ResourcesSold)
+		{
+			ResourceList.Add(Sale.Resource);
+		}
+		ResourceListView->Refresh(0);
+
+		// Proceed with the modal panel
+		GenericModalPanel->Show(LOCTEXT("SelectResource", "Select resource"), FText(), FSimpleDelegate::CreateLambda(BuyResource),
+			FSimpleDelegate(), FSimpleDelegate(), ResourceListView);
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

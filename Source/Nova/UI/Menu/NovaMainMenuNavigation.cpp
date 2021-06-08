@@ -356,7 +356,7 @@ FText SNovaMainMenuNavigation::GetDestinationName(const UNovaArea* Destination) 
 
 const FSlateBrush* SNovaMainMenuNavigation::GetDestinationIcon(const UNovaArea* Destination) const
 {
-	return FNovaStyleSet::GetBrush(Destination == SelectedDestination ? "Icon/SB_ListOn" : "Icon/SB_ListOff");
+	return DestinationListView->GetSelectionIcon(Destination);
 }
 
 FText SNovaMainMenuNavigation::GenerateDestinationTooltip(const UNovaArea* Destination)

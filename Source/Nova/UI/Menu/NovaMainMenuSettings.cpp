@@ -864,7 +864,7 @@ FText SNovaMainMenuSettings::GetCultureName(TSharedPtr<FString> Culture) const
 
 const FSlateBrush* SNovaMainMenuSettings::GetCultureIcon(TSharedPtr<FString> Culture) const
 {
-	return FNovaStyleSet::GetBrush(*Culture == *SelectedCulture ? "Icon/SB_ListOn" : "Icon/SB_ListOff");
+	return CultureListView->GetSelectionIcon(Culture);
 }
 
 FText SNovaMainMenuSettings::GenerateCultureTooltip(TSharedPtr<FString> Culture)
@@ -938,7 +938,7 @@ FText SNovaMainMenuSettings::GetResolutionName(TSharedPtr<struct FScreenResoluti
 
 const FSlateBrush* SNovaMainMenuSettings::GetResolutionIcon(TSharedPtr<struct FScreenResolutionRHI> Resolution) const
 {
-	return FNovaStyleSet::GetBrush(Resolution == SelectedResolution ? "Icon/SB_ListOn" : "Icon/SB_ListOff");
+	return ResolutionListView->GetSelectionIcon(Resolution);
 }
 
 FText SNovaMainMenuSettings::GenerateResolutionTooltip(TSharedPtr<FScreenResolutionRHI> Resolution)

@@ -236,7 +236,7 @@ void SNovaButton::Tick(const FGeometry& AllottedGeometry, const double CurrentTi
 			TargetColorAnim = 1.0f;
 			TargetSizeAnim  = 1.0f;
 		}
-		if (IsHovered())
+		if (Hovered)
 		{
 			TargetSizeAnim = 0.75f;
 		}
@@ -284,24 +284,26 @@ void SNovaButton::OnMouseEnter(const FGeometry& MyGeometry, const FPointerEvent&
 {
 	SButton::OnMouseEnter(MyGeometry, MouseEvent);
 
-	Hovered = true;
-
 	UNovaMenuManager* MenuManager = UNovaMenuManager::Get();
 	NCHECK(MenuManager);
-
-	MenuManager->ShowTooltip(this, HelpText.Get());
+	if (!MenuManager->IsUsingGamepad())
+	{
+		Hovered = true;
+		MenuManager->ShowTooltip(this, HelpText.Get());
+	}
 }
 
 void SNovaButton::OnMouseLeave(const FPointerEvent& MouseEvent)
 {
 	SButton::OnMouseLeave(MouseEvent);
 
-	Hovered = false;
-
 	UNovaMenuManager* MenuManager = UNovaMenuManager::Get();
 	NCHECK(MenuManager);
-
-	MenuManager->HideTooltip(this);
+	if (!MenuManager->IsUsingGamepad())
+	{
+		Hovered = false;
+		MenuManager->HideTooltip(this);
+	}
 }
 
 void SNovaButton::SetFocused(bool FocusedState)

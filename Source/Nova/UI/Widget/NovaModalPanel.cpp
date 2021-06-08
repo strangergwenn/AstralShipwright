@@ -209,6 +209,7 @@ void SNovaModalPanel::Show(FText Title, FText Text, FSimpleDelegate NewOnConfirm
 
 	if (Menu)
 	{
+		ResetNavigation();
 		Menu->SetModalNavigationPanel(this);
 	}
 }

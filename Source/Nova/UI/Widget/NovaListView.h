@@ -22,7 +22,7 @@ class SNovaListView : public SCompoundWidget
 	    Slate arguments
 	----------------------------------------------------*/
 
-	SLATE_BEGIN_ARGS(SNovaListView<ItemType>) : _ButtonTheme("DefaultButton"), _ButtonSize("DoubleButtonSize")
+	SLATE_BEGIN_ARGS(SNovaListView<ItemType>) : _Horizontal(false), _ButtonTheme("DefaultButton"), _ButtonSize("DoubleButtonSize")
 	{}
 
 	SLATE_ARGUMENT(SNovaNavigationPanel*, Panel)
@@ -33,6 +33,7 @@ class SNovaListView : public SCompoundWidget
 	SLATE_EVENT(FNovaListSelectionChanged, OnSelectionChanged)
 	SLATE_EVENT(FSimpleDelegate, OnSelectionDoubleClicked)
 
+	SLATE_ARGUMENT(bool, Horizontal)
 	SLATE_ARGUMENT(FName, ButtonTheme)
 	SLATE_ARGUMENT(FName, ButtonSize)
 
@@ -57,6 +58,10 @@ public:
 		ButtonTheme              = InArgs._ButtonTheme;
 		ButtonSize               = InArgs._ButtonSize;
 
+		// Sanity checks
+		NCHECK(Panel);
+		NCHECK(ItemsSource);
+
 		// clang-format off
 		ChildSlot
 		.VAlign(VAlign_Fill)
@@ -66,6 +71,7 @@ public:
 			.AnimateWheelScrolling(true)
 			.Style(&Theme.ScrollBoxStyle)
 			.ScrollBarVisibility(EVisibility::Collapsed)
+			.Orientation(InArgs._Horizontal ? Orient_Horizontal : Orient_Vertical)
 		];
 		// clang-format on
 
@@ -160,6 +166,18 @@ public:
 			Panel->GetMenu()->SetFocusedButton(ListButtons[PreviousSelectedIndex], true);
 			ListButtons[PreviousSelectedIndex]->GetState() = PreviousSelectedButtonState;
 		}
+	}
+
+	/** Check if an item is currently selected */
+	bool IsCurrentlySelected(const ItemType& Item) const
+	{
+		return Item == GetSelectedItem();
+	}
+
+	/** Get the selection icon */
+	const FSlateBrush* GetSelectionIcon(const ItemType& Item) const
+	{
+		return FNovaStyleSet::GetBrush(IsCurrentlySelected(Item) ? "Icon/SB_ListOn" : "Icon/SB_ListOff");
 	}
 
 	/** Get the currently selected index */
