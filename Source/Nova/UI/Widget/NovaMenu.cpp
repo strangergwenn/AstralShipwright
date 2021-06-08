@@ -374,6 +374,7 @@ void SNovaMenu::RefreshNavigationPanel()
 void SNovaMenu::SetModalNavigationPanel(class SNovaNavigationPanel* Panel)
 {
 	NCHECK(CurrentNavigationPanel);
+	NCHECK(PreviousNavigationPanel == nullptr);
 
 	PreviousNavigationPanel = CurrentNavigationPanel;
 

@@ -62,6 +62,8 @@ public:
 
 	void OnTradeWithSlot(int32 Index, ENovaResourceType Type);
 
+	void OnBuyResource();
+
 protected:
 	/*----------------------------------------------------
 	    Data
@@ -71,8 +73,9 @@ protected:
 	// Game objects
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 	class ANovaPlayerController*     PC;
-	class ANovaSpacecraftPawn*       SpacecraftPawn;
 	class ANovaGameState*            GameState;
+	const struct FNovaSpacecraft*    Spacecraft;
+	int32                            CurrentCompartmentIndex;
 
 	// Resource list
 	TArray<const class UNovaResource*>                    ResourceList;

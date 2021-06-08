@@ -5,7 +5,8 @@
 #include "NovaTradingPanel.h"
 
 #include "Nova/Game/NovaGameTypes.h"
-#include "Nova/Spacecraft/NovaSpacecraftPawn.h"
+#include "Nova/Player/NovaPlayerController.h"
+#include "Nova/Spacecraft/NovaSpacecraft.h"
 
 #include "Nova/UI/Widget/NovaSlider.h"
 #include "Nova/UI/Widget/NovaSlider.h"
@@ -151,12 +152,15 @@ void SNovaTradingPanel::Construct(const FArguments& InArgs)
     Interface
 ----------------------------------------------------*/
 
-void SNovaTradingPanel::StartTrade(
-	ANovaSpacecraftPawn* TargetSpacecraftPawn, const UNovaResource* TargetResource, int32 TargetCompartmentIndex)
+void SNovaTradingPanel::StartTrade(ANovaPlayerController* TargetPC, const UNovaResource* TargetResource, int32 TargetCompartmentIndex)
 {
-	SpacecraftPawn   = TargetSpacecraftPawn;
+	PC               = TargetPC;
+	Spacecraft       = PC->GetSpacecraft();
 	Resource         = TargetResource;
 	CompartmentIndex = TargetCompartmentIndex;
+
+	NCHECK(IsValid(PC));
+	NCHECK(Spacecraft);
 
 	InitialAmount = 0.0f;
 	Capacity      = 0.0f;
@@ -165,8 +169,8 @@ void SNovaTradingPanel::StartTrade(
 	{
 		if (CompartmentIndex != INDEX_NONE)
 		{
-			InitialAmount = SpacecraftPawn->GetCargoMass(Resource, CompartmentIndex);
-			Capacity      = InitialAmount + SpacecraftPawn->GetAvailableCargoMass(Resource, CompartmentIndex);
+			InitialAmount = Spacecraft->GetCargoMass(Resource, CompartmentIndex);
+			Capacity      = InitialAmount + Spacecraft->GetAvailableCargoMass(Resource, CompartmentIndex);
 		}
 	}
 
@@ -259,7 +263,9 @@ void SNovaTradingPanel::OnConfirmTrade()
 {
 	if (Resource)
 	{
-		SpacecraftPawn->ModifyCargo(Resource, AmountSlider->GetCurrentValue() - InitialAmount, CompartmentIndex);
+		FNovaSpacecraft ModifiedSpacecraft = Spacecraft->GetSafeCopy();
+		ModifiedSpacecraft.ModifyCargo(Resource, AmountSlider->GetCurrentValue() - InitialAmount, CompartmentIndex);
+		PC->UpdateSpacecraft(ModifiedSpacecraft);
 	}
 }
 

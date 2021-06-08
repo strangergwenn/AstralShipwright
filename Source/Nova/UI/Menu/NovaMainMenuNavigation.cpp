@@ -225,11 +225,6 @@ void SNovaMainMenuNavigation::Show()
 {
 	SNovaTabPanel::Show();
 
-	if (IsValid(SpacecraftPawn))
-	{
-		SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
-	}
-
 	TrajectoryCalculator->Reset();
 
 	// Destination list

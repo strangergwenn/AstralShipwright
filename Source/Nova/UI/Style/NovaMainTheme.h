@@ -31,6 +31,7 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 	{
 		OutBrushes.Add(&MainMenuBackground);
 		OutBrushes.Add(&MainMenuGenericBackground);
+		OutBrushes.Add(&MainMenuDarkBackground);
 		OutBrushes.Add(&MainMenuGenericBorder);
 		OutBrushes.Add(&MainMenuManipulator);
 		OutBrushes.Add(&TableHeaderBackground);
@@ -45,6 +46,7 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 	// Main
 	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush MainMenuBackground;
 	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush MainMenuGenericBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush MainMenuDarkBackground;
 	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush MainMenuGenericBorder;
 	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush MainMenuManipulator;
 	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush TableHeaderBackground;

@@ -19,7 +19,7 @@ class SNovaTradingPanel : public SNovaModalPanel
 	SLATE_END_ARGS()
 
 public:
-	SNovaTradingPanel() : SpacecraftPawn(nullptr), Resource(nullptr), CompartmentIndex(INDEX_NONE)
+	SNovaTradingPanel() : Spacecraft(nullptr), Resource(nullptr), CompartmentIndex(INDEX_NONE)
 	{}
 
 	void Construct(const FArguments& InArgs);
@@ -30,8 +30,7 @@ public:
 
 public:
 	/** Start trading */
-	void StartTrade(
-		class ANovaSpacecraftPawn* TargetSpacecraftPawn, const class UNovaResource* TargetResource, int32 TargetCompartmentIndex);
+	void StartTrade(class ANovaPlayerController* TargetPC, const class UNovaResource* TargetResource, int32 TargetCompartmentIndex);
 
 	/*----------------------------------------------------
 	    Content callbacks
@@ -69,9 +68,10 @@ protected:
 	TSharedPtr<class SNovaSlider> AmountSlider;
 
 	// Data
-	class ANovaSpacecraftPawn* SpacecraftPawn;
-	const UNovaResource*       Resource;
-	float                      InitialAmount;
-	float                      Capacity;
-	int32                      CompartmentIndex;
+	class ANovaPlayerController*  PC;
+	const struct FNovaSpacecraft* Spacecraft;
+	const UNovaResource*          Resource;
+	float                         InitialAmount;
+	float                         Capacity;
+	int32                         CompartmentIndex;
 };

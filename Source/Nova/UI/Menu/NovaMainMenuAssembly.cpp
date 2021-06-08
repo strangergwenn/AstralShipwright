@@ -1404,7 +1404,7 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateAssetItem(const UNovaAssetDes
 	return SNew(SOverlay)
 		.Clipping(EWidgetClipping::ClipToBoundsAlways)
 
-		 + SOverlay::Slot()
+		+ SOverlay::Slot()
 		[
 			SNew(SScaleBox)
 			[
@@ -1412,28 +1412,47 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateAssetItem(const UNovaAssetDes
 			]
 		]
 
-		 + SOverlay::Slot()
+		+ SOverlay::Slot()
 		.Padding(Theme.ContentPadding)
 		[
-			SNew(SVerticalBox)
+			SNew(SHorizontalBox)
 
-			+ SVerticalBox::Slot()
-			.AutoHeight()
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
 			[
-				SNew(STextBlock)
-				.TextStyle(&Theme.MainFont)
-				 .Text(GetAssetName(Asset))
-			 ]
+				SNew(SVerticalBox)
 
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.TextStyle(&Theme.MainFont)
+						.Text(GetAssetName(Asset))
+					]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SRichTextBlock)
+					.Text(GetAssetDescription(Asset))
+					.TextStyle(&Theme.MainFont)
+					.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
+					+ SRichTextBlock::ImageDecorator()
+				]
+			]
+		
+			+ SHorizontalBox::Slot()
+			
+			// TODO pricing
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			/*[
 				SNew(SRichTextBlock)
-				.Text(GetAssetDescription(Asset))
+				.Text()
 				.TextStyle(&Theme.MainFont)
 				.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
 				+ SRichTextBlock::ImageDecorator()
-			 ]
+			 ]*/
 		];
 
 	// clang-format on
