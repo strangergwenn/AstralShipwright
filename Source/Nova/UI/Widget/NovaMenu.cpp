@@ -24,6 +24,7 @@ SNovaMenu::SNovaMenu()
 	, MousePressed(false)
 	, MousePressedContinued(false)
 	, CurrentNavigationPanel(nullptr)
+	, PreviousNavigationPanel(nullptr)
 	, CurrentAnalogNavigation(EUINavigation::Invalid)
 	, CurrentAnalogNavigationTime(0)
 {}
