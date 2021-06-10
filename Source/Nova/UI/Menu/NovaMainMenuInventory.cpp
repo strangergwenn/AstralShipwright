@@ -165,7 +165,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 									}
 								}
 
-								return nullptr;
+								return &UNovaAssetManager::Get()->GetAsset<UNovaResource>(FGuid("{A89057F9-436B-E890-5538-5986C1C0644E}"))->AssetRender;
 							}))
 						]
 					]
@@ -305,6 +305,9 @@ TSharedRef<SWidget> SNovaMainMenuInventory::GenerateResourceItem(const UNovaReso
 	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
 	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
 
+	FNumberFormattingOptions Options;
+	Options.MaximumFractionalDigits = 0;
+
 	// clang-format off
 	
 	return SNew(SOverlay)
@@ -315,6 +318,18 @@ TSharedRef<SWidget> SNovaMainMenuInventory::GenerateResourceItem(const UNovaReso
 			SNew(SScaleBox)
 			[
 				SNew(SImage).Image(&Resource->AssetRender)
+			]
+		]
+
+		+ SOverlay::Slot()
+		[
+			SNew(SScaleBox)
+			.Stretch(EStretch::ScaleToFit)
+			.HAlign(HAlign_Right)
+			[
+				SNew(SImage)
+				.Image(FNovaStyleSet::GetBrush("Common/SB_Corner"))
+				.ColorAndOpacity(Theme.PositiveColor)
 			]
 		]
 
@@ -337,21 +352,18 @@ TSharedRef<SWidget> SNovaMainMenuInventory::GenerateResourceItem(const UNovaReso
 
 			+ SHorizontalBox::Slot()
 
-			// TODO pricing
 			+ SHorizontalBox::Slot()
 			.AutoWidth()
-			/*[
-				SNew(SBorder)
-				.BorderImage(&Theme.MainMenuDarkBackground)
-				.Padding(Theme.ContentPadding)
-				[
-					SNew(SRichTextBlock)
-					.Text()
-					.TextStyle(&Theme.MainFont)
-					.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
-					+ SRichTextBlock::ImageDecorator()
-				]
-			 ]*/
+			.Padding(Theme.ContentPadding)
+			[
+				SNew(SRichTextBlock)
+				.Text(FText::FromString(FText::AsCurrency(12000, TEXT("CUR"), &Options)
+					.ToString().Replace(TEXT("CUR"), TEXT("Ѥ")))
+				)
+				.TextStyle(&Theme.MainFont)
+				.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
+				+ SRichTextBlock::ImageDecorator()
+			]
 		];
 	// clang-format on
 }
