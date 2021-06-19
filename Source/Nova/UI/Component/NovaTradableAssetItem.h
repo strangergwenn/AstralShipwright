@@ -149,8 +149,10 @@ protected:
 		{
 			return GetPriceText(Asset->BasePrice);
 		}
-
-		return FText();
+		else
+		{
+			return GetPriceText(0);
+		}
 	}
 
 protected:

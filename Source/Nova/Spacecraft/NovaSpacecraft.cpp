@@ -289,15 +289,14 @@ TArray<FText> FNovaSpacecraftCompartmentMetrics::GetDescription() const
 
 	if (PropellantMassCapacity)
 	{
-		Result.Add(
-			FText::FormatNamed(LOCTEXT("CompartmentPropellantFormat", "<img src=\"/Text/Propellant\"/> {propellant} T propellant capacity"),
-				TEXT("propellant"), FText::AsNumber(FMath::RoundToInt(PropellantMassCapacity))));
+		Result.Add(FText::FormatNamed(LOCTEXT("CompartmentPropellantFormat", "<img src=\"/Text/Propellant\"/> {propellant} T propellant"),
+			TEXT("propellant"), FText::AsNumber(FMath::RoundToInt(PropellantMassCapacity))));
 	}
 
 	if (CargoMassCapacity)
 	{
-		Result.Add(FText::FormatNamed(LOCTEXT("CompartmentCargoFormat", "<img src=\"/Text/Cargo\"/> {cargo} T cargo capacity"),
-			TEXT("cargo"), FText::AsNumber(FMath::RoundToInt(CargoMassCapacity))));
+		Result.Add(FText::FormatNamed(LOCTEXT("CompartmentCargoFormat", "<img src=\"/Text/Cargo\"/> {cargo} T cargo"), TEXT("cargo"),
+			FText::AsNumber(FMath::RoundToInt(CargoMassCapacity))));
 	}
 
 	return Result;
