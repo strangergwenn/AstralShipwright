@@ -14,7 +14,7 @@
 #include "Nova/Player/NovaPlayerController.h"
 
 #include "Nova/UI/Component/NovaTradingPanel.h"
-#include "Nova/UI/Component/NovaResourceItem.h"
+#include "Nova/UI/Component/NovaTradableAssetItem.h"
 #include "Nova/UI/Widget/NovaFadingWidget.h"
 #include "Nova/UI/Widget/NovaModalPanel.h"
 
@@ -336,7 +336,7 @@ void SNovaMainMenuInventory::UpdateGameObjects()
 
 TSharedRef<SWidget> SNovaMainMenuInventory::GenerateResourceItem(const UNovaResource* Resource)
 {
-	return SNew(SNovaResourceItem).Resource(Resource);
+	return SNew(SNovaTradableAssetItem).Asset(Resource).Dark(true);
 }
 
 const FSlateBrush* SNovaMainMenuInventory::GetResourceIcon(const UNovaResource* Resource) const

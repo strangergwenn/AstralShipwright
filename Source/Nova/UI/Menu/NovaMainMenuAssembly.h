@@ -214,9 +214,7 @@ protected:
 	FText               GenerateHullTypeTooltip(ENovaHullType Type) const;
 
 	// Helpers
-	TSharedRef<SWidget> GenerateAssetItem(const class UNovaAssetDescription* Asset) const;
-	FText               GetAssetName(const class UNovaAssetDescription* Asset) const;
-	FText               GetAssetDescription(const UNovaAssetDescription* Asset) const;
+	FText GetAssetName(const class UNovaTradableAssetDescription* Asset) const;
 
 	// Panels
 	FLinearColor GetMainColor() const;

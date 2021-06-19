@@ -13,6 +13,7 @@
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 
 #include "Nova/UI/Component/NovaSpacecraftDatasheet.h"
+#include "Nova/UI/Component/NovaTradableAssetItem.h"
 #include "Nova/UI/Widget/NovaFadingWidget.h"
 #include "Nova/UI/Widget/NovaModalPanel.h"
 #include "Nova/UI/Widget/NovaKeyLabel.h"
@@ -1277,7 +1278,7 @@ void SNovaMainMenuAssembly::SetCompartmentPanelVisible(bool Active)
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateCompartmentItem(const UNovaCompartmentDescription* Description) const
 {
-	return GenerateAssetItem(Description);
+	return SNew(SNovaTradableAssetItem).Asset(Description);
 }
 
 FText SNovaMainMenuAssembly::GenerateCompartmentTooltip(const UNovaCompartmentDescription* Description) const
@@ -1296,7 +1297,7 @@ EVisibility SNovaMainMenuAssembly::GetModuleListVisibility() const
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateModuleItem(const UNovaModuleDescription* Module) const
 {
-	return GenerateAssetItem(Module);
+	return SNew(SNovaTradableAssetItem).Asset(Module);
 }
 
 FText SNovaMainMenuAssembly::GetModuleListTitle(const UNovaModuleDescription* Module) const
@@ -1327,7 +1328,7 @@ EVisibility SNovaMainMenuAssembly::GetEquipmentListVisibility() const
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEquipmentItem(const UNovaEquipmentDescription* Equipment) const
 {
-	return GenerateAssetItem(Equipment);
+	return SNew(SNovaTradableAssetItem).Asset(Equipment);
 }
 
 FText SNovaMainMenuAssembly::GetEquipmentListTitle(const UNovaEquipmentDescription* Equipment) const
@@ -1399,76 +1400,9 @@ FText SNovaMainMenuAssembly::GenerateHullTypeTooltip(ENovaHullType Type) const
     Content callbacks
 ----------------------------------------------------*/
 
-TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateAssetItem(const UNovaAssetDescription* Asset) const
-{
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-
-	// clang-format off
-	return SNew(SOverlay)
-		.Clipping(EWidgetClipping::ClipToBoundsAlways)
-
-		+ SOverlay::Slot()
-		[
-			SNew(SScaleBox)
-			[
-				SNew(SImage).Image(Asset ? &Asset->AssetRender : new FSlateNoResource)
-			]
-		]
-
-		+ SOverlay::Slot()
-		.Padding(Theme.ContentPadding)
-		[
-			SNew(SHorizontalBox)
-
-			+ SHorizontalBox::Slot()
-			.AutoWidth()
-			[
-				SNew(SVerticalBox)
-
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(STextBlock)
-					.TextStyle(&Theme.MainFont)
-						.Text(GetAssetName(Asset))
-					]
-
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNew(SRichTextBlock)
-					.Text(GetAssetDescription(Asset))
-					.TextStyle(&Theme.MainFont)
-					.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
-					+ SRichTextBlock::ImageDecorator()
-				]
-			]
-		
-			+ SHorizontalBox::Slot()
-			
-			// TODO pricing
-			+ SHorizontalBox::Slot()
-			.AutoWidth()
-			/*[
-				SNew(SRichTextBlock)
-				.Text()
-				.TextStyle(&Theme.MainFont)
-				.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
-				+ SRichTextBlock::ImageDecorator()
-			 ]*/
-		];
-
-	// clang-format on
-}
-
-FText SNovaMainMenuAssembly::GetAssetName(const UNovaAssetDescription* Asset) const
+FText SNovaMainMenuAssembly::GetAssetName(const UNovaTradableAssetDescription* Asset) const
 {
 	return Asset ? Asset->Name : LOCTEXT("Empty", "Empty");
-}
-
-FText SNovaMainMenuAssembly::GetAssetDescription(const UNovaAssetDescription* Asset) const
-{
-	return Asset ? Asset->GetParagraphDescription() : FText();
 }
 
 FLinearColor SNovaMainMenuAssembly::GetMainColor() const

@@ -258,6 +258,18 @@ public:
 	FSlateBrush AssetRender;
 };
 
+/** Description of a tradable asset */
+UCLASS(ClassGroup = (Nova))
+class UNovaTradableAssetDescription : public UNovaAssetDescription
+{
+	GENERATED_BODY()
+
+public:
+	// Base price modulated by the economy
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	float BasePrice = 10;
+};
+
 /*----------------------------------------------------
     Resources
 ----------------------------------------------------*/
@@ -273,7 +285,7 @@ enum class ENovaResourceType : uint8
 
 /** Description of a resource */
 UCLASS(ClassGroup = (Nova))
-class UNovaResource : public UNovaAssetDescription
+class UNovaResource : public UNovaTradableAssetDescription
 {
 	GENERATED_BODY()
 
@@ -296,10 +308,6 @@ public:
 	// Resource description
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	FText Description;
-
-	// Resource base price modulated by the economy
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	float BasePrice = 10;
 
 #if WITH_EDITORONLY_DATA
 

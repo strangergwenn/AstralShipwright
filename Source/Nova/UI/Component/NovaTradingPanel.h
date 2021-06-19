@@ -65,8 +65,8 @@ protected:
 
 protected:
 	// Slate widgets
-	TSharedPtr<class SNovaSlider>       AmountSlider;
-	TSharedPtr<class SNovaResourceItem> ResourceItem;
+	TSharedPtr<class SNovaSlider>            AmountSlider;
+	TSharedPtr<class SNovaTradableAssetItem> ResourceItem;
 
 	// Data
 	class ANovaPlayerController*  PC;

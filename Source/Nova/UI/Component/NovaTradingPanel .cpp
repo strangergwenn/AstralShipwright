@@ -12,7 +12,7 @@
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Spacecraft/System/NovaSpacecraftPropellantSystem.h"
 
-#include "Nova/UI/Component/NovaResourceItem.h"
+#include "Nova/UI/Component/NovaTradableAssetItem.h"
 #include "Nova/UI/Widget/NovaSlider.h"
 
 #include "Widgets/Layout/SScaleBox.h"
@@ -61,7 +61,7 @@ void SNovaTradingPanel::Construct(const FArguments& InArgs)
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
-						SAssignNew(ResourceItem, SNovaResourceItem)
+						SAssignNew(ResourceItem, SNovaTradableAssetItem)
 					]
 
 					+ SVerticalBox::Slot()
@@ -188,7 +188,7 @@ void SNovaTradingPanel::StartTrade(ANovaPlayerController* TargetPC, const UNovaR
 
 	AmountSlider->SetMaxValue(Capacity);
 	AmountSlider->SetCurrentValue(InitialAmount);
-	ResourceItem->SetResource(TargetResource);
+	ResourceItem->SetAsset(TargetResource);
 
 	FSimpleDelegate ConfirmTrade = FSimpleDelegate::CreateSP(this, &SNovaTradingPanel::OnConfirmTrade);
 	Show(LOCTEXT("TradeTitle", "Trade resource"), FText(), ConfirmTrade);

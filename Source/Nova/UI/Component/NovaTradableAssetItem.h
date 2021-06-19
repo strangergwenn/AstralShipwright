@@ -6,22 +6,23 @@
 #include "Widgets/Layout/SScaleBox.h"
 
 /** Nova resource item image */
-class SNovaResourceItem : public SCompoundWidget
+class SNovaTradableAssetItem : public SCompoundWidget
 {
-	SLATE_BEGIN_ARGS(SNovaResourceItem) : _Resource(nullptr)
+	SLATE_BEGIN_ARGS(SNovaTradableAssetItem) : _Asset(nullptr), _Dark(false)
 	{}
 
-	SLATE_ARGUMENT(const UNovaResource*, Resource)
+	SLATE_ARGUMENT(const UNovaTradableAssetDescription*, Asset)
+	SLATE_ARGUMENT(bool, Dark)
 
 	SLATE_END_ARGS()
 
 public:
-	SNovaResourceItem() : Resource(nullptr)
+	SNovaTradableAssetItem() : Asset(nullptr)
 	{}
 
 	void Construct(const FArguments& InArgs)
 	{
-		Resource = InArgs._Resource;
+		Asset = InArgs._Asset;
 
 		const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
 		const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
@@ -39,7 +40,7 @@ public:
 				[
 					SNew(SScaleBox)
 					[
-						SNew(SImage).Image(this, &SNovaResourceItem::GetBrush)
+						SNew(SImage).Image(this, &SNovaTradableAssetItem::GetBrush)
 					]
 				]
 
@@ -63,12 +64,28 @@ public:
 					.AutoWidth()
 					[
 						SNew(SBorder)
-						.BorderImage(&Theme.MainMenuDarkBackground)
+						.BorderImage(InArgs._Dark ? &Theme.MainMenuDarkBackground : new FSlateNoResource)
 						.Padding(Theme.ContentPadding)
 						[
-							SNew(STextBlock)
-							.TextStyle(&Theme.MainFont)
-							 .Text(this, &SNovaResourceItem::GetName)
+							SNew(SVerticalBox)
+
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNew(STextBlock)
+								.TextStyle(&Theme.MainFont)
+								.Text(this, &SNovaTradableAssetItem::GetName)
+							]
+
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNew(SRichTextBlock)
+								.TextStyle(&Theme.MainFont)
+								.Text(this, &SNovaTradableAssetItem::GetDescription)
+								.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
+								+ SRichTextBlock::ImageDecorator()
+							]
 						]
 					 ]
 
@@ -79,7 +96,7 @@ public:
 					.Padding(Theme.ContentPadding)
 					[
 						SNew(SRichTextBlock)
-						.Text(this, &SNovaResourceItem::GetPrice)
+						.Text(this, &SNovaTradableAssetItem::GetPrice)
 						.TextStyle(&Theme.MainFont)
 						.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
 						+ SRichTextBlock::ImageDecorator()
@@ -90,17 +107,17 @@ public:
 		// clang-format on
 	}
 
-	void SetResource(const UNovaResource* NewResource)
+	void SetAsset(const UNovaTradableAssetDescription* NewAsset)
 	{
-		Resource = NewResource;
+		Asset = NewAsset;
 	}
 
 protected:
 	const FSlateBrush* GetBrush() const
 	{
-		if (Resource)
+		if (Asset)
 		{
-			return &Resource->AssetRender;
+			return &Asset->AssetRender;
 		}
 
 		return nullptr;
@@ -108,9 +125,19 @@ protected:
 
 	FText GetName() const
 	{
-		if (Resource)
+		if (Asset)
 		{
-			return Resource->Name;
+			return Asset->Name;
+		}
+
+		return FText();
+	}
+
+	FText GetDescription() const
+	{
+		if (Asset)
+		{
+			return Asset->GetParagraphDescription();
 		}
 
 		return FText();
@@ -118,9 +145,9 @@ protected:
 
 	FText GetPrice() const
 	{
-		if (Resource)
+		if (Asset)
 		{
-			return GetPriceText(Resource->BasePrice);
+			return GetPriceText(Asset->BasePrice);
 		}
 
 		return FText();
@@ -128,5 +155,5 @@ protected:
 
 protected:
 	// General data
-	const UNovaResource* Resource;
+	const UNovaTradableAssetDescription* Asset;
 };

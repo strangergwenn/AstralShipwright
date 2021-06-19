@@ -179,7 +179,7 @@ public:
 
 /** Description of a main compartment asset */
 UCLASS(ClassGroup = (Nova))
-class UNovaCompartmentDescription : public UNovaAssetDescription
+class UNovaCompartmentDescription : public UNovaTradableAssetDescription
 {
 	GENERATED_BODY()
 
@@ -328,7 +328,7 @@ public:
 
 /** Description of an optional compartment equipment */
 UCLASS(ClassGroup = (Nova))
-class UNovaModuleDescription : public UNovaAssetDescription
+class UNovaModuleDescription : public UNovaTradableAssetDescription
 {
 	GENERATED_BODY()
 
@@ -416,7 +416,7 @@ public:
 
 /** Description of an optional compartment equipment */
 UCLASS(ClassGroup = (Nova))
-class UNovaEquipmentDescription : public UNovaAssetDescription
+class UNovaEquipmentDescription : public UNovaTradableAssetDescription
 {
 	GENERATED_BODY()
 
