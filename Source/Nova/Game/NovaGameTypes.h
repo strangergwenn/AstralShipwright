@@ -282,6 +282,13 @@ class UNovaResource : public UNovaAssetDescription
 	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
 
 public:
+	/** Get a special empty resource */
+	static const UNovaResource* GetEmpty();
+
+	/** Get a special propellant resource */
+	static const UNovaResource* GetPropellant();
+
+public:
 	// Type of cargo hold that will be required for this resource
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	ENovaResourceType Type = ENovaResourceType::Bulk;
@@ -289,6 +296,10 @@ public:
 	// Resource description
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	FText Description;
+
+	// Resource base price modulated by the economy
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	float BasePrice = 10;
 
 #if WITH_EDITORONLY_DATA
 

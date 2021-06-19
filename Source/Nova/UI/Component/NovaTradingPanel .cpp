@@ -5,13 +5,14 @@
 #include "NovaTradingPanel.h"
 
 #include "Nova/Game/NovaGameTypes.h"
+#include "Nova/System/NovaGameInstance.h"
 #include "Nova/Player/NovaPlayerController.h"
 
 #include "Nova/Spacecraft/NovaSpacecraft.h"
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Spacecraft/System/NovaSpacecraftPropellantSystem.h"
 
-#include "Nova/UI/Widget/NovaSlider.h"
+#include "Nova/UI/Component/NovaResourceItem.h"
 #include "Nova/UI/Widget/NovaSlider.h"
 
 #include "Widgets/Layout/SScaleBox.h"
@@ -60,12 +61,7 @@ void SNovaTradingPanel::Construct(const FArguments& InArgs)
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
-						SNew(SScaleBox)
-						.Stretch(EStretch::ScaleToFill)
-						[
-							SNew(SImage)
-							.Image(this, &SNovaTradingPanel::GetResourceImage)
-						]
+						SAssignNew(ResourceItem, SNovaResourceItem)
 					]
 
 					+ SVerticalBox::Slot()
@@ -163,17 +159,15 @@ void SNovaTradingPanel::StartTrade(ANovaPlayerController* TargetPC, const UNovaR
 	CompartmentIndex = TargetCompartmentIndex;
 
 	NCHECK(IsValid(PC));
+	NCHECK(IsValid(Resource));
 	NCHECK(Spacecraft);
 
 	InitialAmount = 0.0f;
 	Capacity      = 0.0f;
-	FText Name;
 
 	// Resource mode
-	if (Resource)
+	if (Resource != UNovaResource::GetPropellant())
 	{
-		Name = Resource->Name;
-
 		if (CompartmentIndex != INDEX_NONE)
 		{
 			InitialAmount = Spacecraft->GetCargoMass(Resource, CompartmentIndex);
@@ -184,8 +178,6 @@ void SNovaTradingPanel::StartTrade(ANovaPlayerController* TargetPC, const UNovaR
 	// Fuel mode
 	else
 	{
-		Name = LOCTEXT("FuelName", "Fuel");    // TODO : use a hidden resource for this
-
 		UNovaSpacecraftPropellantSystem* PropellantSystem =
 			PC->GetSpacecraftPawn()->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
 		NCHECK(PropellantSystem);
@@ -196,9 +188,10 @@ void SNovaTradingPanel::StartTrade(ANovaPlayerController* TargetPC, const UNovaR
 
 	AmountSlider->SetMaxValue(Capacity);
 	AmountSlider->SetCurrentValue(InitialAmount);
+	ResourceItem->SetResource(TargetResource);
 
 	FSimpleDelegate ConfirmTrade = FSimpleDelegate::CreateSP(this, &SNovaTradingPanel::OnConfirmTrade);
-	Show(Name, FText(), ConfirmTrade, FSimpleDelegate(), FSimpleDelegate());
+	Show(LOCTEXT("TradeTitle", "Trade resource"), FText(), ConfirmTrade, FSimpleDelegate(), FSimpleDelegate());
 }
 
 /*----------------------------------------------------
@@ -210,28 +203,11 @@ bool SNovaTradingPanel::IsConfirmEnabled() const
 	return AmountSlider->GetCurrentValue() != InitialAmount;
 }
 
-const FSlateBrush* SNovaTradingPanel::GetResourceImage() const
-{
-	if (Resource)
-	{
-		return &Resource->AssetRender;
-	}
-	else
-	{    // TODO : use a hidden resource for this
-	}
-
-	return nullptr;
-}
-
 FText SNovaTradingPanel::GetResourceDetails() const
 {
 	if (Resource)
 	{
 		return Resource->Description;
-	}
-	else
-	{
-		return LOCTEXT("FuelDescription", "Fuel is cool. Seriously, it's literally cryogenic.");    // TODO : use a hidden resource for this
 	}
 
 	return FText();
@@ -274,13 +250,47 @@ FText SNovaTradingPanel::GetCargoDetails() const
 
 FText SNovaTradingPanel::GetTransactionDetails() const
 {
-	// TODO : cost system
-	return LOCTEXT("TestText", "This transaction will cost you 156 $currency");
+	double Cost = GetTransactionCost();
+
+	if (Cost >= 0)
+	{
+		return FText::FormatNamed(
+			LOCTEXT("TransactionCostDetails", "This transaction will cost you {amount}"), TEXT("amount"), GetPriceText(Cost));
+	}
+	else
+	{
+		return FText::FormatNamed(
+			LOCTEXT("TransactionGainDetails", "This transaction will gain you {amount}"), TEXT("amount"), GetPriceText(-Cost));
+	}
 }
 
 ENovaInfoBoxType SNovaTradingPanel::GetTransactionType() const
 {
-	return (AmountSlider->GetCurrentValue() > InitialAmount) ? ENovaInfoBoxType::Positive : ENovaInfoBoxType::Neutral;
+	double Cost = GetTransactionCost();
+
+	if (Cost > 0)
+	{
+		return ENovaInfoBoxType::Negative;
+	}
+	else if (Cost < 0)
+	{
+		return ENovaInfoBoxType::Positive;
+	}
+	else
+	{
+		return ENovaInfoBoxType::Neutral;
+	}
+}
+
+double SNovaTradingPanel::GetTransactionCost() const
+{
+	if (Resource)
+	{
+		double Amount = AmountSlider->GetCurrentValue() - InitialAmount;
+		return Amount * Resource->BasePrice;
+	}
+
+	return 0.0;
 }
 
 /*----------------------------------------------------
@@ -290,14 +300,14 @@ ENovaInfoBoxType SNovaTradingPanel::GetTransactionType() const
 void SNovaTradingPanel::OnConfirmTrade()
 {
 	// Resource mode
-	if (Resource)
+	if (Resource != UNovaResource::GetPropellant())
 	{
 		FNovaSpacecraft ModifiedSpacecraft = Spacecraft->GetSafeCopy();
 		ModifiedSpacecraft.ModifyCargo(Resource, AmountSlider->GetCurrentValue() - InitialAmount, CompartmentIndex);
 		PC->UpdateSpacecraft(ModifiedSpacecraft);
 	}
 
-	// Fuel mode
+	// Propellant mode
 	else
 	{
 		UNovaSpacecraftPropellantSystem* PropellantSystem =
@@ -306,6 +316,10 @@ void SNovaTradingPanel::OnConfirmTrade()
 
 		PropellantSystem->SetPropellantAmount(AmountSlider->GetCurrentValue());
 	}
+
+	// Process payment
+	PC->ProcessTransaction(-GetTransactionCost());
+	PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
 }
 
 #undef LOCTEXT_NAMESPACE

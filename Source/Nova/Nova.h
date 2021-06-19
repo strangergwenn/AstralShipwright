@@ -28,6 +28,8 @@ FString GetRoleString(const UActorComponent* Component);
 
 FText GetDurationText(struct FNovaTime Time, int32 MaxComponents = 4);
 
+FText GetPriceText(double Credits);
+
 /*----------------------------------------------------
     Error reporting
 ----------------------------------------------------*/

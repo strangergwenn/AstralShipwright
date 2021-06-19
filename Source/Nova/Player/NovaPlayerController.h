@@ -119,6 +119,12 @@ public:
 	    Gameplay
 	----------------------------------------------------*/
 
+	/** Add a possibly negative amount of credits */
+	void ProcessTransaction(double CreditsDelta);
+
+	/** Check whether the player can handle this transaction */
+	bool CanAffordTransaction(double CreditsDelta) const;
+
 	/** Dock the player to a dock with a cutscene */
 	void Dock();
 
@@ -273,6 +279,7 @@ private:
 	ENovaPlayerCameraState CurrentCameraState;
 	float                  CurrentTimeInCameraState;
 	FName                  PhotoModeAction;
+	double                 Credits;
 
 	// Transitions
 	bool                SharedTransitionActive;

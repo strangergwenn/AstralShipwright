@@ -131,6 +131,7 @@ ANovaPlayerController::ANovaPlayerController()
 struct FNovaPlayerSave
 {
 	TSharedPtr<struct FNovaSpacecraft> Spacecraft;
+	double                             Credits;
 };
 
 TSharedPtr<FNovaPlayerSave> ANovaPlayerController::Save() const
@@ -146,6 +147,9 @@ TSharedPtr<FNovaPlayerSave> ANovaPlayerController::Save() const
 		SaveData->Spacecraft = Spacecraft->GetSharedCopy();
 	}
 
+	// Save credits
+	SaveData->Credits = Credits;
+
 	return SaveData;
 }
 
@@ -156,6 +160,8 @@ void ANovaPlayerController::Load(TSharedPtr<FNovaPlayerSave> SaveData)
 
 	// Store the save data so that the spacecraft pawn can fetch it later when it spawns
 	UpdateSpacecraft(*SaveData->Spacecraft.Get());
+
+	Credits = SaveData->Credits;
 }
 
 void ANovaPlayerController::SerializeJson(
@@ -173,6 +179,9 @@ void ANovaPlayerController::SerializeJson(
 			FNovaSpacecraft::SerializeJson(SaveData->Spacecraft, SpacecraftJsonData, ENovaSerialize::DataToJson);
 		}
 		JsonData->SetObjectField("Spacecraft", SpacecraftJsonData);
+
+		// Credits
+		JsonData->SetNumberField("Credits", SaveData->Credits);
 	}
 
 	// Reading from save
@@ -184,6 +193,13 @@ void ANovaPlayerController::SerializeJson(
 		TSharedPtr<FJsonObject> SpacecraftJsonData =
 			JsonData->HasTypedField<EJson::Object>("Spacecraft") ? JsonData->GetObjectField("Spacecraft") : MakeShared<FJsonObject>();
 		FNovaSpacecraft::SerializeJson(SaveData->Spacecraft, SpacecraftJsonData, ENovaSerialize::JsonToData);
+
+		// Credits
+		SaveData->Credits = 0;
+		if (!JsonData->TryGetNumberField("Credits", SaveData->Credits))
+		{
+			SaveData->Credits = 1000;
+		}
 	}
 }
 
@@ -363,6 +379,19 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 /*----------------------------------------------------
     Gameplay
 ----------------------------------------------------*/
+
+void ANovaPlayerController::ProcessTransaction(double CreditsDelta)
+{
+	NCHECK(CanAffordTransaction(CreditsDelta));
+
+	Credits += CreditsDelta;
+	Credits = FMath::Min(Credits, 0.0);
+}
+
+bool ANovaPlayerController::CanAffordTransaction(double CreditsDelta) const
+{
+	return Credits + CreditsDelta >= 0;
+}
 
 void ANovaPlayerController::Dock()
 {

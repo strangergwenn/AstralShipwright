@@ -37,10 +37,8 @@ void UNovaAssetManager::Initialize()
 	{
 		const UNovaAssetDescription* Entry = Cast<UNovaAssetDescription>(Asset.GetAsset());
 		NCHECK(Entry);
-		if (!Entry->Hidden)
-		{
-			Catalog.Add(TPair<FGuid, const class UNovaAssetDescription*>(Entry->Identifier, Entry));
-		}
+
+		Catalog.Add(TPair<FGuid, const class UNovaAssetDescription*>(Entry->Identifier, Entry));
 	}
 }
 

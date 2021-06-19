@@ -39,8 +39,7 @@ public:
 protected:
 	bool IsConfirmEnabled() const override;
 
-	const FSlateBrush* GetResourceImage() const;
-	FText              GetResourceDetails() const;
+	FText GetResourceDetails() const;
 
 	TOptional<float> GetCargoProgress() const;
 
@@ -50,6 +49,7 @@ protected:
 
 	FText            GetTransactionDetails() const;
 	ENovaInfoBoxType GetTransactionType() const;
+	double           GetTransactionCost() const;
 
 	/*----------------------------------------------------
 	    Callbacks
@@ -65,7 +65,8 @@ protected:
 
 protected:
 	// Slate widgets
-	TSharedPtr<class SNovaSlider> AmountSlider;
+	TSharedPtr<class SNovaSlider>       AmountSlider;
+	TSharedPtr<class SNovaResourceItem> ResourceItem;
 
 	// Data
 	class ANovaPlayerController*  PC;

@@ -14,6 +14,7 @@
 #include "Nova/Player/NovaPlayerController.h"
 
 #include "Nova/UI/Component/NovaTradingPanel.h"
+#include "Nova/UI/Component/NovaResourceItem.h"
 #include "Nova/UI/Widget/NovaFadingWidget.h"
 #include "Nova/UI/Widget/NovaModalPanel.h"
 
@@ -193,7 +194,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 									}
 								}
 
-								return &UNovaAssetManager::Get()->GetAsset<UNovaResource>(FGuid("{A89057F9-436B-E890-5538-5986C1C0644E}"))->AssetRender;
+								return &UNovaResource::GetEmpty()->AssetRender;
 							}))
 						]
 					]
@@ -338,71 +339,7 @@ TSharedPtr<SNovaButton> SNovaMainMenuInventory::GetDefaultFocusButton() const
 
 TSharedRef<SWidget> SNovaMainMenuInventory::GenerateResourceItem(const UNovaResource* Resource)
 {
-	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
-	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
-
-	FNumberFormattingOptions Options;
-	Options.MaximumFractionalDigits = 0;
-
-	// clang-format off
-	
-	return SNew(SOverlay)
-		.Clipping(EWidgetClipping::ClipToBoundsAlways)
-
-		+ SOverlay::Slot()
-		[
-			SNew(SScaleBox)
-			[
-				SNew(SImage).Image(&Resource->AssetRender)
-			]
-		]
-
-		+ SOverlay::Slot()
-		[
-			SNew(SScaleBox)
-			.Stretch(EStretch::ScaleToFit)
-			.HAlign(HAlign_Right)
-			[
-				SNew(SImage)
-				.Image(FNovaStyleSet::GetBrush("Common/SB_Corner"))
-				.ColorAndOpacity(Theme.PositiveColor)
-			]
-		]
-
-		+ SOverlay::Slot()
-		[
-			SNew(SHorizontalBox)
-
-			+ SHorizontalBox::Slot()
-			.AutoWidth()
-			[
-				SNew(SBorder)
-				.BorderImage(&Theme.MainMenuDarkBackground)
-				.Padding(Theme.ContentPadding)
-				[
-					SNew(STextBlock)
-					.TextStyle(&Theme.MainFont)
-					 .Text(Resource->Name)
-				]
-			 ]
-
-			+ SHorizontalBox::Slot()
-
-			+ SHorizontalBox::Slot()
-			.AutoWidth()
-			.Padding(Theme.ContentPadding)
-			[
-				// TODO : cost system
-				SNew(SRichTextBlock)
-				.Text(FText::FromString(FText::AsCurrency(12000, TEXT("CUR"), &Options)
-					.ToString().Replace(TEXT("CUR"), TEXT("Ѥ")))
-				)
-				.TextStyle(&Theme.MainFont)
-				.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
-				+ SRichTextBlock::ImageDecorator()
-			]
-		];
-	// clang-format on
+	return SNew(SNovaResourceItem).Resource(Resource);
 }
 
 const FSlateBrush* SNovaMainMenuInventory::GetResourceIcon(const UNovaResource* Resource) const
@@ -443,7 +380,7 @@ FText SNovaMainMenuInventory::GetPropellantText() const
 
 void SNovaMainMenuInventory::OnRefuelPropellant()
 {
-	TradingModalPanel->StartTrade(PC, nullptr, INDEX_NONE);
+	TradingModalPanel->StartTrade(PC, UNovaResource::GetPropellant(), INDEX_NONE);
 }
 
 void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type)

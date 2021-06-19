@@ -7,6 +7,7 @@
 
 #include "Style/NovaStyleSet.h"
 #include "Style/NovaMainTheme.h"
+#include "NovaUITypes.h"
 
 /*----------------------------------------------------
     Slate widget creation macros
@@ -98,13 +99,14 @@ public:
 /** Info box color type */
 enum class ENovaInfoBoxType : uint8
 {
+	None,
 	Positive,
 	Negative,
 	Neutral
 };
 
 /** Info box class */
-class SNovaInfoText : public SBorder
+class SNovaInfoText : public SCompoundWidget
 {
 	SLATE_BEGIN_ARGS(SNovaInfoText)
 	{}
@@ -116,6 +118,9 @@ class SNovaInfoText : public SBorder
 	SLATE_END_ARGS()
 
 public:
+	SNovaInfoText() : DisplayedType(ENovaInfoBoxType::None), CurrentColor(0, 0, 0, 0), PreviousColor(0, 0, 0, 0), TimeSinceColorChange(0.0f)
+	{}
+
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
@@ -123,7 +128,9 @@ public:
 		Type = InArgs._Type;
 
 		// clang-format off
-		SBorder::Construct(SBorder::FArguments()
+		ChildSlot
+		[
+			SNew(SBorder)
 			.BorderImage(FNovaStyleSet::GetBrush("Common/SB_White"))
 			.BorderBackgroundColor(this, &SNovaInfoText::GetColor)
 			.Padding(Theme.ContentPadding)
@@ -134,15 +141,55 @@ public:
 				.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
 				+ SRichTextBlock::ImageDecorator()
 			]
-		);
+		];
 		// clang-format on
+	}
+
+	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override
+	{
+		SCompoundWidget::Tick(AllottedGeometry, CurrentTime, DeltaTime);
+
+		if (Type.IsBound())
+		{
+			ENovaInfoBoxType DesiredType = Type.Get();
+
+			if (DesiredType != ENovaInfoBoxType::None && DisplayedType == ENovaInfoBoxType::None)
+			{
+				CurrentColor = GetDesiredColor(DesiredType);
+
+				DisplayedType        = DesiredType;
+				TimeSinceColorChange = 0.0f;
+				PreviousColor        = CurrentColor;
+			}
+			else if (DesiredType != DisplayedType)
+			{
+				FLinearColor DesiredColor = GetDesiredColor(DesiredType);
+
+				float Alpha = FMath::Clamp(TimeSinceColorChange / ENovaUIConstants::FadeDurationShort, 0.0f, 1.0f);
+				TimeSinceColorChange += DeltaTime;
+
+				CurrentColor = FMath::InterpEaseInOut(PreviousColor, DesiredColor, Alpha, ENovaUIConstants::EaseStandard);
+
+				if (Alpha >= 1.0f)
+				{
+					DisplayedType        = DesiredType;
+					TimeSinceColorChange = 0.0f;
+					PreviousColor        = CurrentColor;
+				}
+			}
+		}
 	}
 
 protected:
 	FSlateColor GetColor() const
 	{
+		return CurrentColor;
+	}
+
+	FLinearColor GetDesiredColor(ENovaInfoBoxType DesiredType) const
+	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-		switch (Type.Get())
+		switch (DesiredType)
 		{
 			case ENovaInfoBoxType::Positive:
 				return Theme.PositiveColor;
@@ -152,9 +199,14 @@ protected:
 				return Theme.NeutralColor;
 		}
 
-		return FSlateColor();
+		return FLinearColor(0, 0, 0, 0);
 	}
 
 protected:
+	// General state
 	TAttribute<ENovaInfoBoxType> Type;
+	ENovaInfoBoxType             DisplayedType;
+	FLinearColor                 CurrentColor;
+	FLinearColor                 PreviousColor;
+	float                        TimeSinceColorChange;
 };

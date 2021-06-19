@@ -53,7 +53,7 @@ public:
 
 		for (const auto& Entry : Catalog)
 		{
-			if (Entry.Value->IsA<T>())
+			if (Entry.Value->IsA<T>() && !Entry.Value->Hidden)
 			{
 				Result.Add(Cast<T>(Entry.Value));
 			}
