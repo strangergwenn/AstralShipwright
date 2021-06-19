@@ -204,7 +204,7 @@ DECLARE_DELEGATE_RetVal(FText, FNovaTextGetter);
 /** Simple STextBlock analog that fades smoothly when the text changes */
 class SNovaText : public SNovaFadingWidget<false>
 {
-	SLATE_BEGIN_ARGS(SNovaText) : _AutoWrapText(true)
+	SLATE_BEGIN_ARGS(SNovaText) : _AutoWrapText(false)
 	{}
 
 	SLATE_ARGUMENT(FNovaTextGetter, Text)
@@ -274,7 +274,7 @@ protected:
 /** Simple SRichTextBlock analog that fades smoothly when the text changes */
 class SNovaRichText : public SNovaText
 {
-	SLATE_BEGIN_ARGS(SNovaRichText) : _AutoWrapText(true)
+	SLATE_BEGIN_ARGS(SNovaRichText) : _AutoWrapText(false)
 	{}
 
 	SLATE_ARGUMENT(FNovaTextGetter, Text)

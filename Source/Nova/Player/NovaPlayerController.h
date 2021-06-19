@@ -125,6 +125,12 @@ public:
 	/** Check whether the player can handle this transaction */
 	bool CanAffordTransaction(double CreditsDelta) const;
 
+	/** Return the current account balance */
+	double GetAccountBalance() const
+	{
+		return Credits;
+	}
+
 	/** Dock the player to a dock with a cutscene */
 	void Dock();
 

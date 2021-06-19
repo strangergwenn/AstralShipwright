@@ -385,7 +385,9 @@ void ANovaPlayerController::ProcessTransaction(double CreditsDelta)
 	NCHECK(CanAffordTransaction(CreditsDelta));
 
 	Credits += CreditsDelta;
-	Credits = FMath::Min(Credits, 0.0);
+	Credits = FMath::Max(Credits, 0.0);
+
+	NLOG("ANovaPlayerController::ProcessTransaction : %f in account (%+f)", Credits, CreditsDelta);
 }
 
 bool ANovaPlayerController::CanAffordTransaction(double CreditsDelta) const

@@ -210,7 +210,7 @@ void SNovaTabView::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							.Padding(0)
-							.HAlign(HAlign_Center)
+							.HAlign(HAlign_Fill)
 							[
 								InArgs._Header.Widget
 							]

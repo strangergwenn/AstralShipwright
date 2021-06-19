@@ -32,7 +32,8 @@ class SNovaMainMenu : public SNovaMenu
 	SLATE_END_ARGS()
 
 public:
-	SNovaMainMenu();
+	SNovaMainMenu()
+	{}
 
 	void Construct(const FArguments& InArgs);
 
@@ -51,8 +52,6 @@ public:
 
 	/** Stop displaying the tooltip */
 	void HideTooltip(SWidget* TargetWidget);
-
-	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
 	virtual FReply OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent) override;
 
@@ -82,8 +81,8 @@ protected:
 	/** Get the title text */
 	FText GetTooltipText() const;
 
-	/** Get the tooltip color */
-	FLinearColor GetTooltipColor() const;
+	/** Get the info text */
+	FText GetInfoText() const;
 
 	/** Get the manipulator color */
 	FSlateColor GetManipulatorColor() const;
@@ -110,23 +109,17 @@ protected:
 	----------------------------------------------------*/
 
 protected:
-	// Settings
-	float TooltipDelay;
-	float TooltipFadeDuration;
-
-	// Tooltip state
-	FString  DesiredTooltipContent;
-	FString  CurrentTooltipContent;
-	SWidget* CurrentTooltipWidget;
-	float    CurrentTooltipDelay;
-	float    CurrentTooltipTime;
-
 	// General state
-	bool WasOnMainMenu;
+	SWidget* CurrentTooltipWidget;
+	FText    CurrentTooltipText;
+	bool     WasOnMainMenu;
 
 	// Widgets
-	TSharedPtr<class SNovaModalPanel>         ModalPanel;
-	TSharedPtr<class SNovaTabView>            TabView;
+	TSharedPtr<class SNovaModalPanel> ModalPanel;
+	TSharedPtr<class SNovaTabView>    TabView;
+	TSharedPtr<class SNovaText>       Tooltip;
+
+	// Menus
 	TSharedPtr<class SNovaMainMenuHome>       HomeMenu;
 	TSharedPtr<class SNovaMainMenuGame>       GameMenu;
 	TSharedPtr<class SNovaMainMenuFlight>     FlightMenu;

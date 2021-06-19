@@ -11,6 +11,7 @@
 #include "NovaMainMenuSettings.h"
 
 #include "Nova/UI/Widget/NovaButton.h"
+#include "Nova/UI/Widget/NovaFadingWidget.h"
 #include "Nova/UI/Widget/NovaKeyLabel.h"
 #include "Nova/UI/Widget/NovaTabView.h"
 #include "Nova/UI/Widget/NovaWindowManipulator.h"
@@ -29,10 +30,6 @@
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
-
-SNovaMainMenu::SNovaMainMenu()
-	: TooltipDelay(0.5f), TooltipFadeDuration(ENovaUIConstants::FadeDurationShort), CurrentTooltipDelay(0), CurrentTooltipTime(0)
-{}
 
 void SNovaMainMenu::Construct(const FArguments& InArgs)
 {
@@ -95,13 +92,27 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		[
 			SNew(SBorder)
 			.Padding(Theme.ContentPadding)
-			.BorderImage(new FSlateNoResource)
-			.ColorAndOpacity(this, &SNovaMainMenu::GetTooltipColor)
-			.Padding(0)
+			.BorderImage(&Theme.MainMenuGenericBorder)
 			[
-				SNew(STextBlock)
-				.TextStyle(&Theme.SubtitleFont)
-				.Text(this, &SNovaMainMenu::GetTooltipText)
+				SNew(SHorizontalBox)
+
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SAssignNew(Tooltip, SNovaText)
+					.TextStyle(&Theme.MainFont)
+					.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenu::GetTooltipText))
+				]
+
+				+ SHorizontalBox::Slot()
+		
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SNovaText)
+					.TextStyle(&Theme.MainFont)
+					.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenu::GetInfoText))
+				]
 			]
 		]
 
@@ -247,8 +258,8 @@ void SNovaMainMenu::ShowTooltip(SWidget* TargetWidget, FText Content)
 {
 	if (TargetWidget != CurrentTooltipWidget)
 	{
-		CurrentTooltipWidget  = TargetWidget;
-		DesiredTooltipContent = Content.ToString();
+		CurrentTooltipWidget = TargetWidget;
+		CurrentTooltipText   = Content;
 	}
 }
 
@@ -256,8 +267,8 @@ void SNovaMainMenu::HideTooltip(SWidget* TargetWidget)
 {
 	if (TargetWidget == CurrentTooltipWidget)
 	{
-		CurrentTooltipWidget  = nullptr;
-		DesiredTooltipContent = FString();
+		CurrentTooltipWidget = nullptr;
+		CurrentTooltipText   = FText();
 	}
 
 	// If the current focus is valid, and different, show it again
@@ -265,38 +276,6 @@ void SNovaMainMenu::HideTooltip(SWidget* TargetWidget)
 	if (FocusButton.IsValid() && FocusButton.Get() != TargetWidget)
 	{
 		ShowTooltip(FocusButton.Get(), FocusButton->GetHelpText());
-	}
-}
-
-void SNovaMainMenu::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
-{
-	SNovaMenu::Tick(AllottedGeometry, CurrentTime, DeltaTime);
-
-	// Update tooltip timeline
-	if (DesiredTooltipContent != CurrentTooltipContent)
-	{
-		CurrentTooltipDelay = 0;
-	}
-	else
-	{
-		CurrentTooltipDelay += DeltaTime;
-	}
-
-	// Update tooltip animation
-	if (CurrentTooltipDelay <= TooltipDelay || TabView->GetCurrentTabAlpha() < 1.0f)
-	{
-		CurrentTooltipTime -= DeltaTime;
-	}
-	else
-	{
-		CurrentTooltipTime += DeltaTime;
-	}
-	CurrentTooltipTime = FMath::Clamp(CurrentTooltipTime, 0.0f, TooltipFadeDuration);
-
-	// Update tooltip content
-	if (CurrentTooltipTime == 0)
-	{
-		CurrentTooltipContent = DesiredTooltipContent;
 	}
 }
 
@@ -398,18 +377,14 @@ FText SNovaMainMenu::GetCloseHelpText() const
 
 FText SNovaMainMenu::GetTooltipText() const
 {
-	return FText::FromString(CurrentTooltipContent);
+	return CurrentTooltipText;
 }
 
-FLinearColor SNovaMainMenu::GetTooltipColor() const
+FText SNovaMainMenu::GetInfoText() const
 {
-	float Alpha = (CurrentTooltipTime / TooltipFadeDuration);
-	Alpha       = FMath::InterpEaseInOut(0.0f, 1.0f, Alpha, ENovaUIConstants::EaseStandard);
+	double PlayerCredits = MenuManager->GetPC()->GetAccountBalance();
 
-	FLinearColor Color = FLinearColor::White;
-	Color.A *= Alpha;
-
-	return Color;
+	return FText::FormatNamed(LOCTEXT("InfoText", "{credits} in account"), TEXT("credits"), GetPriceText(PlayerCredits));
 }
 
 FSlateColor SNovaMainMenu::GetManipulatorColor() const

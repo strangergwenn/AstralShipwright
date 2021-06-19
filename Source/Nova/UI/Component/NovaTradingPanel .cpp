@@ -191,7 +191,7 @@ void SNovaTradingPanel::StartTrade(ANovaPlayerController* TargetPC, const UNovaR
 	ResourceItem->SetResource(TargetResource);
 
 	FSimpleDelegate ConfirmTrade = FSimpleDelegate::CreateSP(this, &SNovaTradingPanel::OnConfirmTrade);
-	Show(LOCTEXT("TradeTitle", "Trade resource"), FText(), ConfirmTrade, FSimpleDelegate(), FSimpleDelegate());
+	Show(LOCTEXT("TradeTitle", "Trade resource"), FText(), ConfirmTrade);
 }
 
 /*----------------------------------------------------
@@ -200,7 +200,7 @@ void SNovaTradingPanel::StartTrade(ANovaPlayerController* TargetPC, const UNovaR
 
 bool SNovaTradingPanel::IsConfirmEnabled() const
 {
-	return AmountSlider->GetCurrentValue() != InitialAmount;
+	return AmountSlider->GetCurrentValue() != InitialAmount && PC->CanAffordTransaction(GetTransactionValue());
 }
 
 FText SNovaTradingPanel::GetResourceDetails() const
@@ -250,44 +250,44 @@ FText SNovaTradingPanel::GetCargoDetails() const
 
 FText SNovaTradingPanel::GetTransactionDetails() const
 {
-	double Cost = GetTransactionCost();
+	double CreditsValue = GetTransactionValue();
 
-	if (Cost >= 0)
+	if (CreditsValue <= 0)
 	{
 		return FText::FormatNamed(
-			LOCTEXT("TransactionCostDetails", "This transaction will cost you {amount}"), TEXT("amount"), GetPriceText(Cost));
+			LOCTEXT("TransactionCostDetails", "This transaction will cost you {amount}"), TEXT("amount"), GetPriceText(-CreditsValue));
 	}
 	else
 	{
 		return FText::FormatNamed(
-			LOCTEXT("TransactionGainDetails", "This transaction will gain you {amount}"), TEXT("amount"), GetPriceText(-Cost));
+			LOCTEXT("TransactionGainDetails", "This transaction will gain you {amount}"), TEXT("amount"), GetPriceText(CreditsValue));
 	}
 }
 
 ENovaInfoBoxType SNovaTradingPanel::GetTransactionType() const
 {
-	double Cost = GetTransactionCost();
+	double CreditsValue = GetTransactionValue();
 
-	if (Cost > 0)
+	if (!PC->CanAffordTransaction(GetTransactionValue()))
 	{
 		return ENovaInfoBoxType::Negative;
 	}
-	else if (Cost < 0)
-	{
-		return ENovaInfoBoxType::Positive;
-	}
-	else
+	else if (CreditsValue == 0)
 	{
 		return ENovaInfoBoxType::Neutral;
 	}
+	else
+	{
+		return ENovaInfoBoxType::Positive;
+	}
 }
 
-double SNovaTradingPanel::GetTransactionCost() const
+double SNovaTradingPanel::GetTransactionValue() const
 {
 	if (Resource)
 	{
 		double Amount = AmountSlider->GetCurrentValue() - InitialAmount;
-		return Amount * Resource->BasePrice;
+		return -Amount * Resource->BasePrice;
 	}
 
 	return 0.0;
@@ -318,7 +318,7 @@ void SNovaTradingPanel::OnConfirmTrade()
 	}
 
 	// Process payment
-	PC->ProcessTransaction(-GetTransactionCost());
+	PC->ProcessTransaction(GetTransactionValue());
 	PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
 }
 

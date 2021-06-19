@@ -195,6 +195,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 		[
 			SNew(SBorder)
 			.BorderImage(&Theme.MainMenuBackground)
+			.Padding(0)
 			[
 				SAssignNew(MenuBox, SVerticalBox)
 
@@ -790,6 +791,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							return FText();
 						}))
 						.TextStyle(&Theme.MainFont)
+						.AutoWrapText(true)
 					]
 				]
 			]
@@ -871,6 +873,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								return FText();
 							}))
 							.TextStyle(&Theme.MainFont)
+							.AutoWrapText(true)
 						]
 					]
 

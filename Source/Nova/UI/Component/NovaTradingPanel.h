@@ -49,7 +49,7 @@ protected:
 
 	FText            GetTransactionDetails() const;
 	ENovaInfoBoxType GetTransactionType() const;
-	double           GetTransactionCost() const;
+	double           GetTransactionValue() const;
 
 	/*----------------------------------------------------
 	    Callbacks

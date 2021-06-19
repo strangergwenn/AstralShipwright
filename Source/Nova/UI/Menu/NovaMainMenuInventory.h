@@ -46,8 +46,6 @@ public:
 
 	virtual void UpdateGameObjects() override;
 
-	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
-
 	/*----------------------------------------------------
 	    Resource list
 	----------------------------------------------------*/
@@ -98,5 +96,4 @@ protected:
 	// Slate widgets
 	TSharedPtr<class SNovaModalPanel>   GenericModalPanel;
 	TSharedPtr<class SNovaTradingPanel> TradingModalPanel;
-	TSharedPtr<class SNovaButton>       RefuelButton;
 };

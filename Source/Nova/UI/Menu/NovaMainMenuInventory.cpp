@@ -51,6 +51,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 	[
 		SAssignNew(MainLayoutBox, SVerticalBox)
 
+		// Main box
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		.Padding(Theme.ContentPadding)
@@ -81,13 +82,12 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 
 						+ SVerticalBox::Slot()
 						.AutoHeight()
-						.Padding(Theme.ContentPadding)
-						.HAlign(HAlign_Center)
+						.Padding(Theme.VerticalContentPadding)
+						.HAlign(HAlign_Left)
 						[
-							SNew(SNovaText)
+							SNew(SNovaRichText)
 							.TextStyle(&Theme.MainFont)
 							.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuInventory::GetPropellantText))
-							.AutoWrapText(false)
 						]
 
 						+ SVerticalBox::Slot()
@@ -105,9 +105,10 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					SNovaAssignNew(RefuelButton, SNovaButton)
-					.Text(LOCTEXT("RefillPropellant", "Refuel"))
-					.HelpText(LOCTEXT("RefillPropellantHelp", "Trade Propellant with this station"))
+					SNovaNew(SNovaButton)
+					.Text(LOCTEXT("TradePropellant", "Trade propellant"))
+					.HelpText(LOCTEXT("TradePropellantHelp", "Trade propellant with this station"))
+					.Action(FNovaPlayerInput::MenuPrimary)
 					.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
 					{
 						return SpacecraftPawn->IsDocked();
@@ -232,6 +233,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 									return FText();
 								}))
 								.TextStyle(&Theme.MainFont)
+								.AutoWrapText(true)
 							]
 						]
 					
@@ -328,11 +330,6 @@ void SNovaMainMenuInventory::UpdateGameObjects()
 	SpacecraftPawn = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
 }
 
-TSharedPtr<SNovaButton> SNovaMainMenuInventory::GetDefaultFocusButton() const
-{
-	return RefuelButton;
-}
-
 /*----------------------------------------------------
     Resource list
 ----------------------------------------------------*/
@@ -369,8 +366,8 @@ FText SNovaMainMenuInventory::GetPropellantText() const
 	FNumberFormattingOptions Options;
 	Options.MaximumFractionalDigits = 0;
 
-	return FText::FormatNamed(LOCTEXT("PropellantFormat", "{remaining}T out of {total}T"), TEXT("remaining"),
-		FText::AsNumber(PropellantSystem->GetCurrentPropellantAmount(), &Options), TEXT("total"),
+	return FText::FormatNamed(LOCTEXT("PropellantFormat", "<img src=\"/Text/Propellant\"/> {remaining}T out of {total}T"),
+		TEXT("remaining"), FText::AsNumber(PropellantSystem->GetCurrentPropellantAmount(), &Options), TEXT("total"),
 		FText::AsNumber(PropellantSystem->GetTotalPropellantAmount(), &Options));
 }
 
