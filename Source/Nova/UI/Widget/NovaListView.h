@@ -76,7 +76,8 @@ public:
 		// clang-format on
 
 		// Initialize
-		CurrentSelectedIndex = 0;
+		CurrentSelectedIndex   = 0;
+		InitiallySelectedIndex = 0;
 	}
 
 	/*----------------------------------------------------
@@ -87,7 +88,8 @@ public:
 	/** Refresh the list based on the items source */
 	void Refresh(int32 SelectedIndex = INDEX_NONE)
 	{
-		SelectedIndex = FMath::Min(SelectedIndex, ItemsSource->Num() - 1);
+		SelectedIndex          = FMath::Min(SelectedIndex, ItemsSource->Num() - 1);
+		InitiallySelectedIndex = SelectedIndex;
 
 		// Get the state of the focused button
 		int32            PreviousSelectedIndex       = INDEX_NONE;
@@ -177,7 +179,10 @@ public:
 	/** Get the selection icon */
 	const FSlateBrush* GetSelectionIcon(const ItemType& Item) const
 	{
-		return FNovaStyleSet::GetBrush(IsCurrentlySelected(Item) ? "Icon/SB_ListOn" : "Icon/SB_ListOff");
+		bool IsInitialItem = InitiallySelectedIndex >= 0 && ItemsSource && InitiallySelectedIndex < ItemsSource->Num() &&
+							 Item == (*ItemsSource)[InitiallySelectedIndex];
+
+		return FNovaStyleSet::GetBrush(IsInitialItem ? "Icon/SB_ListOn" : "Icon/SB_ListOff");
 	}
 
 	/** Get the currently selected index */
@@ -224,6 +229,7 @@ protected:
 
 	// State
 	int32 CurrentSelectedIndex;
+	int32 InitiallySelectedIndex;
 
 	// Widgets
 	TSharedPtr<SScrollBox>          Container;
