@@ -173,8 +173,8 @@ protected:
 			InternalItemsSource = RefreshResult.Value;
 		}
 
-		ListPanel->Show(TitleText.Get(), HelpText.Get(), FSimpleDelegate::CreateSP(this, &SNovaModalListView::OnListConfirmed),
-			FSimpleDelegate(), FSimpleDelegate(), ListView);
+		ListPanel->Show(HelpText.Get(), FText(), FSimpleDelegate::CreateSP(this, &SNovaModalListView::OnListConfirmed), FSimpleDelegate(),
+			FSimpleDelegate(), ListView);
 
 		ListView->Refresh(CurrentListIndex);
 	}
