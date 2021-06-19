@@ -74,19 +74,30 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 				[
 					SNew(SNovaButtonLayout)
 					[
-						SNew(SProgressBar)
-						.Style(&Theme.ProgressBarStyle)
-						.Percent(this, &SNovaMainMenuInventory::GetFuelRatio)
-					]
-				]
+						SNew(SVerticalBox)
 
-				+ SHorizontalBox::Slot()
-				[
-					SNew(SNovaButtonLayout)
-					[
-						SNew(STextBlock)
-						.TextStyle(&Theme.MainFont)
-						.Text(this, &SNovaMainMenuInventory::GetFuelText)
+						+ SVerticalBox::Slot()
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(Theme.ContentPadding)
+						.HAlign(HAlign_Center)
+						[
+							SNew(SNovaText)
+							.TextStyle(&Theme.MainFont)
+							.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuInventory::GetPropellantText))
+							.AutoWrapText(false)
+						]
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SNew(SProgressBar)
+							.Style(&Theme.ProgressBarStyle)
+							.Percent(this, &SNovaMainMenuInventory::GetPropellantRatio)
+						]
+
+						+ SVerticalBox::Slot()
 					]
 				]
 			
@@ -95,12 +106,12 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 				[
 					SNovaAssignNew(RefuelButton, SNovaButton)
 					.Text(LOCTEXT("RefillPropellant", "Refuel"))
-					.HelpText(LOCTEXT("RefillPropellantHelp", "Trade fuel with this station"))
+					.HelpText(LOCTEXT("RefillPropellantHelp", "Trade Propellant with this station"))
 					.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
 					{
 						return SpacecraftPawn->IsDocked();
 					})))
-					.OnClicked(this, &SNovaMainMenuInventory::OnRefuel)
+					.OnClicked(this, &SNovaMainMenuInventory::OnRefuelPropellant)
 				]
 			]
 		]
@@ -280,6 +291,8 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 	BuildCargoLine(LOCTEXT("GeneralCargoTitle", "General cargo"), ENovaResourceType::General);
 	BuildCargoLine(LOCTEXT("BulkCargoTitle", "Bulk cargo"), ENovaResourceType::Bulk);
 	BuildCargoLine(LOCTEXT("LiquidCargoTitle", "Liquid cargo"), ENovaResourceType::Liquid);
+
+	AveragedPropellantRatio.SetPeriod(1.0f);
 }
 
 /*----------------------------------------------------
@@ -289,6 +302,11 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 void SNovaMainMenuInventory::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
 {
 	SNovaTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
+
+	UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+	NCHECK(PropellantSystem);
+
+	AveragedPropellantRatio.Set(PropellantSystem->GetCurrentPropellantAmount() / PropellantSystem->GetTotalPropellantAmount(), DeltaTime);
 }
 
 void SNovaMainMenuInventory::Show()
@@ -401,15 +419,12 @@ FText SNovaMainMenuInventory::GenerateResourceTooltip(const UNovaResource* Resou
     Content callbacks
 ----------------------------------------------------*/
 
-TOptional<float> SNovaMainMenuInventory::GetFuelRatio() const
+TOptional<float> SNovaMainMenuInventory::GetPropellantRatio() const
 {
-	UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
-	NCHECK(PropellantSystem);
-
-	return PropellantSystem->GetCurrentPropellantAmount() / PropellantSystem->GetTotalPropellantAmount();
+	return AveragedPropellantRatio.Get();
 }
 
-FText SNovaMainMenuInventory::GetFuelText() const
+FText SNovaMainMenuInventory::GetPropellantText() const
 {
 	UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
 	NCHECK(PropellantSystem);
@@ -426,7 +441,7 @@ FText SNovaMainMenuInventory::GetFuelText() const
     Callbacks
 ----------------------------------------------------*/
 
-void SNovaMainMenuInventory::OnRefuel()
+void SNovaMainMenuInventory::OnRefuelPropellant()
 {
 	TradingModalPanel->StartTrade(PC, nullptr, INDEX_NONE);
 }

@@ -6,6 +6,8 @@
 #include "Nova/UI/Widget/NovaTabView.h"
 #include "Nova/UI/Widget/NovaListView.h"
 
+#include "Nova/Actor/NovaActorTools.h"
+
 #include "Online.h"
 
 enum class ENovaResourceType : uint8;
@@ -60,15 +62,15 @@ public:
 	    Content callbacks
 	----------------------------------------------------*/
 
-	TOptional<float> GetFuelRatio() const;
+	TOptional<float> GetPropellantRatio() const;
 
-	FText GetFuelText() const;
+	FText GetPropellantText() const;
 
 	/*----------------------------------------------------
 	    Callbacks
 	----------------------------------------------------*/
 
-	void OnRefuel();
+	void OnRefuelPropellant();
 
 	void OnTradeWithSlot(int32 Index, ENovaResourceType Type);
 
@@ -87,6 +89,7 @@ protected:
 	const struct FNovaSpacecraft*    Spacecraft;
 	const class ANovaSpacecraftPawn* SpacecraftPawn;
 	int32                            CurrentCompartmentIndex;
+	TNovaTimedAverage<float>         AveragedPropellantRatio;
 
 	// Resource list
 	TArray<const class UNovaResource*>                    ResourceList;
