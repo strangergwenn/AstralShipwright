@@ -18,14 +18,18 @@
 #include "Engine.h"
 
 // Statics
-UNovaMenuManager* UNovaMenuManager::Singleton    = nullptr;
-bool              UNovaMenuManager::UsingGamepad = false;
+UNovaMenuManager* UNovaMenuManager::Singleton = nullptr;
 
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
-UNovaMenuManager::UNovaMenuManager() : Super(), CurrentMenuState(ENovaFadeState::FadingFromBlack)
+UNovaMenuManager::UNovaMenuManager()
+	: Super()
+	, UsingGamepad(false)
+	, CurrentMenuState(ENovaFadeState::FadingFromBlack)
+	, DesiredInterfaceColor(FLinearColor::White)
+	, DesiredHighlightColor(FLinearColor::White)
 {
 	// Settings
 	FadeDuration        = ENovaUIConstants::FadeDurationLong;
@@ -96,9 +100,10 @@ void UNovaMenuManager::BeginPlay(ANovaPlayerController* PC)
 	Menu->UpdateKeyBindings();
 
 	// Initialize the desired color
-	DesiredInterfaceColor = FLinearColor::White;
 	CurrentInterfaceColor.SetPeriod(ColorChangeDuration);
+	CurrentHighlightColor.SetPeriod(ColorChangeDuration);
 	CurrentInterfaceColor.Set(DesiredInterfaceColor);
+	CurrentHighlightColor.Set(DesiredHighlightColor);
 
 	// Open the menu if desired
 	RunWaitAction(ENovaLoadingScreen::Black,
@@ -225,6 +230,7 @@ void UNovaMenuManager::Tick(float DeltaTime)
 
 	// Update UI color
 	CurrentInterfaceColor.Set(DesiredInterfaceColor, DeltaTime);
+	CurrentHighlightColor.Set(DesiredHighlightColor, DeltaTime);
 
 	// Update game menus
 	for (INovaGameMenu* GameMenu : GameMenus)
@@ -346,9 +352,15 @@ FLinearColor UNovaMenuManager::GetInterfaceColor() const
 	return CurrentInterfaceColor.Get();
 }
 
-void UNovaMenuManager::SetInterfaceColor(const FLinearColor& Color)
+FLinearColor UNovaMenuManager::GetHighlightColor() const
+{
+	return CurrentHighlightColor.Get();
+}
+
+void UNovaMenuManager::SetInterfaceColor(const FLinearColor& Color, const FLinearColor& HighlightColor)
 {
 	DesiredInterfaceColor = Color;
+	DesiredHighlightColor = HighlightColor;
 }
 
 /*----------------------------------------------------

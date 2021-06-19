@@ -35,6 +35,7 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 {
 	// Data
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	InArgs._MenuManager->SetInterfaceColor(FLinearColor::White, Theme.PositiveColor);
 
 	// Parent constructor
 	SNovaMenu::Construct(SNovaMenu::FArguments().MenuManager(InArgs._MenuManager));

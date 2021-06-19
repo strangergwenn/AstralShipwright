@@ -173,6 +173,9 @@ protected:
 	/** Overall button color */
 	FLinearColor GetMainColor() const;
 
+	/** Button border color */
+	FSlateColor GetBorderColor() const;
+
 	/** Current width callback (visual box) */
 	FOptionalSize GetVisualWidth() const;
 

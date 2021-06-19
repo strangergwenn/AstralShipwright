@@ -80,6 +80,7 @@ void SNovaButton::Construct(const FArguments& InArgs)
 				[
 					SNew(SBorder)
 					.BorderImage(&Theme.Border)
+					.BorderBackgroundColor(this, &SNovaButton::GetBorderColor)
 					.Padding(FMargin(1))
 					.RenderTransform(this, &SNovaButton::GetBorderRenderTransform)
 					.RenderTransformPivot(FVector2D(0.5f, 0.5f))
@@ -383,6 +384,18 @@ FLinearColor SNovaButton::GetMainColor() const
 	FLinearColor MainColor = MenuManager->GetInterfaceColor();
 
 	return FMath::InterpEaseInOut(MainColor, Theme.DisabledColor, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+}
+
+FSlateColor SNovaButton::GetBorderColor() const
+{
+	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
+
+	UNovaMenuManager* MenuManager = UNovaMenuManager::Get();
+	NCHECK(MenuManager);
+
+	FLinearColor MainColor      = MenuManager->GetInterfaceColor();
+	FLinearColor SecondaryColor = MenuManager->GetHighlightColor();
+	return FMath::InterpEaseInOut(MainColor, SecondaryColor, State.CurrentColorAnimationAlpha, ENovaUIConstants::EaseLight);
 }
 
 FOptionalSize SNovaButton::GetVisualWidth() const

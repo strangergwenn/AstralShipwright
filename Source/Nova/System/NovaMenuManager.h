@@ -110,11 +110,14 @@ public:
 	/** Stop displaying the tooltip */
 	void HideTooltip(SWidget* TargetWidget);
 
-	/** Change the current UI color */
-	void SetInterfaceColor(const FLinearColor& Color);
+	/** Change the current UI colors */
+	void SetInterfaceColor(const FLinearColor& Color, const FLinearColor& HighlightColor);
 
 	/** Return the current UI color */
 	FLinearColor GetInterfaceColor() const;
+
+	/** Return the current highlight UI color */
+	FLinearColor GetHighlightColor() const;
 
 	/*----------------------------------------------------
 	    Menu tools
@@ -204,7 +207,7 @@ protected:
 
 	// Current menu state
 	bool                         LoadingScreenFrozen;
-	static bool                  UsingGamepad;
+	bool                         UsingGamepad;
 	FNovaAsyncCommand            CurrentCommand;
 	TQueue<FNovaAsyncCommand>    CommandStack;
 	ENovaFadeState               CurrentMenuState;
@@ -213,7 +216,9 @@ protected:
 	// Current color state
 	float                           CurrentFadingTime;
 	FLinearColor                    DesiredInterfaceColor;
+	FLinearColor                    DesiredHighlightColor;
 	TNovaTimedAverage<FLinearColor> CurrentInterfaceColor;
+	TNovaTimedAverage<FLinearColor> CurrentHighlightColor;
 
 	// Dynamic material pool
 	UPROPERTY()
