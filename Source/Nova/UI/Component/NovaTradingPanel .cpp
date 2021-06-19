@@ -6,7 +6,10 @@
 
 #include "Nova/Game/NovaGameTypes.h"
 #include "Nova/Player/NovaPlayerController.h"
+
 #include "Nova/Spacecraft/NovaSpacecraft.h"
+#include "Nova/Spacecraft/NovaSpacecraftPawn.h"
+#include "Nova/Spacecraft/System/NovaSpacecraftPropellantSystem.h"
 
 #include "Nova/UI/Widget/NovaSlider.h"
 #include "Nova/UI/Widget/NovaSlider.h"
@@ -164,9 +167,13 @@ void SNovaTradingPanel::StartTrade(ANovaPlayerController* TargetPC, const UNovaR
 
 	InitialAmount = 0.0f;
 	Capacity      = 0.0f;
+	FText Name;
 
+	// Resource mode
 	if (Resource)
 	{
+		Name = Resource->Name;
+
 		if (CompartmentIndex != INDEX_NONE)
 		{
 			InitialAmount = Spacecraft->GetCargoMass(Resource, CompartmentIndex);
@@ -174,11 +181,24 @@ void SNovaTradingPanel::StartTrade(ANovaPlayerController* TargetPC, const UNovaR
 		}
 	}
 
+	// Fuel mode
+	else
+	{
+		Name = LOCTEXT("FuelName", "Fuel");    // TODO : use a hidden resource for this
+
+		UNovaSpacecraftPropellantSystem* PropellantSystem =
+			PC->GetSpacecraftPawn()->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+		NCHECK(PropellantSystem);
+
+		InitialAmount = PropellantSystem->GetCurrentPropellantAmount();
+		Capacity      = PropellantSystem->GetTotalPropellantAmount();
+	}
+
 	AmountSlider->SetMaxValue(Capacity);
 	AmountSlider->SetCurrentValue(InitialAmount);
 
 	FSimpleDelegate ConfirmTrade = FSimpleDelegate::CreateSP(this, &SNovaTradingPanel::OnConfirmTrade);
-	Show(Resource->Name, FText(), ConfirmTrade, FSimpleDelegate(), FSimpleDelegate());
+	Show(Name, FText(), ConfirmTrade, FSimpleDelegate(), FSimpleDelegate());
 }
 
 /*----------------------------------------------------
@@ -196,6 +216,9 @@ const FSlateBrush* SNovaTradingPanel::GetResourceImage() const
 	{
 		return &Resource->AssetRender;
 	}
+	else
+	{    // TODO : use a hidden resource for this
+	}
 
 	return nullptr;
 }
@@ -205,6 +228,10 @@ FText SNovaTradingPanel::GetResourceDetails() const
 	if (Resource)
 	{
 		return Resource->Description;
+	}
+	else
+	{
+		return LOCTEXT("FuelDescription", "Fuel is cool. Seriously, it's literally cryogenic.");    // TODO : use a hidden resource for this
 	}
 
 	return FText();
@@ -247,6 +274,7 @@ FText SNovaTradingPanel::GetCargoDetails() const
 
 FText SNovaTradingPanel::GetTransactionDetails() const
 {
+	// TODO : cost system
 	return LOCTEXT("TestText", "This transaction will cost you 156 $currency");
 }
 
@@ -261,11 +289,22 @@ ENovaInfoBoxType SNovaTradingPanel::GetTransactionType() const
 
 void SNovaTradingPanel::OnConfirmTrade()
 {
+	// Resource mode
 	if (Resource)
 	{
 		FNovaSpacecraft ModifiedSpacecraft = Spacecraft->GetSafeCopy();
 		ModifiedSpacecraft.ModifyCargo(Resource, AmountSlider->GetCurrentValue() - InitialAmount, CompartmentIndex);
 		PC->UpdateSpacecraft(ModifiedSpacecraft);
+	}
+
+	// Fuel mode
+	else
+	{
+		UNovaSpacecraftPropellantSystem* PropellantSystem =
+			PC->GetSpacecraftPawn()->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+		NCHECK(PropellantSystem);
+
+		PropellantSystem->SetPropellantAmount(AmountSlider->GetCurrentValue());
 	}
 }
 

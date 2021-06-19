@@ -28,7 +28,8 @@
     Constructor
 ----------------------------------------------------*/
 
-SNovaMainMenuInventory::SNovaMainMenuInventory() : PC(nullptr), GameState(nullptr), Spacecraft(nullptr), CurrentCompartmentIndex(INDEX_NONE)
+SNovaMainMenuInventory::SNovaMainMenuInventory()
+	: PC(nullptr), GameState(nullptr), Spacecraft(nullptr), SpacecraftPawn(nullptr), CurrentCompartmentIndex(INDEX_NONE)
 {}
 
 void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
@@ -75,7 +76,17 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 					[
 						SNew(SProgressBar)
 						.Style(&Theme.ProgressBarStyle)
-						.Percent(0.5f)
+						.Percent(this, &SNovaMainMenuInventory::GetFuelRatio)
+					]
+				]
+
+				+ SHorizontalBox::Slot()
+				[
+					SNew(SNovaButtonLayout)
+					[
+						SNew(STextBlock)
+						.TextStyle(&Theme.MainFont)
+						.Text(this, &SNovaMainMenuInventory::GetFuelText)
 					]
 				]
 			
@@ -84,6 +95,12 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 				[
 					SNovaAssignNew(RefuelButton, SNovaButton)
 					.Text(LOCTEXT("RefillPropellant", "Refuel"))
+					.HelpText(LOCTEXT("RefillPropellantHelp", "Trade fuel with this station"))
+					.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
+					{
+						return SpacecraftPawn->IsDocked();
+					})))
+					.OnClicked(this, &SNovaMainMenuInventory::OnRefuel)
 				]
 			]
 		]
@@ -136,10 +153,10 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 			[
 				SNovaNew(SNovaButton)
 				.Size("InventoryButtonSize")
-				//.HelpText() // TODO
+				.HelpText(LOCTEXT("TradeSlotHelp", "Trade with this cargo slot"))
 				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
 				{
-					return IsValidCompartment();
+					return IsValidCompartment() && SpacecraftPawn->IsDocked();
 				})))
 				.OnClicked(this, &SNovaMainMenuInventory::OnTradeWithSlot, Index, Type)
 				.Content()
@@ -286,9 +303,10 @@ void SNovaMainMenuInventory::Hide()
 
 void SNovaMainMenuInventory::UpdateGameObjects()
 {
-	PC         = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
-	GameState  = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
-	Spacecraft = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
+	PC             = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
+	GameState      = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
+	Spacecraft     = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
+	SpacecraftPawn = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
 }
 
 TSharedPtr<SNovaButton> SNovaMainMenuInventory::GetDefaultFocusButton() const
@@ -356,6 +374,7 @@ TSharedRef<SWidget> SNovaMainMenuInventory::GenerateResourceItem(const UNovaReso
 			.AutoWidth()
 			.Padding(Theme.ContentPadding)
 			[
+				// TODO : cost system
 				SNew(SRichTextBlock)
 				.Text(FText::FromString(FText::AsCurrency(12000, TEXT("CUR"), &Options)
 					.ToString().Replace(TEXT("CUR"), TEXT("Ѥ")))
@@ -379,8 +398,38 @@ FText SNovaMainMenuInventory::GenerateResourceTooltip(const UNovaResource* Resou
 }
 
 /*----------------------------------------------------
+    Content callbacks
+----------------------------------------------------*/
+
+TOptional<float> SNovaMainMenuInventory::GetFuelRatio() const
+{
+	UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+	NCHECK(PropellantSystem);
+
+	return PropellantSystem->GetCurrentPropellantAmount() / PropellantSystem->GetTotalPropellantAmount();
+}
+
+FText SNovaMainMenuInventory::GetFuelText() const
+{
+	UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+	NCHECK(PropellantSystem);
+
+	FNumberFormattingOptions Options;
+	Options.MaximumFractionalDigits = 0;
+
+	return FText::FormatNamed(LOCTEXT("PropellantFormat", "{remaining}T out of {total}T"), TEXT("remaining"),
+		FText::AsNumber(PropellantSystem->GetCurrentPropellantAmount(), &Options), TEXT("total"),
+		FText::AsNumber(PropellantSystem->GetTotalPropellantAmount(), &Options));
+}
+
+/*----------------------------------------------------
     Callbacks
 ----------------------------------------------------*/
+
+void SNovaMainMenuInventory::OnRefuel()
+{
+	TradingModalPanel->StartTrade(PC, nullptr, INDEX_NONE);
+}
 
 void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type)
 {

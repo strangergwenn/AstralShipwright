@@ -41,10 +41,10 @@ public:
 	virtual void Update(FNovaTime InitialTime, FNovaTime FinalTime) override;
 
 	/** Refill the spacecraft propellant, changing the system state directly */
-	void Refill();
+	void SetPropellantAmount(float Amount);
 
 	UFUNCTION(Server, Reliable)
-	void ServerRefill();
+	void ServerSetPropellantAmount(float Amount);
 
 	/** Get how much propellant remains available in T */
 	float GetCurrentPropellantAmount() const

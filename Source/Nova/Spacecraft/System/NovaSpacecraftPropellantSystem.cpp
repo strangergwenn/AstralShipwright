@@ -69,14 +69,14 @@ void UNovaSpacecraftPropellantSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 	}
 }
 
-void UNovaSpacecraftPropellantSystem::Refill()
+void UNovaSpacecraftPropellantSystem::SetPropellantAmount(float Amount)
 {
-	NLOG("UNovaSpacecraftPropellantSystem::Refill ('%s')", *GetRoleString(this));
+	NLOG("UNovaSpacecraftPropellantSystem::SetPropellantAmount ('%s')", *GetRoleString(this));
 
 	if (GetOwner()->GetLocalRole() == ROLE_Authority)
 	{
 		FNovaSpacecraft UpdatedSpacecraft = *GetSpacecraft();
-		UpdatedSpacecraft.RefillPropellant();
+		UpdatedSpacecraft.SetPropellantAmount(Amount);
 
 		ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 		NCHECK(GameState);
@@ -84,13 +84,13 @@ void UNovaSpacecraftPropellantSystem::Refill()
 	}
 	else
 	{
-		ServerRefill();
+		ServerSetPropellantAmount(Amount);
 	}
 }
 
-void UNovaSpacecraftPropellantSystem::ServerRefill_Implementation()
+void UNovaSpacecraftPropellantSystem::ServerSetPropellantAmount_Implementation(float Amount)
 {
-	Refill();
+	SetPropellantAmount(Amount);
 }
 
 void UNovaSpacecraftPropellantSystem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

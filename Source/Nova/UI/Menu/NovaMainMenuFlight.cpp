@@ -101,23 +101,6 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					.AutoHeight()
 					[
 						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("Refill", "Refill spacecraft"))
-						.HelpText(LOCTEXT("RefillHelp", "JRefill the spacecraft propellant"))
-						.OnClicked(FSimpleDelegate::CreateLambda([&]()
-						{
-							if (IsValid(SpacecraftPawn))
-							{
-								UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
-								NCHECK(PropellantSystem);
-								PropellantSystem->Refill();
-							}
-						}))
-					]
-			
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNovaNew(SNovaButton)
 						.Text(LOCTEXT("TestJoin", "Join random session"))
 						.HelpText(LOCTEXT("TestJoinHelp", "Join random session"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()

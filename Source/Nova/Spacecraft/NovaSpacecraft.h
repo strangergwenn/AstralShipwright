@@ -344,10 +344,10 @@ public:
 	/** Update the spacecraft's metrics */
 	void UpdatePropulsionMetrics();
 
-	/** Reset completely the propellant amount to the spacecraft's maximum */
-	void RefillPropellant()
+	/** Reset the propellant amount */
+	void SetPropellantAmount(float Amount)
 	{
-		PropellantMassAtLaunch = PropulsionMetrics.PropellantMassCapacity;
+		PropellantMassAtLaunch = Amount;
 	}
 
 	/** Get the current cargo mass */

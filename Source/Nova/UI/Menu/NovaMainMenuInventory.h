@@ -57,8 +57,18 @@ public:
 	FText GenerateResourceTooltip(const class UNovaResource* Resource);
 
 	/*----------------------------------------------------
+	    Content callbacks
+	----------------------------------------------------*/
+
+	TOptional<float> GetFuelRatio() const;
+
+	FText GetFuelText() const;
+
+	/*----------------------------------------------------
 	    Callbacks
 	----------------------------------------------------*/
+
+	void OnRefuel();
 
 	void OnTradeWithSlot(int32 Index, ENovaResourceType Type);
 
@@ -75,6 +85,7 @@ protected:
 	class ANovaPlayerController*     PC;
 	class ANovaGameState*            GameState;
 	const struct FNovaSpacecraft*    Spacecraft;
+	const class ANovaSpacecraftPawn* SpacecraftPawn;
 	int32                            CurrentCompartmentIndex;
 
 	// Resource list
