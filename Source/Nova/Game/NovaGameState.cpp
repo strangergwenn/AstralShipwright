@@ -300,10 +300,10 @@ double ANovaGameState::GetCurrentPrice(const UNovaTradableAssetDescription* Asse
 		}
 	}
 
-	// Non-resource assets have a large deprecation value when re-sold
+	// Non-resource assets have a large depreciation value when re-sold
 	if (ForSale && !Asset->IsA<UNovaResource>())
 	{
-		Multiplier *= 0.5f;
+		Multiplier *= ENovaConstants::ResaleDepreciation;
 	}
 
 	return Multiplier * Asset->BasePrice;

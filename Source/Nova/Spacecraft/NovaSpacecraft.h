@@ -250,6 +250,17 @@ struct FNovaSpacecraftPropulsionMetrics
 	float MaximumBurnTime;
 };
 
+/** Spacecraft upgrade cost result */
+struct FNovaSpacecraftUpgradeCost
+{
+	FNovaSpacecraftUpgradeCost() : UpgradeCosts(0), ResaleGains(0), TotalCost(0)
+	{}
+
+	double UpgradeCosts;
+	double ResaleGains;
+	double TotalCost;
+};
+
 /*----------------------------------------------------
     Spacecraft implementation
 ----------------------------------------------------*/
@@ -290,6 +301,9 @@ public:
 
 	/** Get the spacecraft validity */
 	bool IsValid(FText* Details) const;
+
+	/** Compute the cost structure of an upgrade */
+	FNovaSpacecraftUpgradeCost GetUpgradeCost(const class ANovaGameState* GameState, const FNovaSpacecraft* Other) const;
 
 	/** Get a safe copy of this spacecraft without empty compartments */
 	FNovaSpacecraft GetSafeCopy() const

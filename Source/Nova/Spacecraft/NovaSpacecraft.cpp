@@ -1,6 +1,7 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaSpacecraft.h"
+#include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaOrbitalSimulationTypes.h"
 #include "Nova/System/NovaAssetManager.h"
 #include "Nova/Nova.h"
@@ -412,6 +413,69 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 
 		return false;
 	}
+}
+
+FNovaSpacecraftUpgradeCost FNovaSpacecraft::GetUpgradeCost(const ANovaGameState* GameState, const FNovaSpacecraft* Other) const
+{
+	FNovaSpacecraftUpgradeCost                        Cost;
+	TMap<const UNovaTradableAssetDescription*, int32> PartsDelta;
+
+	// Increase or decrease the amount of one particular part
+	auto UpdatePartsDelta = [&PartsDelta](const UNovaTradableAssetDescription* Asset, bool Add)
+	{
+		if (::IsValid(Asset))
+		{
+			int32* Value = PartsDelta.Find(Asset);
+			if (Value)
+			{
+				*Value += Add ? 1 : -1;
+			}
+			else
+			{
+				PartsDelta.Add(Asset, Add ? 1 : -1);
+			}
+		}
+	};
+
+	// Update the amounts of each parts in a spacecraft
+	auto ProcessSpacecraft = [UpdatePartsDelta](const FNovaSpacecraft* Spacecraft, bool Add)
+	{
+		for (int32 CompartmentIndex = 0; CompartmentIndex < Spacecraft->Compartments.Num(); CompartmentIndex++)
+		{
+			const FNovaCompartment& Compartment = Spacecraft->Compartments[CompartmentIndex];
+			UpdatePartsDelta(Compartment.Description, Add);
+
+			for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+			{
+				UpdatePartsDelta(Compartment.Modules[ModuleIndex].Description, Add);
+			}
+
+			for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
+			{
+				UpdatePartsDelta(Compartment.Equipments[EquipmentIndex], Add);
+			}
+		}
+	};
+
+	// Run the process on each spacecraft
+	ProcessSpacecraft(this, true);
+	ProcessSpacecraft(Other, false);
+
+	// Compute the total costs
+	for (const TPair<const UNovaTradableAssetDescription*, int32>& Entry : PartsDelta)
+	{
+		if (Entry.Value > 0)
+		{
+			Cost.UpgradeCosts += Entry.Value * GameState->GetCurrentPrice(Entry.Key, false);
+		}
+		else if (Entry.Value < 0)
+		{
+			Cost.ResaleGains += -Entry.Value * GameState->GetCurrentPrice(Entry.Key, true);
+		}
+	}
+	Cost.TotalCost = Cost.UpgradeCosts - Cost.ResaleGains;
+
+	return Cost;
 }
 
 FText FNovaSpacecraft::GetClassification() const

@@ -6,6 +6,7 @@
 #include "Nova/Actor/NovaTurntablePawn.h"
 #include "Nova/Player/NovaPlayerController.h"
 #include "Nova/Game/NovaGameTypes.h"
+#include "Nova/Game/NovaGameState.h"
 
 #include "Nova/System/NovaGameInstance.h"
 #include "Nova/System/NovaMenuManager.h"
@@ -50,6 +51,23 @@ public:
 			HasValidSpacecraft = ModifiedSpacecraft.IsValid(&DetailsText);
 		}
 
+		// Build the cost table
+		FNovaSpacecraftUpgradeCost Cost =
+			ModifiedSpacecraft.GetUpgradeCost(PC->GetWorld()->GetGameState<ANovaGameState>(), CurrentSpacecraft);
+		TSharedRef<SNovaTable> CostTable = SNew(SNovaTable).Title(LOCTEXT("CostAnalysis", "Cost analysis"));
+		CostTable->AddEntry(LOCTEXT("UpgradeCostUpgrades", "New parts bought"), GetPriceText(Cost.UpgradeCosts));
+		CostTable->AddEntry(LOCTEXT("UpgradeCostResale", "Parts resold"), GetPriceText(Cost.ResaleGains));
+		CostTable->AddEntry(LOCTEXT("UpgradeCostDepreciation", "Parts depreciation"),
+			FMath::RoundToInt(100 * ENovaConstants::ResaleDepreciation), -1, FText::FromString("%"));
+		CostTable->AddEntry(LOCTEXT("UpgradeCostTotal", "Total cost of changes"), GetPriceText(Cost.TotalCost));
+
+		// Validate cost
+		if (!PC->CanAffordTransaction(-Cost.TotalCost))
+		{
+			HasValidSpacecraft = false;
+			DetailsText        = LOCTEXT("TooExpensive", "Changes to the current design are too expensive to afford");
+		}
+
 		// Reversal callback
 		FSimpleDelegate ConfirmRevertChanges = FSimpleDelegate::CreateLambda(
 			[=]()
@@ -65,6 +83,7 @@ public:
 			ConfirmChanges = FSimpleDelegate::CreateLambda(
 				[=]()
 				{
+					PC->ProcessTransaction(-Cost.TotalCost);
 					SpacecraftPawn->ApplyAssembly();
 					PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
 				});
@@ -115,6 +134,14 @@ public:
 						.Title(LOCTEXT("CurrentSpacecraftTitle", "Current design"))
 						.TargetSpacecraft(*CurrentSpacecraft)
 					]
+				]
+
+				// Cost table
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(Theme.VerticalContentPadding)
+				[
+					CostTable
 				]
 			]
 

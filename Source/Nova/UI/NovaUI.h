@@ -149,7 +149,7 @@ public:
 	{
 		SCompoundWidget::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
-		if (Type.IsBound())
+		if (Type.IsSet() || Type.IsBound())
 		{
 			ENovaInfoBoxType DesiredType = Type.Get();
 
