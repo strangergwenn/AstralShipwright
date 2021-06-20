@@ -63,6 +63,7 @@ void SNovaTradingPanel::Construct(const FArguments& InArgs)
 					.AutoHeight()
 					[
 						SAssignNew(ResourceItem, SNovaTradableAssetItem)
+						.Dark(true)
 					]
 
 					+ SVerticalBox::Slot()
@@ -89,7 +90,7 @@ void SNovaTradingPanel::Construct(const FArguments& InArgs)
 					.AutoHeight()
 					.Padding(Theme.VerticalContentPadding)
 					[
-						SNew(SHorizontalBox)
+						SAssignNew(UnitsBox, SHorizontalBox)
 
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
@@ -137,7 +138,7 @@ void SNovaTradingPanel::Construct(const FArguments& InArgs)
 				SNew(SNovaButtonLayout)
 				.Size("DoubleButtonSize")
 				[
-					SNew(SNovaInfoText)
+					SAssignNew(InfoText, SNovaInfoText)
 					.Text(this, &SNovaTradingPanel::GetTransactionDetails)
 					.Type(this, &SNovaTradingPanel::GetTransactionType)
 				]
@@ -152,12 +153,14 @@ void SNovaTradingPanel::Construct(const FArguments& InArgs)
     Interface
 ----------------------------------------------------*/
 
-void SNovaTradingPanel::StartTrade(ANovaPlayerController* TargetPC, const UNovaResource* TargetResource, int32 TargetCompartmentIndex)
+void SNovaTradingPanel::ShowPanelInternal(
+	ANovaPlayerController* TargetPC, const UNovaResource* TargetResource, int32 TargetCompartmentIndex, bool AllowTrade)
 {
 	PC               = TargetPC;
 	Spacecraft       = PC->GetSpacecraft();
 	Resource         = TargetResource;
 	CompartmentIndex = TargetCompartmentIndex;
+	IsTradeAllowed   = AllowTrade;
 
 	NCHECK(IsValid(PC));
 	NCHECK(IsValid(Resource));
@@ -186,13 +189,28 @@ void SNovaTradingPanel::StartTrade(ANovaPlayerController* TargetPC, const UNovaR
 		InitialAmount = PropellantSystem->GetCurrentPropellantAmount();
 		Capacity      = PropellantSystem->GetTotalPropellantAmount();
 	}
-
-	AmountSlider->SetMaxValue(Capacity);
-	AmountSlider->SetCurrentValue(InitialAmount);
 	ResourceItem->SetAsset(TargetResource);
 
-	FSimpleDelegate ConfirmTrade = FSimpleDelegate::CreateSP(this, &SNovaTradingPanel::OnConfirmTrade);
-	Show(LOCTEXT("TradeTitle", "Trade resource"), FText(), ConfirmTrade);
+	// Setup the UI
+	if (AllowTrade)
+	{
+		InfoText->SetVisibility(EVisibility::Visible);
+		UnitsBox->SetVisibility(EVisibility::Visible);
+		AmountSlider->SetVisibility(EVisibility::Visible);
+		AmountSlider->SetMaxValue(Capacity);
+		AmountSlider->SetCurrentValue(InitialAmount);
+
+		FSimpleDelegate ConfirmTrade = FSimpleDelegate::CreateSP(this, &SNovaTradingPanel::OnConfirmTrade);
+		Show(LOCTEXT("TradeTitle", "Trade resource"), FText(), ConfirmTrade);
+	}
+	else
+	{
+		InfoText->SetVisibility(EVisibility::Collapsed);
+		UnitsBox->SetVisibility(EVisibility::Collapsed);
+		AmountSlider->SetVisibility(EVisibility::Collapsed);
+
+		Show(LOCTEXT("InspectTitle", "Inspect cargo slot"), FText(), FSimpleDelegate());
+	}
 }
 
 /*----------------------------------------------------
@@ -201,7 +219,7 @@ void SNovaTradingPanel::StartTrade(ANovaPlayerController* TargetPC, const UNovaR
 
 bool SNovaTradingPanel::IsConfirmEnabled() const
 {
-	return AmountSlider->GetCurrentValue() != InitialAmount && PC->CanAffordTransaction(GetTransactionValue());
+	return IsTradeAllowed && AmountSlider->GetCurrentValue() != InitialAmount && PC->CanAffordTransaction(GetTransactionValue());
 }
 
 FText SNovaTradingPanel::GetResourceDetails() const

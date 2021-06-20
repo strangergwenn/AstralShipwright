@@ -166,10 +166,16 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 			[
 				SNovaNew(SNovaButton)
 				.Size("InventoryButtonSize")
-				.HelpText(LOCTEXT("TradeSlotHelp", "Trade with this cargo slot"))
+				.HelpText(this, &SNovaMainMenuInventory::GetSlotHelpText)
 				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
 				{
-					return IsValidCompartment() && SpacecraftPawn->IsDocked();
+					if (IsValidCompartment())
+					{
+						const FNovaCompartment& Compartment = Spacecraft->Compartments[Index];
+						const FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(Type);
+						return (SpacecraftPawn->IsDocked() || IsValid(Cargo.Resource));
+					}
+					return false;
 				})))
 				.OnClicked(this, &SNovaMainMenuInventory::OnTradeWithSlot, Index, Type)
 				.Content()
@@ -353,6 +359,18 @@ FText SNovaMainMenuInventory::GenerateResourceTooltip(const UNovaResource* Resou
     Content callbacks
 ----------------------------------------------------*/
 
+FText SNovaMainMenuInventory::GetSlotHelpText() const
+{
+	if (SpacecraftPawn->IsDocked())
+	{
+		return LOCTEXT("TradeSlotHelp", "Trade with this cargo slot");
+	}
+	else
+	{
+		return LOCTEXT("InspectSlotHelp", "Inspect this cargo slot");
+	}
+}
+
 TOptional<float> SNovaMainMenuInventory::GetPropellantRatio() const
 {
 	return AveragedPropellantRatio.Get();
@@ -377,7 +395,7 @@ FText SNovaMainMenuInventory::GetPropellantText() const
 
 void SNovaMainMenuInventory::OnRefuelPropellant()
 {
-	TradingModalPanel->StartTrade(PC, UNovaResource::GetPropellant(), INDEX_NONE);
+	TradingModalPanel->Trade(PC, UNovaResource::GetPropellant(), INDEX_NONE);
 }
 
 void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type)
@@ -388,33 +406,44 @@ void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type
 	const FNovaCompartment&     Compartment = Spacecraft->Compartments[Index];
 	const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(Type);
 
-	// Valid resource in hold - allow trading it directly
-	if (IsValid(Cargo.Resource))
+	// Docked mode : trade with resource
+	if (SpacecraftPawn->IsDocked())
 	{
-		TradingModalPanel->StartTrade(PC, Cargo.Resource, Index);
+		// Valid resource in hold - allow trading it directly
+		if (IsValid(Cargo.Resource))
+		{
+			TradingModalPanel->Trade(PC, Cargo.Resource, Index);
+		}
+
+		// Cargo hold is empty, pick a resource to buy first
+		else
+		{
+			CurrentCompartmentIndex = Index;
+
+			auto BuyResource = [=]()
+			{
+				TradingModalPanel->Trade(PC, ResourceListView->GetSelectedItem(), Index);
+			};
+
+			//	Fill the resource list
+			ResourceList.Empty();
+			for (const FNovaResourceSale& Sale : GameState->GetCurrentArea()->ResourcesSold)
+			{
+				ResourceList.Add(Sale.Resource);
+			}
+			ResourceListView->Refresh(0);
+
+			// Proceed with the modal panel
+			GenericModalPanel->Show(LOCTEXT("SelectResource", "Select resource"), FText(), FSimpleDelegate::CreateLambda(BuyResource),
+				FSimpleDelegate(), FSimpleDelegate(), ResourceListView);
+		}
 	}
 
-	// Cargo hold is empty, pick a resource to buy first
+	// Show the resource
 	else
 	{
-		CurrentCompartmentIndex = Index;
-
-		auto BuyResource = [=]()
-		{
-			TradingModalPanel->StartTrade(PC, ResourceListView->GetSelectedItem(), Index);
-		};
-
-		//	Fill the resource list
-		ResourceList.Empty();
-		for (const FNovaResourceSale& Sale : GameState->GetCurrentArea()->ResourcesSold)
-		{
-			ResourceList.Add(Sale.Resource);
-		}
-		ResourceListView->Refresh(0);
-
-		// Proceed with the modal panel
-		GenericModalPanel->Show(LOCTEXT("SelectResource", "Select resource"), FText(), FSimpleDelegate::CreateLambda(BuyResource),
-			FSimpleDelegate(), FSimpleDelegate(), ResourceListView);
+		NCHECK(IsValid(Cargo.Resource));
+		TradingModalPanel->Inspect(PC, Cargo.Resource, Index);
 	}
 }
 
@@ -424,7 +453,7 @@ void SNovaMainMenuInventory::OnBuyResource()
 
 	GenericModalPanel->Hide();
 
-	TradingModalPanel->StartTrade(PC, ResourceListView->GetSelectedItem(), CurrentCompartmentIndex);
+	TradingModalPanel->Trade(PC, ResourceListView->GetSelectedItem(), CurrentCompartmentIndex);
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -29,8 +29,22 @@ public:
 	----------------------------------------------------*/
 
 public:
+	/** Show contents without trading */
+	void Inspect(ANovaPlayerController* TargetPC, const UNovaResource* TargetResource, int32 TargetCompartmentIndex)
+	{
+		ShowPanelInternal(TargetPC, TargetResource, TargetCompartmentIndex, false);
+	}
+
 	/** Start trading */
-	void StartTrade(class ANovaPlayerController* TargetPC, const class UNovaResource* TargetResource, int32 TargetCompartmentIndex);
+	void Trade(class ANovaPlayerController* TargetPC, const class UNovaResource* TargetResource, int32 TargetCompartmentIndex)
+	{
+		ShowPanelInternal(TargetPC, TargetResource, TargetCompartmentIndex, true);
+	}
+
+protected:
+	/** Implementation of the modal panel */
+	void ShowPanelInternal(
+		class ANovaPlayerController* TargetPC, const class UNovaResource* TargetResource, int32 TargetCompartmentIndex, bool AllowTrade);
 
 	/*----------------------------------------------------
 	    Content callbacks
@@ -67,6 +81,8 @@ protected:
 	// Slate widgets
 	TSharedPtr<class SNovaSlider>            AmountSlider;
 	TSharedPtr<class SNovaTradableAssetItem> ResourceItem;
+	TSharedPtr<class SHorizontalBox>         UnitsBox;
+	TSharedPtr<class SNovaInfoText>          InfoText;
 
 	// Data
 	class ANovaPlayerController*  PC;
@@ -75,4 +91,5 @@ protected:
 	float                         InitialAmount;
 	float                         Capacity;
 	int32                         CompartmentIndex;
+	bool                          IsTradeAllowed;
 };

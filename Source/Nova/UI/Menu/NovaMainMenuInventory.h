@@ -60,6 +60,8 @@ public:
 	    Content callbacks
 	----------------------------------------------------*/
 
+	FText GetSlotHelpText() const;
+
 	TOptional<float> GetPropellantRatio() const;
 
 	FText GetPropellantText() const;
