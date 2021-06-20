@@ -31,11 +31,11 @@ public:
 		SNovaTable::Construct(SNovaTable::FArguments().Title(InArgs._Title).Width(500));
 
 		// Units
-		FText Tonnes           = LOCTEXT("Tonnes", "T");
-		FText MetersPerSeconds = LOCTEXT("MetersPerSecond", "m/s");
-		FText TonnesPerSecond  = LOCTEXT("TonnesPerSecond", "T/s");
-		FText Seconds          = LOCTEXT("Seconds", "s");
-		FText KiloNewtons      = LOCTEXT("KiloNewtons", "kN");
+		FText Tonnes           = FText::FromString("T");
+		FText MetersPerSeconds = FText::FromString("m/s");
+		FText TonnesPerSecond  = FText::FromString("T/s");
+		FText Seconds          = FText::FromString("s");
+		FText KiloNewtons      = FText::FromString("kN");
 
 		// Build the mass table
 		AddHeader(LOCTEXT("Overview", "<img src=\"/Text/Module\"/> Overview"));

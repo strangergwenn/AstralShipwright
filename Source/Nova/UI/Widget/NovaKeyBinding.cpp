@@ -221,7 +221,7 @@ FText SNovaKeyBinding::GetKeyName() const
 {
 	if (WaitingForKey)
 	{
-		return (LOCTEXT("PressKey", "Press a key..."));
+		return (LOCTEXT("PressKey", "Press a key"));
 	}
 	else
 	{

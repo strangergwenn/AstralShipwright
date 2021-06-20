@@ -505,8 +505,7 @@ void ANovaGameState::ProcessPlayerEvents(float DeltaTime)
 		// Handle area changes as the primary information
 		if (AreaChangeEvents.Num())
 		{
-			PrimaryText = FText::FormatNamed(
-				LOCTEXT("SharedTransitionAreaFormat", "{area}"), TEXT("area"), AreaChangeEvents[AreaChangeEvents.Num() - 1]->Name);
+			PrimaryText = AreaChangeEvents[AreaChangeEvents.Num() - 1]->Name;
 		}
 
 		// Handle time skips as the secondary information
