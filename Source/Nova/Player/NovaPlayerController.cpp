@@ -198,7 +198,7 @@ void ANovaPlayerController::SerializeJson(
 		SaveData->Credits = 0;
 		if (!JsonData->TryGetNumberField("Credits", SaveData->Credits))
 		{
-			SaveData->Credits = 1000;
+			SaveData->Credits = 2000;
 		}
 	}
 }
