@@ -1169,7 +1169,7 @@ void SNovaMainMenuAssembly::SetSelectedModuleOrEquipment(int32 Index)
 		NCHECK(EditedCompartmentIndex >= 0 && EditedCompartmentIndex < SpacecraftPawn->GetCompartmentCount());
 		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(EditedCompartmentIndex);
 
-		/** Check that a common index maps to a valid module or equipment */
+		// Check that a common index maps to a valid module or equipment
 		auto IsValidIndex = [&](int32 CommonIndex)
 		{
 			if (IsModuleIndex(CommonIndex))

@@ -69,10 +69,17 @@ struct FNovaResourceSale
 {
 	GENERATED_BODY()
 
+	FNovaResourceSale() : Resource(nullptr), PriceModifier(ENovaPriceModifier::Average)
+	{}
+
 public:
 	// Resource being sold here
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	const class UNovaResource* Resource;
+
+	// Resource price modifier
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	ENovaPriceModifier PriceModifier;
 };
 
 /** World area description */
@@ -97,6 +104,10 @@ public:
 	// Initial phase on the orbit in degrees
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Phase;
+
+	// Resources bought in this area
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	TArray<FNovaResourceSale> ResourcesBought;
 
 	// Resources sold in this area
 	UPROPERTY(Category = Properties, EditDefaultsOnly)

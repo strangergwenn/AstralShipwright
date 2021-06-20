@@ -270,6 +270,17 @@ public:
 	float BasePrice = 10;
 };
 
+/** Trade price modifiers */
+UENUM()
+enum class ENovaPriceModifier : uint8
+{
+	Cheap,
+	BelowAverage,
+	Average,
+	AboveAverage,
+	Expensive
+};
+
 /*----------------------------------------------------
     Resources
 ----------------------------------------------------*/

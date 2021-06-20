@@ -5,6 +5,7 @@
 #include "NovaTradingPanel.h"
 
 #include "Nova/Game/NovaGameTypes.h"
+#include "Nova/Game/NovaGameState.h"
 #include "Nova/System/NovaGameInstance.h"
 #include "Nova/Player/NovaPlayerController.h"
 
@@ -286,8 +287,9 @@ double SNovaTradingPanel::GetTransactionValue() const
 {
 	if (Resource)
 	{
-		double Amount = AmountSlider->GetCurrentValue() - InitialAmount;
-		return -Amount * Resource->BasePrice;
+		double Amount    = AmountSlider->GetCurrentValue() - InitialAmount;
+		double UnitPrice = PC->GetWorld()->GetGameState<ANovaGameState>()->GetCurrentPrice(Resource, Amount < 0);
+		return -Amount * UnitPrice;
 	}
 
 	return 0.0;

@@ -86,8 +86,8 @@ protected:
 	// Game objects
 	TWeakObjectPtr<UNovaMenuManager>       MenuManager;
 	class ANovaPlayerController*           PC;
-	const class ANovaGameState*            GameState;
 	class ANovaSpacecraftPawn*             SpacecraftPawn;
+	class ANovaGameState*                  GameState;
 	class UNovaOrbitalSimulationComponent* OrbitalSimulation;
 
 	// Destination list

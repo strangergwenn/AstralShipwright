@@ -32,7 +32,7 @@
 ----------------------------------------------------*/
 
 SNovaMainMenuNavigation::SNovaMainMenuNavigation()
-	: PC(nullptr), GameState(nullptr), SpacecraftPawn(nullptr), OrbitalSimulation(nullptr), SelectedDestination(nullptr)
+	: PC(nullptr), SpacecraftPawn(nullptr), GameState(nullptr), OrbitalSimulation(nullptr), SelectedDestination(nullptr)
 {}
 
 void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
@@ -97,14 +97,12 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 				SNovaNew(SNovaButton)
 				.Text(LOCTEXT("TimeDilation", "Disable time dilation"))
 				.HelpText(LOCTEXT("TimeDilationHelp", "Set time dilation to zero"))
-				.OnClicked(FSimpleDelegate::CreateLambda([&]()
+				.OnClicked(FSimpleDelegate::CreateLambda([this]()
 				{
-					ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 					GameState->SetTimeDilation(ENovaTimeDilation::Normal);
 				}))
 				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 				{
-					const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 					return GameState && GameState->CanDilateTime(ENovaTimeDilation::Normal);
 				})))
 			]
@@ -115,9 +113,8 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 				SNovaNew(SNovaButton)
 				.Text(LOCTEXT("TimeDilation1", "Time dilation 1"))
 				.HelpText(LOCTEXT("TimeDilation1Help", "Set time dilation to 1 (1s = 1m)"))
-				.OnClicked(FSimpleDelegate::CreateLambda([&]()
+				.OnClicked(FSimpleDelegate::CreateLambda([this]()
 				{
-					ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 					GameState->SetTimeDilation(ENovaTimeDilation::Level1);
 				}))
 				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
@@ -133,14 +130,12 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 				SNovaNew(SNovaButton)
 				.Text(LOCTEXT("TimeDilation2", "Time dilation 2"))
 				.HelpText(LOCTEXT("TimeDilation2Help", "Set time dilation to 2 (1s = 20m)"))
-				.OnClicked(FSimpleDelegate::CreateLambda([&]()
+				.OnClicked(FSimpleDelegate::CreateLambda([this]()
 				{
-					ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 					GameState->SetTimeDilation(ENovaTimeDilation::Level2);
 				}))
 				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 				{
-					const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 					return GameState && GameState->CanDilateTime(ENovaTimeDilation::Level2);
 				})))
 			]
@@ -245,8 +240,8 @@ void SNovaMainMenuNavigation::Hide()
 void SNovaMainMenuNavigation::UpdateGameObjects()
 {
 	PC                = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
-	GameState         = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
 	SpacecraftPawn    = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
+	GameState         = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
 	OrbitalSimulation = IsValid(GameState) ? GameState->GetOrbitalSimulation() : nullptr;
 }
 

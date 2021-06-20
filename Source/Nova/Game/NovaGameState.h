@@ -136,6 +136,9 @@ public:
 	/** Check whether all spacecraft are docked */
 	bool AreAllSpacecraftDocked() const;
 
+	/** Get the current price of an asset */
+	double GetCurrentPrice(const class UNovaTradableAssetDescription* Asset, bool ForSale) const;
+
 	/*----------------------------------------------------
 	    Spacecraft management
 	----------------------------------------------------*/

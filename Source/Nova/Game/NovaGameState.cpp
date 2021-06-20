@@ -3,6 +3,7 @@
 #include "NovaGameState.h"
 
 #include "NovaArea.h"
+#include "NovaGameTypes.h"
 #include "NovaOrbitalSimulationComponent.h"
 
 #include "Nova/Actor/NovaActorTools.h"
@@ -259,6 +260,53 @@ bool ANovaGameState::AreAllSpacecraftDocked() const
 		}
 	}
 	return true;
+}
+
+double ANovaGameState::GetCurrentPrice(const UNovaTradableAssetDescription* Asset, bool ForSale) const
+{
+	NCHECK(IsValid(Asset));
+	double Multiplier = 1.0f;
+
+	// Define price modifiers
+	auto GetPriceModifierValue = [](ENovaPriceModifier Modifier) -> double
+	{
+		switch (Modifier)
+		{
+			case ENovaPriceModifier::Cheap:
+				return 0.75;
+			case ENovaPriceModifier::BelowAverage:
+				return 0.9;
+			case ENovaPriceModifier::Average:
+				return 1.0;
+			case ENovaPriceModifier::AboveAverage:
+				return 1.1;
+			case ENovaPriceModifier::Expensive:
+				return 1.25;
+		}
+
+		return 0.0;
+	};
+
+	// Find out the current modifier for this transaction
+	if (IsValid(CurrentArea))
+	{
+		for (const FNovaResourceSale& Sale : (ForSale ? CurrentArea->ResourcesBought : CurrentArea->ResourcesSold))
+		{
+			if (Sale.Resource == Asset)
+			{
+				Multiplier *= GetPriceModifierValue(Sale.PriceModifier);
+				break;
+			}
+		}
+	}
+
+	// Non-resource assets have a large deprecation value when re-sold
+	if (ForSale && !Asset->IsA<UNovaResource>())
+	{
+		Multiplier *= 0.5f;
+	}
+
+	return Multiplier * Asset->BasePrice;
 }
 
 /*----------------------------------------------------
