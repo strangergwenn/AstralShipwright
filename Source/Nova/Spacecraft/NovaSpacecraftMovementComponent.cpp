@@ -27,6 +27,8 @@
 UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	: Super()
 
+	, MainDriveEnabled(false)
+
 	, CurrentLinearVelocity(FVector::ZeroVector)
 	, CurrentAngularVelocity(FVector::ZeroVector)
 
@@ -239,6 +241,78 @@ void UNovaSpacecraftMovementComponent::Stop(FSimpleDelegate Callback)
 	RequestMovement(FNovaMovementCommand(ENovaMovementState::Stopping));
 }
 
+void UNovaSpacecraftMovementComponent::AlignToNextManeuver()
+{
+	// Fetch the trajectory state
+	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(IsValid(GameState));
+	const FNovaTrajectory* Trajectory   = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
+	const FNovaManeuver*   NextManeuver = Trajectory ? Trajectory->GetNextManeuver(GameState->GetCurrentTime()) : nullptr;
+
+	// Move to the orientation state
+	if (NextManeuver)
+	{
+		FVector ManeuverDirection = GetManeuverDirection();
+		if (AttitudeCommand.Direction != ManeuverDirection)
+		{
+			NLOG("UNovaSpacecraftMovementComponent::AlignToNextManeuver : orientating");
+			AttitudeCommand.Direction = ManeuverDirection;
+			MovementCommand.State     = ENovaMovementState::Orientating;
+		}
+	}
+}
+
+bool UNovaSpacecraftMovementComponent::IsAlignedToNextManeuver() const
+{
+	// Fetch the trajectory state
+	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(IsValid(GameState));
+	const FNovaTrajectory* Trajectory   = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
+	const FNovaManeuver*   NextManeuver = Trajectory ? Trajectory->GetNextManeuver(GameState->GetCurrentTime()) : nullptr;
+
+	// Check the orientation state
+	if (NextManeuver)
+	{
+		const FVector ManeuverDirection = GetManeuverDirection();
+		float CurrentAngle = FMath::RadiansToDegrees(acosf(FVector::DotProduct(UpdatedComponent->GetForwardVector(), ManeuverDirection)));
+
+		return CurrentAngle < AngularDeadDistance;
+	}
+
+	return false;
+}
+
+void UNovaSpacecraftMovementComponent::EnableMainDrive()
+{
+	NLOG("UNovaSpacecraftMovementComponent::EnableMainDrive ('%s')", *GetRoleString(this));
+
+	// Server
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		MainDriveEnabled = true;
+	}
+
+	// Authoritative client
+	else if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		ServerEnableMainDrive();
+	}
+}
+
+void UNovaSpacecraftMovementComponent::DisableMainDrive()
+{
+	NLOG("UNovaSpacecraftMovementComponent::DisableMainDrive");
+
+	NCHECK(GetLocalRole() == ROLE_Authority);
+
+	MainDriveEnabled = false;
+}
+
+void UNovaSpacecraftMovementComponent::ServerEnableMainDrive_Implementation()
+{
+	EnableMainDrive();
+}
+
 /*----------------------------------------------------
     High level movement
 ----------------------------------------------------*/
@@ -253,22 +327,9 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 	switch (MovementCommand.State)
 	{
-		// Docked state
+		// Idle states
 		case ENovaMovementState::Docked:
-			break;
-
-		// Idle state
 		case ENovaMovementState::Idle:
-			if (NextManeuver && IsValid(DockState.Actor))
-			{
-				FVector ManeuverDirection = GetManeuverDirection();
-				if (AttitudeCommand.Direction != ManeuverDirection)
-				{
-					NLOG("UNovaSpacecraftMovementComponent::ProcessState : Idle : orientating");
-					AttitudeCommand.Direction = ManeuverDirection;
-					MovementCommand.State     = ENovaMovementState::Orientating;
-				}
-			}
 			break;
 
 		// Orientating state that serves as a sub-state for Idle without identifying as such
@@ -325,7 +386,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 			}
 			else if (LinearAttitudeDistance < 50)
 			{
-				AttitudeCommand.Direction = GetManeuverDirection();
+				AttitudeCommand.Direction = FVector(1, 0, 0);
 			}
 			break;
 
@@ -688,13 +749,10 @@ void UNovaSpacecraftMovementComponent::ProcessTrajectoryMovement(float DeltaTime
 			}
 		}
 
-		// Get the nearest maneuver
-		int32 CurrentManeuverIndex  = IsEnteringArea ? Trajectory->Maneuvers.Num() - 1 : 0;
-		float ClosestManeuverDeltaV = Trajectory->Maneuvers[CurrentManeuverIndex].DeltaV;
-
 		// Get the current direction to apply
-		const FVector Direction = IsEnteringArea ? DockState.Actor->GetInterfacePointDirection(ClosestManeuverDeltaV)
-												 : DockState.Actor->GetInterfacePointDirection(ClosestManeuverDeltaV);
+		int32         CurrentManeuverIndex  = IsEnteringArea ? Trajectory->Maneuvers.Num() - 1 : 0;
+		float         ClosestManeuverDeltaV = Trajectory->Maneuvers[CurrentManeuverIndex].DeltaV;
+		const FVector Direction             = DockState.Actor->GetInterfacePointDirection(ClosestManeuverDeltaV);
 		UpdatedComponent->SetWorldRotation(Direction.Rotation());
 
 		// Get the current location to apply
@@ -726,22 +784,10 @@ FVector UNovaSpacecraftMovementComponent::GetManeuverDirection() const
 
 	if (DockState.Actor && Maneuver)
 	{
-		const FNovaTime ManeuverStartTime = Trajectory->GetFirstManeuverStartTime();
-		const FNovaTime ArrivalTime       = Trajectory->GetArrivalTime();
-		const FNovaTime CurrentTime       = GameState->GetCurrentTime();
-		const bool      IsEnteringArea    = FMath::Abs(CurrentTime - ArrivalTime) < FMath::Abs(CurrentTime - ManeuverStartTime);
-
-		if (IsEnteringArea)
-		{
-			return DockState.Actor->GetInterfacePointDirection(Maneuver->DeltaV);
-		}
-		else
-		{
-			return DockState.Actor->GetInterfacePointDirection(Maneuver->DeltaV);
-		}
+		return DockState.Actor->GetInterfacePointDirection(Maneuver->DeltaV);
 	}
 
-	return FVector(1, 0, 0);
+	return AttitudeCommand.Direction;
 }
 
 FTransform UNovaSpacecraftMovementComponent::GetInitialTransform() const
@@ -790,6 +836,7 @@ void UNovaSpacecraftMovementComponent::GetLifetimeReplicatedProps(TArray<FLifeti
 	DOREPLIFETIME(UNovaSpacecraftMovementComponent, MovementCommand);
 	DOREPLIFETIME(UNovaSpacecraftMovementComponent, AttitudeCommand);
 	DOREPLIFETIME(UNovaSpacecraftMovementComponent, DockState);
+	DOREPLIFETIME(UNovaSpacecraftMovementComponent, MainDriveEnabled);
 }
 
 #undef LOCTEXT_NAMESPACE

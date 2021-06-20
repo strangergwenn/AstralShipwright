@@ -231,6 +231,9 @@ protected:
 	/** Notify events to the player*/
 	void ProcessPlayerEvents(float DeltaTime);
 
+	/** Automatically abort failed trajectories */
+	void ProcessTrajectoryAbort();
+
 	/** Server replication event for time reconciliation */
 	UFUNCTION()
 	void OnServerTimeReplicated();

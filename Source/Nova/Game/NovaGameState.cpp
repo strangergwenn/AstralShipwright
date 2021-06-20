@@ -442,6 +442,12 @@ bool ANovaGameState::ProcessGameSimulation(FNovaTime DeltaTime)
 	// Update the orbital simulation
 	OrbitalSimulationComponent->UpdateSimulation();
 
+	// Abort trajectories when a player didn't commit the main drive before 10s
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		ProcessTrajectoryAbort();
+	}
+
 	// Update spacecraft systems
 	if (GetLocalRole() == ROLE_Authority)
 	{
@@ -528,6 +534,55 @@ void ANovaGameState::ProcessPlayerEvents(float DeltaTime)
 
 		AreaChangeEvents.Empty();
 		TimeJumpEvents.Empty();
+	}
+}
+
+void ANovaGameState::ProcessTrajectoryAbort()
+{
+	// Check for a main drive on all players
+	bool InvalidTrajectory = false;
+	for (const ANovaSpacecraftPawn* Pawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+	{
+		if (!Pawn->GetSpacecraftMovement()->IsMainDriveEnabled())
+		{
+			InvalidTrajectory = true;
+			break;
+		}
+	}
+
+	// Invalidate the trajectory if a player doesn't have a powered main drive
+	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
+	if (InvalidTrajectory && PlayerTrajectory && PlayerTrajectory->GetCurrentManeuver(GetCurrentTime()) == nullptr &&
+		(PlayerTrajectory->GetNextManeuverStartTime(GetCurrentTime()) - GetCurrentTime()).AsSeconds() < 10)
+	{
+		NLOG("ANovaGameState::ProcessTrajectoryAbort : aborting trajectory");
+
+		OrbitalSimulationComponent->CompleteTrajectory(GetPlayerSpacecraftIdentifiers());
+
+		for (ANovaSpacecraftPawn* Pawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+		{
+			if (Pawn->GetSpacecraftMovement()->IsMainDriveEnabled())
+			{
+				Pawn->GetSpacecraftMovement()->DisableMainDrive();
+			}
+		}
+
+		ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetGameInstance()->GetFirstLocalPlayerController());
+		PC->Notify(LOCTEXT("TrajectoryAborted", "Trajectory aborted"), ENovaNotificationType::Error);
+
+		return;
+	}
+
+	// Disable main drive as soon as the maneuver is ongoing
+	if (PlayerTrajectory && PlayerTrajectory->GetCurrentManeuver(GetCurrentTime()) != nullptr)
+	{
+		for (ANovaSpacecraftPawn* Pawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+		{
+			if (Pawn->GetSpacecraftMovement()->IsMainDriveEnabled())
+			{
+				Pawn->GetSpacecraftMovement()->DisableMainDrive();
+			}
+		}
 	}
 }
 

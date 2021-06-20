@@ -5,7 +5,6 @@
 #include "NovaMainMenu.h"
 
 #include "Nova/Game/NovaArea.h"
-#include "Nova/Game/NovaGameMode.h"
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaOrbitalSimulationComponent.h"
 
@@ -87,69 +86,6 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 				.HelpText(this, &SNovaMainMenuNavigation::GetCommitTrajectoryHelpText)
 				.OnClicked(this, &SNovaMainMenuNavigation::OnCommitTrajectory)
 				.Enabled(this, &SNovaMainMenuNavigation::CanCommitTrajectory)
-			]
-			
-#if WITH_EDITOR
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNovaNew(SNovaButton)
-				.Text(LOCTEXT("TimeDilation", "Disable time dilation"))
-				.HelpText(LOCTEXT("TimeDilationHelp", "Set time dilation to zero"))
-				.OnClicked(FSimpleDelegate::CreateLambda([this]()
-				{
-					GameState->SetTimeDilation(ENovaTimeDilation::Normal);
-				}))
-				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
-				{
-					return GameState && GameState->CanDilateTime(ENovaTimeDilation::Normal);
-				})))
-			]
-			
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNovaNew(SNovaButton)
-				.Text(LOCTEXT("TimeDilation1", "Time dilation 1"))
-				.HelpText(LOCTEXT("TimeDilation1Help", "Set time dilation to 1 (1s = 1m)"))
-				.OnClicked(FSimpleDelegate::CreateLambda([this]()
-				{
-					GameState->SetTimeDilation(ENovaTimeDilation::Level1);
-				}))
-				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
-				{
-					const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-					return GameState && GameState->CanDilateTime(ENovaTimeDilation::Level1);
-				})))
-			]
-			
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNovaNew(SNovaButton)
-				.Text(LOCTEXT("TimeDilation2", "Time dilation 2"))
-				.HelpText(LOCTEXT("TimeDilation2Help", "Set time dilation to 2 (1s = 20m)"))
-				.OnClicked(FSimpleDelegate::CreateLambda([this]()
-				{
-					GameState->SetTimeDilation(ENovaTimeDilation::Level2);
-				}))
-				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
-				{
-					return GameState && GameState->CanDilateTime(ENovaTimeDilation::Level2);
-				})))
-			]
-
-#endif // WITH_EDITOR
-			
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNovaNew(SNovaButton)
-				.Text(LOCTEXT("FastForward", "Fast forward"))
-				.HelpText(LOCTEXT("FastForwardHelp", "Wait until the next event"))
-				.OnClicked(this, &SNovaMainMenuNavigation::FastForward)
-				.Enabled(this, &SNovaMainMenuNavigation::CanFastForward)
 			]
 			
 			// Delta-v trade-off slider
@@ -407,17 +343,6 @@ FText SNovaMainMenuNavigation::GetLocationText() const
 		}
 	}
 	return FText();
-}
-
-bool SNovaMainMenuNavigation::CanFastForward() const
-{
-	const ANovaGameMode* GameMode = MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>();
-	return IsValid(GameMode) && GameMode->CanFastForward();
-}
-
-void SNovaMainMenuNavigation::FastForward()
-{
-	MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->FastForward();
 }
 
 bool SNovaMainMenuNavigation::CanCommitTrajectory() const

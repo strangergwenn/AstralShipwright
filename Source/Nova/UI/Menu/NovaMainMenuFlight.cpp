@@ -5,6 +5,7 @@
 #include "NovaMainMenu.h"
 
 #include "Nova/Game/NovaArea.h"
+#include "Nova/Game/NovaGameMode.h"
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaOrbitalSimulationComponent.h"
 
@@ -24,7 +25,8 @@
     Constructor
 ----------------------------------------------------*/
 
-SNovaMainMenuFlight::SNovaMainMenuFlight() : PC(nullptr), SpacecraftPawn(nullptr), SpacecraftMovement(nullptr), OrbitalSimulation(nullptr)
+SNovaMainMenuFlight::SNovaMainMenuFlight()
+	: PC(nullptr), SpacecraftPawn(nullptr), SpacecraftMovement(nullptr), GameState(nullptr), OrbitalSimulation(nullptr)
 {}
 
 void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
@@ -67,6 +69,40 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.TextStyle(&Theme.MainFont)
 						.Text_Lambda([this]() -> FText
 						{
+							const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
+							const FNovaTime& CurrentTime = GameState->GetCurrentTime();
+
+							if (PlayerTrajectory)
+							{
+								return FText::FormatNamed(LOCTEXT("OnTrajectory", "Next maneuver in {duration}"),
+									TEXT("duration"), GetDurationText(PlayerTrajectory->GetNextManeuverStartTime(CurrentTime) - CurrentTime));
+							}
+
+							if (IsValid(SpacecraftMovement))
+							{
+								const UNovaArea* Area = GameState->GetCurrentArea();
+
+								switch (SpacecraftMovement->GetState())
+								{
+									case ENovaMovementState::Docked:
+									case ENovaMovementState::Undocking:
+									case ENovaMovementState::Docking:
+										return FText::FormatNamed(LOCTEXT("Docked", "Docked at {area}"),
+											TEXT("area"), Area->Name);
+								}
+							}
+
+							return LOCTEXT("FreeFlight", "Flying free");
+						})
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(STextBlock)
+						.TextStyle(&Theme.MainFont)
+						.Text_Lambda([this]() -> FText
+						{
 							if (IsValid(SpacecraftPawn) && IsValid(OrbitalSimulation))
 							{
 								UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
@@ -101,14 +137,93 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					.AutoHeight()
 					[
 						SNovaNew(SNovaButton)
+						.Text(LOCTEXT("FastForward", "Fast forward"))
+						.HelpText(LOCTEXT("FastForwardHelp", "Wait until the next event"))
+						.OnClicked(this, &SNovaMainMenuFlight::FastForward)
+						.Enabled(this, &SNovaMainMenuFlight::CanFastForward)
+					]
+			
+#if WITH_EDITOR
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaNew(SNovaButton)
+						.Text(LOCTEXT("TimeDilation", "Disable time dilation"))
+						.HelpText(LOCTEXT("TimeDilationHelp", "Set time dilation to zero"))
+						.OnClicked(FSimpleDelegate::CreateLambda([this]()
+						{
+							GameState->SetTimeDilation(ENovaTimeDilation::Normal);
+						}))
+						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+						{
+							return GameState && GameState->CanDilateTime(ENovaTimeDilation::Normal);
+						})))
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaNew(SNovaButton)
+						.Text(LOCTEXT("TimeDilation1", "Time dilation 1"))
+						.HelpText(LOCTEXT("TimeDilation1Help", "Set time dilation to 1 (1s = 1m)"))
+						.OnClicked(FSimpleDelegate::CreateLambda([this]()
+						{
+							GameState->SetTimeDilation(ENovaTimeDilation::Level1);
+						}))
+						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+						{
+							const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+							return GameState && GameState->CanDilateTime(ENovaTimeDilation::Level1);
+						})))
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaNew(SNovaButton)
+						.Text(LOCTEXT("TimeDilation2", "Time dilation 2"))
+						.HelpText(LOCTEXT("TimeDilation2Help", "Set time dilation to 2 (1s = 20m)"))
+						.OnClicked(FSimpleDelegate::CreateLambda([this]()
+						{
+							GameState->SetTimeDilation(ENovaTimeDilation::Level2);
+						}))
+						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+						{
+							return GameState && GameState->CanDilateTime(ENovaTimeDilation::Level2);
+						})))
+					]
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaNew(SNovaButton)
 						.Text(LOCTEXT("TestJoin", "Join random session"))
 						.HelpText(LOCTEXT("TestJoinHelp", "Join random session"))
 						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
-							#if WITH_EDITOR
-								PC->TestJoin();
-							#endif
+							PC->TestJoin();
 						}))
+					]
+#endif // WITH_EDITOR
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaAssignNew(AlignManeuverButton, SNovaButton)
+						.Text(LOCTEXT("AlignManeuver", "Align to maneuver"))
+						.HelpText(LOCTEXT("AlignManeuverHelp", "Allow thrusters to fire to re-orient the spacecraft"))
+						.OnClicked(this, &SNovaMainMenuFlight::OnAlignToManeuver)
+						.Enabled(this, &SNovaMainMenuFlight::IsManeuveringEnabled)
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaAssignNew(MainDriveButton, SNovaButton)
+						.Text(LOCTEXT("MainDriveButton", "Enable main drive"))
+						.HelpText(LOCTEXT("MainDriveButtonHelp", "Allow the main drive to fire for maneuvers"))
+						.OnClicked(this, &SNovaMainMenuFlight::OnEnableMainDrive)
+						.Enabled(this, &SNovaMainMenuFlight::IsMainDriveAvailable)
 					]
 			
 					+ SVerticalBox::Slot()
@@ -161,7 +276,8 @@ void SNovaMainMenuFlight::UpdateGameObjects()
 	PC                 = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
 	SpacecraftPawn     = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
 	SpacecraftMovement = IsValid(SpacecraftPawn) ? SpacecraftPawn->GetSpacecraftMovement() : nullptr;
-	OrbitalSimulation  = MenuManager.IsValid() ? UNovaOrbitalSimulationComponent::Get(MenuManager.Get()) : nullptr;
+	GameState          = IsValid(PC) ? PC->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
+	OrbitalSimulation  = IsValid(GameState) ? GameState->GetOrbitalSimulation() : nullptr;
 }
 
 void SNovaMainMenuFlight::HorizontalAnalogInput(float Value)
@@ -191,10 +307,15 @@ TSharedPtr<SNovaButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 		return DockButton;
 	}
 }
-
 /*----------------------------------------------------
-    Callbacks
+    Content callbacks
 ----------------------------------------------------*/
+
+bool SNovaMainMenuFlight::CanFastForward() const
+{
+	const ANovaGameMode* GameMode = MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>();
+	return IsValid(GameMode) && GameMode->CanFastForward();
+}
 
 bool SNovaMainMenuFlight::IsUndockEnabled() const
 {
@@ -205,6 +326,31 @@ bool SNovaMainMenuFlight::IsUndockEnabled() const
 bool SNovaMainMenuFlight::IsDockEnabled() const
 {
 	return IsValid(PC) && IsValid(SpacecraftMovement) && SpacecraftMovement->CanDock();
+}
+
+bool SNovaMainMenuFlight::IsManeuveringEnabled() const
+{
+	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
+
+	return PlayerTrajectory && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Idle &&
+		   !SpacecraftMovement->IsAlignedToNextManeuver();
+}
+
+bool SNovaMainMenuFlight::IsMainDriveAvailable() const
+{
+	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
+
+	return PlayerTrajectory && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Idle &&
+		   SpacecraftMovement->IsAlignedToNextManeuver() && !SpacecraftMovement->IsMainDriveEnabled();
+}
+
+/*----------------------------------------------------
+    Callbacks
+----------------------------------------------------*/
+
+void SNovaMainMenuFlight::FastForward()
+{
+	MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->FastForward();
 }
 
 void SNovaMainMenuFlight::OnUndock()
@@ -220,6 +366,22 @@ void SNovaMainMenuFlight::OnDock()
 	if (IsDockEnabled())
 	{
 		PC->Dock();
+	}
+}
+
+void SNovaMainMenuFlight::OnAlignToManeuver()
+{
+	if (IsValid(SpacecraftMovement))
+	{
+		SpacecraftMovement->AlignToNextManeuver();
+	}
+}
+
+void SNovaMainMenuFlight::OnEnableMainDrive()
+{
+	if (IsValid(SpacecraftMovement))
+	{
+		SpacecraftMovement->EnableMainDrive();
 	}
 }
 

@@ -124,6 +124,27 @@ public:
 	/** Stop right there with no particular target */
 	void Stop(FSimpleDelegate Callback = FSimpleDelegate());
 
+	/** Allow aligning to the next maneuver */
+	void AlignToNextManeuver();
+
+	/** Check if the spacecraft is aligned to the next maneuver */
+	bool IsAlignedToNextManeuver() const;
+
+	/** Enable the main drive */
+	void EnableMainDrive();
+
+	/** Disable the main drive */
+	void DisableMainDrive();
+
+	UFUNCTION(Server, Reliable)
+	void ServerEnableMainDrive();
+
+	/** Check if the main drive is enabled */
+	bool IsMainDriveEnabled() const
+	{
+		return MainDriveEnabled;
+	}
+
 	/*----------------------------------------------------
 	    High level movement
 	----------------------------------------------------*/
@@ -252,6 +273,10 @@ protected:
 	// Dock parameters
 	UPROPERTY(ReplicatedUsing = OnDockStateReplicated)
 	FNovaMovementDockState DockState;
+
+	// Main drive switch
+	UPROPERTY(Replicated)
+	bool MainDriveEnabled;
 
 	// Movement state
 	FVector CurrentLinearVelocity;

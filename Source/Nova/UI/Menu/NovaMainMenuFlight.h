@@ -48,15 +48,30 @@ public:
 	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
 
 	/*----------------------------------------------------
+	    Content callbacks
+	----------------------------------------------------*/
+
+protected:
+	bool CanFastForward() const;
+
+	bool IsUndockEnabled() const;
+	bool IsDockEnabled() const;
+
+	bool IsManeuveringEnabled() const;
+	bool IsMainDriveAvailable() const;
+
+	/*----------------------------------------------------
 	    Callbacks
 	----------------------------------------------------*/
 
 protected:
-	bool IsUndockEnabled() const;
-	bool IsDockEnabled() const;
+	void FastForward();
 
 	void OnUndock();
 	void OnDock();
+
+	void OnAlignToManeuver();
+	void OnEnableMainDrive();
 
 	/*----------------------------------------------------
 	    Data
@@ -68,9 +83,12 @@ protected:
 	class ANovaPlayerController*                 PC;
 	class ANovaSpacecraftPawn*                   SpacecraftPawn;
 	class UNovaSpacecraftMovementComponent*      SpacecraftMovement;
+	class ANovaGameState*                        GameState;
 	const class UNovaOrbitalSimulationComponent* OrbitalSimulation;
 
 	// Slate widgets
 	TSharedPtr<class SNovaButton> UndockButton;
 	TSharedPtr<class SNovaButton> DockButton;
+	TSharedPtr<class SNovaButton> AlignManeuverButton;
+	TSharedPtr<class SNovaButton> MainDriveButton;
 };

@@ -69,8 +69,6 @@ protected:
 
 	// General
 	FText GetLocationText() const;
-	bool  CanFastForward() const;
-	void  FastForward();
 
 	// Trajectory
 	bool  CanCommitTrajectory() const;
