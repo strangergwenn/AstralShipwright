@@ -713,7 +713,7 @@ int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& All
 	for (const FNovaBatchedBrush& Brush : BatchedBrushes)
 	{
 		NCHECK(Brush.Brush);
-		FVector2D BrushSize = Brush.Brush->GetImageSize();
+		FVector2D BrushSize = Brush.Brush->GetImageSize() * CurrentDrawScale;
 
 		FSlateDrawElement::MakeBox(OutDrawElements, LayerId,
 			AllottedGeometry.ToPaintGeometry(BrushSize, FSlateLayoutTransform(CurrentOrigin + Brush.Pos - BrushSize / 2)), Brush.Brush,
