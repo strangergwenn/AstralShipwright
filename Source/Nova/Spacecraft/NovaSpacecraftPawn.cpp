@@ -747,11 +747,35 @@ void ANovaSpacecraftPawn::UpdateBounds()
 		Bounds.GetCenterAndExtents(CurrentOrigin, CurrentExtent);
 	}
 
-	// In other case, use an estimate to avoid animation bounces
+	// In other cases, use a point cloud from component origins to avoid animation bounces
 	else
 	{
-		FVector Unused;
-		GetActorBounds(true, Unused, CurrentExtent);
+		CurrentOrigin = FVector::ZeroVector;
+
+		TArray<FVector> Origins;
+		ForEachComponent<UPrimitiveComponent>(false,
+			[&](const UPrimitiveComponent* Prim)
+			{
+				if (Prim->IsRegistered() && Prim->Implements<UNovaMeshInterface>() && !Cast<INovaMeshInterface>(Prim)->IsDematerializing())
+				{
+					Origins.Add(Prim->Bounds.Origin);
+				}
+			});
+
+		FVector Origin = FVector::ZeroVector;
+		for (const FVector& Point : Origins)
+		{
+			Origin += Point / Origins.Num();
+		}
+
+		float Radius = 0;
+		for (const FVector& Point : Origins)
+		{
+			float Distance = (Point - Origin).Size();
+			Radius         = FMath::Max(Distance, Radius);
+		}
+
+		CurrentExtent = Radius * FVector(1, 1, 1);
 	}
 }
 
