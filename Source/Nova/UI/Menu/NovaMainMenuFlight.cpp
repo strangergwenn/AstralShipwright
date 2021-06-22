@@ -204,6 +204,18 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 							PC->TestJoin();
 						}))
 					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNovaNew(SNovaButton)
+						.Text(LOCTEXT("TestSilentRunning", "Silent running"))
+						.OnClicked(FSimpleDelegate::CreateLambda([this]()
+						{
+							MenuManager->SetInterfaceColor(FLinearColor::Red, FLinearColor(1.0f, 0.0f, 0.1f));
+						}))
+					]
+
 #endif // WITH_EDITOR
 			
 					+ SVerticalBox::Slot()

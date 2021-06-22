@@ -105,6 +105,7 @@ ANovaPlayerController::ANovaPlayerController()
 				ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
 				Material->SetScalarParameterValue("HighlightAlpha", IsValid(SpacecraftPawn) ? SpacecraftPawn->GetHighlightAlpha() : 0);
 				Material->SetScalarParameterValue("OutlineAlpha", IsValid(SpacecraftPawn) ? SpacecraftPawn->GetOutlineAlpha() : 0);
+				Material->SetVectorParameterValue("HighlightColor", GetMenuManager()->GetHighlightColor());
 				// Material->SetScalarParameterValue("ChromaIntensity", FMath::Lerp(Current.ChromaIntensity, Target.ChromaIntensity,
 		        // Alpha));
 

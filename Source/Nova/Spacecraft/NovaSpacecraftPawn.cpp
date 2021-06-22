@@ -747,7 +747,14 @@ void ANovaSpacecraftPawn::UpdateBounds()
 		Bounds.GetCenterAndExtents(CurrentOrigin, CurrentExtent);
 	}
 
-	// In other cases, use a point cloud from component origins to avoid animation bounces
+	// While docked, actual actor bounds work best
+	else if (IsDocked())
+	{
+		FVector Unused;
+		GetActorBounds(true, Unused, CurrentExtent);
+	}
+
+	// In other cases, use a point cloud from component origins because we rotate, and the size doesn't change much
 	else
 	{
 		CurrentOrigin = FVector::ZeroVector;
