@@ -2,6 +2,7 @@
 
 #include "NovaOverlay.h"
 #include "NovaMainMenu.h"
+#include "Nova/UI/Component/NovaEventDisplay.h"
 #include "Nova/UI/Widget/NovaFadingWidget.h"
 #include "Nova/UI/Widget/NovaModalPanel.h"
 
@@ -286,6 +287,12 @@ void SNovaOverlay::Construct(const FArguments& InArgs)
 	.VAlign(VAlign_Fill)
 	[
 		SNew(SOverlay)
+
+		+ SOverlay::Slot()
+		[
+			SNew(SNovaEventDisplay)
+			.MenuManager(InArgs._MenuManager)
+		]
 
 		+ SOverlay::Slot()
 		[
