@@ -58,7 +58,7 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 			.HAlign(HAlign_Center)
 			[
 				SNew(STextBlock)
-				.TextStyle(&Theme.SubtitleFont)
+				.TextStyle(&Theme.HeadingFont)
 				.Text(LOCTEXT("FriendsTitle", "Friends"))
 			]
 	
@@ -131,7 +131,7 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 			.HAlign(HAlign_Center)
 			[
 				SNew(STextBlock)
-				.TextStyle(&Theme.SubtitleFont)
+				.TextStyle(&Theme.HeadingFont)
 				.Text(LOCTEXT("SessionTitle", "Session"))
 			]
 	
@@ -175,7 +175,7 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 				.HAlign(HAlign_Center)
 				[
 					SNew(STextBlock)
-					.TextStyle(&Theme.SubtitleFont)
+					.TextStyle(&Theme.HeadingFont)
 					.Text(LOCTEXT("ContractsTitle", "Contracts"))
 				]
 
@@ -240,7 +240,7 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 				.AutoHeight()
 				[
 					SNew(STextBlock)
-					.TextStyle(&Theme.SubtitleFont)
+					.TextStyle(&Theme.HeadingFont)
 					.Text(this, &SNovaMainMenuGame::GetContractTitle, Index)
 				]
 

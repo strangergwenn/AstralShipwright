@@ -60,7 +60,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 				.HAlign(HAlign_Center)
 				[
 					SNew(STextBlock)
-					.TextStyle(&Theme.SubtitleFont)
+					.TextStyle(&Theme.HeadingFont)
 					.Text(LOCTEXT("Game", "Game settings"))
 				]
 
@@ -117,7 +117,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 				.HAlign(HAlign_Center)
 				[
 					SNew(STextBlock)
-					.TextStyle(&Theme.SubtitleFont)
+					.TextStyle(&Theme.HeadingFont)
 					.Text(LOCTEXT("Display", "Display settings"))
 					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
 				]
@@ -203,7 +203,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 				.HAlign(HAlign_Center)
 				[
 					SNew(STextBlock)
-					.TextStyle(&Theme.SubtitleFont)
+					.TextStyle(&Theme.HeadingFont)
 					.Text(LOCTEXT("Graphics", "Quality settings"))
 					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
 				]
@@ -371,7 +371,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		.HAlign(HAlign_Center)
 		[
 			SNew(STextBlock)
-			.TextStyle(&Theme.SubtitleFont)
+			.TextStyle(&Theme.HeadingFont)
 			.Text(LOCTEXT("KeyBindings", "Key bindings"))
 		];
 

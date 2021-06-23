@@ -35,19 +35,19 @@ void SNovaEventDisplay::Construct(const FArguments& InArgs)
 	.VAlign(VAlign_Top)
 	.Padding(FMargin(0, 90))
 	[
-		SNew(SBackgroundBlur)
-		.BlurRadius(Theme.BlurRadius)
-		.BlurStrength(Theme.BlurStrength)
-		.bApplyAlphaToBlur(true)
-		.Padding(0)
+		SNew(SBorder)
+		.BorderImage(&Theme.MainMenuGenericBorder)
+		.Padding(2)
+		.BorderBackgroundColor(TAttribute<FSlateColor>::Create(TAttribute<FSlateColor>::FGetter::CreateLambda([&]()
+		{
+			return 1.25f * MenuManager->GetHighlightColor();
+		})))
 		[
-			SNew(SBorder)
-			.BorderImage(&Theme.MainMenuGenericBorder)
-			.Padding(2)
-			.BorderBackgroundColor(TAttribute<FSlateColor>::Create(TAttribute<FSlateColor>::FGetter::CreateLambda([&]()
-			{
-				return 1.25f * MenuManager->GetHighlightColor();
-			})))
+			SNew(SBackgroundBlur)
+			.BlurRadius(Theme.BlurRadius)
+			.BlurStrength(Theme.BlurStrength)
+			.bApplyAlphaToBlur(true)
+			.Padding(0)
 			[
 				SNew(SBorder)
 				.BorderImage(&Theme.MainMenuGenericBackground)
@@ -60,7 +60,7 @@ void SNovaEventDisplay::Construct(const FArguments& InArgs)
 					.HAlign(HAlign_Center)
 					[
 						SNew(STextBlock)
-						.TextStyle(&Theme.SubtitleFont)
+						.TextStyle(&Theme.HeadingFont)
 						.Text(LOCTEXT("Test", "Imminent maneuver").ToUpper())
 						.ColorAndOpacity(TAttribute<FSlateColor>::Create(TAttribute<FSlateColor>::FGetter::CreateLambda([&]()
 						{

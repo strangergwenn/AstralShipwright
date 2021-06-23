@@ -66,7 +66,7 @@ void SNovaModalPanel::Construct(const FArguments& InArgs)
 							.HAlign(HAlign_Center)
 							[
 								SAssignNew(TitleText, STextBlock)
-								.TextStyle(&Theme.SubtitleFont)
+								.TextStyle(&Theme.HeadingFont)
 							]
 						]
 

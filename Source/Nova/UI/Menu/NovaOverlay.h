@@ -3,10 +3,10 @@
 #pragma once
 
 #include "Nova/UI/NovaUI.h"
-#include "Nova/UI/NovaUITypes.h"
 #include "Nova/Game/NovaGameTypes.h"
 #include "Widgets/SCompoundWidget.h"
 
+/** Main overlay class */
 class SNovaOverlay : public SCompoundWidget
 {
 	/*----------------------------------------------------

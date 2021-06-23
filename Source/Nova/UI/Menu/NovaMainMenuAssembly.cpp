@@ -264,7 +264,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								.Padding(Theme.VerticalContentPadding)
 								[
 									SNew(STextBlock)
-									.TextStyle(&Theme.SubtitleFont)
+									.TextStyle(&Theme.HeadingFont)
 									.Text(LOCTEXT("CompartmentTitle", "Compartments"))
 								]
 
@@ -305,7 +305,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							.Padding(Theme.VerticalContentPadding)
 							[
 								SNew(STextBlock)
-								.TextStyle(&Theme.SubtitleFont)
+								.TextStyle(&Theme.HeadingFont)
 								.Text(LOCTEXT("AssemblyControls", "Assembly controls"))
 							]
 
@@ -445,7 +445,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 										.Padding(Theme.VerticalContentPadding)
 										[
 											SNew(STextBlock)
-											.TextStyle(&Theme.SubtitleFont)
+											.TextStyle(&Theme.HeadingFont)
 											.Text(LOCTEXT("ModulesTitle", "Modules"))
 										]
 
@@ -467,7 +467,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 										.Padding(Theme.VerticalContentPadding)
 										[
 											SNew(STextBlock)
-											.TextStyle(&Theme.SubtitleFont)
+											.TextStyle(&Theme.HeadingFont)
 											.Text(LOCTEXT("EquipmentsTitle", "Equipments"))
 										]
 
@@ -509,7 +509,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							.Padding(Theme.VerticalContentPadding)
 							[
 								SNew(STextBlock)
-								.TextStyle(&Theme.SubtitleFont)
+								.TextStyle(&Theme.HeadingFont)
 								.Text(LOCTEXT("CompartmentControls", "Compartment controls"))
 							]
 

@@ -63,7 +63,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 			.Padding(Theme.VerticalContentPadding)
 			[
 				SNew(STextBlock)
-				.TextStyle(&Theme.SubtitleFont)
+				.TextStyle(&Theme.HeadingFont)
 				.Text(LOCTEXT("Propellant", "Propellant"))
 			]
 			
@@ -135,7 +135,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 			.Padding(Theme.VerticalContentPadding)
 			[
 				SNew(STextBlock)
-				.TextStyle(&Theme.SubtitleFont)
+				.TextStyle(&Theme.HeadingFont)
 				.Text(Title)
 			]
 

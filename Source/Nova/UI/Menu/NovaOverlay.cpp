@@ -1,179 +1,15 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaOverlay.h"
-#include "NovaMainMenu.h"
+
 #include "Nova/UI/Component/NovaEventDisplay.h"
+#include "Nova/UI/Component/NovaNotification.h"
 #include "Nova/UI/Widget/NovaFadingWidget.h"
-#include "Nova/UI/Widget/NovaModalPanel.h"
 
 #include "Nova/System/NovaMenuManager.h"
-#include "Nova/System/NovaGameInstance.h"
 #include "Nova/Nova.h"
 
-#include "Widgets/Layout/SBackgroundBlur.h"
-#include "Materials/MaterialInstanceDynamic.h"
-#include "Engine/Texture2D.h"
-
 #define LOCTEXT_NAMESPACE "SNovaOverlay"
-
-/*----------------------------------------------------
-    Notification widget
-----------------------------------------------------*/
-
-class SNovaNotification
-	: public SNovaFadingWidget<>
-	, public FGCObject
-{
-public:
-	void Construct(const FArguments& InArgs)
-	{
-		const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
-		const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
-
-		// Create material
-		auto DynamicBrush        = FNovaStyleSet::GetDynamicBrush("Notification/SB_NotificationIcon_Base");
-		NotificationIconBrush    = DynamicBrush.Key;
-		NotificationIconMaterial = DynamicBrush.Value;
-
-		// clang-format off
-		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments()
-			.FadeDuration(ENovaUIConstants::FadeDurationShort)
-			.DisplayDuration(5.0f)
-		);
-
-		ChildSlot
-		.VAlign(VAlign_Fill)
-		[
-			SNew(SOverlay)
-
-			// Notification box
-			+ SOverlay::Slot()
-			.VAlign(VAlign_Top)
-			.Padding(FMargin(0, 100))
-			[
-				SNew(SBox)
-				.HeightOverride(Theme.NotificationDisplayHeight)
-				.Padding(0)
-				[
-					SNew(SBorder)
-					.BorderImage(&ButtonTheme.Border)
-					.ColorAndOpacity(this, &SNovaFadingWidget::GetLinearColor)
-					.BorderBackgroundColor(this, &SNovaFadingWidget::GetSlateColor)
-					.Padding(FMargin(0, 1))
-					[
-						SNew(SBackgroundBlur)
-						.BlurRadius(Theme.BlurRadius)
-						.BlurStrength(Theme.BlurStrength)
-						.bApplyAlphaToBlur(true)
-						.Padding(0)
-						[
-							SNew(SBorder)
-							.Padding(0)
-							.BorderImage(&Theme.MainMenuGenericBackground)
-							.HAlign(HAlign_Center)
-							.VAlign(VAlign_Center)
-							[
-								SNew(STextBlock)
-								.Text(this, &SNovaNotification::GetNotifyText)
-								.TextStyle(&Theme.SubtitleFont)
-							]
-						]
-					]
-				]
-			]
-
-			// Notification icon
-			+ SOverlay::Slot()
-			.VAlign(VAlign_Top)
-			.Padding(FMargin(0, 75))
-			[
-				SNew(SHorizontalBox)
-
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
-				[
-					SNew(SImage)
-					.Image(NotificationIconBrush.Get())
-					.ColorAndOpacity(this, &SNovaFadingWidget::GetSlateColor)
-				]
-			]
-		];
-		// clang-format on
-	}
-
-	virtual FString GetReferencerName() const override
-	{
-		return FString("SNovaNotification");
-	}
-
-	virtual void AddReferencedObjects(FReferenceCollector& Collector) override
-	{
-		Collector.AddReferencedObject(NotificationIconMaterial);
-	}
-
-	void Notify(const FText& Text, ENovaNotificationType Type)
-	{
-		NLOG("SNovaNotification::Notify : %s", *Text.ToString());
-
-		DesiredNotifyText = Text;
-		DesiredNotifyType = Type;
-
-		// Force update if we're past the original time
-		if (CurrentDisplayTime > DisplayDuration)
-		{
-			CurrentNotifyText = FText();
-		}
-	}
-
-	virtual bool IsDirty() const
-	{
-		return !CurrentNotifyText.EqualTo(DesiredNotifyText);
-	}
-
-	virtual void OnUpdate() override
-	{
-		CurrentNotifyText = DesiredNotifyText;
-
-		const FSlateBrush* TemplateNotificationBrush = nullptr;
-		if (DesiredNotifyType == ENovaNotificationType::Info)
-		{
-			TemplateNotificationBrush = FNovaStyleSet::GetBrush("Notification/SB_NotificationIcon_Info");
-		}
-		else if (DesiredNotifyType == ENovaNotificationType::World)
-		{
-			TemplateNotificationBrush = FNovaStyleSet::GetBrush("Notification/SB_NotificationIcon_World");
-		}
-		else if (DesiredNotifyType == ENovaNotificationType::Saved)
-		{
-			TemplateNotificationBrush = FNovaStyleSet::GetBrush("Notification/SB_NotificationIcon_Saved");
-		}
-		else if (DesiredNotifyType == ENovaNotificationType::Error)
-		{
-			TemplateNotificationBrush = FNovaStyleSet::GetBrush("Notification/SB_NotificationIcon_Error");
-		}
-
-		if (TemplateNotificationBrush)
-		{
-			UTexture2D* IconTexture = Cast<UTexture2D>(TemplateNotificationBrush->GetResourceObject());
-			NotificationIconMaterial->SetTextureParameterValue("MonitorTexture", IconTexture);
-		}
-	}
-
-	FText GetNotifyText() const
-	{
-		return CurrentNotifyText;
-	}
-
-private:
-	// Notification icon
-	TSharedPtr<FSlateBrush>         NotificationIconBrush;
-	class UMaterialInstanceDynamic* NotificationIconMaterial;
-
-	// Notification state
-	FText                 DesiredNotifyText;
-	ENovaNotificationType DesiredNotifyType;
-	FText                 CurrentNotifyText;
-};
 
 /*----------------------------------------------------
     Title card widget
@@ -221,7 +57,7 @@ public:
 					[
 						SNew(STextBlock)
 						.Text(this, &SNovaTitleCard::GetSubtitleText)
-						.TextStyle(&Theme.SubtitleFont)
+						.TextStyle(&Theme.HeadingFont)
 						.WrapTextAt(2000)
 						.Justification(ETextJustify::Center)
 					]
@@ -308,6 +144,7 @@ void SNovaOverlay::Construct(const FArguments& InArgs)
 		+ SOverlay::Slot()
 		[
 			SAssignNew(Notification, SNovaNotification)
+			.MenuManager(InArgs._MenuManager)
 		]
 	];
 	// clang-format on

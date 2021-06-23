@@ -43,16 +43,6 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 	    Data
 	----------------------------------------------------*/
 
-	// Main
-	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush MainMenuBackground;
-	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush MainMenuGenericBackground;
-	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush MainMenuDarkBackground;
-	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush MainMenuGenericBorder;
-	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush MainMenuManipulator;
-	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush TableHeaderBackground;
-	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush TableOddBackground;
-	UPROPERTY(EditDefaultsOnly, Category = Brush) FSlateBrush TableEvenBackground;
-
 	// General
 	UPROPERTY(EditDefaultsOnly, Category = General) FMargin ContentPadding;
 	UPROPERTY(EditDefaultsOnly, Category = General) FMargin VerticalContentPadding;
@@ -61,21 +51,31 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = General) FLinearColor PositiveColor;
 	UPROPERTY(EditDefaultsOnly, Category = General) FLinearColor NegativeColor;
 	UPROPERTY(EditDefaultsOnly, Category = General) FLinearColor NeutralColor;
-
-	// Widget styles
-	UPROPERTY(EditDefaultsOnly, Category = Widget) FSliderStyle SliderStyle;
-	UPROPERTY(EditDefaultsOnly, Category = Widget) FScrollBoxStyle ScrollBoxStyle;
-	UPROPERTY(EditDefaultsOnly, Category = Widget) FProgressBarStyle ProgressBarStyle;
+	UPROPERTY(EditDefaultsOnly, Category = General) int32 NotificationDisplayWidth;
 
 	// Fonts
-	UPROPERTY(EditDefaultsOnly, Category = Font) FTextBlockStyle TitleFont;
-	UPROPERTY(EditDefaultsOnly, Category = Font) FTextBlockStyle SubtitleFont;
-	UPROPERTY(EditDefaultsOnly, Category = Font) FTextBlockStyle MainFont;
-	UPROPERTY(EditDefaultsOnly, Category = Font) FTextBlockStyle InfoFont;
-	UPROPERTY(EditDefaultsOnly, Category = Font) FTextBlockStyle KeyFont;
+	UPROPERTY(EditDefaultsOnly, Category = Fonts) FTextBlockStyle TitleFont;
+	UPROPERTY(EditDefaultsOnly, Category = Fonts) FTextBlockStyle NotificationFont;
+	UPROPERTY(EditDefaultsOnly, Category = Fonts) FTextBlockStyle HeadingFont;
+	UPROPERTY(EditDefaultsOnly, Category = Fonts) FTextBlockStyle MainFont;
+	UPROPERTY(EditDefaultsOnly, Category = Fonts) FTextBlockStyle InfoFont;
+	UPROPERTY(EditDefaultsOnly, Category = Fonts) FTextBlockStyle KeyFont;
 
-	// Notifications
-	UPROPERTY(EditDefaultsOnly, Category = Notification) int32 NotificationDisplayHeight;
+	// Main
+	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuGenericBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuPatternedBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuDarkBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuGenericBorder;
+	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuManipulator;
+	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush TableHeaderBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush TableOddBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush TableEvenBackground;
+
+	// Widget styles
+	UPROPERTY(EditDefaultsOnly, Category = Widgets) FSliderStyle SliderStyle;
+	UPROPERTY(EditDefaultsOnly, Category = Widgets) FScrollBoxStyle ScrollBoxStyle;
+	UPROPERTY(EditDefaultsOnly, Category = Widgets) FProgressBarStyle ProgressBarStyle;
 };
 
 /*----------------------------------------------------

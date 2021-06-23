@@ -77,7 +77,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 				.AutoHeight()
 				[
 					SNew(STextBlock)
-					.TextStyle(&Theme.SubtitleFont)
+					.TextStyle(&Theme.HeadingFont)
 					.Text(this, &SNovaTrajectoryCalculator::GetDeltaVText)
 				]
 
@@ -148,7 +148,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 				.AutoHeight()
 				[
 					SNew(STextBlock)
-					.TextStyle(&Theme.SubtitleFont)
+					.TextStyle(&Theme.HeadingFont)
 					.Text(this, &SNovaTrajectoryCalculator::GetDurationText)
 				]
 			]

@@ -378,7 +378,7 @@ void SNovaOrbitalMap::AddPlanet(const FVector2D& Pos, const class UNovaPlanet* P
 	FNovaBatchedText Text;
 	Text.Text      = Planet->Name.ToUpper();
 	Text.Pos       = Brush.Pos - FVector2D(0, Planet->Image.GetImageSize().Y);
-	Text.TextStyle = &Theme.SubtitleFont;
+	Text.TextStyle = &Theme.HeadingFont;
 	BatchedTexts.Add(Text);
 }
 

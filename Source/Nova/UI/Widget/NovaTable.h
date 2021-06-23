@@ -33,7 +33,7 @@ public:
 				[
 					SNew(STextBlock)
 					.Text(InArgs._Title)
-					.TextStyle(&Theme.SubtitleFont)
+					.TextStyle(&Theme.HeadingFont)
 				]
 			]
 		];
