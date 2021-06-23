@@ -379,11 +379,8 @@ FLinearColor SNovaButton::GetMainColor() const
 {
 	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
 
-	UNovaMenuManager* MenuManager = UNovaMenuManager::Get();
-	NCHECK(MenuManager);
-	FLinearColor MainColor = MenuManager->GetInterfaceColor();
-
-	return FMath::InterpEaseInOut(MainColor, Theme.DisabledColor, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+	return FMath::InterpEaseInOut(
+		FLinearColor::White, Theme.DisabledColor, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
 }
 
 FSlateColor SNovaButton::GetBorderColor() const
