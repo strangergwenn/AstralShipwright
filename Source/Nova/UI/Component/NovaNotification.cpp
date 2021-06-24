@@ -24,11 +24,13 @@ void SNovaNotification::Construct(const FArguments& InArgs)
 	SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments()
 		.FadeDuration(ENovaUIConstants::FadeDurationShort)
 		.DisplayDuration(5.0f)
+		.ColorAndOpacity(this, &SNovaNotification::GetNotifyColor)
 	);
 
 	ChildSlot
 	.HAlign(HAlign_Center)
-	.VAlign(VAlign_Center)
+	.VAlign(VAlign_Top)
+	.Padding(FMargin(0, 200))
 	[
 		SNew(SBox)
 		.WidthOverride(Theme.NotificationDisplayWidth)
@@ -37,7 +39,7 @@ void SNovaNotification::Construct(const FArguments& InArgs)
 			SNew(SBorder)
 			.BorderImage(&Theme.MainMenuGenericBorder)
 			.ColorAndOpacity(this, &SNovaFadingWidget::GetLinearColor)
-			.BorderBackgroundColor(this, &SNovaNotification::GetNotifyColor)
+			.BorderBackgroundColor(this, &SNovaFadingWidget::GetSlateColor)
 			.Padding(2)
 			[
 				SNew(SBackgroundBlur)
@@ -59,7 +61,6 @@ void SNovaNotification::Construct(const FArguments& InArgs)
 						[
 							SNew(SImage)
 							.Image(this, &SNovaNotification::GetNotifyIcon)
-							.ColorAndOpacity(this, &SNovaNotification::GetNotifyColor)
 						]
 
 						+ SHorizontalBox::Slot()
@@ -68,7 +69,6 @@ void SNovaNotification::Construct(const FArguments& InArgs)
 							SNew(STextBlock)
 							.Text(this, &SNovaNotification::GetNotifyText)
 							.TextStyle(&Theme.NotificationFont)
-							.ColorAndOpacity(this, &SNovaNotification::GetNotifyColor)
 						]
 					]
 				]
@@ -92,9 +92,9 @@ void SNovaNotification::Notify(const FText& Text, ENovaNotificationType Type)
 	}
 }
 
-FSlateColor SNovaNotification::GetNotifyColor() const
+FLinearColor SNovaNotification::GetNotifyColor() const
 {
-	return 1.25f * SNovaFadingWidget::GetLinearColor() * MenuManager->GetHighlightColor();
+	return 1.25f * MenuManager->GetHighlightColor();
 }
 
 const FSlateBrush* SNovaNotification::GetNotifyIcon() const

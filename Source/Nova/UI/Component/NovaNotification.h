@@ -39,7 +39,7 @@ public:
 		return CurrentNotifyText.ToUpper();
 	}
 
-	FSlateColor GetNotifyColor() const;
+	FLinearColor GetNotifyColor() const;
 
 	const FSlateBrush* GetNotifyIcon() const;
 

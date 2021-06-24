@@ -52,6 +52,7 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = General) FLinearColor NegativeColor;
 	UPROPERTY(EditDefaultsOnly, Category = General) FLinearColor NeutralColor;
 	UPROPERTY(EditDefaultsOnly, Category = General) int32 NotificationDisplayWidth;
+	UPROPERTY(EditDefaultsOnly, Category = General) int32 EventDisplayWidth;
 
 	// Fonts
 	UPROPERTY(EditDefaultsOnly, Category = Fonts) FTextBlockStyle TitleFont;

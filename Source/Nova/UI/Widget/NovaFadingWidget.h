@@ -14,11 +14,12 @@ class SNovaFadingWidget : public SCompoundWidget
 	    Slate arguments
 	----------------------------------------------------*/
 
-	SLATE_BEGIN_ARGS(SNovaFadingWidget)
+	SLATE_BEGIN_ARGS(SNovaFadingWidget) : _FadeDuration(ENovaUIConstants::FadeDurationShort), _ColorAndOpacity(FLinearColor::White)
 	{}
 
 	SLATE_ARGUMENT(float, FadeDuration)
 	SLATE_ARGUMENT(float, DisplayDuration)
+	SLATE_ATTRIBUTE(FLinearColor, ColorAndOpacity)
 	SLATE_DEFAULT_SLOT(FArguments, Content)
 
 	SLATE_END_ARGS()
@@ -34,8 +35,9 @@ public:
 	void Construct(const FArguments& InArgs)
 	{
 		// Settings
-		FadeDuration    = InArgs._FadeDuration;
-		DisplayDuration = InArgs._DisplayDuration;
+		FadeDuration           = InArgs._FadeDuration;
+		DisplayDuration        = InArgs._DisplayDuration;
+		DesiredColorAndOpacity = InArgs._ColorAndOpacity;
 
 		// clang-format off
 		ChildSlot
@@ -99,8 +101,9 @@ protected:
 public:
 	FLinearColor GetLinearColor() const
 	{
-		// Hack for proper smoothing of background blurs
-		return FLinearColor(1.0f, 1.0f, 1.0f, CurrentAlpha > 0.1f ? CurrentAlpha : 0.0f);
+		FLinearColor Color = DesiredColorAndOpacity.Get();
+		Color.A *= CurrentAlpha > 0.1f ? CurrentAlpha : 0.0f;
+		return Color;
 	}
 
 	FSlateColor GetSlateColor() const
@@ -122,8 +125,9 @@ public:
 
 protected:
 	// Settings
-	float FadeDuration;
-	float DisplayDuration;
+	float                    FadeDuration;
+	float                    DisplayDuration;
+	TAttribute<FLinearColor> DesiredColorAndOpacity;
 
 	// Current state
 	float CurrentFadeTime;
@@ -137,10 +141,11 @@ DECLARE_DELEGATE_RetVal(const FSlateBrush*, FNovaImageGetter);
 /** Simple SImage analog that fades smoothly when the image changes */
 class SNovaImage : public SNovaFadingWidget<false>
 {
-	SLATE_BEGIN_ARGS(SNovaImage)
+	SLATE_BEGIN_ARGS(SNovaImage) : _ColorAndOpacity(FLinearColor::White)
 	{}
 
 	SLATE_ARGUMENT(FNovaImageGetter, Image)
+	SLATE_ATTRIBUTE(FLinearColor, ColorAndOpacity)
 
 	SLATE_END_ARGS()
 
@@ -155,6 +160,7 @@ public:
 		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments()
 			.FadeDuration(ENovaUIConstants::FadeDurationShort)
 			.DisplayDuration(4.0f)
+			.ColorAndOpacity(InArgs._ColorAndOpacity)
 		);
 
 		ChildSlot

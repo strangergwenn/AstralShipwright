@@ -3,10 +3,30 @@
 #pragma once
 
 #include "Nova/UI/NovaUI.h"
-#include "Widgets/SCompoundWidget.h"
+#include "Nova/UI/Widget/NovaFadingWidget.h"
+
+/** Event data */
+struct FNovaEventDisplayData
+{
+	FNovaEventDisplayData() : HasDetails(false)
+	{}
+
+	bool operator==(const FNovaEventDisplayData& Other) const
+	{
+		return Text.EqualTo(Other.Text) && HasDetails == Other.HasDetails;
+	}
+
+	bool operator!=(const FNovaEventDisplayData& Other) const
+	{
+		return !operator==(Other);
+	}
+
+	FText Text;
+	bool  HasDetails;
+};
 
 /** Event notification widget */
-class SNovaEventDisplay : public SCompoundWidget
+class SNovaEventDisplay : public SNovaFadingWidget<false>
 {
 	/*----------------------------------------------------
 	    Slate arguments
@@ -30,15 +50,33 @@ public:
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
-	/*----------------------------------------------------
-	    Internals
-	----------------------------------------------------*/
+	virtual bool IsDirty() const override
+	{
+		return DesiredState != CurrentState;
+	}
+
+	virtual void OnUpdate() override
+	{
+		CurrentState = DesiredState;
+	}
 
 protected:
 	/*----------------------------------------------------
 	    Content callbacks
 	----------------------------------------------------*/
+
 protected:
+	EVisibility GetMainVisibility() const;
+	EVisibility GetDetailsVisibility() const;
+
+	FLinearColor GetDisplayColor() const;
+
+	FText GetMainText() const;
+	FText GetTimeText() const;
+	FText GetDetailsText() const;
+
+	const FSlateBrush* GetIcon() const;
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
@@ -46,4 +84,11 @@ protected:
 protected:
 	// Settings
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
+
+	// Current state
+	FNovaEventDisplayData DesiredState;
+	FNovaEventDisplayData CurrentState;
+	FText                 TimeText;
+	FText                 DetailsText;
+	bool                  IsValidDetails;
 };

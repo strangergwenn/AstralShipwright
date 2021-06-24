@@ -17,11 +17,10 @@
 ----------------------------------------------------*/
 
 // Cutscene timing values in seconds
-constexpr float DepartureCutsceneDelay    = 2.0;
+constexpr float CommonCutsceneDelay       = 2.0;
 constexpr float DepartureCutsceneDuration = 5.0;
 constexpr float AreaIntroductionDuration  = 5.0;
 constexpr float ArrivalCutsceneDuration   = 5.0;
-constexpr float ArrivalCutsceneDelay      = 2.0;
 
 /*----------------------------------------------------
     Game state class
@@ -116,7 +115,7 @@ public:
 		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
 
 		if (PlayerTrajectory &&
-			PlayerTrajectory->GetFirstManeuverStartTime() <= GameState->GetCurrentTime() + FNovaTime::FromSeconds(DepartureCutsceneDelay))
+			PlayerTrajectory->GetFirstManeuverStartTime() <= GameState->GetCurrentTime() + FNovaTime::FromSeconds(CommonCutsceneDelay))
 		{
 			return ENovaGameStateIdentifier::DepartureProximity;
 		}
@@ -229,7 +228,7 @@ public:
 	{
 		FNovaGameModeState::UpdateState();
 
-		if (GetSecondsInState() > DepartureCutsceneDelay + DepartureCutsceneDuration)
+		if (GetSecondsInState() > CommonCutsceneDelay + DepartureCutsceneDuration)
 		{
 			return ENovaGameStateIdentifier::DepartureCoast;
 		}
@@ -361,7 +360,7 @@ public:
 
 		if (IsWaitingDelay)
 		{
-			if (GameState->GetCurrentTime() - ArrivalTime > FNovaTime::FromSeconds(ArrivalCutsceneDelay))
+			if (GameState->GetCurrentTime() - ArrivalTime > FNovaTime::FromSeconds(CommonCutsceneDelay))
 			{
 				return ENovaGameStateIdentifier::Area;
 			}

@@ -159,6 +159,12 @@ public:
 	/** Set the current camera state */
 	void SetCameraState(ENovaPlayerCameraState State);
 
+	/** Get the camera state */
+	ENovaPlayerCameraState GetCameraState() const
+	{
+		return CurrentCameraState;
+	}
+
 	/*----------------------------------------------------
 	    Server-side save
 	----------------------------------------------------*/

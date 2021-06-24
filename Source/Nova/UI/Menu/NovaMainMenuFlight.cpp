@@ -210,9 +210,9 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					[
 						SNovaNew(SNovaButton)
 						.Text(LOCTEXT("TestSilentRunning", "Silent running"))
-						.OnClicked(FSimpleDelegate::CreateLambda([this]()
+						.OnClicked(FSimpleDelegate::CreateLambda([&]()
 						{
-							MenuManager->SetInterfaceColor(FLinearColor::Red, FLinearColor(1.0f, 0.0f, 0.1f));
+							MenuManager->SetInterfaceColor(Theme.NegativeColor, FLinearColor(1.0f, 0.0f, 0.1f));
 						}))
 					]
 
