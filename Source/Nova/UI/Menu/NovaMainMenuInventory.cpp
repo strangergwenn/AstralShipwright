@@ -111,7 +111,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 					.Action(FNovaPlayerInput::MenuPrimary)
 					.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
 					{
-						return SpacecraftPawn->IsDocked();
+						return SpacecraftPawn && SpacecraftPawn->IsDocked();
 					})))
 					.OnClicked(this, &SNovaMainMenuInventory::OnRefuelPropellant)
 				]
@@ -312,10 +312,13 @@ void SNovaMainMenuInventory::Tick(const FGeometry& AllottedGeometry, const doubl
 {
 	SNovaTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
-	UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
-	NCHECK(PropellantSystem);
-
-	AveragedPropellantRatio.Set(PropellantSystem->GetCurrentPropellantAmount() / PropellantSystem->GetTotalPropellantAmount(), DeltaTime);
+	if (SpacecraftPawn)
+	{
+		UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+		NCHECK(PropellantSystem);
+		AveragedPropellantRatio.Set(
+			PropellantSystem->GetCurrentPropellantAmount() / PropellantSystem->GetTotalPropellantAmount(), DeltaTime);
+	}
 }
 
 void SNovaMainMenuInventory::Show()
@@ -361,7 +364,7 @@ FText SNovaMainMenuInventory::GenerateResourceTooltip(const UNovaResource* Resou
 
 FText SNovaMainMenuInventory::GetSlotHelpText() const
 {
-	if (SpacecraftPawn->IsDocked())
+	if (SpacecraftPawn && SpacecraftPawn->IsDocked())
 	{
 		return LOCTEXT("TradeSlotHelp", "Trade with this cargo slot");
 	}
@@ -378,15 +381,20 @@ TOptional<float> SNovaMainMenuInventory::GetPropellantRatio() const
 
 FText SNovaMainMenuInventory::GetPropellantText() const
 {
-	UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
-	NCHECK(PropellantSystem);
+	if (SpacecraftPawn)
+	{
+		UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+		NCHECK(PropellantSystem);
 
-	FNumberFormattingOptions Options;
-	Options.MaximumFractionalDigits = 0;
+		FNumberFormattingOptions Options;
+		Options.MaximumFractionalDigits = 0;
 
-	return FText::FormatNamed(LOCTEXT("PropellantFormat", "<img src=\"/Text/Propellant\"/> {remaining}T out of {total}T"),
-		TEXT("remaining"), FText::AsNumber(PropellantSystem->GetCurrentPropellantAmount(), &Options), TEXT("total"),
-		FText::AsNumber(PropellantSystem->GetTotalPropellantAmount(), &Options));
+		return FText::FormatNamed(LOCTEXT("PropellantFormat", "<img src=\"/Text/Propellant\"/> {remaining}T out of {total}T"),
+			TEXT("remaining"), FText::AsNumber(PropellantSystem->GetCurrentPropellantAmount(), &Options), TEXT("total"),
+			FText::AsNumber(PropellantSystem->GetTotalPropellantAmount(), &Options));
+	}
+
+	return FText();
 }
 
 /*----------------------------------------------------
@@ -400,8 +408,8 @@ void SNovaMainMenuInventory::OnRefuelPropellant()
 
 void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type)
 {
-	NCHECK(IsValid(GameState));
-	NCHECK(IsValid(GameState->GetCurrentArea()));
+	NCHECK(GameState);
+	NCHECK(GameState->GetCurrentArea());
 
 	const FNovaCompartment&     Compartment = Spacecraft->Compartments[Index];
 	const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(Type);

@@ -85,11 +85,11 @@ protected:
 	TSharedPtr<class SNovaInfoText>          InfoText;
 
 	// Data
-	class ANovaPlayerController*  PC;
-	const struct FNovaSpacecraft* Spacecraft;
-	const UNovaResource*          Resource;
-	float                         InitialAmount;
-	float                         Capacity;
-	int32                         CompartmentIndex;
-	bool                          IsTradeAllowed;
+	TWeakObjectPtr<ANovaPlayerController> PC;
+	const struct FNovaSpacecraft*         Spacecraft;
+	const UNovaResource*                  Resource;
+	float                                 InitialAmount;
+	float                                 Capacity;
+	int32                                 CompartmentIndex;
+	bool                                  IsTradeAllowed;
 };

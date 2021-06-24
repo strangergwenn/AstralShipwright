@@ -162,7 +162,7 @@ void SNovaTradingPanel::ShowPanelInternal(
 	CompartmentIndex = TargetCompartmentIndex;
 	IsTradeAllowed   = AllowTrade;
 
-	NCHECK(IsValid(PC));
+	NCHECK(PC.IsValid());
 	NCHECK(IsValid(Resource));
 	NCHECK(Spacecraft);
 
@@ -287,7 +287,7 @@ ENovaInfoBoxType SNovaTradingPanel::GetTransactionType() const
 {
 	double CreditsValue = GetTransactionValue();
 
-	if (!PC->CanAffordTransaction(GetTransactionValue()))
+	if (PC.IsValid() && !PC->CanAffordTransaction(GetTransactionValue()))
 	{
 		return ENovaInfoBoxType::Negative;
 	}
@@ -303,11 +303,16 @@ ENovaInfoBoxType SNovaTradingPanel::GetTransactionType() const
 
 double SNovaTradingPanel::GetTransactionValue() const
 {
-	if (Resource)
+	if (PC.IsValid())
 	{
-		double Amount    = AmountSlider->GetCurrentValue() - InitialAmount;
-		double UnitPrice = PC->GetWorld()->GetGameState<ANovaGameState>()->GetCurrentPrice(Resource, Amount < 0);
-		return -Amount * UnitPrice;
+		const ANovaGameState* GameState = PC->GetWorld()->GetGameState<ANovaGameState>();
+
+		if (Resource && IsValid(GameState))
+		{
+			double Amount    = AmountSlider->GetCurrentValue() - InitialAmount;
+			double UnitPrice = GameState->GetCurrentPrice(Resource, Amount < 0);
+			return -Amount * UnitPrice;
+		}
 	}
 
 	return 0.0;
@@ -338,8 +343,9 @@ void SNovaTradingPanel::OnConfirmTrade()
 	}
 
 	// Process payment
+	NCHECK(PC.IsValid());
 	PC->ProcessTransaction(GetTransactionValue());
-	PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
+	PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC.Get());
 }
 
 #undef LOCTEXT_NAMESPACE
