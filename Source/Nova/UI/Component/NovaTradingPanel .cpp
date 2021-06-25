@@ -219,7 +219,8 @@ void SNovaTradingPanel::ShowPanelInternal(
 
 bool SNovaTradingPanel::IsConfirmEnabled() const
 {
-	return IsTradeAllowed && AmountSlider->GetCurrentValue() != InitialAmount && PC->CanAffordTransaction(GetTransactionValue());
+	return IsTradeAllowed && AmountSlider->GetCurrentValue() != InitialAmount && PC.IsValid() &&
+		   PC->CanAffordTransaction(GetTransactionValue());
 }
 
 FText SNovaTradingPanel::GetResourceDetails() const
