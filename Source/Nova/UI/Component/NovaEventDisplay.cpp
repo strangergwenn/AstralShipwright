@@ -149,7 +149,7 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 			if (Trajectory)
 			{
 				FNovaTime ManeuverTimeLeft = Trajectory->GetNextManeuverStartTime(CurrentGameTime) - CurrentGameTime -
-											 FNovaTime::FromSeconds(CommonCutsceneDelay - 1);
+											 FNovaTime::FromSeconds(ENovaGameModeStateTiming::CommonCutsceneDelay - 1);
 				ManeuverTimeLeft = FMath::Max(ManeuverTimeLeft, FNovaTime(0));
 
 				// Nearing maneuver

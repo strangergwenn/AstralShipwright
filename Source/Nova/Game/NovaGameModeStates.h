@@ -1,5 +1,7 @@
 // Nova project - Gwennaël Arbona
 
+#pragma once
+
 #include "NovaGameMode.h"
 #include "NovaGameState.h"
 
@@ -17,10 +19,13 @@
 ----------------------------------------------------*/
 
 // Cutscene timing values in seconds
+namespace ENovaGameModeStateTiming
+{
 constexpr float CommonCutsceneDelay       = 2.0;
 constexpr float DepartureCutsceneDuration = 5.0;
 constexpr float AreaIntroductionDuration  = 5.0;
 constexpr float ArrivalCutsceneDuration   = 5.0;
+}    // namespace ENovaGameModeStateTiming
 
 /*----------------------------------------------------
     Game state class
@@ -114,8 +119,8 @@ public:
 
 		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
 
-		if (PlayerTrajectory &&
-			PlayerTrajectory->GetFirstManeuverStartTime() <= GameState->GetCurrentTime() + FNovaTime::FromSeconds(CommonCutsceneDelay))
+		if (PlayerTrajectory && PlayerTrajectory->GetFirstManeuverStartTime() <=
+									GameState->GetCurrentTime() + FNovaTime::FromSeconds(ENovaGameModeStateTiming::CommonCutsceneDelay))
 		{
 			return ENovaGameStateIdentifier::DepartureProximity;
 		}
@@ -228,7 +233,7 @@ public:
 	{
 		FNovaGameModeState::UpdateState();
 
-		if (GetSecondsInState() > CommonCutsceneDelay + DepartureCutsceneDuration)
+		if (GetSecondsInState() > ENovaGameModeStateTiming::CommonCutsceneDelay + ENovaGameModeStateTiming::DepartureCutsceneDuration)
 		{
 			return ENovaGameStateIdentifier::DepartureCoast;
 		}
@@ -297,7 +302,7 @@ public:
 	{
 		FNovaGameModeState::UpdateState();
 
-		if (GetSecondsInState() > AreaIntroductionDuration)
+		if (GetSecondsInState() > ENovaGameModeStateTiming::AreaIntroductionDuration)
 		{
 			return ENovaGameStateIdentifier::ArrivalCoast;
 		}
@@ -324,8 +329,8 @@ public:
 		FNovaGameModeState::UpdateState();
 
 		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
-		if (PlayerTrajectory == nullptr ||
-			(PlayerTrajectory->GetArrivalTime() - GameState->GetCurrentTime() < FNovaTime::FromSeconds(ArrivalCutsceneDuration)))
+		if (PlayerTrajectory == nullptr || (PlayerTrajectory->GetArrivalTime() - GameState->GetCurrentTime() <
+											   FNovaTime::FromSeconds(ENovaGameModeStateTiming::ArrivalCutsceneDuration)))
 		{
 			return ENovaGameStateIdentifier::ArrivalProximity;
 		}
@@ -360,7 +365,7 @@ public:
 
 		if (IsWaitingDelay)
 		{
-			if (GameState->GetCurrentTime() - ArrivalTime > FNovaTime::FromSeconds(CommonCutsceneDelay))
+			if (GameState->GetCurrentTime() - ArrivalTime > FNovaTime::FromSeconds(ENovaGameModeStateTiming::CommonCutsceneDelay))
 			{
 				return ENovaGameStateIdentifier::Area;
 			}
