@@ -316,8 +316,7 @@ void SNovaMainMenuInventory::Tick(const FGeometry& AllottedGeometry, const doubl
 	{
 		UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
 		NCHECK(PropellantSystem);
-		AveragedPropellantRatio.Set(
-			PropellantSystem->GetCurrentPropellantAmount() / PropellantSystem->GetTotalPropellantAmount(), DeltaTime);
+		AveragedPropellantRatio.Set(PropellantSystem->GetCurrentPropellantMass() / PropellantSystem->GetPropellantCapacity(), DeltaTime);
 	}
 }
 
@@ -381,7 +380,7 @@ TOptional<float> SNovaMainMenuInventory::GetPropellantRatio() const
 
 FText SNovaMainMenuInventory::GetPropellantText() const
 {
-	if (SpacecraftPawn)
+	if (SpacecraftPawn && Spacecraft)
 	{
 		UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
 		NCHECK(PropellantSystem);
@@ -389,9 +388,15 @@ FText SNovaMainMenuInventory::GetPropellantText() const
 		FNumberFormattingOptions Options;
 		Options.MaximumFractionalDigits = 0;
 
-		return FText::FormatNamed(LOCTEXT("PropellantFormat", "<img src=\"/Text/Propellant\"/> {remaining}T out of {total}T"),
-			TEXT("remaining"), FText::AsNumber(PropellantSystem->GetCurrentPropellantAmount(), &Options), TEXT("total"),
-			FText::AsNumber(PropellantSystem->GetTotalPropellantAmount(), &Options));
+		float RemainingDeltaV = Spacecraft->GetPropulsionMetrics().GetRemainingDeltaV(
+			Spacecraft->GetCurrentCargoMass(), PropellantSystem->GetCurrentPropellantMass());
+
+		return FText::FormatNamed(
+			LOCTEXT("PropellantFormat",
+				"<img src=\"/Text/Propellant\"/> {remaining}T out of {total}T <img src=\"/Text/Thrust\"/> {deltav} m/s delta-v"),
+			TEXT("remaining"), FText::AsNumber(PropellantSystem->GetCurrentPropellantMass(), &Options), TEXT("total"),
+			FText::AsNumber(PropellantSystem->GetPropellantCapacity(), &Options), TEXT("deltav"),
+			FText::AsNumber(RemainingDeltaV, &Options));
 	}
 
 	return FText();

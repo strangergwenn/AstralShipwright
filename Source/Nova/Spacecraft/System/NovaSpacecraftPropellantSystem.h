@@ -28,26 +28,20 @@ public:
 	{
 		NLOG("UNovaSpacecraftPropellantSystem::Load : %f", Spacecraft.PropellantMassAtLaunch);
 
-		PropellantAmount = Spacecraft.PropellantMassAtLaunch;
+		PropellantMass = Spacecraft.PropellantMassAtLaunch;
 	}
 
 	virtual void Save(FNovaSpacecraft& Spacecraft) override
 	{
-		NLOG("UNovaSpacecraftPropellantSystem::Save : %f", PropellantAmount);
+		NLOG("UNovaSpacecraftPropellantSystem::Save : %f", PropellantMass);
 
-		Spacecraft.PropellantMassAtLaunch = PropellantAmount;
+		Spacecraft.PropellantMassAtLaunch = PropellantMass;
 	}
 
 	virtual void Update(FNovaTime InitialTime, FNovaTime FinalTime) override;
 
-	/** Refill the spacecraft propellant, changing the system state directly */
-	void SetPropellantAmount(float Amount);
-
-	UFUNCTION(Server, Reliable)
-	void ServerSetPropellantAmount(float Amount);
-
 	/** Get how much propellant remains available in T */
-	float GetCurrentPropellantAmount() const
+	float GetCurrentPropellantMass() const
 	{
 		if (IsSpacecraftDocked())
 		{
@@ -63,12 +57,12 @@ public:
 		}
 		else
 		{
-			return PropellantAmount;
+			return PropellantMass;
 		}
 	}
 
 	/** Get how much propellant can be stored in T */
-	float GetTotalPropellantAmount() const
+	float GetPropellantCapacity() const
 	{
 		const FNovaSpacecraftPropulsionMetrics* PropulsionMetrics = GetPropulsionMetrics();
 		return PropulsionMetrics ? PropulsionMetrics->PropellantMassCapacity : 0;
@@ -98,5 +92,5 @@ protected:
 
 	// Current propellant amount
 	UPROPERTY(Replicated)
-	float PropellantAmount;
+	float PropellantMass;
 };

@@ -271,7 +271,7 @@ TArray<FText> FNovaSpacecraftCompartmentMetrics::GetDescription() const
 	TArray<FText> Result = INovaDescriptibleInterface::GetDescription();
 
 	Result.Add(FText::FormatNamed(
-		LOCTEXT("CompartmentMassFormat", "<img src=\"/Text/Mass\"/> {mass}T"), TEXT("mass"), FText::AsNumber(FMath::RoundToInt(DryMass))));
+		LOCTEXT("CompartmentMassFormat", "<img src=\"/Text/Mass\"/> {mass} T"), TEXT("mass"), FText::AsNumber(FMath::RoundToInt(DryMass))));
 
 	if (ModuleCount)
 	{
@@ -419,9 +419,10 @@ FNovaSpacecraftUpgradeCost FNovaSpacecraft::GetUpgradeCost(const ANovaGameState*
 {
 	FNovaSpacecraftUpgradeCost                        Cost;
 	TMap<const UNovaTradableAssetDescription*, int32> PartsDelta;
+	int32                                             TotalCostAsNew = 0;
 
 	// Increase or decrease the amount of one particular part
-	auto UpdatePartsDelta = [&PartsDelta](const UNovaTradableAssetDescription* Asset, bool Add)
+	auto UpdatePartsData = [&PartsDelta, &TotalCostAsNew, GameState](const UNovaTradableAssetDescription* Asset, bool Add)
 	{
 		if (::IsValid(Asset))
 		{
@@ -434,46 +435,52 @@ FNovaSpacecraftUpgradeCost FNovaSpacecraft::GetUpgradeCost(const ANovaGameState*
 			{
 				PartsDelta.Add(Asset, Add ? 1 : -1);
 			}
+
+			if (Add)
+			{
+				TotalCostAsNew += GameState->GetCurrentPrice(Asset, false);
+			}
 		}
 	};
 
 	// Update the amounts of each parts in a spacecraft
-	auto ProcessSpacecraft = [UpdatePartsDelta](const FNovaSpacecraft* Spacecraft, bool Add)
+	auto ProcessSpacecraft = [UpdatePartsData](const FNovaSpacecraft* Spacecraft, bool Add)
 	{
 		for (int32 CompartmentIndex = 0; CompartmentIndex < Spacecraft->Compartments.Num(); CompartmentIndex++)
 		{
 			const FNovaCompartment& Compartment = Spacecraft->Compartments[CompartmentIndex];
-			UpdatePartsDelta(Compartment.Description, Add);
+			UpdatePartsData(Compartment.Description, Add);
 
 			for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
 			{
-				UpdatePartsDelta(Compartment.Modules[ModuleIndex].Description, Add);
+				UpdatePartsData(Compartment.Modules[ModuleIndex].Description, Add);
 			}
 
 			for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
 			{
-				UpdatePartsDelta(Compartment.Equipments[EquipmentIndex], Add);
+				UpdatePartsData(Compartment.Equipments[EquipmentIndex], Add);
 			}
 		}
 	};
 
-	// Run the process on each spacecraft
+	// Run the process on both spacecraft
 	ProcessSpacecraft(this, true);
 	ProcessSpacecraft(Other, false);
 
-	// Compute the total costs
+	// Compute the total change costs
 	for (const TPair<const UNovaTradableAssetDescription*, int32>& Entry : PartsDelta)
 	{
 		if (Entry.Value > 0)
 		{
-			Cost.UpgradeCosts += Entry.Value * GameState->GetCurrentPrice(Entry.Key, false);
+			Cost.UpgradeCost += Entry.Value * GameState->GetCurrentPrice(Entry.Key, false);
 		}
 		else if (Entry.Value < 0)
 		{
-			Cost.ResaleGains += -Entry.Value * GameState->GetCurrentPrice(Entry.Key, true);
+			Cost.ResaleGain += -Entry.Value * GameState->GetCurrentPrice(Entry.Key, true);
 		}
 	}
-	Cost.TotalCost = Cost.UpgradeCosts - Cost.ResaleGains;
+	Cost.TotalCost       = TotalCostAsNew;
+	Cost.TotalChangeCost = Cost.UpgradeCost - Cost.ResaleGain;
 
 	return Cost;
 }
@@ -744,6 +751,8 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 			PropulsionMetrics.ExhaustVelocity * log((PropulsionMetrics.MaximumMass) / PropulsionMetrics.DryMass);
 		PropulsionMetrics.MaximumBurnTime = PropulsionMetrics.PropellantMassCapacity / PropulsionMetrics.PropellantRate;
 	}
+
+	PropellantMassAtLaunch = FMath::Min(PropellantMassAtLaunch, PropulsionMetrics.PropellantMassCapacity);
 
 #if 0
 	NLOG("--------------------------------------------------------------------------------");

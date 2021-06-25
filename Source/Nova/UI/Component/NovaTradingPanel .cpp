@@ -186,8 +186,8 @@ void SNovaTradingPanel::ShowPanelInternal(
 			PC->GetSpacecraftPawn()->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
 		NCHECK(PropellantSystem);
 
-		InitialAmount = PropellantSystem->GetCurrentPropellantAmount();
-		Capacity      = PropellantSystem->GetTotalPropellantAmount();
+		InitialAmount = PropellantSystem->GetCurrentPropellantMass();
+		Capacity      = PropellantSystem->GetPropellantCapacity();
 	}
 	ResourceItem->SetAsset(TargetResource);
 
@@ -324,26 +324,23 @@ double SNovaTradingPanel::GetTransactionValue() const
 
 void SNovaTradingPanel::OnConfirmTrade()
 {
+	FNovaSpacecraft ModifiedSpacecraft = Spacecraft->GetSafeCopy();
+
 	// Resource mode
 	if (Resource != UNovaResource::GetPropellant())
 	{
-		FNovaSpacecraft ModifiedSpacecraft = Spacecraft->GetSafeCopy();
 		ModifiedSpacecraft.ModifyCargo(Resource, AmountSlider->GetCurrentValue() - InitialAmount, CompartmentIndex);
-		PC->UpdateSpacecraft(ModifiedSpacecraft);
 	}
 
 	// Propellant mode
 	else
 	{
-		UNovaSpacecraftPropellantSystem* PropellantSystem =
-			PC->GetSpacecraftPawn()->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
-		NCHECK(PropellantSystem);
-
-		PropellantSystem->SetPropellantAmount(AmountSlider->GetCurrentValue());
+		ModifiedSpacecraft.SetPropellantMass(AmountSlider->GetCurrentValue());
 	}
 
-	// Process payment
+	// Process spacecraft update and payment
 	NCHECK(PC.IsValid());
+	PC->UpdateSpacecraft(ModifiedSpacecraft);
 	PC->ProcessTransaction(GetTransactionValue());
 	PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC.Get());
 }

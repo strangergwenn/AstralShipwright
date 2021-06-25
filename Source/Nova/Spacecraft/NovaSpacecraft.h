@@ -129,6 +129,12 @@ struct FNovaCompartment
 	/** Get the amount of cargo mass available for one resource */
 	float GetAvailableCargoMass(const class UNovaResource* Resource) const;
 
+	/** Get the current cargo mass */
+	float GetCurrentCargoMass() const
+	{
+		return GeneralCargo.Amount + BulkCargo.Amount + LiquidCargo.Amount;
+	}
+
 	/** Add a (possibly negative) amount of resources to the spacecraft */
 	void ModifyCargo(const class UNovaResource* Resource, float& MassDelta);
 
@@ -204,7 +210,7 @@ struct FNovaSpacecraftPropulsionMetrics
 	{}
 
 	/** Get the duration & mass of propellant spent in T for a maneuver */
-	FNovaTime GetManeuverDurationAndPropellantUsed(const float DeltaV, float CurrentCargoMass, float& CurrentPropellantMass) const
+	FNovaTime GetManeuverDurationAndPropellantUsed(float DeltaV, float CurrentCargoMass, float& CurrentPropellantMass) const
 	{
 		NCHECK(Thrust > 0);
 		NCHECK(ExhaustVelocity > 0);
@@ -217,6 +223,13 @@ struct FNovaSpacecraftPropulsionMetrics
 		NCHECK(CurrentPropellantMass > 0);
 
 		return FNovaTime::FromMinutes(Duration);
+	}
+
+	/** Get the remaining delta-v in m/s */
+	float GetRemainingDeltaV(float CurrentCargoMass, float CurrentPropellantMass) const
+	{
+		return (DryMass > 0 && ExhaustVelocity > 0) ? ExhaustVelocity * log((DryMass + CurrentCargoMass + CurrentPropellantMass) / DryMass)
+													: 0.0f;
 	}
 
 	// Dry mass before propellants and cargo in T
@@ -253,11 +266,12 @@ struct FNovaSpacecraftPropulsionMetrics
 /** Spacecraft upgrade cost result */
 struct FNovaSpacecraftUpgradeCost
 {
-	FNovaSpacecraftUpgradeCost() : UpgradeCosts(0), ResaleGains(0), TotalCost(0)
+	FNovaSpacecraftUpgradeCost() : UpgradeCost(0), ResaleGain(0), TotalChangeCost(0), TotalCost(0)
 	{}
 
-	double UpgradeCosts;
-	double ResaleGains;
+	double UpgradeCost;
+	double ResaleGain;
+	double TotalChangeCost;
 	double TotalCost;
 };
 
@@ -359,7 +373,7 @@ public:
 	void UpdatePropulsionMetrics();
 
 	/** Reset the propellant amount */
-	void SetPropellantAmount(float Amount)
+	void SetPropellantMass(float Amount)
 	{
 		PropellantMassAtLaunch = Amount;
 	}
@@ -371,9 +385,7 @@ public:
 
 		for (const FNovaCompartment& Compartment : Compartments)
 		{
-			CargoMass += Compartment.GeneralCargo.Amount;
-			CargoMass += Compartment.BulkCargo.Amount;
-			CargoMass += Compartment.LiquidCargo.Amount;
+			CargoMass += Compartment.GetCurrentCargoMass();
 		}
 
 		return CargoMass;

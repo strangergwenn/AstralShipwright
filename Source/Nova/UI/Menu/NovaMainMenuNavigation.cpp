@@ -106,7 +106,7 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 						UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
 						NCHECK(PropellantSystem);
 						float FuelToBeUsed = OrbitalSimulation->GetPlayerRemainingFuelRequired(*CurrentSimulatedTrajectory, SpacecraftPawn->GetSpacecraftIdentifier());
-						float FuelRemaining = PropellantSystem->GetCurrentPropellantAmount();
+						float FuelRemaining = PropellantSystem->GetCurrentPropellantMass();
 
 						FNumberFormattingOptions Options;
 						Options.MaximumFractionalDigits = 1;

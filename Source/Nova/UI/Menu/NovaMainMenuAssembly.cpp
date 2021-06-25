@@ -55,14 +55,13 @@ public:
 		FNovaSpacecraftUpgradeCost Cost =
 			ModifiedSpacecraft.GetUpgradeCost(PC->GetWorld()->GetGameState<ANovaGameState>(), CurrentSpacecraft);
 		TSharedRef<SNovaTable> CostTable = SNew(SNovaTable).Title(LOCTEXT("CostAnalysis", "Cost analysis"));
-		CostTable->AddEntry(LOCTEXT("UpgradeCostUpgrades", "New parts bought"), GetPriceText(Cost.UpgradeCosts));
-		CostTable->AddEntry(LOCTEXT("UpgradeCostResale", "Parts resold"), GetPriceText(Cost.ResaleGains));
-		CostTable->AddEntry(LOCTEXT("UpgradeCostDepreciation", "Parts depreciation"),
-			FMath::RoundToInt(100 * ENovaConstants::ResaleDepreciation), -1, FText::FromString("%"));
-		CostTable->AddEntry(LOCTEXT("UpgradeCostTotal", "Total cost of changes"), GetPriceText(Cost.TotalCost));
+		CostTable->AddEntry(LOCTEXT("UpgradeCostValue", "Estimated total value"), GetPriceText(Cost.TotalCost));
+		CostTable->AddEntry(LOCTEXT("UpgradeCostUpgrades", "New parts bought"), GetPriceText(Cost.UpgradeCost));
+		CostTable->AddEntry(LOCTEXT("UpgradeCostResale", "Parts resold"), GetPriceText(Cost.ResaleGain));
+		CostTable->AddEntry(LOCTEXT("UpgradeCostTotal", "Total cost of changes"), GetPriceText(Cost.TotalChangeCost));
 
 		// Validate cost
-		if (!PC->CanAffordTransaction(-Cost.TotalCost))
+		if (!PC->CanAffordTransaction(-Cost.TotalChangeCost))
 		{
 			HasValidSpacecraft = false;
 			DetailsText        = LOCTEXT("TooExpensive", "Changes to the current design are too expensive to afford");
@@ -83,7 +82,7 @@ public:
 			ConfirmChanges = FSimpleDelegate::CreateLambda(
 				[=]()
 				{
-					PC->ProcessTransaction(-Cost.TotalCost);
+					PC->ProcessTransaction(-Cost.TotalChangeCost);
 					SpacecraftPawn->ApplyAssembly();
 					PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
 				});
@@ -1530,7 +1529,18 @@ bool SNovaMainMenuAssembly::IsModuleEnabled(int32 ModuleIndex) const
 	if (CompartmentPanelVisible && IsValid(SpacecraftPawn))
 	{
 		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
-		return ModuleIndex < Compartment.Description->ModuleSlots.Num();
+		if (ModuleIndex >= Compartment.Description->ModuleSlots.Num())
+		{
+			return false;
+		}
+
+		if (IsValid(Compartment.Modules[ModuleIndex].Description) && Compartment.GetCurrentCargoMass() > 0 &&
+			Compartment.Modules[ModuleIndex].Description->IsA<UNovaCargoModuleDescription>())
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	return false;

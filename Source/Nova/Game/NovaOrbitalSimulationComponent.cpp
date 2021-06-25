@@ -87,7 +87,7 @@ struct FNovaSpacecraftFleet
 			// and any non-propulsion-related transfer of mass should abort the trajectory
 			const ANovaSpacecraftPawn* SpacecraftPawn = GameState->GetSpacecraftPawn(Spacecraft->Identifier);
 			CurrentCargoMass                          = Spacecraft->GetCurrentCargoMass();
-			CurrentPropellantMass = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>()->GetCurrentPropellantAmount();
+			CurrentPropellantMass = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>()->GetCurrentPropellantMass();
 		}
 
 		FNovaSpacecraftPropulsionMetrics Metrics;
