@@ -67,9 +67,6 @@ protected:
 	FText               GetDestinationHelpText() const;
 	void                OnSelectedDestinationChanged(const class UNovaArea* Destination, int32 Index);
 
-	// General
-	FText GetLocationText() const;
-
 	// Trajectory
 	bool  CanCommitTrajectory() const;
 	FText GetCommitTrajectoryHelpText() const;

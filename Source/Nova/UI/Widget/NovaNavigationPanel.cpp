@@ -57,7 +57,7 @@ void SNovaNavigationPanel::ResetNavigation()
 		TSharedPtr<SNovaButton> FocusButton = GetDefaultFocusButton();
 		if (FocusButton && FocusButton->SupportsKeyboardFocus())
 		{
-			NLOG("SNovaNavigationPanel::ResetNavigation : reset to '%s'", *FocusButton->ToString());
+			// NLOG("SNovaNavigationPanel::ResetNavigation : reset to '%s'", *FocusButton->ToString());
 			Menu->SetFocusedButton(FocusButton, true);
 		}
 		else

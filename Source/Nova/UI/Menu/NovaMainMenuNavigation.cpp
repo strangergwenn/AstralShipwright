@@ -58,14 +58,6 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
-				SNew(STextBlock)
-				.TextStyle(&Theme.MainFont)
-				.Text(this, &SNovaMainMenuNavigation::GetLocationText)
-			]
-			
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
 				SNovaAssignNew(DestinationListView, SNovaModalListView<const UNovaArea*>)
 				.Panel(this)
 				.TitleText(LOCTEXT("DestinationList", "Destinations"))
@@ -319,31 +311,6 @@ void SNovaMainMenuNavigation::OnSelectedDestinationChanged(const UNovaArea* Dest
 /*----------------------------------------------------
     Callbacks
 ----------------------------------------------------*/
-
-FText SNovaMainMenuNavigation::GetLocationText() const
-{
-	if (IsValid(OrbitalSimulation))
-	{
-		const FNovaTrajectory*      Trajectory = OrbitalSimulation->GetPlayerTrajectory();
-		const FNovaOrbitalLocation* Location   = OrbitalSimulation->GetPlayerLocation();
-
-		if (Trajectory)
-		{
-			return LOCTEXT("Trajectory", "On trajectory");
-		}
-		else if (Location)
-		{
-			auto AreaAndDistance = OrbitalSimulation->GetNearestAreaAndDistance(*Location);
-
-			FNumberFormattingOptions NumberOptions;
-			NumberOptions.SetMaximumFractionalDigits(1);
-
-			return FText::FormatNamed(LOCTEXT("NearestAreaFormat", "{area} at {distance}km"), TEXT("area"), AreaAndDistance.Key->Name,
-				TEXT("distance"), FText::AsNumber(AreaAndDistance.Value, &NumberOptions));
-		}
-	}
-	return FText();
-}
 
 bool SNovaMainMenuNavigation::CanCommitTrajectory() const
 {

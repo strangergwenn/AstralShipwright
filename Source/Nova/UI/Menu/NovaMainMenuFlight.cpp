@@ -11,7 +11,6 @@
 
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
-#include "Nova/Spacecraft/System/NovaSpacecraftPropellantSystem.h"
 
 #include "Nova/System/NovaMenuManager.h"
 #include "Nova/Player/NovaPlayerController.h"
@@ -65,85 +64,14 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
-						SNew(STextBlock)
-						.TextStyle(&Theme.MainFont)
-						.Text_Lambda([this]() -> FText
-						{
-							const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
-							const FNovaTime& CurrentTime = GameState->GetCurrentTime();
-
-							if (PlayerTrajectory)
-							{
-								return FText::FormatNamed(LOCTEXT("OnTrajectory", "Next maneuver in {duration}"),
-									TEXT("duration"), GetDurationText(PlayerTrajectory->GetNextManeuverStartTime(CurrentTime) - CurrentTime));
-							}
-
-							if (IsValid(SpacecraftMovement))
-							{
-								const UNovaArea* Area = GameState->GetCurrentArea();
-
-								switch (SpacecraftMovement->GetState())
-								{
-									case ENovaMovementState::Docked:
-									case ENovaMovementState::Undocking:
-									case ENovaMovementState::Docking:
-										return FText::FormatNamed(LOCTEXT("Docked", "Docked at {area}"),
-											TEXT("area"), Area->Name);
-								}
-							}
-
-							return LOCTEXT("FreeFlight", "Flying free");
-						})
-					]
-			
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNew(STextBlock)
-						.TextStyle(&Theme.MainFont)
-						.Text_Lambda([this]() -> FText
-						{
-							if (IsValid(SpacecraftPawn) && IsValid(OrbitalSimulation))
-							{
-								UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
-								NCHECK(PropellantSystem);
-								
-								float TrajectoryFuelRemaining = OrbitalSimulation->GetPlayerRemainingFuelRequired(SpacecraftPawn->GetSpacecraftIdentifier());
-
-								FNumberFormattingOptions Options;
-								Options.MaximumFractionalDigits = 0;
-
-								FText PropellantLine = FText::FormatNamed(LOCTEXT("PropellantFormat", "Propellant : {remaining}T remaining out of {total}T"),
-									TEXT("remaining"), FText::AsNumber(PropellantSystem->GetCurrentPropellantAmount(), &Options),
-									TEXT("total"), FText::AsNumber(PropellantSystem->GetTotalPropellantAmount(), &Options));
-								
-								FText TrajectoryLine;
-								if (TrajectoryFuelRemaining > 0)
-								{
-									TrajectoryLine = FText::FormatNamed(LOCTEXT("TrajectoryFormat", "Trajectory : {remaining}T of propellant still needed"),
-										TEXT("remaining"), FText::AsNumber(TrajectoryFuelRemaining, &Options));
-
-									return FText::FromString(PropellantLine.ToString() + "\n" + TrajectoryLine.ToString());
-								}
-
-								return PropellantLine;
-							}
-
-							return FText();
-						})
-					]
-			
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNovaNew(SNovaButton)
+						SNovaAssignNew(FastForwardButton, SNovaButton)
 						.Text(LOCTEXT("FastForward", "Fast forward"))
 						.HelpText(LOCTEXT("FastForwardHelp", "Wait until the next event"))
 						.OnClicked(this, &SNovaMainMenuFlight::FastForward)
 						.Enabled(this, &SNovaMainMenuFlight::CanFastForward)
 					]
 			
-#if WITH_EDITOR
+#if WITH_EDITOR && 0
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
@@ -314,11 +242,26 @@ TSharedPtr<SNovaButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 	{
 		return UndockButton;
 	}
-	else
+	else if (IsDockEnabled())
 	{
 		return DockButton;
 	}
+	else if (IsManeuveringEnabled())
+	{
+		return AlignManeuverButton;
+	}
+	else if (IsMainDriveAvailable())
+	{
+		return MainDriveButton;
+	}
+	else if (CanFastForward())
+	{
+		return FastForwardButton;
+	}
+
+	return nullptr;
 }
+
 /*----------------------------------------------------
     Content callbacks
 ----------------------------------------------------*/
