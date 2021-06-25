@@ -532,8 +532,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								.ItemsSource(&ModuleList)
 								.ListButtonSize("LargeListButtonSize")
 								.TitleText(LOCTEXT("ModuleListTitle", "Module"))
-								.HelpText(LOCTEXT("ModuleListHelp", "Change the module for this slot"))
-								.Enabled(this, &SNovaMainMenuAssembly::IsCompartmentPanelVisible)
+								.HelpText(this, &SNovaMainMenuAssembly::GetModuleListHelpText)
+								.Enabled(this, &SNovaMainMenuAssembly::IsModuleListEnabled)
 								.Visibility(this, &SNovaMainMenuAssembly::GetModuleListVisibility)
 								.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateModuleItem)
 								.OnGenerateName(this, &SNovaMainMenuAssembly::GetModuleListTitle)
@@ -757,7 +757,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 			SNew(SNovaButton) // No navigation
 			.Focusable(false)
 			.Size("CompartmentButtonSize")
-			.HelpText(FText::FormatNamed(LOCTEXT("ModuleSlotFormat", "Select module slot {slot}"), TEXT("slot"), FText::AsNumber(ModuleIndex + 1)))
+			.HelpText(this, &SNovaMainMenuAssembly::GetModuleHelpText, ModuleIndex)
 			.Enabled(this, &SNovaMainMenuAssembly::IsModuleEnabled, ModuleIndex)
 			.OnClicked(this, &SNovaMainMenuAssembly::SetSelectedModuleOrEquipment, GetCommonIndexFromModule(ModuleIndex))
 			.OnDoubleClicked(FSimpleDelegate::CreateLambda([=]()
@@ -1317,9 +1317,26 @@ FText SNovaMainMenuAssembly::GenerateCompartmentTooltip(const UNovaCompartmentDe
     Compartment module list
 ----------------------------------------------------*/
 
+bool SNovaMainMenuAssembly::IsModuleListEnabled() const
+{
+	return IsCompartmentPanelVisible() && IsModuleEnabled(GetSelectedModuleIndex());
+}
+
 EVisibility SNovaMainMenuAssembly::GetModuleListVisibility() const
 {
-	return (IsModuleSelected() && IsModuleEnabled(GetSelectedModuleIndex())) ? EVisibility::Visible : EVisibility::Collapsed;
+	return IsModuleSelected() ? EVisibility::Visible : EVisibility::Collapsed;
+}
+
+FText SNovaMainMenuAssembly::GetModuleListHelpText() const
+{
+	FText Help;
+
+	if ((IsCompartmentPanelVisible() && IsModuleEnabled(GetSelectedModuleIndex(), &Help)) || Help.IsEmpty())
+	{
+		return LOCTEXT("ModuleListHelp", "Change the module for this slot");
+	}
+
+	return Help;
 }
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateModuleItem(const UNovaModuleDescription* Module) const
@@ -1504,11 +1521,6 @@ bool SNovaMainMenuAssembly::IsAddCompartmentEnabled(bool Forward) const
 	}
 }
 
-bool SNovaMainMenuAssembly::IsBackToAssemblyEnabled() const
-{
-	return EditedCompartmentIndex != INDEX_NONE;
-}
-
 bool SNovaMainMenuAssembly::IsEditCompartmentEnabled() const
 {
 	return SelectedCompartmentIndex >= 0;
@@ -1524,7 +1536,26 @@ FText SNovaMainMenuAssembly::GetCompartmentText()
 	return FText();
 }
 
-bool SNovaMainMenuAssembly::IsModuleEnabled(int32 ModuleIndex) const
+bool SNovaMainMenuAssembly::IsBackToAssemblyEnabled() const
+{
+	return EditedCompartmentIndex != INDEX_NONE;
+}
+
+FText SNovaMainMenuAssembly::GetModuleHelpText(int32 ModuleIndex) const
+{
+	FText Help;
+
+	if (IsModuleEnabled(ModuleIndex, &Help) || Help.IsEmpty())
+	{
+		return FText::FormatNamed(LOCTEXT("ModuleSlotFormat", "Select module slot {slot}"), TEXT("slot"), FText::AsNumber(ModuleIndex + 1));
+	}
+	else
+	{
+		return Help;
+	}
+}
+
+bool SNovaMainMenuAssembly::IsModuleEnabled(int32 ModuleIndex, FText* Help) const
 {
 	if (CompartmentPanelVisible && IsValid(SpacecraftPawn))
 	{
@@ -1537,6 +1568,10 @@ bool SNovaMainMenuAssembly::IsModuleEnabled(int32 ModuleIndex) const
 		if (IsValid(Compartment.Modules[ModuleIndex].Description) && Compartment.GetCurrentCargoMass() > 0 &&
 			Compartment.Modules[ModuleIndex].Description->IsA<UNovaCargoModuleDescription>())
 		{
+			if (Help)
+			{
+				*Help = LOCTEXT("ModuleHasCargo", "This module cannot be changed because it holds cargo");
+			}
 			return false;
 		}
 

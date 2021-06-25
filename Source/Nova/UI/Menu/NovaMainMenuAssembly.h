@@ -196,7 +196,9 @@ protected:
 	FText               GenerateCompartmentTooltip(const class UNovaCompartmentDescription* Description) const;
 
 	// Compartment module list
+	bool                IsModuleListEnabled() const;
 	EVisibility         GetModuleListVisibility() const;
+	FText               GetModuleListHelpText() const;
 	TSharedRef<SWidget> GenerateModuleItem(const class UNovaModuleDescription* Module) const;
 	FText               GetModuleListTitle(const class UNovaModuleDescription* Module) const;
 	FText               GenerateModuleTooltip(const class UNovaModuleDescription* Module) const;
@@ -233,7 +235,12 @@ protected:
 		return CompartmentPanelVisible;
 	}
 	bool  IsBackToAssemblyEnabled() const;
-	bool  IsModuleEnabled(int32 ModuleIndex) const;
+	FText GetModuleHelpText(int32 ModuleIndex) const;
+	bool  IsModuleEnabled(int32 ModuleIndex) const
+	{
+		return IsModuleEnabled(ModuleIndex, nullptr);
+	}
+	bool  IsModuleEnabled(int32 ModuleIndex, FText* Help) const;
 	bool  IsEquipmentEnabled(int32 EquipmentIndex) const;
 	FText GetModuleOrEquipmentText();
 

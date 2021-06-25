@@ -509,13 +509,16 @@ FReply SNovaButton::OnButtonClicked()
 
 FReply SNovaButton::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	if (OnDoubleClicked.IsBound())
+	if (IsButtonEnabled())
 	{
-		OnDoubleClicked.Execute();
-	}
-	else
-	{
-		OnButtonClicked();
+		if (OnDoubleClicked.IsBound())
+		{
+			OnDoubleClicked.Execute();
+		}
+		else
+		{
+			OnButtonClicked();
+		}
 	}
 
 	return FReply::Handled();
