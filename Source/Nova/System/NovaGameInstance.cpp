@@ -211,7 +211,7 @@ void UNovaGameInstance::SaveGame(ANovaPlayerController* PC, bool Synchronous)
 
 	// Write to file
 	SaveGameToFile(Synchronous);
-	PC->Notify(LOCTEXT("SavedGame", "Game saved"), ENovaNotificationType::Save);
+	PC->Notify(LOCTEXT("SavedGame", "Game saved"), FText(), ENovaNotificationType::Save);
 }
 
 void UNovaGameInstance::SaveGameToFile(bool Synchronous)

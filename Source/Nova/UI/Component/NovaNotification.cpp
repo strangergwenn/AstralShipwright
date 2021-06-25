@@ -53,22 +53,37 @@ void SNovaNotification::Construct(const FArguments& InArgs)
 					.BorderImage(&Theme.MainMenuPatternedBackground)
 					.Padding(Theme.ContentPadding)
 					[
-						SNew(SHorizontalBox)
+						SNew(SVerticalBox)
 
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
-						.VAlign(VAlign_Center)
+						+ SVerticalBox::Slot()
+						.AutoHeight()
 						[
-							SNew(SImage)
-							.Image(this, &SNovaNotification::GetNotifyIcon)
+							SNew(SHorizontalBox)
+
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
+							.VAlign(VAlign_Center)
+							[
+								SNew(SImage)
+								.Image(this, &SNovaNotification::GetNotifyIcon)
+							]
+
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
+							[
+								SNew(STextBlock)
+								.Text(this, &SNovaNotification::GetNotifyText)
+								.TextStyle(&Theme.NotificationFont)
+							]
 						]
 
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
+						+ SVerticalBox::Slot()
+						.AutoHeight()
 						[
 							SNew(STextBlock)
-							.Text(this, &SNovaNotification::GetNotifyText)
-							.TextStyle(&Theme.NotificationFont)
+							.Text(this, &SNovaNotification::GetNotifySubtext)
+							.TextStyle(&Theme.HeadingFont)
+							.Visibility(this, &SNovaNotification::GetSubtextVisibility)
 						]
 					]
 				]
@@ -78,12 +93,13 @@ void SNovaNotification::Construct(const FArguments& InArgs)
 	// clang-format on
 }
 
-void SNovaNotification::Notify(const FText& Text, ENovaNotificationType Type)
+void SNovaNotification::Notify(const FText& Text, const FText& Subtext, ENovaNotificationType Type)
 {
-	NLOG("SNovaNotification::Notify : %s", *Text.ToString());
+	NLOG("SNovaNotification::Notify : %s (%s)", *Text.ToString(), *Subtext.ToString());
 
-	DesiredNotifyText = Text;
-	DesiredNotifyType = Type;
+	DesiredNotifyText    = Text;
+	DesiredNotifySubtext = Subtext;
+	DesiredNotifyType    = Type;
 
 	// Force update if we're past the original time
 	if (CurrentDisplayTime > DisplayDuration)
@@ -114,6 +130,10 @@ const FSlateBrush* SNovaNotification::GetNotifyIcon() const
 	else if (DesiredNotifyType == ENovaNotificationType::Save)
 	{
 		return FNovaStyleSet::GetBrush("Icon/SB_Notify_Save");
+	}
+	else if (DesiredNotifyType == ENovaNotificationType::World)
+	{
+		return FNovaStyleSet::GetBrush("Icon/SB_Notify_World");
 	}
 
 	return nullptr;

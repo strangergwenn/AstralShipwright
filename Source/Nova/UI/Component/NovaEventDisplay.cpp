@@ -155,10 +155,10 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 				// Nearing maneuver
 				if (ManeuverTimeLeft < FNovaTime::FromSeconds(60))
 				{
-					DesiredState.Text       = LOCTEXT("ImminentManeuver", "Imminent maneuver").ToUpper();
-					DesiredState.HasDetails = true;
+					DesiredState.Text = LOCTEXT("ImminentManeuver", "Imminent maneuver").ToUpper();
+					DesiredState.Type = ENovaEventDisplayType::StaticTextWithDetails;
 
-					if (CurrentState.HasDetails)
+					if (CurrentState.Type == ENovaEventDisplayType::StaticTextWithDetails)
 					{
 						TimeText = ManeuverTimeLeft >= FNovaTime::FromSeconds(1)
 									 ? FText::FormatNamed(LOCTEXT("ImminentManeuverTimeFormat", "{time} left"), TEXT("time"),
@@ -175,7 +175,9 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 				// On trajectory
 				else
 				{
-					DesiredState.Text = LOCTEXT("OnTrajectory", "On trajectory");
+					DesiredState.Text = FText::FormatNamed(
+						LOCTEXT("NextManeuverFormat", "Next maneuver in {duration}"), TEXT("duration"), GetDurationText(ManeuverTimeLeft));
+					DesiredState.Type = ENovaEventDisplayType::DynamicText;
 				}
 			}
 
@@ -184,15 +186,21 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 			{
 				if (GameState->GetCurrentArea()->Hidden)
 				{
-					DesiredState.Text = LOCTEXT("orbit", "On orbit");
+					DesiredState.Text = LOCTEXT("InOrbit", "In orbit");
 				}
 				else
 				{
 					DesiredState.Text = FText::FormatNamed(
-						LOCTEXT("FreeFlightFormat", "On orbit at {station}"), TEXT("station"), GameState->GetCurrentArea()->Name);
+						LOCTEXT("FreeFlightFormat", "In orbit at {station}"), TEXT("station"), GameState->GetCurrentArea()->Name);
 				}
 			}
 		}
+	}
+
+	// Dynamic text bypasses the dirty system
+	if (CurrentState.Type == DesiredState.Type && CurrentState.Type == ENovaEventDisplayType::DynamicText)
+	{
+		CurrentState.Text = DesiredState.Text;
 	}
 }
 
@@ -232,7 +240,7 @@ FText SNovaEventDisplay::GetDetailsText() const
 
 const FSlateBrush* SNovaEventDisplay::GetIcon() const
 {
-	return IsValidDetails ? FNovaStyleSet::GetBrush("Icon/SB_On") : FNovaStyleSet::GetBrush("Icon/SB_Off");
+	return IsValidDetails ? FNovaStyleSet::GetBrush("Icon/SB_On") : FNovaStyleSet::GetBrush("Icon/SB_Remove");
 }
 
 #undef LOCTEXT_NAMESPACE

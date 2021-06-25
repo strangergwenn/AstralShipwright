@@ -528,7 +528,7 @@ void ANovaGameState::ProcessPlayerEvents(float DeltaTime)
 			ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetGameInstance()->GetFirstLocalPlayerController());
 			if (IsValid(PC) && PC->IsLocalController())
 			{
-				PC->ShowTitle(PrimaryText, SecondaryText);
+				PC->Notify(PrimaryText, SecondaryText, ENovaNotificationType::World);
 			}
 		}
 
@@ -568,7 +568,10 @@ void ANovaGameState::ProcessTrajectoryAbort()
 		}
 
 		ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetGameInstance()->GetFirstLocalPlayerController());
-		PC->Notify(LOCTEXT("TrajectoryAborted", "Trajectory aborted"), ENovaNotificationType::Error);
+		PC->Notify(LOCTEXT("TrajectoryAborted", "Trajectory aborted"),
+			PlayerArray.Num() > 1 ? LOCTEXT("PlayerNotReady", "Spacecraft not cleared for maneuver")
+								  : LOCTEXT("NotAllPlayersReady", "A spacecraft wasn't cleared for maneuver"),
+			ENovaNotificationType::Error);
 
 		return;
 	}

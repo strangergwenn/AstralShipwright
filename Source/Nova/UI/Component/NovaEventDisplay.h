@@ -5,15 +5,23 @@
 #include "Nova/UI/NovaUI.h"
 #include "Nova/UI/Widget/NovaFadingWidget.h"
 
+/** Event display type */
+enum class ENovaEventDisplayType : uint8
+{
+	StaticText,
+	DynamicText,
+	StaticTextWithDetails
+};
+
 /** Event data */
 struct FNovaEventDisplayData
 {
-	FNovaEventDisplayData() : HasDetails(false)
+	FNovaEventDisplayData() : Type(ENovaEventDisplayType::StaticText)
 	{}
 
 	bool operator==(const FNovaEventDisplayData& Other) const
 	{
-		return Text.EqualTo(Other.Text) && HasDetails == Other.HasDetails;
+		return Text.EqualTo(Other.Text) && Type == Other.Type;
 	}
 
 	bool operator!=(const FNovaEventDisplayData& Other) const
@@ -21,8 +29,8 @@ struct FNovaEventDisplayData
 		return !operator==(Other);
 	}
 
-	FText Text;
-	bool  HasDetails;
+	FText                 Text;
+	ENovaEventDisplayType Type;
 };
 
 /** Event notification widget */

@@ -290,7 +290,7 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 			LastNetworkError = SessionsManager->GetNetworkError();
 			if (LastNetworkError != ENovaNetworkError::Success)
 			{
-				Notify(SessionsManager->GetNetworkErrorString(), ENovaNotificationType::Error);
+				Notify(LOCTEXT("NetworkError", "Network error"), SessionsManager->GetNetworkErrorString(), ENovaNotificationType::Error);
 			}
 		}
 
@@ -754,8 +754,7 @@ void ANovaPlayerController::InviteFriend(TSharedRef<FOnlineFriend> Friend)
 
 	UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
 
-	Notify(FText::FormatNamed(LOCTEXT("InviteFriend", "Invited {friend}"), TEXT("friend"), FText::FromString(Friend->GetDisplayName())),
-		ENovaNotificationType::Info);
+	Notify(LOCTEXT("InviteFriend", "Invited friend"), FText::FromString(Friend->GetDisplayName()), ENovaNotificationType::Info);
 
 	SessionsManager->InviteFriend(Friend->GetUserId());
 }
@@ -764,17 +763,16 @@ void ANovaPlayerController::JoinFriend(TSharedRef<FOnlineFriend> Friend)
 {
 	NLOG("ANovaPlayerController::JoinFriend");
 
-	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch, FNovaAsyncAction::CreateLambda(
-																[=]()
-																{
-																	Notify(FText::FormatNamed(LOCTEXT("JoiningFriend", "Joining {friend}"),
-																			   TEXT("friend"), FText::FromString(Friend->GetDisplayName())),
-																		ENovaNotificationType::Info);
+	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,
+		FNovaAsyncAction::CreateLambda(
+			[=]()
+			{
+				Notify(
+					LOCTEXT("JoiningFriend", "Joining friend"), FText::FromString(Friend->GetDisplayName()), ENovaNotificationType::Info);
 
-																	UNovaSessionsManager* SessionsManager =
-																		GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
-																	SessionsManager->JoinFriend(Friend->GetUserId());
-																}));
+				UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
+				SessionsManager->JoinFriend(Friend->GetUserId());
+			}));
 }
 
 void ANovaPlayerController::AcceptInvitation(const FOnlineSessionSearchResult& InviteResult)
@@ -824,14 +822,9 @@ bool ANovaPlayerController::IsMenuOnly() const
 	return Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMenuMap();
 }
 
-void ANovaPlayerController::Notify(const FText& Text, ENovaNotificationType Type)
+void ANovaPlayerController::Notify(const FText& Text, const FText& Subtext, ENovaNotificationType Type)
 {
-	GetMenuManager()->GetOverlay()->Notify(Text, Type);
-}
-
-void ANovaPlayerController::ShowTitle(const FText& Title, const FText& Subtitle)
-{
-	GetMenuManager()->GetOverlay()->ShowTitle(Title, Subtitle);
+	GetMenuManager()->GetOverlay()->Notify(Text, Subtext, Type);
 }
 
 void ANovaPlayerController::EnterPhotoMode(FName ActionName)
@@ -977,7 +970,7 @@ void ANovaPlayerController::OnJoinRandomSession(TArray<FOnlineSessionSearchResul
 					{
 						MenuManager->GetOverlay()->Notify(FText::FormatNamed(LOCTEXT("JoinFriend", "Joining {session}"), TEXT("session"),
 															  FText::FromString(*Result.Session.GetSessionIdStr())),
-							ENovaNotificationType::Info);
+							FText(), ENovaNotificationType::Info);
 
 						UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
 						SessionsManager->JoinSearchResult(Result);

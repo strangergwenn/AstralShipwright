@@ -233,10 +233,7 @@ public:
 	bool IsMenuOnly() const;
 
 	/** Show a text notification on the screen */
-	void Notify(const FText& Text, ENovaNotificationType Type);
-
-	/** Show a title on the screen */
-	void ShowTitle(const FText& Title, const FText& Subtitle);
+	void Notify(const FText& Text, const FText& Subtext = FText(), ENovaNotificationType Type = ENovaNotificationType::Info);
 
 	/** Start the photo mode with a transition and wait for ActionName */
 	void EnterPhotoMode(FName ActionName);

@@ -28,10 +28,7 @@ public:
 	----------------------------------------------------*/
 
 	/** Show a text notification on the screen */
-	void Notify(const FText& Text, ENovaNotificationType Type);
-
-	/** Show a title on the screen */
-	void ShowTitle(const FText& Title, const FText& Subtitle);
+	void Notify(const FText& Text, const FText& Subtext, ENovaNotificationType Type);
 
 	/** Start the fast-forward overlay */
 	void StartFastForward();
@@ -49,6 +46,5 @@ protected:
 
 	// Widgets
 	TSharedPtr<class SNovaNotification> Notification;
-	TSharedPtr<class SNovaTitleCard>    TitleCard;
 	TSharedPtr<class SBorder>           FastForward;
 };

@@ -27,7 +27,8 @@ enum class ENovaNotificationType : uint8
 	Info,
 	Warning,
 	Error,
-	Save
+	Save,
+	World
 };
 
 /** Loading screen types */

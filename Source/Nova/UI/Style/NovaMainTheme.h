@@ -55,7 +55,6 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = General) int32 EventDisplayWidth;
 
 	// Fonts
-	UPROPERTY(EditDefaultsOnly, Category = Fonts) FTextBlockStyle TitleFont;
 	UPROPERTY(EditDefaultsOnly, Category = Fonts) FTextBlockStyle NotificationFont;
 	UPROPERTY(EditDefaultsOnly, Category = Fonts) FTextBlockStyle HeadingFont;
 	UPROPERTY(EditDefaultsOnly, Category = Fonts) FTextBlockStyle MainFont;

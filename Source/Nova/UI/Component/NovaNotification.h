@@ -22,21 +22,32 @@ class SNovaNotification : public SNovaFadingWidget<>
 public:
 	void Construct(const FArguments& InArgs);
 
-	void Notify(const FText& Text, ENovaNotificationType Type);
+	void Notify(const FText& Text, const FText& Subtext, ENovaNotificationType Type);
 
 	virtual bool IsDirty() const
 	{
-		return !CurrentNotifyText.EqualTo(DesiredNotifyText);
+		return !CurrentNotifyText.EqualTo(DesiredNotifyText) || !CurrentNotifySubtext.EqualTo(DesiredNotifySubtext);
 	}
 
 	virtual void OnUpdate() override
 	{
-		CurrentNotifyText = DesiredNotifyText;
+		CurrentNotifyText    = DesiredNotifyText;
+		CurrentNotifySubtext = DesiredNotifySubtext;
 	}
 
 	FText GetNotifyText() const
 	{
 		return CurrentNotifyText.ToUpper();
+	}
+
+	FText GetNotifySubtext() const
+	{
+		return DesiredNotifySubtext.ToUpper();
+	}
+
+	EVisibility GetSubtextVisibility() const
+	{
+		return CurrentNotifySubtext.IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible;
 	}
 
 	FLinearColor GetNotifyColor() const;
@@ -49,6 +60,8 @@ private:
 
 	// Notification state
 	FText                 DesiredNotifyText;
+	FText                 DesiredNotifySubtext;
 	ENovaNotificationType DesiredNotifyType;
 	FText                 CurrentNotifyText;
+	FText                 CurrentNotifySubtext;
 };
