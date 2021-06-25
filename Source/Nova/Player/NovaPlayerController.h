@@ -122,6 +122,9 @@ public:
 	/** Add a possibly negative amount of credits */
 	void ProcessTransaction(double CreditsDelta);
 
+	UFUNCTION(Server, Reliable)
+	void ServerProcessTransaction(double CreditsDelta);
+
 	/** Check whether the player can handle this transaction */
 	bool CanAffordTransaction(double CreditsDelta) const;
 
@@ -288,7 +291,10 @@ private:
 	ENovaPlayerCameraState CurrentCameraState;
 	float                  CurrentTimeInCameraState;
 	FName                  PhotoModeAction;
-	double                 Credits;
+
+	// Replicated credits value
+	UPROPERTY(Replicated)
+	double Credits;
 
 	// Transitions
 	bool                SharedTransitionActive;

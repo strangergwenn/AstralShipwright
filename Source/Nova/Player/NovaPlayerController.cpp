@@ -199,7 +199,11 @@ void ANovaPlayerController::SerializeJson(
 		SaveData->Credits = 0;
 		if (!JsonData->TryGetNumberField("Credits", SaveData->Credits))
 		{
+#if WITH_EDITOR
+			SaveData->Credits = 20000;
+#else
 			SaveData->Credits = 2000;
+#endif    // WITH_EDITOR
 		}
 	}
 }
@@ -383,12 +387,29 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 
 void ANovaPlayerController::ProcessTransaction(double CreditsDelta)
 {
-	NCHECK(CanAffordTransaction(CreditsDelta));
+	// Authority
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		NCHECK(CanAffordTransaction(CreditsDelta));
 
-	Credits += CreditsDelta;
-	Credits = FMath::Max(Credits, 0.0);
+		Credits += CreditsDelta;
+		Credits = FMath::Max(Credits, 0.0);
 
-	NLOG("ANovaPlayerController::ProcessTransaction : %f in account (%+f)", Credits, CreditsDelta);
+		NLOG("ANovaPlayerController::ProcessTransaction : %f in account (%+f)", Credits, CreditsDelta);
+	}
+
+	// Remote client
+	else if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		ServerProcessTransaction(CreditsDelta);
+	}
+}
+
+void ANovaPlayerController::ServerProcessTransaction_Implementation(double CreditsDelta)
+{
+	NCHECK(GetLocalRole() == ROLE_Authority);
+
+	ProcessTransaction(CreditsDelta);
 }
 
 bool ANovaPlayerController::CanAffordTransaction(double CreditsDelta) const
@@ -688,6 +709,13 @@ void ANovaPlayerController::ServerUpdateSpacecraft_Implementation(const FNovaSpa
 	NLOG("ANovaPlayerController::ServerUpdateSpacecraft_Implementation");
 
 	UpdateSpacecraft(Spacecraft);
+}
+
+void ANovaPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ANovaPlayerController, Credits);
 }
 
 /*----------------------------------------------------
