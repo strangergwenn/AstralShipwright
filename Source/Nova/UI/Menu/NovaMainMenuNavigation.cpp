@@ -46,90 +46,129 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 	// clang-format off
 	ChildSlot
 	[
-		SNew(SHorizontalBox)
-
-		// Main box
-		+ SHorizontalBox::Slot()
-		.VAlign(VAlign_Fill)
-		.AutoWidth()
-		[
-			SNew(SVerticalBox)
-			
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNovaAssignNew(DestinationListView, SNovaModalListView<const UNovaArea*>)
-				.Panel(this)
-				.TitleText(LOCTEXT("DestinationList", "Destinations"))
-				.HelpText(this, &SNovaMainMenuNavigation::GetDestinationHelpText)
-				.ItemsSource(&DestinationList)
-				.OnGenerateItem(this, &SNovaMainMenuNavigation::GenerateDestinationItem)
-				.OnGenerateName(this, &SNovaMainMenuNavigation::GetDestinationName)
-				.OnGenerateTooltip(this, &SNovaMainMenuNavigation::GenerateDestinationTooltip)
-				.OnSelectionChanged(this, &SNovaMainMenuNavigation::OnSelectedDestinationChanged)
-				.Enabled(this, &SNovaMainMenuNavigation::CanSelectDestination)
-			]
-			
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNovaNew(SNovaButton)
-				.Text(LOCTEXT("CommitTrajectory", "Commit trajectory"))
-				.HelpText(this, &SNovaMainMenuNavigation::GetCommitTrajectoryHelpText)
-				.OnClicked(this, &SNovaMainMenuNavigation::OnCommitTrajectory)
-				.Enabled(this, &SNovaMainMenuNavigation::CanCommitTrajectory)
-			]
-			
-			// Delta-v trade-off slider
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SAssignNew(TrajectoryCalculator, SNovaTrajectoryCalculator)
-				.MenuManager(MenuManager)
-				.Panel(this)
-				.CurrentAlpha(TAttribute<float>::Create(TAttribute<float>::FGetter::CreateSP(this, &SNovaTabPanel::GetCurrentAlpha)))
-				.DurationActionName(FNovaPlayerInput::MenuPrimary)
-				.DeltaVActionName(FNovaPlayerInput::MenuSecondary)
-				.OnTrajectoryChanged(this, &SNovaMainMenuNavigation::OnTrajectoryChanged)
-			]
-
-			// Fuel use
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.HAlign(HAlign_Center)
-			[
-				SNew(SNovaText)
-				.Text(FNovaTextGetter::CreateLambda([&]()
-				{
-					if (IsValid(GameState) && IsValid(OrbitalSimulation) && IsValid(SpacecraftPawn) && CurrentSimulatedTrajectory.IsValid())
-					{
-						UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
-						NCHECK(PropellantSystem);
-						float FuelToBeUsed = OrbitalSimulation->GetPlayerRemainingFuelRequired(*CurrentSimulatedTrajectory, SpacecraftPawn->GetSpacecraftIdentifier());
-						float FuelRemaining = PropellantSystem->GetCurrentPropellantMass();
-
-						FNumberFormattingOptions Options;
-						Options.MaximumFractionalDigits = 1;
-
-						return FText::FormatNamed(LOCTEXT("TrajectoryFuelFormat", "{used}T of propellant will be used ({remaining}T remaining)"),
-							TEXT("used"), FText::AsNumber(FuelToBeUsed, &Options),
-							TEXT("remaining"), FText::AsNumber(FuelRemaining, &Options));
-					}
-
-					return FText();
-				}))
-				.TextStyle(&Theme.MainFont)
-				.WrapTextAt(500)
-			]
-
-			+ SVerticalBox::Slot()
-		]
+		SNew(SOverlay)
 
 		// Map slot
-		+ SHorizontalBox::Slot()
+		+ SOverlay::Slot()
 		[
 			SAssignNew(OrbitalMap, SNovaOrbitalMap)
 			.MenuManager(MenuManager)
+		]
+
+		// Main box
+		+ SOverlay::Slot()
+		.HAlign(HAlign_Left)
+		[
+			SNew(SBackgroundBlur)
+			.BlurRadius(this, &SNovaTabPanel::GetBlurRadius)
+			.BlurStrength(this, &SNovaTabPanel::GetBlurStrength)
+			.bApplyAlphaToBlur(true)
+			.Padding(0)
+			[
+				SNew(SBorder)
+				.BorderImage(&Theme.MainMenuBackground)
+				.Padding(Theme.ContentPadding)
+				[
+					SNew(SVerticalBox)
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					.HAlign(HAlign_Center)
+					[
+						SNovaAssignNew(DestinationListView, SNovaModalListView<const UNovaArea*>)
+						.Panel(this)
+						.TitleText(LOCTEXT("DestinationList", "Destinations"))
+						.HelpText(this, &SNovaMainMenuNavigation::GetDestinationHelpText)
+						.ItemsSource(&DestinationList)
+						.OnGenerateItem(this, &SNovaMainMenuNavigation::GenerateDestinationItem)
+						.OnGenerateName(this, &SNovaMainMenuNavigation::GetDestinationName)
+						.OnGenerateTooltip(this, &SNovaMainMenuNavigation::GenerateDestinationTooltip)
+						.OnSelectionChanged(this, &SNovaMainMenuNavigation::OnSelectedDestinationChanged)
+						.Enabled(this, &SNovaMainMenuNavigation::CanSelectDestination)
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					.HAlign(HAlign_Center)
+					[
+						SNovaNew(SNovaButton)
+						.Text(LOCTEXT("CommitTrajectory", "Commit trajectory"))
+						.HelpText(this, &SNovaMainMenuNavigation::GetCommitTrajectoryHelpText)
+						.OnClicked(this, &SNovaMainMenuNavigation::OnCommitTrajectory)
+						.Enabled(this, &SNovaMainMenuNavigation::CanCommitTrajectory)
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(STextBlock)
+						.Text(TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([&]()
+						{
+							FString Result;
+
+							if (IsValid(GameState))
+							{
+								for (const FNovaOrbitalObject& Object : OrbitalMap->GetHoveredOrbitalObjects())
+								{
+									if (!Result.IsEmpty())
+									{
+										Result += "\n";
+									}
+
+									Result += Object.GetText(GameState).ToString();
+								}
+							}
+
+							return FText::FromString(Result);
+						})))
+						.TextStyle(&Theme.MainFont)
+					]
+			
+					// Delta-v trade-off slider
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SAssignNew(TrajectoryCalculator, SNovaTrajectoryCalculator)
+						.MenuManager(MenuManager)
+						.Panel(this)
+						.CurrentAlpha(TAttribute<float>::Create(TAttribute<float>::FGetter::CreateSP(this, &SNovaTabPanel::GetCurrentAlpha)))
+						.DurationActionName(FNovaPlayerInput::MenuPrimary)
+						.DeltaVActionName(FNovaPlayerInput::MenuSecondary)
+						.OnTrajectoryChanged(this, &SNovaMainMenuNavigation::OnTrajectoryChanged)
+					]
+
+					// Fuel use
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					.HAlign(HAlign_Center)
+					[
+						SNew(SNovaText)
+						.Text(FNovaTextGetter::CreateLambda([&]()
+						{
+							if (IsValid(GameState) && IsValid(OrbitalSimulation) && IsValid(SpacecraftPawn) && CurrentSimulatedTrajectory.IsValid())
+							{
+								UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+								NCHECK(PropellantSystem);
+								float FuelToBeUsed = OrbitalSimulation->GetPlayerRemainingFuelRequired(*CurrentSimulatedTrajectory, SpacecraftPawn->GetSpacecraftIdentifier());
+								float FuelRemaining = PropellantSystem->GetCurrentPropellantMass();
+
+								FNumberFormattingOptions Options;
+								Options.MaximumFractionalDigits = 1;
+
+								return FText::FormatNamed(LOCTEXT("TrajectoryFuelFormat", "{used}T of propellant will be used ({remaining}T remaining)"),
+									TEXT("used"), FText::AsNumber(FuelToBeUsed, &Options),
+									TEXT("remaining"), FText::AsNumber(FuelRemaining, &Options));
+							}
+
+							return FText();
+						}))
+						.TextStyle(&Theme.MainFont)
+						.WrapTextAt(500)
+					]
+
+					+ SVerticalBox::Slot()
+				]
+			]
 		]
 	];
 	// clang-format on

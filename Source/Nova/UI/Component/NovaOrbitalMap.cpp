@@ -19,25 +19,27 @@
     Internal structures
 ----------------------------------------------------*/
 
-FText FNovaOrbitalObject::GetText(FNovaTime CurrentTime) const
+FText FNovaOrbitalObject::GetText(const ANovaGameState* GameState) const
 {
-	if (Area)
+	if (Area.IsValid())
 	{
 		return Area->Name;
 	}
-	else if (Spacecraft)
+	else if (SpacecraftIdentifier != FGuid())
 	{
+		const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(SpacecraftIdentifier);
+		NCHECK(Spacecraft);
 		return Spacecraft->GetName();
 	}
-	else if (Maneuver)
+	else if (Maneuver.IsValid())
 	{
 		FNumberFormattingOptions NumberOptions;
 		NumberOptions.SetMaximumFractionalDigits(1);
 
 		return FText::FormatNamed(LOCTEXT("ManeuverFormat", "{duration} burn for a {deltav} m/s maneuver at {phase}° in {time}"),
 			TEXT("phase"), FText::AsNumber(FMath::Fmod(Maneuver->Phase, 360.0f), &NumberOptions), TEXT("time"),
-			GetDurationText(Maneuver->Time - CurrentTime), TEXT("duration"), GetDurationText(Maneuver->Duration), TEXT("deltav"),
-			FText::AsNumber(Maneuver->DeltaV, &NumberOptions));
+			GetDurationText(Maneuver->Time - GameState->GetCurrentTime()), TEXT("duration"), GetDurationText(Maneuver->Duration),
+			TEXT("deltav"), FText::AsNumber(Maneuver->DeltaV, &NumberOptions));
 	}
 	else
 	{
@@ -111,37 +113,6 @@ void SNovaOrbitalMap::Construct(const FArguments& InArgs)
 	TrajectoryZoomAcceleration = 1.0f;
 	TrajectoryZoomSnappinness  = 10.0f;
 	TrajectoryInflationRatio   = 1.2f;
-
-	// clang-format off
-	ChildSlot
-	[
-		SNew(SVerticalBox)
-
-		+ SVerticalBox::Slot()
-		
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.VAlign(VAlign_Bottom)
-		[
-			SNew(SBackgroundBlur)
-			.BlurRadius(Theme.BlurRadius)
-			.BlurStrength(Theme.BlurStrength)
-			.bApplyAlphaToBlur(true)
-			.Padding(0)
-			[
-				SNew(SBorder)
-				.BorderImage(&Theme.MainMenuBackground)
-				.Padding(Theme.ContentPadding)
-				.HAlign(HAlign_Center)
-				[
-					SNew(STextBlock)
-					.Text(this, &SNovaOrbitalMap::GetHoverText)
-					.TextStyle(&Theme.MainFont)
-				]
-			]
-		]
-	];
-	// clang-format on
 }
 
 /*----------------------------------------------------
@@ -160,7 +131,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	// Reset state
 	ClearBatches();
 	CurrentDesiredSize = 100;
-	DesiredObjectTexts.Empty();
+	HoveredOrbitalObjects.Empty();
 	CurrentOrigin = GetTickSpaceGeometry().GetLocalSize() / 2;
 
 #if 0
@@ -182,26 +153,6 @@ void SNovaOrbitalMap::ShowTrajectory(const TSharedPtr<FNovaTrajectory>& Trajecto
 {
 	CurrentPreviewTrajectory = Trajectory;
 	CurrentPreviewProgress   = Immediate ? TrajectoryPreviewDuration : 0;
-}
-
-/*----------------------------------------------------
-    Slate callbacks
-----------------------------------------------------*/
-
-FText SNovaOrbitalMap::GetHoverText() const
-{
-	FString Result;
-
-	for (const FString& Text : DesiredObjectTexts)
-	{
-		if (Result.Len())
-		{
-			Result += '\n';
-		}
-		Result += Text;
-	}
-
-	return FText::FromString(Result);
 }
 
 /*----------------------------------------------------
@@ -250,11 +201,6 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 
 		FNovaOrbitalObject Point = FNovaOrbitalObject(AreaAndOrbitalLocation.Key, Phase);
 
-#if 0
-		NLOG("%s at phase %f, orbit start phase %f", *Point.GetText(OrbitalSimulation->GetCurrentTime()).ToString(), Point.Phase,
-			ExistingGeometry ? ExistingGeometry->StartPhase : Geometry.StartPhase);
-#endif
-
 		if (ExistingGeometry)
 		{
 			ExistingGeometry->Objects.Add(Point);
@@ -296,7 +242,7 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 
 			TArray<FNovaOrbitalObject> Objects;
 
-			Objects.Add(FNovaOrbitalObject(GameState->GetSpacecraft(Identifier), Location.Phase));
+			Objects.Add(FNovaOrbitalObject(Identifier, Location.Phase));
 
 			AddOrbit(Origin, Location.Geometry, Objects, SpacecraftStyle);
 			CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Location.Geometry.GetHighestAltitude());
@@ -405,7 +351,7 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 			NLOG("SNovaOrbitalMap::AddTrajectory : %s at phase %f ", *Spacecraft->Identifier.ToString(), SpacecraftLocation->Phase);
 #endif
 
-			Objects.Add(FNovaOrbitalObject(Spacecraft, SpacecraftLocation->Phase));
+			Objects.Add(FNovaOrbitalObject(Spacecraft->Identifier, SpacecraftLocation->Phase));
 			CurrentSpacecraftPhase = SpacecraftLocation->Phase;
 		}
 	}
@@ -473,22 +419,21 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbit(const FVector2D& Position,
 		FNovaSplineOrbit(LocalPosition, SemiMajorAxis, SemiMinorAxis, Phase, InitialAngle, AngularLength, Offset), Objects, Style);
 }
 
-void SNovaOrbitalMap::AddOrbitalObject(const FNovaOrbitalObject& Object, const FLinearColor& Color)
+void SNovaOrbitalMap::AddHoveredObject(const FNovaOrbitalObject& Object, const FLinearColor& Color)
 {
-	bool IsHovered =
+	bool IsObjectHovered =
 		(CurrentOrigin + Object.Position - GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos())).Size() < 50;
 
 	FNovaBatchedPoint Point;
 	Point.Pos   = Object.Position;
 	Point.Color = Color;
-	Point.Scale = IsHovered ? 1.25f : 1.0f;
+	Point.Scale = IsObjectHovered ? 1.25f : 1.0f;
 
 	BatchedPoints.AddUnique(Point);
 
-	if (IsHovered)
+	if (IsObjectHovered)
 	{
-		const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-		DesiredObjectTexts.AddUnique(Object.GetText(GameState->GetCurrentTime()).ToString());
+		HoveredOrbitalObjects.Add(Object);
 	}
 }
 
@@ -632,11 +577,14 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 	}
 
 	// Draw positioned objects
-	for (const FNovaOrbitalObject& Object : Objects)
+	if (IsHovered())
 	{
-		if (Object.Positioned)
+		for (const FNovaOrbitalObject& Object : Objects)
 		{
-			AddOrbitalObject(Object, Style.ColorInner);
+			if (Object.Positioned)
+			{
+				AddHoveredObject(Object, Style.ColorInner);
+			}
 		}
 	}
 

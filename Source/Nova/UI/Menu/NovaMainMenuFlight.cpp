@@ -71,7 +71,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 						.Enabled(this, &SNovaMainMenuFlight::CanFastForward)
 					]
 			
-#if WITH_EDITOR && 0
+#if WITH_EDITOR && 1
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[

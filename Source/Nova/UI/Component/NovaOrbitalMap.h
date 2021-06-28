@@ -67,7 +67,7 @@ struct FNovaBatchedText
 /** Point of interest on the map */
 struct FNovaOrbitalObject
 {
-	FNovaOrbitalObject() : Area(nullptr), Spacecraft(nullptr), Maneuver(nullptr), Positioned(false)
+	FNovaOrbitalObject() : Area(nullptr), SpacecraftIdentifier(FGuid()), Maneuver(nullptr), Positioned(false)
 	{}
 
 	FNovaOrbitalObject(const class UNovaArea* A, float P) : FNovaOrbitalObject()
@@ -76,10 +76,10 @@ struct FNovaOrbitalObject
 		Phase = P;
 	}
 
-	FNovaOrbitalObject(const struct FNovaSpacecraft* S, float P) : FNovaOrbitalObject()
+	FNovaOrbitalObject(const FGuid& S, float P) : FNovaOrbitalObject()
 	{
-		Spacecraft = S;
-		Phase      = P;
+		SpacecraftIdentifier = S;
+		Phase                = P;
 	}
 
 	FNovaOrbitalObject(const FNovaManeuver& M) : FNovaOrbitalObject()
@@ -88,12 +88,12 @@ struct FNovaOrbitalObject
 		Phase    = M.Phase;
 	}
 
-	FText GetText(FNovaTime CurrentTime) const;
+	FText GetText(const class ANovaGameState* GameState) const;
 
 	// Object data
-	const class UNovaArea*        Area;
-	const struct FNovaSpacecraft* Spacecraft;
-	TSharedPtr<FNovaManeuver>     Maneuver;
+	TWeakObjectPtr<const class UNovaArea> Area;
+	FGuid                                 SpacecraftIdentifier;
+	TSharedPtr<FNovaManeuver>             Maneuver;
 
 	// Generated data
 	float Phase;
@@ -147,6 +147,12 @@ public:
 		return CurrentPreviewTrajectory;
 	}
 
+	/** Get hovered orbital objects */
+	const TArray<FNovaOrbitalObject>& GetHoveredOrbitalObjects() const
+	{
+		return HoveredOrbitalObjects;
+	}
+
 protected:
 	/*----------------------------------------------------
 	    High-level internals
@@ -169,13 +175,6 @@ protected:
 
 protected:
 	/*----------------------------------------------------
-	   Slate callbacks
-	----------------------------------------------------*/
-
-	FText GetHoverText() const;
-
-protected:
-	/*----------------------------------------------------
 	    Map drawing implementation
 	----------------------------------------------------*/
 
@@ -195,7 +194,7 @@ protected:
 		const struct FNovaSplineOrbit& Orbit, TArray<FNovaOrbitalObject>& Objects, const struct FNovaSplineStyle& Style);
 
 	/** Draw an interactive orbital object on the map */
-	void AddOrbitalObject(const FNovaOrbitalObject& Object, const FLinearColor& Color);
+	void AddHoveredObject(const FNovaOrbitalObject& Object, const FLinearColor& Color);
 
 	/** Add test orbits */
 	void AddTestOrbits();
@@ -255,9 +254,8 @@ protected:
 	float                              CurrentDrawScale;
 	float                              CurrentZoomSpeed;
 
-	// Object text system
-	TArray<FString> DesiredObjectTexts;
-	TArray<FString> CurrentObjectTexts;
+	// Object system
+	TArray<FNovaOrbitalObject> HoveredOrbitalObjects;
 
 	// Batching system
 	TArray<FNovaBatchedSpline> BatchedSplines;
