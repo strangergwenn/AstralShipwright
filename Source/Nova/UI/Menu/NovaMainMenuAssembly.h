@@ -285,6 +285,7 @@ protected:
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 	class ANovaPlayerController*     PC;
 	class ANovaSpacecraftPawn*       SpacecraftPawn;
+	class ANovaGameState*            GameState;
 
 	// Widgets
 	TSharedPtr<SHorizontalBox>                CompartmentBox;

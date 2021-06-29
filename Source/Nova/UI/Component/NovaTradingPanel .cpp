@@ -190,6 +190,7 @@ void SNovaTradingPanel::ShowPanelInternal(
 		Capacity      = PropellantSystem->GetPropellantCapacity();
 	}
 	ResourceItem->SetAsset(TargetResource);
+	ResourceItem->SetGameState(PC->GetWorld()->GetGameState<ANovaGameState>());
 
 	// Setup the UI
 	if (AllowTrade)

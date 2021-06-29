@@ -8,10 +8,12 @@
 /** Nova resource item image */
 class SNovaTradableAssetItem : public SCompoundWidget
 {
-	SLATE_BEGIN_ARGS(SNovaTradableAssetItem) : _Asset(nullptr), _Dark(false)
+	SLATE_BEGIN_ARGS(SNovaTradableAssetItem) : _Asset(nullptr), _GameState(nullptr), _ForSale(false), _Dark(false)
 	{}
 
 	SLATE_ARGUMENT(const UNovaTradableAssetDescription*, Asset)
+	SLATE_ARGUMENT(const ANovaGameState*, GameState)
+	SLATE_ARGUMENT(bool, ForSale)
 	SLATE_ARGUMENT(bool, Dark)
 
 	SLATE_END_ARGS()
@@ -22,7 +24,9 @@ public:
 
 	void Construct(const FArguments& InArgs)
 	{
-		Asset = InArgs._Asset;
+		Asset     = InArgs._Asset;
+		GameState = InArgs._GameState;
+		ForSale   = InArgs._ForSale;
 
 		const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
 		const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
@@ -112,10 +116,15 @@ public:
 		Asset = NewAsset;
 	}
 
+	void SetGameState(const ANovaGameState* NewGameState)
+	{
+		GameState = NewGameState;
+	}
+
 protected:
 	const FSlateBrush* GetBrush() const
 	{
-		if (Asset)
+		if (Asset.IsValid())
 		{
 			return &Asset->AssetRender;
 		}
@@ -125,7 +134,7 @@ protected:
 
 	FText GetName() const
 	{
-		if (Asset)
+		if (Asset.IsValid())
 		{
 			return Asset->Name;
 		}
@@ -135,7 +144,7 @@ protected:
 
 	FText GetDescription() const
 	{
-		if (Asset)
+		if (Asset.IsValid())
 		{
 			return Asset->GetParagraphDescription();
 		}
@@ -145,17 +154,18 @@ protected:
 
 	FText GetPrice() const
 	{
-		if (Asset)
+		if (Asset.IsValid() && GameState.IsValid())
 		{
-			return GetPriceText(Asset->BasePrice);
+			double Price = GameState->GetCurrentPrice(Asset.Get(), ForSale);
+			return GetPriceText(Price);
 		}
-		else
-		{
-			return GetPriceText(0);
-		}
+
+		return FText();
 	}
 
 protected:
-	// General data
-	const UNovaTradableAssetDescription* Asset;
+	// Settings
+	TWeakObjectPtr<const UNovaTradableAssetDescription> Asset;
+	TWeakObjectPtr<const ANovaGameState>                GameState;
+	bool                                                ForSale;
 };

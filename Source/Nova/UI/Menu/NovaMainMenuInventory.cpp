@@ -344,7 +344,7 @@ void SNovaMainMenuInventory::UpdateGameObjects()
 
 TSharedRef<SWidget> SNovaMainMenuInventory::GenerateResourceItem(const UNovaResource* Resource)
 {
-	return SNew(SNovaTradableAssetItem).Asset(Resource).Dark(true);
+	return SNew(SNovaTradableAssetItem).Asset(Resource).GameState(GameState).Dark(true);
 }
 
 const FSlateBrush* SNovaMainMenuInventory::GetResourceIcon(const UNovaResource* Resource) const

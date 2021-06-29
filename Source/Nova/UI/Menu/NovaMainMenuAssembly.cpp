@@ -192,6 +192,7 @@ protected:
 SNovaMainMenuAssembly::SNovaMainMenuAssembly()
 	: PC(nullptr)
 	, SpacecraftPawn(nullptr)
+	, GameState(nullptr)
 	, FadeDuration(ENovaUIConstants::FadeDurationShort)
 	, CurrentFadeTime(ENovaUIConstants::FadeDurationShort)
 	, CompartmentPanelVisible(false)
@@ -1084,6 +1085,7 @@ void SNovaMainMenuAssembly::UpdateGameObjects()
 {
 	PC             = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
 	SpacecraftPawn = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
+	GameState      = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
 }
 
 void SNovaMainMenuAssembly::Next()
@@ -1305,7 +1307,7 @@ void SNovaMainMenuAssembly::SetCompartmentPanelVisible(bool Active)
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateCompartmentItem(const UNovaCompartmentDescription* Description) const
 {
-	return SNew(SNovaTradableAssetItem).Asset(Description);
+	return SNew(SNovaTradableAssetItem).Asset(Description).GameState(GameState);
 }
 
 FText SNovaMainMenuAssembly::GenerateCompartmentTooltip(const UNovaCompartmentDescription* Description) const
@@ -1341,7 +1343,7 @@ FText SNovaMainMenuAssembly::GetModuleListHelpText() const
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateModuleItem(const UNovaModuleDescription* Module) const
 {
-	return SNew(SNovaTradableAssetItem).Asset(Module);
+	return SNew(SNovaTradableAssetItem).Asset(Module).GameState(GameState);
 }
 
 FText SNovaMainMenuAssembly::GetModuleListTitle(const UNovaModuleDescription* Module) const
@@ -1372,7 +1374,7 @@ EVisibility SNovaMainMenuAssembly::GetEquipmentListVisibility() const
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEquipmentItem(const UNovaEquipmentDescription* Equipment) const
 {
-	return SNew(SNovaTradableAssetItem).Asset(Equipment);
+	return SNew(SNovaTradableAssetItem).Asset(Equipment).GameState(GameState);
 }
 
 FText SNovaMainMenuAssembly::GetEquipmentListTitle(const UNovaEquipmentDescription* Equipment) const
