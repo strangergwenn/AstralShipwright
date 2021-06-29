@@ -285,18 +285,28 @@ bool SNovaMainMenuFlight::IsDockEnabled() const
 
 bool SNovaMainMenuFlight::IsManeuveringEnabled() const
 {
-	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
+	if (OrbitalSimulation)
+	{
+		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
 
-	return PlayerTrajectory && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Idle &&
-		   !SpacecraftMovement->IsAlignedToNextManeuver();
+		return PlayerTrajectory && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Idle &&
+			   !SpacecraftMovement->IsAlignedToNextManeuver();
+	}
+
+	return false;
 }
 
 bool SNovaMainMenuFlight::IsMainDriveAvailable() const
 {
-	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
+	if (OrbitalSimulation)
+	{
+		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
 
-	return PlayerTrajectory && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Idle &&
-		   SpacecraftMovement->IsAlignedToNextManeuver() && !SpacecraftMovement->IsMainDriveEnabled();
+		return PlayerTrajectory && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Idle &&
+			   SpacecraftMovement->IsAlignedToNextManeuver() && !SpacecraftMovement->IsMainDriveEnabled();
+	}
+
+	return false;
 }
 
 /*----------------------------------------------------

@@ -24,7 +24,7 @@ public:
 
 	void Notify(const FText& Text, const FText& Subtext, ENovaNotificationType Type);
 
-	virtual bool IsDirty() const
+	virtual bool IsDirty() const override
 	{
 		return !CurrentNotifyText.EqualTo(DesiredNotifyText) || !CurrentNotifySubtext.EqualTo(DesiredNotifySubtext);
 	}

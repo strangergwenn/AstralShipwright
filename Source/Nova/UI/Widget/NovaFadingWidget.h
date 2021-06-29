@@ -99,6 +99,11 @@ protected:
 	----------------------------------------------------*/
 
 public:
+	float GetCurrentAlpha() const
+	{
+		return CurrentAlpha;
+	}
+
 	FLinearColor GetLinearColor() const
 	{
 		FLinearColor Color = DesiredColorAndOpacity.Get();
@@ -183,7 +188,7 @@ public:
 		}
 	}
 
-	virtual bool IsDirty() const
+	virtual bool IsDirty() const override
 	{
 		return DesiredImage != CurrentImage;
 	}
@@ -256,7 +261,7 @@ public:
 		}
 	}
 
-	virtual bool IsDirty() const
+	virtual bool IsDirty() const override
 	{
 		return !DesiredText.EqualTo(CurrentText);
 	}

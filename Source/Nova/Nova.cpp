@@ -94,6 +94,10 @@ FText GetDurationText(FNovaTime Time, int32 MaxComponents)
 	int32 Minutes = FMath::Floor(SourceMinutes);
 	SourceMinutes -= Minutes;
 	int32 Seconds = FMath::Floor(SourceMinutes * 60.0f);
+	if (Days == 0 && Hours == 0 && Minutes == 0 && Seconds == 0)
+	{
+		Seconds = 1;
+	}
 
 	// Format the time
 	int32 ComponentCount = 0;
