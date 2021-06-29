@@ -88,7 +88,15 @@ struct FNovaOrbitalObject
 		Phase    = M.Phase;
 	}
 
-	FText GetText(const class ANovaGameState* GameState) const;
+	bool operator==(const FNovaOrbitalObject& Other) const
+	{
+		return Area == Other.Area && SpacecraftIdentifier == Other.SpacecraftIdentifier && Maneuver == Other.Maneuver;
+	}
+
+	bool operator!=(const FNovaOrbitalObject& Other) const
+	{
+		return !operator==(Other);
+	}
 
 	// Object data
 	TWeakObjectPtr<const class UNovaArea> Area;

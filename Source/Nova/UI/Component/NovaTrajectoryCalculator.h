@@ -17,6 +17,7 @@ class SNovaTrajectoryCalculator : public SCompoundWidget
 	SLATE_BEGIN_ARGS(SNovaTrajectoryCalculator)
 		: _MenuManager(nullptr)
 		, _Panel(nullptr)
+		, _FadeTime(ENovaUIConstants::FadeDurationShort)
 		, _MinAltitude(100)
 		, _MaxAltitude(1000)
 		, _DeltaVActionName(NAME_None)
@@ -25,6 +26,7 @@ class SNovaTrajectoryCalculator : public SCompoundWidget
 
 	SLATE_ARGUMENT(TWeakObjectPtr<class UNovaMenuManager>, MenuManager)
 	SLATE_ARGUMENT(class SNovaNavigationPanel*, Panel)
+	SLATE_ARGUMENT(float, FadeTime)
 	SLATE_ATTRIBUTE(float, CurrentAlpha)
 
 	SLATE_ARGUMENT(float, MinAltitude)
@@ -94,6 +96,7 @@ protected:
 protected:
 	// Settings
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
+	float                            TrajectoryFadeTime;
 	TAttribute<float>                CurrentAlpha;
 	FOnTrajectoryChanged             OnTrajectoryChanged;
 	int32                            AltitudeStep;

@@ -314,7 +314,7 @@ public:
 	}
 
 	/** Get the spacecraft validity */
-	bool IsValid(FText* Details) const;
+	bool IsValid(FText* Details = nullptr) const;
 
 	/** Compute the cost structure of an upgrade */
 	FNovaSpacecraftUpgradeCost GetUpgradeCost(const class ANovaGameState* GameState, const FNovaSpacecraft* Other) const;

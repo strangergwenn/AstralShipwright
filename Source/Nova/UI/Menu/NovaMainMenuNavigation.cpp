@@ -16,7 +16,6 @@
 #include "Nova/System/NovaMenuManager.h"
 
 #include "Nova/Player/NovaPlayerController.h"
-#include "Nova/UI/Component/NovaOrbitalMap.h"
 #include "Nova/UI/Component/NovaTrajectoryCalculator.h"
 #include "Nova/UI/Widget/NovaFadingWidget.h"
 #include "Nova/UI/Widget/NovaSlider.h"
@@ -27,11 +26,165 @@
 #define LOCTEXT_NAMESPACE "SNovaMainMenuNavigation"
 
 /*----------------------------------------------------
+    Side panel container widget (fading)
+----------------------------------------------------*/
+
+class SNovaSidePanelContainer : public SNovaFadingWidget<false>
+{
+	SLATE_BEGIN_ARGS(SNovaSidePanelContainer)
+	{}
+
+	SLATE_ARGUMENT(FSimpleDelegate, OnUpdate)
+	SLATE_DEFAULT_SLOT(FArguments, Content)
+
+	SLATE_END_ARGS()
+
+public:
+	void Construct(const FArguments& InArgs)
+	{
+		// clang-format off
+		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments().Content()
+		[
+			InArgs._Content.Widget
+		]);
+		// clang-format on
+
+		UpdateCallback = InArgs._OnUpdate;
+		ColorAndOpacity.BindRaw(this, &SNovaFadingWidget::GetLinearColor);
+	}
+
+	void SetObjectList(TArray<FNovaOrbitalObject> NewObjectList)
+	{
+		DesiredObjectList = NewObjectList;
+	}
+
+protected:
+	virtual bool IsDirty() const override
+	{
+		if (CurrentObjectList.Num() != DesiredObjectList.Num())
+		{
+			return true;
+		}
+		else
+		{
+			for (int32 i = 0; i < CurrentObjectList.Num(); i++)
+			{
+				if (CurrentObjectList[i] != DesiredObjectList[i])
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	virtual void OnUpdate() override
+	{
+		CurrentObjectList = DesiredObjectList;
+
+		UpdateCallback.ExecuteIfBound();
+	}
+
+protected:
+	FSimpleDelegate            UpdateCallback;
+	TArray<FNovaOrbitalObject> DesiredObjectList;
+	TArray<FNovaOrbitalObject> CurrentObjectList;
+};
+
+/*----------------------------------------------------
+    Side panel widget (structure and animation)
+----------------------------------------------------*/
+
+class SNovaSidePanel : public SNovaFadingWidget<false>
+{
+	SLATE_BEGIN_ARGS(SNovaSidePanel)
+	{}
+
+	SLATE_ARGUMENT(const SNovaTabPanel*, Panel)
+	SLATE_DEFAULT_SLOT(FArguments, Content)
+
+	SLATE_END_ARGS()
+
+public:
+	void Construct(const FArguments& InArgs)
+	{
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+		// clang-format off
+		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments().Content()
+		[
+			SNew(SBox)
+			.WidthOverride(500)
+			[
+				SNew(SBackgroundBlur)
+				.BlurRadius(InArgs._Panel, &SNovaTabPanel::GetBlurRadius)
+				.BlurStrength(InArgs._Panel, &SNovaTabPanel::GetBlurStrength)
+				.bApplyAlphaToBlur(true)
+				.Padding(0)
+				[
+					SNew(SBorder)
+					.BorderImage(&Theme.MainMenuBackground)
+					.Padding(Theme.ContentPadding)
+					[
+						InArgs._Content.Widget
+					]
+				]
+			]
+		]);
+		// clang-format on
+	}
+
+	void SetVisible(bool NewState)
+	{
+		DesiredState = NewState;
+	}
+
+	void Reset()
+	{
+		DesiredState = false;
+		CurrentState = false;
+		CurrentAlpha = 0.0f;
+	}
+
+	bool AreButtonsEnabled() const
+	{
+		return CurrentAlpha >= 1.0f;
+	}
+
+	FMargin GetMargin() const
+	{
+		float Alpha = CurrentState ? CurrentAlpha : 0.0f;
+		return FMargin((Alpha - 1.0f) * 1000, 0, 0, 0);
+	}
+
+protected:
+	virtual bool IsDirty() const override
+	{
+		return CurrentState != DesiredState;
+	}
+
+	virtual void OnUpdate() override
+	{
+		CurrentState = DesiredState;
+	}
+
+protected:
+	bool DesiredState;
+	bool CurrentState;
+};
+
+/*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
 SNovaMainMenuNavigation::SNovaMainMenuNavigation()
-	: PC(nullptr), SpacecraftPawn(nullptr), GameState(nullptr), OrbitalSimulation(nullptr), SelectedDestination(nullptr)
+	: PC(nullptr)
+	, SpacecraftPawn(nullptr)
+	, GameState(nullptr)
+	, OrbitalSimulation(nullptr)
+	, HasHoveredObjects(false)
+	, SelectedDestination(nullptr)
 {}
 
 void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
@@ -58,92 +211,60 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 		// Main box
 		+ SOverlay::Slot()
 		.HAlign(HAlign_Left)
+		.Padding(TAttribute<FMargin>::Create(TAttribute<FMargin>::FGetter::CreateLambda([&]()
+		{
+			return SidePanel->GetMargin();
+		})))
 		[
-			SNew(SBackgroundBlur)
-			.BlurRadius(this, &SNovaTabPanel::GetBlurRadius)
-			.BlurStrength(this, &SNovaTabPanel::GetBlurStrength)
-			.bApplyAlphaToBlur(true)
-			.Padding(0)
+			SAssignNew(SidePanel, SNovaSidePanel)
+			.Panel(this)
 			[
-				SNew(SBorder)
-				.BorderImage(&Theme.MainMenuBackground)
-				.Padding(Theme.ContentPadding)
+				SAssignNew(SidePanelContainer, SNovaSidePanelContainer)
+				.OnUpdate(FSimpleDelegate::CreateSP(this, &SNovaMainMenuNavigation::UpdateSidePanel))
 				[
-					SNew(SVerticalBox)
-			
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.HAlign(HAlign_Center)
+					SNew(SScrollBox)
+					.Style(&Theme.ScrollBoxStyle)
+					.ScrollBarVisibility(EVisibility::Collapsed)
+					.AnimateWheelScrolling(true)
+
+					// Header
+					+ SScrollBox::Slot()
 					[
-						SNovaAssignNew(DestinationListView, SNovaModalListView<const UNovaArea*>)
-						.Panel(this)
-						.TitleText(LOCTEXT("DestinationList", "Destinations"))
-						.HelpText(this, &SNovaMainMenuNavigation::GetDestinationHelpText)
-						.ItemsSource(&DestinationList)
-						.OnGenerateItem(this, &SNovaMainMenuNavigation::GenerateDestinationItem)
-						.OnGenerateName(this, &SNovaMainMenuNavigation::GetDestinationName)
-						.OnGenerateTooltip(this, &SNovaMainMenuNavigation::GenerateDestinationTooltip)
-						.OnSelectionChanged(this, &SNovaMainMenuNavigation::OnSelectedDestinationChanged)
-						.Enabled(this, &SNovaMainMenuNavigation::CanSelectDestination)
-					]
-			
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.HAlign(HAlign_Center)
-					[
-						SNovaNew(SNovaButton)
-						.Text(LOCTEXT("CommitTrajectory", "Commit trajectory"))
-						.HelpText(this, &SNovaMainMenuNavigation::GetCommitTrajectoryHelpText)
-						.OnClicked(this, &SNovaMainMenuNavigation::OnCommitTrajectory)
-						.Enabled(this, &SNovaMainMenuNavigation::CanCommitTrajectory)
-					]
-			
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNew(STextBlock)
-						.Text(TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([&]()
+						SNew(SBorder)
+						.BorderImage(new FSlateNoResource)
+						.Padding(Theme.VerticalContentPadding)
+						.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([=]()
 						{
-							FString Result;
-
-							if (IsValid(GameState))
-							{
-								for (const FNovaOrbitalObject& Object : OrbitalMap->GetHoveredOrbitalObjects())
-								{
-									if (!Result.IsEmpty())
-									{
-										Result += "\n";
-									}
-
-									Result += Object.GetText(GameState).ToString();
-								}
-							}
-
-							return FText::FromString(Result);
+							return AreaTitle->GetText().IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible;
 						})))
-						.TextStyle(&Theme.MainFont)
+						[
+							SAssignNew(AreaTitle, STextBlock)
+							.TextStyle(&Theme.HeadingFont)
+						]
 					]
 			
 					// Delta-v trade-off slider
-					+ SVerticalBox::Slot()
-					.AutoHeight()
+					+ SScrollBox::Slot()
 					[
 						SAssignNew(TrajectoryCalculator, SNovaTrajectoryCalculator)
 						.MenuManager(MenuManager)
 						.Panel(this)
-						.CurrentAlpha(TAttribute<float>::Create(TAttribute<float>::FGetter::CreateSP(this, &SNovaTabPanel::GetCurrentAlpha)))
+						.FadeTime(0.0f)
+						.CurrentAlpha(TAttribute<float>::Create(TAttribute<float>::FGetter::CreateLambda([=]()
+						{
+							return SidePanelContainer->GetCurrentAlpha();
+						})))
 						.DurationActionName(FNovaPlayerInput::MenuPrimary)
 						.DeltaVActionName(FNovaPlayerInput::MenuSecondary)
 						.OnTrajectoryChanged(this, &SNovaMainMenuNavigation::OnTrajectoryChanged)
 					]
 
 					// Fuel use
-					+ SVerticalBox::Slot()
-					.AutoHeight()
+					+ SScrollBox::Slot()
 					.HAlign(HAlign_Center)
 					[
-						SNew(SNovaText)
-						.Text(FNovaTextGetter::CreateLambda([&]()
+						SAssignNew(FuelText, STextBlock)
+						.Text(TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([&]()
 						{
 							if (IsValid(GameState) && IsValid(OrbitalSimulation) && IsValid(SpacecraftPawn) && CurrentSimulatedTrajectory.IsValid())
 							{
@@ -161,12 +282,40 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 							}
 
 							return FText();
-						}))
+						})))
 						.TextStyle(&Theme.MainFont)
 						.WrapTextAt(500)
 					]
+			
+					+ SScrollBox::Slot()
+					.HAlign(HAlign_Center)
+					[
+						SNovaAssignNew(CommitButton, SNovaButton)
+						.Size("WideButtonSize")
+						.Text(LOCTEXT("CommitTrajectory", "Commit trajectory"))
+						.HelpText(this, &SNovaMainMenuNavigation::GetCommitTrajectoryHelpText)
+						.OnClicked(this, &SNovaMainMenuNavigation::OnCommitTrajectory)
+						.Enabled(this, &SNovaMainMenuNavigation::CanCommitTrajectory)
+					]
+				]
+			]
+		]
 
-					+ SVerticalBox::Slot()
+		// Hover text slot
+		+ SOverlay::Slot()
+		.HAlign(HAlign_Right)
+		.VAlign(VAlign_Top)
+		[
+			SNew(SBox)
+			.WidthOverride(500)
+			[
+				SNew(SBorder)
+				.BorderImage(&Theme.MainMenuBackground)
+				.Padding(Theme.ContentPadding)
+				[
+					SNew(STextBlock)
+					.Text(this, &SNovaMainMenuNavigation::GetHoverText)
+					.TextStyle(&Theme.MainFont)
 				]
 			]
 		]
@@ -181,27 +330,47 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 void SNovaMainMenuNavigation::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
 {
 	SNovaTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
+
+	// Fetch currently hovered objects
+	TArray<FNovaOrbitalObject> CurrentHoveredObjects;
+	if (IsValid(GameState))
+	{
+		CurrentHoveredObjects = OrbitalMap->GetHoveredOrbitalObjects();
+	}
+
+	// Show the tooltip
+	if (CurrentHoveredObjects.Num())
+	{
+		if (!HasHoveredObjects)
+		{
+			MenuManager->ShowTooltip(this, LOCTEXT("OrbitalMapHint", "Inspect this object"));
+			HasHoveredObjects = true;
+		}
+	}
+	else
+	{
+		if (HasHoveredObjects)
+		{
+			MenuManager->HideTooltip(this);
+			HasHoveredObjects = false;
+		}
+	}
 }
 
 void SNovaMainMenuNavigation::Show()
 {
 	SNovaTabPanel::Show();
 
-	TrajectoryCalculator->Reset();
-
-	// Destination list
-	SelectedDestination = nullptr;
-	DestinationList     = MenuManager->GetGameInstance()->GetAssetManager()->GetAssets<UNovaArea>();
-	DestinationListView->Refresh();
+	ResetDestination();
+	SidePanel->Reset();
 }
 
 void SNovaMainMenuNavigation::Hide()
 {
 	SNovaTabPanel::Hide();
 
-	OrbitalMap->ClearTrajectory();
-	TrajectoryCalculator->Reset();
-	CurrentSimulatedTrajectory.Reset();
+	ResetDestination();
+	SidePanel->Reset();
 }
 
 void SNovaMainMenuNavigation::UpdateGameObjects()
@@ -212,18 +381,136 @@ void SNovaMainMenuNavigation::UpdateGameObjects()
 	OrbitalSimulation = IsValid(GameState) ? GameState->GetOrbitalSimulation() : nullptr;
 }
 
+void SNovaMainMenuNavigation::OnClicked(const FVector2D& Position)
+{
+	SNovaTabPanel::OnClicked(Position);
+
+	if (IsValid(GameState))
+	{
+		bool                       HasValidObject      = false;
+		bool                       HasAnyHoveredObject = false;
+		TArray<FNovaOrbitalObject> HoveredObjects      = OrbitalMap->GetHoveredOrbitalObjects();
+
+		// Check whether the current selection is relevant
+		for (const FNovaOrbitalObject& Object : HoveredObjects)
+		{
+			HasAnyHoveredObject = true;
+
+			if (Object.Area.IsValid() || Object.SpacecraftIdentifier != FGuid())
+			{
+				HasValidObject = true;
+				break;
+			}
+		}
+
+		// Case 1 : no existing selection, new valid selection (open)
+		if (SelectedObjectList.Num() == 0)
+		{
+			if (HasValidObject)
+			{
+				SelectedObjectList = HoveredObjects;
+				SidePanel->SetVisible(true);
+				SidePanelContainer->SetObjectList(SelectedObjectList);
+			}
+		}
+		else
+		{
+			// Case 2 : existing selection, new valid selection (change)
+			if (HasValidObject)
+			{
+				SelectedObjectList = HoveredObjects;
+				SidePanelContainer->SetObjectList(SelectedObjectList);
+			}
+
+			// Case 3 : existing selection, no selection at all (close)
+			else if (!HasAnyHoveredObject)
+			{
+				SelectedObjectList = {};
+				SidePanel->SetVisible(false);
+				SidePanelContainer->SetObjectList({});
+			}
+		}
+	}
+}
+
 /*----------------------------------------------------
     Internals
 ----------------------------------------------------*/
 
-bool SNovaMainMenuNavigation::CanSelectDestinationInternal(FText* Details) const
+void SNovaMainMenuNavigation::UpdateSidePanel()
 {
-	if (IsValid(GameState))
+	bool HasValidDestination = false;
+
+	for (const FNovaOrbitalObject& Object : SelectedObjectList)
+	{
+		// Valid area found
+		if (Object.Area.IsValid() && SelectDestination(Object.Area.Get()))
+		{
+			HasValidDestination = true;
+			AreaTitle->SetText(Object.Area->Name);
+		}
+	}
+
+	// No valid area found
+	if (!HasValidDestination)
+	{
+		ResetDestination();
+		AreaTitle->SetText(FText());
+	}
+}
+
+bool SNovaMainMenuNavigation::SelectDestination(const UNovaArea* Destination)
+{
+	NLOG("SNovaMainMenuNavigation::SelectDestination : %s", *Destination->Name.ToString());
+
+	if (CanSelectDestination(Destination))
+	{
+		SelectedDestination = Destination;
+
+		if (Destination != GameState->GetCurrentArea())
+		{
+			TrajectoryCalculator->SimulateTrajectories(MakeShared<FNovaOrbit>(*OrbitalSimulation->GetPlayerOrbit()),
+				OrbitalSimulation->GetAreaOrbit(Destination), GameState->GetPlayerSpacecraftIdentifiers());
+
+			TrajectoryCalculator->SetVisibility(EVisibility::Visible);
+			FuelText->SetVisibility(EVisibility::Visible);
+			CommitButton->SetVisibility(EVisibility::Visible);
+		}
+		else
+		{
+			TrajectoryCalculator->SetVisibility(EVisibility::Collapsed);
+			FuelText->SetVisibility(EVisibility::Collapsed);
+			CommitButton->SetVisibility(EVisibility::Collapsed);
+		}
+
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void SNovaMainMenuNavigation::ResetDestination()
+{
+	NLOG("SNovaMainMenuNavigation::ResetDestination");
+
+	SelectedDestination = nullptr;
+	SelectedObjectList  = {};
+
+	OrbitalMap->ClearTrajectory();
+	TrajectoryCalculator->Reset();
+	CurrentSimulatedTrajectory.Reset();
+}
+
+bool SNovaMainMenuNavigation::CanSelectDestination(const UNovaArea* Destination) const
+{
+	if (IsValid(GameState) && IsValid(OrbitalSimulation))
 	{
 		for (FGuid Identifier : GameState->GetPlayerSpacecraftIdentifiers())
 		{
 			const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Identifier);
-			if (Spacecraft == nullptr || !Spacecraft->IsValid(Details))
+			if (Spacecraft == nullptr || !Spacecraft->IsValid())
 			{
 				return false;
 			}
@@ -253,103 +540,67 @@ bool SNovaMainMenuNavigation::CanCommitTrajectoryInternal(FText* Details) const
 		}
 	}
 
-	return true;
+	return SidePanel->AreButtonsEnabled();
 }
 
 /*----------------------------------------------------
-    Callbacks (destination)
+    Content callbacks
 ----------------------------------------------------*/
 
-bool SNovaMainMenuNavigation::CanSelectDestination() const
+FText SNovaMainMenuNavigation::GetHoverText() const
 {
-	return CanSelectDestinationInternal();
-}
-
-TSharedRef<SWidget> SNovaMainMenuNavigation::GenerateDestinationItem(const UNovaArea* Destination)
-{
-	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
-	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
-
-	// clang-format off
-	return SNew(SHorizontalBox)
-
-		+ SHorizontalBox::Slot()
-		.Padding(ButtonTheme.IconPadding)
-		.AutoWidth()
-		[
-			SNew(SBorder)
-			.BorderImage(new FSlateNoResource)
-			.HAlign(HAlign_Center)
-			.VAlign(VAlign_Center)
-			.Padding(0)
-			[
-				SNew(SImage)
-				.Image(this, &SNovaMainMenuNavigation::GetDestinationIcon, Destination)
-			]
-		]
-
-		+ SHorizontalBox::Slot()
-		.HAlign(HAlign_Left)
-		.VAlign(VAlign_Center)
-		[
-			SNew(STextBlock)
-			.TextStyle(&Theme.MainFont)
-			.Text(Destination->Name)
-		];
-	// clang-format on
-}
-
-FText SNovaMainMenuNavigation::GetDestinationName(const UNovaArea* Destination) const
-{
-	if (SelectedDestination)
+	auto GetText = [](const FNovaOrbitalObject& Object, const ANovaGameState* GameState)
 	{
-		return SelectedDestination->Name;
+		if (Object.Area.IsValid())
+		{
+			return Object.Area->Name;
+		}
+		else if (Object.SpacecraftIdentifier != FGuid())
+		{
+			const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Object.SpacecraftIdentifier);
+			NCHECK(Spacecraft);
+			return Spacecraft->GetName();
+		}
+		else if (Object.Maneuver.IsValid())
+		{
+			FNumberFormattingOptions NumberOptions;
+			NumberOptions.SetMaximumFractionalDigits(1);
+
+			return FText::FormatNamed(LOCTEXT("ManeuverFormat", "{duration} burn for a {deltav} m/s maneuver at {phase}° in {time}"),
+				TEXT("phase"), FText::AsNumber(FMath::Fmod(Object.Maneuver->Phase, 360.0f), &NumberOptions), TEXT("time"),
+				GetDurationText(Object.Maneuver->Time - GameState->GetCurrentTime()), TEXT("duration"),
+				GetDurationText(Object.Maneuver->Duration), TEXT("deltav"), FText::AsNumber(Object.Maneuver->DeltaV, &NumberOptions));
+		}
+		else
+		{
+			return FText();
+		}
+	};
+
+	// Build text for all objects
+	FString Result;
+	if (IsValid(GameState))
+	{
+		for (const FNovaOrbitalObject& Object : OrbitalMap->GetHoveredOrbitalObjects())
+		{
+			if (!Result.IsEmpty())
+			{
+				Result += "\n";
+			}
+
+			Result += GetText(Object, GameState).ToString();
+		}
+	}
+
+	if (Result.IsEmpty())
+	{
+		return LOCTEXT("HoverTextHint", "Hover points of interest to learn more");
 	}
 	else
 	{
-		return LOCTEXT("SelectDestination", "Select destination");
+		return FText::FromString(Result);
 	}
 }
-
-const FSlateBrush* SNovaMainMenuNavigation::GetDestinationIcon(const UNovaArea* Destination) const
-{
-	return DestinationListView->GetSelectionIcon(Destination);
-}
-
-FText SNovaMainMenuNavigation::GenerateDestinationTooltip(const UNovaArea* Destination)
-{
-	return FText::FormatNamed(LOCTEXT("DestinationHelp", "Set course for {area}"), TEXT("area"), Destination->Name);
-}
-
-FText SNovaMainMenuNavigation::GetDestinationHelpText() const
-{
-	FText Details;
-	if (CanSelectDestinationInternal(&Details))
-	{
-		return LOCTEXT("DestinationListHelp", "Plan a trajectory toward a destination");
-	}
-	else
-	{
-		return Details;
-	}
-}
-
-void SNovaMainMenuNavigation::OnSelectedDestinationChanged(const UNovaArea* Destination, int32 Index)
-{
-	NLOG("SNovaMainMenuNavigation::OnSelectedDestinationChanged : %s", *Destination->Name.ToString());
-
-	SelectedDestination = Destination;
-
-	if (IsValid(GameState) && IsValid(OrbitalSimulation) && SelectedDestination != GameState->GetCurrentArea())
-	{
-		TrajectoryCalculator->SimulateTrajectories(MakeShared<FNovaOrbit>(*OrbitalSimulation->GetPlayerOrbit()),
-			OrbitalSimulation->GetAreaOrbit(Destination), GameState->GetPlayerSpacecraftIdentifiers());
-	}
-}
-
-/*----------------------------------------------------
-    Callbacks
-----------------------------------------------------*/
 
 bool SNovaMainMenuNavigation::CanCommitTrajectory() const
 {
@@ -369,6 +620,10 @@ FText SNovaMainMenuNavigation::GetCommitTrajectoryHelpText() const
 	}
 }
 
+/*----------------------------------------------------
+    Callbacks
+----------------------------------------------------*/
+
 void SNovaMainMenuNavigation::OnTrajectoryChanged(TSharedPtr<FNovaTrajectory> Trajectory)
 {
 	CurrentSimulatedTrajectory = Trajectory;
@@ -381,9 +636,8 @@ void SNovaMainMenuNavigation::OnCommitTrajectory()
 	if (IsValid(OrbitalSimulation) && OrbitalSimulation->CanCommitTrajectory(Trajectory))
 	{
 		OrbitalSimulation->CommitTrajectory(GameState->GetPlayerSpacecraftIdentifiers(), Trajectory);
-		OrbitalMap->ClearTrajectory();
-		TrajectoryCalculator->Reset();
-		CurrentSimulatedTrajectory.Reset();
+
+		ResetDestination();
 	}
 }
 

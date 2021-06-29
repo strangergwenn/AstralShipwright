@@ -5,6 +5,7 @@
 #include "Nova/UI/NovaUI.h"
 #include "Nova/UI/Widget/NovaTabView.h"
 #include "Nova/UI/Widget/NovaModalListView.h"
+#include "Nova/UI/Component/NovaOrbitalMap.h"
 
 #include "Online.h"
 
@@ -42,36 +43,45 @@ public:
 
 	virtual void UpdateGameObjects() override;
 
+	virtual void OnClicked(const FVector2D& Position) override;
+
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
 
 protected:
+	/** Re-create the UI in the side panel */
+	void UpdateSidePanel();
+
+	/** Set the current destination */
+	bool SelectDestination(const class UNovaArea* Destination);
+
+	/** Remove the current destination */
+	void ResetDestination();
+
 	/** Check for destination validity */
-	bool CanSelectDestinationInternal(FText* Details = nullptr) const;
+	bool CanSelectDestination(const UNovaArea* Destination) const;
 
 	/** Check for trajectory validity */
 	bool CanCommitTrajectoryInternal(FText* Details = nullptr) const;
 
 	/*----------------------------------------------------
-	    Callbacks
+	    Content callbacks
 	----------------------------------------------------*/
 
 protected:
-	// Destinations
-	bool                CanSelectDestination() const;
-	TSharedRef<SWidget> GenerateDestinationItem(const class UNovaArea* Destination);
-	FText               GetDestinationName(const class UNovaArea* Destination) const;
-	const FSlateBrush*  GetDestinationIcon(const class UNovaArea* Destination) const;
-	FText               GenerateDestinationTooltip(const class UNovaArea* Destination);
-	FText               GetDestinationHelpText() const;
-	void                OnSelectedDestinationChanged(const class UNovaArea* Destination, int32 Index);
+	FText GetHoverText() const;
 
-	// Trajectory
 	bool  CanCommitTrajectory() const;
 	FText GetCommitTrajectoryHelpText() const;
-	void  OnTrajectoryChanged(TSharedPtr<struct FNovaTrajectory> Trajectory);
-	void  OnCommitTrajectory();
+
+	/*----------------------------------------------------
+	    Callbacks
+	----------------------------------------------------*/
+protected:
+	// Trajectories
+	void OnTrajectoryChanged(TSharedPtr<struct FNovaTrajectory> Trajectory);
+	void OnCommitTrajectory();
 
 	/*----------------------------------------------------
 	    Data
@@ -85,15 +95,20 @@ protected:
 	class ANovaGameState*                  GameState;
 	class UNovaOrbitalSimulationComponent* OrbitalSimulation;
 
-	// Destination list
-	const class UNovaArea*                           SelectedDestination;
-	TArray<const class UNovaArea*>                   DestinationList;
-	TSharedPtr<SNovaModalListView<const UNovaArea*>> DestinationListView;
-
 	// Slate widgets
-	TSharedPtr<class SNovaOrbitalMap>           OrbitalMap;
+	TSharedPtr<SNovaOrbitalMap>               OrbitalMap;
+	TSharedPtr<class SNovaSidePanel>          SidePanel;
+	TSharedPtr<class SNovaSidePanelContainer> SidePanelContainer;
+
+	// Side panel widgets
+	TSharedPtr<class STextBlock>                AreaTitle;
 	TSharedPtr<class SNovaTrajectoryCalculator> TrajectoryCalculator;
+	TSharedPtr<class STextBlock>                FuelText;
+	TSharedPtr<class SNovaButton>               CommitButton;
 
 	// Local state
+	bool                        HasHoveredObjects;
+	const class UNovaArea*      SelectedDestination;
+	TArray<FNovaOrbitalObject>  SelectedObjectList;
 	TSharedPtr<FNovaTrajectory> CurrentSimulatedTrajectory;
 };

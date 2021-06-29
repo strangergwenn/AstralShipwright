@@ -19,34 +19,6 @@
     Internal structures
 ----------------------------------------------------*/
 
-FText FNovaOrbitalObject::GetText(const ANovaGameState* GameState) const
-{
-	if (Area.IsValid())
-	{
-		return Area->Name;
-	}
-	else if (SpacecraftIdentifier != FGuid())
-	{
-		const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(SpacecraftIdentifier);
-		NCHECK(Spacecraft);
-		return Spacecraft->GetName();
-	}
-	else if (Maneuver.IsValid())
-	{
-		FNumberFormattingOptions NumberOptions;
-		NumberOptions.SetMaximumFractionalDigits(1);
-
-		return FText::FormatNamed(LOCTEXT("ManeuverFormat", "{duration} burn for a {deltav} m/s maneuver at {phase}° in {time}"),
-			TEXT("phase"), FText::AsNumber(FMath::Fmod(Maneuver->Phase, 360.0f), &NumberOptions), TEXT("time"),
-			GetDurationText(Maneuver->Time - GameState->GetCurrentTime()), TEXT("duration"), GetDurationText(Maneuver->Duration),
-			TEXT("deltav"), FText::AsNumber(Maneuver->DeltaV, &NumberOptions));
-	}
-	else
-	{
-		return FText();
-	}
-}
-
 /** Geometry of an orbit on the map */
 struct FNovaSplineOrbit
 {
@@ -433,7 +405,7 @@ void SNovaOrbitalMap::AddHoveredObject(const FNovaOrbitalObject& Object, const F
 
 	if (IsObjectHovered)
 	{
-		HoveredOrbitalObjects.Add(Object);
+		HoveredOrbitalObjects.AddUnique(Object);
 	}
 }
 
@@ -577,14 +549,11 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 	}
 
 	// Draw positioned objects
-	if (IsHovered())
+	for (const FNovaOrbitalObject& Object : Objects)
 	{
-		for (const FNovaOrbitalObject& Object : Objects)
+		if (Object.Positioned)
 		{
-			if (Object.Positioned)
-			{
-				AddHoveredObject(Object, Style.ColorInner);
-			}
+			AddHoveredObject(Object, Style.ColorInner);
 		}
 	}
 
