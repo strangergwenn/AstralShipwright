@@ -162,11 +162,16 @@ void SNovaTradingPanel::ShowPanelInternal(
 	CompartmentIndex = TargetCompartmentIndex;
 	IsTradeAllowed   = AllowTrade;
 
+	const ANovaGameState* GameState = PC->GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(IsValid(GameState));
+
 	NCHECK(PC.IsValid());
 	NCHECK(IsValid(Resource));
 	NCHECK(Spacecraft);
 
 	InitialAmount = 0.0f;
+	MinAmount     = 0.0f;
+	MaxAmount     = 0.0f;
 	Capacity      = 0.0f;
 
 	// Resource mode
@@ -176,6 +181,17 @@ void SNovaTradingPanel::ShowPanelInternal(
 		{
 			InitialAmount = Spacecraft->GetCargoMass(Resource, CompartmentIndex);
 			Capacity      = InitialAmount + Spacecraft->GetAvailableCargoMass(Resource, CompartmentIndex);
+
+			if (GameState->IsResourceSold(Resource))
+			{
+				MinAmount = InitialAmount;
+				MaxAmount = Capacity;
+			}
+			else
+			{
+				MinAmount = 0.0f;
+				MaxAmount = InitialAmount;
+			}
 		}
 	}
 
@@ -188,9 +204,10 @@ void SNovaTradingPanel::ShowPanelInternal(
 
 		InitialAmount = PropellantSystem->GetCurrentPropellantMass();
 		Capacity      = PropellantSystem->GetPropellantCapacity();
+		MaxAmount     = Capacity;
 	}
 	ResourceItem->SetAsset(TargetResource);
-	ResourceItem->SetGameState(PC->GetWorld()->GetGameState<ANovaGameState>());
+	ResourceItem->SetGameState(GameState);
 
 	// Setup the UI
 	if (AllowTrade)
@@ -198,11 +215,12 @@ void SNovaTradingPanel::ShowPanelInternal(
 		InfoText->SetVisibility(EVisibility::Visible);
 		UnitsBox->SetVisibility(EVisibility::Visible);
 		AmountSlider->SetVisibility(EVisibility::Visible);
-		AmountSlider->SetMaxValue(Capacity);
+		AmountSlider->SetMaxValue(MaxAmount);
 		AmountSlider->SetCurrentValue(InitialAmount);
 
 		FSimpleDelegate ConfirmTrade = FSimpleDelegate::CreateSP(this, &SNovaTradingPanel::OnConfirmTrade);
-		Show(LOCTEXT("TradeTitle", "Trade resource"), FText(), ConfirmTrade);
+		Show(GameState->IsResourceSold(Resource) ? LOCTEXT("BuyTitle", "Buy resource") : LOCTEXT("SellTitle", "Sell resource"), FText(),
+			ConfirmTrade);
 	}
 	else
 	{
@@ -247,7 +265,7 @@ FText SNovaTradingPanel::GetCargoAmount() const
 
 FText SNovaTradingPanel::GetCargoCapacity() const
 {
-	return FText::FormatNamed(LOCTEXT("CargoCapacityFormat", "{capacity}T"), TEXT("capacity"), FText::AsNumber(Capacity));
+	return FText::FormatNamed(LOCTEXT("CargoCapacityFormat", "{capacity}T"), TEXT("capacity"), FText::AsNumber(MaxAmount));
 }
 
 FText SNovaTradingPanel::GetCargoDetails() const
@@ -271,7 +289,7 @@ FText SNovaTradingPanel::GetCargoDetails() const
 
 FText SNovaTradingPanel::GetTransactionDetails() const
 {
-	double CreditsValue = GetTransactionValue();
+	FNovaCredits CreditsValue = GetTransactionValue();
 
 	if (CreditsValue <= 0)
 	{
@@ -287,7 +305,7 @@ FText SNovaTradingPanel::GetTransactionDetails() const
 
 ENovaInfoBoxType SNovaTradingPanel::GetTransactionType() const
 {
-	double CreditsValue = GetTransactionValue();
+	FNovaCredits CreditsValue = GetTransactionValue();
 
 	if (PC.IsValid() && !PC->CanAffordTransaction(GetTransactionValue()))
 	{
@@ -303,7 +321,7 @@ ENovaInfoBoxType SNovaTradingPanel::GetTransactionType() const
 	}
 }
 
-double SNovaTradingPanel::GetTransactionValue() const
+FNovaCredits SNovaTradingPanel::GetTransactionValue() const
 {
 	if (PC.IsValid())
 	{
@@ -311,13 +329,13 @@ double SNovaTradingPanel::GetTransactionValue() const
 
 		if (Resource && IsValid(GameState))
 		{
-			double Amount    = AmountSlider->GetCurrentValue() - InitialAmount;
-			double UnitPrice = GameState->GetCurrentPrice(Resource, Amount < 0);
+			float        Amount    = AmountSlider->GetCurrentValue() - InitialAmount;
+			FNovaCredits UnitPrice = GameState->GetCurrentPrice(Resource, Amount < 0);
 			return -Amount * UnitPrice;
 		}
 	}
 
-	return 0.0;
+	return 0;
 }
 
 /*----------------------------------------------------

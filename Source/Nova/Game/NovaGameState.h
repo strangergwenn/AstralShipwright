@@ -136,8 +136,17 @@ public:
 	/** Check whether all spacecraft are docked */
 	bool AreAllSpacecraftDocked() const;
 
+	/** Is a particular resource sold in this area */
+	bool IsResourceSold(const class UNovaResource* Asset) const;
+
+	/** Get resources sold in this area */
+	TArray<const class UNovaResource*> GetResourcesSold() const;
+
+	/** Get the current price modifier of an asset */
+	ENovaPriceModifier GetCurrentPriceModifier(const class UNovaTradableAssetDescription* Asset) const;
+
 	/** Get the current price of an asset */
-	double GetCurrentPrice(const class UNovaTradableAssetDescription* Asset, bool ForSale) const;
+	FNovaCredits GetCurrentPrice(const class UNovaTradableAssetDescription* Asset, bool SpacecraftPartForSale = false) const;
 
 	/*----------------------------------------------------
 	    Spacecraft management

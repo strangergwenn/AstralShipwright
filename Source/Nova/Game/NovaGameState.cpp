@@ -262,10 +262,60 @@ bool ANovaGameState::AreAllSpacecraftDocked() const
 	return true;
 }
 
-double ANovaGameState::GetCurrentPrice(const UNovaTradableAssetDescription* Asset, bool ForSale) const
+bool ANovaGameState::IsResourceSold(const UNovaResource* Asset) const
+{
+	if (IsValid(CurrentArea))
+	{
+		for (const FNovaResourceTrade& Trade : CurrentArea->ResourceTradeMetadata)
+		{
+			if (Trade.Resource == Asset)
+			{
+				return Trade.ForSale;
+			}
+		}
+	}
+
+	return false;
+}
+
+TArray<const UNovaResource*> ANovaGameState::GetResourcesSold() const
+{
+	TArray<const UNovaResource*> Result;
+
+	if (IsValid(CurrentArea))
+	{
+		for (const FNovaResourceTrade& Trade : CurrentArea->ResourceTradeMetadata)
+		{
+			if (Trade.ForSale)
+			{
+				Result.Add(Trade.Resource);
+			}
+		}
+	}
+
+	return Result;
+}
+
+ENovaPriceModifier ANovaGameState::GetCurrentPriceModifier(const UNovaTradableAssetDescription* Asset) const
+{
+	if (IsValid(CurrentArea))
+	{
+		for (const FNovaResourceTrade& Trade : CurrentArea->ResourceTradeMetadata)
+		{
+			if (Trade.Resource == Asset)
+			{
+				return Trade.PriceModifier;
+			}
+		}
+	}
+
+	return ENovaPriceModifier::Average;
+}
+
+FNovaCredits ANovaGameState::GetCurrentPrice(const UNovaTradableAssetDescription* Asset, bool SpacecraftPartForSale) const
 {
 	NCHECK(IsValid(Asset));
-	double Multiplier = 1.0f;
+	float Multiplier = 1.0f;
 
 	// Define price modifiers
 	auto GetPriceModifierValue = [](ENovaPriceModifier Modifier) -> double
@@ -273,40 +323,30 @@ double ANovaGameState::GetCurrentPrice(const UNovaTradableAssetDescription* Asse
 		switch (Modifier)
 		{
 			case ENovaPriceModifier::Cheap:
-				return 0.75;
+				return 0.75f;
 			case ENovaPriceModifier::BelowAverage:
-				return 0.9;
+				return 0.9f;
 			case ENovaPriceModifier::Average:
-				return 1.0;
+				return 1.0f;
 			case ENovaPriceModifier::AboveAverage:
-				return 1.1;
+				return 1.1f;
 			case ENovaPriceModifier::Expensive:
-				return 1.25;
+				return 1.25f;
 		}
 
-		return 0.0;
+		return 0.0f;
 	};
 
 	// Find out the current modifier for this transaction
-	if (IsValid(CurrentArea))
-	{
-		for (const FNovaResourceSale& Sale : (ForSale ? CurrentArea->ResourcesBought : CurrentArea->ResourcesSold))
-		{
-			if (Sale.Resource == Asset)
-			{
-				Multiplier *= GetPriceModifierValue(Sale.PriceModifier);
-				break;
-			}
-		}
-	}
+	Multiplier *= GetPriceModifierValue(GetCurrentPriceModifier(Asset));
 
 	// Non-resource assets have a large depreciation value when re-sold
-	if (ForSale && !Asset->IsA<UNovaResource>())
+	if (!Asset->IsA<UNovaResource>() && SpacecraftPartForSale)
 	{
 		Multiplier *= ENovaConstants::ResaleDepreciation;
 	}
 
-	return Multiplier * Asset->BasePrice;
+	return Multiplier * FNovaCredits(Asset->BasePrice);
 }
 
 /*----------------------------------------------------

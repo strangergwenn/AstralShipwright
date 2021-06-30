@@ -4,6 +4,7 @@
 
 #include "EngineMinimal.h"
 #include "Engine/DataAsset.h"
+#include <cmath>
 #include "NovaGameTypes.generated.h"
 
 /*----------------------------------------------------
@@ -55,6 +56,108 @@ public:
 		return TArray<FText>();
 	}
 };
+
+/*----------------------------------------------------
+    Currency type
+----------------------------------------------------*/
+
+/** Currency type */
+USTRUCT()
+struct FNovaCredits
+{
+	GENERATED_BODY();
+
+	FNovaCredits() : Value(0)
+	{}
+
+	FNovaCredits(int64 V) : Value(V)
+	{}
+
+	bool operator==(const FNovaCredits Other) const
+	{
+		return Value == Other.Value;
+	}
+
+	bool operator!=(const FNovaCredits Other) const
+	{
+		return !operator==(Other);
+	}
+
+	bool operator<(const FNovaCredits Other) const
+	{
+		return Value < Other.Value;
+	}
+
+	bool operator<=(const FNovaCredits Other) const
+	{
+		return Value <= Other.Value;
+	}
+
+	bool operator>(const FNovaCredits Other) const
+	{
+		return Value > Other.Value;
+	}
+
+	bool operator>=(const FNovaCredits Other) const
+	{
+		return Value >= Other.Value;
+	}
+
+	FNovaCredits operator+(const FNovaCredits Other) const
+	{
+		return FNovaCredits(Value + Other.Value);
+	}
+
+	FNovaCredits operator+=(const FNovaCredits Other)
+	{
+		Value += Other.Value;
+		return *this;
+	}
+
+	FNovaCredits operator-() const
+	{
+		return FNovaCredits(-Value);
+	}
+
+	FNovaCredits operator-(const FNovaCredits Other) const
+	{
+		return FNovaCredits(Value - Other.Value);
+	}
+
+	FNovaCredits operator-=(const FNovaCredits Other)
+	{
+		Value -= Other.Value;
+		return *this;
+	}
+
+	int64 GetValue() const
+	{
+		return Value;
+	}
+
+	UPROPERTY()
+	int64 Value;
+};
+
+static FNovaCredits operator*(const FNovaCredits Credits, const float Value)
+{
+	return FNovaCredits(Credits.Value * Value);
+}
+
+static FNovaCredits operator*(const float Value, const FNovaCredits Credits)
+{
+	return FNovaCredits(std::round(Credits.Value * Value));
+}
+
+static FNovaCredits operator/(const FNovaCredits Credits, const float Value)
+{
+	return FNovaCredits(Credits.Value / Value);
+}
+
+static FNovaCredits operator/(const float Value, const FNovaCredits Credits)
+{
+	return FNovaCredits(Value / Credits.Value);
+}
 
 /*----------------------------------------------------
     Time type

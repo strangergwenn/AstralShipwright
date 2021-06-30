@@ -439,16 +439,13 @@ void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type
 			};
 
 			//	Fill the resource list
-			ResourceList.Empty();
-			for (const FNovaResourceSale& Sale : GameState->GetCurrentArea()->ResourcesSold)
-			{
-				ResourceList.Add(Sale.Resource);
-			}
+			ResourceList = GameState->GetResourcesSold();
 			ResourceListView->Refresh(0);
 
 			// Proceed with the modal panel
-			GenericModalPanel->Show(LOCTEXT("SelectResource", "Select resource"), FText(), FSimpleDelegate::CreateLambda(BuyResource),
-				FSimpleDelegate(), FSimpleDelegate(), ResourceListView);
+			GenericModalPanel->Show(LOCTEXT("SelectResource", "Select resource"),
+				ResourceList.Num() == 0 ? LOCTEXT("NoResource", "No resource available for sale") : FText(),
+				FSimpleDelegate::CreateLambda(BuyResource), FSimpleDelegate(), FSimpleDelegate(), ResourceListView);
 		}
 	}
 

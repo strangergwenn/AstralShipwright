@@ -164,12 +164,12 @@ FText GetDurationText(FNovaTime Time, int32 MaxComponents)
 	return FText::FromString(Result);
 }
 
-FText GetPriceText(double Credits)
+FText GetPriceText(FNovaCredits Credits)
 {
 	FNumberFormattingOptions Options;
 	Options.MaximumFractionalDigits = 0;
 
-	return FText::FromString(FText::AsCurrency(Credits, TEXT("CUR"), &Options).ToString().Replace(TEXT("CUR"), TEXT("Ѥ")));
+	return FText::FromString(FText::AsCurrency(Credits.GetValue(), TEXT("CUR"), &Options).ToString().Replace(TEXT("CUR"), TEXT("Ѥ")));
 }
 
 /*----------------------------------------------------

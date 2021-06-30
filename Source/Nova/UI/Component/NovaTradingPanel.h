@@ -63,7 +63,7 @@ protected:
 
 	FText            GetTransactionDetails() const;
 	ENovaInfoBoxType GetTransactionType() const;
-	double           GetTransactionValue() const;
+	FNovaCredits     GetTransactionValue() const;
 
 	/*----------------------------------------------------
 	    Callbacks
@@ -89,6 +89,8 @@ protected:
 	const struct FNovaSpacecraft*         Spacecraft;
 	const UNovaResource*                  Resource;
 	float                                 InitialAmount;
+	float                                 MinAmount;
+	float                                 MaxAmount;
 	float                                 Capacity;
 	int32                                 CompartmentIndex;
 	bool                                  IsTradeAllowed;

@@ -269,10 +269,10 @@ struct FNovaSpacecraftUpgradeCost
 	FNovaSpacecraftUpgradeCost() : UpgradeCost(0), ResaleGain(0), TotalChangeCost(0), TotalCost(0)
 	{}
 
-	double UpgradeCost;
-	double ResaleGain;
-	double TotalChangeCost;
-	double TotalCost;
+	FNovaCredits UpgradeCost;
+	FNovaCredits ResaleGain;
+	FNovaCredits TotalChangeCost;
+	FNovaCredits TotalCost;
 };
 
 /*----------------------------------------------------

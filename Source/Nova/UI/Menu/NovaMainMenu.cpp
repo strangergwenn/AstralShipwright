@@ -384,7 +384,7 @@ FText SNovaMainMenu::GetTooltipText() const
 
 FText SNovaMainMenu::GetInfoText() const
 {
-	double PlayerCredits = MenuManager->GetPC()->GetAccountBalance();
+	FNovaCredits PlayerCredits = MenuManager->GetPC()->GetAccountBalance();
 
 	return FText::FormatNamed(LOCTEXT("InfoText", "{credits} in account"), TEXT("credits"), GetPriceText(PlayerCredits));
 }

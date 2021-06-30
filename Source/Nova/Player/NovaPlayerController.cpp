@@ -41,6 +41,8 @@
 #include "Engine/Engine.h"
 #include "EngineUtils.h"
 
+#include <inttypes.h>
+
 #define LOCTEXT_NAMESPACE "ANovaPlayerController"
 
 /*----------------------------------------------------
@@ -132,7 +134,7 @@ ANovaPlayerController::ANovaPlayerController()
 struct FNovaPlayerSave
 {
 	TSharedPtr<struct FNovaSpacecraft> Spacecraft;
-	double                             Credits;
+	FNovaCredits                       Credits;
 };
 
 TSharedPtr<FNovaPlayerSave> ANovaPlayerController::Save() const
@@ -182,7 +184,7 @@ void ANovaPlayerController::SerializeJson(
 		JsonData->SetObjectField("Spacecraft", SpacecraftJsonData);
 
 		// Credits
-		JsonData->SetNumberField("Credits", SaveData->Credits);
+		JsonData->SetNumberField("Credits", SaveData->Credits.GetValue());
 	}
 
 	// Reading from save
@@ -196,8 +198,12 @@ void ANovaPlayerController::SerializeJson(
 		FNovaSpacecraft::SerializeJson(SaveData->Spacecraft, SpacecraftJsonData, ENovaSerialize::JsonToData);
 
 		// Credits
-		SaveData->Credits = 0;
-		if (!JsonData->TryGetNumberField("Credits", SaveData->Credits))
+		int64 Credits = 0;
+		if (JsonData->TryGetNumberField("Credits", Credits))
+		{
+			SaveData->Credits = Credits;
+		}
+		else
 		{
 #if WITH_EDITOR
 			SaveData->Credits = 20000;
@@ -385,7 +391,7 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
     Gameplay
 ----------------------------------------------------*/
 
-void ANovaPlayerController::ProcessTransaction(double CreditsDelta)
+void ANovaPlayerController::ProcessTransaction(FNovaCredits CreditsDelta)
 {
 	// Authority
 	if (GetLocalRole() == ROLE_Authority)
@@ -393,9 +399,10 @@ void ANovaPlayerController::ProcessTransaction(double CreditsDelta)
 		NCHECK(CanAffordTransaction(CreditsDelta));
 
 		Credits += CreditsDelta;
-		Credits = FMath::Max(Credits, 0.0);
+		Credits = FMath::Max(Credits, FNovaCredits(0));
 
-		NLOG("ANovaPlayerController::ProcessTransaction : %f in account (%+f)", Credits, CreditsDelta);
+		NLOG("ANovaPlayerController::ProcessTransaction : %" PRId64 " in account (%+" PRId64 ")", Credits.GetValue(),
+			CreditsDelta.GetValue());
 	}
 
 	// Remote client
@@ -405,14 +412,14 @@ void ANovaPlayerController::ProcessTransaction(double CreditsDelta)
 	}
 }
 
-void ANovaPlayerController::ServerProcessTransaction_Implementation(double CreditsDelta)
+void ANovaPlayerController::ServerProcessTransaction_Implementation(FNovaCredits CreditsDelta)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 
 	ProcessTransaction(CreditsDelta);
 }
 
-bool ANovaPlayerController::CanAffordTransaction(double CreditsDelta) const
+bool ANovaPlayerController::CanAffordTransaction(FNovaCredits CreditsDelta) const
 {
 	return Credits + CreditsDelta >= 0;
 }

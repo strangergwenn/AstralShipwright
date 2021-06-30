@@ -120,16 +120,16 @@ public:
 	----------------------------------------------------*/
 
 	/** Add a possibly negative amount of credits */
-	void ProcessTransaction(double CreditsDelta);
+	void ProcessTransaction(FNovaCredits CreditsDelta);
 
 	UFUNCTION(Server, Reliable)
-	void ServerProcessTransaction(double CreditsDelta);
+	void ServerProcessTransaction(FNovaCredits CreditsDelta);
 
 	/** Check whether the player can handle this transaction */
-	bool CanAffordTransaction(double CreditsDelta) const;
+	bool CanAffordTransaction(FNovaCredits CreditsDelta) const;
 
 	/** Return the current account balance */
-	double GetAccountBalance() const
+	FNovaCredits GetAccountBalance() const
 	{
 		return Credits;
 	}
@@ -294,7 +294,7 @@ private:
 
 	// Replicated credits value
 	UPROPERTY(Replicated)
-	double Credits;
+	FNovaCredits Credits;
 
 	// Transitions
 	bool                SharedTransitionActive;

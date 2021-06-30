@@ -8,12 +8,12 @@
 /** Nova resource item image */
 class SNovaTradableAssetItem : public SCompoundWidget
 {
-	SLATE_BEGIN_ARGS(SNovaTradableAssetItem) : _Asset(nullptr), _GameState(nullptr), _ForSale(false), _Dark(false)
+	SLATE_BEGIN_ARGS(SNovaTradableAssetItem) : _Asset(nullptr), _GameState(nullptr), _NoPriceHint(false), _Dark(false)
 	{}
 
 	SLATE_ARGUMENT(const UNovaTradableAssetDescription*, Asset)
 	SLATE_ARGUMENT(const ANovaGameState*, GameState)
-	SLATE_ARGUMENT(bool, ForSale)
+	SLATE_ARGUMENT(bool, NoPriceHint)
 	SLATE_ARGUMENT(bool, Dark)
 
 	SLATE_END_ARGS()
@@ -26,7 +26,6 @@ public:
 	{
 		Asset     = InArgs._Asset;
 		GameState = InArgs._GameState;
-		ForSale   = InArgs._ForSale;
 
 		const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
 		const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
@@ -99,11 +98,26 @@ public:
 					.AutoWidth()
 					.Padding(Theme.ContentPadding)
 					[
-						SNew(SRichTextBlock)
-						.Text(this, &SNovaTradableAssetItem::GetPrice)
-						.TextStyle(&Theme.MainFont)
-						.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
-						+ SRichTextBlock::ImageDecorator()
+						SNew(SVerticalBox)
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SNew(SRichTextBlock)
+							.Text(this, &SNovaTradableAssetItem::GetPriceText)
+							.TextStyle(&Theme.MainFont)
+							.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
+							+ SRichTextBlock::ImageDecorator()
+						]
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.HAlign(HAlign_Right)
+						[
+							SNew(SImage)
+							.Image(this, &SNovaTradableAssetItem::GetMarketHintIcon)
+							.Visibility(InArgs._NoPriceHint ? EVisibility::Collapsed : EVisibility::Visible)
+						]
 					]
 				]
 			]
@@ -152,20 +166,41 @@ protected:
 		return FText();
 	}
 
-	FText GetPrice() const
+	FText GetPriceText() const
 	{
 		if (Asset.IsValid() && GameState.IsValid())
 		{
-			double Price = GameState->GetCurrentPrice(Asset.Get(), ForSale);
-			return GetPriceText(Price);
+			FNovaCredits Price = GameState->GetCurrentPrice(Asset.Get());
+			return ::GetPriceText(Price);
 		}
 
 		return FText();
+	}
+
+	const FSlateBrush* GetMarketHintIcon() const
+	{
+		if (Asset.IsValid() && GameState.IsValid())
+		{
+			switch (GameState->GetCurrentPriceModifier(Asset.Get()))
+			{
+				case ENovaPriceModifier::Cheap:
+					return FNovaStyleSet::GetBrush("Icon/SB_BelowAverage");
+				case ENovaPriceModifier::BelowAverage:
+					return FNovaStyleSet::GetBrush("Icon/SB_BelowAverage");
+				case ENovaPriceModifier::Average:
+					return FNovaStyleSet::GetBrush("Icon/SB_Average");
+				case ENovaPriceModifier::AboveAverage:
+					return FNovaStyleSet::GetBrush("Icon/SB_AboveAverage");
+				case ENovaPriceModifier::Expensive:
+					return FNovaStyleSet::GetBrush("Icon/SB_Expensive");
+			}
+		}
+
+		return nullptr;
 	}
 
 protected:
 	// Settings
 	TWeakObjectPtr<const UNovaTradableAssetDescription> Asset;
 	TWeakObjectPtr<const ANovaGameState>                GameState;
-	bool                                                ForSale;
 };

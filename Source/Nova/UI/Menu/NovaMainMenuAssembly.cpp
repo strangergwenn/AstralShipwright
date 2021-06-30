@@ -1307,7 +1307,7 @@ void SNovaMainMenuAssembly::SetCompartmentPanelVisible(bool Active)
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateCompartmentItem(const UNovaCompartmentDescription* Description) const
 {
-	return SNew(SNovaTradableAssetItem).Asset(Description).GameState(GameState);
+	return SNew(SNovaTradableAssetItem).Asset(Description).GameState(GameState).NoPriceHint(true);
 }
 
 FText SNovaMainMenuAssembly::GenerateCompartmentTooltip(const UNovaCompartmentDescription* Description) const
@@ -1343,7 +1343,7 @@ FText SNovaMainMenuAssembly::GetModuleListHelpText() const
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateModuleItem(const UNovaModuleDescription* Module) const
 {
-	return SNew(SNovaTradableAssetItem).Asset(Module).GameState(GameState);
+	return SNew(SNovaTradableAssetItem).Asset(Module).GameState(GameState).NoPriceHint(true);
 }
 
 FText SNovaMainMenuAssembly::GetModuleListTitle(const UNovaModuleDescription* Module) const
@@ -1374,7 +1374,7 @@ EVisibility SNovaMainMenuAssembly::GetEquipmentListVisibility() const
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEquipmentItem(const UNovaEquipmentDescription* Equipment) const
 {
-	return SNew(SNovaTradableAssetItem).Asset(Equipment).GameState(GameState);
+	return SNew(SNovaTradableAssetItem).Asset(Equipment).GameState(GameState).NoPriceHint(true);
 }
 
 FText SNovaMainMenuAssembly::GetEquipmentListTitle(const UNovaEquipmentDescription* Equipment) const

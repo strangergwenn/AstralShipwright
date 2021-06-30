@@ -419,7 +419,7 @@ FNovaSpacecraftUpgradeCost FNovaSpacecraft::GetUpgradeCost(const ANovaGameState*
 {
 	FNovaSpacecraftUpgradeCost                        Cost;
 	TMap<const UNovaTradableAssetDescription*, int32> PartsDelta;
-	int32                                             TotalCostAsNew = 0;
+	FNovaCredits                                      TotalCostAsNew = 0;
 
 	// Increase or decrease the amount of one particular part
 	auto UpdatePartsData = [&PartsDelta, &TotalCostAsNew, GameState](const UNovaTradableAssetDescription* Asset, bool Add)

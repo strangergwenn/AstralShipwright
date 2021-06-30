@@ -63,23 +63,27 @@ public:
 	FNovaPlanetMass Mass;
 };
 
-/** Sold resource */
+/** Resource trade metadata */
 USTRUCT()
-struct FNovaResourceSale
+struct FNovaResourceTrade
 {
 	GENERATED_BODY()
 
-	FNovaResourceSale() : Resource(nullptr), PriceModifier(ENovaPriceModifier::Average)
+	FNovaResourceTrade() : Resource(nullptr), PriceModifier(ENovaPriceModifier::Average)
 	{}
 
 public:
-	// Resource being sold here
+	// Resource this data applies to
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	const class UNovaResource* Resource;
 
 	// Resource price modifier
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	ENovaPriceModifier PriceModifier;
+
+	// Resource is being sold here as opposed to bought
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	bool ForSale;
 };
 
 /** World area description */
@@ -105,11 +109,7 @@ public:
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Phase;
 
-	// Resources bought in this area
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	TArray<FNovaResourceSale> ResourcesBought;
-
 	// Resources sold in this area
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	TArray<FNovaResourceSale> ResourcesSold;
+	TArray<FNovaResourceTrade> ResourceTradeMetadata;
 };
