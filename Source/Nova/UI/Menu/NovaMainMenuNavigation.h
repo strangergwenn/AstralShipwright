@@ -91,6 +91,7 @@ protected:
 	// Game objects
 	TWeakObjectPtr<UNovaMenuManager>       MenuManager;
 	class ANovaPlayerController*           PC;
+	const struct FNovaSpacecraft*          Spacecraft;
 	class ANovaSpacecraftPawn*             SpacecraftPawn;
 	class ANovaGameState*                  GameState;
 	class UNovaOrbitalSimulationComponent* OrbitalSimulation;
@@ -105,6 +106,7 @@ protected:
 	TSharedPtr<class SNovaTrajectoryCalculator> TrajectoryCalculator;
 	TSharedPtr<class STextBlock>                FuelText;
 	TSharedPtr<class SNovaButton>               CommitButton;
+	TSharedPtr<class SVerticalBox>              StationTrades;
 
 	// Local state
 	bool                        HasHoveredObjects;

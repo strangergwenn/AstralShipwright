@@ -17,6 +17,7 @@
 
 #include "Nova/Player/NovaPlayerController.h"
 #include "Nova/UI/Component/NovaTrajectoryCalculator.h"
+#include "Nova/UI/Component/NovaTradableAssetItem.h"
 #include "Nova/UI/Widget/NovaFadingWidget.h"
 #include "Nova/UI/Widget/NovaSlider.h"
 #include "Nova/Nova.h"
@@ -180,6 +181,7 @@ protected:
 
 SNovaMainMenuNavigation::SNovaMainMenuNavigation()
 	: PC(nullptr)
+	, Spacecraft(nullptr)
 	, SpacecraftPawn(nullptr)
 	, GameState(nullptr)
 	, OrbitalSimulation(nullptr)
@@ -297,6 +299,12 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 						.OnClicked(this, &SNovaMainMenuNavigation::OnCommitTrajectory)
 						.Enabled(this, &SNovaMainMenuNavigation::CanCommitTrajectory)
 					]
+			
+					+ SScrollBox::Slot()
+					.HAlign(HAlign_Center)
+					[
+						SAssignNew(StationTrades, SVerticalBox)
+					]
 				]
 			]
 		]
@@ -376,6 +384,7 @@ void SNovaMainMenuNavigation::Hide()
 void SNovaMainMenuNavigation::UpdateGameObjects()
 {
 	PC                = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
+	Spacecraft        = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
 	SpacecraftPawn    = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
 	GameState         = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
 	OrbitalSimulation = IsValid(GameState) ? GameState->GetOrbitalSimulation() : nullptr;
@@ -441,6 +450,9 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 {
 	bool HasValidDestination = false;
 
+	StationTrades->ClearChildren();
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
 	for (const FNovaOrbitalObject& Object : SelectedObjectList)
 	{
 		// Valid area found
@@ -448,6 +460,95 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 		{
 			HasValidDestination = true;
 			AreaTitle->SetText(Object.Area->Name);
+
+			// clang-format off
+			StationTrades->AddSlot()
+			.Padding(Theme.VerticalContentPadding)
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(LOCTEXT("SoldTitle", "For sale"))
+				.TextStyle(&Theme.HeadingFont)
+			];
+			// clang-format on
+
+			// Add sold resources
+			for (const FNovaResourceTrade& Trade : Object.Area->ResourceTradeMetadata)
+			{
+				if (Trade.ForSale)
+				{
+					// clang-format off
+					StationTrades->AddSlot()
+					.Padding(Theme.ContentPadding)
+					.AutoHeight()
+					[
+						SNew(SNovaTradableAssetItem)
+						.Asset(Trade.Resource)
+						.GameState(GameState)
+						.Dark(true)
+					];
+					// clang-format on
+				}
+			}
+
+			// clang-format off
+			StationTrades->AddSlot()
+			.Padding(Theme.VerticalContentPadding)
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(LOCTEXT("DealsTitle", "Best deals"))
+				.TextStyle(&Theme.HeadingFont)
+			];
+			// clang-format on
+
+			// Create a list of best deals for selling resources
+			TArray<TPair<const UNovaResource*, ENovaPriceModifier>> BestDeals;
+			for (int32 Index = 0; Index < Spacecraft->Compartments.Num(); Index++)
+			{
+				auto AddDeal = [this, &BestDeals, &Object, Index](ENovaResourceType Type)
+				{
+					const FNovaSpacecraftCargo& Cargo = Spacecraft->Compartments[Index].GetCargo(Type);
+					if (Cargo.Amount > 0 && !GameState->IsResourceSold(Cargo.Resource, Object.Area.Get()))
+					{
+						BestDeals.Add(TPair<const UNovaResource*, ENovaPriceModifier>(
+							Cargo.Resource, GameState->GetCurrentPriceModifier(Cargo.Resource)));
+					}
+				};
+
+				AddDeal(ENovaResourceType::General);
+				AddDeal(ENovaResourceType::Bulk);
+				AddDeal(ENovaResourceType::Liquid);
+			}
+
+			BestDeals.Sort(
+				[&](const TPair<const UNovaResource*, ENovaPriceModifier>& A, const TPair<const UNovaResource*, ENovaPriceModifier>& B)
+				{
+					return B.Value < A.Value;
+				});
+
+			// Add the N top deals
+			int32 DealsToShow = 3;
+			for (TPair<const UNovaResource*, ENovaPriceModifier>& Deal : BestDeals)
+			{
+				// clang-format off
+					StationTrades->AddSlot()
+					.Padding(Theme.ContentPadding)
+					.AutoHeight()
+					[
+						SNew(SNovaTradableAssetItem)
+						.Asset(Deal.Key)
+						.GameState(GameState)
+						.Dark(true)
+					];
+				// clang-format on
+
+				DealsToShow--;
+				if (DealsToShow <= 0)
+				{
+					break;
+				}
+			}
 		}
 	}
 
@@ -509,8 +610,8 @@ bool SNovaMainMenuNavigation::CanSelectDestination(const UNovaArea* Destination)
 	{
 		for (FGuid Identifier : GameState->GetPlayerSpacecraftIdentifiers())
 		{
-			const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Identifier);
-			if (Spacecraft == nullptr || !Spacecraft->IsValid())
+			const FNovaSpacecraft* PlayerSpacecraft = GameState->GetSpacecraft(Identifier);
+			if (PlayerSpacecraft == nullptr || !PlayerSpacecraft->IsValid())
 			{
 				return false;
 			}

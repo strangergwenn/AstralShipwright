@@ -262,11 +262,13 @@ bool ANovaGameState::AreAllSpacecraftDocked() const
 	return true;
 }
 
-bool ANovaGameState::IsResourceSold(const UNovaResource* Asset) const
+bool ANovaGameState::IsResourceSold(const UNovaResource* Asset, const class UNovaArea* Area) const
 {
-	if (IsValid(CurrentArea))
+	const UNovaArea* TargetArea = IsValid(Area) ? Area : CurrentArea;
+
+	if (IsValid(TargetArea))
 	{
-		for (const FNovaResourceTrade& Trade : CurrentArea->ResourceTradeMetadata)
+		for (const FNovaResourceTrade& Trade : TargetArea->ResourceTradeMetadata)
 		{
 			if (Trade.Resource == Asset)
 			{

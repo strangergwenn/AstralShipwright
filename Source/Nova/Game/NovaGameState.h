@@ -137,7 +137,7 @@ public:
 	bool AreAllSpacecraftDocked() const;
 
 	/** Is a particular resource sold in this area */
-	bool IsResourceSold(const class UNovaResource* Asset) const;
+	bool IsResourceSold(const class UNovaResource* Asset, const class UNovaArea* Area = nullptr) const;
 
 	/** Get resources sold in this area */
 	TArray<const class UNovaResource*> GetResourcesSold() const;
