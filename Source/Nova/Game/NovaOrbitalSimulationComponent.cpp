@@ -351,15 +351,17 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 		DestinationPhaseChangeDuringTransfer, NewDestinationPhaseAfterTransfers, PhaseDelta);
 	NLOG("PhasingOrbitPeriod = %f, DestinationOrbitPeriod = %f", PhasingOrbitPeriod.AsMinutes(), DestinationOrbitPeriod.AsMinutes());
 	NLOG("PhasingDuration = %f, PhasingAngle = %f", PhasingDuration.AsMinutes(), PhasingAngle);
-	NLOG("FinalDestinationPhase = %f, FinalSpacecraftPhase = %f", FinalDestinationPhase, FinalSpacecraftPhase);
+	NLOG("FinalDestinationPhase = %f, FinalSpacecraftPhase = %f",
+		FMath::IsFinite(FinalDestinationPhase) ? FMath::UnwindDegrees(FinalDestinationPhase) : 0,
+		FMath::IsFinite(FinalSpacecraftPhase) ? FMath::UnwindDegrees(FinalSpacecraftPhase) : 0);
 	NLOG("Trajectory->GetStartTime() = %f, Parameters->StartTime = %f",
 		FMath::IsFinite(PhasingDuration.AsMinutes()) ? Trajectory->GetStartTime().AsMinutes() : 0, Parameters->StartTime.AsMinutes());
 	NLOG("--------------------------------------------------------------------------------");
 #endif
 
-	NCHECK(FMath::Abs(FinalSpacecraftPhase - FinalDestinationPhase) < SMALL_NUMBER);
 	if (FMath::IsFinite(PhasingDuration.AsMinutes()))
 	{
+		NCHECK(FMath::Abs(FMath::UnwindDegrees(FinalSpacecraftPhase) - FMath::UnwindDegrees(FinalDestinationPhase)) < 0.0001);
 		NCHECK(FMath::Abs((Trajectory->GetStartTime() - Parameters->StartTime).AsSeconds()) < 1);
 	}
 
