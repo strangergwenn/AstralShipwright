@@ -148,35 +148,42 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 			// Trajectory
 			if (Trajectory)
 			{
-				FNovaTime ManeuverTimeLeft = Trajectory->GetNextManeuverStartTime(CurrentGameTime) - CurrentGameTime -
-											 FNovaTime::FromSeconds(ENovaGameModeStateTiming::CommonCutsceneDelay - 1);
-				ManeuverTimeLeft = FMath::Max(ManeuverTimeLeft, FNovaTime(0));
+				const FNovaManeuver* CurrentManeuver        = Trajectory->GetCurrentManeuver(CurrentGameTime);
+				FNovaTime            TimeBeforeNextManeuver = Trajectory->GetNextManeuverStartTime(CurrentGameTime) - CurrentGameTime -
+												   FNovaTime::FromSeconds(ENovaGameModeStateTiming::CommonCutsceneDelay - 1);
+				FNovaTime TimeLeftInManeuver = CurrentManeuver ? (CurrentManeuver->Time + CurrentManeuver->Duration - CurrentGameTime) : 0;
 
 				// Nearing maneuver
-				if (ManeuverTimeLeft < FNovaTime::FromSeconds(60))
+				if (TimeBeforeNextManeuver > 0 && TimeBeforeNextManeuver < FNovaTime::FromSeconds(60))
 				{
 					DesiredState.Text = LOCTEXT("ImminentManeuver", "Imminent maneuver").ToUpper();
 					DesiredState.Type = ENovaEventDisplayType::StaticTextWithDetails;
 
 					if (CurrentState.Type == ENovaEventDisplayType::StaticTextWithDetails)
 					{
-						TimeText = ManeuverTimeLeft >= FNovaTime::FromSeconds(1)
-									 ? FText::FormatNamed(LOCTEXT("ImminentManeuverTimeFormat", "{time} left"), TEXT("time"),
-										   GetDurationText(ManeuverTimeLeft))
-									 : FText();
+						TimeText = FText::FormatNamed(LOCTEXT("ImminentManeuverTimeFormat", "{duration} left"), TEXT("duration"),
+							GetDurationText(TimeBeforeNextManeuver));
 
 						DetailsText    = SpacecraftMovement->IsMainDriveEnabled()
-										   ? LOCTEXT("ImminentManeuverClear", "Spacecraft is cleared to maneuver")
-										   : LOCTEXT("ImminentManeuverNotClear", "Spacecraft is not cleared to maneuver");
+										   ? LOCTEXT("ImminentManeuverAuthorized", "Spacecraft is authorized to maneuver")
+										   : LOCTEXT("ImminentManeuverNotAuthorized", "Spacecraft is not authorized to maneuver");
 						IsValidDetails = SpacecraftMovement->IsMainDriveEnabled();
 					}
 				}
 
-				// On trajectory
-				else
+				// Ongoing maneuver
+				else if (TimeLeftInManeuver > 0)
 				{
-					DesiredState.Text = FText::FormatNamed(
-						LOCTEXT("NextManeuverFormat", "Next maneuver in {duration}"), TEXT("duration"), GetDurationText(ManeuverTimeLeft));
+					DesiredState.Text = FText::FormatNamed(LOCTEXT("CurrentManeuverFormat", "Maneuver ends in {duration}"),
+						TEXT("duration"), GetDurationText(TimeLeftInManeuver));
+					DesiredState.Type = ENovaEventDisplayType::DynamicText;
+				}
+
+				// On trajectory
+				else if (TimeBeforeNextManeuver > 0)
+				{
+					DesiredState.Text = FText::FormatNamed(LOCTEXT("NextManeuverFormat", "Next maneuver in {duration}"), TEXT("duration"),
+						GetDurationText(TimeBeforeNextManeuver));
 					DesiredState.Type = ENovaEventDisplayType::DynamicText;
 				}
 			}

@@ -159,9 +159,9 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
-						SNovaAssignNew(MainDriveButton, SNovaButton)
-						.Text(LOCTEXT("MainDriveButton", "Enable main drive"))
-						.HelpText(LOCTEXT("MainDriveButtonHelp", "Allow the main drive to fire for maneuvers"))
+						SNovaAssignNew(AuthorizeManeuverButton, SNovaButton)
+						.Text(LOCTEXT("AuthorizeManeuverButton", "Authorize maneuver"))
+						.HelpText(LOCTEXT("AuthorizeManeuverButtonHelp", "Allow the main drive to fire for maneuvers"))
 						.OnClicked(this, &SNovaMainMenuFlight::OnEnableMainDrive)
 						.Enabled(this, &SNovaMainMenuFlight::IsMainDriveAvailable)
 					]
@@ -252,7 +252,7 @@ TSharedPtr<SNovaButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 	}
 	else if (IsMainDriveAvailable())
 	{
-		return MainDriveButton;
+		return AuthorizeManeuverButton;
 	}
 	else if (CanFastForward())
 	{

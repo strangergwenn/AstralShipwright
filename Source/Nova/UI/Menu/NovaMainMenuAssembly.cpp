@@ -1656,8 +1656,8 @@ void SNovaMainMenuAssembly::OnRemoveCompartment()
 {
 	NCHECK(SelectedCompartmentIndex >= 0 && SelectedCompartmentIndex < ENovaConstants::MaxCompartmentCount);
 
-	GenericModalPanel->Show(LOCTEXT("ScrapCompartmentConfirm", "Scrap compartment"),
-		LOCTEXT("ScrapCompartmentConfirmHelp", "Confirm the scrapping of this compartment"),
+	GenericModalPanel->Show(LOCTEXT("ScrapCompartmentConfirm", "Confirm the scrapping of this compartment"),
+		LOCTEXT("ScrapCompartmentConfirmHelp", "All resources in the compartment's cargo hold will be lost"),
 		FSimpleDelegate::CreateSP(this, &SNovaMainMenuAssembly::OnRemoveCompartmentConfirmed));
 }
 

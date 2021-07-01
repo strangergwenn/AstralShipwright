@@ -90,6 +90,6 @@ protected:
 	TSharedPtr<class SNovaButton> UndockButton;
 	TSharedPtr<class SNovaButton> DockButton;
 	TSharedPtr<class SNovaButton> AlignManeuverButton;
-	TSharedPtr<class SNovaButton> MainDriveButton;
+	TSharedPtr<class SNovaButton> AuthorizeManeuverButton;
 	TSharedPtr<class SNovaButton> FastForwardButton;
 };

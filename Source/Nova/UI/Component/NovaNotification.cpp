@@ -6,6 +6,7 @@
 #include "Nova/Nova.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
+#include "Widgets/Layout/SScaleBox.h"
 
 #define LOCTEXT_NAMESPACE "SNovaNotification"
 
@@ -49,9 +50,7 @@ void SNovaNotification::Construct(const FArguments& InArgs)
 				.Padding(0)
 				[
 					SNew(SBorder)
-					.HAlign(HAlign_Center)
 					.BorderImage(&Theme.MainMenuPatternedBackground)
-					.Padding(Theme.ContentPadding)
 					[
 						SNew(SVerticalBox)
 
@@ -61,24 +60,32 @@ void SNovaNotification::Construct(const FArguments& InArgs)
 							SNew(SHorizontalBox)
 
 							+ SHorizontalBox::Slot()
-							.AutoWidth()
 							.VAlign(VAlign_Center)
+							.HAlign(HAlign_Right)
+							.Padding(Theme.ContentPadding)
 							[
-								SNew(SImage)
-								.Image(this, &SNovaNotification::GetNotifyIcon)
+								SNew(SScaleBox)
+								[
+									SNew(SImage)
+									.Image(this, &SNovaNotification::GetNotifyIcon)
+								]
 							]
 
 							+ SHorizontalBox::Slot()
 							.AutoWidth()
+							.VAlign(VAlign_Center)
 							[
 								SNew(STextBlock)
 								.Text(this, &SNovaNotification::GetNotifyText)
 								.TextStyle(&Theme.NotificationFont)
 							]
+
+							+ SHorizontalBox::Slot()
 						]
 
 						+ SVerticalBox::Slot()
 						.AutoHeight()
+						.HAlign(HAlign_Center)
 						[
 							SNew(STextBlock)
 							.Text(this, &SNovaNotification::GetNotifySubtext)
