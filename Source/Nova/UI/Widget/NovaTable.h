@@ -18,6 +18,8 @@ class SNovaTable : public SCompoundWidget
 public:
 	void Construct(const FArguments& InArgs)
 	{
+		Width = InArgs._Width;
+
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 
 		// clang-format off
@@ -125,6 +127,7 @@ protected:
 
 		// clang-format off
 		TableBox->AddSlot()
+		.AutoHeight()
 		[
 			SNew(SBorder)
 			.BorderImage(EvenRow ? &Theme.TableEvenBackground : &Theme.TableOddBackground)
@@ -136,6 +139,7 @@ protected:
 					SNew(SRichTextBlock)
 					.Text(Label)
 					.TextStyle(&Theme.MainFont)
+					.WrapTextAt(Width.Get() / 2)
 					.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
 					+ SRichTextBlock::ImageDecorator()
 				]
@@ -157,6 +161,7 @@ protected:
 protected:
 	TSharedPtr<SVerticalBox> TableBox;
 	bool                     EvenRow;
+	FOptionalSize            Width;
 };
 
 #undef LOCTEXT_NAMESPACE

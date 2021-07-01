@@ -611,8 +611,8 @@ void ANovaGameState::ProcessTrajectoryAbort()
 
 		ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetGameInstance()->GetFirstLocalPlayerController());
 		PC->Notify(LOCTEXT("TrajectoryAborted", "Trajectory aborted"),
-			PlayerArray.Num() > 1 ? LOCTEXT("PlayerNotReady", "Spacecraft not cleared for maneuver")
-								  : LOCTEXT("NotAllPlayersReady", "A spacecraft wasn't cleared for maneuver"),
+			PlayerArray.Num() > 1 ? LOCTEXT("PlayerNotReady", "Spacecraft not authorized to maneuver")
+								  : LOCTEXT("NotAllPlayersReady", "A spacecraft wasn't authorized to maneuver"),
 			ENovaNotificationType::Error);
 
 		return;

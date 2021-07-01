@@ -260,20 +260,20 @@ TOptional<float> SNovaTradingPanel::GetCargoProgress() const
 FText SNovaTradingPanel::GetCargoAmount() const
 {
 	return FText::FormatNamed(
-		LOCTEXT("CargoAmountFormat", "{amount}T"), TEXT("amount"), FText::AsNumber(FMath::RoundToInt(AmountSlider->GetCurrentValue())));
+		LOCTEXT("CargoAmountFormat", "{amount} T"), TEXT("amount"), FText::AsNumber(FMath::RoundToInt(AmountSlider->GetCurrentValue())));
 }
 
 FText SNovaTradingPanel::GetCargoCapacity() const
 {
-	return FText::FormatNamed(LOCTEXT("CargoCapacityFormat", "{capacity}T"), TEXT("capacity"), FText::AsNumber(MaxAmount));
+	return FText::FormatNamed(LOCTEXT("CargoCapacityFormat", "{capacity} T"), TEXT("capacity"), FText::AsNumber(MaxAmount));
 }
 
 FText SNovaTradingPanel::GetCargoDetails() const
 {
 	if (CompartmentIndex == INDEX_NONE)
 	{
-		return FText::FormatNamed(
-			LOCTEXT("CargoDetailsFormat", "Currently holding {amount}T out of {capacity}T across the spacecraft ({remaining}T remaining)"),
+		return FText::FormatNamed(LOCTEXT("CargoDetailsFormat",
+									  "Currently holding {amount} T out of {capacity} T across the spacecraft ({remaining} T remaining)"),
 			TEXT("amount"), FText::AsNumber(InitialAmount), TEXT("capacity"), FText::AsNumber(Capacity), TEXT("remaining"),
 			FText::AsNumber(Capacity - InitialAmount));
 	}
@@ -281,7 +281,7 @@ FText SNovaTradingPanel::GetCargoDetails() const
 	{
 		return FText::FormatNamed(
 			LOCTEXT("CargoDetailsFormat",
-				"Currently holding {amount}T out of {capacity}T in compartment {compartment} ({remaining}T remaining)"),
+				"Currently holding {amount} T out of {capacity} T in compartment {compartment} ({remaining} T remaining)"),
 			TEXT("amount"), FText::AsNumber(InitialAmount), TEXT("capacity"), FText::AsNumber(Capacity), TEXT("compartment"),
 			FText::AsNumber(CompartmentIndex + 1), TEXT("remaining"), FText::AsNumber(Capacity - InitialAmount));
 	}

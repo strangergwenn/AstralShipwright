@@ -336,7 +336,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 
 	// Build gameplay options
 	FOVSlider = AddSettingSlider(GameplayContainer, LOCTEXT("FOV", "Field of view ({value}°)"),
-		LOCTEXT("FOVHelp", "Set vertical field of view in degrees"),
+		LOCTEXT("FOVHelp", "Set the horizontal field of view in degrees"),
 		FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnFOVChanged),
 		80, 110, 5);
 
@@ -353,7 +353,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 			LOCTEXT("EffectsQualityHelp", "Set the quality of rendering effects"),
 			FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnEffectsChanged));
 		PostProcessSlider = AddSettingSlider(GraphicsContainer, LOCTEXT("PostProcessQuality", "Post-processing quality"),
-			LOCTEXT("PostProcessQualityHelp", "Set the distance over which game objects will be rendered"),
+			LOCTEXT("PostProcessQualityHelp", "Set the quality of post-processing effects"),
 			FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnPostProcessChanged));
 		AntiAliasingSlider = AddSettingSlider(GraphicsContainer, LOCTEXT("AntiAliasingQuality", "Anti-aliasing quality"),
 			LOCTEXT("AntiAliasingQualityHelp", "Set the quality of the anti-aliasing process"),
@@ -678,7 +678,7 @@ void SNovaMainMenuSettings::UpdateResolution(FIntPoint Resolution, bool Fullscre
 		FullscreenButton->IsActive());
 
 	// Confirm
-	ModalPanel->Show(LOCTEXT("ConfirmResolution", "Confirm video settings ?"),
+	ModalPanel->Show(LOCTEXT("ConfirmResolution", "Confirm video settings"),
 		LOCTEXT("ConfirmResolutionHelp", "Do you want to confirm and save the new video settings, or revert the changes ?"),
 		FSimpleDelegate::CreateSP(this, &SNovaMainMenuSettings::ApplyVideoSettings), FSimpleDelegate(),
 		FSimpleDelegate::CreateSP(this, &SNovaMainMenuSettings::RevertVideoSettings));

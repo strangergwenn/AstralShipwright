@@ -76,8 +76,6 @@ SNovaOrbitalMap::SNovaOrbitalMap() : CurrentPreviewProgress(0), CurrentDesiredSi
 
 void SNovaOrbitalMap::Construct(const FArguments& InArgs)
 {
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-
 	// Settings
 	MenuManager                = InArgs._MenuManager;
 	TrajectoryPreviewDuration  = 2.0f;
@@ -391,7 +389,7 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbit(const FVector2D& Position,
 		FNovaSplineOrbit(LocalPosition, SemiMajorAxis, SemiMinorAxis, Phase, InitialAngle, AngularLength, Offset), Objects, Style);
 }
 
-void SNovaOrbitalMap::AddHoveredObject(const FNovaOrbitalObject& Object, const FLinearColor& Color)
+void SNovaOrbitalMap::AddOrbitalObject(const FNovaOrbitalObject& Object, const FLinearColor& Color)
 {
 	bool IsObjectHovered =
 		(CurrentOrigin + Object.Position - GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos())).Size() < 50;
@@ -399,9 +397,20 @@ void SNovaOrbitalMap::AddHoveredObject(const FNovaOrbitalObject& Object, const F
 	FNovaBatchedPoint Point;
 	Point.Pos   = Object.Position;
 	Point.Color = Color;
-	Point.Scale = IsObjectHovered ? 1.25f : 1.0f;
+	Point.Scale = IsObjectHovered ? 2.0f : 1.5f;
 
 	BatchedPoints.AddUnique(Point);
+
+	if (Object.Area.IsValid())
+	{
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+		FNovaBatchedText Text;
+		Text.Text      = Object.Area->Name.ToUpper();
+		Text.Pos       = Point.Pos - FVector2D(0, 32);
+		Text.TextStyle = &Theme.MainFont;
+		BatchedTexts.Add(Text);
+	}
 
 	if (IsObjectHovered)
 	{
@@ -553,7 +562,7 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 	{
 		if (Object.Positioned)
 		{
-			AddHoveredObject(Object, Style.ColorInner);
+			AddOrbitalObject(Object, Style.ColorInner);
 		}
 	}
 

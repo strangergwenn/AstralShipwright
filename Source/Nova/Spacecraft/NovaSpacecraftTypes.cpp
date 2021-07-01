@@ -172,7 +172,7 @@ TArray<FText> UNovaModuleDescription::GetDescription() const
 	TArray<FText> Result = Super::GetDescription();
 
 	Result.Add(
-		FText::FormatNamed(LOCTEXT("ModuleDescriptionFormat", "<img src=\"/Text/Mass\"/> {mass}T"), TEXT("mass"), FText::AsNumber(Mass)));
+		FText::FormatNamed(LOCTEXT("ModuleDescriptionFormat", "<img src=\"/Text/Mass\"/> {mass} T"), TEXT("mass"), FText::AsNumber(Mass)));
 
 	return Result;
 }
@@ -185,8 +185,7 @@ TArray<FText> UNovaPropellantModuleDescription::GetDescription() const
 {
 	TArray<FText> Result = Super::GetDescription();
 
-	Result.Add(FText::FormatNamed(
-		LOCTEXT("PropellantModuleDescriptionFormat", "<img src=\"/Text/Propellant\"/> {propellant} T propellant capacity"),
+	Result.Add(FText::FormatNamed(LOCTEXT("PropellantModuleDescriptionFormat", "<img src=\"/Text/Propellant\"/> {propellant} T propellant"),
 		TEXT("propellant"), FText::AsNumber(PropellantMass)));
 
 	return Result;
@@ -196,8 +195,8 @@ TArray<FText> UNovaCargoModuleDescription::GetDescription() const
 {
 	TArray<FText> Result = Super::GetDescription();
 
-	Result.Add(FText::FormatNamed(LOCTEXT("CargoModuleDescriptionFormat", "<img src=\"/Text/Cargo\"/> {cargo} T cargo capacity"),
-		TEXT("cargo"), FText::AsNumber(CargoMass)));
+	Result.Add(FText::FormatNamed(
+		LOCTEXT("CargoModuleDescriptionFormat", "<img src=\"/Text/Cargo\"/> {cargo} T cargo"), TEXT("cargo"), FText::AsNumber(CargoMass)));
 
 	return Result;
 }

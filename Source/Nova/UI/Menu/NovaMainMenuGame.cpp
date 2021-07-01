@@ -187,7 +187,7 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 				[
 					SNew(STextBlock)
 					.TextStyle(&Theme.InfoFont)
-					.Text(LOCTEXT("ContractsNone", "Find contracts in the world to gain units"))
+					.Text(LOCTEXT("ContractsNone", "Find contracts in the world to gain credits"))
 					.Visibility(this, &SNovaMainMenuGame::GetContractsTextVisibility)
 				]
 			]
@@ -217,7 +217,7 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 					.Icon(this, &SNovaMainMenuGame::GetContractTrackIcon, Index)
 					.OnClicked(this, &SNovaMainMenuGame::OnTrackContract, Index)
 					.Text(this, &SNovaMainMenuGame::GetContractTrackText, Index)
-					.HelpText(LOCTEXT("ContractTrackHelp", "Track this contract to see its status on the HUD"))
+					.HelpText(LOCTEXT("ContractTrackHelp", "Track this contract to see its status in menus"))
 				]
 
 				+ SVerticalBox::Slot()
@@ -452,7 +452,7 @@ FText SNovaMainMenuGame::GetOnlineText() const
 		}
 		else if (SessionsManager->GetNetworkState() == ENovaNetworkState::OnlineClient)
 		{
-			StatusMessage = FText::FormatNamed(LOCTEXT("OnlineClient", "You are playing online as a guest ({ping}ms ping)"), TEXT("ping"),
+			StatusMessage = FText::FormatNamed(LOCTEXT("OnlineClient", "You are playing online as a guest ({ping} ms ping)"), TEXT("ping"),
 				FText::AsNumber(PlayerState->ExactPing));
 		}
 		else

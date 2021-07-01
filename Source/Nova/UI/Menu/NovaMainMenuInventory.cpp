@@ -150,7 +150,6 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 		{
 			auto IsValidCompartment = [=]()
 			{
-				const FNovaSpacecraft* Spacecraft = PC->GetSpacecraft();
 				if (Spacecraft && Index >= 0 && Index < Spacecraft->Compartments.Num())
 				{
 					return Spacecraft->Compartments[Index].GetCargoCapacity(Type) > 0;
@@ -263,7 +262,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 										int32 Amount = Cargo.Amount;
 										int32 Capacity = Compartment.GetCargoCapacity(Type);
 
-										return FText::FormatNamed(LOCTEXT("CargoAmountFormat", "<img src=\"/Text/Cargo\"/> {amount}T / {capacity}T"),
+										return FText::FormatNamed(LOCTEXT("CargoAmountFormat", "<img src=\"/Text/Cargo\"/> {amount} T / {capacity} T"),
 											TEXT("amount"), FText::AsNumber(Amount),
 											TEXT("capacity"), FText::AsNumber(Capacity));
 									}
@@ -393,7 +392,7 @@ FText SNovaMainMenuInventory::GetPropellantText() const
 
 		return FText::FormatNamed(
 			LOCTEXT("PropellantFormat",
-				"<img src=\"/Text/Propellant\"/> {remaining}T out of {total}T <img src=\"/Text/Thrust\"/> {deltav} m/s delta-v"),
+				"<img src=\"/Text/Propellant\"/> {remaining} T out of {total} T <img src=\"/Text/Thrust\"/> {deltav} m/s delta-v"),
 			TEXT("remaining"), FText::AsNumber(PropellantSystem->GetCurrentPropellantMass(), &Options), TEXT("total"),
 			FText::AsNumber(PropellantSystem->GetPropellantCapacity(), &Options), TEXT("deltav"),
 			FText::AsNumber(RemainingDeltaV, &Options));

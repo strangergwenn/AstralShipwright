@@ -37,7 +37,7 @@ public:
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-		SNovaText::Construct(SNovaText::FArguments().TextStyle(&Theme.MainFont));
+		SNovaText::Construct(SNovaText::FArguments().TextStyle(&Theme.MainFont).WrapTextAt(500));
 
 		// clang-format off
 		ChildSlot
@@ -102,12 +102,16 @@ public:
 					FNumberFormattingOptions NumberOptions;
 					NumberOptions.SetMaximumFractionalDigits(1);
 
-					return FText::FormatNamed(
-						LOCTEXT("ManeuverFormat", "{duration} burn for a {deltav} m/s maneuver at {phase}° in {time}"), TEXT("phase"),
+					FNovaTime TimeLeftBeforeManeuver = Object.Maneuver->Time - GameState->GetCurrentTime();
+					FText     ManeuverTextFormat =
+                        TimeLeftBeforeManeuver > 0
+								? LOCTEXT("ManeuverFormatValid", "{duration} burn for a {deltav} m/s maneuver at {phase}° in {time}")
+								: LOCTEXT("ManeuverFormatExpired", "{duration} burn for a {deltav} m/s maneuver at {phase}°");
+
+					return FText::FormatNamed(ManeuverTextFormat, TEXT("phase"),
 						FText::AsNumber(FMath::Fmod(Object.Maneuver->Phase, 360.0f), &NumberOptions), TEXT("time"),
-						GetDurationText(Object.Maneuver->Time - GameState->GetCurrentTime()), TEXT("duration"),
-						GetDurationText(Object.Maneuver->Duration), TEXT("deltav"),
-						FText::AsNumber(Object.Maneuver->DeltaV, &NumberOptions));
+						GetDurationText(TimeLeftBeforeManeuver), TEXT("duration"), GetDurationText(Object.Maneuver->Duration),
+						TEXT("deltav"), FText::AsNumber(Object.Maneuver->DeltaV, &NumberOptions));
 				}
 				else
 				{
@@ -422,7 +426,7 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 								FNumberFormattingOptions Options;
 								Options.MaximumFractionalDigits = 1;
 
-								return FText::FormatNamed(LOCTEXT("TrajectoryFuelFormat", "{used}T of propellant will be used ({remaining}T remaining)"),
+								return FText::FormatNamed(LOCTEXT("TrajectoryFuelFormat", "{used} T of propellant will be used ({remaining} T remaining)"),
 									TEXT("used"), FText::AsNumber(FuelToBeUsed, &Options),
 									TEXT("remaining"), FText::AsNumber(FuelRemaining, &Options));
 							}

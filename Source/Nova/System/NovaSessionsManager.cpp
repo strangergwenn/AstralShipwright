@@ -738,7 +738,7 @@ FText UNovaSessionsManager::GetNetworkErrorString() const
 		case ENovaNetworkError::Success:
 			return LOCTEXT("Success", "Success");
 		case ENovaNetworkError::CreateFailed:
-			return LOCTEXT("CreateFailed", "Failed to create");
+			return LOCTEXT("CreateFailed", "Failed to create session");
 		case ENovaNetworkError::StartFailed:
 			return LOCTEXT("StartFailed", "Failed to start session");
 		case ENovaNetworkError::DestroyFailed:

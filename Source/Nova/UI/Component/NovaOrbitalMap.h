@@ -202,7 +202,7 @@ protected:
 		const struct FNovaSplineOrbit& Orbit, TArray<FNovaOrbitalObject>& Objects, const struct FNovaSplineStyle& Style);
 
 	/** Draw an interactive orbital object on the map */
-	void AddHoveredObject(const FNovaOrbitalObject& Object, const FLinearColor& Color);
+	void AddOrbitalObject(const FNovaOrbitalObject& Object, const FLinearColor& Color);
 
 	/** Add test orbits */
 	void AddTestOrbits();

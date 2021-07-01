@@ -69,7 +69,7 @@ struct FNovaResourceTrade
 {
 	GENERATED_BODY()
 
-	FNovaResourceTrade() : Resource(nullptr), PriceModifier(ENovaPriceModifier::Average)
+	FNovaResourceTrade() : Resource(nullptr), PriceModifier(ENovaPriceModifier::Average), ForSale(false)
 	{}
 
 public:

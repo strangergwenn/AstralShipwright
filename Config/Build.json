@@ -7,7 +7,7 @@
 	"itch": 
 	{
 		"user": "deimos-games",
-		"project": "gaia",
+		"project": "nova",
 		"branches": ["windows", "linux"],
 		"directories": ["WindowsNoEditor", "LinuxNoEditor"]
 	}
