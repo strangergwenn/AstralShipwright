@@ -240,15 +240,34 @@ public:
 
 		ChildSlot
 		[
-			SNew(STextBlock)
+			SAssignNew(TextBlock, STextBlock)
 			.Text(this, &SNovaText::GetText)
 			.TextStyle(InArgs._TextStyle)
 			.WrapTextAt(InArgs._WrapTextAt)
-				.AutoWrapText(InArgs._AutoWrapText)
+			.AutoWrapText(InArgs._AutoWrapText)
 			.ColorAndOpacity(this, &SNovaFadingWidget::GetSlateColor)
 
 		];
 		// clang-format on
+	}
+
+	void SetText(const FText& Text, bool InstantUpdate = false)
+	{
+		if (Getter.IsBound())
+		{
+			Getter.Unbind();
+		}
+
+		DesiredText = Text;
+		if (InstantUpdate && !CurrentText.IsEmpty())
+		{
+			CurrentText = Text;
+		}
+	}
+
+	FText GetText() const
+	{
+		return CurrentText;
 	}
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
@@ -271,15 +290,11 @@ public:
 		CurrentText = DesiredText;
 	}
 
-	FText GetText() const
-	{
-		return CurrentText;
-	}
-
 protected:
-	FText           DesiredText;
-	FText           CurrentText;
-	FNovaTextGetter Getter;
+	FText                  DesiredText;
+	FText                  CurrentText;
+	FNovaTextGetter        Getter;
+	TSharedPtr<STextBlock> TextBlock;
 };
 
 /** Simple SRichTextBlock analog that fades smoothly when the text changes */

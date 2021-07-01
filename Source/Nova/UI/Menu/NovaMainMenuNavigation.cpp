@@ -27,6 +27,150 @@
 #define LOCTEXT_NAMESPACE "SNovaMainMenuNavigation"
 
 /*----------------------------------------------------
+    Hover details stack
+----------------------------------------------------*/
+
+/** Fading text widget with a background */
+class SNovaHoverStackEntry : public SNovaText
+{
+public:
+	void Construct(const FArguments& InArgs)
+	{
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+		SNovaText::Construct(SNovaText::FArguments().TextStyle(&Theme.MainFont));
+
+		// clang-format off
+		ChildSlot
+		[
+			SNew(SBorder)
+			.BorderImage(&Theme.MainMenuBackground)
+			.Padding(Theme.ContentPadding)
+			.BorderBackgroundColor(this, &SNovaFadingWidget::GetSlateColor)
+			[
+				TextBlock.ToSharedRef()
+			]
+		];
+		// clang-format on
+	}
+};
+
+/** Text stack with fading lines */
+class SNovaHoverStack : public SCompoundWidget
+{
+	SLATE_BEGIN_ARGS(SNovaHoverStack)
+	{}
+
+	SLATE_END_ARGS()
+
+public:
+	void Construct(const FArguments& InArgs)
+	{
+		// clang-format off
+		ChildSlot
+		[
+			SNew(SBox)
+			.WidthOverride(500)
+			[
+				SAssignNew(Container, SVerticalBox)
+			]
+		];
+		// clang-format on
+	}
+
+public:
+	void SetObjectList(const ANovaGameState* GameState, TArray<FNovaOrbitalObject> ObjectList)
+	{
+		if (IsValid(GameState))
+		{
+			const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+			// Text builder
+			auto GetText = [GameState](const FNovaOrbitalObject& Object)
+			{
+				if (Object.Area.IsValid())
+				{
+					return Object.Area->Name;
+				}
+				else if (Object.SpacecraftIdentifier != FGuid())
+				{
+					const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Object.SpacecraftIdentifier);
+					NCHECK(Spacecraft);
+					return Spacecraft->GetName();
+				}
+				else if (Object.Maneuver.IsValid())
+				{
+					FNumberFormattingOptions NumberOptions;
+					NumberOptions.SetMaximumFractionalDigits(1);
+
+					return FText::FormatNamed(
+						LOCTEXT("ManeuverFormat", "{duration} burn for a {deltav} m/s maneuver at {phase}° in {time}"), TEXT("phase"),
+						FText::AsNumber(FMath::Fmod(Object.Maneuver->Phase, 360.0f), &NumberOptions), TEXT("time"),
+						GetDurationText(Object.Maneuver->Time - GameState->GetCurrentTime()), TEXT("duration"),
+						GetDurationText(Object.Maneuver->Duration), TEXT("deltav"),
+						FText::AsNumber(Object.Maneuver->DeltaV, &NumberOptions));
+				}
+				else
+				{
+					return FText();
+				}
+			};
+
+			// Grow the text item list if too small
+			int32 TextItemsToAdd = ObjectList.Num() - TextItemList.Num();
+			if (TextItemsToAdd > 0)
+			{
+				for (int32 Index = 0; Index < TextItemsToAdd; Index++)
+				{
+					TSharedPtr<SNovaHoverStackEntry> NewItem = SNew(SNovaHoverStackEntry);
+
+					Container->AddSlot().AutoHeight()[NewItem.ToSharedRef()];
+					TextItemList.Add(NewItem);
+				}
+			}
+
+			// Nicely fade out and trim the item list if too big
+			else if (TextItemsToAdd < 0)
+			{
+				for (int32 Index = ObjectList.Num(); Index < TextItemList.Num(); Index++)
+				{
+					TSharedPtr<SNovaHoverStackEntry>& Item = TextItemList[Index];
+					if (!Item->GetText().IsEmpty())
+					{
+						Item->SetText(FText());
+					}
+					else
+					{
+						Container->RemoveSlot(Item.ToSharedRef());
+						TextItemList.RemoveAt(Index);
+					}
+				}
+			}
+
+			// Build text for all objects
+			int32 Index = 0;
+			for (const FNovaOrbitalObject& Object : ObjectList)
+			{
+				TSharedPtr<SNovaHoverStackEntry>& Item = TextItemList[Index];
+
+				FText Text = FText::FromString(FString(TEXT("• ")) + GetText(Object).ToString());
+				bool  InstantUpdate =
+					Index < PreviousObjects.Num() && PreviousObjects[Index].Maneuver.IsValid() && Object.Maneuver.IsValid();
+
+				Item->SetText(Text, InstantUpdate);
+				Index++;
+			}
+		}
+
+		PreviousObjects = ObjectList;
+	}
+
+protected:
+	TSharedPtr<SVerticalBox>                 Container;
+	TArray<TSharedPtr<SNovaHoverStackEntry>> TextItemList;
+	TArray<FNovaOrbitalObject>               PreviousObjects;
+};
+
+/*----------------------------------------------------
     Side panel container widget (fading)
 ----------------------------------------------------*/
 
@@ -314,18 +458,7 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 		.HAlign(HAlign_Right)
 		.VAlign(VAlign_Top)
 		[
-			SNew(SBox)
-			.WidthOverride(500)
-			[
-				SNew(SBorder)
-				.BorderImage(&Theme.MainMenuBackground)
-				.Padding(Theme.ContentPadding)
-				[
-					SNew(STextBlock)
-					.Text(this, &SNovaMainMenuNavigation::GetHoverText)
-					.TextStyle(&Theme.MainFont)
-				]
-			]
+			SAssignNew(HoverText, SNovaHoverStack)
 		]
 	];
 	// clang-format on
@@ -363,6 +496,9 @@ void SNovaMainMenuNavigation::Tick(const FGeometry& AllottedGeometry, const doub
 			HasHoveredObjects = false;
 		}
 	}
+
+	// Update the hover block
+	HoverText->SetObjectList(GameState, CurrentHoveredObjects);
 }
 
 void SNovaMainMenuNavigation::Show()
@@ -647,61 +783,6 @@ bool SNovaMainMenuNavigation::CanCommitTrajectoryInternal(FText* Details) const
 /*----------------------------------------------------
     Content callbacks
 ----------------------------------------------------*/
-
-FText SNovaMainMenuNavigation::GetHoverText() const
-{
-	auto GetText = [](const FNovaOrbitalObject& Object, const ANovaGameState* GameState)
-	{
-		if (Object.Area.IsValid())
-		{
-			return Object.Area->Name;
-		}
-		else if (Object.SpacecraftIdentifier != FGuid())
-		{
-			const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Object.SpacecraftIdentifier);
-			NCHECK(Spacecraft);
-			return Spacecraft->GetName();
-		}
-		else if (Object.Maneuver.IsValid())
-		{
-			FNumberFormattingOptions NumberOptions;
-			NumberOptions.SetMaximumFractionalDigits(1);
-
-			return FText::FormatNamed(LOCTEXT("ManeuverFormat", "{duration} burn for a {deltav} m/s maneuver at {phase}° in {time}"),
-				TEXT("phase"), FText::AsNumber(FMath::Fmod(Object.Maneuver->Phase, 360.0f), &NumberOptions), TEXT("time"),
-				GetDurationText(Object.Maneuver->Time - GameState->GetCurrentTime()), TEXT("duration"),
-				GetDurationText(Object.Maneuver->Duration), TEXT("deltav"), FText::AsNumber(Object.Maneuver->DeltaV, &NumberOptions));
-		}
-		else
-		{
-			return FText();
-		}
-	};
-
-	// Build text for all objects
-	FString Result;
-	if (IsValid(GameState))
-	{
-		for (const FNovaOrbitalObject& Object : OrbitalMap->GetHoveredOrbitalObjects())
-		{
-			if (!Result.IsEmpty())
-			{
-				Result += "\n";
-			}
-
-			Result += GetText(Object, GameState).ToString();
-		}
-	}
-
-	if (Result.IsEmpty())
-	{
-		return LOCTEXT("HoverTextHint", "Hover points of interest to learn more");
-	}
-	else
-	{
-		return FText::FromString(Result);
-	}
-}
 
 bool SNovaMainMenuNavigation::CanCommitTrajectory() const
 {

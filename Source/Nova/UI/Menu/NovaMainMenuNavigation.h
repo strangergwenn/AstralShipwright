@@ -70,8 +70,6 @@ protected:
 	----------------------------------------------------*/
 
 protected:
-	FText GetHoverText() const;
-
 	bool  CanCommitTrajectory() const;
 	FText GetCommitTrajectoryHelpText() const;
 
@@ -100,6 +98,7 @@ protected:
 	TSharedPtr<SNovaOrbitalMap>               OrbitalMap;
 	TSharedPtr<class SNovaSidePanel>          SidePanel;
 	TSharedPtr<class SNovaSidePanelContainer> SidePanelContainer;
+	TSharedPtr<class SNovaHoverStack>         HoverText;
 
 	// Side panel widgets
 	TSharedPtr<class STextBlock>                AreaTitle;
