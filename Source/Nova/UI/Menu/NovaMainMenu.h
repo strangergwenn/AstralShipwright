@@ -69,6 +69,9 @@ protected:
 	/** Check if we can display the game menus */
 	bool AreGameMenusVisible() const;
 
+	/** Get the credits text visibility */
+	EVisibility GetInfoTextVisibility() const;
+
 	/** Get the visibility of the window control */
 	EVisibility GetMaximizeVisibility() const;
 

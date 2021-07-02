@@ -113,6 +113,7 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 					SNew(SNovaText)
 					.TextStyle(&Theme.MainFont)
 					.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenu::GetInfoText))
+					.Visibility(this, &SNovaMainMenu::GetInfoTextVisibility)
 				]
 			]
 		]
@@ -334,6 +335,11 @@ bool SNovaMainMenu::IsAssemblyMenuVisible() const
 bool SNovaMainMenu::AreGameMenusVisible() const
 {
 	return !IsHomeMenuVisible();
+}
+
+EVisibility SNovaMainMenu::GetInfoTextVisibility() const
+{
+	return AreGameMenusVisible() ? EVisibility::Visible : EVisibility::Collapsed;
 }
 
 EVisibility SNovaMainMenu::GetMaximizeVisibility() const

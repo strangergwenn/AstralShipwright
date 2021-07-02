@@ -222,6 +222,7 @@ class SNovaText : public SNovaFadingWidget<false>
 	SLATE_STYLE_ARGUMENT(FTextBlockStyle, TextStyle)
 	SLATE_ATTRIBUTE(float, WrapTextAt)
 	SLATE_ATTRIBUTE(bool, AutoWrapText)
+	SLATE_ATTRIBUTE(EVisibility, Visibility)
 
 	SLATE_END_ARGS()
 
@@ -236,6 +237,7 @@ public:
 		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments()
 			.FadeDuration(ENovaUIConstants::FadeDurationShort)
 			.DisplayDuration(4.0f)
+			.Visibility(InArgs._Visibility)
 		);
 
 		ChildSlot
@@ -246,7 +248,6 @@ public:
 			.WrapTextAt(InArgs._WrapTextAt)
 			.AutoWrapText(InArgs._AutoWrapText)
 			.ColorAndOpacity(this, &SNovaFadingWidget::GetSlateColor)
-
 		];
 		// clang-format on
 	}
