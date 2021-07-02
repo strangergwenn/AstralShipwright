@@ -461,6 +461,7 @@ void SNovaMainMenuSettings::Show()
 
 	// Gameplay options
 	FOVSlider->SetCurrentValue(GameUserSettings->FOV);
+	CrashReportButton->SetActive(GameUserSettings->EnableCrashReports);
 }
 
 TSharedPtr<SNovaButton> SNovaMainMenuSettings::GetDefaultFocusButton() const
