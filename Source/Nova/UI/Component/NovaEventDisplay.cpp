@@ -74,6 +74,7 @@ void SNovaEventDisplay::Construct(const FArguments& InArgs)
 							SNew(STextBlock)
 							.TextStyle(&Theme.HeadingFont)
 							.Text(this, &SNovaEventDisplay::GetMainText)
+							.WrapTextAt(Theme.EventDisplayWidth)
 						]
 
 						+ SVerticalBox::Slot()
@@ -83,6 +84,7 @@ void SNovaEventDisplay::Construct(const FArguments& InArgs)
 							SNew(STextBlock)
 							.TextStyle(&Theme.MainFont)
 							.Text(this, &SNovaEventDisplay::GetTimeText)
+							.WrapTextAt(Theme.EventDisplayWidth)
 							.Visibility(this, &SNovaEventDisplay::GetDetailsVisibility)
 						]
 
@@ -108,6 +110,7 @@ void SNovaEventDisplay::Construct(const FArguments& InArgs)
 								SNew(SNovaText)
 								.TextStyle(&Theme.MainFont)
 								.Text(FNovaTextGetter::CreateSP(this, &SNovaEventDisplay::GetDetailsText))
+								.WrapTextAt(Theme.EventDisplayWidth)
 								.Visibility(this, &SNovaEventDisplay::GetDetailsVisibility)
 							]
 						]

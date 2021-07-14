@@ -795,6 +795,7 @@ FTransform UNovaSpacecraftMovementComponent::GetInitialTransform() const
 	// Start docked
 	if (DockState.IsDocked)
 	{
+		NLOG("UNovaSpacecraftMovementComponent::GetInitialTransform : docked");
 		return DockState.Actor->GetActorTransform();
 	}
 
@@ -804,24 +805,34 @@ FTransform UNovaSpacecraftMovementComponent::GetInitialTransform() const
 		// Fetch the trajectory state
 		const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 		NCHECK(IsValid(GameState));
+		FNovaTime              CurrentTime  = GameState->GetCurrentTime();
 		const FNovaTrajectory* Trajectory   = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
-		const FNovaManeuver*   NextManeuver = Trajectory ? Trajectory->GetNextManeuver(GameState->GetCurrentTime()) : nullptr;
+		const FNovaManeuver*   NextManeuver = Trajectory ? Trajectory->GetNextManeuver(CurrentTime) : nullptr;
 
 		// Maneuver override
 		if (NextManeuver)
 		{
+			FRotator DesiredRotation = DockState.Actor->GetInterfacePointDirection(NextManeuver->DeltaV).Rotation();
+
 			// Exit maneuver
-			if (Trajectory->GetFirstManeuverStartTime() > GameState->GetCurrentTime())
+			if (Trajectory->GetFirstManeuverStartTime() > CurrentTime)
 			{
-				return FTransform(DockState.Actor->GetInterfacePointDirection(NextManeuver->DeltaV).Rotation(),
-					DockState.Actor->GetWaitingPointLocation());
+				NLOG("UNovaSpacecraftMovementComponent::GetInitialTransform : exit maneuver");
+				return FTransform(DesiredRotation, DockState.Actor->GetWaitingPointLocation());
+			}
+
+			// Orbiting between areas
+			else if (Trajectory && Trajectory->GetRemainingManeuverCount(CurrentTime) > 1)
+			{
+				NLOG("UNovaSpacecraftMovementComponent::GetInitialTransform : orbiting");
+				return FTransform(DesiredRotation, FVector::ZeroVector);
 			}
 
 			// Enter maneuver
 			else
 			{
-				return FTransform(DockState.Actor->GetInterfacePointDirection(NextManeuver->DeltaV).Rotation(),
-					DockState.Actor->GetInterfacePointLocation(NextManeuver->DeltaV));
+				NLOG("UNovaSpacecraftMovementComponent::GetInitialTransform : enter maneuver");
+				return FTransform(DesiredRotation, DockState.Actor->GetInterfacePointLocation(NextManeuver->DeltaV));
 			}
 		}
 	}

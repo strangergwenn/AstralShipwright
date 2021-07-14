@@ -40,7 +40,7 @@ public:
 	/** Get the world location of the area interface point */
 	FVector GetInterfacePointLocation(float DeltaV) const
 	{
-		return GetWaitingPointLocation() + GetInterfacePointDirection(DeltaV) * 10000;
+		return GetWaitingPointLocation() + GetInterfacePointDirection(DeltaV) * 100000;
 	}
 
 	/** Get the world direction of the area interface point */
