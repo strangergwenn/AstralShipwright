@@ -407,7 +407,7 @@ void SNovaMenu::SetFocusedButton(TSharedPtr<SNovaButton> FocusButton, bool FromN
 
 		FocusButton->SetFocused(true);
 
-		if (FromNavigation)
+		if (FromNavigation && CurrentNavigationPanel)
 		{
 			CurrentNavigationPanel->OnFocusChanged(FocusButton);
 		}
@@ -422,7 +422,7 @@ void SNovaMenu::SetFocusedButton(TSharedPtr<SNovaButton> FocusButton, bool FromN
 			}
 		}
 
-		if (FromNavigation)
+		if (FromNavigation && CurrentNavigationPanel)
 		{
 			CurrentNavigationPanel->OnFocusChanged(FocusButton);
 		}
