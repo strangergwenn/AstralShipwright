@@ -370,7 +370,7 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 		for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
 		{
 			const UNovaEquipmentDescription* Equipment = Compartment.Equipments[EquipmentIndex];
-			if (Equipment)
+			if (Equipment && Equipment->RequiresPairing)
 			{
 				for (int32 GroupedIndex : Compartment.Description->GetGroupedEquipmentSlotsIndices(EquipmentIndex))
 				{
@@ -378,7 +378,7 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 					{
 						Issues.Add(FText::FormatNamed(LOCTEXT("InvalidPairing",
 														  "The equipment in slot {slot} of compartment {compartment} is not "
-														  "correctly paired with identical equipments"),
+														  "correctly paired with symmetrical equipments"),
 							TEXT("slot"), Compartment.Description->GetEquipmentSlot(EquipmentIndex).DisplayName, TEXT("compartment"),
 							FText::AsNumber(CompartmentIndex + 1)));
 					}

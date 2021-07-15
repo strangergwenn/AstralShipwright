@@ -254,6 +254,11 @@ TArray<FText> UNovaEquipmentDescription::GetDescription() const
 	Result.Add(FText::FormatNamed(
 		LOCTEXT("EquipmenteDescriptionFormat", "<img src=\"/Text/Mass\"/> {mass} T"), TEXT("mass"), FText::AsNumber(Mass)));
 
+	if (RequiresPairing)
+	{
+		Result.Add(LOCTEXT("EquipmentPairing", "<img src=\"/Text/Paired\"/> Requires pairing"));
+	}
+
 	return Result;
 }
 

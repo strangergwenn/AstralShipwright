@@ -461,6 +461,10 @@ public:
 	// Equipment requirement
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	ENovaEquipmentType EquipmentType;
+
+	// Equipment pairing
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	bool RequiresPairing;
 };
 
 /** Description of an engine equipment */

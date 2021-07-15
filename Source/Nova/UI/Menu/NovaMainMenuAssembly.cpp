@@ -948,7 +948,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 											PairedList += PairedSlot->DisplayName.ToString();
 										}
 
-										return FText::FormatNamed(LOCTEXT("PairingFormat", "<img src=\"/Text/Paired\"/> Paired with {slot}"), TEXT("slot"), FText::FromString(PairedList));
+										return LOCTEXT("Paired", "<img src=\"/Text/Paired\"/>");
 									}
 								}
 							
@@ -1600,22 +1600,49 @@ FText SNovaMainMenuAssembly::GetModuleOrEquipmentText()
 	{
 		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(EditedCompartmentIndex);
 
+		// A module is selected : get its description
 		if (IsModuleSelected())
 		{
 			int32 ModuleIndex = GetSelectedModuleIndex();
 			if (ModuleIndex < Compartment.Description->ModuleSlots.Num())
 			{
 				const UNovaModuleDescription* Module = Compartment.Modules[ModuleIndex].Description;
-				return Module ? Module->GetInlineDescription() : LOCTEXT("EmptyModule", "Empty module slot");
+				return Module ? Module->GetInlineDescription() : LOCTEXT("EmptyModule", "<img src=\"/Text/Module\"/> Empty module slot");
 			}
 		}
+
+		// An equipment is selected : get its description
 		else
 		{
 			int32 EquipmentIndex = GetSelectedEquipmentIndex();
 			if (EquipmentIndex < Compartment.Description->EquipmentSlots.Num())
 			{
-				const UNovaEquipmentDescription* Equipment = Compartment.Equipments[EquipmentIndex];
-				return Equipment ? Equipment->GetInlineDescription() : LOCTEXT("EmptyEquipment", "Empty equipment slot");
+				const UNovaEquipmentDescription* Equipment     = Compartment.Equipments[EquipmentIndex];
+				FText                            EquipmentText = Equipment ? Equipment->GetInlineDescription()
+																		   : LOCTEXT("EmptyEquipment", "<img src=\"/Text/Equipment\"/> Empty equipment slot");
+
+				// Append the pairing information
+				TArray<const FNovaEquipmentSlot*> PairedSlots = Compartment.Description->GetGroupedEquipmentSlots(EquipmentIndex);
+				if (PairedSlots.Num())
+				{
+					FString PairedList;
+					for (const FNovaEquipmentSlot* PairedSlot : PairedSlots)
+					{
+						if (PairedList.Len())
+						{
+							PairedList += TEXT(", ");
+						}
+						PairedList += PairedSlot->DisplayName.ToString();
+					}
+
+					EquipmentText =
+						FText::FromString(EquipmentText.ToString() + " " +
+										  FText::FormatNamed(LOCTEXT("PairingFormat", "<img src=\"/Text/Paired\"/> Paired with {slot}"),
+											  TEXT("slot"), FText::FromString(PairedList))
+											  .ToString());
+				}
+
+				return EquipmentText;
 			}
 		}
 	}
