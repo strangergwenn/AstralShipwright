@@ -37,12 +37,12 @@ sourceEngine =               projectConfig.get('sourceEngine')
 projectConfigFile.close()
 
 # Get version tag
-gitCommand = ['git', 'describe']
+gitCommand = ['git', 'describe', '--tags']
 try:
-	buildVersion = subprocess.check_output(gitCommand, stdout=open(os.devnull, 'wb')).decode('utf-8')
+	buildVersion = subprocess.check_output(gitCommand).decode('utf-8')
 	buildVersion = buildVersion.replace('\n', '');
 except:
-	buildVersion = 'master'
+	sys.exit('Git describe failed')
 
 
 #-------------------------------------------------------------------------------
@@ -137,7 +137,7 @@ for platform in projectPlatforms:
 			# Wipe generated files that aren't needed
 			if re.match('.*\.((pdb)|(debug))', filename):
 				if 'ThirdParty' in root or not projectKeepPdbs:
-					os.remove(absoluteFilename)
+					shutil.move(absoluteFilename, os.path.join(os.getcwd(), '..', 'Releases', buildVersion))
 			elif re.match('Manifest.*\.txt', filename):
 				os.remove(absoluteFilename)
 	
