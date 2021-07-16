@@ -166,6 +166,35 @@ struct FNovaCompartment
 	bool NeedsMainWiring;
 };
 
+/** Spacecraft customization data */
+USTRUCT()
+struct FNovaSpacecraftCustomization
+{
+	GENERATED_BODY()
+
+	FNovaSpacecraftCustomization() : StructuralPaint(nullptr)
+	{}
+
+	/** Initialize the customization data */
+	void Create()
+	{
+		StructuralPaint = UNovaStructuralPaintDescription::GetDefault();
+	}
+
+	bool operator==(const FNovaSpacecraftCustomization& Other) const
+	{
+		return StructuralPaint == Other.StructuralPaint;
+	}
+
+	bool operator!=(const FNovaSpacecraftCustomization& Other) const
+	{
+		return !operator==(Other);
+	}
+
+	UPROPERTY()
+	const UNovaStructuralPaintDescription* StructuralPaint;
+};
+
 /** Metrics for a spacecraft compartment */
 struct FNovaSpacecraftCompartmentMetrics : public INovaDescriptibleInterface
 {
@@ -266,11 +295,12 @@ struct FNovaSpacecraftPropulsionMetrics
 /** Spacecraft upgrade cost result */
 struct FNovaSpacecraftUpgradeCost
 {
-	FNovaSpacecraftUpgradeCost() : UpgradeCost(0), ResaleGain(0), TotalChangeCost(0), TotalCost(0)
+	FNovaSpacecraftUpgradeCost() : UpgradeCost(0), ResaleGain(0), PaintCost(0), TotalChangeCost(0), TotalCost(0)
 	{}
 
 	FNovaCredits UpgradeCost;
 	FNovaCredits ResaleGain;
+	FNovaCredits PaintCost;
 	FNovaCredits TotalChangeCost;
 	FNovaCredits TotalCost;
 };
@@ -311,6 +341,8 @@ public:
 	{
 		Identifier = FGuid::NewGuid();
 		Name       = SpacecraftName;
+
+		Customization.Create();
 	}
 
 	/** Get the spacecraft validity */
@@ -352,6 +384,12 @@ public:
 
 	/** Get this spacecraft's classification */
 	FText GetClassification() const;
+
+	/** Get the customization data */
+	const struct FNovaSpacecraftCustomization& GetCustomization() const
+	{
+		return Customization;
+	}
 
 	/** Serialize the spacecraft */
 	static void SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
@@ -452,6 +490,10 @@ public:
 	// Name
 	UPROPERTY()
 	FString Name;
+
+	// Customization data
+	UPROPERTY()
+	FNovaSpacecraftCustomization Customization;
 
 	// Propellant mass while docked - serves as persistent storage
 	// The real-time value while flying is handled by the propellant system

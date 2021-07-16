@@ -77,6 +77,8 @@ class SNovaMainMenuAssembly
 	typedef SNovaModalListView<ENovaAssemblyDisplayFilter>               SNovaDisplayFilterList;
 	typedef SNovaModalListView<ENovaHullType>                            SNovaHullTypeList;
 
+	typedef SNovaListView<const class UNovaStructuralPaintDescription*> SNovaStructuralPaintList;
+
 	/*----------------------------------------------------
 	    Slate arguments
 	----------------------------------------------------*/
@@ -126,7 +128,7 @@ public:
 
 protected:
 	/** Get the index of the next compartment to build */
-	int32 GetNewBuildIndex(bool Forward) const;
+	int32 GetNewBuildIndex(bool Forward = true) const;
 
 	/** Select a compartment index */
 	void SetSelectedCompartment(int32 Index);
@@ -225,7 +227,7 @@ protected:
 	// Assembly callbacks
 	FText GetSelectedFilterText() const;
 	bool  IsSelectCompartmentEnabled(int32 Index) const;
-	bool  IsAddCompartmentEnabled(bool Forward) const;
+	bool  IsAddCompartmentEnabled() const;
 	bool  IsEditCompartmentEnabled() const;
 	FText GetCompartmentText();
 
@@ -248,6 +250,10 @@ protected:
 	FKey GetPreviousItemKey() const;
 	FKey GetNextItemKey() const;
 
+	// Paint list
+	TSharedRef<SWidget> GenerateStructuralPaintItem(const class UNovaStructuralPaintDescription* Paint) const;
+	FText               GenerateStructuralPaintTooltip(const class UNovaStructuralPaintDescription* Paint) const;
+
 	/*----------------------------------------------------
 	    Callbacks
 	----------------------------------------------------*/
@@ -259,7 +265,7 @@ protected:
 	void OnRemoveCompartmentConfirmed();
 
 	// Compartment selection
-	void OnAddCompartment(const class UNovaCompartmentDescription* Compartment, int32 Index, bool Forward);
+	void OnAddCompartment(const class UNovaCompartmentDescription* Compartment, int32 Index, bool Forward = true);
 	void OnCompartmentSelected(int32 Index);
 
 	// Display filters
@@ -271,6 +277,10 @@ protected:
 	void OnSelectedModuleChanged(const class UNovaModuleDescription* Module, int32 Index);
 	void OnSelectedEquipmentChanged(const class UNovaEquipmentDescription* Equipment, int32 Index);
 	void OnSelectedHullTypeChanged(ENovaHullType Type, int32 Index);
+
+	// Customization
+	void OnOpenCustomization();
+	void OnConfirmCustomization();
 
 	// Save & exit
 	void OnReviewSpacecraft();
@@ -297,6 +307,7 @@ protected:
 	TSharedPtr<class SNovaModalPanel>         GenericModalPanel;
 	TSharedPtr<class SNovaAssemblyModalPanel> AssemblyModalPanel;
 	TSharedPtr<SVerticalBox>                  MenuBox;
+	TSharedPtr<SHorizontalBox>                CustomizationBox;
 
 	// Panel fading system
 	float FadeDuration;
@@ -324,4 +335,8 @@ protected:
 	// Compartment equipment list
 	TArray<const class UNovaEquipmentDescription*> EquipmentList;
 	TSharedPtr<SNovaEquipmentList>                 EquipmentListView;
+
+	// Structural paint list
+	TArray<const class UNovaStructuralPaintDescription*> StructuralPaintList;
+	TSharedPtr<SNovaStructuralPaintList>                 StructuralPaintListView;
 };

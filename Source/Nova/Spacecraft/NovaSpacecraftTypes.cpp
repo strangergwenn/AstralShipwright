@@ -4,6 +4,7 @@
 #include "NovaSpacecraftPawn.h"
 #include "Nova/Actor/NovaCaptureActor.h"
 #include "Nova/Game/NovaGameMode.h"
+#include "Nova/System/NovaAssetManager.h"
 
 #define LOCTEXT_NAMESPACE "NovaSpacecraftTypes"
 
@@ -118,6 +119,15 @@ TArray<FText> UNovaCompartmentDescription::GetDescription() const
 			TEXT("equipments"), FText::AsNumber(EquipmentSlots.Num())));
 
 	return Result;
+}
+
+/*----------------------------------------------------
+    Paint data asset
+----------------------------------------------------*/
+
+const UNovaStructuralPaintDescription* UNovaStructuralPaintDescription::GetDefault()
+{
+	return UNovaAssetManager::Get()->GetAsset<UNovaStructuralPaintDescription>(FGuid("{FF8DB953-4255-8F98-FC5C-E88CA87D18E9}"));
 }
 
 /*----------------------------------------------------

@@ -1,6 +1,7 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaSpacecraftCompartmentComponent.h"
+#include "NovaSpacecraftPawn.h"
 
 #include "Nova/Actor/NovaMeshInterface.h"
 #include "Nova/Actor/NovaStaticMeshComponent.h"
@@ -369,7 +370,13 @@ void UNovaSpacecraftCompartmentComponent::BuildElement(
 		}
 	}
 
+	// Fetch the desired customization state
+	ANovaSpacecraftPawn* SpacecraftPawn = Cast<ANovaSpacecraftPawn>(GetOwner());
+	NCHECK(SpacecraftPawn);
+	const FNovaSpacecraftCustomization& Customization = SpacecraftPawn->GetCustomization();
 	RequestParameter(Element, "DirtyIntensity", 0.5f);
+	RequestParameter(Element, "StructuralPaint", Customization.StructuralPaint->Unpainted ? 0.0f : 1.0f);
+	RequestParameter(Element, "StructuralPaintColor", Customization.StructuralPaint->PaintColor);
 }
 
 /*----------------------------------------------------
@@ -415,6 +422,14 @@ void UNovaSpacecraftCompartmentComponent::SetElementOffset(FNovaAssemblyElement&
 }
 
 void UNovaSpacecraftCompartmentComponent::RequestParameter(FNovaAssemblyElement& Element, FName Name, float Value)
+{
+	if (Element.Mesh)
+	{
+		Element.Mesh->RequestParameter(Name, Value, ImmediateMode);
+	}
+}
+
+void UNovaSpacecraftCompartmentComponent::RequestParameter(FNovaAssemblyElement& Element, FName Name, FLinearColor Value)
 {
 	if (Element.Mesh)
 	{

@@ -10,6 +10,7 @@
 
 #include "Nova/System/NovaGameInstance.h"
 #include "Nova/System/NovaMenuManager.h"
+#include "Nova/System/NovaAssetManager.h"
 
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 
@@ -58,6 +59,7 @@ public:
 		CostTable->AddEntry(LOCTEXT("UpgradeCostValue", "Estimated total value"), GetPriceText(Cost.TotalCost));
 		CostTable->AddEntry(LOCTEXT("UpgradeCostUpgrades", "New parts bought"), GetPriceText(Cost.UpgradeCost));
 		CostTable->AddEntry(LOCTEXT("UpgradeCostResale", "Parts resold"), GetPriceText(Cost.ResaleGain));
+		CostTable->AddEntry(LOCTEXT("UpgradeCostPaint", "Paint"), GetPriceText(Cost.PaintCost));
 		CostTable->AddEntry(LOCTEXT("UpgradeCostTotal", "Total cost of changes"), GetPriceText(Cost.TotalChangeCost));
 
 		// Validate cost
@@ -330,9 +332,9 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								[
 									SNovaNew(SNovaCompartmentList)
 									.Panel(this)
-									.Action(FNovaPlayerInput::MenuSecondary)
-									.TitleText(LOCTEXT("BuildCompartmentForward", "Add compartment forward"))
-									.HelpText(LOCTEXT("BuildCompartmentForwardelp", "Pick the blueprint for the new compartment"))
+									.Action(FNovaPlayerInput::MenuPrimary)
+									.TitleText(LOCTEXT("BuildCompartment", "Insert compartment"))
+									.HelpText(LOCTEXT("BuildCompartmentHelp", "Insert a new compartment forward of selected one"))
 									.OnSelfRefresh(SNovaCompartmentList::FNovaOnSelfRefresh::CreateLambda([&]()
 										{
 											int32 NewIndex = GetNewBuildIndex(true);
@@ -341,27 +343,19 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 									.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateCompartmentItem)
 									.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateCompartmentTooltip)
 									.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnAddCompartment, true)
-									.Enabled(this, &SNovaMainMenuAssembly::IsAddCompartmentEnabled, true)
+									.Enabled(this, &SNovaMainMenuAssembly::IsAddCompartmentEnabled)
 									.ListButtonSize("LargeListButtonSize")
 								]
 
 								+ SHorizontalBox::Slot()
 								.AutoWidth()
 								[
-									SNovaNew(SNovaCompartmentList)
-									.Panel(this)
-									.TitleText(LOCTEXT("BuildCompartmentAft", "Add compartment aft"))
-									.HelpText(LOCTEXT("BuildCompartmentAftHelp", "Pick the blueprint for the new compartment"))
-									.OnSelfRefresh(SNovaCompartmentList::FNovaOnSelfRefresh::CreateLambda([&]()
-										{
-											int32 NewIndex = GetNewBuildIndex(false);
-											return SNovaCompartmentList::SelfRefreshType(0, SpacecraftPawn->GetCompatibleCompartments(NewIndex));
-										}))
-									.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateCompartmentItem)
-									.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateCompartmentTooltip)
-									.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnAddCompartment, false)
-									.Enabled(this, &SNovaMainMenuAssembly::IsAddCompartmentEnabled, false)
-									.ListButtonSize("LargeListButtonSize")
+									SNovaNew(SNovaButton)
+									.Action(FNovaPlayerInput::MenuSecondary)
+									.Text(LOCTEXT("EditCompartment", "Edit compartment"))
+									.HelpText(LOCTEXT("EditCompartmentHelp", "Add modules and equipments to the selected compartment"))
+									.Enabled(this, &SNovaMainMenuAssembly::IsEditCompartmentEnabled)
+									.OnClicked(this, &SNovaMainMenuAssembly::OnEditCompartment)
 								]
 							]
 
@@ -374,11 +368,9 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								.AutoWidth()
 								[
 									SNovaNew(SNovaButton)
-									.Action(FNovaPlayerInput::MenuPrimary)
-									.Text(LOCTEXT("EditCompartment", "Edit compartment"))
-									.HelpText(LOCTEXT("EditCompartmentHelp", "Add modules and equipments to the selected compartment"))
-									.Enabled(this, &SNovaMainMenuAssembly::IsEditCompartmentEnabled)
-									.OnClicked(this, &SNovaMainMenuAssembly::OnEditCompartment)
+									.Text(LOCTEXT("CustomizeSpacecraft", "Customize spacecraft"))
+									.HelpText(LOCTEXT("CustomizeSpacecraftHelp", "Customize the spacecraft's paint scheme"))
+									.OnClicked(this, &SNovaMainMenuAssembly::OnOpenCustomization)
 								]
 
 								+ SHorizontalBox::Slot()
@@ -963,7 +955,40 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 			]
 		];
 	}
+	
+	// Build the customization panel
+	SAssignNew(CustomizationBox, SHorizontalBox)
 
+		+ SHorizontalBox::Slot()
+
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		[
+			SNew(SVerticalBox)
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(Theme.VerticalContentPadding)
+			[
+				SNew(STextBlock)
+				.TextStyle(&Theme.HeadingFont)
+				.Text(LOCTEXT("StructuralPaintTitle", "Structural paint"))
+			]
+			
+			// Paint list
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SAssignNew(StructuralPaintListView, SNovaStructuralPaintList)
+				.Panel(GenericModalPanel.Get())
+				.ItemsSource(&StructuralPaintList)
+				.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateStructuralPaintItem)
+				.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateStructuralPaintTooltip)
+				.ButtonSize("LargeListButtonSize")
+			]
+		]
+
+		+ SHorizontalBox::Slot();
 	// clang-format on
 
 	// Default settings
@@ -1499,7 +1524,7 @@ bool SNovaMainMenuAssembly::IsSelectCompartmentEnabled(int32 Index) const
 	return IsValid(SpacecraftPawn) && Index >= 0 && Index < SpacecraftPawn->GetCompartmentCount();
 }
 
-bool SNovaMainMenuAssembly::IsAddCompartmentEnabled(bool Forward) const
+bool SNovaMainMenuAssembly::IsAddCompartmentEnabled() const
 {
 	if (!IsValid(SpacecraftPawn))
 	{
@@ -1513,13 +1538,9 @@ bool SNovaMainMenuAssembly::IsAddCompartmentEnabled(bool Forward) const
 	{
 		return true;
 	}
-	else if (Forward)
-	{
-		return SelectedCompartmentIndex != INDEX_NONE;
-	}
 	else
 	{
-		return true;
+		return SelectedCompartmentIndex != INDEX_NONE;
 	}
 }
 
@@ -1658,6 +1679,24 @@ FKey SNovaMainMenuAssembly::GetPreviousItemKey() const
 FKey SNovaMainMenuAssembly::GetNextItemKey() const
 {
 	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuNext);
+}
+
+TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateStructuralPaintItem(const UNovaStructuralPaintDescription* Paint) const
+{
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+	return SNew(SOverlay).Clipping(EWidgetClipping::ClipToBoundsAlways)
+
+		 + SOverlay::Slot()[SNew(SScaleBox)[
+			   // TODO : image background for various paints
+			   SNew(SImage).Image(new FSlateNoResource)]]
+
+		 + SOverlay::Slot().Padding(Theme.ContentPadding)[SNew(STextBlock).TextStyle(&Theme.MainFont).Text(Paint->Name)];
+}
+
+FText SNovaMainMenuAssembly::GenerateStructuralPaintTooltip(const UNovaStructuralPaintDescription* Paint) const
+{
+	return Paint->Name;
 }
 
 /*----------------------------------------------------
@@ -1804,6 +1843,35 @@ void SNovaMainMenuAssembly::OnSelectedHullTypeChanged(ENovaHullType Type, int32 
 		SpacecraftPawn->GetCompartment(EditedCompartmentIndex).HullType = Type;
 		SpacecraftPawn->RequestAssemblyUpdate();
 	}
+}
+
+/*----------------------------------------------------
+    Customization
+----------------------------------------------------*/
+
+void SNovaMainMenuAssembly::OnOpenCustomization()
+{
+	NLOG("SNovaMainMenuAssembly::OnOpenCustomization");
+
+	const FNovaSpacecraftCustomization& Customization = SpacecraftPawn->GetCustomization();
+
+	StructuralPaintList = UNovaAssetManager::Get()->GetAssets<UNovaStructuralPaintDescription>();
+	StructuralPaintListView->Refresh(StructuralPaintList.Find(Customization.StructuralPaint));
+
+	GenericModalPanel->Show(LOCTEXT("CustomizeSpacecraftTitle", "Customize spacecraft"), FText(),
+		FSimpleDelegate::CreateSP(this, &SNovaMainMenuAssembly::OnConfirmCustomization), FSimpleDelegate(), FSimpleDelegate(),
+		CustomizationBox);
+}
+
+void SNovaMainMenuAssembly::OnConfirmCustomization()
+{
+	NLOG("SNovaMainMenuAssembly::OnConfirmCustomization");
+
+	FNovaSpacecraftCustomization Customization;
+	Customization.Create();
+	Customization.StructuralPaint = StructuralPaintListView->GetSelectedItem();
+
+	SpacecraftPawn->UpdateCustomization(Customization);
 }
 
 /*----------------------------------------------------

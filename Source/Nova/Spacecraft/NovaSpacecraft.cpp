@@ -317,6 +317,10 @@ bool FNovaSpacecraft::operator==(const FNovaSpacecraft& Other) const
 	{
 		return false;
 	}
+	else if (Customization != Other.Customization)
+	{
+		return false;
+	}
 	else if (Compartments.Num() != Other.Compartments.Num())
 	{
 		return false;
@@ -467,6 +471,12 @@ FNovaSpacecraftUpgradeCost FNovaSpacecraft::GetUpgradeCost(const ANovaGameState*
 	ProcessSpacecraft(this, true);
 	ProcessSpacecraft(Other, false);
 
+	// Process paint
+	if (Customization != Other->Customization)
+	{
+		Cost.PaintCost += 100;
+	}
+
 	// Compute the total change costs
 	for (const TPair<const UNovaTradableAssetDescription*, int32>& Entry : PartsDelta)
 	{
@@ -479,8 +489,8 @@ FNovaSpacecraftUpgradeCost FNovaSpacecraft::GetUpgradeCost(const ANovaGameState*
 			Cost.ResaleGain += -Entry.Value * GameState->GetCurrentPrice(Entry.Key, true);
 		}
 	}
-	Cost.TotalCost       = TotalCostAsNew;
-	Cost.TotalChangeCost = Cost.UpgradeCost - Cost.ResaleGain;
+	Cost.TotalCost       = TotalCostAsNew + Cost.PaintCost;
+	Cost.TotalChangeCost = Cost.UpgradeCost + Cost.PaintCost - Cost.ResaleGain;
 
 	return Cost;
 }
@@ -518,6 +528,9 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 
 		// Systems
 		JsonData->SetNumberField("P", This->PropellantMassAtLaunch);
+
+		// Customization
+		UNovaAssetDescription::SaveAsset(JsonData, "SP", This->Customization.StructuralPaint);
 
 		// Compartments
 		TArray<TSharedPtr<FJsonValue>> SavedCompartments;
@@ -586,6 +599,14 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 		if (JsonData->TryGetNumberField("P", InitialPropellantMass))
 		{
 			This->PropellantMassAtLaunch = InitialPropellantMass;
+		}
+
+		// Customization
+		const UNovaStructuralPaintDescription* StructuralPaint =
+			UNovaAssetDescription::LoadAsset<UNovaStructuralPaintDescription>(JsonData, "SP");
+		if (StructuralPaint)
+		{
+			This->Customization.StructuralPaint = StructuralPaint;
 		}
 
 		// Compartments

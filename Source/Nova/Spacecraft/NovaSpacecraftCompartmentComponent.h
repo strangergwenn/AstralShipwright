@@ -115,6 +115,9 @@ protected:
 	/** Request a parameter value change */
 	void RequestParameter(FNovaAssemblyElement& Element, FName Name, float Value);
 
+	/** Request a parameter value change */
+	void RequestParameter(FNovaAssemblyElement& Element, FName Name, FLinearColor Value);
+
 	/** Get the length along X of a given element */
 	FVector GetElementLength(const FNovaAssemblyElement& Element) const;
 

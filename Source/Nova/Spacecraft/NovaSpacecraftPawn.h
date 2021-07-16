@@ -230,6 +230,20 @@ public:
 	/** Return which compartment index a primitive belongs to, or INDEX_NONE */
 	int32 GetCompartmentIndexByPrimitive(const class UPrimitiveComponent* Component);
 
+	/** Get the customization data */
+	const struct FNovaSpacecraftCustomization& GetCustomization() const
+	{
+		NCHECK(Spacecraft.IsValid());
+		return Spacecraft->GetCustomization();
+	}
+
+	/** Update the customization data */
+	void UpdateCustomization(const struct FNovaSpacecraftCustomization& Customization)
+	{
+		Spacecraft->Customization = Customization;
+		RequestAssemblyUpdate();
+	}
+
 	/** Set this compartment to immediate mode (no animations or shader transitions) */
 	void SetImmediateMode(bool Value)
 	{

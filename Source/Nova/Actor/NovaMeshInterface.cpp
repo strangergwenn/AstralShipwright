@@ -113,7 +113,7 @@ void FNovaMeshInterfaceBehavior::RequestParameter(FName Name, float Value, bool 
 	{
 		ComponentMaterial->SetScalarParameterValue(Name, Value);
 
-		NLOG("FNovaMeshInterfaceBehavior::RequestParameter : immediate value %.2f for '%s'", Value, *Name.ToString());
+		// NLOG("FNovaMeshInterfaceBehavior::RequestParameter : immediate value %.2f for '%s'", Value, *Name.ToString());
 	}
 	else
 	{
@@ -124,7 +124,7 @@ void FNovaMeshInterfaceBehavior::RequestParameter(FName Name, float Value, bool 
 
 		if (RequestIndex != INDEX_NONE)
 		{
-			NLOG("FNovaMeshInterfaceBehavior::RequestParameter : ignoring value %.2f for '%s'", Value, *Name.ToString());
+			// NLOG("FNovaMeshInterfaceBehavior::RequestParameter : ignoring value %.2f for '%s'", Value, *Name.ToString());
 			return;
 		}
 		else if (PreviousParameterFloatValues.Find(Name) == nullptr)
@@ -132,8 +132,8 @@ void FNovaMeshInterfaceBehavior::RequestParameter(FName Name, float Value, bool 
 			PreviousParameterFloatValues.Add(Name, PreviousValue);
 		}
 
-		NLOG("FNovaMeshInterfaceBehavior::RequestParameter : new value %.2f for '%s' (previously %.2f)", Value, *Name.ToString(),
-			PreviousValue);
+		// NLOG("FNovaMeshInterfaceBehavior::RequestParameter : new value %.2f for '%s' (previously %.2f)", Value, *Name.ToString(),
+		//	PreviousValue);
 
 		CurrentRequests.Add(Request);
 	}
@@ -145,8 +145,8 @@ void FNovaMeshInterfaceBehavior::RequestParameter(FName Name, FLinearColor Value
 	{
 		ComponentMaterial->SetVectorParameterValue(Name, Value);
 
-		NLOG("FNovaMeshInterfaceBehavior::RequestParameter : immediate value %.2f, %.2f, %.2f, %.2f for '%s'", Value.R, Value.G, Value.B,
-			Value.A, *Name.ToString());
+		// NLOG("FNovaMeshInterfaceBehavior::RequestParameter : immediate value %.2f, %.2f, %.2f, %.2f for '%s'", Value.R, Value.G, Value.B,
+		//	Value.A, *Name.ToString());
 	}
 	else
 	{
@@ -157,8 +157,9 @@ void FNovaMeshInterfaceBehavior::RequestParameter(FName Name, FLinearColor Value
 
 		if (RequestIndex != INDEX_NONE)
 		{
-			NLOG("FNovaMeshInterfaceBehavior::RequestParameter : ignoring value %.2f, %.2f, %.2f, %.2f for '%s'", Value.R, Value.G, Value.B,
-				Value.A, *Name.ToString());
+			// NLOG("FNovaMeshInterfaceBehavior::RequestParameter : ignoring value %.2f, %.2f, %.2f, %.2f for '%s'", Value.R, Value.G,
+			// Value.B,
+			//	Value.A, *Name.ToString());
 
 			return;
 		}
@@ -167,8 +168,9 @@ void FNovaMeshInterfaceBehavior::RequestParameter(FName Name, FLinearColor Value
 			PreviousParameterColorValues.Add(Name, PreviousValue);
 		}
 
-		NLOG("FNovaMeshInterfaceBehavior::RequestParameter : new value %.2f, %.2f, %.2f, %.2f for '%s' (previously %.2f, %.2f, %.2f, %.2f)",
-			Value.R, Value.G, Value.B, Value.A, *Name.ToString(), PreviousValue.R, PreviousValue.G, PreviousValue.B, PreviousValue.A);
+		// NLOG("FNovaMeshInterfaceBehavior::RequestParameter : new value %.2f, %.2f, %.2f, %.2f for '%s' (previously %.2f, %.2f, %.2f,
+		// %.2f)",
+		//	Value.R, Value.G, Value.B, Value.A, *Name.ToString(), PreviousValue.R, PreviousValue.G, PreviousValue.B, PreviousValue.A);
 
 		CurrentRequests.Add(Request);
 	}

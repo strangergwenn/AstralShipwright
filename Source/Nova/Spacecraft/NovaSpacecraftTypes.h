@@ -323,6 +323,33 @@ public:
 };
 
 /*----------------------------------------------------
+    Paint data asset
+----------------------------------------------------*/
+
+/** Description of a paint asset */
+UCLASS(ClassGroup = (Nova))
+class UNovaStructuralPaintDescription : public UNovaAssetDescription
+{
+	GENERATED_BODY()
+
+public:
+	UNovaStructuralPaintDescription() : PaintColor(FLinearColor::Black), Unpainted(false)
+	{}
+
+	/** Get the default paint asset */
+	static const UNovaStructuralPaintDescription* GetDefault();
+
+public:
+	// Paint color
+	UPROPERTY(Category = Paint, EditDefaultsOnly)
+	FLinearColor PaintColor;
+
+	// Raw metal
+	UPROPERTY(Category = Paint, EditDefaultsOnly)
+	bool Unpainted;
+};
+
+/*----------------------------------------------------
     Module data assets
 ----------------------------------------------------*/
 
