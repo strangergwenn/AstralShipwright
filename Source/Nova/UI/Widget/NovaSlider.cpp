@@ -16,6 +16,7 @@
 void SNovaSlider::Construct(const FArguments& InArgs)
 {
 	// Arguments
+	Action       = InArgs._Action;
 	ValueStep    = InArgs._ValueStep;
 	Analog       = InArgs._Analog;
 	CurrentValue = InArgs._Value;
@@ -58,45 +59,47 @@ void SNovaSlider::Construct(const FArguments& InArgs)
 
 	// Add the internal layout
 	TSharedPtr<SHorizontalBox> Box;
-	InnerContainer->SetContent(SAssignNew(Box, SHorizontalBox));
+	InnerContainer->SetContent(SAssignNew(Box, SHorizontalBox)
 
-	// Add the action if any
-	if (InArgs._Action.IsSet() || InArgs._Action.IsBound())
-	{
-		Box->AddSlot()
+		// Action binding
+		+ SHorizontalBox::Slot()
 		.AutoWidth()
-		.Padding(ButtonTheme.IconPadding)
 		[
-			SNew(SNovaKeyLabel)
-			.Key(this, &SNovaButton::GetActionKey)
-		];
-	}
+			SNew(SBox)
+			.Padding(ButtonTheme.IconPadding)
+			.Visibility(this, &SNovaSlider::GetActionVisibility)
+			[
+				SNew(SNovaKeyLabel)
+				.Key(this, &SNovaButton::GetActionKey)
+			]
+		]
 	
-	// Add the slider
-	Box->AddSlot()
-	[
-		SAssignNew(Slider, SSlider)
-		.IsFocusable(false)
-		.Locked(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
-		{
-			if (InArgs._Enabled.IsSet() || InArgs._Enabled.IsBound())
+		// Slider
+		+ SHorizontalBox::Slot()
+		[
+			SAssignNew(Slider, SSlider)
+			.IsFocusable(false)
+			.Locked(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
 			{
-				return !InArgs._Enabled.Get();
-			}
-			else
-			{
-				return false;
-			}
-		})))
-		.Value(InArgs._Value)
-		.MinValue(InArgs._MinValue)
-		.MaxValue(InArgs._MaxValue)
-		.OnValueChanged(this, &SNovaSlider::OnSliderValueChanged)
-		.OnMouseCaptureBegin(this, &SNovaSlider::OnMouseCaptured)
-		.OnMouseCaptureEnd(this, &SNovaSlider::OnMouseReleased)
-		.Style(&Theme.SliderStyle)
-		.SliderBarColor(FLinearColor(0, 0, 0, 0))
-	];
+				if (InArgs._Enabled.IsSet() || InArgs._Enabled.IsBound())
+				{
+					return !InArgs._Enabled.Get();
+				}
+				else
+				{
+					return false;
+				}
+			})))
+			.Value(InArgs._Value)
+			.MinValue(InArgs._MinValue)
+			.MaxValue(InArgs._MaxValue)
+			.OnValueChanged(this, &SNovaSlider::OnSliderValueChanged)
+			.OnMouseCaptureBegin(this, &SNovaSlider::OnMouseCaptured)
+			.OnMouseCaptureEnd(this, &SNovaSlider::OnMouseReleased)
+			.Style(&Theme.SliderStyle)
+			.SliderBarColor(FLinearColor(0, 0, 0, 0))
+		]
+	);
 
 	// clang-format on
 }
@@ -197,6 +200,19 @@ const FSlateBrush* SNovaSlider::GetBackgroundBrush() const
 	{
 		return &Theme.SliderStyle.NormalBarImage;
 	}
+}
+
+EVisibility SNovaSlider::GetActionVisibility() const
+{
+	if ((Action.IsBound() || Action.IsSet()) && Action.Get() != NAME_None)
+	{
+		if (UNovaMenuManager::Get()->GetFirstActionKey(Action.Get()) != FKey(NAME_None))
+		{
+			return EVisibility::Visible;
+		}
+	}
+
+	return EVisibility::Collapsed;
 }
 
 void SNovaSlider::OnSliderValueChanged(float Value)

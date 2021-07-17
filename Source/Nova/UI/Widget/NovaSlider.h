@@ -82,6 +82,9 @@ protected:
 	/** Brush callback*/
 	const FSlateBrush* GetBackgroundBrush() const;
 
+	/** Action binding visibility callback **/
+	EVisibility GetActionVisibility() const;
+
 	/** Value callback */
 	void OnSliderValueChanged(float Value);
 
@@ -103,9 +106,10 @@ protected:
 	----------------------------------------------------*/
 
 	// Settings & attributes
-	float SliderSpeed;
-	float SliderAnalogSpeed;
-	bool  Analog;
+	TAttribute<FName> Action;
+	float             SliderSpeed;
+	float             SliderAnalogSpeed;
+	bool              Analog;
 
 	// State
 	float                ValueStep;
