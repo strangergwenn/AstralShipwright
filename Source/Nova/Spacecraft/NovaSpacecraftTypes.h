@@ -323,10 +323,29 @@ public:
 };
 
 /*----------------------------------------------------
-    Paint data asset
+    Paint data assets
 ----------------------------------------------------*/
 
-/** Description of a paint asset */
+/** Description of a generic paint asset */
+UCLASS(ClassGroup = (Nova))
+class UNovaPaintDescription : public UNovaAssetDescription
+{
+	GENERATED_BODY()
+
+public:
+	UNovaPaintDescription() : PaintColor(FLinearColor::Black)
+	{}
+
+	/** Get the default paint asset */
+	static const UNovaPaintDescription* GetDefault();
+
+public:
+	// Paint color
+	UPROPERTY(Category = Paint, EditDefaultsOnly)
+	FLinearColor PaintColor;
+};
+
+/** Description of a structural paint asset */
 UCLASS(ClassGroup = (Nova))
 class UNovaStructuralPaintDescription : public UNovaAssetDescription
 {

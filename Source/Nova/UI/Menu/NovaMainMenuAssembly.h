@@ -77,6 +77,7 @@ class SNovaMainMenuAssembly
 	typedef SNovaModalListView<ENovaAssemblyDisplayFilter>               SNovaDisplayFilterList;
 	typedef SNovaModalListView<ENovaHullType>                            SNovaHullTypeList;
 
+	typedef SNovaListView<const class UNovaPaintDescription*>           SNovaPaintList;
 	typedef SNovaListView<const class UNovaStructuralPaintDescription*> SNovaStructuralPaintList;
 
 	/*----------------------------------------------------
@@ -250,9 +251,11 @@ protected:
 	FKey GetPreviousItemKey() const;
 	FKey GetNextItemKey() const;
 
-	// Paint list
+	// Paint lists
 	TSharedRef<SWidget> GenerateStructuralPaintItem(const class UNovaStructuralPaintDescription* Paint) const;
 	FText               GenerateStructuralPaintTooltip(const class UNovaStructuralPaintDescription* Paint) const;
+	TSharedRef<SWidget> GenerateWirePaintItem(const class UNovaPaintDescription* Paint) const;
+	FText               GenerateWirePaintTooltip(const class UNovaPaintDescription* Paint) const;
 
 	/*----------------------------------------------------
 	    Callbacks
@@ -308,6 +311,7 @@ protected:
 	TSharedPtr<class SNovaAssemblyModalPanel> AssemblyModalPanel;
 	TSharedPtr<SVerticalBox>                  MenuBox;
 	TSharedPtr<SHorizontalBox>                CustomizationBox;
+	TSharedPtr<class SNovaSlider>             DirtyIntensity;
 
 	// Panel fading system
 	float FadeDuration;
@@ -336,7 +340,9 @@ protected:
 	TArray<const class UNovaEquipmentDescription*> EquipmentList;
 	TSharedPtr<SNovaEquipmentList>                 EquipmentListView;
 
-	// Structural paint list
+	// Paint lists
+	TArray<const class UNovaPaintDescription*>           GenericPaintList;
 	TArray<const class UNovaStructuralPaintDescription*> StructuralPaintList;
 	TSharedPtr<SNovaStructuralPaintList>                 StructuralPaintListView;
+	TSharedPtr<SNovaPaintList>                           WirePaintListView;
 };

@@ -186,7 +186,7 @@ void SNovaModalPanel::Tick(const FGeometry& AllottedGeometry, const double Curre
 void SNovaModalPanel::Show(FText Title, FText Text, FSimpleDelegate NewOnConfirmed, FSimpleDelegate NewOnDismissed,
 	FSimpleDelegate NewOnCancelled, TSharedPtr<SWidget> Content)
 {
-	NLOG("SNovaModalPanel::Show");
+	// NLOG("SNovaModalPanel::Show");
 
 	ShouldShow  = true;
 	OnConfirmed = NewOnConfirmed;
@@ -216,7 +216,7 @@ void SNovaModalPanel::Show(FText Title, FText Text, FSimpleDelegate NewOnConfirm
 
 void SNovaModalPanel::Hide()
 {
-	NLOG("SNovaModalPanel::Hide");
+	// NLOG("SNovaModalPanel::Hide");
 
 	ShouldShow = false;
 

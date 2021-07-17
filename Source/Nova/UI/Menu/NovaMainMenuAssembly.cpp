@@ -960,7 +960,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 	SAssignNew(CustomizationBox, SHorizontalBox)
 
 		+ SHorizontalBox::Slot()
-
+		
+		// Structural paint
 		+ SHorizontalBox::Slot()
 		.AutoWidth()
 		[
@@ -975,7 +976,6 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 				.Text(LOCTEXT("StructuralPaintTitle", "Structural paint"))
 			]
 			
-			// Paint list
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
@@ -984,7 +984,57 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 				.ItemsSource(&StructuralPaintList)
 				.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateStructuralPaintItem)
 				.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateStructuralPaintTooltip)
-				.ButtonSize("LargeListButtonSize")
+				.OnSelectionDoubleClicked(this, &SNovaMainMenuAssembly::OnConfirmCustomization)
+			]
+		]
+		
+		// Wire paint
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		[
+			SNew(SVerticalBox)
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(Theme.VerticalContentPadding)
+			[
+				SNew(STextBlock)
+				.TextStyle(&Theme.HeadingFont)
+				.Text(LOCTEXT("WirePaintTitle", "Wire color"))
+			]
+			
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SAssignNew(WirePaintListView, SNovaPaintList)
+				.Panel(GenericModalPanel.Get())
+				.ItemsSource(&GenericPaintList)
+				.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateWirePaintItem)
+				.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateWirePaintTooltip)
+				.OnSelectionDoubleClicked(this, &SNovaMainMenuAssembly::OnConfirmCustomization)
+			]
+		]
+
+		// Dirty intensity
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		[
+			SNew(SVerticalBox)
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(Theme.VerticalContentPadding)
+			[
+				SNew(STextBlock)
+				.TextStyle(&Theme.HeadingFont)
+				.Text(LOCTEXT("DirtyIntensityTitle", "Wear & tear"))
+			]
+			
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNovaAssignNew(DirtyIntensity, SNovaSlider)
+				.ValueStep(0.1f)
 			]
 		]
 
@@ -1697,20 +1747,64 @@ FKey SNovaMainMenuAssembly::GetNextItemKey() const
 	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuNext);
 }
 
-TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateStructuralPaintItem(const UNovaStructuralPaintDescription* Paint) const
+/*----------------------------------------------------
+    Paint lists callbacks
+----------------------------------------------------*/
+
+template <typename P, typename L>
+TSharedRef<SWidget> GeneratePaintItem(const P* Paint, L& List)
 {
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 
-	return SNew(SOverlay).Clipping(EWidgetClipping::ClipToBoundsAlways)
+	// clang-format off
+	return SNew(SHorizontalBox)
 
-		 + SOverlay::Slot()[SNew(SScaleBox)[
-			   // TODO : image background for various paints
-			   SNew(SImage).Image(new FSlateNoResource)]]
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.VAlign(VAlign_Center)
+		[
+			SNew(SImage)
+			.Image_Lambda([=]()
+			{
+				return List->GetSelectionIcon(Paint);
+			})
+		]
 
-		 + SOverlay::Slot().Padding(Theme.ContentPadding)[SNew(STextBlock).TextStyle(&Theme.MainFont).Text(Paint->Name)];
+		+ SHorizontalBox::Slot()
+		.VAlign(VAlign_Center)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.MainFont)
+			.Text(Paint->Name)
+		]
+
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		[
+			SNew(SColorBlock)
+			.Color(Paint->PaintColor)
+			.Size(FVector2D(64, 16))
+		];
+
+	// clang-format on
+}
+
+TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateStructuralPaintItem(const UNovaStructuralPaintDescription* Paint) const
+{
+	return GeneratePaintItem(Paint, StructuralPaintListView);
 }
 
 FText SNovaMainMenuAssembly::GenerateStructuralPaintTooltip(const UNovaStructuralPaintDescription* Paint) const
+{
+	return Paint->Name;
+}
+
+TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateWirePaintItem(const UNovaPaintDescription* Paint) const
+{
+	return GeneratePaintItem(Paint, WirePaintListView);
+}
+
+FText SNovaMainMenuAssembly::GenerateWirePaintTooltip(const UNovaPaintDescription* Paint) const
 {
 	return Paint->Name;
 }
@@ -1871,20 +1965,28 @@ void SNovaMainMenuAssembly::OnOpenCustomization()
 
 	const FNovaSpacecraftCustomization& Customization = SpacecraftPawn->GetCustomization();
 
+	GenericPaintList    = UNovaAssetManager::Get()->GetAssets<UNovaPaintDescription>();
 	StructuralPaintList = UNovaAssetManager::Get()->GetAssets<UNovaStructuralPaintDescription>();
-	StructuralPaintListView->Refresh(StructuralPaintList.Find(Customization.StructuralPaint));
 
 	GenericModalPanel->Show(LOCTEXT("CustomizeSpacecraftTitle", "Customize spacecraft"), FText(),
 		FSimpleDelegate::CreateSP(this, &SNovaMainMenuAssembly::OnConfirmCustomization), FSimpleDelegate(), FSimpleDelegate(),
 		CustomizationBox);
+
+	DirtyIntensity->SetCurrentValue(Customization.DirtyIntensity);
+	WirePaintListView->Refresh(GenericPaintList.Find(Customization.WirePaint));
+	StructuralPaintListView->Refresh(StructuralPaintList.Find(Customization.StructuralPaint));
 }
 
 void SNovaMainMenuAssembly::OnConfirmCustomization()
 {
 	NLOG("SNovaMainMenuAssembly::OnConfirmCustomization");
 
+	GenericModalPanel->Hide();
+
 	FNovaSpacecraftCustomization Customization;
 	Customization.Create();
+	Customization.DirtyIntensity  = DirtyIntensity->GetCurrentValue();
+	Customization.WirePaint       = WirePaintListView->GetSelectedItem();
 	Customization.StructuralPaint = StructuralPaintListView->GetSelectedItem();
 
 	SpacecraftPawn->UpdateCustomization(Customization);

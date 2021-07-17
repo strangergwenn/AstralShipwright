@@ -374,9 +374,10 @@ void UNovaSpacecraftCompartmentComponent::BuildElement(
 	ANovaSpacecraftPawn* SpacecraftPawn = Cast<ANovaSpacecraftPawn>(GetOwner());
 	NCHECK(SpacecraftPawn);
 	const FNovaSpacecraftCustomization& Customization = SpacecraftPawn->GetCustomization();
-	RequestParameter(Element, "DirtyIntensity", 0.5f);
+	RequestParameter(Element, "DirtyIntensity", FMath::Lerp(0.5f, 1.0f, Customization.DirtyIntensity));
 	RequestParameter(Element, "StructuralPaint", Customization.StructuralPaint->Unpainted ? 0.0f : 1.0f);
 	RequestParameter(Element, "StructuralPaintColor", Customization.StructuralPaint->PaintColor);
+	RequestParameter(Element, "WireColor", Customization.WirePaint->PaintColor);
 }
 
 /*----------------------------------------------------
