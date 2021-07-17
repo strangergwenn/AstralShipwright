@@ -64,7 +64,6 @@ protected:
 	EVisibility GetQuitGameVisibility() const;
 
 	TSharedRef<SWidget> GenerateFriendItem(TSharedRef<FOnlineFriend> Friend);
-	const FSlateBrush*  GetFriendIcon(TSharedRef<FOnlineFriend> Friend) const;
 	FText               GenerateFriendTooltip(TSharedRef<FOnlineFriend> Friend);
 
 	FText GetInviteText() const;

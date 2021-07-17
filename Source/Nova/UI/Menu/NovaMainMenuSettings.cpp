@@ -841,7 +841,10 @@ TSharedRef<SWidget> SNovaMainMenuSettings::GenerateCultureItem(TSharedPtr<FStrin
 			.Padding(0)
 			[
 				SNew(SImage)
-				.Image(this, &SNovaMainMenuSettings::GetCultureIcon, Culture)
+				.Image_Lambda([=]()
+				{
+					return CultureListView->GetSelectionIcon(Culture);
+				})
 			]
 		]
 
@@ -861,11 +864,6 @@ FText SNovaMainMenuSettings::GetCultureName(TSharedPtr<FString> Culture) const
 	FCulturePtr CulturePtr = FInternationalization::Get().GetCulture(*Culture);
 	FString     NativeName = CulturePtr->GetNativeName();
 	return FText::FromString(NativeName.Left(1).ToUpper() + NativeName.RightChop(1));
-}
-
-const FSlateBrush* SNovaMainMenuSettings::GetCultureIcon(TSharedPtr<FString> Culture) const
-{
-	return CultureListView->GetSelectionIcon(Culture);
 }
 
 FText SNovaMainMenuSettings::GenerateCultureTooltip(TSharedPtr<FString> Culture)
@@ -917,7 +915,10 @@ TSharedRef<SWidget> SNovaMainMenuSettings::GenerateResolutionItem(TSharedPtr<FSc
 			.VAlign(VAlign_Center)
 			[
 				SNew(SImage)
-				.Image(this, &SNovaMainMenuSettings::GetResolutionIcon, Resolution)
+				.Image_Lambda([=]()
+				{
+					return ResolutionListView->GetSelectionIcon(Resolution);
+				})
 			]
 		]
 
@@ -935,11 +936,6 @@ TSharedRef<SWidget> SNovaMainMenuSettings::GenerateResolutionItem(TSharedPtr<FSc
 FText SNovaMainMenuSettings::GetResolutionName(TSharedPtr<struct FScreenResolutionRHI> Resolution) const
 {
 	return FText::FromString(FString::FromInt(Resolution->Width) + TEXT("x") + FString::FromInt(Resolution->Height));
-}
-
-const FSlateBrush* SNovaMainMenuSettings::GetResolutionIcon(TSharedPtr<struct FScreenResolutionRHI> Resolution) const
-{
-	return ResolutionListView->GetSelectionIcon(Resolution);
 }
 
 FText SNovaMainMenuSettings::GenerateResolutionTooltip(TSharedPtr<FScreenResolutionRHI> Resolution)

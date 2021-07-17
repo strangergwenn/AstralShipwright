@@ -8,13 +8,15 @@
 /** Nova resource item image */
 class SNovaTradableAssetItem : public SCompoundWidget
 {
-	SLATE_BEGIN_ARGS(SNovaTradableAssetItem) : _Asset(nullptr), _GameState(nullptr), _NoPriceHint(false), _Dark(false)
+	SLATE_BEGIN_ARGS(SNovaTradableAssetItem)
+		: _Asset(nullptr), _GameState(nullptr), _NoPriceHint(false), _Dark(false), _SelectionIcon(nullptr)
 	{}
 
 	SLATE_ARGUMENT(const UNovaTradableAssetDescription*, Asset)
 	SLATE_ARGUMENT(const ANovaGameState*, GameState)
 	SLATE_ARGUMENT(bool, NoPriceHint)
 	SLATE_ARGUMENT(bool, Dark)
+	SLATE_ATTRIBUTE(const FSlateBrush*, SelectionIcon)
 
 	SLATE_END_ARGS()
 
@@ -27,8 +29,9 @@ public:
 		Asset     = InArgs._Asset;
 		GameState = InArgs._GameState;
 
-		const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
-		const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
+		const FNovaMainTheme&      Theme       = FNovaStyleSet::GetMainTheme();
+		const FNovaButtonTheme&    ButtonTheme = FNovaStyleSet::GetButtonTheme();
+		TSharedPtr<SHorizontalBox> ContentBox;
 
 		// clang-format off
 		ChildSlot
@@ -61,7 +64,7 @@ public:
 
 				+ SOverlay::Slot()
 				[
-					SNew(SHorizontalBox)
+					SAssignNew(ContentBox, SHorizontalBox)
 
 					+ SHorizontalBox::Slot()
 					.AutoWidth()
@@ -122,6 +125,22 @@ public:
 				]
 			]
 		];
+
+		// Add the selection icon
+		if (InArgs._SelectionIcon.IsSet() || InArgs._SelectionIcon.IsBound())
+		{
+			ContentBox->InsertSlot(0)
+			.AutoWidth()
+			.VAlign(VAlign_Top)
+			[
+				SNew(SImage)
+				.Image_Lambda([=]()
+				{
+					return InArgs._SelectionIcon.Get();
+				})
+			];
+		}
+
 		// clang-format on
 	}
 

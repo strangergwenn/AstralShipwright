@@ -52,8 +52,6 @@ public:
 
 	TSharedRef<SWidget> GenerateResourceItem(const class UNovaResource* Resource);
 
-	const FSlateBrush* GetResourceIcon(const class UNovaResource* Resource) const;
-
 	FText GenerateResourceTooltip(const class UNovaResource* Resource);
 
 	/*----------------------------------------------------

@@ -1368,7 +1368,15 @@ FText SNovaMainMenuAssembly::GetModuleListHelpText() const
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateModuleItem(const UNovaModuleDescription* Module) const
 {
-	return SNew(SNovaTradableAssetItem).Asset(Module).GameState(GameState).NoPriceHint(true);
+	return SNew(SNovaTradableAssetItem)
+		.Asset(Module)
+		.GameState(GameState)
+		.NoPriceHint(true)
+		.SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
+			[=]()
+			{
+				return ModuleListView->GetSelectionIcon(Module);
+			})));
 }
 
 FText SNovaMainMenuAssembly::GetModuleListTitle(const UNovaModuleDescription* Module) const
@@ -1399,7 +1407,15 @@ EVisibility SNovaMainMenuAssembly::GetEquipmentListVisibility() const
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEquipmentItem(const UNovaEquipmentDescription* Equipment) const
 {
-	return SNew(SNovaTradableAssetItem).Asset(Equipment).GameState(GameState).NoPriceHint(true);
+	return SNew(SNovaTradableAssetItem)
+		.Asset(Equipment)
+		.GameState(GameState)
+		.NoPriceHint(true)
+		.SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
+			[=]()
+			{
+				return EquipmentListView->GetSelectionIcon(Equipment);
+			})));
 }
 
 FText SNovaMainMenuAssembly::GetEquipmentListTitle(const UNovaEquipmentDescription* Equipment) const

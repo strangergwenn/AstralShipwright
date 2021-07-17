@@ -525,29 +525,46 @@ TSharedRef<SWidget> SNovaMainMenuGame::GenerateFriendItem(TSharedRef<FOnlineFrie
 			FriendStatus = LOCTEXT("Offline", "Offline");
 	}
 
-	// Build widget
+	// clang-format off
 	return SNew(SHorizontalBox)
 
 		 + SHorizontalBox::Slot()
-			   .Padding(ButtonTheme.IconPadding)
-			   .AutoWidth()[SNew(SVerticalBox)
+		.Padding(ButtonTheme.IconPadding)
+		.AutoWidth()
+		[
+			SNew(SVerticalBox)
 
-							+ SVerticalBox::Slot()
-								  .HAlign(HAlign_Left)
-								  .VAlign(VAlign_Center)[SNew(SImage).Image(this, &SNovaMainMenuGame::GetFriendIcon, Friend)]]
+			+ SVerticalBox::Slot()
+			.HAlign(HAlign_Left)
+			.VAlign(VAlign_Center)
+			[
+				SNew(SImage)
+				.Image_Lambda([=]()
+				{
+					return FriendListView->GetSelectionIcon(Friend);
+				})
+			]
+		]
 
 		 + SHorizontalBox::Slot()
-			   .HAlign(HAlign_Center)
-			   .VAlign(VAlign_Center)[SNew(STextBlock).TextStyle(&Theme.MainFont).Text(GetFriendName(Friend))]
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.MainFont)
+			.Text(GetFriendName(Friend))
+		]
 
 		 + SHorizontalBox::Slot()
-			   .HAlign(HAlign_Center)
-			   .VAlign(VAlign_Center)[SNew(STextBlock).TextStyle(&Theme.MainFont).Text(FriendStatus)];
-}
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.MainFont)
+			 .Text(FriendStatus)
+		];
 
-const FSlateBrush* SNovaMainMenuGame::GetFriendIcon(TSharedRef<FOnlineFriend> Friend) const
-{
-	return FriendListView->GetSelectionIcon(Friend);
+	// clang-format on
 }
 
 FText SNovaMainMenuGame::GenerateFriendTooltip(TSharedRef<FOnlineFriend> Friend)

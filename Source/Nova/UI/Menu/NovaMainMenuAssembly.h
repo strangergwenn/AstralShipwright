@@ -324,7 +324,7 @@ protected:
 	FNovaCarouselAnimation<ENovaConstants::MaxCompartmentCount>                                CompartmentAnimation;
 	FNovaCarouselAnimation<ENovaConstants::MaxModuleCount + ENovaConstants::MaxEquipmentCount> ModuleEquipmentAnimation;
 
-	// Compartment list
+	// Hull type list
 	TArray<ENovaHullType>         HullTypeList;
 	TSharedPtr<SNovaHullTypeList> HullTypeListView;
 

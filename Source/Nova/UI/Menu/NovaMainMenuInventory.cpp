@@ -346,11 +346,6 @@ TSharedRef<SWidget> SNovaMainMenuInventory::GenerateResourceItem(const UNovaReso
 	return SNew(SNovaTradableAssetItem).Asset(Resource).GameState(GameState).Dark(true);
 }
 
-const FSlateBrush* SNovaMainMenuInventory::GetResourceIcon(const UNovaResource* Resource) const
-{
-	return ResourceListView->GetSelectionIcon(Resource);
-}
-
 FText SNovaMainMenuInventory::GenerateResourceTooltip(const UNovaResource* Resource)
 {
 	return FText::FormatNamed(LOCTEXT("ResourceHelp", "Buy {resource}"), TEXT("resource"), Resource->Name);

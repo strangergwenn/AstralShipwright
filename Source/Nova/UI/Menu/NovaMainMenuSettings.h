@@ -89,7 +89,6 @@ protected:
 	// Culture list
 	TSharedRef<SWidget> GenerateCultureItem(TSharedPtr<FString> Culture);
 	FText               GetCultureName(TSharedPtr<FString> Culture) const;
-	const FSlateBrush*  GetCultureIcon(TSharedPtr<FString> Culture) const;
 	FText               GenerateCultureTooltip(TSharedPtr<FString> Culture);
 	void                OnSelectedCultureChanged(TSharedPtr<FString> Culture, int32 Index);
 
@@ -99,7 +98,6 @@ protected:
 	// Resolution list
 	TSharedRef<SWidget> GenerateResolutionItem(TSharedPtr<struct FScreenResolutionRHI> Resolution);
 	FText               GetResolutionName(TSharedPtr<struct FScreenResolutionRHI> Resolution) const;
-	const FSlateBrush*  GetResolutionIcon(TSharedPtr<struct FScreenResolutionRHI> Resolution) const;
 	FText               GenerateResolutionTooltip(TSharedPtr<struct FScreenResolutionRHI> Resolution);
 	void                OnSelectedResolutionChanged(TSharedPtr<struct FScreenResolutionRHI> Resolution, int32 Index);
 
