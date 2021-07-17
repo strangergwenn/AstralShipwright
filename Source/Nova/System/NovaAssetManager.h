@@ -62,6 +62,13 @@ public:
 		return Result;
 	}
 
+	/** Find the default asset of a class */
+	template <typename T>
+	const T* GetDefaultAsset() const
+	{
+		return Cast<T>(DefaultAssets[T::StaticClass()]);
+	}
+
 	/** Load an asset asynchronously */
 	void LoadAsset(FSoftObjectPath Entry, FStreamableDelegate Callback);
 
@@ -84,6 +91,10 @@ public:
 	// All assets
 	UPROPERTY()
 	TMap<FGuid, const class UNovaAssetDescription*> Catalog;
+
+	// Default assets
+	UPROPERTY()
+	TMap<TSubclassOf<UNovaAssetDescription>, const class UNovaAssetDescription*> DefaultAssets;
 
 	// Asynchronous asset loader
 	FStreamableManager StreamableManager;

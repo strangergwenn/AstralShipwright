@@ -39,6 +39,11 @@ void UNovaAssetManager::Initialize()
 		NCHECK(Entry);
 
 		Catalog.Add(TPair<FGuid, const class UNovaAssetDescription*>(Entry->Identifier, Entry));
+
+		if (Entry->Default)
+		{
+			DefaultAssets.Add(TPair<TSubclassOf<UNovaAssetDescription>, const class UNovaAssetDescription*>(Entry->GetClass(), Entry));
+		}
 	}
 }
 

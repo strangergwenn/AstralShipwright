@@ -127,12 +127,12 @@ TArray<FText> UNovaCompartmentDescription::GetDescription() const
 
 const UNovaPaintDescription* UNovaPaintDescription::GetDefault()
 {
-	return UNovaAssetManager::Get()->GetAsset<UNovaPaintDescription>(FGuid("{E6D9DF5E-41C1-9E26-B89B-4987B477B29E}"));
+	return UNovaAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
 }
 
 const UNovaStructuralPaintDescription* UNovaStructuralPaintDescription::GetDefault()
 {
-	return UNovaAssetManager::Get()->GetAsset<UNovaStructuralPaintDescription>(FGuid("{FF8DB953-4255-8F98-FC5C-E88CA87D18E9}"));
+	return UNovaAssetManager::Get()->GetDefaultAsset<UNovaStructuralPaintDescription>();
 }
 
 /*----------------------------------------------------

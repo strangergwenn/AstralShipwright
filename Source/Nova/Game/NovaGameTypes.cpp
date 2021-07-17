@@ -122,7 +122,7 @@ void UNovaResource::ConfigurePreviewActor(class AActor* Actor) const
 
 const UNovaResource* UNovaResource::GetEmpty()
 {
-	return UNovaAssetManager::Get()->GetAsset<UNovaResource>(FGuid("{A89057F9-436B-E890-5538-5986C1C0644E}"));
+	return UNovaAssetManager::Get()->GetDefaultAsset<UNovaResource>();
 }
 
 const UNovaResource* UNovaResource::GetPropellant()

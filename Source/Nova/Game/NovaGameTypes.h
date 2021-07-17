@@ -357,6 +357,10 @@ public:
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	bool Hidden;
 
+	// Whether this asset is a special default asset
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	bool Default;
+
 	// Generated texture file
 	UPROPERTY()
 	FSlateBrush AssetRender;

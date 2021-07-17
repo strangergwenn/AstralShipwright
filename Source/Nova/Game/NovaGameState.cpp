@@ -138,7 +138,7 @@ void ANovaGameState::SerializeJson(
 		SaveData->CurrentArea = UNovaAssetDescription::LoadAsset<UNovaArea>(JsonData, "CurrentArea");
 		if (!IsValid(SaveData->CurrentArea))
 		{
-			SaveData->CurrentArea = UNovaAssetManager::Get()->GetAsset<UNovaArea>(FGuid("{3F74954E-44DD-EE5C-404A-FC8BF3410826}"));
+			SaveData->CurrentArea = UNovaAssetManager::Get()->GetDefaultAsset<UNovaArea>();
 		}
 	}
 }
