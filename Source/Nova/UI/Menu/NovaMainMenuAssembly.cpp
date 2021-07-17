@@ -195,9 +195,10 @@ SNovaMainMenuAssembly::SNovaMainMenuAssembly()
 	: PC(nullptr)
 	, SpacecraftPawn(nullptr)
 	, GameState(nullptr)
+	, DesiredPanelState(ENovaMainMenuAssemblyState::Assembly)
+	, CurrentPanelState(ENovaMainMenuAssemblyState::Assembly)
 	, FadeDuration(ENovaUIConstants::FadeDurationShort)
 	, CurrentFadeTime(ENovaUIConstants::FadeDurationShort)
-	, CompartmentPanelVisible(false)
 	, SelectedCompartmentIndex(INDEX_NONE)
 	, EditedCompartmentIndex(INDEX_NONE)
 	, SelectedModuleOrEquipmentIndex(INDEX_NONE)
@@ -206,9 +207,12 @@ SNovaMainMenuAssembly::SNovaMainMenuAssembly()
 void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 {
 	// Data
-	const FNovaMainTheme&  Theme                 = FNovaStyleSet::GetMainTheme();
-	const FNovaButtonSize& CompartmentButtonSize = FNovaStyleSet::GetButtonSize("CompartmentButtonSize");
-	MenuManager                                  = InArgs._MenuManager;
+	const FNovaMainTheme&  Theme                           = FNovaStyleSet::GetMainTheme();
+	const FNovaButtonSize& CompartmentButtonSize           = FNovaStyleSet::GetButtonSize("CompartmentButtonSize");
+	MenuManager                                            = InArgs._MenuManager;
+	const TSharedRef<FSlateFontMeasure> FontMeasureService = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+
+	int32 PanelHeight = 3 * FNovaStyleSet::GetButtonSize().Height + FontMeasureService->Measure("Z", Theme.MainFont.Font).Y;
 
 	// Parent constructor
 	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
@@ -573,6 +577,157 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						+ SHorizontalBox::Slot()
 					]
 				]
+				
+				// Customization panel
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(Theme.ContentPadding)
+				[
+					SNew(SBorder)
+					.BorderImage(new FSlateNoResource)
+					.ColorAndOpacity(this, &SNovaMainMenuAssembly::GetCustomizationColor)
+					.Padding(0)
+					[
+						SNew(SHorizontalBox)
+
+						+ SHorizontalBox::Slot()
+		
+						// Structural paint
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(SVerticalBox)
+
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							.Padding(Theme.VerticalContentPadding)
+							[
+								SNew(STextBlock)
+								.TextStyle(&Theme.HeadingFont)
+								.Text(LOCTEXT("StructuralPaintTitle", "Structural paint"))
+							]
+			
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNew(SBox)
+								.HeightOverride(PanelHeight)
+								[
+									SAssignNew(StructuralPaintListView, SNovaStructuralPaintList)
+									.Panel(this)
+									.ItemsSource(&StructuralPaintList)
+									.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateStructuralPaintItem)
+									.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateStructuralPaintTooltip)
+									.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnStructuralPaintSelected)
+									.ButtonSize("DefaultButtonSize")
+								]
+							]
+						]
+		
+						// Wire paint
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(SVerticalBox)
+
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							.Padding(Theme.VerticalContentPadding)
+							[
+								SNew(STextBlock)
+								.TextStyle(&Theme.HeadingFont)
+								.Text(LOCTEXT("WirePaintTitle", "Wire color"))
+							]
+			
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNew(SBox)
+								.HeightOverride(PanelHeight)
+								[
+									SAssignNew(WirePaintListView, SNovaPaintList)
+									.Panel(this)
+									.ItemsSource(&GenericPaintList)
+									.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateWirePaintItem)
+									.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateWirePaintTooltip)
+									.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnWirePaintSelected)
+									.ButtonSize("DefaultButtonSize")
+								]
+							]
+						]
+
+						+ SHorizontalBox::Slot()
+					
+						// Customization controls
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(SVerticalBox)
+
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							.Padding(Theme.VerticalContentPadding)
+							[
+								SNew(STextBlock)
+								.TextStyle(&Theme.HeadingFont)
+								.Text(LOCTEXT("CustomizationControls", "Customization controls"))
+							]
+
+							// Back
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNovaNew(SNovaButton)
+								.Action(FNovaPlayerInput::MenuCancel)
+								.Text(LOCTEXT("CompartmentBack", "Back to assembly"))
+								.HelpText(LOCTEXT("CompartmentBackHelp", "Go back to the main assembly"))
+								.OnClicked(this, &SNovaMainMenuAssembly::OnBackToAssembly)
+								.Enabled(this, &SNovaMainMenuAssembly::IsBackToAssemblyEnabled)
+							]
+
+							// Wear & tear title
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNew(STextBlock)
+								.TextStyle(&Theme.MainFont)
+								.Text(LOCTEXT("DirtyIntensityTitle", "Wear & tear"))
+							]
+
+							// Wear & tear
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNovaAssignNew(DirtyIntensity, SNovaSlider)
+								.ValueStep(0.1f)
+								.OnValueChanged(this, &SNovaMainMenuAssembly::OnDirtyIntensityChanged)
+							]
+
+							// Name
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNew(SNovaButton) // No navigation
+								.Focusable(false)
+								.Content()
+								[
+									SNew(SBox)
+									.Padding(FNovaStyleSet::GetButtonTheme().IconPadding)
+									.VAlign(VAlign_Center)
+									[
+										SAssignNew(SpacecraftNameText, SEditableText)
+										.HintText(LOCTEXT("SpacecraftHint", "Spacecraft name"))
+										.Font(Theme.MainFont.Font)
+										.ColorAndOpacity(Theme.MainFont.ColorAndOpacity)
+										.OnTextChanged(this, &SNovaMainMenuAssembly::OnSpacecraftNameChanged)
+									]
+								]
+							]
+						]
+
+						+ SHorizontalBox::Slot()
+					]
+				]
 
 				// Display options panel
 				+ SVerticalBox::Slot()
@@ -592,28 +747,6 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							.Text(LOCTEXT("PhotoMode", "Toggle photo mode"))
 							.HelpText(LOCTEXT("PhotoModeHelp", "Hide the interface to show off your spacecraft"))
 							.OnClicked(this, &SNovaMainMenuAssembly::OnEnterPhotoMode, FNovaPlayerInput::MenuAltPrimary)
-						]
-
-						+ SHorizontalBox::Slot()
-
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
-						[
-							SNew(SNovaButton) // No navigation
-							.Focusable(false)
-							.Content()
-							[
-								SNew(SBox)
-								.Padding(FNovaStyleSet::GetButtonTheme().IconPadding)
-								.VAlign(VAlign_Center)
-								[
-									SAssignNew(SpacecraftNameText, SEditableText)
-									.HintText(LOCTEXT("SpacecraftHint", "Spacecraft name"))
-									.Font(Theme.MainFont.Font)
-									.ColorAndOpacity(Theme.MainFont.ColorAndOpacity)
-									.OnTextChanged(this, &SNovaMainMenuAssembly::OnSpacecraftNameChanged)
-								]
-							]
 						]
 
 						+ SHorizontalBox::Slot()
@@ -955,96 +1088,13 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 			]
 		];
 	}
-	
-	// Build the customization panel
-	SAssignNew(CustomizationBox, SHorizontalBox)
 
-		+ SHorizontalBox::Slot()
-		
-		// Structural paint
-		+ SHorizontalBox::Slot()
-		.AutoWidth()
-		[
-			SNew(SVerticalBox)
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(Theme.VerticalContentPadding)
-			[
-				SNew(STextBlock)
-				.TextStyle(&Theme.HeadingFont)
-				.Text(LOCTEXT("StructuralPaintTitle", "Structural paint"))
-			]
-			
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SAssignNew(StructuralPaintListView, SNovaStructuralPaintList)
-				.Panel(GenericModalPanel.Get())
-				.ItemsSource(&StructuralPaintList)
-				.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateStructuralPaintItem)
-				.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateStructuralPaintTooltip)
-				.OnSelectionDoubleClicked(this, &SNovaMainMenuAssembly::OnConfirmCustomization)
-			]
-		]
-		
-		// Wire paint
-		+ SHorizontalBox::Slot()
-		.AutoWidth()
-		[
-			SNew(SVerticalBox)
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(Theme.VerticalContentPadding)
-			[
-				SNew(STextBlock)
-				.TextStyle(&Theme.HeadingFont)
-				.Text(LOCTEXT("WirePaintTitle", "Wire color"))
-			]
-			
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SAssignNew(WirePaintListView, SNovaPaintList)
-				.Panel(GenericModalPanel.Get())
-				.ItemsSource(&GenericPaintList)
-				.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateWirePaintItem)
-				.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateWirePaintTooltip)
-				.OnSelectionDoubleClicked(this, &SNovaMainMenuAssembly::OnConfirmCustomization)
-			]
-		]
-
-		// Dirty intensity
-		+ SHorizontalBox::Slot()
-		.AutoWidth()
-		[
-			SNew(SVerticalBox)
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(Theme.VerticalContentPadding)
-			[
-				SNew(STextBlock)
-				.TextStyle(&Theme.HeadingFont)
-				.Text(LOCTEXT("DirtyIntensityTitle", "Wear & tear"))
-			]
-			
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNovaAssignNew(DirtyIntensity, SNovaSlider)
-				.ValueStep(0.1f)
-			]
-		]
-
-		+ SHorizontalBox::Slot();
 	// clang-format on
 
 	// Default settings
 	CompartmentAnimation.Initialize(FNovaStyleSet::GetButtonTheme().AnimationDuration, ENovaUIConstants::EaseLight);
 	ModuleEquipmentAnimation.Initialize(FNovaStyleSet::GetButtonTheme().AnimationDuration, ENovaUIConstants::EaseLight);
-	SetCompartmentPanelVisible(false);
+	SetPanelState(ENovaMainMenuAssemblyState::Assembly);
 }
 
 /*----------------------------------------------------
@@ -1084,8 +1134,7 @@ void SNovaMainMenuAssembly::Tick(const FGeometry& AllottedGeometry, const double
 	SNovaTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
 	// Update fade time
-	bool WantCompartmentPanelVisible = EditedCompartmentIndex != INDEX_NONE;
-	if (WantCompartmentPanelVisible != CompartmentPanelVisible)
+	if (CurrentPanelState != DesiredPanelState)
 	{
 		CurrentFadeTime -= DeltaTime;
 	}
@@ -1098,15 +1147,15 @@ void SNovaMainMenuAssembly::Tick(const FGeometry& AllottedGeometry, const double
 	// Update desired panel
 	if (CurrentFadeTime <= 0)
 	{
-		SetCompartmentPanelVisible(WantCompartmentPanelVisible);
+		SetPanelState(DesiredPanelState);
 	}
 
 	// Set the hovered compartment
 	if (IsValid(SpacecraftPawn))
 	{
 		int32 HighlightedCompartment = INDEX_NONE;
-		if (!CompartmentPanelVisible && !MenuManager->IsUsingGamepad() && !PC->IsInPhotoMode() && Menu->IsActiveNavigationPanel(this) &&
-			SpacecraftPawn->GetCompartmentCount() > 1)
+		if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly && !MenuManager->IsUsingGamepad() && !PC->IsInPhotoMode() &&
+			Menu->IsActiveNavigationPanel(this) && SpacecraftPawn->GetCompartmentCount() > 1)
 		{
 			FVector2D MousePosition = Menu->GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos());
 			HighlightedCompartment  = GetCompartmentIndexAtPosition(PC, SpacecraftPawn, MousePosition);
@@ -1127,7 +1176,7 @@ void SNovaMainMenuAssembly::Show()
 		SpacecraftNameText->SetText(SpacecraftPawn->GetSpacecraftCopy().GetName());
 
 		// Reset the compartment view
-		if (CompartmentPanelVisible)
+		if (IsCompartmentPanelVisible())
 		{
 			EditedCompartmentIndex = INDEX_NONE;
 
@@ -1137,7 +1186,7 @@ void SNovaMainMenuAssembly::Show()
 
 		// Reset compartment data
 		SetSelectedCompartment(SpacecraftPawn->GetCompartmentCount() > 0 ? 0 : INDEX_NONE);
-		SetCompartmentPanelVisible(false);
+		SetPanelState(ENovaMainMenuAssemblyState::Assembly);
 	}
 }
 
@@ -1165,14 +1214,14 @@ void SNovaMainMenuAssembly::UpdateGameObjects()
 
 void SNovaMainMenuAssembly::Next()
 {
-	if (!CompartmentPanelVisible)
+	if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly)
 	{
 		if (SelectedCompartmentIndex != INDEX_NONE)
 		{
 			SetSelectedCompartment(FMath::Min(SelectedCompartmentIndex + 1, SpacecraftPawn->GetCompartmentCount() - 1));
 		}
 	}
-	else
+	else if (CurrentPanelState == ENovaMainMenuAssemblyState::Compartment)
 	{
 		SetSelectedModuleOrEquipment(FMath::Min(SelectedModuleOrEquipmentIndex + 1, GetMaxCommonIndex()));
 	}
@@ -1180,14 +1229,14 @@ void SNovaMainMenuAssembly::Next()
 
 void SNovaMainMenuAssembly::Previous()
 {
-	if (!CompartmentPanelVisible)
+	if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly)
 	{
 		if (SelectedCompartmentIndex != INDEX_NONE)
 		{
 			SetSelectedCompartment(FMath::Max(SelectedCompartmentIndex - 1, 0));
 		}
 	}
-	else
+	else if (CurrentPanelState == ENovaMainMenuAssemblyState::Compartment)
 	{
 		SetSelectedModuleOrEquipment(FMath::Max(SelectedModuleOrEquipmentIndex - 1, 0));
 	}
@@ -1195,7 +1244,7 @@ void SNovaMainMenuAssembly::Previous()
 
 void SNovaMainMenuAssembly::OnClicked(const FVector2D& Position)
 {
-	if (!CompartmentPanelVisible && Menu->IsActiveNavigationPanel(this))
+	if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly && Menu->IsActiveNavigationPanel(this))
 	{
 		int32 HitIndex = GetCompartmentIndexAtPosition(PC, SpacecraftPawn, Position);
 		if (HitIndex != INDEX_NONE)
@@ -1207,7 +1256,8 @@ void SNovaMainMenuAssembly::OnClicked(const FVector2D& Position)
 
 void SNovaMainMenuAssembly::OnDoubleClicked(const FVector2D& Position)
 {
-	if (!CompartmentPanelVisible && Menu->IsActiveNavigationPanel(this) && SelectedCompartmentIndex != INDEX_NONE)
+	if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly && Menu->IsActiveNavigationPanel(this) &&
+		SelectedCompartmentIndex != INDEX_NONE)
 	{
 		int32 HitIndex = GetCompartmentIndexAtPosition(PC, SpacecraftPawn, Position);
 		if (HitIndex == SelectedCompartmentIndex)
@@ -1235,9 +1285,13 @@ void SNovaMainMenuAssembly::VerticalAnalogInput(float Value)
 
 TSharedPtr<SNovaButton> SNovaMainMenuAssembly::GetDefaultFocusButton() const
 {
-	if (!CompartmentPanelVisible && SaveButton->IsButtonEnabled())
+	if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly && SaveButton->IsButtonEnabled())
 	{
 		return SaveButton;
+	}
+	else if (CurrentPanelState == ENovaMainMenuAssemblyState::Customization && DirtyIntensity->IsButtonEnabled())
+	{
+		return DirtyIntensity;
 	}
 	else
 	{
@@ -1344,12 +1398,12 @@ void SNovaMainMenuAssembly::SetSelectedModuleOrEquipment(int32 Index)
 	}
 }
 
-void SNovaMainMenuAssembly::SetCompartmentPanelVisible(bool Active)
+void SNovaMainMenuAssembly::SetPanelState(ENovaMainMenuAssemblyState State)
 {
-	CompartmentPanelVisible = Active;
+	CurrentPanelState = State;
 
-	// Refresh the hull type list
-	if (CompartmentPanelVisible && IsValid(SpacecraftPawn))
+	// Compartment sub-menu
+	if (State == ENovaMainMenuAssemblyState::Compartment && IsValid(SpacecraftPawn))
 	{
 		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
 
@@ -1358,14 +1412,33 @@ void SNovaMainMenuAssembly::SetCompartmentPanelVisible(bool Active)
 
 		SetSelectedModuleOrEquipment(0);
 	}
+
+	// Customization
+	else if (State == ENovaMainMenuAssemblyState::Customization && IsValid(SpacecraftPawn))
+	{
+		const FNovaSpacecraftCustomization& Customization = SpacecraftPawn->GetCustomization();
+
+		GenericPaintList    = UNovaAssetManager::Get()->GetAssets<UNovaPaintDescription>();
+		StructuralPaintList = UNovaAssetManager::Get()->GetAssets<UNovaStructuralPaintDescription>();
+
+		DirtyIntensity->SetCurrentValue(Customization.DirtyIntensity);
+		WirePaintListView->Refresh(GenericPaintList.Find(Customization.WirePaint));
+		StructuralPaintListView->Refresh(StructuralPaintList.Find(Customization.StructuralPaint));
+	}
+
+	// Assembly sub-menu
 	else
 	{
 		SelectedModuleOrEquipmentIndex = INDEX_NONE;
 	}
 
 	// Change visibility
-	MenuBox->GetChildren()->GetChildAt(0)->SetVisibility(CompartmentPanelVisible ? EVisibility::Collapsed : EVisibility::Visible);
-	MenuBox->GetChildren()->GetChildAt(1)->SetVisibility(CompartmentPanelVisible ? EVisibility::Visible : EVisibility::Collapsed);
+	MenuBox->GetChildren()->GetChildAt(0)->SetVisibility(
+		State == ENovaMainMenuAssemblyState::Assembly ? EVisibility::Visible : EVisibility::Collapsed);
+	MenuBox->GetChildren()->GetChildAt(1)->SetVisibility(
+		State == ENovaMainMenuAssemblyState::Compartment ? EVisibility::Visible : EVisibility::Collapsed);
+	MenuBox->GetChildren()->GetChildAt(2)->SetVisibility(
+		State == ENovaMainMenuAssemblyState::Customization ? EVisibility::Visible : EVisibility::Collapsed);
 
 	// Update UI state
 	ResetNavigation();
@@ -1544,15 +1617,25 @@ FText SNovaMainMenuAssembly::GetAssetName(const UNovaTradableAssetDescription* A
 
 FLinearColor SNovaMainMenuAssembly::GetMainColor() const
 {
-	float Alpha =
-		CompartmentPanelVisible ? 0.0f : FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard);
+	float Alpha = CurrentPanelState == ENovaMainMenuAssemblyState::Assembly
+					? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard)
+					: 0.0f;
 	return FLinearColor(1, 1, 1, Alpha);
 }
 
 FLinearColor SNovaMainMenuAssembly::GetCompartmentColor() const
 {
-	float Alpha =
-		CompartmentPanelVisible ? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard) : 0.0f;
+	float Alpha = CurrentPanelState == ENovaMainMenuAssemblyState::Compartment
+					? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard)
+					: 0.0f;
+	return FLinearColor(1, 1, 1, Alpha);
+}
+
+FLinearColor SNovaMainMenuAssembly::GetCustomizationColor() const
+{
+	float Alpha = CurrentPanelState == ENovaMainMenuAssemblyState::Customization
+					? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard)
+					: 0.0f;
 	return FLinearColor(1, 1, 1, Alpha);
 }
 
@@ -1627,7 +1710,7 @@ FText SNovaMainMenuAssembly::GetCompartmentText()
 
 bool SNovaMainMenuAssembly::IsBackToAssemblyEnabled() const
 {
-	return EditedCompartmentIndex != INDEX_NONE;
+	return CurrentPanelState != ENovaMainMenuAssemblyState::Assembly;
 }
 
 FText SNovaMainMenuAssembly::GetModuleHelpText(int32 ModuleIndex) const
@@ -1646,7 +1729,7 @@ FText SNovaMainMenuAssembly::GetModuleHelpText(int32 ModuleIndex) const
 
 bool SNovaMainMenuAssembly::IsModuleEnabled(int32 ModuleIndex, FText* Help) const
 {
-	if (CompartmentPanelVisible && IsValid(SpacecraftPawn))
+	if (IsCompartmentPanelVisible() && IsValid(SpacecraftPawn))
 	{
 		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
 		if (ModuleIndex >= Compartment.Description->ModuleSlots.Num())
@@ -1672,7 +1755,7 @@ bool SNovaMainMenuAssembly::IsModuleEnabled(int32 ModuleIndex, FText* Help) cons
 
 bool SNovaMainMenuAssembly::IsEquipmentEnabled(int32 EquipmentIndex) const
 {
-	if (CompartmentPanelVisible && IsValid(SpacecraftPawn))
+	if (IsCompartmentPanelVisible() && IsValid(SpacecraftPawn))
 	{
 		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
 		return EquipmentIndex < Compartment.Description->EquipmentSlots.Num();
@@ -1826,6 +1909,8 @@ void SNovaMainMenuAssembly::OnEditCompartment()
 		SpacecraftPawn->SetDisplayFilter(SpacecraftPawn->GetDisplayFilter(), EditedCompartmentIndex);
 		SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
 	}
+
+	DesiredPanelState = ENovaMainMenuAssemblyState::Compartment;
 }
 
 void SNovaMainMenuAssembly::OnRemoveCompartment()
@@ -1879,22 +1964,6 @@ void SNovaMainMenuAssembly::OnCompartmentSelected(int32 Index)
 /*----------------------------------------------------
     Display filters
 ----------------------------------------------------*/
-
-void SNovaMainMenuAssembly::OnSpacecraftNameChanged(const FText& InText)
-{
-	constexpr int32 MaxSpacecraftNameLength = 25;
-
-	FString SpacecraftName = InText.ToString().Left(MaxSpacecraftNameLength);
-	if (InText.ToString().Len() > MaxSpacecraftNameLength)
-	{
-		SpacecraftNameText->SetText(FText::FromString(SpacecraftName));
-	}
-
-	if (IsValid(SpacecraftPawn))
-	{
-		SpacecraftPawn->RenameSpacecraft(SpacecraftName);
-	}
-}
 
 void SNovaMainMenuAssembly::OnEnterPhotoMode(FName ActionName)
 {
@@ -1963,33 +2032,69 @@ void SNovaMainMenuAssembly::OnOpenCustomization()
 {
 	NLOG("SNovaMainMenuAssembly::OnOpenCustomization");
 
-	const FNovaSpacecraftCustomization& Customization = SpacecraftPawn->GetCustomization();
+	SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
 
-	GenericPaintList    = UNovaAssetManager::Get()->GetAssets<UNovaPaintDescription>();
-	StructuralPaintList = UNovaAssetManager::Get()->GetAssets<UNovaStructuralPaintDescription>();
+	DesiredPanelState = ENovaMainMenuAssemblyState::Customization;
+}
 
-	GenericModalPanel->Show(LOCTEXT("CustomizeSpacecraftTitle", "Customize spacecraft"), FText(),
-		FSimpleDelegate::CreateSP(this, &SNovaMainMenuAssembly::OnConfirmCustomization), FSimpleDelegate(), FSimpleDelegate(),
-		CustomizationBox);
+void SNovaMainMenuAssembly::OnStructuralPaintSelected(const UNovaStructuralPaintDescription* Paint, int32 Index)
+{
+	NLOG("SNovaMainMenuAssembly::OnStructuralPaintSelected : %d", Index);
 
-	DirtyIntensity->SetCurrentValue(Customization.DirtyIntensity);
-	WirePaintListView->Refresh(GenericPaintList.Find(Customization.WirePaint));
-	StructuralPaintListView->Refresh(StructuralPaintList.Find(Customization.StructuralPaint));
+	FNovaSpacecraftCustomization Customization = SpacecraftPawn->GetCustomization();
+	Customization.StructuralPaint              = Paint;
+	SpacecraftPawn->UpdateCustomization(Customization);
+
+	StructuralPaintListView->SetInitiallySelectedIndex(Index);
+}
+
+void SNovaMainMenuAssembly::OnWirePaintSelected(const class UNovaPaintDescription* Paint, int32 Index)
+{
+	NLOG("SNovaMainMenuAssembly::OnWirePaintSelected : %d", Index);
+
+	FNovaSpacecraftCustomization Customization = SpacecraftPawn->GetCustomization();
+	Customization.WirePaint                    = Paint;
+	SpacecraftPawn->UpdateCustomization(Customization);
+
+	WirePaintListView->SetInitiallySelectedIndex(Index);
+}
+
+void SNovaMainMenuAssembly::OnDirtyIntensityChanged(float Value)
+{
+	FNovaSpacecraftCustomization Customization = SpacecraftPawn->GetCustomization();
+	Customization.DirtyIntensity               = Value;
+	SpacecraftPawn->UpdateCustomization(Customization);
+}
+
+void SNovaMainMenuAssembly::OnSpacecraftNameChanged(const FText& InText)
+{
+	constexpr int32 MaxSpacecraftNameLength = 25;
+
+	FString SpacecraftName = InText.ToString().Left(MaxSpacecraftNameLength);
+	if (InText.ToString().Len() > MaxSpacecraftNameLength)
+	{
+		SpacecraftNameText->SetText(FText::FromString(SpacecraftName));
+	}
+
+	if (IsValid(SpacecraftPawn))
+	{
+		SpacecraftPawn->RenameSpacecraft(SpacecraftName);
+	}
 }
 
 void SNovaMainMenuAssembly::OnConfirmCustomization()
 {
 	NLOG("SNovaMainMenuAssembly::OnConfirmCustomization");
 
-	GenericModalPanel->Hide();
+	FNovaSpacecraftCustomization Customization = SpacecraftPawn->GetCustomization();
 
-	FNovaSpacecraftCustomization Customization;
-	Customization.Create();
 	Customization.DirtyIntensity  = DirtyIntensity->GetCurrentValue();
 	Customization.WirePaint       = WirePaintListView->GetSelectedItem();
 	Customization.StructuralPaint = StructuralPaintListView->GetSelectedItem();
 
 	SpacecraftPawn->UpdateCustomization(Customization);
+
+	OnBackToAssembly();
 }
 
 /*----------------------------------------------------
@@ -2006,9 +2111,10 @@ void SNovaMainMenuAssembly::OnReviewSpacecraft()
 
 void SNovaMainMenuAssembly::OnBackToAssembly()
 {
-	if (CompartmentPanelVisible)
+	if (CurrentPanelState != ENovaMainMenuAssemblyState::Assembly)
 	{
 		EditedCompartmentIndex = INDEX_NONE;
+		DesiredPanelState      = ENovaMainMenuAssemblyState::Assembly;
 
 		SpacecraftPawn->SetDisplayFilter(SpacecraftPawn->GetDisplayFilter(), INDEX_NONE);
 		SpacecraftPawn->SetOutlinedCompartment(SelectedCompartmentIndex);

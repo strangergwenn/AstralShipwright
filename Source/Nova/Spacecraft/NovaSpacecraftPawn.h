@@ -238,11 +238,7 @@ public:
 	}
 
 	/** Update the customization data */
-	void UpdateCustomization(const struct FNovaSpacecraftCustomization& Customization)
-	{
-		Spacecraft->Customization = Customization;
-		RequestAssemblyUpdate();
-	}
+	void UpdateCustomization(const struct FNovaSpacecraftCustomization& Customization);
 
 	/** Set this compartment to immediate mode (no animations or shader transitions) */
 	void SetImmediateMode(bool Value)

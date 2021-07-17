@@ -170,6 +170,12 @@ public:
 		}
 	}
 
+	/** Force the initially selected index */
+	void SetInitiallySelectedIndex(int32 Index)
+	{
+		InitiallySelectedIndex = Index;
+	}
+
 	/** Check if an item is currently selected */
 	bool IsCurrentlySelected(const ItemType& Item) const
 	{

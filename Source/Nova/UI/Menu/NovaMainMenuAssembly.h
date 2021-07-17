@@ -12,6 +12,13 @@
 enum class ENovaAssemblyDisplayFilter : uint8;
 enum class ENovaHullType : uint8;
 
+enum class ENovaMainMenuAssemblyState
+{
+	Assembly,
+	Compartment,
+	Customization
+};
+
 template <int Size>
 struct FNovaCarouselAnimation
 {
@@ -137,8 +144,13 @@ protected:
 	/** Select a module or equipment */
 	void SetSelectedModuleOrEquipment(int32 Index);
 
-	/** Set whether the compartment sub-menu is active */
-	void SetCompartmentPanelVisible(bool Active);
+	/** Set which sub-menu is active */
+	void SetPanelState(ENovaMainMenuAssemblyState State);
+
+	bool IsCompartmentPanelVisible() const
+	{
+		return CurrentPanelState == ENovaMainMenuAssemblyState::Compartment;
+	}
 
 	/*----------------------------------------------------
 	    Module / equipment index helpers
@@ -224,6 +236,7 @@ protected:
 	// Panels
 	FLinearColor GetMainColor() const;
 	FLinearColor GetCompartmentColor() const;
+	FLinearColor GetCustomizationColor() const;
 
 	// Assembly callbacks
 	FText GetSelectedFilterText() const;
@@ -233,10 +246,6 @@ protected:
 	FText GetCompartmentText();
 
 	// Compartment callbacks
-	bool IsCompartmentPanelVisible() const
-	{
-		return CompartmentPanelVisible;
-	}
 	bool  IsBackToAssemblyEnabled() const;
 	FText GetModuleHelpText(int32 ModuleIndex) const;
 	bool  IsModuleEnabled(int32 ModuleIndex) const
@@ -272,7 +281,6 @@ protected:
 	void OnCompartmentSelected(int32 Index);
 
 	// Display filters
-	void OnSpacecraftNameChanged(const FText& InText);
 	void OnEnterPhotoMode(FName ActionName);
 	void OnSelectedFilterChanged(float Value);
 
@@ -283,6 +291,10 @@ protected:
 
 	// Customization
 	void OnOpenCustomization();
+	void OnStructuralPaintSelected(const class UNovaStructuralPaintDescription* Paint, int32 Index);
+	void OnWirePaintSelected(const class UNovaPaintDescription* Paint, int32 Index);
+	void OnDirtyIntensityChanged(float Value);
+	void OnSpacecraftNameChanged(const FText& InText);
 	void OnConfirmCustomization();
 
 	// Save & exit
@@ -310,13 +322,13 @@ protected:
 	TSharedPtr<class SNovaModalPanel>         GenericModalPanel;
 	TSharedPtr<class SNovaAssemblyModalPanel> AssemblyModalPanel;
 	TSharedPtr<SVerticalBox>                  MenuBox;
-	TSharedPtr<SHorizontalBox>                CustomizationBox;
 	TSharedPtr<class SNovaSlider>             DirtyIntensity;
 
 	// Panel fading system
-	float FadeDuration;
-	float CurrentFadeTime;
-	bool  CompartmentPanelVisible;
+	ENovaMainMenuAssemblyState DesiredPanelState;
+	ENovaMainMenuAssemblyState CurrentPanelState;
+	float                      FadeDuration;
+	float                      CurrentFadeTime;
 
 	// Assembly data
 	int32 SelectedCompartmentIndex;

@@ -196,6 +196,16 @@ void UNovaSpacecraftCompartmentComponent::BuildCompartment(const struct FNovaCom
 	}
 }
 
+void UNovaSpacecraftCompartmentComponent::UpdateCustomization()
+{
+	UpdateCustomization(MainStructure);
+	UpdateCustomization(OuterStructure);
+	UpdateCustomization(MainPiping);
+	UpdateCustomization(MainWiring);
+	UpdateCustomization(MainHull);
+	UpdateCustomization(OuterHull);
+}
+
 void UNovaSpacecraftCompartmentComponent::BuildModule(
 	FNovaModuleAssembly& Assembly, const FNovaModuleSlot& Slot, const FNovaCompartment& Compartment)
 {
@@ -370,10 +380,15 @@ void UNovaSpacecraftCompartmentComponent::BuildElement(
 		}
 	}
 
-	// Fetch the desired customization state
+	UpdateCustomization(Element);
+}
+
+void UNovaSpacecraftCompartmentComponent::UpdateCustomization(FNovaAssemblyElement& Element)
+{
 	ANovaSpacecraftPawn* SpacecraftPawn = Cast<ANovaSpacecraftPawn>(GetOwner());
 	NCHECK(SpacecraftPawn);
 	const FNovaSpacecraftCustomization& Customization = SpacecraftPawn->GetCustomization();
+
 	RequestParameter(Element, "DirtyIntensity", FMath::Lerp(0.5f, 1.0f, Customization.DirtyIntensity));
 	RequestParameter(Element, "StructuralPaint", Customization.StructuralPaint->Unpainted ? 0.0f : 1.0f);
 	RequestParameter(Element, "StructuralPaintColor", Customization.StructuralPaint->PaintColor);

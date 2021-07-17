@@ -86,6 +86,9 @@ public:
 	/** Create assembly elements and set the relevant locations */
 	virtual void BuildCompartment(const struct FNovaCompartment& Compartment, int32 Index);
 
+	/** Update customization for the full compartment */
+	void UpdateCustomization();
+
 protected:
 	/** Build a single module of a compartment assembly */
 	void BuildModule(FNovaModuleAssembly& Assembly, const FNovaModuleSlot& Slot, const FNovaCompartment& Compartment);
@@ -96,6 +99,9 @@ protected:
 
 	/** Build a single element of a compartment assembly */
 	void BuildElement(FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent);
+
+	/** Update customization for one element */
+	void UpdateCustomization(FNovaAssemblyElement& Element);
 
 	/*----------------------------------------------------
 	    Helpers

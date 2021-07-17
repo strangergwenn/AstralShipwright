@@ -368,6 +368,19 @@ int32 ANovaSpacecraftPawn::GetCompartmentIndexByPrimitive(const class UPrimitive
 	return INDEX_NONE;
 }
 
+void ANovaSpacecraftPawn::UpdateCustomization(const struct FNovaSpacecraftCustomization& Customization)
+{
+	if (Customization != Spacecraft->Customization)
+	{
+		Spacecraft->Customization = Customization;
+
+		for (UNovaSpacecraftCompartmentComponent* Compartment : CompartmentComponents)
+		{
+			Compartment->UpdateCustomization();
+		}
+	}
+}
+
 void ANovaSpacecraftPawn::SetDisplayFilter(ENovaAssemblyDisplayFilter Filter, int32 CompartmentIndex)
 {
 	DisplayFilterType  = Filter;
