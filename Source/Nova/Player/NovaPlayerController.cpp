@@ -733,24 +733,30 @@ void ANovaPlayerController::StartGame(FString SaveName, bool Online)
 {
 	NLOG("ANovaPlayerController::StartGame : loading from '%s', online = %d", *SaveName, Online);
 
-	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,    //
-		FNovaAsyncAction::CreateLambda(
-			[=]()
-			{
-				GetGameInstance<UNovaGameInstance>()->StartGame(SaveName, Online);
-			}));
+	if (GetMenuManager()->IsIdle())
+	{
+		GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,    //
+			FNovaAsyncAction::CreateLambda(
+				[=]()
+				{
+					GetGameInstance<UNovaGameInstance>()->StartGame(SaveName, Online);
+				}));
+	}
 }
 
 void ANovaPlayerController::SetGameOnline(bool Online)
 {
 	NLOG("ANovaPlayerController::SetGameOnline : online = %d", Online);
 
-	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,    //
-		FNovaAsyncAction::CreateLambda(
-			[=]()
-			{
-				GetGameInstance<UNovaGameInstance>()->SetGameOnline(GetWorld()->GetName(), Online);
-			}));
+	if (GetMenuManager()->IsIdle())
+	{
+		GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,    //
+			FNovaAsyncAction::CreateLambda(
+				[=]()
+				{
+					GetGameInstance<UNovaGameInstance>()->SetGameOnline(GetWorld()->GetName(), Online);
+				}));
+	}
 }
 
 void ANovaPlayerController::GoToMainMenu(bool SaveGame)
