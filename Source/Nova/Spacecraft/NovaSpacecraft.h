@@ -172,7 +172,7 @@ struct FNovaSpacecraftCustomization
 {
 	GENERATED_BODY()
 
-	FNovaSpacecraftCustomization() : DirtyIntensity(0.0f), StructuralPaint(nullptr), WirePaint(nullptr)
+	FNovaSpacecraftCustomization() : DirtyIntensity(0.0f), StructuralPaint(nullptr), HullPaint(nullptr), WirePaint(nullptr)
 	{}
 
 	/** Initialize the customization data */

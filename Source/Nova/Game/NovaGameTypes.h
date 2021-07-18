@@ -394,11 +394,11 @@ public:
 
 	// Mesh to use to render the asset
 	UPROPERTY(Category = Preview, EditDefaultsOnly)
-	class UStaticMesh* PreviewMesh;
+	TSoftObjectPtr<class UStaticMesh> PreviewMesh;
 
 	// Material to use to render the asset
 	UPROPERTY(Category = Preview, EditDefaultsOnly)
-	class UMaterialInterface* PreviewMaterial;
+	TSoftObjectPtr<class UMaterialInterface> PreviewMaterial;
 
 	// Preview offset for the asset render, in units
 	UPROPERTY(Category = Preview, EditDefaultsOnly)
