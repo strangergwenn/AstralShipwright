@@ -142,7 +142,7 @@ struct FNovaCompartment
 	const class UNovaCompartmentDescription* Description;
 
 	UPROPERTY()
-	ENovaHullType HullType;
+	const UNovaHullDescription* HullType;
 
 	UPROPERTY()
 	FNovaCompartmentModule Modules[ENovaConstants::MaxModuleCount];
@@ -176,12 +176,7 @@ struct FNovaSpacecraftCustomization
 	{}
 
 	/** Initialize the customization data */
-	void Create()
-	{
-		StructuralPaint = UNovaStructuralPaintDescription::GetDefault();
-		HullPaint       = UNovaStructuralPaintDescription::GetDefault();
-		WirePaint       = UNovaPaintDescription::GetDefault();
-	}
+	void Create();
 
 	bool operator==(const FNovaSpacecraftCustomization& Other) const
 	{

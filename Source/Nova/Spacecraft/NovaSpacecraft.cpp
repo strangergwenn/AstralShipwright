@@ -28,7 +28,7 @@ FNovaCompartmentModule::FNovaCompartmentModule()
 
 FNovaCompartment::FNovaCompartment()
 	: Description(nullptr)
-	, HullType(ENovaHullType::None)
+	, HullType(nullptr)
 	, Modules{FNovaCompartmentModule()}
 	, Equipments{nullptr}
 	, NeedsOuterSkirt(false)
@@ -190,6 +190,13 @@ void FNovaCompartment::ModifyCargo(const class UNovaResource* Resource, float& M
 	}
 
 	MassDelta -= (Cargo.Amount - PreviousAmount);
+}
+
+void FNovaSpacecraftCustomization::Create()
+{
+	StructuralPaint = UNovaAssetManager::Get()->GetDefaultAsset<UNovaStructuralPaintDescription>();
+	HullPaint       = UNovaAssetManager::Get()->GetDefaultAsset<UNovaStructuralPaintDescription>();
+	WirePaint       = UNovaAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
 }
 
 /*----------------------------------------------------
@@ -454,6 +461,7 @@ FNovaSpacecraftUpgradeCost FNovaSpacecraft::GetUpgradeCost(const ANovaGameState*
 		{
 			const FNovaCompartment& Compartment = Spacecraft->Compartments[CompartmentIndex];
 			UpdatePartsData(Compartment.Description, Add);
+			UpdatePartsData(Compartment.HullType, Add);
 
 			for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
 			{
@@ -474,7 +482,7 @@ FNovaSpacecraftUpgradeCost FNovaSpacecraft::GetUpgradeCost(const ANovaGameState*
 	// Process paint
 	if (Customization != Other->Customization)
 	{
-		Cost.PaintCost += 100;
+		Cost.PaintCost += 10 * Compartments.Num();
 	}
 
 	// Compute the total change costs
@@ -545,7 +553,7 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 			{
 				// Compartment
 				UNovaAssetDescription::SaveAsset(CompartmentJsonData, "D", Compartment.Description);
-				CompartmentJsonData->SetNumberField("H", static_cast<uint8>(Compartment.HullType));
+				UNovaAssetDescription::SaveAsset(CompartmentJsonData, "H", Compartment.HullType);
 
 				// Modules
 				for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
@@ -640,7 +648,7 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 				// Compartment
 				Compartment.Description = UNovaAssetDescription::LoadAsset<UNovaCompartmentDescription>(CompartmentJsonData, "D");
 				NCHECK(Compartment.Description);
-				Compartment.HullType = static_cast<ENovaHullType>(CompartmentJsonData->GetNumberField("H"));
+				Compartment.HullType = UNovaAssetDescription::LoadAsset<UNovaHullDescription>(CompartmentJsonData, "H");
 
 				// Modules
 				for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)

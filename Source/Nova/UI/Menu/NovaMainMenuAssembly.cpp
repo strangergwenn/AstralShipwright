@@ -1441,7 +1441,7 @@ void SNovaMainMenuAssembly::SetPanelState(ENovaMainMenuAssemblyState State)
 	{
 		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
 
-		HullTypeList = Compartment.Description->GetSupportedHullTypes();
+		HullTypeList = Compartment.Description->GetSupportedHulls();
 		HullTypeListView->Refresh(HullTypeList.Find(Compartment.HullType));
 
 		SetSelectedModuleOrEquipment(0);
@@ -1597,41 +1597,29 @@ FText SNovaMainMenuAssembly::GenerateEquipmentTooltip(const UNovaEquipmentDescri
     Compartment hull type list
 ----------------------------------------------------*/
 
-TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateHullTypeItem(ENovaHullType Type) const
+TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateHullTypeItem(const class UNovaHullDescription* Hull) const
 {
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-
-	return SNew(SOverlay).Clipping(EWidgetClipping::ClipToBoundsAlways)
-
-		 + SOverlay::Slot()[SNew(SScaleBox)[
-			   // TODO : image background for various hull types
-			   SNew(SImage).Image(new FSlateNoResource)]]
-
-		 + SOverlay::Slot().Padding(Theme.ContentPadding)[SNew(STextBlock).TextStyle(&Theme.MainFont).Text(GetHullTypeName(Type))];
+	return SNew(SNovaTradableAssetItem)
+		.Asset(Hull)
+		.GameState(GameState)
+		.NoPriceHint(true)
+		.SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
+			[=]()
+			{
+				return HullTypeListView->GetSelectionIcon(Hull);
+			})));
 }
 
-FText SNovaMainMenuAssembly::GetHullTypeListTitle(ENovaHullType Type) const
+FText SNovaMainMenuAssembly::GetHullTypeListTitle(const class UNovaHullDescription* Hull) const
 {
-	return FText::FormatNamed(LOCTEXT("HullTypeTitle", "Change hull type ({hull})"), TEXT("hull"), GetHullTypeName(Type));
+	return FText::FormatNamed(LOCTEXT("HullTypeTitle", "Change hull type ({hull})"), TEXT("hull"), GetAssetName(Hull));
 }
 
-FText SNovaMainMenuAssembly::GetHullTypeName(ENovaHullType Type) const
+FText SNovaMainMenuAssembly::GenerateHullTypeTooltip(const class UNovaHullDescription* Hull) const
 {
-	switch (Type)
+	if (IsValid(Hull))
 	{
-		default:
-		case ENovaHullType::None:
-			return LOCTEXT("ENovaHullTypeNone", "No hull");
-		case ENovaHullType::SoftCladding:
-			return LOCTEXT("ENovaHullTypePlasticFabric", "Soft cladding");
-	}
-}
-
-FText SNovaMainMenuAssembly::GenerateHullTypeTooltip(ENovaHullType Type) const
-{
-	if (Type != ENovaHullType::None)
-	{
-		return FText::FormatNamed(LOCTEXT("HullTypeHelp", "Use {hull} for this compartment"), TEXT("hull"), GetHullTypeName(Type));
+		return FText::FormatNamed(LOCTEXT("HullTypeHelp", "Use {hull} for this compartment"), TEXT("hull"), GetAssetName(Hull));
 	}
 	else
 	{
@@ -2051,13 +2039,13 @@ void SNovaMainMenuAssembly::OnSelectedEquipmentChanged(const UNovaEquipmentDescr
 	}
 }
 
-void SNovaMainMenuAssembly::OnSelectedHullTypeChanged(ENovaHullType Type, int32 Index)
+void SNovaMainMenuAssembly::OnSelectedHullTypeChanged(const UNovaHullDescription* Hull, int32 Index)
 {
-	NLOG("SNovaMainMenuAssembly::OnSelectedHullTypeChanged : setting new hull ('%d')", static_cast<int32>(Type));
+	NLOG("SNovaMainMenuAssembly::OnSelectedHullTypeChanged : setting new hull ('%d')", *GetAssetName(Hull).ToString());
 
 	if (IsValid(SpacecraftPawn))
 	{
-		SpacecraftPawn->GetCompartment(EditedCompartmentIndex).HullType = Type;
+		SpacecraftPawn->GetCompartment(EditedCompartmentIndex).HullType = Hull;
 		SpacecraftPawn->RequestAssemblyUpdate();
 	}
 }

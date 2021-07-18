@@ -378,6 +378,43 @@ public:
 	float BasePrice = 10;
 };
 
+/** Description of a tradable asset that has dedicated preview assets */
+UCLASS(ClassGroup = (Nova))
+class UNovaPreviableTradableAssetDescription : public UNovaTradableAssetDescription
+{
+	GENERATED_BODY()
+
+public:
+	virtual struct FNovaAssetPreviewSettings GetPreviewSettings() const override;
+
+	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
+
+public:
+#if WITH_EDITORONLY_DATA
+
+	// Mesh to use to render the asset
+	UPROPERTY(Category = Preview, EditDefaultsOnly)
+	class UStaticMesh* PreviewMesh;
+
+	// Material to use to render the asset
+	UPROPERTY(Category = Preview, EditDefaultsOnly)
+	class UMaterialInterface* PreviewMaterial;
+
+	// Preview offset for the asset render, in units
+	UPROPERTY(Category = Preview, EditDefaultsOnly)
+	FVector PreviewOffset = FVector(25.0f, -25.0f, 0.0f);
+
+	// Preview rotation for the asset render
+	UPROPERTY(Category = Preview, EditDefaultsOnly)
+	FRotator PreviewRotation = FRotator::ZeroRotator;
+
+	// Preview scale for the asset render
+	UPROPERTY(Category = Preview, EditDefaultsOnly)
+	float PreviewScale = 4.25f;
+
+#endif    // WITH_EDITORONLY_DATA
+};
+
 /** Trade price modifiers */
 UENUM()
 enum class ENovaPriceModifier : uint8
@@ -404,13 +441,9 @@ enum class ENovaResourceType : uint8
 
 /** Description of a resource */
 UCLASS(ClassGroup = (Nova))
-class UNovaResource : public UNovaTradableAssetDescription
+class UNovaResource : public UNovaPreviableTradableAssetDescription
 {
 	GENERATED_BODY()
-
-	virtual struct FNovaAssetPreviewSettings GetPreviewSettings() const override;
-
-	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
 
 public:
 	/** Get a special empty resource */
@@ -427,30 +460,6 @@ public:
 	// Resource description
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	FText Description;
-
-#if WITH_EDITORONLY_DATA
-
-	// Mesh to use to render the resource
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	class UStaticMesh* ResourceMesh;
-
-	// Material to use to render the resource
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	class UMaterialInterface* ResourceMaterial;
-
-	// Preview offset for the resource render, in units
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	FVector PreviewOffset = FVector(25.0f, -25.0f, 0.0f);
-
-	// Preview rotation for the resource render
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	FRotator PreviewRotation = FRotator::ZeroRotator;
-
-	// Preview scale for the resource render
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	float PreviewScale = 4.25f;
-
-#endif    // WITH_EDITORONLY_DATA
 };
 
 /*----------------------------------------------------

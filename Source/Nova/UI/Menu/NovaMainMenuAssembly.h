@@ -82,7 +82,7 @@ class SNovaMainMenuAssembly
 	typedef SNovaModalListView<const class UNovaModuleDescription*>      SNovaModuleList;
 	typedef SNovaModalListView<const class UNovaEquipmentDescription*>   SNovaEquipmentList;
 	typedef SNovaModalListView<ENovaAssemblyDisplayFilter>               SNovaDisplayFilterList;
-	typedef SNovaModalListView<ENovaHullType>                            SNovaHullTypeList;
+	typedef SNovaModalListView<const class UNovaHullDescription*>        SNovaHullTypeList;
 
 	typedef SNovaListView<const class UNovaPaintDescription*>           SNovaPaintList;
 	typedef SNovaListView<const class UNovaStructuralPaintDescription*> SNovaStructuralPaintList;
@@ -225,10 +225,9 @@ protected:
 	FText               GenerateEquipmentTooltip(const class UNovaEquipmentDescription* Equipment) const;
 
 	// Compartment hull types list
-	TSharedRef<SWidget> GenerateHullTypeItem(ENovaHullType Type) const;
-	FText               GetHullTypeListTitle(ENovaHullType Type) const;
-	FText               GetHullTypeName(ENovaHullType Type) const;
-	FText               GenerateHullTypeTooltip(ENovaHullType Type) const;
+	TSharedRef<SWidget> GenerateHullTypeItem(const class UNovaHullDescription* Hull) const;
+	FText               GetHullTypeListTitle(const class UNovaHullDescription* Hull) const;
+	FText               GenerateHullTypeTooltip(const class UNovaHullDescription* Hull) const;
 
 	// Helpers
 	FText GetAssetName(const class UNovaTradableAssetDescription* Asset) const;
@@ -288,7 +287,7 @@ protected:
 	// Modules & equipments
 	void OnSelectedModuleChanged(const class UNovaModuleDescription* Module, int32 Index);
 	void OnSelectedEquipmentChanged(const class UNovaEquipmentDescription* Equipment, int32 Index);
-	void OnSelectedHullTypeChanged(ENovaHullType Type, int32 Index);
+	void OnSelectedHullTypeChanged(const class UNovaHullDescription* Hull, int32 Index);
 
 	// Customization
 	void OnOpenCustomization();
@@ -343,8 +342,8 @@ protected:
 	FNovaCarouselAnimation<ENovaConstants::MaxModuleCount + ENovaConstants::MaxEquipmentCount> ModuleEquipmentAnimation;
 
 	// Hull type list
-	TArray<ENovaHullType>         HullTypeList;
-	TSharedPtr<SNovaHullTypeList> HullTypeListView;
+	TArray<const class UNovaHullDescription*> HullTypeList;
+	TSharedPtr<SNovaHullTypeList>             HullTypeListView;
 
 	// Compartment module list
 	TArray<const class UNovaModuleDescription*> ModuleList;

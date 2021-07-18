@@ -12,6 +12,17 @@
     Compartment data asset
 ----------------------------------------------------*/
 
+TArray<const UNovaHullDescription*> UNovaCompartmentDescription::GetSupportedHulls() const
+{
+	TArray<const UNovaHullDescription*> Result;
+
+	Result.Add(nullptr);
+
+	Result.Append(UNovaAssetManager::Get()->GetAssets<UNovaHullDescription>());
+
+	return Result;
+}
+
 TArray<FName> UNovaCompartmentDescription::GetGroupedEquipmentSlotsNames(int32 Index) const
 {
 	TArray<FName> GroupedSocketNames;
@@ -80,6 +91,16 @@ TArray<const FNovaEquipmentSlot*> UNovaCompartmentDescription::GetGroupedEquipme
 	return GroupedSlots;
 }
 
+TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetMainHull(const UNovaHullDescription* Hull) const
+{
+	return IsValid(Hull) ? MainHull : nullptr;
+}
+
+TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetOuterHull(const UNovaHullDescription* Hull) const
+{
+	return IsValid(Hull) ? OuterHull : nullptr;
+}
+
 FNovaAssetPreviewSettings UNovaCompartmentDescription::GetPreviewSettings() const
 {
 	FNovaAssetPreviewSettings Settings;
@@ -119,20 +140,6 @@ TArray<FText> UNovaCompartmentDescription::GetDescription() const
 			TEXT("equipments"), FText::AsNumber(EquipmentSlots.Num())));
 
 	return Result;
-}
-
-/*----------------------------------------------------
-    Paint data asset
-----------------------------------------------------*/
-
-const UNovaPaintDescription* UNovaPaintDescription::GetDefault()
-{
-	return UNovaAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
-}
-
-const UNovaStructuralPaintDescription* UNovaStructuralPaintDescription::GetDefault()
-{
-	return UNovaAssetManager::Get()->GetDefaultAsset<UNovaStructuralPaintDescription>();
 }
 
 /*----------------------------------------------------

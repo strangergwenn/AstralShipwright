@@ -88,11 +88,7 @@ struct FNovaAssetPreviewSettings UNovaAssetDescription::GetPreviewSettings() con
 	return FNovaAssetPreviewSettings();
 }
 
-/*----------------------------------------------------
-    Resources
-----------------------------------------------------*/
-
-FNovaAssetPreviewSettings UNovaResource::GetPreviewSettings() const
+FNovaAssetPreviewSettings UNovaPreviableTradableAssetDescription::GetPreviewSettings() const
 {
 	FNovaAssetPreviewSettings Settings;
 
@@ -107,18 +103,22 @@ FNovaAssetPreviewSettings UNovaResource::GetPreviewSettings() const
 	return Settings;
 }
 
-void UNovaResource::ConfigurePreviewActor(class AActor* Actor) const
+void UNovaPreviableTradableAssetDescription::ConfigurePreviewActor(class AActor* Actor) const
 {
 #if WITH_EDITORONLY_DATA
 
 	NCHECK(Actor->GetClass() == AStaticMeshActor::StaticClass());
 
 	AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Actor);
-	MeshActor->GetStaticMeshComponent()->SetStaticMesh(ResourceMesh);
-	MeshActor->GetStaticMeshComponent()->SetMaterial(0, ResourceMaterial);
+	MeshActor->GetStaticMeshComponent()->SetStaticMesh(PreviewMesh);
+	MeshActor->GetStaticMeshComponent()->SetMaterial(0, PreviewMaterial);
 
 #endif    // WITH_EDITORONLY_DATA
 }
+
+/*----------------------------------------------------
+    Resources
+----------------------------------------------------*/
 
 const UNovaResource* UNovaResource::GetEmpty()
 {

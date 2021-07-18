@@ -184,15 +184,7 @@ class UNovaCompartmentDescription : public UNovaTradableAssetDescription
 
 public:
 	/** Get a list of hull styles supported by this compartment */
-	TArray<ENovaHullType> GetSupportedHullTypes() const
-	{
-		TArray<ENovaHullType> Result;
-
-		Result.Add(ENovaHullType::None);
-		Result.Add(ENovaHullType::SoftCladding);
-
-		return Result;
-	}
+	TArray<const UNovaHullDescription*> GetSupportedHulls() const;
 
 	/** Get the module setup at this index, if it exists, by index */
 	FNovaModuleSlot GetModuleSlot(int32 Index) const
@@ -237,16 +229,10 @@ public:
 	}
 
 	/** Return the appropriate main hull mesh */
-	TSoftObjectPtr<class UStaticMesh> GetMainHull(ENovaHullType Type) const
-	{
-		return Type != ENovaHullType::None ? MainHull : nullptr;
-	}
+	TSoftObjectPtr<class UStaticMesh> GetMainHull(const class UNovaHullDescription* Hull) const;
 
 	/** Return the appropriate outer hull mesh */
-	TSoftObjectPtr<class UStaticMesh> GetOuterHull(ENovaHullType Type) const
-	{
-		return Type != ENovaHullType::None ? OuterHull : nullptr;
-	}
+	TSoftObjectPtr<class UStaticMesh> GetOuterHull(const class UNovaHullDescription* Hull) const;
 
 	/** Return the appropriate main wiring mesh */
 	TSoftObjectPtr<class UStaticMesh> GetMainWiring(bool Enabled) const
@@ -321,8 +307,20 @@ public:
 };
 
 /*----------------------------------------------------
-    Paint data assets
+    Hull and paint data assets
 ----------------------------------------------------*/
+
+/** Description of a hull type */
+UCLASS(ClassGroup = (Nova))
+class UNovaHullDescription : public UNovaPreviableTradableAssetDescription
+{
+	GENERATED_BODY()
+
+public:
+	// Hull type
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	ENovaHullType Type;
+};
 
 /** Description of a generic paint asset */
 UCLASS(ClassGroup = (Nova))
@@ -333,9 +331,6 @@ class UNovaPaintDescription : public UNovaAssetDescription
 public:
 	UNovaPaintDescription() : PaintColor(FLinearColor::Black)
 	{}
-
-	/** Get the default paint asset */
-	static const UNovaPaintDescription* GetDefault();
 
 public:
 	// Paint color
@@ -352,9 +347,6 @@ class UNovaStructuralPaintDescription : public UNovaAssetDescription
 public:
 	UNovaStructuralPaintDescription() : PaintColor(FLinearColor::Black), Unpainted(false)
 	{}
-
-	/** Get the default paint asset */
-	static const UNovaStructuralPaintDescription* GetDefault();
 
 public:
 	// Paint color
