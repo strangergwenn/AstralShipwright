@@ -179,12 +179,14 @@ struct FNovaSpacecraftCustomization
 	void Create()
 	{
 		StructuralPaint = UNovaStructuralPaintDescription::GetDefault();
+		HullPaint       = UNovaStructuralPaintDescription::GetDefault();
 		WirePaint       = UNovaPaintDescription::GetDefault();
 	}
 
 	bool operator==(const FNovaSpacecraftCustomization& Other) const
 	{
-		return DirtyIntensity == Other.DirtyIntensity && StructuralPaint == Other.StructuralPaint && WirePaint == Other.WirePaint;
+		return DirtyIntensity == Other.DirtyIntensity && StructuralPaint == Other.StructuralPaint && HullPaint == Other.HullPaint &&
+			   WirePaint == Other.WirePaint;
 	}
 
 	bool operator!=(const FNovaSpacecraftCustomization& Other) const
@@ -197,6 +199,9 @@ struct FNovaSpacecraftCustomization
 
 	UPROPERTY()
 	const UNovaStructuralPaintDescription* StructuralPaint;
+
+	UPROPERTY()
+	const UNovaStructuralPaintDescription* HullPaint;
 
 	UPROPERTY()
 	const UNovaPaintDescription* WirePaint;

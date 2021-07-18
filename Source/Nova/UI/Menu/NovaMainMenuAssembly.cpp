@@ -624,6 +624,38 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							]
 						]
 		
+						// Hull paint
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(SVerticalBox)
+
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							.Padding(Theme.VerticalContentPadding)
+							[
+								SNew(STextBlock)
+								.TextStyle(&Theme.HeadingFont)
+								.Text(LOCTEXT("HullPaintTitle", "Hull paint"))
+							]
+			
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNew(SBox)
+								.HeightOverride(PanelHeight)
+								[
+									SAssignNew(HullPaintListView, SNovaStructuralPaintList)
+									.Panel(this)
+									.ItemsSource(&StructuralPaintList)
+									.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateHullPaintItem)
+									.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateStructuralPaintTooltip)
+									.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnHullPaintSelected)
+									.ButtonSize("DefaultButtonSize")
+								]
+							]
+						]
+		
 						// Wire paint
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
@@ -1171,6 +1203,8 @@ void SNovaMainMenuAssembly::Show()
 {
 	SNovaTabPanel::Show();
 
+	DesiredPanelState = ENovaMainMenuAssemblyState::Assembly;
+
 	if (IsValid(SpacecraftPawn))
 	{
 		SpacecraftNameText->SetText(SpacecraftPawn->GetSpacecraftCopy().GetName());
@@ -1422,8 +1456,9 @@ void SNovaMainMenuAssembly::SetPanelState(ENovaMainMenuAssemblyState State)
 		StructuralPaintList = UNovaAssetManager::Get()->GetAssets<UNovaStructuralPaintDescription>();
 
 		DirtyIntensity->SetCurrentValue(Customization.DirtyIntensity);
-		WirePaintListView->Refresh(GenericPaintList.Find(Customization.WirePaint));
 		StructuralPaintListView->Refresh(StructuralPaintList.Find(Customization.StructuralPaint));
+		HullPaintListView->Refresh(StructuralPaintList.Find(Customization.HullPaint));
+		WirePaintListView->Refresh(GenericPaintList.Find(Customization.WirePaint));
 	}
 
 	// Assembly sub-menu
@@ -1587,10 +1622,8 @@ FText SNovaMainMenuAssembly::GetHullTypeName(ENovaHullType Type) const
 		default:
 		case ENovaHullType::None:
 			return LOCTEXT("ENovaHullTypeNone", "No hull");
-		case ENovaHullType::PlasticFabric:
-			return LOCTEXT("ENovaHullTypePlasticFabric", "Plastic isolation");
-		case ENovaHullType::MetalFabric:
-			return LOCTEXT("ENovaHullTypeMetalFabric", "Metallic isolation");
+		case ENovaHullType::SoftCladding:
+			return LOCTEXT("ENovaHullTypePlasticFabric", "Soft cladding");
 	}
 }
 
@@ -1882,6 +1915,11 @@ FText SNovaMainMenuAssembly::GenerateStructuralPaintTooltip(const UNovaStructura
 	return Paint->Name;
 }
 
+TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateHullPaintItem(const UNovaStructuralPaintDescription* Paint) const
+{
+	return GeneratePaintItem(Paint, HullPaintListView);
+}
+
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateWirePaintItem(const UNovaPaintDescription* Paint) const
 {
 	return GeneratePaintItem(Paint, WirePaintListView);
@@ -2048,6 +2086,17 @@ void SNovaMainMenuAssembly::OnStructuralPaintSelected(const UNovaStructuralPaint
 	StructuralPaintListView->SetInitiallySelectedIndex(Index);
 }
 
+void SNovaMainMenuAssembly::OnHullPaintSelected(const UNovaStructuralPaintDescription* Paint, int32 Index)
+{
+	NLOG("SNovaMainMenuAssembly::OnHullPaintSelected : %d", Index);
+
+	FNovaSpacecraftCustomization Customization = SpacecraftPawn->GetCustomization();
+	Customization.HullPaint                    = Paint;
+	SpacecraftPawn->UpdateCustomization(Customization);
+
+	HullPaintListView->SetInitiallySelectedIndex(Index);
+}
+
 void SNovaMainMenuAssembly::OnWirePaintSelected(const class UNovaPaintDescription* Paint, int32 Index)
 {
 	NLOG("SNovaMainMenuAssembly::OnWirePaintSelected : %d", Index);
@@ -2089,8 +2138,9 @@ void SNovaMainMenuAssembly::OnConfirmCustomization()
 	FNovaSpacecraftCustomization Customization = SpacecraftPawn->GetCustomization();
 
 	Customization.DirtyIntensity  = DirtyIntensity->GetCurrentValue();
-	Customization.WirePaint       = WirePaintListView->GetSelectedItem();
 	Customization.StructuralPaint = StructuralPaintListView->GetSelectedItem();
+	Customization.HullPaint       = HullPaintListView->GetSelectedItem();
+	Customization.WirePaint       = WirePaintListView->GetSelectedItem();
 
 	SpacecraftPawn->UpdateCustomization(Customization);
 

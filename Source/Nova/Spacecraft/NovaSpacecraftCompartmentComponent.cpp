@@ -178,10 +178,6 @@ void UNovaSpacecraftCompartmentComponent::BuildCompartment(const struct FNovaCom
 	SetElementOffset(MainHull, StructureOffset);
 	SetElementOffset(OuterHull, StructureOffset);
 
-	// Setup material
-	RequestParameter(MainHull, "AlternateHull", Compartment.HullType == ENovaHullType::MetalFabric);
-	RequestParameter(OuterHull, "AlternateHull", Compartment.HullType == ENovaHullType::MetalFabric);
-
 	// Build modules
 	for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
 	{
@@ -204,6 +200,20 @@ void UNovaSpacecraftCompartmentComponent::UpdateCustomization()
 	UpdateCustomization(MainWiring);
 	UpdateCustomization(MainHull);
 	UpdateCustomization(OuterHull);
+
+	for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+	{
+		UpdateCustomization(Modules[ModuleIndex].AftBulkhead);
+		UpdateCustomization(Modules[ModuleIndex].ForwardBulkhead);
+		UpdateCustomization(Modules[ModuleIndex].Segment);
+		UpdateCustomization(Modules[ModuleIndex].ConnectionPiping);
+		UpdateCustomization(Modules[ModuleIndex].ConnectionWiring);
+	}
+
+	for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
+	{
+		UpdateCustomization(Equipments[EquipmentIndex].Equipment);
+	}
 }
 
 void UNovaSpacecraftCompartmentComponent::BuildModule(
@@ -390,8 +400,13 @@ void UNovaSpacecraftCompartmentComponent::UpdateCustomization(FNovaAssemblyEleme
 	const FNovaSpacecraftCustomization& Customization = SpacecraftPawn->GetCustomization();
 
 	RequestParameter(Element, "DirtyIntensity", FMath::Lerp(0.5f, 1.0f, Customization.DirtyIntensity));
+
 	RequestParameter(Element, "StructuralPaint", Customization.StructuralPaint->Unpainted ? 0.0f : 1.0f);
 	RequestParameter(Element, "StructuralPaintColor", Customization.StructuralPaint->PaintColor);
+
+	RequestParameter(Element, "HullPaint", Customization.HullPaint->Unpainted ? 0.0f : 1.0f);
+	RequestParameter(Element, "HullPaintColor", Customization.HullPaint->PaintColor);
+
 	RequestParameter(Element, "WireColor", Customization.WirePaint->PaintColor);
 }
 

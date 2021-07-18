@@ -42,8 +42,7 @@ UENUM()
 enum class ENovaHullType : uint8
 {
 	None,
-	PlasticFabric,
-	MetalFabric
+	SoftCladding
 };
 
 /** Possible construction element types */
@@ -190,8 +189,7 @@ public:
 		TArray<ENovaHullType> Result;
 
 		Result.Add(ENovaHullType::None);
-		Result.Add(ENovaHullType::PlasticFabric);
-		Result.Add(ENovaHullType::MetalFabric);
+		Result.Add(ENovaHullType::SoftCladding);
 
 		return Result;
 	}
