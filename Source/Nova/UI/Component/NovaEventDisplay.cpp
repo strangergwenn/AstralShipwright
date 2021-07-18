@@ -250,7 +250,7 @@ FText SNovaEventDisplay::GetDetailsText() const
 
 const FSlateBrush* SNovaEventDisplay::GetIcon() const
 {
-	return IsValidDetails ? FNovaStyleSet::GetBrush("Icon/SB_On") : FNovaStyleSet::GetBrush("Icon/SB_Remove");
+	return IsValidDetails ? FNovaStyleSet::GetBrush("Icon/SB_On") : FNovaStyleSet::GetBrush("Icon/SB_Warning");
 }
 
 #undef LOCTEXT_NAMESPACE
