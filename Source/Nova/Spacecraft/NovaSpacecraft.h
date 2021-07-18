@@ -172,7 +172,7 @@ struct FNovaSpacecraftCustomization
 {
 	GENERATED_BODY()
 
-	FNovaSpacecraftCustomization() : DirtyIntensity(0.0f), StructuralPaint(nullptr), HullPaint(nullptr), WirePaint(nullptr)
+	FNovaSpacecraftCustomization() : DirtyIntensity(0.0f), StructuralPaint(nullptr), HullPaint(nullptr), DetailPaint(nullptr)
 	{}
 
 	/** Initialize the customization data */
@@ -181,7 +181,7 @@ struct FNovaSpacecraftCustomization
 	bool operator==(const FNovaSpacecraftCustomization& Other) const
 	{
 		return DirtyIntensity == Other.DirtyIntensity && StructuralPaint == Other.StructuralPaint && HullPaint == Other.HullPaint &&
-			   WirePaint == Other.WirePaint;
+			   DetailPaint == Other.DetailPaint;
 	}
 
 	bool operator!=(const FNovaSpacecraftCustomization& Other) const
@@ -199,7 +199,7 @@ struct FNovaSpacecraftCustomization
 	const UNovaStructuralPaintDescription* HullPaint;
 
 	UPROPERTY()
-	const UNovaPaintDescription* WirePaint;
+	const UNovaPaintDescription* DetailPaint;
 };
 
 /** Metrics for a spacecraft compartment */

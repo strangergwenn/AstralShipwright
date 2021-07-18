@@ -401,13 +401,22 @@ void UNovaSpacecraftCompartmentComponent::UpdateCustomization(FNovaAssemblyEleme
 
 	RequestParameter(Element, "DirtyIntensity", FMath::Lerp(0.5f, 1.0f, Customization.DirtyIntensity));
 
-	RequestParameter(Element, "StructuralPaint", Customization.StructuralPaint->Unpainted ? 0.0f : 1.0f);
-	RequestParameter(Element, "StructuralPaintColor", Customization.StructuralPaint->PaintColor);
+	if (Customization.StructuralPaint)
+	{
+		RequestParameter(Element, "StructuralPaint", Customization.StructuralPaint->Unpainted ? 0.0f : 1.0f);
+		RequestParameter(Element, "StructuralPaintColor", Customization.StructuralPaint->PaintColor);
+	}
 
-	RequestParameter(Element, "HullPaint", Customization.HullPaint->Unpainted ? 0.0f : 1.0f);
-	RequestParameter(Element, "HullPaintColor", Customization.HullPaint->PaintColor);
+	if (Customization.HullPaint)
+	{
+		RequestParameter(Element, "HullPaint", Customization.HullPaint->Unpainted ? 0.0f : 1.0f);
+		RequestParameter(Element, "HullPaintColor", Customization.HullPaint->PaintColor);
+	}
 
-	RequestParameter(Element, "WireColor", Customization.WirePaint->PaintColor);
+	if (Customization.DetailPaint)
+	{
+		RequestParameter(Element, "PaintColor", Customization.DetailPaint->PaintColor);
+	}
 }
 
 /*----------------------------------------------------

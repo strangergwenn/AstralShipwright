@@ -263,8 +263,8 @@ protected:
 	TSharedRef<SWidget> GenerateStructuralPaintItem(const class UNovaStructuralPaintDescription* Paint) const;
 	FText               GenerateStructuralPaintTooltip(const class UNovaStructuralPaintDescription* Paint) const;
 	TSharedRef<SWidget> GenerateHullPaintItem(const class UNovaStructuralPaintDescription* Paint) const;
-	TSharedRef<SWidget> GenerateWirePaintItem(const class UNovaPaintDescription* Paint) const;
-	FText               GenerateWirePaintTooltip(const class UNovaPaintDescription* Paint) const;
+	TSharedRef<SWidget> GenerateDetailPaintItem(const class UNovaPaintDescription* Paint) const;
+	FText               GenerateDetailPaintTooltip(const class UNovaPaintDescription* Paint) const;
 
 	/*----------------------------------------------------
 	    Callbacks
@@ -293,7 +293,7 @@ protected:
 	void OnOpenCustomization();
 	void OnStructuralPaintSelected(const class UNovaStructuralPaintDescription* Paint, int32 Index);
 	void OnHullPaintSelected(const class UNovaStructuralPaintDescription* Paint, int32 Index);
-	void OnWirePaintSelected(const class UNovaPaintDescription* Paint, int32 Index);
+	void OnDetailPaintSelected(const class UNovaPaintDescription* Paint, int32 Index);
 	void OnDirtyIntensityChanged(float Value);
 	void OnSpacecraftNameChanged(const FText& InText);
 	void OnConfirmCustomization();
@@ -358,5 +358,5 @@ protected:
 	TArray<const class UNovaStructuralPaintDescription*> StructuralPaintList;
 	TSharedPtr<SNovaStructuralPaintList>                 StructuralPaintListView;
 	TSharedPtr<SNovaStructuralPaintList>                 HullPaintListView;
-	TSharedPtr<SNovaPaintList>                           WirePaintListView;
+	TSharedPtr<SNovaPaintList>                           DetailPaintListView;
 };

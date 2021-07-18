@@ -656,7 +656,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							]
 						]
 		
-						// Wire paint
+						// Detail paint
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						[
@@ -668,7 +668,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							[
 								SNew(STextBlock)
 								.TextStyle(&Theme.HeadingFont)
-								.Text(LOCTEXT("WirePaintTitle", "Wire color"))
+								.Text(LOCTEXT("DetailPaintTitle", "Detail paint"))
 							]
 			
 							+ SVerticalBox::Slot()
@@ -677,12 +677,12 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								SNew(SBox)
 								.HeightOverride(PanelHeight)
 								[
-									SAssignNew(WirePaintListView, SNovaPaintList)
+									SAssignNew(DetailPaintListView, SNovaPaintList)
 									.Panel(this)
 									.ItemsSource(&GenericPaintList)
-									.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateWirePaintItem)
-									.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateWirePaintTooltip)
-									.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnWirePaintSelected)
+									.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateDetailPaintItem)
+									.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateDetailPaintTooltip)
+									.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnDetailPaintSelected)
 									.ButtonSize("DefaultButtonSize")
 								]
 							]
@@ -1458,7 +1458,7 @@ void SNovaMainMenuAssembly::SetPanelState(ENovaMainMenuAssemblyState State)
 		DirtyIntensity->SetCurrentValue(Customization.DirtyIntensity);
 		StructuralPaintListView->Refresh(StructuralPaintList.Find(Customization.StructuralPaint));
 		HullPaintListView->Refresh(StructuralPaintList.Find(Customization.HullPaint));
-		WirePaintListView->Refresh(GenericPaintList.Find(Customization.WirePaint));
+		DetailPaintListView->Refresh(GenericPaintList.Find(Customization.DetailPaint));
 	}
 
 	// Assembly sub-menu
@@ -1908,12 +1908,12 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateHullPaintItem(const UNovaStru
 	return GeneratePaintItem(Paint, HullPaintListView);
 }
 
-TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateWirePaintItem(const UNovaPaintDescription* Paint) const
+TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateDetailPaintItem(const UNovaPaintDescription* Paint) const
 {
-	return GeneratePaintItem(Paint, WirePaintListView);
+	return GeneratePaintItem(Paint, DetailPaintListView);
 }
 
-FText SNovaMainMenuAssembly::GenerateWirePaintTooltip(const UNovaPaintDescription* Paint) const
+FText SNovaMainMenuAssembly::GenerateDetailPaintTooltip(const UNovaPaintDescription* Paint) const
 {
 	return Paint->Name;
 }
@@ -2085,15 +2085,15 @@ void SNovaMainMenuAssembly::OnHullPaintSelected(const UNovaStructuralPaintDescri
 	HullPaintListView->SetInitiallySelectedIndex(Index);
 }
 
-void SNovaMainMenuAssembly::OnWirePaintSelected(const class UNovaPaintDescription* Paint, int32 Index)
+void SNovaMainMenuAssembly::OnDetailPaintSelected(const class UNovaPaintDescription* Paint, int32 Index)
 {
-	NLOG("SNovaMainMenuAssembly::OnWirePaintSelected : %d", Index);
+	NLOG("SNovaMainMenuAssembly::OnDetailPaintSelected : %d", Index);
 
 	FNovaSpacecraftCustomization Customization = SpacecraftPawn->GetCustomization();
-	Customization.WirePaint                    = Paint;
+	Customization.DetailPaint                  = Paint;
 	SpacecraftPawn->UpdateCustomization(Customization);
 
-	WirePaintListView->SetInitiallySelectedIndex(Index);
+	DetailPaintListView->SetInitiallySelectedIndex(Index);
 }
 
 void SNovaMainMenuAssembly::OnDirtyIntensityChanged(float Value)
@@ -2128,7 +2128,7 @@ void SNovaMainMenuAssembly::OnConfirmCustomization()
 	Customization.DirtyIntensity  = DirtyIntensity->GetCurrentValue();
 	Customization.StructuralPaint = StructuralPaintListView->GetSelectedItem();
 	Customization.HullPaint       = HullPaintListView->GetSelectedItem();
-	Customization.WirePaint       = WirePaintListView->GetSelectedItem();
+	Customization.DetailPaint     = DetailPaintListView->GetSelectedItem();
 
 	SpacecraftPawn->UpdateCustomization(Customization);
 

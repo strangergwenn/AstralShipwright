@@ -196,7 +196,7 @@ void FNovaSpacecraftCustomization::Create()
 {
 	StructuralPaint = UNovaAssetManager::Get()->GetDefaultAsset<UNovaStructuralPaintDescription>();
 	HullPaint       = UNovaAssetManager::Get()->GetDefaultAsset<UNovaStructuralPaintDescription>();
-	WirePaint       = UNovaAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
+	DetailPaint     = UNovaAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
 }
 
 /*----------------------------------------------------
@@ -554,7 +554,7 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 		// Customization
 		UNovaAssetDescription::SaveAsset(JsonData, "SP", This->Customization.StructuralPaint);
 		UNovaAssetDescription::SaveAsset(JsonData, "HP", This->Customization.HullPaint);
-		UNovaAssetDescription::SaveAsset(JsonData, "WP", This->Customization.WirePaint);
+		UNovaAssetDescription::SaveAsset(JsonData, "DP", This->Customization.DetailPaint);
 		JsonData->SetNumberField("DI", This->Customization.DirtyIntensity);
 
 		// Compartments
@@ -639,10 +639,10 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 		{
 			This->Customization.HullPaint = HullPaint;
 		}
-		const UNovaPaintDescription* WirePaint = UNovaAssetDescription::LoadAsset<UNovaPaintDescription>(JsonData, "WP");
-		if (WirePaint)
+		const UNovaPaintDescription* DetailPaint = UNovaAssetDescription::LoadAsset<UNovaPaintDescription>(JsonData, "DP");
+		if (DetailPaint)
 		{
-			This->Customization.WirePaint = WirePaint;
+			This->Customization.DetailPaint = DetailPaint;
 		}
 		double DirtyIntensity = 0;
 		if (JsonData->TryGetNumberField("DI", DirtyIntensity))
