@@ -47,7 +47,7 @@ public:
 	{
 		const UActorComponent* ThisComponent = Cast<UActorComponent>(this);
 		NCHECK(ThisComponent);
-		return Cast<ANovaSpacecraftPawn>(ThisComponent->GetOwner())->GetSpacecraftIdentifier();
+		return ThisComponent->GetOwner<ANovaSpacecraftPawn>()->GetSpacecraftIdentifier();
 	}
 
 	/** Get the owning spacecraft */
@@ -79,6 +79,6 @@ public:
 	{
 		const UActorComponent* ThisComponent = Cast<UActorComponent>(this);
 		NCHECK(ThisComponent);
-		return Cast<ANovaSpacecraftPawn>(ThisComponent->GetOwner())->IsDocked();
+		return ThisComponent->GetOwner<ANovaSpacecraftPawn>()->IsDocked();
 	}
 };

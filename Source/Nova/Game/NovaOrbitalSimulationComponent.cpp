@@ -176,7 +176,7 @@ void UNovaOrbitalSimulationComponent::UpdateSimulation()
 
 FNovaTime UNovaOrbitalSimulationComponent::GetCurrentTime() const
 {
-	return Cast<ANovaGameState>(GetOwner())->GetCurrentTime();
+	return GetOwner<ANovaGameState>()->GetCurrentTime();
 }
 
 /*----------------------------------------------------

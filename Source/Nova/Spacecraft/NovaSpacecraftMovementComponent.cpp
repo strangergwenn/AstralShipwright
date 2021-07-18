@@ -1,6 +1,7 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaSpacecraftMovementComponent.h"
+#include "NovaSpacecraftPawn.h"
 
 #include "Nova/Actor/NovaActorTools.h"
 #include "Nova/Actor/NovaPlayerStart.h"
@@ -40,10 +41,6 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	, MeasuredAcceleration(FVector::ZeroVector)
 	, MeasuredAngularAcceleration(FVector::ZeroVector)
 {
-	// Linear defaults
-	LinearAcceleration  = 8;
-	AngularAcceleration = 30;
-
 	// Angular defaults
 	LinearDeadDistance          = 1;
 	MaxLinearVelocity           = 50;
@@ -68,10 +65,20 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// Fetch data from the spacecraft
+	const ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
+	NCHECK(SpacecraftPawn);
+	if (SpacecraftPawn->IsSpacecraftValid())
+	{
+		LinearAcceleration  = SpacecraftPawn->GetPropulsionMetrics().ThrusterThrust / SpacecraftPawn->GetCurrentMass();
+		AngularAcceleration = 4 * LinearAcceleration;
+		NCHECK(FMath::IsFinite(LinearAcceleration));
+	}
+
 	// Initialize the movement component on server when it doesn't have a start actor
 	if (GetLocalRole() == ROLE_Authority && !IsInitialized())
 	{
-		ANovaPlayerController* PC    = GetOwner<APawn>()->GetController<ANovaPlayerController>();
+		ANovaPlayerController* PC    = SpacecraftPawn->GetController<ANovaPlayerController>();
 		ANovaPlayerStart*      Start = Cast<ANovaPlayerStart>(GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChoosePlayerStart(PC));
 
 		if (IsValid(Start))

@@ -243,6 +243,7 @@ struct FNovaSpacecraftPropulsionMetrics
 		, ExhaustVelocity(0)
 		, MaximumDeltaV(0)
 		, MaximumBurnTime(0)
+		, ThrusterThrust(0)
 	{}
 
 	/** Get the duration & mass of propellant spent in T for a maneuver */
@@ -297,6 +298,9 @@ struct FNovaSpacecraftPropulsionMetrics
 
 	// Total capable engine burn time in s
 	float MaximumBurnTime;
+
+	// Spacecraft thruster force in kN
+	float ThrusterThrust;
 };
 
 /** Spacecraft upgrade cost result */

@@ -372,7 +372,9 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 		Issues.Add(LOCTEXT("InsufficientDeltaV", "This spacecraft does not have enough delta-v"));
 	}
 
-	// Check for invalid equipment pairings
+	bool HasAnyThruster = false;
+
+	// Check equipment for required items, invalid pairings
 	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
 	{
 		const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
@@ -395,9 +397,21 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 					}
 				}
 			}
+
+			if (Equipment && Equipment->IsA<UNovaThrusterDescription>())
+			{
+				HasAnyThruster = true;
+			}
 		}
 	}
 
+	// Check for required equipment
+	if (!HasAnyThruster)
+	{
+		Issues.Add(LOCTEXT("NoThrusters", "This spacecraft has no maneuvering thrusters"));
+	}
+
+	// Report issues
 	if (Issues.Num() == 0)
 	{
 		if (Details)
@@ -785,6 +799,15 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 		PropulsionMetrics.CargoMassCapacity += Metrics.CargoMassCapacity;
 		PropulsionMetrics.Thrust += Metrics.Thrust;
 		TotalEngineISPTimesThrust += Metrics.TotalEngineISPTimesThrust;
+
+		for (const UNovaEquipmentDescription* Equipment : Compartments[CompartmentIndex].Equipments)
+		{
+			const UNovaThrusterDescription* Thruster = Cast<UNovaThrusterDescription>(Equipment);
+			if (Thruster)
+			{
+				PropulsionMetrics.ThrusterThrust += Thruster->Thrust;
+			}
+		}
 	}
 
 	// Compute metrics

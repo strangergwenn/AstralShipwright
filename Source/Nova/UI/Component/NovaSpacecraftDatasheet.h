@@ -31,11 +31,12 @@ public:
 		SNovaTable::Construct(SNovaTable::FArguments().Title(InArgs._Title).Width(500));
 
 		// Units
-		FText Tonnes           = FText::FromString("T");
-		FText MetersPerSeconds = FText::FromString("m/s");
-		FText TonnesPerSecond  = FText::FromString("T/s");
-		FText Seconds          = FText::FromString("s");
-		FText KiloNewtons      = FText::FromString("kN");
+		FText Tonnes            = FText::FromString("T");
+		FText MetersPerSeconds  = FText::FromString("m/s");
+		FText MetersPerSeconds2 = FText::FromString("m/s-2");
+		FText TonnesPerSecond   = FText::FromString("T/s");
+		FText Seconds           = FText::FromString("s");
+		FText KiloNewtons       = FText::FromString("kN");
 
 		// Build the mass table
 		AddHeader(LOCTEXT("Overview", "<img src=\"/Text/Module\"/> Overview"));
@@ -67,6 +68,8 @@ public:
 			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->MaximumDeltaV : -1, MetersPerSeconds);
 		AddEntry(LOCTEXT("MaximumBurnTime", "Full-load burn time"), TargetPropulsionMetrics.MaximumBurnTime,
 			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->MaximumBurnTime : -1, Seconds);
+		AddEntry(LOCTEXT("LinearAcceleration", "Thruster power"), TargetPropulsionMetrics.ThrusterThrust,
+			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->ThrusterThrust : -1, KiloNewtons);
 	}
 };
 

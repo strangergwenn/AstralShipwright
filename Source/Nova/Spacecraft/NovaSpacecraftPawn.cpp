@@ -182,6 +182,17 @@ bool ANovaSpacecraftPawn::HasModifications() const
 	return CurrentSpacecraft && Spacecraft.IsValid() && *Spacecraft != *CurrentSpacecraft;
 }
 
+float ANovaSpacecraftPawn::GetCurrentMass() const
+{
+	if (Spacecraft.IsValid())
+	{
+		return Spacecraft->GetPropulsionMetrics().DryMass + Spacecraft->GetCurrentCargoMass() +
+			   FindComponentByClass<UNovaSpacecraftPropellantSystem>()->GetCurrentPropellantMass();
+	}
+
+	return 0;
+}
+
 void ANovaSpacecraftPawn::Dock(FSimpleDelegate Callback)
 {
 	SaveSystems();

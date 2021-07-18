@@ -528,4 +528,7 @@ class UNovaThrusterDescription : public UNovaEquipmentDescription
 	GENERATED_BODY()
 
 public:
+	// Thruster thrust in kN
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	float Thrust = 500;
 };

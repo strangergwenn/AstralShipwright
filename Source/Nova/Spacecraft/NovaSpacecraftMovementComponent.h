@@ -214,16 +214,6 @@ protected:
 	----------------------------------------------------*/
 
 public:
-	// Maximum linear acceleration rate in m/s²
-	// TODO move to asset
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
-	float LinearAcceleration;
-
-	// Maximum axis turn acceleration rate in °/s²
-	// TODO move to asset
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
-	float AngularAcceleration;
-
 	// Distance under which we consider stopped
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float LinearDeadDistance;
@@ -277,6 +267,10 @@ protected:
 	// Main drive switch
 	UPROPERTY(Replicated)
 	bool MainDriveEnabled;
+
+	// Acceleration data
+	float LinearAcceleration;
+	float AngularAcceleration;
 
 	// Movement state
 	FVector CurrentLinearVelocity;

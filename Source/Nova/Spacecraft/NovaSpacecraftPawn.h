@@ -122,6 +122,15 @@ public:
 		return Spacecraft.IsValid() ? Spacecraft->GetSafeCopy() : FNovaSpacecraft();
 	}
 
+	/** Return the propulsion metrics */
+	FNovaSpacecraftPropulsionMetrics GetPropulsionMetrics() const
+	{
+		return Spacecraft.IsValid() ? Spacecraft->GetPropulsionMetrics() : FNovaSpacecraftPropulsionMetrics();
+	}
+
+	/** Get the current spacecraft mass */
+	float GetCurrentMass() const;
+
 	/** Dock at a particular location */
 	void Dock(FSimpleDelegate Callback = FSimpleDelegate());
 
@@ -182,7 +191,7 @@ public:
 	}
 
 	/** Revert the pawn to the game state version */
-	bool IsSpacecraftValid(FText* Details = nullptr)
+	bool IsSpacecraftValid(FText* Details = nullptr) const
 	{
 		return Spacecraft.IsValid() && Spacecraft->IsValid(Details);
 	}

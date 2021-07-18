@@ -57,7 +57,7 @@ void UNovaSpacecraftDriveComponent::TickComponent(float DeltaTime, ELevelTick Ti
 	if (MovementComponent && IsValid(GetAttachParent()))
 	{
 		const UNovaOrbitalSimulationComponent* Simulation     = UNovaOrbitalSimulationComponent::Get(this);
-		const ANovaSpacecraftPawn*             SpacecraftPawn = Cast<ANovaSpacecraftPawn>(GetOwner());
+		const ANovaSpacecraftPawn*             SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
 		INovaMeshInterface*                    ParentMesh     = Cast<INovaMeshInterface>(GetAttachParent());
 		NCHECK(ParentMesh);
 
