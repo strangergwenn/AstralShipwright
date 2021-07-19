@@ -26,6 +26,8 @@ FString GetRoleString(const AActor* Actor);
 
 FString GetRoleString(const UActorComponent* Component);
 
+FText GetDateText(struct FNovaTime Time);
+
 FText GetDurationText(struct FNovaTime Time, int32 MaxComponents = 4);
 
 FText GetPriceText(struct FNovaCredits Credits);

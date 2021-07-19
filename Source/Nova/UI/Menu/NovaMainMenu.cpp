@@ -20,6 +20,7 @@
 #include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Spacecraft/NovaSpacecraftMovementComponent.h"
 
+#include "Nova/Game/NovaGameState.h"
 #include "Nova/Player/NovaPlayerController.h"
 #include "Nova/System/NovaMenuManager.h"
 
@@ -103,6 +104,17 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 					SAssignNew(Tooltip, SNovaText)
 					.TextStyle(&Theme.MainFont)
 					.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenu::GetTooltipText))
+				]
+
+				+ SHorizontalBox::Slot()
+
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(STextBlock)
+					.TextStyle(&Theme.MainFont)
+					.Text(this, &SNovaMainMenu::GetDateText)
+					.Visibility(this, &SNovaMainMenu::GetInfoTextVisibility)
 				]
 
 				+ SHorizontalBox::Slot()
@@ -386,6 +398,14 @@ FText SNovaMainMenu::GetCloseHelpText() const
 FText SNovaMainMenu::GetTooltipText() const
 {
 	return CurrentTooltipText;
+}
+
+FText SNovaMainMenu::GetDateText() const
+{
+	const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(GameState);
+
+	return ::GetDateText(GameState->GetCurrentTime());
 }
 
 FText SNovaMainMenu::GetInfoText() const

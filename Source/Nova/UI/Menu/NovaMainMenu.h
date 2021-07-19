@@ -84,6 +84,9 @@ protected:
 	/** Get the title text */
 	FText GetTooltipText() const;
 
+	/** Get the date text */
+	FText GetDateText() const;
+
 	/** Get the info text */
 	FText GetInfoText() const;
 

@@ -76,6 +76,13 @@ FString GetRoleString(const UActorComponent* Component)
 	return GetEnumText(Component->GetOwnerRole());
 }
 
+FText GetDateText(struct FNovaTime Time)
+{
+	FDateTime DateTime = FDateTime(2340, 2, 10) + FDateTime(Time.AsMinutes() * ETimespan::TicksPerMinute);
+
+	return FText::AsDateTime(DateTime);
+}
+
 FText GetDurationText(FNovaTime Time, int32 MaxComponents)
 {
 	FString Result;
