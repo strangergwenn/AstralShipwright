@@ -78,6 +78,7 @@ void SNovaOrbitalMap::Construct(const FArguments& InArgs)
 {
 	// Settings
 	MenuManager                = InArgs._MenuManager;
+	CurrentAlpha               = InArgs._CurrentAlpha;
 	TrajectoryPreviewDuration  = 2.0f;
 	TrajectoryZoomSpeed        = 0.5f;
 	TrajectoryZoomAcceleration = 1.0f;
@@ -639,23 +640,29 @@ int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& All
 	for (const FNovaBatchedBrush& Brush : BatchedBrushes)
 	{
 		NCHECK(Brush.Brush);
-		FVector2D BrushSize = Brush.Brush->GetImageSize() * CurrentDrawScale;
+		FVector2D    BrushSize = Brush.Brush->GetImageSize() * CurrentDrawScale;
+		FLinearColor BrushColor(1.0f, 1.0f, 1.0f, CurrentAlpha.Get());
 
 		FSlateDrawElement::MakeBox(OutDrawElements, LayerId,
 			AllottedGeometry.ToPaintGeometry(BrushSize, FSlateLayoutTransform(CurrentOrigin + Brush.Pos - BrushSize / 2)), Brush.Brush,
-			ESlateDrawEffect::NoPixelSnapping, FLinearColor::White);
+			ESlateDrawEffect::NoPixelSnapping, BrushColor);
 	}
 
 	// Draw batched splines
 	for (const FNovaBatchedSpline& Spline : BatchedSplines)
 	{
+		FLinearColor ColorOuter = Spline.ColorOuter;
+		ColorOuter.A            = CurrentAlpha.Get();
+		FLinearColor ColorInner = Spline.ColorInner;
+		ColorInner.A            = CurrentAlpha.Get();
+
 		FSlateDrawElement::MakeCubicBezierSpline(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), CurrentOrigin + Spline.P0,
 			CurrentOrigin + Spline.P1, CurrentOrigin + Spline.P2, CurrentOrigin + Spline.P3, Spline.WidthOuter * AllottedGeometry.Scale,
-			ESlateDrawEffect::NoPixelSnapping, Spline.ColorOuter);
+			ESlateDrawEffect::NoPixelSnapping, ColorOuter);
 
 		FSlateDrawElement::MakeCubicBezierSpline(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), CurrentOrigin + Spline.P0,
 			CurrentOrigin + Spline.P1, CurrentOrigin + Spline.P2, CurrentOrigin + Spline.P3, Spline.WidthInner * AllottedGeometry.Scale,
-			ESlateDrawEffect::NoPixelSnapping, Spline.ColorInner);
+			ESlateDrawEffect::NoPixelSnapping, ColorInner);
 	}
 
 	// Draw batched points
@@ -664,9 +671,12 @@ int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& All
 		const FSlateBrush* Brush     = FNovaStyleSet::GetBrush("Map/SB_OrbitalObject");
 		FVector2D          BrushSize = Brush->GetImageSize() * Point.Scale;
 
+		FLinearColor Color = Point.Color;
+		Color.A            = CurrentAlpha.Get();
+
 		FSlateDrawElement::MakeBox(OutDrawElements, LayerId,
 			AllottedGeometry.ToPaintGeometry(BrushSize, FSlateLayoutTransform(CurrentOrigin + Point.Pos - BrushSize / 2)), Brush,
-			ESlateDrawEffect::NoPixelSnapping, Point.Color);
+			ESlateDrawEffect::NoPixelSnapping, Color);
 	}
 
 	// Draw batched texts
@@ -674,11 +684,13 @@ int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& All
 	{
 		const TSharedRef<FSlateFontMeasure> FontMeasureService = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
 		FVector2D                           TextSize           = FontMeasureService->Measure(Text.Text, Text.TextStyle->Font);
+		FLinearColor                        TextColor(1.0f, 1.0f, 1.0f, CurrentAlpha.Get());
 
 		FPaintGeometry TextGeometry =
 			AllottedGeometry.ToPaintGeometry(TextSize, FSlateLayoutTransform(CurrentOrigin + Text.Pos - TextSize / 2));
 
-		FSlateDrawElement::MakeText(OutDrawElements, LayerId, TextGeometry, Text.Text, Text.TextStyle->Font);
+		FSlateDrawElement::MakeText(
+			OutDrawElements, LayerId, TextGeometry, Text.Text, Text.TextStyle->Font, ESlateDrawEffect::None, TextColor);
 	}
 
 	return SCompoundWidget::OnPaint(PaintArgs, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);

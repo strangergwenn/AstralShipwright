@@ -356,6 +356,10 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 		[
 			SAssignNew(OrbitalMap, SNovaOrbitalMap)
 			.MenuManager(MenuManager)
+			.CurrentAlpha(TAttribute<float>::Create(TAttribute<float>::FGetter::CreateLambda([=]()
+			{
+				return CurrentAlpha;
+			})))
 		]
 
 		// Main box

@@ -1,4 +1,4 @@
-﻿// Nova project - Gwennaël Arbona
+// Nova project - Gwennaël Arbona
 
 #pragma once
 
@@ -122,10 +122,11 @@ class SNovaOrbitalMap : public SCompoundWidget
 	    Slate arguments
 	----------------------------------------------------*/
 
-	SLATE_BEGIN_ARGS(SNovaOrbitalMap)
+	SLATE_BEGIN_ARGS(SNovaOrbitalMap) : _MenuManager(nullptr), _CurrentAlpha(1.0f)
 	{}
 
 	SLATE_ARGUMENT(TWeakObjectPtr<class UNovaMenuManager>, MenuManager)
+	SLATE_ATTRIBUTE(float, CurrentAlpha);
 
 	SLATE_END_ARGS()
 
@@ -248,6 +249,7 @@ protected:
 protected:
 	// Settings
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
+	TAttribute<float>                CurrentAlpha;
 	float                            TrajectoryPreviewDuration;
 	float                            TrajectoryZoomSpeed;
 	float                            TrajectoryZoomAcceleration;
