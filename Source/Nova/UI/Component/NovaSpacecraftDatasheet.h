@@ -60,16 +60,12 @@ public:
 		AddHeader(LOCTEXT("PropulsionMetrics", "<img src=\"/Text/Thrust\"/> Propulsion metrics"));
 		AddEntry(LOCTEXT("SpecificImpulse", "Specific impulse"), TargetPropulsionMetrics.SpecificImpulse,
 			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->SpecificImpulse : -1, Seconds);
-		AddEntry(LOCTEXT("Thrust", "Maximum thrust"), TargetPropulsionMetrics.Thrust,
-			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->Thrust : -1, KiloNewtons);
-		AddEntry(LOCTEXT("PropellantRate", "Propellant mass rate"), TargetPropulsionMetrics.PropellantRate,
-			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->PropellantRate : -1, TonnesPerSecond);
+		AddEntry(LOCTEXT("Thrust", "Engine thrust"), TargetPropulsionMetrics.EngineThrust,
+			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->EngineThrust : -1, KiloNewtons);
+		AddEntry(LOCTEXT("LinearAcceleration", "Attitude control thrust"), TargetPropulsionMetrics.ThrusterThrust,
+			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->ThrusterThrust : -1, KiloNewtons);
 		AddEntry(LOCTEXT("MaximumDeltaV", "Full-load delta-v"), TargetPropulsionMetrics.MaximumDeltaV,
 			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->MaximumDeltaV : -1, MetersPerSeconds);
-		AddEntry(LOCTEXT("MaximumBurnTime", "Full-load burn time"), TargetPropulsionMetrics.MaximumBurnTime,
-			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->MaximumBurnTime : -1, Seconds);
-		AddEntry(LOCTEXT("LinearAcceleration", "Thruster power"), TargetPropulsionMetrics.ThrusterThrust,
-			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->ThrusterThrust : -1, KiloNewtons);
 	}
 };
 

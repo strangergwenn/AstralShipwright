@@ -238,7 +238,7 @@ struct FNovaSpacecraftPropulsionMetrics
 		, CargoMassCapacity(0)
 		, MaximumMass(0)
 		, SpecificImpulse(0)
-		, Thrust(0)
+		, EngineThrust(0)
 		, PropellantRate(0)
 		, ExhaustVelocity(0)
 		, MaximumDeltaV(0)
@@ -249,10 +249,10 @@ struct FNovaSpacecraftPropulsionMetrics
 	/** Get the duration & mass of propellant spent in T for a maneuver */
 	FNovaTime GetManeuverDurationAndPropellantUsed(float DeltaV, float CurrentCargoMass, float& CurrentPropellantMass) const
 	{
-		NCHECK(Thrust > 0);
+		NCHECK(EngineThrust > 0);
 		NCHECK(ExhaustVelocity > 0);
 
-		float Duration = (((DryMass + CurrentCargoMass + CurrentPropellantMass) * 1000.0f * ExhaustVelocity) / (Thrust * 1000.0f)) *
+		float Duration = (((DryMass + CurrentCargoMass + CurrentPropellantMass) * 1000.0f * ExhaustVelocity) / (EngineThrust * 1000.0f)) *
 						 (1.0f - exp(-abs(DeltaV) / ExhaustVelocity)) / 60.0f;
 		float PropellantUsed = PropellantRate * Duration;
 
@@ -285,7 +285,7 @@ struct FNovaSpacecraftPropulsionMetrics
 	float SpecificImpulse;
 
 	// Full-power thrust in N
-	float Thrust;
+	float EngineThrust;
 
 	// Propellant mass rate in T/s
 	float PropellantRate;

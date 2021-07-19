@@ -359,7 +359,7 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 	{
 		Issues.Add(LOCTEXT("NoName", "This spacecraft is unnamed"));
 	}
-	if (PropulsionMetrics.Thrust <= 0)
+	if (PropulsionMetrics.EngineThrust <= 0)
 	{
 		Issues.Add(LOCTEXT("InsufficientThrust", "This spacecraft has no engine"));
 	}
@@ -797,7 +797,7 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 		PropulsionMetrics.DryMass += Metrics.DryMass;
 		PropulsionMetrics.PropellantMassCapacity += Metrics.PropellantMassCapacity;
 		PropulsionMetrics.CargoMassCapacity += Metrics.CargoMassCapacity;
-		PropulsionMetrics.Thrust += Metrics.Thrust;
+		PropulsionMetrics.EngineThrust += Metrics.Thrust;
 		TotalEngineISPTimesThrust += Metrics.TotalEngineISPTimesThrust;
 
 		for (const UNovaEquipmentDescription* Equipment : Compartments[CompartmentIndex].Equipments)
@@ -813,11 +813,11 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 	// Compute metrics
 	PropulsionMetrics.MaximumMass =
 		PropulsionMetrics.DryMass + PropulsionMetrics.PropellantMassCapacity + PropulsionMetrics.CargoMassCapacity;
-	if (PropulsionMetrics.Thrust > 0)
+	if (PropulsionMetrics.EngineThrust > 0)
 	{
-		PropulsionMetrics.SpecificImpulse = TotalEngineISPTimesThrust / PropulsionMetrics.Thrust;
+		PropulsionMetrics.SpecificImpulse = TotalEngineISPTimesThrust / PropulsionMetrics.EngineThrust;
 		PropulsionMetrics.ExhaustVelocity = StandardGravity * PropulsionMetrics.SpecificImpulse;
-		PropulsionMetrics.PropellantRate  = PropulsionMetrics.Thrust / PropulsionMetrics.ExhaustVelocity;
+		PropulsionMetrics.PropellantRate  = PropulsionMetrics.EngineThrust / PropulsionMetrics.ExhaustVelocity;
 		PropulsionMetrics.MaximumDeltaV =
 			PropulsionMetrics.ExhaustVelocity * log((PropulsionMetrics.MaximumMass) / PropulsionMetrics.DryMass);
 		PropulsionMetrics.MaximumBurnTime = PropulsionMetrics.PropellantMassCapacity / PropulsionMetrics.PropellantRate;
