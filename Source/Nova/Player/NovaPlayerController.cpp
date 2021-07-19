@@ -368,23 +368,6 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 			}
 		}
 	}
-
-	// Chase cam
-	else if (IsReady() && CurrentCameraState == ENovaPlayerCameraState::Chase)
-	{
-		const ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-		NCHECK(SpacecraftPawn);
-
-		const FVector Backwards          = -SpacecraftPawn->GetActorForwardVector();
-		const FVector SpacecraftLocation = SpacecraftPawn->GetActorLocation();
-		const float   SpacecraftExtent   = SpacecraftPawn->GetTurntableBounds().Value.Size();
-
-		FVector BoundsOffset = SpacecraftExtent * Backwards;
-		FVector BaseOffset   = 5000 * Backwards;
-
-		Location = SpacecraftLocation + BoundsOffset + BaseOffset;
-		Rotation = (SpacecraftPawn->GetActorLocation() - Location).Rotation();
-	}
 }
 
 /*----------------------------------------------------
@@ -626,6 +609,9 @@ void ANovaPlayerController::SetCameraState(ENovaPlayerCameraState State)
 {
 	CurrentCameraState       = State;
 	CurrentTimeInCameraState = 0;
+
+	// Handle chase mode
+	GetSpacecraftPawn()->SetChaseMode(State == ENovaPlayerCameraState::Chase);
 
 	// Handle the fast-forward camera
 	if (State == ENovaPlayerCameraState::FastForward)

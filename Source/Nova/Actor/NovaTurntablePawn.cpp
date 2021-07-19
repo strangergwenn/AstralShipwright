@@ -20,6 +20,7 @@
 
 ANovaTurntablePawn::ANovaTurntablePawn()
 	: Super()
+	, ChaseMode(false)
 	, CurrentPanTarget(0)
 	, CurrentTiltTarget(0)
 	, CurrentPanAngle(0)
@@ -38,7 +39,6 @@ ANovaTurntablePawn::ANovaTurntablePawn()
 	// Create the spring arm component that moves to avoid geometry
 	CameraYawComponent = CreateDefaultSubobject<USceneComponent>(TEXT("CameraYawComponent"));
 	CameraYawComponent->SetupAttachment(RootComponent);
-	CameraYawComponent->SetAbsolute(false, true, false);
 
 	// Create the camera container component
 	CameraPitchComponent = CreateDefaultSubobject<USceneComponent>(TEXT("CameraPitchComponent"));
@@ -61,19 +61,22 @@ ANovaTurntablePawn::ANovaTurntablePawn()
 	PrimaryActorTick.bCanEverTick          = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
 
-	// Default camera parameters
+	// General presentation defaults
 	AnimationDuration           = 0.5f;
 	DefaultDistance             = 500.0f;
 	DefaultDistanceFactor       = 2.0f;
 	DistanceFactorIncrement     = 0.5f;
 	NumDistanceFactorIncrements = 1;
-	CameraMinTilt               = -80.0f;
-	CameraMaxTilt               = 20.0f;
-	CameraVelocity              = 200.0f;
-	CameraGamepadVelocity       = 100.0f;
-	CameraAcceleration          = 300.0f;
-	CameraResistance            = 1 / 360.0f;
-	CameraInputPower            = 3.0f;
+
+	// Camera control defaults
+	CameraMinTilt         = -80.0f;
+	CameraMaxTilt         = 20.0f;
+	CameraMaxChaseAngle   = 20.0f;
+	CameraVelocity        = 200.0f;
+	CameraGamepadVelocity = 100.0f;
+	CameraAcceleration    = 300.0f;
+	CameraResistance      = 1 / 360.0f;
+	CameraInputPower      = 3.0f;
 }
 
 /*----------------------------------------------------
@@ -87,6 +90,7 @@ void ANovaTurntablePawn::BeginPlay()
 	Super::BeginPlay();
 
 	ResetView();
+	SetChaseMode(false);
 }
 
 void ANovaTurntablePawn::Tick(float DeltaTime)
@@ -134,11 +138,23 @@ void ANovaTurntablePawn::Tick(float DeltaTime)
 
 void ANovaTurntablePawn::ResetView()
 {
-	CurrentTiltAngle      = -45;
+	CurrentTiltAngle      = ChaseMode ? 0 : -45;
 	CurrentPanAngle       = 135;
 	CurrentDistance       = DefaultDistance;
 	CurrentDistanceFactor = DefaultDistanceFactor;
 	CurrentAnimationTime  = AnimationDuration;
+}
+
+void ANovaTurntablePawn::SetChaseMode(bool Enabled)
+{
+	CameraYawComponent->SetAbsolute(false, !Enabled, false);
+
+	if (ChaseMode != Enabled)
+	{
+		ChaseMode = Enabled;
+
+		ResetView();
+	}
 }
 
 TPair<FVector, FVector> ANovaTurntablePawn::GetTurntableBounds() const
@@ -215,12 +231,24 @@ void ANovaTurntablePawn::ProcessCamera(float DeltaTime)
 	ApplyInputFilter(CurrentTiltAngle, CurrentTiltSpeed, CurrentTiltTarget, IsGamepad ? CameraGamepadVelocity : CameraVelocity);
 
 	// Clamp pitch to legal values
-	float ExternalCameraPitchClamped = FMath::Clamp(CurrentTiltAngle, CameraMinTilt, CameraMaxTilt);
+	float ExternalCameraPitchClamped = ChaseMode ? FMath::Clamp(CurrentTiltAngle, -CameraMaxChaseAngle, CameraMaxChaseAngle)
+												 : FMath::Clamp(CurrentTiltAngle, CameraMinTilt, CameraMaxTilt);
 	if (ExternalCameraPitchClamped != CurrentTiltAngle)
 	{
 		CurrentTiltSpeed = -CurrentTiltSpeed / 2;
 	}
 	CurrentTiltAngle = ExternalCameraPitchClamped;
+
+	// Clamp yaw to legal values in chase mode
+	if (ChaseMode)
+	{
+		float ExternalCameraYawClamped = FMath::Clamp(CurrentPanAngle, -CameraMaxChaseAngle, CameraMaxChaseAngle);
+		if (ExternalCameraYawClamped != CurrentPanAngle)
+		{
+			CurrentPanSpeed = -CurrentPanSpeed / 2;
+		}
+		CurrentPanAngle = ExternalCameraYawClamped;
+	}
 
 	// Apply values
 	CameraYawComponent->SetRelativeRotation(FRotator(0, CurrentPanAngle, 0));
