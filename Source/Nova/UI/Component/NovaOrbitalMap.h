@@ -1,4 +1,4 @@
-// Nova project - Gwennaël Arbona
+﻿// Nova project - Gwennaël Arbona
 
 #pragma once
 
@@ -162,6 +162,12 @@ public:
 		return HoveredOrbitalObjects;
 	}
 
+	/** Pass horizontal input to the map */
+	void HorizontalAnalogInput(float Value);
+
+	/** Pass vertical input to the map */
+	void VerticalAnalogInput(float Value);
+
 protected:
 	/*----------------------------------------------------
 	    High-level internals
@@ -250,14 +256,18 @@ protected:
 	// Settings
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 	TAttribute<float>                CurrentAlpha;
-	float                            TrajectoryPreviewDuration;
-	float                            TrajectoryZoomSpeed;
-	float                            TrajectoryZoomAcceleration;
-	float                            TrajectoryZoomSnappinness;
-	float                            TrajectoryInflationRatio;
+
+	// Local settings
+	float AnalogSpeed;
+	float TrajectoryPreviewDuration;
+	float TrajectoryZoomSpeed;
+	float TrajectoryZoomAcceleration;
+	float TrajectoryZoomSnappinness;
+	float TrajectoryInflationRatio;
 
 	// Local state
 	FVector2D                          CurrentOrigin;
+	FVector2D                          CurrentAnalogInput;
 	TSharedPtr<struct FNovaTrajectory> CurrentPreviewTrajectory;
 	float                              CurrentPreviewProgress;
 	float                              CurrentDesiredSize;

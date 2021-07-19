@@ -45,6 +45,10 @@ public:
 
 	virtual void OnClicked(const FVector2D& Position) override;
 
+	virtual void HorizontalAnalogInput(float Value) override;
+
+	virtual void VerticalAnalogInput(float Value) override;
+
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/

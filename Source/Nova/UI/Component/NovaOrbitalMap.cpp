@@ -77,8 +77,11 @@ SNovaOrbitalMap::SNovaOrbitalMap() : CurrentPreviewProgress(0), CurrentDesiredSi
 void SNovaOrbitalMap::Construct(const FArguments& InArgs)
 {
 	// Settings
-	MenuManager                = InArgs._MenuManager;
-	CurrentAlpha               = InArgs._CurrentAlpha;
+	MenuManager  = InArgs._MenuManager;
+	CurrentAlpha = InArgs._CurrentAlpha;
+
+	// Local settings
+	AnalogSpeed                = 5.0f;
 	TrajectoryPreviewDuration  = 2.0f;
 	TrajectoryZoomSpeed        = 0.5f;
 	TrajectoryZoomAcceleration = 1.0f;
@@ -87,7 +90,7 @@ void SNovaOrbitalMap::Construct(const FArguments& InArgs)
 }
 
 /*----------------------------------------------------
-    Interface
+    Interface3
 ----------------------------------------------------*/
 
 void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
@@ -95,7 +98,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	SCompoundWidget::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
 	// Debug data
-	FVector2D                Origin = FVector2D(0, 0);
+	FVector2D                Origin = FVector2D::ZeroVector;
 	const class UNovaPlanet* DefaultPlanet =
 		MenuManager->GetGameInstance()->GetAssetManager()->GetAsset<UNovaPlanet>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
 
@@ -103,20 +106,30 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	ClearBatches();
 	CurrentDesiredSize = 100;
 	HoveredOrbitalObjects.Empty();
-	CurrentOrigin = GetTickSpaceGeometry().GetLocalSize() / 2;
+	CurrentOrigin = GetTickSpaceGeometry().GetLocalSize() / 2 + AnalogSpeed * CurrentAnalogInput;
 
 #if 0
 	AddTestOrbits();
 #else
 
-	// Run processes
+	// Run orbital map processes
 	AddPlanet(Origin, DefaultPlanet);
 	ProcessAreas(Origin);
 	ProcessSpacecraftOrbits(Origin);
 	ProcessPlayerTrajectory(Origin);
 	ProcessTrajectoryPreview(Origin, DeltaTime);
 
+	// Run display processes
 	ProcessDrawScale(DeltaTime);
+	if (MenuManager->IsUsingGamepad())
+	{
+		FNovaBatchedPoint Point;
+		Point.Pos   = -AnalogSpeed * CurrentAnalogInput;
+		Point.Color = FLinearColor::White;
+		Point.Scale = 0.25;
+		BatchedPoints.AddUnique(Point);
+	}
+
 #endif
 }
 
@@ -124,6 +137,30 @@ void SNovaOrbitalMap::ShowTrajectory(const TSharedPtr<FNovaTrajectory>& Trajecto
 {
 	CurrentPreviewTrajectory = Trajectory;
 	CurrentPreviewProgress   = Immediate ? TrajectoryPreviewDuration : 0;
+}
+
+void SNovaOrbitalMap::HorizontalAnalogInput(float Value)
+{
+	if (MenuManager->IsUsingGamepad())
+	{
+		CurrentAnalogInput.X -= Value;
+	}
+	else
+	{
+		CurrentAnalogInput.X += Value;
+	}
+}
+
+void SNovaOrbitalMap::VerticalAnalogInput(float Value)
+{
+	if (MenuManager->IsUsingGamepad())
+	{
+		CurrentAnalogInput.Y += Value;
+	}
+	else
+	{
+		CurrentAnalogInput.Y -= Value;
+	}
 }
 
 /*----------------------------------------------------
@@ -392,8 +429,19 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbit(const FVector2D& Position,
 
 void SNovaOrbitalMap::AddOrbitalObject(const FNovaOrbitalObject& Object, const FLinearColor& Color)
 {
-	bool IsObjectHovered =
-		(CurrentOrigin + Object.Position - GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos())).Size() < 50;
+	bool  IsObjectHovered;
+	float Radius = 50;
+
+	if (MenuManager->IsUsingGamepad())
+	{
+		IsObjectHovered = (CurrentOrigin + Object.Position - GetTickSpaceGeometry().GetLocalSize() / 2).Size() < Radius;
+	}
+	else
+	{
+		IsObjectHovered =
+			(CurrentOrigin + Object.Position - GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos())).Size() <
+			Radius;
+	}
 
 	FNovaBatchedPoint Point;
 	Point.Pos   = Object.Position;

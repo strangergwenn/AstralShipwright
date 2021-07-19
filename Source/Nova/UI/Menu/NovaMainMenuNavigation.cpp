@@ -586,6 +586,16 @@ void SNovaMainMenuNavigation::OnClicked(const FVector2D& Position)
 	}
 }
 
+void SNovaMainMenuNavigation::HorizontalAnalogInput(float Value)
+{
+	OrbitalMap->HorizontalAnalogInput(Value);
+}
+
+void SNovaMainMenuNavigation::VerticalAnalogInput(float Value)
+{
+	OrbitalMap->VerticalAnalogInput(Value);
+}
+
 /*----------------------------------------------------
     Internals
 ----------------------------------------------------*/
