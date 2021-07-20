@@ -118,12 +118,14 @@ for platform in projectPlatforms:
 
 		# Cook
 		'-cook',
+		'-skipcookingeditorcontent',
 		'-createreleaseversion=' + buildVersion,
 
 		# Package
 		'-stage', 
 		'-package',
-		'-pak', '-compressed',
+		'-pak',
+		'-compressed',
 		'-distribution',
 		'-archive', '-archivedirectory="' + outputDir + '"'
 	])
