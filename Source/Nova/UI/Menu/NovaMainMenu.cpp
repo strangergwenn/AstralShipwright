@@ -99,7 +99,7 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 				SNew(SHorizontalBox)
 
 				+ SHorizontalBox::Slot()
-				.AutoWidth()
+				.HAlign(HAlign_Left)
 				[
 					SAssignNew(Tooltip, SNovaText)
 					.TextStyle(&Theme.MainFont)
@@ -107,20 +107,16 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 				]
 
 				+ SHorizontalBox::Slot()
-
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
+				.HAlign(HAlign_Center)
 				[
 					SNew(STextBlock)
 					.TextStyle(&Theme.MainFont)
 					.Text(this, &SNovaMainMenu::GetDateText)
 					.Visibility(this, &SNovaMainMenu::GetInfoTextVisibility)
 				]
-
-				+ SHorizontalBox::Slot()
 		
 				+ SHorizontalBox::Slot()
-				.AutoWidth()
+				.HAlign(HAlign_Right)
 				[
 					SNew(SNovaText)
 					.TextStyle(&Theme.MainFont)
