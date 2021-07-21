@@ -209,6 +209,14 @@ protected:
 	/** Get the transform to use when a new dock actor is ready */
 	FTransform GetInitialTransform() const;
 
+	/** Get the max velocity */
+	float GetMaximumAcceleration() const
+	{
+		return (MovementCommand.State == ENovaMovementState::Docking || MovementCommand.State == ENovaMovementState::Undocking)
+				 ? MaxSlowLinearAcceleration
+				 : LinearAcceleration;
+	}
+
 	/*----------------------------------------------------
 	    Properties
 	----------------------------------------------------*/
@@ -221,6 +229,10 @@ public:
 	// Maximum moving velocity in m/s
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
 	float MaxLinearVelocity;
+
+	// Maximum moving acceleration in m/s-2 while docking
+	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	float MaxSlowLinearAcceleration;
 
 	// Distance under which we consider stopped
 	UPROPERTY(Category = Gaia, EditDefaultsOnly)
@@ -296,11 +308,6 @@ public:
 	ENovaMovementState GetState() const
 	{
 		return MovementCommand.State;
-	}
-
-	bool IsMaxVelocity() const
-	{
-		return CurrentLinearVelocity.Size() >= MaxLinearVelocity;
 	}
 
 	const FVector GetCurrentLinearVelocity() const

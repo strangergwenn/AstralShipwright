@@ -44,6 +44,7 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	// Angular defaults
 	LinearDeadDistance          = 1;
 	MaxLinearVelocity           = 50;
+	MaxSlowLinearAcceleration   = 10;
 	AngularDeadDistance         = 0.5f;
 	MaxAngularVelocity          = 60;
 	AngularOvershootRatio       = 1.1f;
@@ -527,7 +528,7 @@ void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 	float TimeToFinalVelocity = 0;
 	if (!FMath::IsNearlyZero(DeltaVelocity.SizeSquared()))
 	{
-		TimeToFinalVelocity = DeltaVelocity.Size() / LinearAcceleration;
+		TimeToFinalVelocity = DeltaVelocity.Size() / GetMaximumAcceleration();
 	}
 
 	// Update desired velocity to match location & velocity inputs best
@@ -555,9 +556,9 @@ void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 	{
 		Value = FMath::Clamp(Target, Value - MaxDelta, Value + MaxDelta);
 	};
-	UpdateVelocity(CurrentLinearVelocity.X, RelativeResultSpeed.X, LinearAcceleration * DeltaTime);
-	UpdateVelocity(CurrentLinearVelocity.Y, RelativeResultSpeed.Y, LinearAcceleration * DeltaTime);
-	UpdateVelocity(CurrentLinearVelocity.Z, RelativeResultSpeed.Z, LinearAcceleration * DeltaTime);
+	UpdateVelocity(CurrentLinearVelocity.X, RelativeResultSpeed.X, GetMaximumAcceleration() * DeltaTime);
+	UpdateVelocity(CurrentLinearVelocity.Y, RelativeResultSpeed.Y, GetMaximumAcceleration() * DeltaTime);
+	UpdateVelocity(CurrentLinearVelocity.Z, RelativeResultSpeed.Z, GetMaximumAcceleration() * DeltaTime);
 }
 
 void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
