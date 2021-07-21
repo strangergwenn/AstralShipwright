@@ -367,6 +367,15 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 
 #endif
 
+	// Check for propellant
+	for (const FNovaSpacecraftFleet::FNovaSpacecraftFleetEntry& Entry : Fleet.Fleet)
+	{
+		if (Entry.CurrentPropellantMass <= 0)
+		{
+			return nullptr;
+		}
+	}
+
 	return Trajectory;
 }
 

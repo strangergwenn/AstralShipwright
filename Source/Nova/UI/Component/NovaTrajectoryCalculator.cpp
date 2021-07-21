@@ -159,22 +159,29 @@ void SNovaTrajectoryCalculator::Tick(const FGeometry& AllottedGeometry, const do
 			for (TPair<float, TSharedPtr<FNovaTrajectory>>& AltitudeAndTrajectory : SimulatedTrajectories)
 			{
 				TSharedPtr<FNovaTrajectory>& Trajectory = AltitudeAndTrajectory.Value;
-				NCHECK(Trajectory.IsValid());
 
-				auto Transform = [](float Value)
+				if (Trajectory.IsValid())
 				{
-					return FMath::LogX(5, Value);
-				};
+					auto Transform = [](float Value)
+					{
+						return FMath::LogX(5, Value);
+					};
 
-				double DeltaVAlpha = FMath::Clamp(
-					(Transform(Trajectory->TotalDeltaV) - Transform(MinDeltaV)) / (Transform(MaxDeltaV) - Transform(MinDeltaV)), 0.0f,
-					1.0f);
-				double DurationAlpha = FMath::Clamp((Transform(Trajectory->TotalTravelDuration.AsMinutes()) - Transform(MinDuration)) /
-														(Transform(MaxDuration) - Transform(MinDuration)),
-					0.0f, 1.0f);
+					double DeltaVAlpha = FMath::Clamp(
+						(Transform(Trajectory->TotalDeltaV) - Transform(MinDeltaV)) / (Transform(MaxDeltaV) - Transform(MinDeltaV)), 0.0f,
+						1.0f);
+					double DurationAlpha = FMath::Clamp((Transform(Trajectory->TotalTravelDuration.AsMinutes()) - Transform(MinDuration)) /
+															(Transform(MaxDuration) - Transform(MinDuration)),
+						0.0f, 1.0f);
 
-				TrajectoryDeltaVGradientData.Add(FNovaStyleSet::GetPlasmaColor(DeltaVAlpha));
-				TrajectoryDurationGradientData.Add(FNovaStyleSet::GetViridisColor(DurationAlpha));
+					TrajectoryDeltaVGradientData.Add(FNovaStyleSet::GetPlasmaColor(DeltaVAlpha));
+					TrajectoryDurationGradientData.Add(FNovaStyleSet::GetViridisColor(DurationAlpha));
+				}
+				else
+				{
+					TrajectoryDeltaVGradientData.Add(FLinearColor::Black);
+					TrajectoryDurationGradientData.Add(FLinearColor::Black);
+				}
 			}
 
 			CurrentTrajectoryDisplayTime = 0;
@@ -250,7 +257,6 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNo
 	for (float Altitude = Slider->GetMinValue(); Altitude <= Slider->GetMaxValue(); Altitude += AltitudeStep)
 	{
 		TSharedPtr<FNovaTrajectory> Trajectory = OrbitalSimulation->ComputeTrajectory(Parameters, Altitude);
-		NCHECK(Trajectory.IsValid());
 		SimulatedTrajectories.Add(Altitude, Trajectory);
 	}
 
@@ -259,28 +265,30 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNo
 	{
 		float                              Altitude   = AltitudeAndTrajectory.Key;
 		const TSharedPtr<FNovaTrajectory>& Trajectory = AltitudeAndTrajectory.Value;
-		NCHECK(Trajectory.IsValid());
 
-		double TotalTravelDuration = Trajectory->TotalTravelDuration.AsMinutes();
-
-		if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(TotalTravelDuration))
+		if (Trajectory.IsValid())
 		{
-			if (Trajectory->TotalDeltaV < MinDeltaV)
+			double TotalTravelDuration = Trajectory->TotalTravelDuration.AsMinutes();
+
+			if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(TotalTravelDuration))
 			{
-				MinDeltaV = Trajectory->TotalDeltaV;
-			}
-			if (Trajectory->TotalDeltaV > MaxDeltaV)
-			{
-				MaxDeltaV = Trajectory->TotalDeltaV;
-			}
-			if (TotalTravelDuration < MinDuration)
-			{
-				MinDuration         = TotalTravelDuration;
-				MinDurationAltitude = Altitude;
-			}
-			if (TotalTravelDuration > MaxDuration)
-			{
-				MaxDuration = TotalTravelDuration;
+				if (Trajectory->TotalDeltaV < MinDeltaV)
+				{
+					MinDeltaV = Trajectory->TotalDeltaV;
+				}
+				if (Trajectory->TotalDeltaV > MaxDeltaV)
+				{
+					MaxDeltaV = Trajectory->TotalDeltaV;
+				}
+				if (TotalTravelDuration < MinDuration)
+				{
+					MinDuration         = TotalTravelDuration;
+					MinDurationAltitude = Altitude;
+				}
+				if (TotalTravelDuration > MaxDuration)
+				{
+					MaxDuration = TotalTravelDuration;
+				}
 			}
 		}
 	}
@@ -292,7 +300,8 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNo
 		float                              Altitude   = AltitudeAndTrajectory.Key;
 		const TSharedPtr<FNovaTrajectory>& Trajectory = AltitudeAndTrajectory.Value;
 
-		if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(Trajectory->TotalTravelDuration.AsMinutes()))
+		if (Trajectory.IsValid() && FMath::IsFinite(Trajectory->TotalDeltaV) &&
+			FMath::IsFinite(Trajectory->TotalTravelDuration.AsMinutes()))
 		{
 			if (Trajectory->TotalDeltaV < 1.001f * MinDeltaV && Trajectory->TotalTravelDuration.AsMinutes() < MinDurationWithinMinDeltaV)
 			{
@@ -353,16 +362,17 @@ FText SNovaTrajectoryCalculator::GetDeltaVText() const
 	if (TrajectoryPtr)
 	{
 		const TSharedPtr<FNovaTrajectory>& Trajectory = *TrajectoryPtr;
-		NCHECK(Trajectory.IsValid());
+		if (Trajectory.IsValid())
+		{
+			FNumberFormattingOptions NumberOptions;
+			NumberOptions.SetMaximumFractionalDigits(1);
 
-		FNumberFormattingOptions NumberOptions;
-		NumberOptions.SetMaximumFractionalDigits(1);
-
-		return FText::FormatNamed(
-			LOCTEXT("DeltaVFormat", "{deltav} m/s"), TEXT("deltav"), FText::AsNumber(Trajectory->TotalDeltaV, &NumberOptions));
+			return FText::FormatNamed(
+				LOCTEXT("DeltaVFormat", "{deltav} m/s"), TEXT("deltav"), FText::AsNumber(Trajectory->TotalDeltaV, &NumberOptions));
+		}
 	}
 
-	return FText();
+	return LOCTEXT("InvalidDeltaV", "No trajectory");
 }
 
 FText SNovaTrajectoryCalculator::GetDurationText() const
@@ -371,12 +381,13 @@ FText SNovaTrajectoryCalculator::GetDurationText() const
 	if (TrajectoryPtr)
 	{
 		const TSharedPtr<FNovaTrajectory>& Trajectory = *TrajectoryPtr;
-		NCHECK(Trajectory.IsValid());
-
-		return ::GetDurationText(Trajectory->TotalTravelDuration, 2);
+		if (Trajectory.IsValid())
+		{
+			return ::GetDurationText(Trajectory->TotalTravelDuration, 2);
+		}
 	}
 
-	return FText();
+	return LOCTEXT("InvalidDuration", "No trajectory");
 }
 
 void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
@@ -387,10 +398,7 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 	const TSharedPtr<FNovaTrajectory>* TrajectoryPtr = SimulatedTrajectories.Find(CurrentAltitude);
 	if (TrajectoryPtr)
 	{
-		const TSharedPtr<FNovaTrajectory>& Trajectory = *TrajectoryPtr;
-		NCHECK(Trajectory.IsValid());
-
-		OnTrajectoryChanged.ExecuteIfBound(Trajectory);
+		OnTrajectoryChanged.ExecuteIfBound(*TrajectoryPtr);
 	}
 }
 

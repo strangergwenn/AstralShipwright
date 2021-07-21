@@ -827,7 +827,15 @@ FText SNovaMainMenuNavigation::GetCommitTrajectoryHelpText() const
 void SNovaMainMenuNavigation::OnTrajectoryChanged(TSharedPtr<FNovaTrajectory> Trajectory)
 {
 	CurrentSimulatedTrajectory = Trajectory;
-	OrbitalMap->ShowTrajectory(Trajectory, false);
+
+	if (Trajectory.IsValid())
+	{
+		OrbitalMap->ShowTrajectory(Trajectory, false);
+	}
+	else
+	{
+		OrbitalMap->ClearTrajectory();
+	}
 }
 
 void SNovaMainMenuNavigation::OnCommitTrajectory()

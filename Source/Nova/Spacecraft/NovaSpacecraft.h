@@ -253,13 +253,12 @@ struct FNovaSpacecraftPropulsionMetrics
 		NCHECK(ExhaustVelocity > 0);
 
 		float Duration = (((DryMass + CurrentCargoMass + CurrentPropellantMass) * 1000.0f * ExhaustVelocity) / (EngineThrust * 1000.0f)) *
-						 (1.0f - exp(-abs(DeltaV) / ExhaustVelocity)) / 60.0f;
+						 (1.0f - exp(-abs(DeltaV) / ExhaustVelocity));
 		float PropellantUsed = PropellantRate * Duration;
 
 		CurrentPropellantMass -= PropellantUsed;
-		NCHECK(CurrentPropellantMass > 0);
 
-		return FNovaTime::FromMinutes(Duration);
+		return FNovaTime::FromSeconds(Duration);
 	}
 
 	/** Get the remaining delta-v in m/s */
