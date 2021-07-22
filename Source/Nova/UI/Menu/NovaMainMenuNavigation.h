@@ -94,7 +94,6 @@ protected:
 	TWeakObjectPtr<UNovaMenuManager>       MenuManager;
 	class ANovaPlayerController*           PC;
 	const struct FNovaSpacecraft*          Spacecraft;
-	class ANovaSpacecraftPawn*             SpacecraftPawn;
 	class ANovaGameState*                  GameState;
 	class UNovaOrbitalSimulationComponent* OrbitalSimulation;
 

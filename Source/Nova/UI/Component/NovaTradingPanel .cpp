@@ -198,8 +198,7 @@ void SNovaTradingPanel::ShowPanelInternal(
 	// Fuel mode
 	else
 	{
-		UNovaSpacecraftPropellantSystem* PropellantSystem =
-			PC->GetSpacecraftPawn()->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+		UNovaSpacecraftPropellantSystem* PropellantSystem = Spacecraft->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
 		NCHECK(PropellantSystem);
 
 		InitialAmount = PropellantSystem->GetCurrentPropellantMass();

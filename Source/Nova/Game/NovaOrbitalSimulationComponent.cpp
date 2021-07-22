@@ -85,9 +85,8 @@ struct FNovaSpacecraftFleet
 			// The core assumption here is that only maneuvers can modify mass, and so the current mass won't change until the next
 			// maneuver. The practical consequence is that trajectories can only ever be plotted while undocked
 			// and any non-propulsion-related transfer of mass should abort the trajectory
-			const ANovaSpacecraftPawn* SpacecraftPawn = GameState->GetSpacecraftPawn(Spacecraft->Identifier);
-			CurrentCargoMass                          = Spacecraft->GetCurrentCargoMass();
-			CurrentPropellantMass = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>()->GetCurrentPropellantMass();
+			CurrentCargoMass      = Spacecraft->GetCurrentCargoMass();
+			CurrentPropellantMass = Spacecraft->FindComponentByClass<UNovaSpacecraftPropellantSystem>()->GetCurrentPropellantMass();
 		}
 
 		FNovaSpacecraftPropulsionMetrics Metrics;

@@ -389,19 +389,6 @@ void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool Me
 	}
 }
 
-ANovaSpacecraftPawn* ANovaGameState::GetSpacecraftPawn(const FGuid& Identifier) const
-{
-	for (ANovaSpacecraftPawn* Pawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
-	{
-		if (Pawn->GetSpacecraftIdentifier() == Identifier)
-		{
-			return Pawn;
-		}
-	}
-
-	return nullptr;
-}
-
 FGuid ANovaGameState::GetPlayerSpacecraftIdentifier() const
 {
 	return CurrentPlayerState ? CurrentPlayerState->GetSpacecraftIdentifier() : FGuid();

@@ -361,6 +361,16 @@ public:
 	/** Compute the cost structure of an upgrade */
 	FNovaSpacecraftUpgradeCost GetUpgradeCost(const class ANovaGameState* GameState, const FNovaSpacecraft* Other) const;
 
+	/** Get a component of the linked spacecraft pawn if any */
+	template <class T>
+	T* FindComponentByClass() const
+	{
+		return (T*) FindComponentByClass(T::StaticClass());
+	}
+
+	/** Get a component of the linked spacecraft pawn if any */
+	UActorComponent* FindComponentByClass(const TSubclassOf<UActorComponent> ComponentClass) const;
+
 	/** Get a safe copy of this spacecraft without empty compartments */
 	FNovaSpacecraft GetSafeCopy() const
 	{

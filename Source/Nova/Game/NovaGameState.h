@@ -167,9 +167,6 @@ public:
 		return SpacecraftDatabase.Get(Identifier);
 	}
 
-	/** Get the spacecraft pawn for this identifier */
-	class ANovaSpacecraftPawn* GetSpacecraftPawn(const FGuid& Identifier) const;
-
 	/** Return the identifier of one of the player spacecraft */
 	FGuid GetPlayerSpacecraftIdentifier() const;
 

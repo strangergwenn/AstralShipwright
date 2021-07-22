@@ -1,12 +1,15 @@
 // Nova project - Gwennaël Arbona
 
 #include "NovaSpacecraft.h"
+#include "NovaSpacecraftPawn.h"
+
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaOrbitalSimulationTypes.h"
 #include "Nova/System/NovaAssetManager.h"
 #include "Nova/Nova.h"
 
 #include "Dom/JsonObject.h"
+#include "EngineUtils.h"
 
 #define LOCTEXT_NAMESPACE "NovaSpacecraft"
 
@@ -515,6 +518,19 @@ FNovaSpacecraftUpgradeCost FNovaSpacecraft::GetUpgradeCost(const ANovaGameState*
 	Cost.TotalChangeCost = Cost.UpgradeCost + Cost.PaintCost - Cost.ResaleGain;
 
 	return Cost;
+}
+
+UActorComponent* FNovaSpacecraft::FindComponentByClass(const TSubclassOf<UActorComponent> ComponentClass) const
+{
+	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GEngine->GetWorld()))
+	{
+		if (::IsValid(SpacecraftPawn) && SpacecraftPawn->GetSpacecraftIdentifier() == Identifier)
+		{
+			return SpacecraftPawn->FindComponentByClass(ComponentClass);
+		}
+	}
+
+	return nullptr;
 }
 
 FText FNovaSpacecraft::GetClassification() const

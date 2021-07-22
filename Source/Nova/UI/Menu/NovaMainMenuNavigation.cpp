@@ -8,7 +8,6 @@
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaOrbitalSimulationComponent.h"
 
-#include "Nova/Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova/Spacecraft/System/NovaSpacecraftPropellantSystem.h"
 
 #include "Nova/System/NovaAssetManager.h"
@@ -330,7 +329,6 @@ protected:
 SNovaMainMenuNavigation::SNovaMainMenuNavigation()
 	: PC(nullptr)
 	, Spacecraft(nullptr)
-	, SpacecraftPawn(nullptr)
 	, GameState(nullptr)
 	, OrbitalSimulation(nullptr)
 	, HasHoveredObjects(false)
@@ -420,11 +418,11 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 						SAssignNew(FuelText, STextBlock)
 						.Text(TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([&]()
 						{
-							if (IsValid(GameState) && IsValid(OrbitalSimulation) && IsValid(SpacecraftPawn) && CurrentSimulatedTrajectory.IsValid())
+							if (IsValid(GameState) && IsValid(OrbitalSimulation) && Spacecraft && CurrentSimulatedTrajectory.IsValid())
 							{
-								UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+								UNovaSpacecraftPropellantSystem* PropellantSystem = Spacecraft->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
 								NCHECK(PropellantSystem);
-								float FuelToBeUsed = OrbitalSimulation->GetPlayerRemainingFuelRequired(*CurrentSimulatedTrajectory, SpacecraftPawn->GetSpacecraftIdentifier());
+								float FuelToBeUsed = OrbitalSimulation->GetPlayerRemainingFuelRequired(*CurrentSimulatedTrajectory, Spacecraft->Identifier);
 								float FuelRemaining = PropellantSystem->GetCurrentPropellantMass();
 
 								FNumberFormattingOptions Options;
@@ -529,7 +527,6 @@ void SNovaMainMenuNavigation::UpdateGameObjects()
 {
 	PC                = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
 	Spacecraft        = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
-	SpacecraftPawn    = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
 	GameState         = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
 	OrbitalSimulation = IsValid(GameState) ? GameState->GetOrbitalSimulation() : nullptr;
 }
