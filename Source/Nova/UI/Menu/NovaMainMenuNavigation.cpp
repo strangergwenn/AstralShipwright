@@ -420,15 +420,16 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 						{
 							if (IsValid(GameState) && IsValid(OrbitalSimulation) && Spacecraft && CurrentSimulatedTrajectory.IsValid())
 							{
-								UNovaSpacecraftPropellantSystem* PropellantSystem = Spacecraft->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+								UNovaSpacecraftPropellantSystem* PropellantSystem = Spacecraft->FindComponentByClass<UNovaSpacecraftPropellantSystem>(GameState);
 								NCHECK(PropellantSystem);
-								float FuelToBeUsed = OrbitalSimulation->GetPlayerRemainingFuelRequired(*CurrentSimulatedTrajectory, Spacecraft->Identifier);
+
+								float FuelToBeUsed = Spacecraft->GetPropulsionMetrics().GetRequiredPropellant(CurrentSimulatedTrajectory->TotalDeltaV, Spacecraft->GetCurrentCargoMass());
 								float FuelRemaining = PropellantSystem->GetCurrentPropellantMass();
 
 								FNumberFormattingOptions Options;
 								Options.MaximumFractionalDigits = 1;
 
-								return FText::FormatNamed(LOCTEXT("TrajectoryFuelFormat", "{used} T of propellant will be used ({remaining} T remaining)"),
+								return FText::FormatNamed(LOCTEXT("TrajectoryFuelFormat", "{used} T of propellant required ({remaining} T remaining)"),
 									TEXT("used"), FText::AsNumber(FuelToBeUsed, &Options),
 									TEXT("remaining"), FText::AsNumber(FuelRemaining, &Options));
 							}

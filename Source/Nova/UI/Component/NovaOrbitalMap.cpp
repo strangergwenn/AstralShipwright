@@ -135,8 +135,11 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 
 void SNovaOrbitalMap::ShowTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, bool Immediate)
 {
-	CurrentPreviewTrajectory = Trajectory;
-	CurrentPreviewProgress   = Immediate ? TrajectoryPreviewDuration : 0;
+	if (Trajectory.IsValid() && Trajectory->IsValid())
+	{
+		CurrentPreviewTrajectory = Trajectory;
+		CurrentPreviewProgress   = Immediate ? TrajectoryPreviewDuration : 0;
+	}
 }
 
 void SNovaOrbitalMap::HorizontalAnalogInput(float Value)

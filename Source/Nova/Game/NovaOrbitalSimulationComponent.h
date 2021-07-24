@@ -200,16 +200,6 @@ public:
 		return 0;
 	}
 
-	/** Get how much fuel a player spacecraft still needs to be used for the current trajectory */
-	float GetPlayerRemainingFuelRequired(const FGuid& Identifier) const;
-
-	/** Get how much fuel a player spacecraft still needs to be used for a trajectory */
-	float GetPlayerRemainingFuelRequired(const FNovaTrajectory& Trajectory, const FGuid& Identifier) const;
-
-	/** Get how much fuel a spacecraft still needs to be used for a trajectory */
-	float GetRemainingFuelRequired(
-		const FNovaTrajectory& Trajectory, const struct FNovaSpacecraftPropulsionMetrics& Metrics, int32 SpacecraftIndex) const;
-
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/

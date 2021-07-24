@@ -85,8 +85,9 @@ struct FNovaSpacecraftFleet
 			// The core assumption here is that only maneuvers can modify mass, and so the current mass won't change until the next
 			// maneuver. The practical consequence is that trajectories can only ever be plotted while undocked
 			// and any non-propulsion-related transfer of mass should abort the trajectory
-			CurrentCargoMass      = Spacecraft->GetCurrentCargoMass();
-			CurrentPropellantMass = Spacecraft->FindComponentByClass<UNovaSpacecraftPropellantSystem>()->GetCurrentPropellantMass();
+			CurrentCargoMass = Spacecraft->GetCurrentCargoMass();
+			CurrentPropellantMass =
+				Spacecraft->FindComponentByClass<UNovaSpacecraftPropellantSystem>(GameState)->GetCurrentPropellantMass();
 		}
 
 		FNovaSpacecraftPropulsionMetrics Metrics;
@@ -366,15 +367,6 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 
 #endif
 
-	// Check for propellant
-	for (const FNovaSpacecraftFleet::FNovaSpacecraftFleetEntry& Entry : Fleet.Fleet)
-	{
-		if (Entry.CurrentPropellantMass <= 0)
-		{
-			return nullptr;
-		}
-	}
-
 	return Trajectory;
 }
 
@@ -598,57 +590,6 @@ TPair<const UNovaArea*, float> UNovaOrbitalSimulationComponent::GetNearestAreaAn
 	}
 
 	return TPair<const UNovaArea*, float>(ClosestArea, ClosestDistance);
-}
-
-float UNovaOrbitalSimulationComponent::GetPlayerRemainingFuelRequired(const FGuid& Identifier) const
-{
-	const FNovaTrajectory* Trajectory = GetPlayerTrajectory();
-
-	if (Trajectory)
-	{
-		return GetPlayerRemainingFuelRequired(*Trajectory, Identifier);
-	}
-
-	return 0;
-}
-
-float UNovaOrbitalSimulationComponent::GetPlayerRemainingFuelRequired(const FNovaTrajectory& Trajectory, const FGuid& Identifier) const
-{
-	const ANovaGameState*  GameState  = GetOwner<ANovaGameState>();
-	const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Identifier);
-
-	if (Spacecraft)
-	{
-		return GetRemainingFuelRequired(Trajectory, Spacecraft->GetPropulsionMetrics(), GetPlayerSpacecraftIndex(Identifier));
-	}
-
-	return 0;
-}
-
-float UNovaOrbitalSimulationComponent::GetRemainingFuelRequired(
-	const FNovaTrajectory& Trajectory, const FNovaSpacecraftPropulsionMetrics& Metrics, int32 SpacecraftIndex) const
-{
-	float     Fuel        = 0;
-	FNovaTime CurrentTime = GetCurrentTime();
-
-	for (const FNovaManeuver& Maneuver : Trajectory.Maneuvers)
-	{
-		NCHECK(SpacecraftIndex != INDEX_NONE && SpacecraftIndex >= 0 && SpacecraftIndex < Maneuver.ThrustFactors.Num());
-		float ManeuverFuelUse = Metrics.PropellantRate * Maneuver.ThrustFactors[SpacecraftIndex] * Maneuver.Duration.AsSeconds();
-
-		if (CurrentTime < Maneuver.Time)
-		{
-			Fuel += ManeuverFuelUse;
-		}
-		else if (CurrentTime <= Maneuver.Time + Maneuver.Duration)
-		{
-			float FuelUseAlpha = (CurrentTime - Maneuver.Time) / Maneuver.Duration;
-			NCHECK(FuelUseAlpha >= 0.0f && FuelUseAlpha <= 1.0f);
-			Fuel += FuelUseAlpha * ManeuverFuelUse;
-		}
-	}
-
-	return Fuel;
 }
 
 /*----------------------------------------------------

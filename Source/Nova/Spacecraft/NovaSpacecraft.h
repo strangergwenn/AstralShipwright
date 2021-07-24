@@ -268,6 +268,12 @@ struct FNovaSpacecraftPropulsionMetrics
 													: 0.0f;
 	}
 
+	/** Get the minimum amount of fuel required for a delta-v budget */
+	float GetRequiredPropellant(float DeltaV, float CurrentCargoMass) const
+	{
+		return (DryMass > 0 && ExhaustVelocity > 0) ? DryMass * exp(DeltaV / ExhaustVelocity) - DryMass - CurrentCargoMass : 0.0f;
+	}
+
 	// Dry mass before propellants and cargo in T
 	float DryMass;
 
@@ -363,13 +369,13 @@ public:
 
 	/** Get a component of the linked spacecraft pawn if any */
 	template <class T>
-	T* FindComponentByClass() const
+	T* FindComponentByClass(const AActor* Outer) const
 	{
-		return (T*) FindComponentByClass(T::StaticClass());
+		return (T*) FindComponentByClass(Outer, T::StaticClass());
 	}
 
 	/** Get a component of the linked spacecraft pawn if any */
-	UActorComponent* FindComponentByClass(const TSubclassOf<UActorComponent> ComponentClass) const;
+	UActorComponent* FindComponentByClass(const AActor* Outer, const TSubclassOf<UActorComponent> ComponentClass) const;
 
 	/** Get a safe copy of this spacecraft without empty compartments */
 	FNovaSpacecraft GetSafeCopy() const

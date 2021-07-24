@@ -311,9 +311,9 @@ void SNovaMainMenuInventory::Tick(const FGeometry& AllottedGeometry, const doubl
 {
 	SNovaTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
-	if (Spacecraft)
+	if (Spacecraft && GameState)
 	{
-		UNovaSpacecraftPropellantSystem* PropellantSystem = Spacecraft->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+		UNovaSpacecraftPropellantSystem* PropellantSystem = Spacecraft->FindComponentByClass<UNovaSpacecraftPropellantSystem>(GameState);
 		NCHECK(PropellantSystem);
 		AveragedPropellantRatio.Set(PropellantSystem->GetCurrentPropellantMass() / PropellantSystem->GetPropellantCapacity(), DeltaTime);
 	}
