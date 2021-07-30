@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Nova/UI/NovaUI.h"
+#include "Nova/Actor/NovaActorTools.h"
 #include "Nova/Game/NovaGameTypes.h"
 #include "Nova/Game/NovaOrbitalSimulationComponent.h"
 
@@ -259,6 +260,7 @@ protected:
 
 	// Local settings
 	float AnalogSpeed;
+	float AnalogSpeedPeriod;
 	float TrajectoryPreviewDuration;
 	float TrajectoryZoomSpeed;
 	float TrajectoryZoomAcceleration;
@@ -268,6 +270,7 @@ protected:
 	// Local state
 	FVector2D                          CurrentOrigin;
 	FVector2D                          CurrentAnalogInput;
+	TNovaTimedAverage<FVector2D>       AveragedAnalogInput;
 	TSharedPtr<struct FNovaTrajectory> CurrentPreviewTrajectory;
 	float                              CurrentPreviewProgress;
 	float                              CurrentDesiredSize;

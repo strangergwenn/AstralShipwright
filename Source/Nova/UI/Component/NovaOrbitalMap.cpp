@@ -81,12 +81,16 @@ void SNovaOrbitalMap::Construct(const FArguments& InArgs)
 	CurrentAlpha = InArgs._CurrentAlpha;
 
 	// Local settings
-	AnalogSpeed                = 5.0f;
+	AnalogSpeed                = 20.0f;
+	AnalogSpeedPeriod          = 0.15f;
 	TrajectoryPreviewDuration  = 2.0f;
 	TrajectoryZoomSpeed        = 0.5f;
 	TrajectoryZoomAcceleration = 1.0f;
 	TrajectoryZoomSnappinness  = 10.0f;
 	TrajectoryInflationRatio   = 1.2f;
+
+	// Initialize
+	AveragedAnalogInput.SetPeriod(AnalogSpeedPeriod);
 }
 
 /*----------------------------------------------------
@@ -106,7 +110,10 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	ClearBatches();
 	CurrentDesiredSize = 100;
 	HoveredOrbitalObjects.Empty();
-	CurrentOrigin = GetTickSpaceGeometry().GetLocalSize() / 2 + AnalogSpeed * CurrentAnalogInput;
+
+	// Integrate analog input
+	AveragedAnalogInput.Set(CurrentAnalogInput, DeltaTime);
+	CurrentOrigin = GetTickSpaceGeometry().GetLocalSize() / 2 + AnalogSpeed * AveragedAnalogInput.Get();
 
 #if 0
 	AddTestOrbits();
@@ -124,7 +131,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	if (MenuManager->IsUsingGamepad())
 	{
 		FNovaBatchedPoint Point;
-		Point.Pos   = -AnalogSpeed * CurrentAnalogInput;
+		Point.Pos   = -AnalogSpeed * AveragedAnalogInput.Get();
 		Point.Color = FLinearColor::White;
 		Point.Scale = 0.25;
 		BatchedPoints.AddUnique(Point);
