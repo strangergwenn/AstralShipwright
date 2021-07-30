@@ -210,9 +210,7 @@ bool UNovaSpacecraftMovementComponent::CanDock() const
 	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 	if (GameState)
 	{
-		const FNovaTrajectory* Trajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
-
-		return IsInitialized() && GetState() == ENovaMovementState::Idle && !DockState.Actor->IsInSpace && Trajectory == nullptr;
+		return IsInitialized() && GetState() == ENovaMovementState::Idle && !DockState.Actor->IsInSpace;
 	}
 	else
 	{

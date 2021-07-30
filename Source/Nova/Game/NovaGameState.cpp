@@ -568,25 +568,43 @@ void ANovaGameState::ProcessPlayerEvents(float DeltaTime)
 
 void ANovaGameState::ProcessTrajectoryAbort()
 {
-	// Check for a main drive on all players
-	bool InvalidTrajectory = false;
+	// Check all spacecraft for issues
+	// TODO : only player ships
+	bool  AbortTrajectoryIfStarted   = false;
+	bool  AbortTrajectoryImmediately = false;
+	FText AbortReason;
 	for (const ANovaSpacecraftPawn* Pawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 	{
-		if (!Pawn->GetSpacecraftMovement()->IsMainDriveEnabled())
+		// Docking or undocking
+		if (Pawn->GetSpacecraftMovement()->GetState() == ENovaMovementState::Docking ||
+			Pawn->GetSpacecraftMovement()->GetState() == ENovaMovementState::Docked)
 		{
-			InvalidTrajectory = true;
+			AbortReason = FText::FormatNamed(LOCTEXT("NotAllPlayersReady", "{spacecraft}|plural(one=The,other=A) spacecraft is docking"),
+				TEXT("spacecraft"), PlayerArray.Num());
+			AbortTrajectoryImmediately = true;
+			break;
+		}
+
+		// Maneuvers not cleared by player
+		else if (!Pawn->GetSpacecraftMovement()->IsMainDriveEnabled())
+		{
+			AbortReason = FText::FormatNamed(
+				LOCTEXT("NotAllPlayersReady", "{spacecraft}|plural(one=The,other=A) spacecraft wasn't authorized to maneuver"),
+				TEXT("spacecraft"), PlayerArray.Num());
+			AbortTrajectoryIfStarted = true;
 			break;
 		}
 	}
 
-	// Invalidate the trajectory if a player doesn't have a powered main drive
-	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
-	if (InvalidTrajectory && PlayerTrajectory && PlayerTrajectory->GetCurrentManeuver(GetCurrentTime()) == nullptr &&
-		(PlayerTrajectory->GetNextManeuverStartTime(GetCurrentTime()) - GetCurrentTime()).AsSeconds() < 10)
+	// Check whether the trajectory is less than 10s away from starting
+	const FNovaTrajectory* PlayerTrajectory    = OrbitalSimulationComponent->GetPlayerTrajectory();
+	bool                   IsTrajectoryStarted = PlayerTrajectory && PlayerTrajectory->GetCurrentManeuver(GetCurrentTime()) == nullptr &&
+							   (PlayerTrajectory->GetNextManeuverStartTime(GetCurrentTime()) - GetCurrentTime()).AsSeconds() < 10;
+
+	// Invalidate the trajectory if a player doesn't match conditions
+	if (PlayerTrajectory && (AbortTrajectoryImmediately || (AbortTrajectoryIfStarted && IsTrajectoryStarted)))
 	{
 		NLOG("ANovaGameState::ProcessTrajectoryAbort : aborting trajectory");
-
-		OrbitalSimulationComponent->CompleteTrajectory(GetPlayerSpacecraftIdentifiers());
 
 		for (ANovaSpacecraftPawn* Pawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 		{
@@ -596,11 +614,9 @@ void ANovaGameState::ProcessTrajectoryAbort()
 			}
 		}
 
+		OrbitalSimulationComponent->CompleteTrajectory(GetPlayerSpacecraftIdentifiers());
 		ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetGameInstance()->GetFirstLocalPlayerController());
-		PC->Notify(LOCTEXT("TrajectoryAborted", "Trajectory aborted"),
-			PlayerArray.Num() > 1 ? LOCTEXT("PlayerNotReady", "Spacecraft not authorized to maneuver")
-								  : LOCTEXT("NotAllPlayersReady", "A spacecraft wasn't authorized to maneuver"),
-			ENovaNotificationType::Error);
+		PC->Notify(LOCTEXT("TrajectoryAborted", "Trajectory aborted"), AbortReason, ENovaNotificationType::Error);
 
 		return;
 	}
