@@ -438,7 +438,7 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 	const TSharedPtr<FNovaTrajectory>* TrajectoryPtr = SimulatedTrajectories.Find(CurrentAltitude);
 	if (TrajectoryPtr)
 	{
-		OnTrajectoryChanged.ExecuteIfBound(*TrajectoryPtr);
+		bool HasEnoughPropellant = true;
 
 		ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 		NCHECK(GameState);
@@ -454,12 +454,14 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 						Spacecraft->FindComponentByClass<UNovaSpacecraftPropellantSystem>(GameState);
 					NCHECK(PropellantSystem);
 
+					// Process remaining propellant
 					float FuelToBeUsed = Spacecraft->GetPropulsionMetrics().GetRequiredPropellant(
 						(*TrajectoryPtr)->TotalDeltaV, Spacecraft->GetCurrentCargoMass());
 					float FuelRemaining = PropellantSystem->GetCurrentPropellantMass();
-
-					FNumberFormattingOptions Options;
-					Options.MaximumFractionalDigits = 1;
+					if (HasEnoughPropellant && FuelToBeUsed > FuelRemaining)
+					{
+						HasEnoughPropellant = false;
+					}
 
 					if (TrajectoryDetails.Len())
 					{
@@ -467,6 +469,10 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 					}
 					TrajectoryDetails += TEXT("• ");
 
+					FNumberFormattingOptions Options;
+					Options.MaximumFractionalDigits = 1;
+
+					// Format the propellant data
 					TrajectoryDetails += FText::FormatNamed(
 						LOCTEXT("TrajectoryFuelFormat", "{spacecraft}: {used} T of propellant required ({remaining} T remaining)"),
 						TEXT("spacecraft"), Spacecraft->GetName(), TEXT("used"), FText::AsNumber(FuelToBeUsed, &Options), TEXT("remaining"),
@@ -475,6 +481,8 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 				}
 			}
 		}
+
+		OnTrajectoryChanged.ExecuteIfBound(*TrajectoryPtr, HasEnoughPropellant);
 	}
 
 	PropellantText->SetText(FText::FromString(TrajectoryDetails));

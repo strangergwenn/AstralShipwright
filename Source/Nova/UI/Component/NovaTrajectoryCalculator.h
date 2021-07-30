@@ -5,7 +5,7 @@
 #include "Nova/UI/NovaUI.h"
 
 // Callback type
-DECLARE_DELEGATE_OneParam(FOnTrajectoryChanged, TSharedPtr<struct FNovaTrajectory>);
+DECLARE_DELEGATE_TwoParams(FOnTrajectoryChanged, TSharedPtr<struct FNovaTrajectory>, bool);
 
 /** Orbital trajectory trade-off calculator */
 class SNovaTrajectoryCalculator : public SCompoundWidget

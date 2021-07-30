@@ -82,7 +82,7 @@ protected:
 	----------------------------------------------------*/
 protected:
 	// Trajectories
-	void OnTrajectoryChanged(TSharedPtr<struct FNovaTrajectory> Trajectory);
+	void OnTrajectoryChanged(TSharedPtr<struct FNovaTrajectory> Trajectory, bool HasEnoughPropellant);
 	void OnCommitTrajectory();
 
 	/*----------------------------------------------------
@@ -111,8 +111,8 @@ protected:
 	TSharedPtr<class SVerticalBox>              StationTrades;
 
 	// Local state
-	bool                        HasHoveredObjects;
-	const class UNovaArea*      SelectedDestination;
-	TArray<FNovaOrbitalObject>  SelectedObjectList;
-	TSharedPtr<FNovaTrajectory> CurrentSimulatedTrajectory;
+	bool                       HasHoveredObjects;
+	const class UNovaArea*     SelectedDestination;
+	TArray<FNovaOrbitalObject> SelectedObjectList;
+	bool                       CurrentTrajectoryHasEnoughPropellant;
 };

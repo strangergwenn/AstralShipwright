@@ -737,7 +737,6 @@ void SNovaMainMenuNavigation::ResetDestination()
 
 	OrbitalMap->ClearTrajectory();
 	TrajectoryCalculator->Reset();
-	CurrentSimulatedTrajectory.Reset();
 
 	SidePanel->SetVisible(false);
 	SidePanelContainer->SetObjectList({});
@@ -772,6 +771,18 @@ bool SNovaMainMenuNavigation::CanCommitTrajectoryInternal(FText* Details) const
 			{
 				*Details = LOCTEXT("CanCommitTrajectoryIdentical", "The selected trajectory goes to your current location");
 			}
+			return false;
+		}
+		else if (!CurrentTrajectoryHasEnoughPropellant)
+		{
+			if (Details)
+			{
+				*Details = FText::FormatNamed(
+					LOCTEXT("OneSpacecraftLacksPropellant",
+						"{spacecraft}|plural(one=The,other=A) spacecraft doesn't have enough propellant for this trajectory"),
+					TEXT("spacecraft"), GameState->GetPlayerSpacecraftIdentifiers().Num());
+			}
+
 			return false;
 		}
 		else if (!OrbitalSimulation->CanCommitTrajectory(OrbitalMap->GetPreviewTrajectory(), Details))
@@ -809,9 +820,9 @@ FText SNovaMainMenuNavigation::GetCommitTrajectoryHelpText() const
     Callbacks
 ----------------------------------------------------*/
 
-void SNovaMainMenuNavigation::OnTrajectoryChanged(TSharedPtr<FNovaTrajectory> Trajectory)
+void SNovaMainMenuNavigation::OnTrajectoryChanged(TSharedPtr<FNovaTrajectory> Trajectory, bool HasEnoughPropellant)
 {
-	CurrentSimulatedTrajectory = Trajectory;
+	CurrentTrajectoryHasEnoughPropellant = HasEnoughPropellant;
 
 	if (Trajectory.IsValid())
 	{
