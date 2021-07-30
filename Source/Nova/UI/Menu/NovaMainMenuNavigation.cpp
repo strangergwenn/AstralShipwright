@@ -8,8 +8,6 @@
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaOrbitalSimulationComponent.h"
 
-#include "Nova/Spacecraft/System/NovaSpacecraftPropellantSystem.h"
-
 #include "Nova/System/NovaAssetManager.h"
 #include "Nova/System/NovaGameInstance.h"
 #include "Nova/System/NovaMenuManager.h"
@@ -25,6 +23,8 @@
 
 #define LOCTEXT_NAMESPACE "SNovaMainMenuNavigation"
 
+#define STACK_PANEL_WIDTH 500
+
 /*----------------------------------------------------
     Hover details stack
 ----------------------------------------------------*/
@@ -36,7 +36,9 @@ public:
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-		SNovaText::Construct(SNovaText::FArguments().TextStyle(&Theme.MainFont).WrapTextAt(500));
+		SNovaText::Construct(SNovaText::FArguments()
+								 .TextStyle(&Theme.MainFont)
+								 .WrapTextAt(STACK_PANEL_WIDTH - Theme.ContentPadding.Left - Theme.ContentPadding.Right));
 
 		// clang-format off
 		ChildSlot
@@ -68,7 +70,7 @@ public:
 		ChildSlot
 		[
 			SNew(SBox)
-			.WidthOverride(500)
+			.WidthOverride(STACK_PANEL_WIDTH)
 			[
 				SAssignNew(Container, SVerticalBox)
 			]
@@ -102,15 +104,13 @@ public:
 					NumberOptions.SetMaximumFractionalDigits(1);
 
 					FNovaTime TimeLeftBeforeManeuver = Object.Maneuver->Time - GameState->GetCurrentTime();
-					FText     ManeuverTextFormat =
-                        TimeLeftBeforeManeuver > 0
-								? LOCTEXT("ManeuverFormatValid", "{duration} burn for a {deltav} m/s maneuver at {phase}° in {time}")
-								: LOCTEXT("ManeuverFormatExpired", "{duration} burn for a {deltav} m/s maneuver at {phase}°");
+					FText     ManeuverTextFormat     = TimeLeftBeforeManeuver > 0
+														 ? LOCTEXT("ManeuverFormatValid", "{duration} burn for a {deltav} m/s maneuver in {time}")
+														 : LOCTEXT("ManeuverFormatExpired", "{duration} burn for a {deltav} m/s maneuver");
 
-					return FText::FormatNamed(ManeuverTextFormat, TEXT("phase"),
-						FText::AsNumber(FMath::Fmod(Object.Maneuver->Phase, 360.0f), &NumberOptions), TEXT("time"),
-						GetDurationText(TimeLeftBeforeManeuver), TEXT("duration"), GetDurationText(Object.Maneuver->Duration),
-						TEXT("deltav"), FText::AsNumber(Object.Maneuver->DeltaV, &NumberOptions));
+					return FText::FormatNamed(ManeuverTextFormat, TEXT("time"), GetDurationText(TimeLeftBeforeManeuver, 2),
+						TEXT("duration"), GetDurationText(Object.Maneuver->Duration), TEXT("deltav"),
+						FText::AsNumber(Object.Maneuver->DeltaV, &NumberOptions));
 				}
 				else
 				{
@@ -262,21 +262,17 @@ public:
 		// clang-format off
 		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments().Content()
 		[
-			SNew(SBox)
-			.WidthOverride(500)
+			SNew(SBackgroundBlur)
+			.BlurRadius(InArgs._Panel, &SNovaTabPanel::GetBlurRadius)
+			.BlurStrength(InArgs._Panel, &SNovaTabPanel::GetBlurStrength)
+			.bApplyAlphaToBlur(true)
+			.Padding(0)
 			[
-				SNew(SBackgroundBlur)
-				.BlurRadius(InArgs._Panel, &SNovaTabPanel::GetBlurRadius)
-				.BlurStrength(InArgs._Panel, &SNovaTabPanel::GetBlurStrength)
-				.bApplyAlphaToBlur(true)
-				.Padding(0)
+				SNew(SBorder)
+				.BorderImage(&Theme.MainMenuBackground)
+				.Padding(Theme.ContentPadding)
 				[
-					SNew(SBorder)
-					.BorderImage(&Theme.MainMenuBackground)
-					.Padding(Theme.ContentPadding)
-					[
-						InArgs._Content.Widget
-					]
+					InArgs._Content.Widget
 				]
 			]
 		]);
@@ -394,8 +390,24 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 							.TextStyle(&Theme.HeadingFont)
 						]
 					]
+
+					// Description
+					+ SScrollBox::Slot()
+					[
+						SNew(SBorder)
+						.BorderImage(new FSlateNoResource)
+						.Padding(Theme.VerticalContentPadding)
+						.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([=]()
+						{
+							return AreaDescription->GetText().IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible;
+						})))
+						[
+							SAssignNew(AreaDescription, STextBlock)
+							.TextStyle(&Theme.MainFont)
+						]
+					]
 			
-					// Delta-v trade-off slider
+					// Trajectory computation widget
 					+ SScrollBox::Slot()
 					[
 						SAssignNew(TrajectoryCalculator, SNovaTrajectoryCalculator)
@@ -406,45 +418,17 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 						{
 							return SidePanelContainer->GetCurrentAlpha();
 						})))
-						.DurationActionName(FNovaPlayerInput::MenuPrimary)
-						.DeltaVActionName(FNovaPlayerInput::MenuSecondary)
+						.DeltaVActionName(FNovaPlayerInput::MenuPrimary)
+						.DurationActionName(FNovaPlayerInput::MenuSecondary)
 						.OnTrajectoryChanged(this, &SNovaMainMenuNavigation::OnTrajectoryChanged)
 					]
-
-					// Fuel use
-					+ SScrollBox::Slot()
-					.HAlign(HAlign_Center)
-					[
-						SAssignNew(FuelText, STextBlock)
-						.Text(TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([&]()
-						{
-							if (IsValid(GameState) && IsValid(OrbitalSimulation) && Spacecraft && CurrentSimulatedTrajectory.IsValid())
-							{
-								UNovaSpacecraftPropellantSystem* PropellantSystem = Spacecraft->FindComponentByClass<UNovaSpacecraftPropellantSystem>(GameState);
-								NCHECK(PropellantSystem);
-
-								float FuelToBeUsed = Spacecraft->GetPropulsionMetrics().GetRequiredPropellant(CurrentSimulatedTrajectory->TotalDeltaV, Spacecraft->GetCurrentCargoMass());
-								float FuelRemaining = PropellantSystem->GetCurrentPropellantMass();
-
-								FNumberFormattingOptions Options;
-								Options.MaximumFractionalDigits = 1;
-
-								return FText::FormatNamed(LOCTEXT("TrajectoryFuelFormat", "{used} T of propellant required ({remaining} T remaining)"),
-									TEXT("used"), FText::AsNumber(FuelToBeUsed, &Options),
-									TEXT("remaining"), FText::AsNumber(FuelRemaining, &Options));
-							}
-
-							return FText();
-						})))
-						.TextStyle(&Theme.MainFont)
-						.WrapTextAt(500)
-					]
 			
+					// Trajectory commit
 					+ SScrollBox::Slot()
 					.HAlign(HAlign_Center)
 					[
 						SNovaAssignNew(CommitButton, SNovaButton)
-						.Size("WideButtonSize")
+						.Size("DoubleButtonSize")
 						.Text(LOCTEXT("CommitTrajectory", "Commit trajectory"))
 						.HelpText(this, &SNovaMainMenuNavigation::GetCommitTrajectoryHelpText)
 						.OnClicked(this, &SNovaMainMenuNavigation::OnCommitTrajectory)
@@ -536,7 +520,7 @@ void SNovaMainMenuNavigation::OnClicked(const FVector2D& Position)
 {
 	SNovaTabPanel::OnClicked(Position);
 
-	if (IsValid(GameState))
+	if (IsValid(GameState) && !SidePanel->IsHovered())
 	{
 		bool                       HasValidObject      = false;
 		bool                       HasAnyHoveredObject = false;
@@ -612,6 +596,7 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 		{
 			HasValidDestination = true;
 			AreaTitle->SetText(Object.Area->Name);
+			AreaDescription->SetText(Object.Area->Description);
 
 			// clang-format off
 			StationTrades->AddSlot()
@@ -619,7 +604,7 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 			.AutoHeight()
 			[
 				SNew(STextBlock)
-				.Text(LOCTEXT("SoldTitle", "For sale"))
+				.Text(LOCTEXT("SoldTitle", "For sale here"))
 				.TextStyle(&Theme.HeadingFont)
 			];
 			// clang-format on
@@ -644,14 +629,15 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 			}
 
 			// clang-format off
-			StationTrades->AddSlot()
+			// TODO add deals here
+			/*StationTrades->AddSlot()
 			.Padding(Theme.VerticalContentPadding)
 			.AutoHeight()
 			[
 				SNew(STextBlock)
 				.Text(LOCTEXT("DealsTitle", "Best deals"))
 				.TextStyle(&Theme.HeadingFont)
-			];
+			];*/
 			// clang-format on
 
 			// Create a list of best deals for selling resources
@@ -726,13 +712,11 @@ bool SNovaMainMenuNavigation::SelectDestination(const UNovaArea* Destination)
 				OrbitalSimulation->GetAreaOrbit(Destination), GameState->GetPlayerSpacecraftIdentifiers());
 
 			TrajectoryCalculator->SetVisibility(EVisibility::Visible);
-			FuelText->SetVisibility(EVisibility::Visible);
 			CommitButton->SetVisibility(EVisibility::Visible);
 		}
 		else
 		{
 			TrajectoryCalculator->SetVisibility(EVisibility::Collapsed);
-			FuelText->SetVisibility(EVisibility::Collapsed);
 			CommitButton->SetVisibility(EVisibility::Collapsed);
 		}
 
@@ -754,6 +738,9 @@ void SNovaMainMenuNavigation::ResetDestination()
 	OrbitalMap->ClearTrajectory();
 	TrajectoryCalculator->Reset();
 	CurrentSimulatedTrajectory.Reset();
+
+	SidePanel->SetVisible(false);
+	SidePanelContainer->SetObjectList({});
 }
 
 bool SNovaMainMenuNavigation::CanSelectDestination(const UNovaArea* Destination) const

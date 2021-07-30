@@ -101,6 +101,10 @@ public:
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	FName LevelName;
 
+	// Area description
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	FText Description;
+
 	// Altitude in kilometers
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Altitude;

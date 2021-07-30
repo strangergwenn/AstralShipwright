@@ -105,8 +105,8 @@ protected:
 
 	// Side panel widgets
 	TSharedPtr<class STextBlock>                AreaTitle;
+	TSharedPtr<class STextBlock>                AreaDescription;
 	TSharedPtr<class SNovaTrajectoryCalculator> TrajectoryCalculator;
-	TSharedPtr<class STextBlock>                FuelText;
 	TSharedPtr<class SNovaButton>               CommitButton;
 	TSharedPtr<class SVerticalBox>              StationTrades;
 

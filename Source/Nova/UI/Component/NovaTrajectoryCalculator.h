@@ -120,4 +120,5 @@ protected:
 
 	// Slate widgets
 	TSharedPtr<class SNovaSlider> Slider;
+	TSharedPtr<class STextBlock>  PropellantText;
 };

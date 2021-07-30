@@ -6,6 +6,9 @@
 #include "Nova/Game/NovaGameState.h"
 #include "Nova/Game/NovaOrbitalSimulationComponent.h"
 
+#include "Nova/Spacecraft/NovaSpacecraft.h"
+#include "Nova/Spacecraft/System/NovaSpacecraftPropellantSystem.h"
+
 #include "Nova/System/NovaMenuManager.h"
 
 #include "Nova/UI/Widget/NovaNavigationPanel.h"
@@ -39,31 +42,27 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 	// clang-format off
 	ChildSlot
 	[
-		InArgs._Panel->SNovaAssignNew(Slider, SNovaSlider)
-		.Size("WideButtonSize")
-		.Value((InArgs._MaxAltitude - InArgs._MinAltitude) / 2)
-		.MinValue(InArgs._MinAltitude)
-		.MaxValue(InArgs._MaxAltitude)
-		.ValueStep(50)
-		.Analog(true)
-		.HelpText(LOCTEXT("AltitudeSliderHelp", "Change the intermediate altitude used to synchronize orbits"))
-		.Enabled(this, &SNovaTrajectoryCalculator::CanEditTrajectory)
-		.Header()
+		SNew(SVerticalBox)
+
+		// Title
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
 		[
-			SNew(SVerticalBox)
+			SNew(STextBlock)
+			.TextStyle(&Theme.HeadingFont)
+			.Text(LOCTEXT("TrajectoryTitle", "Trajectory"))
+		]
 
-			+ SVerticalBox::Slot()
-			.HAlign(HAlign_Center)
-			.AutoHeight()
-			[
-				SNew(STextBlock)
-				.TextStyle(&Theme.HeadingFont)
-				.Text(this, &SNovaTrajectoryCalculator::GetDeltaVText)
-			]
+		// Controls
+		+ SVerticalBox::Slot()
+		.HAlign(HAlign_Center)
+		.AutoHeight()
+		[
+			SNew(SHorizontalBox)
 
-			+ SVerticalBox::Slot()
-			.HAlign(HAlign_Center)
-			.AutoHeight()
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
 			[
 				InArgs._Panel->SNovaNew(SNovaButton)
 				.Text(LOCTEXT("MinimizeDeltaV", "Minimize propellant"))
@@ -73,47 +72,8 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 				.Enabled(this, &SNovaTrajectoryCalculator::CanEditTrajectory)
 			]
 
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(Theme.VerticalContentPadding + FMargin(0, 0, 0, ButtonTheme.HoverAnimationPadding.Top))
-			[
-				SNew(SBox)
-				.HeightOverride(32)
-				[
-					SNew(SBorder)
-					.BorderImage(&ButtonTheme.Border)
-					.BorderBackgroundColor(this, &SNovaTrajectoryCalculator::GetBorderColor)
-					[
-						SNew(SComplexGradient)
-						.GradientColors(TAttribute<TArray<FLinearColor>>::Create(TAttribute<TArray<FLinearColor>>::FGetter::CreateSP(this, &SNovaTrajectoryCalculator::GetDeltaVGradient)))
-					]
-				]
-			]
-		]
-		.Footer()
-		[
-			SNew(SVerticalBox)
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(Theme.VerticalContentPadding + FMargin(0, ButtonTheme.HoverAnimationPadding.Bottom, 0, 0))
-			[
-				SNew(SBox)
-				.HeightOverride(32)
-				[
-					SNew(SBorder)
-					.BorderImage(&ButtonTheme.Border)
-					.BorderBackgroundColor(this, &SNovaTrajectoryCalculator::GetBorderColor)
-					[
-						SNew(SComplexGradient)
-						.GradientColors(TAttribute<TArray<FLinearColor>>::Create(TAttribute<TArray<FLinearColor>>::FGetter::CreateSP(this, &SNovaTrajectoryCalculator::GetDurationGradient)))
-					]
-				]
-			]
-
-			+ SVerticalBox::Slot()
-			.HAlign(HAlign_Center)
-			.AutoHeight()
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
 			[
 				InArgs._Panel->SNovaNew(SNovaButton)
 				.Text(LOCTEXT("MinimizeTravelTime", "Minimize travel time"))
@@ -122,17 +82,95 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 				.OnClicked(this, &SNovaTrajectoryCalculator::OptimizeForDuration)
 				.Enabled(this, &SNovaTrajectoryCalculator::CanEditTrajectory)
 			]
+		]
 
-			+ SVerticalBox::Slot()
+		// Slider & heatmaps
+		+ SVerticalBox::Slot()
+		.HAlign(HAlign_Center)
+		.AutoHeight()
+		[
+			InArgs._Panel->SNovaAssignNew(Slider, SNovaSlider)
+			.Size("DoubleButtonSize")
+			.Value((InArgs._MaxAltitude - InArgs._MinAltitude) / 2)
+			.MinValue(InArgs._MinAltitude)
+			.MaxValue(InArgs._MaxAltitude)
+			.ValueStep(50)
+			.Analog(true)
+			.HelpText(LOCTEXT("AltitudeSliderHelp", "Change the intermediate altitude used to synchronize orbits"))
+			.Enabled(this, &SNovaTrajectoryCalculator::CanEditTrajectory)
+			.Header()
+			[
+				SNew(SVerticalBox)
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(Theme.VerticalContentPadding)
+				[
+					SNew(SBox)
+					.HeightOverride(16)
+					[
+						SNew(SBorder)
+						.BorderImage(&ButtonTheme.Border)
+						.BorderBackgroundColor(this, &SNovaTrajectoryCalculator::GetBorderColor)
+						[
+							SNew(SComplexGradient)
+							.GradientColors(TAttribute<TArray<FLinearColor>>::Create(TAttribute<TArray<FLinearColor>>::FGetter::CreateSP(this, &SNovaTrajectoryCalculator::GetDeltaVGradient)))
+						]
+					]
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(Theme.VerticalContentPadding)
+				[
+					SNew(SBox)
+					.HeightOverride(16)
+					[
+						SNew(SBorder)
+						.BorderImage(&ButtonTheme.Border)
+						.BorderBackgroundColor(this, &SNovaTrajectoryCalculator::GetBorderColor)
+						[
+							SNew(SComplexGradient)
+							.GradientColors(TAttribute<TArray<FLinearColor>>::Create(TAttribute<TArray<FLinearColor>>::FGetter::CreateSP(this, &SNovaTrajectoryCalculator::GetDurationGradient)))
+						]
+					]
+				]
+			]
+			.OnValueChanged(this, &SNovaTrajectoryCalculator::OnAltitudeSliderChanged)
+		]
+
+		// Main metrics
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
+		[
+			SNew(SHorizontalBox)
+
+			+ SHorizontalBox::Slot()
 			.HAlign(HAlign_Center)
-			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.TextStyle(&Theme.HeadingFont)
+				.Text(this, &SNovaTrajectoryCalculator::GetDeltaVText)
+			]
+
+			+ SHorizontalBox::Slot()
+			.HAlign(HAlign_Center)
 			[
 				SNew(STextBlock)
 				.TextStyle(&Theme.HeadingFont)
 				.Text(this, &SNovaTrajectoryCalculator::GetDurationText)
 			]
 		]
-		.OnValueChanged(this, &SNovaTrajectoryCalculator::OnAltitudeSliderChanged)
+
+		// Fuel use
+		+ SVerticalBox::Slot()
+		.Padding(Theme.VerticalContentPadding)
+		[
+			SAssignNew(PropellantText, STextBlock)
+			.TextStyle(&Theme.MainFont)
+			.WrapTextAt(500)
+		]
 	];
 	// clang-format on
 }
@@ -395,11 +433,51 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 	CurrentAltitude =
 		Slider->GetMinValue() + FMath::RoundToInt((Altitude - Slider->GetMinValue()) / static_cast<float>(AltitudeStep)) * AltitudeStep;
 
+	FString TrajectoryDetails;
+
 	const TSharedPtr<FNovaTrajectory>* TrajectoryPtr = SimulatedTrajectories.Find(CurrentAltitude);
 	if (TrajectoryPtr)
 	{
 		OnTrajectoryChanged.ExecuteIfBound(*TrajectoryPtr);
+
+		ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+		NCHECK(GameState);
+		if (IsValid(GameState))
+		{
+			for (const FGuid& Identifier : GameState->GetPlayerSpacecraftIdentifiers())
+			{
+				const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Identifier);
+
+				if (Spacecraft)
+				{
+					UNovaSpacecraftPropellantSystem* PropellantSystem =
+						Spacecraft->FindComponentByClass<UNovaSpacecraftPropellantSystem>(GameState);
+					NCHECK(PropellantSystem);
+
+					float FuelToBeUsed = Spacecraft->GetPropulsionMetrics().GetRequiredPropellant(
+						(*TrajectoryPtr)->TotalDeltaV, Spacecraft->GetCurrentCargoMass());
+					float FuelRemaining = PropellantSystem->GetCurrentPropellantMass();
+
+					FNumberFormattingOptions Options;
+					Options.MaximumFractionalDigits = 1;
+
+					if (TrajectoryDetails.Len())
+					{
+						TrajectoryDetails += "\n";
+					}
+					TrajectoryDetails += TEXT("• ");
+
+					TrajectoryDetails += FText::FormatNamed(
+						LOCTEXT("TrajectoryFuelFormat", "{spacecraft}: {used} T of propellant required ({remaining} T remaining)"),
+						TEXT("spacecraft"), Spacecraft->GetName(), TEXT("used"), FText::AsNumber(FuelToBeUsed, &Options), TEXT("remaining"),
+						FText::AsNumber(FuelRemaining, &Options))
+											 .ToString();
+				}
+			}
+		}
 	}
+
+	PropellantText->SetText(FText::FromString(TrajectoryDetails));
 }
 
 #undef LOCTEXT_NAMESPACE
