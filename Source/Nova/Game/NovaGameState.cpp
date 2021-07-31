@@ -579,7 +579,7 @@ void ANovaGameState::ProcessTrajectoryAbort()
 		if (Pawn->GetSpacecraftMovement()->GetState() == ENovaMovementState::Docking ||
 			Pawn->GetSpacecraftMovement()->GetState() == ENovaMovementState::Docked)
 		{
-			AbortReason = FText::FormatNamed(LOCTEXT("NotAllPlayersReady", "{spacecraft}|plural(one=The,other=A) spacecraft is docking"),
+			AbortReason = FText::FormatNamed(LOCTEXT("SpacecraftDocking", "{spacecraft}|plural(one=The,other=A) spacecraft is docking"),
 				TEXT("spacecraft"), PlayerArray.Num());
 			AbortTrajectoryImmediately = true;
 			break;
@@ -589,7 +589,7 @@ void ANovaGameState::ProcessTrajectoryAbort()
 		else if (!Pawn->GetSpacecraftMovement()->IsMainDriveEnabled())
 		{
 			AbortReason = FText::FormatNamed(
-				LOCTEXT("NotAllPlayersReady", "{spacecraft}|plural(one=The,other=A) spacecraft wasn't authorized to maneuver"),
+				LOCTEXT("SpacecraftNotManeuvering", "{spacecraft}|plural(one=The,other=A) spacecraft wasn't authorized to maneuver"),
 				TEXT("spacecraft"), PlayerArray.Num());
 			AbortTrajectoryIfStarted = true;
 			break;
