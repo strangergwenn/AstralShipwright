@@ -21,7 +21,9 @@ constexpr int32  MaxModuleCount      = 5;
 constexpr int32  MaxEquipmentCount   = 8;
 constexpr double ResaleDepreciation  = 0.5;
 
-const FString DefaultLevel = TEXT("Space");
+const FDateTime ZeroTime     = FDateTime(2340, 2, 10, 8);
+const FString   DefaultLevel = TEXT("Space");
+
 };    // namespace ENovaConstants
 
 /** Serialization way */

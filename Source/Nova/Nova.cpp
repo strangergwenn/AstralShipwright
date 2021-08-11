@@ -78,7 +78,7 @@ FString GetRoleString(const UActorComponent* Component)
 
 FText GetDateText(struct FNovaTime Time)
 {
-	FDateTime DateTime = FDateTime(2340, 2, 10) + FDateTime(Time.AsMinutes() * ETimespan::TicksPerMinute);
+	FDateTime DateTime = FDateTime(ENovaConstants::ZeroTime) + FDateTime(Time.AsMinutes() * ETimespan::TicksPerMinute);
 
 	return FText::AsDateTime(DateTime);
 }
