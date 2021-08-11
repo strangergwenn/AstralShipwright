@@ -49,6 +49,7 @@ public:
 		TSharedPtr<SWindow> Window = FSlateApplication::Get().GetTopLevelWindows()[0];
 		NCHECK(Window);
 
+		// Start moving when dragged
 		if (!Window->IsWindowMaximized() && GEngine->GetGameUserSettings()->GetFullscreenMode() == EWindowMode::Windowed)
 		{
 			Moving = true;
@@ -60,16 +61,22 @@ public:
 
 	virtual FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
 	{
-		SImage::OnMouseButtonUp(MyGeometry, MouseEvent);
+		FReply Result = SImage::OnMouseButtonUp(MyGeometry, MouseEvent);
+
+		TSharedPtr<SWindow> Window = FSlateApplication::Get().GetTopLevelWindows()[0];
+		NCHECK(Window);
+
+		// Auto-maximize the window when dragged to the top border of the screen
+		if (!Window->IsWindowMaximized() && GEngine->GetGameUserSettings()->GetFullscreenMode() == EWindowMode::Windowed && Moving &&
+			FSlateApplication::Get().GetCursorPos().Y <= 0)
+		{
+			UNovaMenuManager::Get()->MaximizeOrRestore();
+			Result = FReply::Handled();
+		}
 
 		Moving = false;
 
-		if (FSlateApplication::Get().GetCursorPos().Y <= 0)
-		{
-			UNovaMenuManager::Get()->MaximizeOrRestore();
-		}
-
-		return FReply::Handled();
+		return Result;
 	}
 
 	virtual FReply OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
