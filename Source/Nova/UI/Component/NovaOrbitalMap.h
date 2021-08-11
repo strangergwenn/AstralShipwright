@@ -257,10 +257,9 @@ protected:
 	// Settings
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 	TAttribute<float>                CurrentAlpha;
+	FNovaCameraInputFilter           CameraFilter;
 
 	// Local settings
-	float AnalogSpeed;
-	float AnalogSpeedPeriod;
 	float TrajectoryPreviewDuration;
 	float TrajectoryZoomSpeed;
 	float TrajectoryZoomAcceleration;
@@ -269,8 +268,9 @@ protected:
 
 	// Local state
 	FVector2D                          CurrentOrigin;
-	FVector2D                          CurrentAnalogInput;
-	TNovaTimedAverage<FVector2D>       AveragedAnalogInput;
+	FVector2D                          TargetPosition;
+	FVector2D                          CurrentPosition;
+	FVector2D                          CurrentVelocity;
 	TSharedPtr<struct FNovaTrajectory> CurrentPreviewTrajectory;
 	float                              CurrentPreviewProgress;
 	float                              CurrentDesiredSize;

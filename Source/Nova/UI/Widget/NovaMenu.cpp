@@ -106,27 +106,22 @@ void SNovaMenu::Tick(const FGeometry& AllottedGeometry, const double CurrentTime
 			MousePressedContinued = false;
 		}
 
-		// Process analog input
-		float ConstantRateRatio = DeltaTime * 60.0f;
-		float HorizontalInput   = ConstantRateRatio * CurrentAnalogInput.X;
-		float VerticalInput     = ConstantRateRatio * CurrentAnalogInput.Y;
-
 		// Pass analog input when using gamepad
 		bool                    HorizontalInputConsumed = false;
 		bool                    VerticalInputConsumed   = false;
 		TSharedPtr<SNovaButton> Button                  = GetFocusedButton();
 		if (MenuManager->IsUsingGamepad() && Button.IsValid())
 		{
-			HorizontalInputConsumed = Button->HorizontalAnalogInput(HorizontalInput);
-			VerticalInputConsumed   = Button->VerticalAnalogInput(VerticalInput);
+			HorizontalInputConsumed = Button->HorizontalAnalogInput(CurrentAnalogInput.X);
+			VerticalInputConsumed   = Button->VerticalAnalogInput(CurrentAnalogInput.Y);
 		}
 		if (!HorizontalInputConsumed)
 		{
-			CurrentNavigationPanel->HorizontalAnalogInput(HorizontalInput);
+			CurrentNavigationPanel->HorizontalAnalogInput(CurrentAnalogInput.X);
 		}
 		if (!VerticalInputConsumed)
 		{
-			CurrentNavigationPanel->VerticalAnalogInput(VerticalInput);
+			CurrentNavigationPanel->VerticalAnalogInput(CurrentAnalogInput.Y);
 		}
 	}
 }

@@ -81,16 +81,16 @@ void SNovaOrbitalMap::Construct(const FArguments& InArgs)
 	CurrentAlpha = InArgs._CurrentAlpha;
 
 	// Local settings
-	AnalogSpeed                = 20.0f;
-	AnalogSpeedPeriod          = 0.15f;
 	TrajectoryPreviewDuration  = 2.0f;
 	TrajectoryZoomSpeed        = 0.5f;
 	TrajectoryZoomAcceleration = 1.0f;
 	TrajectoryZoomSnappinness  = 10.0f;
 	TrajectoryInflationRatio   = 1.2f;
 
-	// Initialize
-	AveragedAnalogInput.SetPeriod(AnalogSpeedPeriod);
+	// Camera filter settings, based on the defaults
+	CameraFilter.Velocity *= 150;
+	CameraFilter.Acceleration *= 75;
+	CameraFilter.Resistance *= 10;
 }
 
 /*----------------------------------------------------
@@ -112,8 +112,12 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	HoveredOrbitalObjects.Empty();
 
 	// Integrate analog input
-	AveragedAnalogInput.Set(CurrentAnalogInput, DeltaTime);
-	CurrentOrigin = GetTickSpaceGeometry().GetLocalSize() / 2 + AnalogSpeed * AveragedAnalogInput.Get();
+	const float     PositionFreedom = 0.5f;
+	const FVector2D HalfLocalSize   = GetTickSpaceGeometry().GetLocalSize() / 2;
+	CameraFilter.ApplyFilter(CurrentPosition, CurrentVelocity, TargetPosition, DeltaTime, MenuManager->IsUsingGamepad());
+	CurrentPosition.X = FMath::Clamp(CurrentPosition.X, PositionFreedom * -HalfLocalSize.X, PositionFreedom * HalfLocalSize.X);
+	CurrentPosition.Y = FMath::Clamp(CurrentPosition.Y, PositionFreedom * -HalfLocalSize.Y, PositionFreedom * HalfLocalSize.Y);
+	CurrentOrigin     = HalfLocalSize + CurrentPosition;
 
 #if 0
 	AddTestOrbits();
@@ -131,7 +135,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	if (MenuManager->IsUsingGamepad())
 	{
 		FNovaBatchedPoint Point;
-		Point.Pos   = -AnalogSpeed * AveragedAnalogInput.Get();
+		Point.Pos   = -CurrentPosition;
 		Point.Color = FLinearColor::White;
 		Point.Scale = 0.25;
 		BatchedPoints.AddUnique(Point);
@@ -153,11 +157,11 @@ void SNovaOrbitalMap::HorizontalAnalogInput(float Value)
 {
 	if (MenuManager->IsUsingGamepad())
 	{
-		CurrentAnalogInput.X -= Value;
+		TargetPosition.X -= Value;
 	}
 	else
 	{
-		CurrentAnalogInput.X += Value;
+		TargetPosition.X += Value;
 	}
 }
 
@@ -165,11 +169,11 @@ void SNovaOrbitalMap::VerticalAnalogInput(float Value)
 {
 	if (MenuManager->IsUsingGamepad())
 	{
-		CurrentAnalogInput.Y += Value;
+		TargetPosition.Y += Value;
 	}
 	else
 	{
-		CurrentAnalogInput.Y -= Value;
+		TargetPosition.Y -= Value;
 	}
 }
 

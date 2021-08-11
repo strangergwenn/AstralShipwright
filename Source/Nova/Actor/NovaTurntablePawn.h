@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "NovaActorTools.h"
 #include "GameFramework/Pawn.h"
 
 #include "NovaTurntablePawn.generated.h"
@@ -93,25 +94,9 @@ public:
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float CameraMaxChaseAngle;
 
-	// Angular velocity of camera in °/s
+	// Camera filter
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float CameraVelocity;
-
-	// Angular velocity of camera in °/s (gamepad)
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float CameraGamepadVelocity;
-
-	// Camera acceleration force in °/s²
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float CameraAcceleration;
-
-	// Camera acceleration force as a multiplier of velocity
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float CameraResistance;
-
-	// Power function applied to inputs
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float CameraInputPower;
+	FNovaCameraInputFilter CameraFilter;
 
 	/*----------------------------------------------------
 	    Components

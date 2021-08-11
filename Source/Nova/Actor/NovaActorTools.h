@@ -37,6 +37,104 @@ public:
 };
 
 /*----------------------------------------------------
+    Camera filter with resistance and inertia
+----------------------------------------------------*/
+
+USTRUCT()
+struct FNovaCameraInputFilter
+{
+	GENERATED_BODY()
+
+public:
+	FNovaCameraInputFilter()
+		: Velocity(200.0f)
+		, GamepadMultiplier(0.5f)
+		, Acceleration(300.0f)
+		, Resistance(1 / 360.0f)
+		, InputPower(3.0f)
+		, Brake(2.f)
+		, Brake2(04.f)
+	{}
+
+public:
+	/** Apply the filter to a current position, speed, to match a target */
+	template <bool UnwindPosition = false>
+	void ApplyFilter(
+		float& CurrentPosition, float& CurrentVelocity, float& TargetPosition, const float DeltaTime, const bool IsGamepad) const
+	{
+		float MaximumVelocity = Velocity;
+		if (IsGamepad)
+		{
+			MaximumVelocity *= GamepadMultiplier;
+		}
+
+		// Compute acceleration and resistance
+		float Acc = FMath::Pow(TargetPosition, InputPower) * Acceleration;
+		float Res = FMath::Sign(CurrentVelocity) *
+					(Resistance * FMath::Square(CurrentVelocity) + (Acc == 0 ? Brake2 + Brake * FMath::Abs(CurrentVelocity) : 0));
+		float MaxResDeltaSpeed = CurrentVelocity;
+		float AccDeltaSpeed    = Acc * DeltaTime;
+		float ResDeltaSpeed    = -(FMath::Abs(Res * DeltaTime) > FMath::Abs(MaxResDeltaSpeed) ? MaxResDeltaSpeed : Res * DeltaTime);
+
+		// Update velocity, integrate the current angle and consume the input
+		CurrentVelocity += AccDeltaSpeed + ResDeltaSpeed;
+		CurrentVelocity = FMath::Clamp(CurrentVelocity, -MaximumVelocity, MaximumVelocity);
+		CurrentPosition += CurrentVelocity * DeltaTime;
+		TargetPosition = 0;
+
+		// Optionally unwind output
+		if (UnwindPosition)
+		{
+			CurrentPosition = FMath::UnwindDegrees(CurrentPosition);
+		}
+	}
+
+	void ApplyFilter(FVector2D& CurrentPosition, FVector2D& CurrentVelocity, FVector2D& TargetPosition, const float DeltaTime,
+		const bool IsGamepad) const
+	{
+		ApplyFilter(CurrentPosition.X, CurrentVelocity.X, TargetPosition.X, DeltaTime, IsGamepad);
+		ApplyFilter(CurrentPosition.Y, CurrentVelocity.Y, TargetPosition.Y, DeltaTime, IsGamepad);
+	}
+
+	void ApplyFilter(
+		FVector& CurrentPosition, FVector& CurrentVelocity, FVector& TargetPosition, const float DeltaTime, const bool IsGamepad) const
+	{
+		ApplyFilter(CurrentPosition.X, CurrentVelocity.X, TargetPosition.X, DeltaTime, IsGamepad);
+		ApplyFilter(CurrentPosition.Y, CurrentVelocity.Y, TargetPosition.Y, DeltaTime, IsGamepad);
+		ApplyFilter(CurrentPosition.Z, CurrentVelocity.Z, TargetPosition.Z, DeltaTime, IsGamepad);
+	}
+
+public:
+	// Angular velocity of camera in °/s
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float Velocity;
+
+	// Velocity multiplier when using a gamepad
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float GamepadMultiplier;
+
+	// Camera acceleration force in °/s²
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float Acceleration;
+
+	// Camera acceleration force as a multiplier of velocity
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float Resistance;
+
+	// Power function applied to inputs
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float InputPower;
+
+	// Brake component 1
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float Brake;
+
+	// Brake component 2
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float Brake2;
+};
+
+/*----------------------------------------------------
     Time-based moving average structure
 ----------------------------------------------------*/
 

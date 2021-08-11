@@ -69,14 +69,9 @@ ANovaTurntablePawn::ANovaTurntablePawn()
 	NumDistanceFactorIncrements = 1;
 
 	// Camera control defaults
-	CameraMinTilt         = -80.0f;
-	CameraMaxTilt         = 20.0f;
-	CameraMaxChaseAngle   = 20.0f;
-	CameraVelocity        = 200.0f;
-	CameraGamepadVelocity = 100.0f;
-	CameraAcceleration    = 300.0f;
-	CameraResistance      = 1 / 360.0f;
-	CameraInputPower      = 3.0f;
+	CameraMinTilt       = -80.0f;
+	CameraMaxTilt       = 20.0f;
+	CameraMaxChaseAngle = 20.0f;
 }
 
 /*----------------------------------------------------
@@ -197,38 +192,10 @@ void ANovaTurntablePawn::ResetZoom()
 
 void ANovaTurntablePawn::ProcessCamera(float DeltaTime)
 {
-	auto ApplyInputFilter = [&](float& CurrentAngle, float& CurrentSpeed, float& TargetAngle, const float MaximumSpeed)
-	{
-		float Brake  = 2.f;
-		float Brake2 = 4.f;
-
-		// Compute acceleration and resistance
-		float Acc = FMath::Pow(TargetAngle, CameraInputPower) * CameraAcceleration;
-		float Res = FMath::Sign(CurrentSpeed) *
-					(CameraResistance * FMath::Square(CurrentSpeed) + (Acc == 0 ? Brake2 + Brake * FMath::Abs(CurrentSpeed) : 0));
-		float MaxResDeltaSpeed = CurrentSpeed;
-		float AccDeltaSpeed    = Acc * DeltaTime;
-		float ResDeltaSpeed    = -(FMath::Abs(Res * DeltaTime) > FMath::Abs(MaxResDeltaSpeed) ? MaxResDeltaSpeed : Res * DeltaTime);
-
-		// Update velocity, integrate the current angle and consume the input
-		CurrentSpeed += AccDeltaSpeed + ResDeltaSpeed;
-		CurrentSpeed = FMath::Clamp(CurrentSpeed, -MaximumSpeed, MaximumSpeed);
-		CurrentAngle += CurrentSpeed * DeltaTime;
-		CurrentAngle = FMath::UnwindDegrees(CurrentAngle);
-		TargetAngle  = 0;
-	};
-
-	// Regularize framerate
-	float FramerateMultiplier = 1.0f;
-	bool  IsGamepad           = GetGameInstance<UNovaGameInstance>()->GetMenuManager()->IsUsingGamepad();
-	if (IsGamepad)
-	{
-		FramerateMultiplier = DeltaTime / (1.0f / 60.0f);
-	}
-
-	// Apply filters
-	ApplyInputFilter(CurrentPanAngle, CurrentPanSpeed, CurrentPanTarget, IsGamepad ? CameraGamepadVelocity : CameraVelocity);
-	ApplyInputFilter(CurrentTiltAngle, CurrentTiltSpeed, CurrentTiltTarget, IsGamepad ? CameraGamepadVelocity : CameraVelocity);
+	// Apply filter
+	bool IsGamepad = GetGameInstance<UNovaGameInstance>()->GetMenuManager()->IsUsingGamepad();
+	CameraFilter.ApplyFilter<true>(CurrentPanAngle, CurrentPanSpeed, CurrentPanTarget, DeltaTime, IsGamepad);
+	CameraFilter.ApplyFilter<true>(CurrentTiltAngle, CurrentTiltSpeed, CurrentTiltTarget, DeltaTime, IsGamepad);
 
 	// Clamp pitch to legal values
 	float ExternalCameraPitchClamped = ChaseMode ? FMath::Clamp(CurrentTiltAngle, -CameraMaxChaseAngle, CameraMaxChaseAngle)
