@@ -96,6 +96,8 @@ for platform in projectPlatforms:
 	# Clean up
 	if os.path.exists(buildOutputDir):
 		shutil.rmtree(buildOutputDir)
+	releaseFolder = os.path.join(os.getcwd(), '..', 'Releases', buildVersion)
+	shutil.rmtree(releaseFolder)
 
 	# Build project
 	subprocess.check_call([
@@ -129,25 +131,33 @@ for platform in projectPlatforms:
 		'-distribution',
 		'-archive', '-archivedirectory="' + outputDir + '"'
 	])
-
+			
 	# Post-processing of generated files
 	for root, directories, filenames in os.walk(buildOutputDir):
 		for filename in filenames:
 			
 			absoluteFilename = str(os.path.join(root, filename))
+			baseChunkName = projectName + '-' + platform + '-'
 		
 			# Wipe generated files that aren't needed
 			if re.match('.*\.((pdb)|(debug))', filename):
 				if 'ThirdParty' in root or not projectKeepPdbs:
-					shutil.move(absoluteFilename, os.path.join(os.getcwd(), '..', 'Releases', buildVersion))
+					shutil.move(absoluteFilename, releaseFolder)
 			elif re.match('Manifest.*\.txt', filename):
 				os.remove(absoluteFilename)
-	
-			# Rename chunks
-			chunkMatch = re.search('pakchunk([0-9]+).*\.pak', filename)
+				
+			# Rename optional chunks
+			chunkMatch = re.search('pakchunk([0-9]+)optional.*\.pak', filename)
 			if chunkMatch:
-				absoluteChunkFilename = str(os.path.join(root, projectName + '-' + platform + '-' + chunkMatch.group(1) + '.pak'))
+				absoluteChunkFilename = str(os.path.join(root, baseChunkName + chunkMatch.group(1) + 'b.pak'))
 				os.rename(absoluteFilename, absoluteChunkFilename)
+	
+			# Rename normal chunks
+			else:
+				chunkMatch = re.search('pakchunk([0-9]+).*\.pak', filename)
+				if chunkMatch:
+					absoluteChunkFilename = str(os.path.join(root, baseChunkName + chunkMatch.group(1) + '.pak'))
+					os.rename(absoluteFilename, absoluteChunkFilename)
 	
 	# Remove engine content - only debug stuff
 	shutil.rmtree(os.path.join(buildOutputDir, 'Engine', 'Content'))
