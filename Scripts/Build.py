@@ -5,7 +5,7 @@
 # Package the game for distribution - make sure to configure project.json
 # Usage : Build.py <absolute-output-dir>
 # 
-# Gwennaël Arbona 2019
+# Gwennaël Arbona 2021
 #-------------------------------------------------------------------------------
 
 import re
@@ -79,6 +79,11 @@ else:
 projectFile = os.path.join(os.getcwd(), '..', projectName + '.uproject')
 engineBuildTool = os.path.join(engineDir, 'Engine', 'Build', 'BatchFiles', 'RunUAT.bat')
 
+# Clean up output path
+releaseOutputDir = os.path.join(os.getcwd(), '..', 'Releases', buildVersion)
+if os.path.exists(releaseOutputDir):
+	shutil.rmtree(releaseOutputDir)
+
 
 #-------------------------------------------------------------------------------
 # Build project
@@ -96,8 +101,6 @@ for platform in projectPlatforms:
 	# Clean up
 	if os.path.exists(buildOutputDir):
 		shutil.rmtree(buildOutputDir)
-	releaseFolder = os.path.join(os.getcwd(), '..', 'Releases', buildVersion)
-	shutil.rmtree(releaseFolder)
 
 	# Build project
 	subprocess.check_call([
@@ -142,7 +145,7 @@ for platform in projectPlatforms:
 			# Wipe generated files that aren't needed
 			if re.match('.*\.((pdb)|(debug))', filename):
 				if 'ThirdParty' in root or not projectKeepPdbs:
-					shutil.move(absoluteFilename, releaseFolder)
+					shutil.move(absoluteFilename, releaseOutputDir)
 			elif re.match('Manifest.*\.txt', filename):
 				os.remove(absoluteFilename)
 				
