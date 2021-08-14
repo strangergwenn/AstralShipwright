@@ -101,6 +101,23 @@ TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetOuterHull(const UNov
 	return IsValid(Hull) ? OuterHull : nullptr;
 }
 
+TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetBulkhead(
+	const UNovaModuleDescription* ModuleDescription, ENovaBulkheadType Style, bool Forward) const
+{
+	if (Style == ENovaBulkheadType::Skirt && !Forward)
+	{
+		return SkirtBulkhead;
+	}
+	else if (ModuleDescription)
+	{
+		return ModuleDescription->GetBulkhead(Style, Forward);
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
 FNovaAssetPreviewSettings UNovaCompartmentDescription::GetPreviewSettings() const
 {
 	FNovaAssetPreviewSettings Settings;
@@ -150,16 +167,14 @@ TSoftObjectPtr<class UStaticMesh> UNovaModuleDescription::GetBulkhead(ENovaBulkh
 {
 	switch (Style)
 	{
+		default:
 		case ENovaBulkheadType::None:
+		case ENovaBulkheadType::Skirt:
 			return nullptr;
 		case ENovaBulkheadType::Standard:
 			return Forward ? ForwardBulkhead : AftBulkhead;
-		case ENovaBulkheadType::Skirt:
-			return Forward ? nullptr : SkirtBulkhead;
 		case ENovaBulkheadType::Outer:
 			return Forward ? OuterForwardBulkhead : OuterAftBulkhead;
-		default:
-			return nullptr;
 	}
 }
 

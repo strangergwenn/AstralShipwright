@@ -132,9 +132,10 @@ void UNovaSpacecraftCompartmentComponent::ProcessModule(FNovaModuleAssembly& Ass
 
 	// Process the module elements
 	ProcessElement(Assembly.Segment, ModuleDescription ? ModuleDescription->Segment : nullptr);
-	ProcessElement(
-		Assembly.ForwardBulkhead, ModuleDescription ? ModuleDescription->GetBulkhead(Module.ForwardBulkheadType, true) : nullptr);
-	ProcessElement(Assembly.AftBulkhead, ModuleDescription ? ModuleDescription->GetBulkhead(Module.AftBulkheadType, false) : nullptr);
+	ProcessElement(Assembly.ForwardBulkhead,
+		CompartmentDescription ? CompartmentDescription->GetBulkhead(ModuleDescription, Module.ForwardBulkheadType, true) : nullptr);
+	ProcessElement(Assembly.AftBulkhead,
+		CompartmentDescription ? CompartmentDescription->GetBulkhead(ModuleDescription, Module.AftBulkheadType, false) : nullptr);
 	ProcessElement(
 		Assembly.ConnectionPiping, CompartmentDescription ? CompartmentDescription->GetSkirtPiping(Module.SkirtPipingType) : nullptr);
 	ProcessElement(

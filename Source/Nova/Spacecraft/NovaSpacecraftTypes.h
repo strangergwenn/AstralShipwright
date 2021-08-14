@@ -246,6 +246,10 @@ public:
 		return Enabled ? ConnectionWiring : nullptr;
 	}
 
+	/** Get the skirt between modules */
+	TSoftObjectPtr<class UStaticMesh> GetBulkhead(
+		const UNovaModuleDescription* ModuleDescription, ENovaBulkheadType Style, bool Forward) const;
+
 	virtual struct FNovaAssetPreviewSettings GetPreviewSettings() const override;
 
 	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
@@ -288,6 +292,10 @@ public:
 	// Decorative outer hull (skirt)
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> OuterHull = nullptr;
+
+	// Skirt bulkhead - forward side of the module behind will be empty
+	UPROPERTY(Category = Elements, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> SkirtBulkhead = nullptr;
 
 	// Compartment mass in T
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
@@ -390,10 +398,6 @@ public:
 	// Standard aft bulkhead
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> AftBulkhead = nullptr;
-
-	// Skirt bulkhead - forward side of the module behind will be empty
-	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> SkirtBulkhead = nullptr;
 
 	// Outer-facing forward bulkhead
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
