@@ -763,24 +763,24 @@ void FNovaSpacecraft::UpdateProceduralElements()
 					if (IsFirstCompartment(CompartmentIndex))
 					{
 						Module.ForwardBulkheadType = ENovaBulkheadType::Outer;
-						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> forward is Outer");
+						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> forward bulkhead is Outer");
 					}
 					else if (IsSameModuleInPreviousCompartment(CompartmentIndex, ModuleIndex))
 					{
 						Module.ForwardBulkheadType = ENovaBulkheadType::Skirt;
-						Module.NeedsWiring         = false;
-						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> forward is Connected");
+						Module.NeedsWiring         = !Module.Description->AllowCommonWiring;
+						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> forward bulkhead is Skirt");
 					}
 
 					if (IsLastCompartment(CompartmentIndex))
 					{
 						Module.AftBulkheadType = ENovaBulkheadType::Outer;
-						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> aft is Outer");
+						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> aft bulkhead is Outer");
 					}
 					else if (IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
 					{
 						Module.AftBulkheadType = ENovaBulkheadType::Skirt;
-						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> aft is Connected");
+						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> aft bulkhead is Skirt");
 					}
 
 					// Define piping
