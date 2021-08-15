@@ -400,7 +400,7 @@ void UNovaSpacecraftCompartmentComponent::UpdateCustomization(FNovaAssemblyEleme
 	NCHECK(SpacecraftPawn);
 	const FNovaSpacecraftCustomization& Customization = SpacecraftPawn->GetCustomization();
 
-	RequestParameter(Element, "DirtyIntensity", FMath::Lerp(0.5f, 1.0f, Customization.DirtyIntensity));
+	RequestParameter(Element, "DirtyIntensity", FMath::Lerp(0.15f, 0.85f, Customization.DirtyIntensity));
 
 	if (Customization.StructuralPaint)
 	{
