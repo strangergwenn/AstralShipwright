@@ -381,29 +381,30 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
 	{
 		const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
-		NCHECK(::IsValid(Compartment.Description));
-
-		for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
+		if (::IsValid(Compartment.Description))
 		{
-			const UNovaEquipmentDescription* Equipment = Compartment.Equipments[EquipmentIndex];
-			if (Equipment && Equipment->RequiresPairing)
+			for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
 			{
-				for (int32 GroupedIndex : Compartment.Description->GetGroupedEquipmentSlotsIndices(EquipmentIndex))
+				const UNovaEquipmentDescription* Equipment = Compartment.Equipments[EquipmentIndex];
+				if (Equipment && Equipment->RequiresPairing)
 				{
-					if (Compartment.Equipments[GroupedIndex] != Equipment)
+					for (int32 GroupedIndex : Compartment.Description->GetGroupedEquipmentSlotsIndices(EquipmentIndex))
 					{
-						Issues.Add(FText::FormatNamed(LOCTEXT("InvalidPairing",
-														  "The equipment in slot {slot} of compartment {compartment} is not "
-														  "correctly paired with symmetrical equipments"),
-							TEXT("slot"), Compartment.Description->GetEquipmentSlot(EquipmentIndex).DisplayName, TEXT("compartment"),
-							FText::AsNumber(CompartmentIndex + 1)));
+						if (Compartment.Equipments[GroupedIndex] != Equipment)
+						{
+							Issues.Add(FText::FormatNamed(LOCTEXT("InvalidPairing",
+															  "The equipment in slot {slot} of compartment {compartment} is not "
+															  "correctly paired with symmetrical equipments"),
+								TEXT("slot"), Compartment.Description->GetEquipmentSlot(EquipmentIndex).DisplayName, TEXT("compartment"),
+								FText::AsNumber(CompartmentIndex + 1)));
+						}
 					}
 				}
-			}
 
-			if (Equipment && Equipment->IsA<UNovaThrusterDescription>())
-			{
-				HasAnyThruster = true;
+				if (Equipment && Equipment->IsA<UNovaThrusterDescription>())
+				{
+					HasAnyThruster = true;
+				}
 			}
 		}
 	}
