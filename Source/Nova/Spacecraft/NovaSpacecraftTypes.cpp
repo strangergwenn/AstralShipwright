@@ -185,6 +185,7 @@ FNovaAssetPreviewSettings UNovaModuleDescription::GetPreviewSettings() const
 	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
 	Settings.RequireCustomPrimitives = true;
 	Settings.UsePowerfulLight        = true;
+	Settings.Rotation                = FRotator(0, 180, 0);
 
 	return Settings;
 }
@@ -265,6 +266,7 @@ FNovaAssetPreviewSettings UNovaEquipmentDescription::GetPreviewSettings() const
 	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
 	Settings.RequireCustomPrimitives = true;
 	Settings.UsePowerfulLight        = true;
+	Settings.Rotation                = FRotator(0, 180, 0);
 
 	return Settings;
 }
@@ -302,6 +304,15 @@ TArray<FText> UNovaEquipmentDescription::GetDescription() const
 /*----------------------------------------------------
     Equipment subclasses
 ----------------------------------------------------*/
+
+FNovaAssetPreviewSettings UNovaEngineDescription::GetPreviewSettings() const
+{
+	FNovaAssetPreviewSettings Settings = Super::GetPreviewSettings();
+
+	Settings.Rotation = FRotator::ZeroRotator;
+
+	return Settings;
+}
 
 TArray<FText> UNovaEngineDescription::GetDescription() const
 {

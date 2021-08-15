@@ -517,6 +517,8 @@ class UNovaEngineDescription : public UNovaEquipmentDescription
 {
 	GENERATED_BODY()
 public:
+	virtual FNovaAssetPreviewSettings GetPreviewSettings() const override;
+
 	TArray<FText> GetDescription() const override;
 
 public:
