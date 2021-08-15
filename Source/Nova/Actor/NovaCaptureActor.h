@@ -40,6 +40,13 @@ public:
 protected:
 #if WITH_EDITOR
 
+	virtual void Tick(float DeltaTime) override;
+
+	virtual bool ShouldTickIfViewportsOnly() const override
+	{
+		return true;
+	}
+
 	/** Spawn the preview actor */
 	void CreateActor(TSubclassOf<AActor> ActorClass);
 
@@ -93,6 +100,10 @@ protected:
 	    Data
 	----------------------------------------------------*/
 
+	// Asset to shoot
+	UPROPERTY()
+	UNovaAssetDescription* AssetToShoot;
+
 	// Preview actor
 	UPROPERTY()
 	class AActor* PreviewActor;
@@ -104,6 +115,10 @@ protected:
 	// Render target used for rendering the assets
 	UPROPERTY(Transient)
 	class UTextureRenderTarget2D* RenderTarget;
+
+	// Asset render
+	FSlateBrush* TargetAssetRender;
+	float        TimeBeforeScreenshot;
 
 #endif    // WITH_EDITORONLY_DATA
 };

@@ -42,19 +42,20 @@ FNovaAssetPreviewSettings::FNovaAssetPreviewSettings()
 ANovaCaptureActor::ANovaCaptureActor()
 	: Super()
 #if WITH_EDITORONLY_DATA
+	, AssetToShoot(nullptr)
 	, AssetManager(nullptr)
+	, TargetAssetRender(nullptr)
+	, TimeBeforeScreenshot(0)
 #endif    // WITH_EDITORONLY_DATA
 {
 #if WITH_EDITORONLY_DATA
 
 	// Create root component
-	RootComponent                = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-	RootComponent->bIsEditorOnly = true;
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 
 	// Create camera arm
 	CameraArmComponent = CreateDefaultSubobject<USceneComponent>(TEXT("CameraArm"));
 	CameraArmComponent->SetupAttachment(RootComponent);
-	CameraArmComponent->bIsEditorOnly = true;
 
 	// Create camera component
 	CameraCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("CameraCapture"));
@@ -66,12 +67,15 @@ ANovaCaptureActor::ANovaCaptureActor()
 	CameraCapture->ShowFlags.EnableAdvancedFeatures();
 	CameraCapture->ShowFlags.SetFog(false);
 	CameraCapture->FOVAngle                     = 70;
-	CameraCapture->bIsEditorOnly                = true;
 	CameraCapture->bAlwaysPersistRenderingState = true;
 	CameraCapture->bUseRayTracingIfEnabled      = true;
 
+	// Settings
+	SetActorTickEnabled(true);
+	PrimaryActorTick.bCanEverTick          = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
+
 	// Defaults
-	bIsEditorOnlyActor  = true;
 	RenderUpscaleFactor = 4;
 	ResultUpscaleFactor = 2;
 
@@ -87,48 +91,71 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 #if WITH_EDITOR
 
 	NCHECK(Asset);
-	NLOG("ANovaCaptureActor::CaptureScreenshot for '%s'", *GetName());
 
-	// Get required objects
-	CreateAssetManager();
-	CreateRenderTarget();
-
-	// Delete previous content
-	if (AssetRender.GetResourceObject())
+	if (AssetToShoot == nullptr)
 	{
-		TArray<UObject*> AssetsToDelete;
-		AssetsToDelete.Add(AssetRender.GetResourceObject());
-		ObjectTools::ForceDeleteObjects(AssetsToDelete, false);
+		NLOG("ANovaCaptureActor::CaptureScreenshot for '%s'", *GetName());
+
+		// Copy state
+		AssetToShoot         = Asset;
+		TargetAssetRender    = &AssetRender;
+		TimeBeforeScreenshot = 0.5f;
+
+		// Get required objects
+		CreateAssetManager();
+		CreateRenderTarget();
+
+		// Create the actor
+		const FNovaAssetPreviewSettings& Settings = AssetToShoot->GetPreviewSettings();
+		CreateActor(Settings.Class);
+		AssetToShoot->ConfigurePreviewActor(PreviewActor);
 	}
-
-	// Build path
-	int32   SeparatorIndex;
-	FString ScreenshotPath = Asset->GetOuter()->GetFName().ToString();
-	if (ScreenshotPath.FindLastChar('/', SeparatorIndex))
-	{
-		ScreenshotPath.InsertAt(SeparatorIndex + 1, TEXT("T_"));
-	}
-
-	// Create the actor
-	const FNovaAssetPreviewSettings& Settings = Asset->GetPreviewSettings();
-	CreateActor(Settings.Class);
-	Asset->ConfigurePreviewActor(PreviewActor);
-
-	// Proceed with the screenshot
-	ConfigureScene(Settings);
-	CameraCapture->CaptureScene();
-	UTexture2D* AssetRenderTexture = SaveTexture(ScreenshotPath);
-	AssetRender.SetResourceObject(AssetRenderTexture);
-	AssetRender.SetImageSize(GetDesiredSize());
-
-	// Clean up
-	Asset->MarkPackageDirty();
-	PreviewActor->Destroy();
 
 #endif    // WITH_EDITOR
 }
 
 #if WITH_EDITOR
+
+void ANovaCaptureActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	TimeBeforeScreenshot -= DeltaTime;
+
+	if (AssetToShoot && TimeBeforeScreenshot <= 0.0f)
+	{
+		NLOG("ANovaCaptureActor::Tick : proceeding with screenshot for '%s'", *GetName());
+		const FNovaAssetPreviewSettings& Settings = AssetToShoot->GetPreviewSettings();
+
+		// Delete previous content
+		if (TargetAssetRender->GetResourceObject())
+		{
+			TArray<UObject*> AssetsToDelete;
+			AssetsToDelete.Add(TargetAssetRender->GetResourceObject());
+			ObjectTools::ForceDeleteObjects(AssetsToDelete, false);
+		}
+
+		// Build path
+		int32   SeparatorIndex;
+		FString ScreenshotPath = AssetToShoot->GetOuter()->GetFName().ToString();
+		if (ScreenshotPath.FindLastChar('/', SeparatorIndex))
+		{
+			ScreenshotPath.InsertAt(SeparatorIndex + 1, TEXT("T_"));
+		}
+
+		// Proceed with the screenshot
+		ConfigureScene(Settings);
+		CameraCapture->CaptureScene();
+		UTexture2D* AssetRenderTexture = SaveTexture(ScreenshotPath);
+		TargetAssetRender->SetResourceObject(AssetRenderTexture);
+		TargetAssetRender->SetImageSize(GetDesiredSize());
+
+		// Clean up
+		AssetToShoot->MarkPackageDirty();
+		PreviewActor->Destroy();
+		AssetToShoot = nullptr;
+	}
+}
 
 void ANovaCaptureActor::CreateActor(TSubclassOf<AActor> ActorClass)
 {
