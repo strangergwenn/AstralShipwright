@@ -66,11 +66,13 @@ ANovaCaptureActor::ANovaCaptureActor()
 	CameraCapture->bCaptureOnMovement  = false;
 	CameraCapture->ShowFlags.EnableAdvancedFeatures();
 	CameraCapture->ShowFlags.SetFog(false);
+	CameraCapture->ShowFlags.SetGame(false);
 	CameraCapture->FOVAngle                     = 70;
 	CameraCapture->bAlwaysPersistRenderingState = true;
 	CameraCapture->bUseRayTracingIfEnabled      = true;
 
 	// Settings
+	bIsEditorOnlyActor = true;
 	SetActorTickEnabled(true);
 	PrimaryActorTick.bCanEverTick          = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
@@ -94,7 +96,7 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 
 	if (AssetToShoot == nullptr)
 	{
-		NLOG("ANovaCaptureActor::CaptureScreenshot for '%s'", *GetName());
+		NLOG("ANovaCaptureActor::RenderAsset for '%s'", *GetName());
 
 		// Copy state
 		AssetToShoot         = Asset;
@@ -105,10 +107,31 @@ void ANovaCaptureActor::RenderAsset(UNovaAssetDescription* Asset, FSlateBrush& A
 		CreateAssetManager();
 		CreateRenderTarget();
 
-		// Create the actor
+		// Create the actor and scene
 		const FNovaAssetPreviewSettings& Settings = AssetToShoot->GetPreviewSettings();
 		CreateActor(Settings.Class);
 		AssetToShoot->ConfigurePreviewActor(PreviewActor);
+		ConfigureScene(Settings);
+
+		// Force all actor textures at maximum resolution
+		CameraCapture->bCaptureEveryFrame = true;
+		PreviewActor->ForEachComponent<UPrimitiveComponent>(false,
+			[=](UPrimitiveComponent* MeshComponent)
+			{
+				if (IsValid(MeshComponent) && IsValid(MeshComponent->GetMaterial(0)))
+				{
+					TArray<UTexture*> Textures;
+					MeshComponent->GetMaterial(0)->GetUsedTextures(
+						Textures, EMaterialQualityLevel::Num, false, ERHIFeatureLevel::Num, true);
+
+					for (UTexture* Texture : Textures)
+					{
+						NLOG("ANovaCaptureActor::RenderAsset : streaming in texture '%s'", *Texture->GetName());
+						Texture->SetForceMipLevelsToBeResident(30.0f);
+						Texture->WaitForStreaming();
+					}
+				}
+			});
 	}
 
 #endif    // WITH_EDITOR
@@ -125,7 +148,6 @@ void ANovaCaptureActor::Tick(float DeltaTime)
 	if (AssetToShoot && TimeBeforeScreenshot <= 0.0f)
 	{
 		NLOG("ANovaCaptureActor::Tick : proceeding with screenshot for '%s'", *GetName());
-		const FNovaAssetPreviewSettings& Settings = AssetToShoot->GetPreviewSettings();
 
 		// Delete previous content
 		if (TargetAssetRender->GetResourceObject())
@@ -144,13 +166,13 @@ void ANovaCaptureActor::Tick(float DeltaTime)
 		}
 
 		// Proceed with the screenshot
-		ConfigureScene(Settings);
 		CameraCapture->CaptureScene();
 		UTexture2D* AssetRenderTexture = SaveTexture(ScreenshotPath);
 		TargetAssetRender->SetResourceObject(AssetRenderTexture);
 		TargetAssetRender->SetImageSize(GetDesiredSize());
 
 		// Clean up
+		CameraCapture->bCaptureEveryFrame = false;
 		AssetToShoot->MarkPackageDirty();
 		PreviewActor->Destroy();
 		AssetToShoot = nullptr;
