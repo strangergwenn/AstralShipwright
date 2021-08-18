@@ -293,9 +293,13 @@ public:
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> OuterHull = nullptr;
 
-	// Skirt bulkhead - forward side of the module behind will be empty
+	// Tank skirt - forward side of the module behind will be empty
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> SkirtBulkhead = nullptr;
+	TSoftObjectPtr<class UStaticMesh> TankSkirt = nullptr;
+
+	// Cargo skirt - forward side of the module behind will be empty
+	UPROPERTY(Category = Elements, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> CargoSkirt = nullptr;
 
 	// Compartment mass in T
 	UPROPERTY(Category = Properties, EditDefaultsOnly)

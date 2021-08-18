@@ -106,7 +106,14 @@ TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetBulkhead(
 {
 	if (Style == ENovaBulkheadType::Skirt && !Forward)
 	{
-		return SkirtBulkhead;
+		if (ModuleDescription && ModuleDescription->IsA<UNovaCargoModuleDescription>())
+		{
+			return CargoSkirt;
+		}
+		else
+		{
+			return TankSkirt;
+		}
 	}
 	else if (ModuleDescription)
 	{
