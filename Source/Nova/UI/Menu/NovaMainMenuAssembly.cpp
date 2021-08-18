@@ -357,7 +357,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 									SNovaNew(SNovaButton)
 									.Action(FNovaPlayerInput::MenuSecondary)
 									.Text(LOCTEXT("EditCompartment", "Edit compartment"))
-									.HelpText(LOCTEXT("EditCompartmentHelp", "Add modules and equipments to the selected compartment"))
+									.HelpText(LOCTEXT("EditCompartmentHelp", "Add modules and equipment to the selected compartment"))
 									.Enabled(this, &SNovaMainMenuAssembly::IsEditCompartmentEnabled)
 									.OnClicked(this, &SNovaMainMenuAssembly::OnEditCompartment)
 								]
@@ -464,7 +464,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 										[
 											SNew(STextBlock)
 											.TextStyle(&Theme.HeadingFont)
-											.Text(LOCTEXT("EquipmentsTitle", "Equipments"))
+											.Text(LOCTEXT("EquipmentTitle", "Equipment"))
 										]
 
 										+ SVerticalBox::Slot()
@@ -1020,7 +1020,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							const FNovaCompartment* Compartment = GetEditedCompartment();
 							if (Compartment)
 							{
-								const UNovaEquipmentDescription* Equipment = Compartment->Equipments[EquipmentIndex];
+								const UNovaEquipmentDescription* Equipment = Compartment->Equipment[EquipmentIndex];
 								if (IsValid(Equipment))
 								{
 									return &Equipment->AssetRender;
@@ -1388,7 +1388,7 @@ void SNovaMainMenuAssembly::SetSelectedModuleOrEquipment(int32 Index)
 			SelectedModuleOrEquipmentIndex = Index;
 		}
 
-		// Skip over invalid modules & equipments
+		// Skip over invalid modules & equipment
 		else if (SelectedModuleOrEquipmentIndex != INDEX_NONE)
 		{
 			int32 Step          = FMath::Sign(Index - SelectedModuleOrEquipmentIndex);
@@ -1427,7 +1427,7 @@ void SNovaMainMenuAssembly::SetSelectedModuleOrEquipment(int32 Index)
 		{
 			int32 EquipmentIndex = GetSelectedEquipmentIndex();
 			EquipmentList        = SpacecraftPawn->GetCompatibleEquipments(EditedCompartmentIndex, EquipmentIndex);
-			EquipmentListView->Refresh(EquipmentList.Find(Compartment.Equipments[EquipmentIndex]));
+			EquipmentListView->Refresh(EquipmentList.Find(Compartment.Equipment[EquipmentIndex]));
 		}
 	}
 }
@@ -1672,10 +1672,10 @@ FText SNovaMainMenuAssembly::GetSelectedFilterText() const
 			case ENovaAssemblyDisplayFilter::ModulesStructure:
 				return LOCTEXT("ModulesStructure", "Modules & structure");
 				break;
-			case ENovaAssemblyDisplayFilter::ModulesStructureEquipments:
-				return LOCTEXT("ModulesStructureEquipments", "Modules, structure, equipments");
+			case ENovaAssemblyDisplayFilter::ModulesStructureEquipment:
+				return LOCTEXT("ModulesStructureEquipments", "Modules, structure, equipment");
 				break;
-			case ENovaAssemblyDisplayFilter::ModulesStructureEquipmentsWiring:
+			case ENovaAssemblyDisplayFilter::ModulesStructureEquipmentWiring:
 				return LOCTEXT("ModulesStructureEquipmentsWiring", "All internal systems");
 				break;
 			case ENovaAssemblyDisplayFilter::All:
@@ -1808,7 +1808,7 @@ FText SNovaMainMenuAssembly::GetModuleOrEquipmentText()
 			int32 EquipmentIndex = GetSelectedEquipmentIndex();
 			if (EquipmentIndex < Compartment.Description->EquipmentSlots.Num())
 			{
-				const UNovaEquipmentDescription* Equipment     = Compartment.Equipments[EquipmentIndex];
+				const UNovaEquipmentDescription* Equipment     = Compartment.Equipment[EquipmentIndex];
 				FText                            EquipmentText = Equipment ? Equipment->GetInlineDescription()
 																		   : LOCTEXT("EmptyEquipment", "<img src=\"/Text/Equipment\"/> Empty equipment slot");
 
@@ -2008,7 +2008,7 @@ void SNovaMainMenuAssembly::OnSelectedFilterChanged(float Value)
 }
 
 /*----------------------------------------------------
-    Modules & equipments
+    Modules & equipment
 ----------------------------------------------------*/
 
 void SNovaMainMenuAssembly::OnSelectedModuleChanged(const UNovaModuleDescription* Module, int32 Index)
@@ -2034,7 +2034,7 @@ void SNovaMainMenuAssembly::OnSelectedEquipmentChanged(const UNovaEquipmentDescr
 
 	if (IsValid(SpacecraftPawn))
 	{
-		SpacecraftPawn->GetCompartment(EditedCompartmentIndex).Equipments[SlotIndex] = Equipment;
+		SpacecraftPawn->GetCompartment(EditedCompartmentIndex).Equipment[SlotIndex] = Equipment;
 		SpacecraftPawn->RequestAssemblyUpdate();
 	}
 }

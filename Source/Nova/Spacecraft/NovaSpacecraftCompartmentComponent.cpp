@@ -111,10 +111,10 @@ void UNovaSpacecraftCompartmentComponent::ProcessCompartment(const FNovaCompartm
 		ProcessModule(Modules[ModuleIndex], Compartment.Modules[ModuleIndex], Compartment, Callback);
 	}
 
-	// Process equipments
+	// Process equipment
 	for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
 	{
-		ProcessEquipment(Equipments[EquipmentIndex], Compartment.Equipments[EquipmentIndex], Compartment, Callback);
+		ProcessEquipment(Equipment[EquipmentIndex], Compartment.Equipment[EquipmentIndex], Compartment, Callback);
 	}
 }
 
@@ -185,10 +185,10 @@ void UNovaSpacecraftCompartmentComponent::BuildCompartment(const struct FNovaCom
 		BuildModule(Modules[ModuleIndex], Compartment.Description->GetModuleSlot(ModuleIndex), Compartment);
 	}
 
-	// Build equipments
+	// Build equipment
 	for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
 	{
-		BuildEquipment(Equipments[EquipmentIndex], Compartment.Equipments[EquipmentIndex],
+		BuildEquipment(Equipment[EquipmentIndex], Compartment.Equipment[EquipmentIndex],
 			Compartment.Description->GetEquipmentSlot(EquipmentIndex), Compartment);
 	}
 }
@@ -213,7 +213,7 @@ void UNovaSpacecraftCompartmentComponent::UpdateCustomization()
 
 	for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
 	{
-		UpdateCustomization(Equipments[EquipmentIndex].Equipment);
+		UpdateCustomization(Equipment[EquipmentIndex].Equipment);
 	}
 }
 

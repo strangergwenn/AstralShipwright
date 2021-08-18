@@ -160,8 +160,8 @@ TArray<FText> UNovaCompartmentDescription::GetDescription() const
 		TEXT("modules"), FText::AsNumber(ModuleSlots.Num())));
 
 	Result.Add(
-		FText::FormatNamed(LOCTEXT("CompartmentDescriptionEquipmentsFormat", "<img src=\"/Text/Equipment\"/> {equipments} equipment slots"),
-			TEXT("equipments"), FText::AsNumber(EquipmentSlots.Num())));
+		FText::FormatNamed(LOCTEXT("CompartmentDescriptionEquipmentsFormat", "<img src=\"/Text/Equipment\"/> {equipment} equipment slots"),
+			TEXT("equipment"), FText::AsNumber(EquipmentSlots.Num())));
 
 	return Result;
 }
@@ -285,7 +285,7 @@ void UNovaEquipmentDescription::ConfigurePreviewActor(AActor* Actor) const
 
 	TSharedPtr<FNovaSpacecraft> Spacecraft = MakeShared<FNovaSpacecraft>();
 	FNovaCompartment            Compartment(SpacecraftPawn->EmptyCompartmentDescription);
-	Compartment.Equipments[0] = this;
+	Compartment.Equipment[0] = this;
 	Spacecraft->Compartments.Add(Compartment);
 
 	SpacecraftPawn->SetImmediateMode(true);

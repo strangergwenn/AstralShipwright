@@ -284,7 +284,7 @@ protected:
 	void OnEnterPhotoMode(FName ActionName);
 	void OnSelectedFilterChanged(float Value);
 
-	// Modules & equipments
+	// Modules & equipment
 	void OnSelectedModuleChanged(const class UNovaModuleDescription* Module, int32 Index);
 	void OnSelectedEquipmentChanged(const class UNovaEquipmentDescription* Equipment, int32 Index);
 	void OnSelectedHullTypeChanged(const class UNovaHullDescription* Hull, int32 Index);

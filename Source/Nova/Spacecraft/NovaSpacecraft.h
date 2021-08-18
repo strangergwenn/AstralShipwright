@@ -148,7 +148,7 @@ struct FNovaCompartment
 	FNovaCompartmentModule Modules[ENovaConstants::MaxModuleCount];
 
 	UPROPERTY()
-	const class UNovaEquipmentDescription* Equipments[ENovaConstants::MaxEquipmentCount];
+	const class UNovaEquipmentDescription* Equipment[ENovaConstants::MaxEquipmentCount];
 
 	UPROPERTY()
 	FNovaSpacecraftCargo GeneralCargo;
@@ -484,8 +484,8 @@ public:
 	/** Get a list of compatible modules that can be added at a compartment index, and a module slot index */
 	TArray<const class UNovaModuleDescription*> GetCompatibleModules(int32 CompartmentIndex, int32 SlotIndex) const;
 
-	/** Get a list of compatible equipments that can be added at a compartment index, and an equipment slot index */
-	TArray<const class UNovaEquipmentDescription*> GetCompatibleEquipments(int32 InCompartmentIndexdex, int32 SlotIndex) const;
+	/** Get a list of compatible equipment that can be added at a compartment index, and an equipment slot index */
+	TArray<const class UNovaEquipmentDescription*> GetCompatibleEquipment(int32 InCompartmentIndexdex, int32 SlotIndex) const;
 
 	/*----------------------------------------------------
 	    Internals

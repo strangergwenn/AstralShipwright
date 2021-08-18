@@ -313,7 +313,7 @@ public:
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	TArray<FNovaEquipmentSlot> EquipmentSlots;
 
-	// Groups of equipment slot that require identical equipments
+	// Groups of equipment slot that require identical equipment
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	TArray<FNovaEquipmentSlotGroup> EquipmentSlotsGroups;
 };
