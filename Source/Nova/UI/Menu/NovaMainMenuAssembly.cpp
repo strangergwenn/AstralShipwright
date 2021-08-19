@@ -870,8 +870,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 									return &Compartment.Description->AssetRender;
 								}
 							}
-
-							return nullptr;
+							
+							return &UNovaAssetManager::Get()->GetDefaultAsset<UNovaCompartmentDescription>()->AssetRender;
 						}))
 					]
 				]
@@ -950,7 +950,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								}
 							}
 
-							return nullptr;
+							return &UNovaAssetManager::Get()->GetDefaultAsset<UNovaModuleDescription>()->AssetRender;
 						}))
 					]
 				]
@@ -1026,8 +1026,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 									return &Equipment->AssetRender;
 								}
 							}
-
-							return nullptr;
+							
+							return &UNovaAssetManager::Get()->GetDefaultAsset<UNovaEquipmentDescription>()->AssetRender;
 						}))
 					]
 				]
@@ -1528,6 +1528,7 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateModuleItem(const UNovaModuleD
 {
 	return SNew(SNovaTradableAssetItem)
 		.Asset(Module)
+		.DefaultAsset(UNovaAssetManager::Get()->GetDefaultAsset<UNovaModuleDescription>())
 		.GameState(GameState)
 		.NoPriceHint(true)
 		.SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
@@ -1567,6 +1568,7 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEquipmentItem(const UNovaEqui
 {
 	return SNew(SNovaTradableAssetItem)
 		.Asset(Equipment)
+		.DefaultAsset(UNovaAssetManager::Get()->GetDefaultAsset<UNovaEquipmentDescription>())
 		.GameState(GameState)
 		.NoPriceHint(true)
 		.SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
@@ -1597,10 +1599,11 @@ FText SNovaMainMenuAssembly::GenerateEquipmentTooltip(const UNovaEquipmentDescri
     Compartment hull type list
 ----------------------------------------------------*/
 
-TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateHullTypeItem(const class UNovaHullDescription* Hull) const
+TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateHullTypeItem(const UNovaHullDescription* Hull) const
 {
 	return SNew(SNovaTradableAssetItem)
 		.Asset(Hull)
+		.DefaultAsset(UNovaAssetManager::Get()->GetDefaultAsset<UNovaHullDescription>())
 		.GameState(GameState)
 		.NoPriceHint(true)
 		.SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
@@ -1610,12 +1613,12 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateHullTypeItem(const class UNov
 			})));
 }
 
-FText SNovaMainMenuAssembly::GetHullTypeListTitle(const class UNovaHullDescription* Hull) const
+FText SNovaMainMenuAssembly::GetHullTypeListTitle(const UNovaHullDescription* Hull) const
 {
 	return FText::FormatNamed(LOCTEXT("HullTypeTitle", "Change hull type ({hull})"), TEXT("hull"), GetAssetName(Hull));
 }
 
-FText SNovaMainMenuAssembly::GenerateHullTypeTooltip(const class UNovaHullDescription* Hull) const
+FText SNovaMainMenuAssembly::GenerateHullTypeTooltip(const UNovaHullDescription* Hull) const
 {
 	if (IsValid(Hull))
 	{
@@ -2085,7 +2088,7 @@ void SNovaMainMenuAssembly::OnHullPaintSelected(const UNovaStructuralPaintDescri
 	HullPaintListView->SetInitiallySelectedIndex(Index);
 }
 
-void SNovaMainMenuAssembly::OnDetailPaintSelected(const class UNovaPaintDescription* Paint, int32 Index)
+void SNovaMainMenuAssembly::OnDetailPaintSelected(const UNovaPaintDescription* Paint, int32 Index)
 {
 	NLOG("SNovaMainMenuAssembly::OnDetailPaintSelected : %d", Index);
 
