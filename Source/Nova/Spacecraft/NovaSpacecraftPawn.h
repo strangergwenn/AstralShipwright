@@ -171,7 +171,7 @@ public:
 	}
 
 	/** Get a list of compatible equipments that can be added at a compartment index, and an equipment slot index */
-	TArray<const class UNovaEquipmentDescription*> GetCompatibleEquipments(int32 CompartmentIndex, int32 SlotIndex) const
+	TArray<const class UNovaEquipmentDescription*> GetCompatibleEquipment(int32 CompartmentIndex, int32 SlotIndex) const
 	{
 		NCHECK(Spacecraft.IsValid());
 		return Spacecraft->GetCompatibleEquipment(CompartmentIndex, SlotIndex);

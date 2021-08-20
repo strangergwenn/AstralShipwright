@@ -992,7 +992,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 			SNew(SNovaButton) // No navigation
 			.Focusable(false)
 			.Size("CompartmentButtonSize")
-			.HelpText(FText::FormatNamed(LOCTEXT("EquipmentSlotFormat", "Select equipment slot {slot}"), TEXT("slot"), FText::AsNumber(EquipmentIndex + 1)))
+			.HelpText(this, &SNovaMainMenuAssembly::GetEquipmentHelpText, EquipmentIndex)
 			.Enabled(this, &SNovaMainMenuAssembly::IsEquipmentEnabled, EquipmentIndex)
 			.OnClicked(this, &SNovaMainMenuAssembly::SetSelectedModuleOrEquipment, GetCommonIndexFromEquipment(EquipmentIndex))
 			.OnDoubleClicked(FSimpleDelegate::CreateLambda([=]()
@@ -1426,7 +1426,7 @@ void SNovaMainMenuAssembly::SetSelectedModuleOrEquipment(int32 Index)
 		else
 		{
 			int32 EquipmentIndex = GetSelectedEquipmentIndex();
-			EquipmentList        = SpacecraftPawn->GetCompatibleEquipments(EditedCompartmentIndex, EquipmentIndex);
+			EquipmentList        = SpacecraftPawn->GetCompatibleEquipment(EditedCompartmentIndex, EquipmentIndex);
 			EquipmentListView->Refresh(EquipmentList.Find(Compartment.Equipment[EquipmentIndex]));
 		}
 	}
@@ -1580,7 +1580,8 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEquipmentItem(const UNovaEqui
 
 FText SNovaMainMenuAssembly::GetEquipmentListTitle(const UNovaEquipmentDescription* Equipment) const
 {
-	return FText::FormatNamed(LOCTEXT("EquipmentTitle", "Change equipment ({equipment})"), TEXT("equipment"), GetAssetName(Equipment));
+	return FText::FormatNamed(
+		LOCTEXT("EquipmentTitleFormat", "Change equipment ({equipment})"), TEXT("equipment"), GetAssetName(Equipment));
 }
 
 FText SNovaMainMenuAssembly::GenerateEquipmentTooltip(const UNovaEquipmentDescription* Equipment) const
@@ -1756,17 +1757,25 @@ bool SNovaMainMenuAssembly::IsModuleEnabled(int32 ModuleIndex, FText* Help) cons
 	if (IsCompartmentPanelVisible() && IsValid(SpacecraftPawn))
 	{
 		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
+
 		if (ModuleIndex >= Compartment.Description->ModuleSlots.Num())
 		{
 			return false;
 		}
-
-		if (IsValid(Compartment.Modules[ModuleIndex].Description) && Compartment.GetCurrentCargoMass() > 0 &&
-			Compartment.Modules[ModuleIndex].Description->IsA<UNovaCargoModuleDescription>())
+		else if (IsValid(Compartment.Modules[ModuleIndex].Description) && Compartment.GetCurrentCargoMass() > 0 &&
+				 Compartment.Modules[ModuleIndex].Description->IsA<UNovaCargoModuleDescription>())
 		{
 			if (Help)
 			{
 				*Help = LOCTEXT("ModuleHasCargo", "This module cannot be changed because it holds cargo");
+			}
+			return false;
+		}
+		else if (SpacecraftPawn->GetCompatibleModules(SelectedCompartmentIndex, ModuleIndex).Num() == 1)
+		{
+			if (Help)
+			{
+				*Help = LOCTEXT("ModuleHasNoChoice", "There is no available module for this slot");
 			}
 			return false;
 		}
@@ -1777,12 +1786,41 @@ bool SNovaMainMenuAssembly::IsModuleEnabled(int32 ModuleIndex, FText* Help) cons
 	return false;
 }
 
-bool SNovaMainMenuAssembly::IsEquipmentEnabled(int32 EquipmentIndex) const
+FText SNovaMainMenuAssembly::GetEquipmentHelpText(int32 EquipmentIndex) const
+{
+	FText Help;
+
+	if (IsEquipmentEnabled(EquipmentIndex, &Help) || Help.IsEmpty())
+	{
+		return FText::FormatNamed(
+			LOCTEXT("EquipmentSlotFormat", "Select equipment slot {slot}"), TEXT("slot"), FText::AsNumber(EquipmentIndex + 1));
+	}
+	else
+	{
+		return Help;
+	}
+}
+
+bool SNovaMainMenuAssembly::IsEquipmentEnabled(int32 EquipmentIndex, FText* Help) const
 {
 	if (IsCompartmentPanelVisible() && IsValid(SpacecraftPawn))
 	{
 		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
-		return EquipmentIndex < Compartment.Description->EquipmentSlots.Num();
+
+		if (EquipmentIndex >= Compartment.Description->EquipmentSlots.Num())
+		{
+			return false;
+		}
+		else if (SpacecraftPawn->GetCompatibleEquipment(SelectedCompartmentIndex, EquipmentIndex).Num() == 1)
+		{
+			if (Help)
+			{
+				*Help = LOCTEXT("EquipmentHasNoChoice", "There is no available equipment for this slot");
+			}
+			return false;
+		}
+
+		return true;
 	}
 
 	return false;

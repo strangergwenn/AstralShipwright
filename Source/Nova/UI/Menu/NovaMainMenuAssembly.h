@@ -243,16 +243,25 @@ protected:
 	bool  IsAddCompartmentEnabled() const;
 	bool  IsEditCompartmentEnabled() const;
 	FText GetCompartmentText();
-
-	// Compartment callbacks
 	bool  IsBackToAssemblyEnabled() const;
+
+	// Module callbacks
 	FText GetModuleHelpText(int32 ModuleIndex) const;
 	bool  IsModuleEnabled(int32 ModuleIndex) const
 	{
 		return IsModuleEnabled(ModuleIndex, nullptr);
 	}
-	bool  IsModuleEnabled(int32 ModuleIndex, FText* Help) const;
-	bool  IsEquipmentEnabled(int32 EquipmentIndex) const;
+	bool IsModuleEnabled(int32 ModuleIndex, FText* Help) const;
+
+	// Equipment callbacks
+	FText GetEquipmentHelpText(int32 EquipmentIndex) const;
+	bool  IsEquipmentEnabled(int32 EquipmentIndex) const
+	{
+		return IsEquipmentEnabled(EquipmentIndex, nullptr);
+	}
+	bool IsEquipmentEnabled(int32 EquipmentIndex, FText* Help) const;
+
+	// Module + equipment
 	FText GetModuleOrEquipmentText();
 
 	// Key bindings
