@@ -15,7 +15,7 @@ UENUM()
 enum class ENovaEquipmentType : uint8
 {
 	Standard,
-	Engine
+	Aft
 };
 
 /** Type of bulkhead to use */
