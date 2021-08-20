@@ -13,10 +13,6 @@
 
 #define LOCTEXT_NAMESPACE "NovaSpacecraft"
 
-// Constants
-constexpr float StandardGravity           = 9.807f;
-constexpr float SkirtPropellantMultiplier = 1.1f;
-
 /*----------------------------------------------------
     Spacecraft compartment
 ----------------------------------------------------*/
@@ -240,7 +236,7 @@ FNovaSpacecraftCompartmentMetrics::FNovaSpacecraftCompartmentMetrics(const FNova
 
 						if (Spacecraft.IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
 						{
-							PropellantMass *= SkirtPropellantMultiplier;
+							PropellantMass *= ENovaConstants::SkirtCapacityMultiplier;
 						}
 
 						PropellantMassCapacity += PropellantMass;
@@ -250,7 +246,14 @@ FNovaSpacecraftCompartmentMetrics::FNovaSpacecraftCompartmentMetrics(const FNova
 					const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Module.Description);
 					if (CargoModule)
 					{
-						CargoMassCapacity += CargoModule->CargoMass;
+						float CargoMass = CargoModule->CargoMass;
+
+						if (Spacecraft.IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
+						{
+							CargoMass *= ENovaConstants::SkirtCapacityMultiplier;
+						}
+
+						CargoMassCapacity += CargoMass;
 					}
 				}
 			}
@@ -831,7 +834,7 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 	if (PropulsionMetrics.EngineThrust > 0)
 	{
 		PropulsionMetrics.SpecificImpulse = TotalEngineISPTimesThrust / PropulsionMetrics.EngineThrust;
-		PropulsionMetrics.ExhaustVelocity = StandardGravity * PropulsionMetrics.SpecificImpulse;
+		PropulsionMetrics.ExhaustVelocity = ENovaConstants::StandardGravity * PropulsionMetrics.SpecificImpulse;
 		PropulsionMetrics.PropellantRate  = PropulsionMetrics.EngineThrust / PropulsionMetrics.ExhaustVelocity;
 		PropulsionMetrics.MaximumDeltaV =
 			PropulsionMetrics.ExhaustVelocity * log((PropulsionMetrics.MaximumMass) / PropulsionMetrics.DryMass);
