@@ -11,6 +11,16 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 {
 	GENERATED_BODY()
 
+	FNovaMainTheme()
+		: BlurRadius(0)
+		, BlurStrength(0)
+		, PositiveColor(FLinearColor::Blue)
+		, NegativeColor(FLinearColor::Red)
+		, NeutralColor(FLinearColor::Gray)
+		, NotificationDisplayWidth(0)
+		, EventDisplayWidth(0)
+	{}
+
 	/*----------------------------------------------------
 	    Interface
 	----------------------------------------------------*/

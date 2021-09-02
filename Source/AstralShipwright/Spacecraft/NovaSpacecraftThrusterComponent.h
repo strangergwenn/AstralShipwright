@@ -15,6 +15,9 @@ struct FNovaThrusterExhaust
 {
 	GENERATED_BODY()
 
+	FNovaThrusterExhaust() : Mesh(nullptr), Material(nullptr)
+	{}
+
 	// Exhaust identifier
 	FName Name;
 

@@ -135,6 +135,9 @@ struct FNovaModuleSlot
 {
 	GENERATED_BODY()
 
+	FNovaModuleSlot() : ForceSkirtPiping(false)
+	{}
+
 public:
 	// Slot name in menus
 	UPROPERTY(Category = Compartment, EditDefaultsOnly)

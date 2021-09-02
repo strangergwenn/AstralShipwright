@@ -12,6 +12,9 @@ struct FNovaButtonTheme : public FSlateWidgetStyle
 {
 	GENERATED_BODY()
 
+	FNovaButtonTheme() : DisabledColor(FLinearColor::Gray), Centered(false), WrapMargin(48), AnimationDuration(0.2f)
+	{}
+
 	/*----------------------------------------------------
 	    Interface
 	----------------------------------------------------*/
@@ -45,8 +48,8 @@ struct FNovaButtonTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = Button) FSlateBrush Background;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FLinearColor DisabledColor;
 	UPROPERTY(EditDefaultsOnly, Category = Button) bool Centered;
-	UPROPERTY(EditDefaultsOnly, Category = Button) int32 WrapMargin        = 48;
-	UPROPERTY(EditDefaultsOnly, Category = Button) float AnimationDuration = 0.2f;
+	UPROPERTY(EditDefaultsOnly, Category = Button) int32 WrapMargin;
+	UPROPERTY(EditDefaultsOnly, Category = Button) float AnimationDuration;
 };
 
 /** Theme structure storing dimensional elements of a button */
@@ -54,6 +57,9 @@ USTRUCT()
 struct FNovaButtonSize : public FSlateWidgetStyle
 {
 	GENERATED_BODY()
+
+	FNovaButtonSize() : Width(0), Height(0), DisabledAnimationSize(FVector2D::ZeroVector), UserAnimationSize(FVector2D::ZeroVector)
+	{}
 
 	/*----------------------------------------------------
 	    Interface
