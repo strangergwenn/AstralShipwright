@@ -1,0 +1,21 @@
+"AppBuild"
+{
+	"AppID" "1728180"
+	"Desc" "Master - Linux"
+
+	"ContentRoot" "..\Packaged\LinuxNoEditor"
+	"BuildOutput" "..\Steam"
+
+	"Depots"
+	{
+		"1728182"
+		{
+			"FileMapping"
+			{
+				"LocalPath" "*" 
+				"DepotPath" "."
+				"recursive" "1"
+			}
+		}
+	}
+}

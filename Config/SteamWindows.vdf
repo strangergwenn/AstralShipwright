@@ -1,0 +1,21 @@
+"AppBuild"
+{
+	"AppID" "1728180"
+	"Desc" "Master - Windows"
+
+	"ContentRoot" "..\Packaged\WindowsNoEditor"
+	"BuildOutput" "..\Steam"
+
+	"Depots"
+	{
+		"1728181"
+		{
+			"FileMapping"
+			{
+				"LocalPath" "*" 
+				"DepotPath" "."
+				"recursive" "1"
+			}
+		}
+	}
+}

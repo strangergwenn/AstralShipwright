@@ -4,11 +4,16 @@
 	"configuration": "Shipping",
 	"pdb": false,
 	"outputDir": "..\\Packaged",
+	
 	"itch": 
 	{
-		"user": "deimos-games",
 		"project": "nova",
 		"branches": ["windows", "linux"],
 		"directories": ["WindowsNoEditor", "LinuxNoEditor"]
+	},
+	
+	"steam":
+	{
+		"apps": ["SteamWindows.vdf", "SteamLinux.vdf"]
 	}
 }

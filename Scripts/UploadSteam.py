@@ -2,8 +2,12 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Upload the game for distribution - make sure to configure Build.json
-# Usage : UploadItch.py <absolute-output-dir>
+# Upload a game for distribution on Steam
+#
+# Usage : UploadSteam.py <absolute-output-dir>
+#  - Make sure to configure STEAM_USER in environment with your Steam username
+#  - Make sure to configure STEAM_BUILDER in environment with your Steam SDK 'builder' folder
+#  - Make sure to configure Build.json
 # 
 # Gwennaël Arbona 2021
 #-------------------------------------------------------------------------------
@@ -24,11 +28,9 @@ projectConfig = json.load(projectConfigFile)
 # Get optional build settings
 outputDir =                  str(projectConfig.get('outputDir'))
 
-# Get Itch settings
-itchConfig =                 projectConfig["itch"]
-itchProject =                str(itchConfig["project"])
-itchBranches =               itchConfig["branches"]
-itchDirectories =            itchConfig["directories"]
+# Get Steam settings
+steamConfig =                projectConfig["steam"]
+steamApps =                  steamConfig["apps"]
 
 
 #-------------------------------------------------------------------------------
@@ -43,25 +45,38 @@ if outputDir == 'None':
 		sys.exit('Output directory was neither set in Build.json nor passed as command line')
 		
 # Get user name
-if 'ITCH_USER' in os.environ:
-	itchUser = os.environ['ITCH_USER']
+if 'STEAM_USER' in os.environ:
+	steamUser = os.environ['STEAM_USER']
 else:
-	sys.exit('itch.io user was not provided in the ITCH_USER environment variable')
+	sys.exit('Steam user was not provided in the STEAM_USER environment variable')
+		
+# Get builder directory
+if 'STEAM_BUILDER' in os.environ:
+	steamBuilder = os.environ['STEAM_BUILDER']
+else:
+	sys.exit('Steam SDK builder directory was not provided in the STEAM_BUILDER environment variable')
+
+# Define the Steam command
+if steamBuilder.endswith('builder'):
+	steamCommand = 'SteamCmd.exe'
+else:
+	steamCommand = 'steamcmd.sh'
 
 
 #-------------------------------------------------------------------------------
-# Upload all platforms to itch.io
+# Upload all platforms to Steam
 #-------------------------------------------------------------------------------
 
-itchBranchIndex = 0
-for branch in itchBranches:
+steamAppIndex = 0
+for app in steamApps:
 
 	# Upload
 	subprocess.check_call([
-		'butler',
-		'push',
-		os.path.join(outputDir, itchDirectories[itchBranchIndex]),
-		itchUser + "/" + itchProject + ":" + branch
-	])
-	
-	itchBranchIndex += 1
+		os.path.join(steamBuilder, steamCommand),
+		'+login', steamUser,
+		'+run_app_build', os.path.realpath(os.path.join(configDir, steamApps[steamAppIndex])),
+		'+quit'
+	],
+	cwd = steamBuilder)
+
+	steamAppIndex += 1
