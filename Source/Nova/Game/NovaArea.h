@@ -4,64 +4,12 @@
 
 #include "EngineMinimal.h"
 #include "NovaGameTypes.h"
+#include "NovaOrbitalSimulatioNTypes.h"
 #include "NovaArea.generated.h"
 
 /*----------------------------------------------------
     Description types
 ----------------------------------------------------*/
-
-/** Large number type for planet mass */
-USTRUCT()
-struct FNovaPlanetMass
-{
-	GENERATED_BODY()
-
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	float Value;
-
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	float Exponent;
-};
-
-/** Planet description */
-UCLASS(ClassGroup = (Nova))
-class UNovaPlanet : public UNovaAssetDescription
-{
-	GENERATED_BODY()
-
-public:
-	/** Get the mass of the planet in kg */
-	double GetMass() const
-	{
-		return static_cast<double>(Mass.Value) * FMath::Pow(10, static_cast<double>(Mass.Exponent));
-	}
-
-	/** Get the gravitational parameter in m3/s² */
-	double GetGravitationalParameter() const
-	{
-		constexpr double GravitationalConstant = 6.674e-11;
-		return GravitationalConstant * GetMass();
-	}
-
-	/** Get a radius value in meters from altitude above ground in km */
-	double GetRadius(float Altitude) const
-	{
-		return (static_cast<double>(Radius) + static_cast<double>(Altitude)) * 1000.0;
-	}
-
-public:
-	// Brush
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	FSlateBrush Image;
-
-	// Planet radius in km
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	float Radius;
-
-	// Mass in kg with exponent stored separately
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	FNovaPlanetMass Mass;
-};
 
 /** Resource trade metadata */
 USTRUCT()
@@ -93,17 +41,9 @@ class UNovaArea : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
-	// Planet associated with the level
+	// Body orbited
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	const UNovaPlanet* Planet;
-
-	// Sub-level to load
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	FName LevelName;
-
-	// Area description
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	FText Description;
+	const class UNovaCelestialBody* Body;
 
 	// Altitude in kilometers
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
@@ -112,6 +52,14 @@ public:
 	// Initial phase on the orbit in degrees
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Phase;
+
+	// Sub-level to load
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	FName LevelName;
+
+	// Area description
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	FText Description;
 
 	// Resources sold in this area
 	UPROPERTY(Category = Properties, EditDefaultsOnly)

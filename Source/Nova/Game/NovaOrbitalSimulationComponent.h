@@ -78,7 +78,7 @@ public:
 	/** Get the orbital data for an area */
 	TSharedPtr<FNovaOrbit> GetAreaOrbit(const UNovaArea* Area) const
 	{
-		return MakeShared<FNovaOrbit>(FNovaOrbitGeometry(Area->Planet, Area->Altitude, Area->Phase), FNovaTime());
+		return MakeShared<FNovaOrbit>(FNovaOrbitGeometry(Area->Body, Area->Altitude, Area->Phase), FNovaTime());
 	}
 
 	/** Get an area's location */

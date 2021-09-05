@@ -195,7 +195,7 @@ protected:
 	----------------------------------------------------*/
 
 	/** Draw a planet */
-	void AddPlanet(const FVector2D& Pos, const class UNovaPlanet* Planet);
+	void AddPlanet(const FVector2D& Pos, const class UNovaCelestialBody* Planet);
 
 	/** Draw a trajectory */
 	void AddTrajectory(const FVector2D& Position, const struct FNovaTrajectory& Trajectory, const struct FNovaSpacecraft* Spacecraft,

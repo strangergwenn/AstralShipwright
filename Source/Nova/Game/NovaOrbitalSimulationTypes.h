@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "NovaArea.h"
 #include "NovaGameTypes.h"
 
 #include "NovaOrbitalSimulationTypes.generated.h"
@@ -12,25 +11,99 @@
     Simulation structures
 ----------------------------------------------------*/
 
+/** Large number type for planetary values */
+USTRUCT()
+struct FNovaLargeNumber
+{
+	GENERATED_BODY()
+
+	double GetValue() const
+	{
+		return static_cast<double>(Value) * FMath::Pow(10, static_cast<double>(Exponent));
+	}
+
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	float Value;
+
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	float Exponent;
+};
+
+/** Planet description */
+UCLASS(ClassGroup = (Nova))
+class UNovaCelestialBody : public UNovaAssetDescription
+{
+	GENERATED_BODY()
+
+public:
+	/** Get the mass of the planet in kg */
+	double GetMass() const
+	{
+		return Mass.GetValue();
+	}
+
+	/** Get the gravitational parameter in m3/s² */
+	double GetGravitationalParameter() const
+	{
+		constexpr double GravitationalConstant = 6.674e-11;
+		return GravitationalConstant * GetMass();
+	}
+
+	/** Get a radius value in meters from altitude above ground in km */
+	double GetRadius(float CurrentAltitude) const
+	{
+		return (static_cast<double>(Radius) + static_cast<double>(CurrentAltitude)) * 1000.0;
+	}
+
+public:
+	// Orbital map brush
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	FSlateBrush Image;
+
+	// Body radius in km
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	float Radius;
+
+	// Mass in kg with exponent stored separately
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	FNovaLargeNumber Mass;
+
+	// Body orbited
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	const class UNovaCelestialBody* Body;
+
+	// Altitude in kilometers
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	FNovaLargeNumber Altitude;
+
+	// Initial phase on the orbit in degrees
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	float Phase;
+
+	// Name to look for in the planetarium
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	FName PlanetariumName;
+};
+
 /** Data for a stable orbit that might be a circular, elliptical or Hohmann transfer orbit */
 USTRUCT(Atomic)
 struct FNovaOrbitGeometry
 {
 	GENERATED_BODY()
 
-	FNovaOrbitGeometry() : Planet(nullptr), StartAltitude(0), OppositeAltitude(0), StartPhase(0), EndPhase(0)
+	FNovaOrbitGeometry() : Body(nullptr), StartAltitude(0), OppositeAltitude(0), StartPhase(0), EndPhase(0)
 	{}
 
-	FNovaOrbitGeometry(const UNovaPlanet* P, float SA, float SP)
-		: Planet(P), StartAltitude(SA), OppositeAltitude(SA), StartPhase(SP), EndPhase(SP + 360)
+	FNovaOrbitGeometry(const UNovaCelestialBody* P, float SA, float SP)
+		: Body(P), StartAltitude(SA), OppositeAltitude(SA), StartPhase(SP), EndPhase(SP + 360)
 	{
-		NCHECK(Planet != nullptr);
+		NCHECK(::IsValid(Body));
 	}
 
-	FNovaOrbitGeometry(const UNovaPlanet* P, float SA, float EA, float SP, float EP)
-		: Planet(P), StartAltitude(SA), OppositeAltitude(EA), StartPhase(SP), EndPhase(EP)
+	FNovaOrbitGeometry(const UNovaCelestialBody* P, float SA, float EA, float SP, float EP)
+		: Body(P), StartAltitude(SA), OppositeAltitude(EA), StartPhase(SP), EndPhase(EP)
 	{
-		NCHECK(Planet != nullptr);
+		NCHECK(::IsValid(Body));
 	}
 
 	bool operator==(const FNovaOrbitGeometry& Other) const
@@ -47,7 +120,7 @@ struct FNovaOrbitGeometry
 	/** Check for validity */
 	bool IsValid() const
 	{
-		return ::IsValid(Planet) && StartAltitude > 0 && OppositeAltitude > 0 && StartPhase >= 0 && EndPhase > 0 && StartPhase < EndPhase;
+		return ::IsValid(Body) && StartAltitude > 0 && OppositeAltitude > 0 && StartPhase >= 0 && EndPhase > 0 && StartPhase < EndPhase;
 	}
 
 	/** Check whether this geometry is circular */
@@ -65,10 +138,10 @@ struct FNovaOrbitGeometry
 	/** Compute the period of this orbit geometry */
 	FNovaTime GetOrbitalPeriod() const
 	{
-		NCHECK(Planet);
-		const double RadiusA = Planet->GetRadius(StartAltitude);
-		const double RadiusB = Planet->GetRadius(OppositeAltitude);
-		const double µ       = Planet->GetGravitationalParameter();
+		NCHECK(::IsValid(Body));
+		const double RadiusA = Body->GetRadius(StartAltitude);
+		const double RadiusB = Body->GetRadius(OppositeAltitude);
+		const double µ       = Body->GetGravitationalParameter();
 
 		const float SemiMajorAxis = 0.5f * (RadiusA + RadiusB);
 		return FNovaTime::FromMinutes(2.0 * PI * sqrt(pow(SemiMajorAxis, 3.0) / µ) / 60.0);
@@ -78,7 +151,7 @@ struct FNovaOrbitGeometry
 	template <bool Unwind>
 	double GetCurrentPhase(FNovaTime DeltaTime) const
 	{
-		NCHECK(Planet);
+		NCHECK(Body);
 		const double PhaseDelta = (DeltaTime / GetOrbitalPeriod()) * 360;
 		double       Result     = StartPhase + (Unwind ? FMath::Fmod(PhaseDelta, 360.0) : PhaseDelta);
 
@@ -91,7 +164,7 @@ struct FNovaOrbitGeometry
 	}
 
 	UPROPERTY()
-	const UNovaPlanet* Planet;
+	const UNovaCelestialBody* Body;
 
 	UPROPERTY()
 	float StartAltitude;
@@ -117,7 +190,7 @@ struct FNovaOrbit
 
 	FNovaOrbit(const FNovaOrbitGeometry& G, FNovaTime T) : Geometry(G), InsertionTime(T)
 	{
-		NCHECK(Geometry.Planet != nullptr);
+		NCHECK(Geometry.Body != nullptr);
 	}
 
 	bool operator==(const FNovaOrbit& Other) const

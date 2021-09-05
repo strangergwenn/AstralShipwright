@@ -59,8 +59,8 @@ struct FNovaTrajectoryParameters
 	double        DestinationPhase;
 	TArray<FGuid> SpacecraftIdentifiers;
 
-	const UNovaPlanet* Planet;
-	double             µ;
+	const UNovaCelestialBody* Body;
+	double                    µ;
 };
 
 /** Results of a maneuver on a fleet of spacecraft */
@@ -192,7 +192,7 @@ TSharedPtr<FNovaTrajectoryParameters> UNovaOrbitalSimulationComponent::PrepareTr
 	NCHECK(Source->IsValid() && Destination->IsValid());
 	NCHECK(*Source.Get() != *Destination.Get());
 	NCHECK(Destination->Geometry.IsCircular());
-	NCHECK(Source->Geometry.Planet == Destination->Geometry.Planet);
+	NCHECK(Source->Geometry.Body == Destination->Geometry.Body);
 	NCHECK(SpacecraftIdentifiers.Num() > 0);
 
 	// Get basic parameters
@@ -203,8 +203,8 @@ TSharedPtr<FNovaTrajectoryParameters> UNovaOrbitalSimulationComponent::PrepareTr
 	Parameters->SpacecraftIdentifiers = SpacecraftIdentifiers;
 
 	// Get orbital parameters
-	Parameters->Planet = Source->Geometry.Planet;
-	Parameters->µ      = Source->Geometry.Planet->GetGravitationalParameter();
+	Parameters->Body = Source->Geometry.Body;
+	Parameters->µ    = Source->Geometry.Body->GetGravitationalParameter();
 
 	return Parameters;
 }
@@ -239,10 +239,10 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	}
 
 	// Get orbital parameters
-	const double R1A = Parameters->Planet->GetRadius(SourceAltitudeA);
-	const double R1B = Parameters->Planet->GetRadius(SourceAltitudeB);
-	const double R2  = Parameters->Planet->GetRadius(PhasingAltitude);
-	const double R3  = Parameters->Planet->GetRadius(DestinationAltitude);
+	const double R1A = Parameters->Body->GetRadius(SourceAltitudeA);
+	const double R1B = Parameters->Body->GetRadius(SourceAltitudeB);
+	const double R2  = Parameters->Body->GetRadius(PhasingAltitude);
+	const double R3  = Parameters->Body->GetRadius(DestinationAltitude);
 
 	// Compute both Hohmann transfers as well as the orbital periods
 	const FNovaHohmannTransfer TransferA(Parameters->µ, R1A, R1B, R2);
@@ -280,7 +280,7 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	if (FirstTransferIsValid)
 	{
 		Trajectory->Add(FNovaOrbit(
-			FNovaOrbitGeometry(Parameters->Planet, SourceAltitudeA, PhasingAltitude, CurrentPhase, CurrentPhase + 180), CurrentTime));
+			FNovaOrbitGeometry(Parameters->Body, SourceAltitudeA, PhasingAltitude, CurrentPhase, CurrentPhase + 180), CurrentTime));
 	}
 	CurrentPhase += 180;
 
@@ -296,7 +296,7 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	if (FirstTransferIsValid)
 	{
 		Trajectory->Add(
-			FNovaOrbit(FNovaOrbitGeometry(Parameters->Planet, PhasingAltitude, PhasingAltitude, CurrentPhase, CurrentPhase + PhasingAngle),
+			FNovaOrbit(FNovaOrbitGeometry(Parameters->Body, PhasingAltitude, PhasingAltitude, CurrentPhase, CurrentPhase + PhasingAngle),
 				CurrentTime));
 	}
 	CurrentTime += PhasingDuration;
@@ -319,7 +319,7 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 
 	// Second transfer
 	Trajectory->Add(FNovaOrbit(
-		FNovaOrbitGeometry(Parameters->Planet, PhasingAltitude, DestinationAltitude, CurrentPhase, CurrentPhase + 180), CurrentTime));
+		FNovaOrbitGeometry(Parameters->Body, PhasingAltitude, DestinationAltitude, CurrentPhase, CurrentPhase + 180), CurrentTime));
 	FleetManeuver = Fleet.AddManeuver(TransferB.EndDeltaV);
 	CurrentPhase += 180;
 
