@@ -4,7 +4,7 @@
 
 #include "EngineMinimal.h"
 #include "NovaGameTypes.h"
-#include "NovaOrbitalSimulatioNTypes.h"
+#include "NovaOrbitalSimulationTypes.h"
 #include "NovaArea.generated.h"
 
 /*----------------------------------------------------
