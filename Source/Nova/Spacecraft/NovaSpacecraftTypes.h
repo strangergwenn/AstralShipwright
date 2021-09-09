@@ -42,7 +42,8 @@ UENUM()
 enum class ENovaHullType : uint8
 {
 	None,
-	SoftCladding
+	SoftCladding,
+	Stealth
 };
 
 /** Possible construction element types */
@@ -261,7 +262,7 @@ public:
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> MainStructure = nullptr;
 
-	// Skirt structural element
+	// Skirt structural element // TODO REVIEW
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> OuterStructure = nullptr;
 
@@ -285,11 +286,15 @@ public:
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> ConnectionWiring = nullptr;
 
-	// Decorative outer hull
+	// Decorative outer hull - soft mesh
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> MainHull = nullptr;
+	TSoftObjectPtr<class UStaticMesh> SoftHull = nullptr;
 
-	// Decorative outer hull (skirt)
+	// Decorative outer hull - rigid variant
+	UPROPERTY(Category = Elements, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> RigidHull = nullptr;
+
+	// Decorative outer hull (skirt) // TODO REVIEW
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> OuterHull = nullptr;
 

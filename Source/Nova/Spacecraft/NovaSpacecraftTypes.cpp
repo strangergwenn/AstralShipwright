@@ -93,7 +93,18 @@ TArray<const FNovaEquipmentSlot*> UNovaCompartmentDescription::GetGroupedEquipme
 
 TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetMainHull(const UNovaHullDescription* Hull) const
 {
-	return IsValid(Hull) ? MainHull : nullptr;
+	if (!IsValid(Hull))
+	{
+		return nullptr;
+	}
+	else if (Hull->Type == ENovaHullType::SoftCladding)
+	{
+		return SoftHull;
+	}
+	else
+	{
+		return RigidHull;
+	}
 }
 
 TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetOuterHull(const UNovaHullDescription* Hull) const
