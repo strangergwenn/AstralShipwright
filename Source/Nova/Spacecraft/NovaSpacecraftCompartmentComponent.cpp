@@ -13,6 +13,7 @@
 
 #include "Components/PrimitiveComponent.h"
 #include "Components/DecalComponent.h"
+#include "Animation/AnimSingleNodeInstance.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
 #define LOCTEXT_NAMESPACE "UNovaSpacecraftCompartmentComponent"
@@ -440,16 +441,20 @@ void UNovaSpacecraftCompartmentComponent::AttachElementToSocket(
 
 void UNovaSpacecraftCompartmentComponent::SetElementAnimation(FNovaAssemblyElement& Element, TSoftObjectPtr<UAnimationAsset> Animation)
 {
-	if (Element.Mesh)
+	UNovaSkeletalMeshComponent* SkeletalComponent = Cast<UNovaSkeletalMeshComponent>(Element.Mesh);
+	if (IsValid(SkeletalComponent))
 	{
-		UNovaSkeletalMeshComponent* SkeletalComponent = Cast<UNovaSkeletalMeshComponent>(Element.Mesh);
-
-		if (SkeletalComponent && SkeletalComponent->GetAnimInstance() == nullptr)
+		UAnimSingleNodeInstance* AnimInstance = SkeletalComponent->GetSingleNodeInstance();
+		if (!IsValid(AnimInstance))
 		{
 			SkeletalComponent->SetAnimationMode(EAnimationMode::AnimationSingleNode);
-			SkeletalComponent->SetAnimation(Animation.Get());
-			SkeletalComponent->Play(false);
+			AnimInstance = SkeletalComponent->GetSingleNodeInstance();
+			NCHECK(AnimInstance);
 		}
+
+		AnimInstance->SetAnimationAsset(Animation.Get(), false);
+		AnimInstance->SetPlaying(true);
+		AnimInstance->SetPosition(ImmediateMode ? AnimInstance->GetLength() : 0.0f);
 	}
 }
 

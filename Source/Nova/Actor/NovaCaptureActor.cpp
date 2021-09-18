@@ -225,13 +225,10 @@ void ANovaCaptureActor::CreateRenderTarget()
 
 void ANovaCaptureActor::ConfigureScene(const FNovaAssetPreviewSettings& Settings)
 {
-	FVector CurrentOrigin = FVector::ZeroVector;
-	FVector CurrentExtent = FVector::ZeroVector;
-
 	NCHECK(PreviewActor);
 
 	// Compute bounds
-	FBox Bounds(ForceInit);
+	FSphere Bounds(ForceInit);
 	PreviewActor->ForEachComponent<UPrimitiveComponent>(false,
 		[&](const UPrimitiveComponent* Prim)
 		{
@@ -245,30 +242,23 @@ void ANovaCaptureActor::ConfigureScene(const FNovaAssetPreviewSettings& Settings
 
 				if (IsValidPrimitive)
 				{
-					Bounds += Prim->Bounds.GetBox();
+					Bounds += Prim->Bounds.GetSphere();
 				}
 			}
 		});
-	Bounds.GetCenterAndExtents(CurrentOrigin, CurrentExtent);
 
 	// Compute camera offset
-	const float HalfFOVRadians     = FMath::DegreesToRadians(CameraCapture->FOVAngle / 2.0f);
-	const float DistanceFromSphere = FMath::Max(CurrentExtent.Size(), 2.0f * CurrentExtent.Z) / FMath::Tan(HalfFOVRadians);
-	FVector     ProjectedOffset    = FVector(-3.0f * DistanceFromSphere, 0, 0);
+	const FVector CurrentOrigin      = Bounds.Center;
+	const float   HalfFOVRadians     = FMath::DegreesToRadians(CameraCapture->FOVAngle / 2.0f);
+	const float   DistanceFromSphere = Bounds.W / FMath::Tan(HalfFOVRadians);
+	const FVector ProjectedOffset    = FVector(-3.5f * DistanceFromSphere, 0, 0);
 
 	// Apply offset
-	CameraArmComponent->SetRelativeLocation(FVector(CurrentOrigin.X, 0, 0));
+	CameraArmComponent->SetWorldLocation(CurrentOrigin);
 	CameraCapture->SetRelativeLocation(ProjectedOffset);
-	PreviewActor->SetActorLocation(GetActorLocation() + Settings.Offset);
+	PreviewActor->SetActorRelativeLocation(Settings.Offset);
 	PreviewActor->SetActorRelativeRotation(Settings.Rotation);
 	PreviewActor->SetActorScale3D(Settings.Scale * FVector(1.0f, 1.0f, 1.0f));
-
-	// Set lights
-	PreviewActor->ForEachComponent<USpotLightComponent>(false,
-		[&](USpotLightComponent* SpotLight)
-		{
-			SpotLight->SetLightBrightness(Settings.UsePowerfulLight ? 10000000 : 500000);
-		});
 }
 
 UTexture2D* ANovaCaptureActor::SaveTexture(FString TextureName)

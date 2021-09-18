@@ -416,7 +416,7 @@ public:
 
 	// Preview scale for the asset render
 	UPROPERTY(Category = Preview, EditDefaultsOnly)
-	float PreviewScale = 4.25f;
+	float PreviewScale = 5.0f;
 
 #endif    // WITH_EDITORONLY_DATA
 };
