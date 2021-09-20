@@ -66,7 +66,15 @@ public:
 	template <typename T>
 	const T* GetDefaultAsset() const
 	{
-		return Cast<T>(DefaultAssets[T::StaticClass()]);
+		const auto Entry = DefaultAssets.Find(T::StaticClass());
+		if (Entry)
+		{
+			return Cast<T>(*Entry);
+		}
+		else
+		{
+			return nullptr;
+		}
 	}
 
 	/** Load an asset asynchronously */
