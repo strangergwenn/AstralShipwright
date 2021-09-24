@@ -215,6 +215,9 @@ protected:
 	/** Add test orbits */
 	void AddTestOrbits();
 
+	/** Add debug elements */
+	void AddDebugDisplay();
+
 	/** Interpolate a spline, returning the point at Alpha (0-1) over the spline defined by P0..P3 */
 	static FVector2D DeCasteljauInterp(const FVector2D& P0, const FVector2D& P1, const FVector2D& P2, const FVector2D& P3, float Alpha)
 	{

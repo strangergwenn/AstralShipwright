@@ -141,6 +141,10 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 		BatchedPoints.AddUnique(Point);
 	}
 
+#if 1
+	AddDebugDisplay();
+#endif
+
 #endif
 }
 
@@ -669,6 +673,34 @@ void SNovaOrbitalMap::AddTestOrbits()
 	AddTransferOrbit(Origin, 300, 250, 135, 0, Objects, FNovaSplineStyle(FLinearColor::Blue));
 	AddPartialCircularOrbit(Origin, 250, 135 + 180, 0, 45, Objects, FNovaSplineStyle(FLinearColor::Blue));
 	AddTransferOrbit(Origin, 250, 450, 135 + 180 + 45, 0, Objects, FNovaSplineStyle(FLinearColor::Blue));
+}
+
+void SNovaOrbitalMap::AddDebugDisplay()
+{
+	auto addDebugPoint = [&](FVector2D Position, FText Name, FLinearColor Color = FLinearColor::Green)
+	{
+		FNovaBatchedPoint Point;
+		Point.Pos   = Position * CurrentDrawScale * 2.0;
+		Point.Color = Color;
+		Point.Scale = 1.0;
+		BatchedPoints.AddUnique(Point);
+	};
+
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+	if (IsValid(OrbitalSimulation))
+	{
+		// Show all areas
+		for (const auto& AreaAndLocation : OrbitalSimulation->GetAllAreasLocations())
+		{
+			addDebugPoint(AreaAndLocation.Value.GetCartesianLocation() / 2, AreaAndLocation.Key->Name);
+		}
+
+		// Show all players
+		for (const auto& SpacecraftAndLocation : OrbitalSimulation->GetAllSpacecraftLocations())
+		{
+			addDebugPoint(SpacecraftAndLocation.Value.GetCartesianLocation() / 2, FText::FromString(SpacecraftAndLocation.Key.ToString()));
+		}
+	}
 }
 
 /*----------------------------------------------------
