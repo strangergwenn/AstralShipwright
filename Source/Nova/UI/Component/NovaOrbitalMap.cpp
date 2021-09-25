@@ -26,15 +26,12 @@ struct FNovaSplineOrbit
 		: Origin(Orig), Width(R), Height(R), Phase(0), InitialAngle(0), AngularLength(360), OriginOffset(0)
 	{}
 
-	FNovaSplineOrbit(const FVector2D& Orig, float W, float H, float P) : FNovaSplineOrbit(Orig, W)
-	{
-		Height = H;
-		Phase  = P;
-	}
-
 	FNovaSplineOrbit(const FVector2D& Orig, float W, float H, float P, float Initial, float Length, float Offset)
-		: FNovaSplineOrbit(Orig, W, H, P)
 	{
+		Origin        = Orig;
+		Width         = W;
+		Height        = H;
+		Phase         = P;
 		InitialAngle  = Initial;
 		AngularLength = Length;
 		OriginOffset  = Offset;
