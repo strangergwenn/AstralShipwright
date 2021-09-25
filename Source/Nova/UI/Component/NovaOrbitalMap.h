@@ -68,25 +68,25 @@ struct FNovaBatchedText
 /** Point of interest on the map */
 struct FNovaOrbitalObject
 {
-	FNovaOrbitalObject() : Area(nullptr), SpacecraftIdentifier(FGuid()), Maneuver(nullptr), Positioned(false)
+	FNovaOrbitalObject() : Area(nullptr), SpacecraftIdentifier(FGuid()), Maneuver(nullptr)
 	{}
 
-	FNovaOrbitalObject(const class UNovaArea* A, float P) : FNovaOrbitalObject()
+	FNovaOrbitalObject(const class UNovaArea* A, const FVector2D& P) : FNovaOrbitalObject()
 	{
-		Area  = A;
-		Phase = P;
+		Area     = A;
+		Position = P;
 	}
 
-	FNovaOrbitalObject(const FGuid& S, float P) : FNovaOrbitalObject()
+	FNovaOrbitalObject(const FGuid& S, const FVector2D& P) : FNovaOrbitalObject()
 	{
 		SpacecraftIdentifier = S;
-		Phase                = P;
+		Position             = P;
 	}
 
-	FNovaOrbitalObject(const FNovaManeuver& M) : FNovaOrbitalObject()
+	FNovaOrbitalObject(const FNovaManeuver& M, const FVector2D& P) : FNovaOrbitalObject()
 	{
 		Maneuver = MakeShared<FNovaManeuver>(M);
-		Phase    = M.Phase;
+		Position = P;
 	}
 
 	bool operator==(const FNovaOrbitalObject& Other) const
@@ -104,11 +104,7 @@ struct FNovaOrbitalObject
 	FGuid                                 SpacecraftIdentifier;
 	TSharedPtr<FNovaManeuver>             Maneuver;
 
-	// Generated data
-	float Phase;
-
-	// Positioning
-	bool      Positioned;
+	// Position
 	FVector2D Position;
 };
 
@@ -206,11 +202,10 @@ protected:
 		const struct FNovaSplineStyle& Style, float InitialPhase = 0.0f);
 
 	/** Draw an orbit based on processed 2D parameters */
-	TPair<FVector2D, FVector2D> AddOrbitInternal(
-		const struct FNovaSplineOrbit& Orbit, TArray<FNovaOrbitalObject>& Objects, const struct FNovaSplineStyle& Style);
+	TPair<FVector2D, FVector2D> AddOrbitInternal(const struct FNovaSplineOrbit& Orbit, const struct FNovaSplineStyle& Style);
 
 	/** Draw an interactive orbital object on the map */
-	void AddOrbitalObject(const FNovaOrbitalObject& Object, const FLinearColor& Color);
+	void AddOrbitalObject(FNovaOrbitalObject Object, const FLinearColor& Color);
 
 	/** Interpolate a spline, returning the point at Alpha (0-1) over the spline defined by P0..P3 */
 	static FVector2D DeCasteljauInterp(const FVector2D& P0, const FVector2D& P1, const FVector2D& P2, const FVector2D& P3, float Alpha)
