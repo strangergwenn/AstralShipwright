@@ -119,10 +119,6 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	CurrentPosition.Y = FMath::Clamp(CurrentPosition.Y, PositionFreedom * -HalfLocalSize.Y, PositionFreedom * HalfLocalSize.Y);
 	CurrentOrigin     = HalfLocalSize + CurrentPosition;
 
-#if 0
-	AddTestOrbits();
-#else
-
 	// Run orbital map processes
 	AddPlanet(Origin, DefaultPlanet);
 	ProcessAreas(Origin);
@@ -140,12 +136,6 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 		Point.Scale = 0.25;
 		BatchedPoints.AddUnique(Point);
 	}
-
-#if 1
-	AddDebugDisplay();
-#endif
-
-#endif
 }
 
 void SNovaOrbitalMap::ShowTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, bool Immediate)
@@ -447,27 +437,28 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbit(const FVector2D& Position,
 
 void SNovaOrbitalMap::AddOrbitalObject(const FNovaOrbitalObject& Object, const FLinearColor& Color)
 {
+	// Check for hover
+	float HoverRadius = 50;
 	bool  IsObjectHovered;
-	float Radius = 50;
-
 	if (MenuManager->IsUsingGamepad())
 	{
-		IsObjectHovered = (CurrentOrigin + Object.Position - GetTickSpaceGeometry().GetLocalSize() / 2).Size() < Radius;
+		IsObjectHovered = (CurrentOrigin + Object.Position - GetTickSpaceGeometry().GetLocalSize() / 2).Size() < HoverRadius;
 	}
 	else
 	{
 		IsObjectHovered =
 			(CurrentOrigin + Object.Position - GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos())).Size() <
-			Radius;
+			HoverRadius;
 	}
 
+	// Add the point
 	FNovaBatchedPoint Point;
 	Point.Pos   = Object.Position;
 	Point.Color = Color;
 	Point.Scale = IsObjectHovered ? 2.0f : 1.5f;
-
 	BatchedPoints.AddUnique(Point);
 
+	// Add the text
 	if (Object.Area.IsValid())
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
@@ -634,73 +625,6 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(
 	}
 
 	return TPair<FVector2D, FVector2D>(InitialPosition, FinalPosition);
-}
-
-void SNovaOrbitalMap::AddTestOrbits()
-{
-	FVector2D Origin = FVector2D(0, 0);
-
-	auto AddCircularOrbit = [&](const FVector2D& Position, float Radius, TArray<FNovaOrbitalObject>& Objects, const FNovaSplineStyle& Style)
-	{
-		AddOrbitInternal(FNovaSplineOrbit(Position, Radius), Objects, Style);
-	};
-
-	auto AddPartialCircularOrbit = [&](const FVector2D& Position, float Radius, float Phase, float InitialAngle, float AngularLength,
-									   TArray<FNovaOrbitalObject>& Objects, const FNovaSplineStyle& Style)
-	{
-		AddOrbitInternal(FNovaSplineOrbit(Position, Radius, Radius, Phase, InitialAngle, AngularLength, 0.0f), Objects, Style);
-	};
-
-	auto AddTransferOrbit = [&](const FVector2D& Position, float RadiusA, float RadiusB, float Phase, float InitialAngle,
-								TArray<FNovaOrbitalObject>& Objects, const FNovaSplineStyle& Style)
-	{
-		float MajorAxis = 0.5f * (RadiusA + RadiusB);
-		float MinorAxis = FMath::Sqrt(RadiusA * RadiusB);
-
-		TPair<FVector2D, FVector2D> InitialAndFinalPosition = AddOrbitInternal(
-			FNovaSplineOrbit(Position, MajorAxis, MinorAxis, Phase, InitialAngle, 180, 0.5f * (RadiusB - RadiusA)), Objects, Style);
-	};
-
-	TArray<FNovaOrbitalObject> Objects;
-
-	AddCircularOrbit(Origin, 300, Objects, FNovaSplineStyle(FLinearColor::White));
-	AddCircularOrbit(Origin, 450, Objects, FNovaSplineStyle(FLinearColor::White));
-	AddTransferOrbit(Origin, 300, 450, 45, 0, Objects, FNovaSplineStyle(FLinearColor::Red));
-
-	AddTransferOrbit(Origin, 300, 500, 90, 0, Objects, FNovaSplineStyle(FLinearColor::Green));
-	AddTransferOrbit(Origin, 500, 450, 180 + 90, 0, Objects, FNovaSplineStyle(FLinearColor::Green));
-
-	AddTransferOrbit(Origin, 300, 250, 135, 0, Objects, FNovaSplineStyle(FLinearColor::Blue));
-	AddPartialCircularOrbit(Origin, 250, 135 + 180, 0, 45, Objects, FNovaSplineStyle(FLinearColor::Blue));
-	AddTransferOrbit(Origin, 250, 450, 135 + 180 + 45, 0, Objects, FNovaSplineStyle(FLinearColor::Blue));
-}
-
-void SNovaOrbitalMap::AddDebugDisplay()
-{
-	auto addDebugPoint = [&](FVector2D Position, FText Name, FLinearColor Color = FLinearColor::Green)
-	{
-		FNovaBatchedPoint Point;
-		Point.Pos   = Position * CurrentDrawScale * 2.0;
-		Point.Color = Color;
-		Point.Scale = 1.0;
-		BatchedPoints.AddUnique(Point);
-	};
-
-	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-	if (IsValid(OrbitalSimulation))
-	{
-		// Show all areas
-		for (const auto& AreaAndLocation : OrbitalSimulation->GetAllAreasLocations())
-		{
-			addDebugPoint(AreaAndLocation.Value.GetCartesianLocation() / 2, AreaAndLocation.Key->Name);
-		}
-
-		// Show all players
-		for (const auto& SpacecraftAndLocation : OrbitalSimulation->GetAllSpacecraftLocations())
-		{
-			addDebugPoint(SpacecraftAndLocation.Value.GetCartesianLocation() / 2, FText::FromString(SpacecraftAndLocation.Key.ToString()));
-		}
-	}
 }
 
 /*----------------------------------------------------
