@@ -198,11 +198,11 @@ protected:
 		float Progress, const struct FNovaSplineStyle& OrbitStyle, const struct FNovaSplineStyle& ManeuverStyle);
 
 	/** Draw an orbit */
-	TPair<FVector2D, FVector2D> AddOrbit(const FVector2D& Position, const FNovaOrbitGeometry& Geometry, TArray<FNovaOrbitalObject>& Objects,
-		const struct FNovaSplineStyle& Style, float InitialPhase = 0.0f);
+	bool AddOrbit(const FVector2D& Position, const TSharedPtr<FVector2D>& StartPosition, const FNovaOrbitGeometry& Geometry,
+		TArray<FNovaOrbitalObject>& Objects, const struct FNovaSplineStyle& Style, float InitialPhase = 0.0f);
 
 	/** Draw an orbit based on processed 2D parameters */
-	TPair<FVector2D, FVector2D> AddOrbitInternal(const struct FNovaSplineOrbit& Orbit, const struct FNovaSplineStyle& Style);
+	bool AddOrbitInternal(const struct FNovaSplineOrbit& Orbit, const struct FNovaSplineStyle& Style);
 
 	/** Draw an interactive orbital object on the map */
 	void AddOrbitalObject(FNovaOrbitalObject Object, const FLinearColor& Color);

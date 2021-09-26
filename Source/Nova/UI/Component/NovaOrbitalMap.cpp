@@ -26,9 +26,11 @@ struct FNovaSplineOrbit
 		: Origin(Orig), Width(R), Height(R), Phase(0), InitialAngle(0), AngularLength(360), OriginOffset(0)
 	{}
 
-	FNovaSplineOrbit(const FVector2D& Orig, float W, float H, float P, float Initial, float Length, float Offset)
+	FNovaSplineOrbit(
+		const FVector2D& Orig, const TSharedPtr<FVector2D>& SP, float W, float H, float P, float Initial, float Length, float Offset)
 	{
 		Origin        = Orig;
+		StartPosition = SP;
 		Width         = W;
 		Height        = H;
 		Phase         = P;
@@ -37,13 +39,14 @@ struct FNovaSplineOrbit
 		OriginOffset  = Offset;
 	}
 
-	FVector2D Origin;
-	float     Width;
-	float     Height;
-	float     Phase;
-	float     InitialAngle;
-	float     AngularLength;
-	float     OriginOffset;
+	FVector2D             Origin;
+	TSharedPtr<FVector2D> StartPosition;
+	float                 Width;
+	float                 Height;
+	float                 Phase;
+	float                 InitialAngle;
+	float                 AngularLength;
+	float                 OriginOffset;
 };
 
 /** Orbit drawing style */
@@ -262,7 +265,7 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 	// Draw merged orbits
 	for (FNovaMergedOrbitGeometry& Geometry : MergedOrbitGeometries)
 	{
-		AddOrbit(Origin, Geometry, Geometry.Objects, AreaStyle);
+		AddOrbit(Origin, nullptr, Geometry, Geometry.Objects, AreaStyle);
 	}
 }
 
@@ -292,7 +295,7 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 
 			Objects.Add(FNovaOrbitalObject(Identifier, Location.GetCartesianLocation()));
 
-			AddOrbit(Origin, Location.Geometry, Objects, SpacecraftStyle);
+			AddOrbit(Origin, nullptr, Location.Geometry, Objects, SpacecraftStyle);
 			CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Location.Geometry.GetHighestAltitude());
 		}
 	}
@@ -381,7 +384,10 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 {
 	NCHECK(Trajectory.IsValid());
 
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+
 	// Prepare our work
+	TSharedPtr<FVector2D>     AbsolutePosition;
 	float                     CurrentSpacecraftPhase = 0;
 	const TArray<FNovaOrbit>& Transfers              = Trajectory.Transfers;
 	float CurrentProgressPhase = FMath::Lerp(Transfers[0].Geometry.StartPhase, Transfers[Transfers.Num() - 1].Geometry.EndPhase, Progress);
@@ -390,8 +396,7 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 	TArray<FNovaOrbitalObject> Objects;
 	if (Spacecraft)
 	{
-		UNovaOrbitalSimulationComponent* OrbitalSimulation  = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-		const FNovaOrbitalLocation*      SpacecraftLocation = OrbitalSimulation->GetSpacecraftLocation(Spacecraft->Identifier);
+		const FNovaOrbitalLocation* SpacecraftLocation = OrbitalSimulation->GetSpacecraftLocation(Spacecraft->Identifier);
 
 		if (SpacecraftLocation)
 		{
@@ -399,7 +404,9 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 			NLOG("SNovaOrbitalMap::AddTrajectory : %s at phase %f ", *Spacecraft->Identifier.ToString(), SpacecraftLocation->Phase);
 #endif
 
-			Objects.Add(FNovaOrbitalObject(Spacecraft->Identifier, SpacecraftLocation->GetCartesianLocation()));
+			// Determine the absolute position
+			AbsolutePosition = MakeShared<FVector2D>(SpacecraftLocation->GetCartesianLocation());
+			Objects.Add(FNovaOrbitalObject(Spacecraft->Identifier, *AbsolutePosition));
 
 			// Determine the physical angle
 			const FVector2D RelativePosition = SpacecraftLocation->GetCartesianLocation<false>();
@@ -437,6 +444,14 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 	{
 		FNovaOrbitGeometry Geometry = Transfer.Geometry;
 
+		// Detect the starting point
+		TSharedPtr<FVector2D> StartPosition;
+		if (OrbitalSimulation->GetCurrentTime() > Transfer.InsertionTime)
+		{
+			StartPosition = AbsolutePosition;
+		}
+
+		// Detect the final transfer
 		bool SkipRemainingTransfers = false;
 		if (CurrentProgressPhase < Geometry.EndPhase)
 		{
@@ -444,7 +459,10 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 			SkipRemainingTransfers = true;
 		}
 
-		AddOrbit(Position, Geometry, Objects, OrbitStyle, CurrentSpacecraftPhase);
+		if (AddOrbit(Position, StartPosition, Geometry, Objects, OrbitStyle, CurrentSpacecraftPhase) && StartPosition)
+		{
+			AbsolutePosition = nullptr;
+		}
 
 		if (SkipRemainingTransfers)
 		{
@@ -453,8 +471,7 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 	}
 
 	// Get maneuvers
-	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-	TArray<FNovaOrbitalObject>       ManeuverObjects;
+	TArray<FNovaOrbitalObject> ManeuverObjects;
 	for (const FNovaManeuver& Maneuver : Trajectory.Maneuvers)
 	{
 		if (Maneuver.Time + Maneuver.Duration > OrbitalSimulation->GetCurrentTime())
@@ -475,13 +492,14 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 
 			if (CurrentProgressPhase > Maneuver.Phase && Maneuver.Phase < ManeuverGeometry.EndPhase)
 			{
-				AddOrbit(Position, ManeuverGeometry, ManeuverObjects, ManeuverStyle, FMath::Max(Maneuver.Phase, CurrentSpacecraftPhase));
+				AddOrbit(Position, nullptr, ManeuverGeometry, ManeuverObjects, ManeuverStyle,
+					FMath::Max(Maneuver.Phase, CurrentSpacecraftPhase));
 			}
 		}
 	}
 }
 
-TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbit(const FVector2D& Position, const FNovaOrbitGeometry& Geometry,
+bool SNovaOrbitalMap::AddOrbit(const FVector2D& Position, const TSharedPtr<FVector2D>& StartPosition, const FNovaOrbitGeometry& Geometry,
 	TArray<FNovaOrbitalObject>& Objects, const FNovaSplineStyle& Style, float InitialPhase)
 {
 	const FVector2D LocalPosition = Position * CurrentDrawScale;
@@ -501,7 +519,7 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbit(const FVector2D& Position,
 	}
 
 	return AddOrbitInternal(
-		FNovaSplineOrbit(LocalPosition, SemiMajorAxis, SemiMinorAxis, Phase, InitialAngle, AngularLength, Offset), Style);
+		FNovaSplineOrbit(LocalPosition, StartPosition, SemiMajorAxis, SemiMinorAxis, Phase, InitialAngle, AngularLength, Offset), Style);
 }
 
 void SNovaOrbitalMap::AddOrbitalObject(FNovaOrbitalObject Object, const FLinearColor& Color)
@@ -547,16 +565,14 @@ void SNovaOrbitalMap::AddOrbitalObject(FNovaOrbitalObject Object, const FLinearC
 	}
 }
 
-TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(const FNovaSplineOrbit& Orbit, const FNovaSplineStyle& Style)
+bool SNovaOrbitalMap::AddOrbitInternal(const FNovaSplineOrbit& Orbit, const FNovaSplineStyle& Style)
 {
-	int32     RenderedSplineCount = 0;
-	FVector2D InitialPosition     = FVector2D::ZeroVector;
-	FVector2D FinalPosition       = FVector2D::ZeroVector;
+	int32 RenderedSplineCount = 0;
 
 	// Ignore orbits that are empty or completely erased by the initial angle
 	if (Orbit.AngularLength <= 0 || Orbit.InitialAngle > Orbit.AngularLength)
 	{
-		return TPair<FVector2D, FVector2D>(InitialPosition, FinalPosition);
+		return false;
 	}
 
 	// Strip orbits down to the minimum length to improve performance (Orbit.AngularLength can be +inf)
@@ -626,6 +642,11 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(const FNovaSplineO
 			P3 = ControlPoints[3];
 		}
 
+		if (RenderedSplineCount == 0 && Orbit.StartPosition)
+		{
+			P0 = CurrentDrawScale * (*Orbit.StartPosition);
+		}
+
 		// Batch the spline segment if we haven't done a full circle yet, including partial start & end segments
 		if (RenderedSplineCount < 6)
 		{
@@ -641,16 +662,10 @@ TPair<FVector2D, FVector2D> SNovaOrbitalMap::AddOrbitInternal(const FNovaSplineO
 			BatchedSplines.AddUnique(Spline);
 		}
 
-		// Report the initial and final positions
-		if (RenderedSplineCount == 0)
-		{
-			InitialPosition = P0;
-		}
-		FinalPosition = P3;
 		RenderedSplineCount++;
 	}
 
-	return TPair<FVector2D, FVector2D>(InitialPosition, FinalPosition);
+	return (RenderedSplineCount > 0);
 }
 
 /*----------------------------------------------------
