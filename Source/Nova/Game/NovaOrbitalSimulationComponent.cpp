@@ -455,6 +455,32 @@ void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& Sp
 	SetOrbit(SpacecraftIdentifiers, MakeShared<FNovaOrbit>(CommonFinalOrbit));
 }
 
+void UNovaOrbitalSimulationComponent::AbortTrajectory(const TArray<FGuid>& SpacecraftIdentifiers)
+{
+	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
+	NLOG("UNovaOrbitalSimulationComponent::AbortTrajectory for %d spacecraft", SpacecraftIdentifiers.Num());
+
+	FNovaOrbit CommonAbortOrbit;
+	bool       FoundCommonOrbit = false;
+
+	// Compute the final orbit and ensure all spacecraft are going there
+	for (const FGuid& Identifier : SpacecraftIdentifiers)
+	{
+		const FNovaTrajectory* Trajectory = SpacecraftTrajectoryDatabase.Get(Identifier);
+		if (Trajectory)
+		{
+			const FNovaOrbit AbortOrbit = FNovaOrbit(Trajectory->GetCurrentLocation(GetCurrentTime()).Geometry, GetCurrentTime());
+			NCHECK(!FoundCommonOrbit || AbortOrbit == CommonAbortOrbit);
+			FoundCommonOrbit = true;
+			CommonAbortOrbit = AbortOrbit;
+		}
+	}
+
+	// Commit the change
+	NCHECK(FoundCommonOrbit);
+	SetOrbit(SpacecraftIdentifiers, MakeShared<FNovaOrbit>(CommonAbortOrbit));
+}
+
 void UNovaOrbitalSimulationComponent::SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit)
 {
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);

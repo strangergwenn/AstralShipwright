@@ -614,7 +614,7 @@ void ANovaGameState::ProcessTrajectoryAbort()
 			}
 		}
 
-		OrbitalSimulationComponent->CompleteTrajectory(GetPlayerSpacecraftIdentifiers());
+		OrbitalSimulationComponent->AbortTrajectory(GetPlayerSpacecraftIdentifiers());
 		ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetGameInstance()->GetFirstLocalPlayerController());
 		PC->Notify(LOCTEXT("TrajectoryAborted", "Trajectory aborted"), AbortReason, ENovaNotificationType::Error);
 

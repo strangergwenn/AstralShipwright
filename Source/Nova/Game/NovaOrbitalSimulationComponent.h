@@ -62,6 +62,9 @@ public:
 	/** Complete the current trajectory of spacecraft */
 	void CompleteTrajectory(const TArray<FGuid>& SpacecraftIdentifiers);
 
+	/** Abort the current trajectory of spacecraft */
+	void AbortTrajectory(const TArray<FGuid>& SpacecraftIdentifiers);
+
 	/** Put spacecraft in a particular orbit */
 	void SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit);
 
