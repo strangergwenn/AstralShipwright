@@ -16,7 +16,7 @@
 #include "Components/DirectionalLightComponent.h"
 #include "Materials/MaterialInstanceConstant.h"
 
-#define CELESTIAL_SCALE 0.001
+#define CELESTIAL_SCALE 0.02
 
 /*----------------------------------------------------
     Constructor
@@ -26,6 +26,8 @@ ANovaPlanetarium::ANovaPlanetarium() : Super()
 {
 	// Settings
 	PrimaryActorTick.bCanEverTick = true;
+	bRelevantForLevelBounds       = false;
+	SetActorEnableCollision(false);
 }
 
 /*----------------------------------------------------
