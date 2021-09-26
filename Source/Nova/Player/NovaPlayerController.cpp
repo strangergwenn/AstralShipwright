@@ -553,7 +553,6 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 	{
 		// UI enabled states
 		case ENovaPlayerCameraState::Default:
-		case ENovaPlayerCameraState::Chase:
 			GetMenuManager()->OpenMenu(Action, Condition);
 			break;
 
@@ -609,9 +608,6 @@ void ANovaPlayerController::SetCameraState(ENovaPlayerCameraState State)
 {
 	CurrentCameraState       = State;
 	CurrentTimeInCameraState = 0;
-
-	// Handle chase mode
-	GetSpacecraftPawn()->SetChaseMode(State == ENovaPlayerCameraState::Chase);
 
 	// Handle the fast-forward camera
 	if (State == ENovaPlayerCameraState::FastForward)

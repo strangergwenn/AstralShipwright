@@ -20,7 +20,6 @@
 
 ANovaTurntablePawn::ANovaTurntablePawn()
 	: Super()
-	, ChaseMode(false)
 	, CurrentPanTarget(0)
 	, CurrentTiltTarget(0)
 	, CurrentPanAngle(0)
@@ -69,9 +68,8 @@ ANovaTurntablePawn::ANovaTurntablePawn()
 	NumDistanceFactorIncrements = 1;
 
 	// Camera control defaults
-	CameraMinTilt       = -80.0f;
-	CameraMaxTilt       = 20.0f;
-	CameraMaxChaseAngle = 20.0f;
+	CameraMinTilt = -80.0f;
+	CameraMaxTilt = 20.0f;
 }
 
 /*----------------------------------------------------
@@ -85,7 +83,7 @@ void ANovaTurntablePawn::BeginPlay()
 	Super::BeginPlay();
 
 	ResetView();
-	SetChaseMode(false);
+	CameraYawComponent->SetAbsolute(false, true, false);
 }
 
 void ANovaTurntablePawn::Tick(float DeltaTime)
@@ -133,23 +131,11 @@ void ANovaTurntablePawn::Tick(float DeltaTime)
 
 void ANovaTurntablePawn::ResetView()
 {
-	CurrentTiltAngle      = ChaseMode ? 0 : -45;
+	CurrentTiltAngle      = -45;
 	CurrentPanAngle       = 135;
 	CurrentDistance       = DefaultDistance;
 	CurrentDistanceFactor = DefaultDistanceFactor;
 	CurrentAnimationTime  = AnimationDuration;
-}
-
-void ANovaTurntablePawn::SetChaseMode(bool Enabled)
-{
-	CameraYawComponent->SetAbsolute(false, !Enabled, false);
-
-	if (ChaseMode != Enabled)
-	{
-		ChaseMode = Enabled;
-
-		ResetView();
-	}
 }
 
 TPair<FVector, FVector> ANovaTurntablePawn::GetTurntableBounds() const
@@ -198,24 +184,12 @@ void ANovaTurntablePawn::ProcessCamera(float DeltaTime)
 	CameraFilter.ApplyFilter<true>(CurrentTiltAngle, CurrentTiltSpeed, CurrentTiltTarget, DeltaTime, IsGamepad);
 
 	// Clamp pitch to legal values
-	float ExternalCameraPitchClamped = ChaseMode ? FMath::Clamp(CurrentTiltAngle, -CameraMaxChaseAngle, CameraMaxChaseAngle)
-												 : FMath::Clamp(CurrentTiltAngle, CameraMinTilt, CameraMaxTilt);
+	float ExternalCameraPitchClamped = FMath::Clamp(CurrentTiltAngle, CameraMinTilt, CameraMaxTilt);
 	if (ExternalCameraPitchClamped != CurrentTiltAngle)
 	{
 		CurrentTiltSpeed = -CurrentTiltSpeed / 2;
 	}
 	CurrentTiltAngle = ExternalCameraPitchClamped;
-
-	// Clamp yaw to legal values in chase mode
-	if (ChaseMode)
-	{
-		float ExternalCameraYawClamped = FMath::Clamp(CurrentPanAngle, -CameraMaxChaseAngle, CameraMaxChaseAngle);
-		if (ExternalCameraYawClamped != CurrentPanAngle)
-		{
-			CurrentPanSpeed = -CurrentPanSpeed / 2;
-		}
-		CurrentPanAngle = ExternalCameraYawClamped;
-	}
 
 	// Apply values
 	CameraYawComponent->SetRelativeRotation(FRotator(0, CurrentPanAngle, 0));

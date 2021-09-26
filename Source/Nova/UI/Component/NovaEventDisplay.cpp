@@ -143,7 +143,7 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 		auto OrbitalSimulation  = IsValid(GameState) ? GameState->GetOrbitalSimulation() : nullptr;
 
 		if (IsValid(PC) && IsValid(SpacecraftPawn) && IsValid(GameState) && IsValid(OrbitalSimulation) && !SpacecraftPawn->IsDocked() &&
-			(PC->GetCameraState() == ENovaPlayerCameraState::Default || PC->GetCameraState() == ENovaPlayerCameraState::Chase))
+			PC->GetCameraState() == ENovaPlayerCameraState::Default)
 		{
 			const FNovaTrajectory* Trajectory      = OrbitalSimulation->GetPlayerTrajectory();
 			const FNovaTime&       CurrentGameTime = GameState->GetCurrentTime();

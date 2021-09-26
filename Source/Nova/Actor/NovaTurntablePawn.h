@@ -28,9 +28,6 @@ public:
 	/** Reset the view */
 	void ResetView();
 
-	/** Set whether to use the chase mode or not */
-	void SetChaseMode(bool Enabled);
-
 	/** Get the current bounds of the actor */
 	virtual TPair<FVector, FVector> GetTurntableBounds() const;
 
@@ -90,10 +87,6 @@ public:
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float CameraMaxTilt;
 
-	// Maximum allowed off-axis angle in degrees during chase
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float CameraMaxChaseAngle;
-
 	// Camera filter
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	FNovaCameraInputFilter CameraFilter;
@@ -123,9 +116,6 @@ protected:
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
-
-	// Local state
-	bool ChaseMode;
 
 	// Input data
 	float CurrentPanTarget;

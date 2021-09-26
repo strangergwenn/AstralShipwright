@@ -244,7 +244,7 @@ public:
 	}
 };
 
-// Departure stage 2 : chase cam until fast forward or arrival
+// Departure stage 2 : pit state, wait until we fast-forward or arrive naturally
 class FNovaDepartureCoastState : public FNovaGameModeState
 {
 public:
@@ -252,7 +252,7 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
-		PC->SharedTransition(ENovaPlayerCameraState::Chase,    //
+		PC->SharedTransition(ENovaPlayerCameraState::Default,    //
 			FNovaAsyncAction::CreateLambda(
 				[&]()
 				{
@@ -321,7 +321,7 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
-		PC->SharedTransition(ENovaPlayerCameraState::Chase);
+		PC->SharedTransition(ENovaPlayerCameraState::Default);
 	}
 
 	virtual ENovaGameStateIdentifier UpdateState() override
