@@ -38,7 +38,7 @@ void UNovaSpacecraftDriveComponent::BeginPlay()
 	SetStaticMesh(ExhaustMesh);
 
 	// Create exhaust metadata
-	ExhaustPower.SetPeriod(0.15f);
+	ExhaustPower.SetPeriod(0.4f);
 
 	// Create exhaust material
 	ExhaustMaterial = UMaterialInstanceDynamic::Create(GetMaterial(0), GetWorld());
