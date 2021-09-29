@@ -30,9 +30,25 @@ public:
 protected:
 	// Sun body
 	UPROPERTY()
-	const class UNovaCelestialBody* RootBody;
+	const class UNovaCelestialBody* SunBody;
+
+	// Sky mesh
+	UPROPERTY()
+	class UStaticMeshComponent* SkyboxComponent;
+
+	// Sun light
+	UPROPERTY()
+	class UDirectionalLightComponent* SunlightComponent;
+
+	// Sky light
+	UPROPERTY()
+	class USkyLightComponent* SkylightComponent;
 
 	// Celestial body map
 	UPROPERTY()
 	TMap<const class UNovaCelestialBody*, class UStaticMeshComponent*> CelestialToComponent;
+
+	// Atmosphere meshes
+	UPROPERTY()
+	TArray<class UStaticMeshComponent*> AtmosphereComponents;
 };

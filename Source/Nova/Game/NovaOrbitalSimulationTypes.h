@@ -80,6 +80,10 @@ public:
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Phase;
 
+	// Rotation period in minutes
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	float RotationPeriod;
+
 	// Name to look for in the planetarium
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	FName PlanetariumName;
