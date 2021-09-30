@@ -24,31 +24,36 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 	/*----------------------------------------------------
-	    Data
+	    Components
 	----------------------------------------------------*/
 
 protected:
 	// Sun body
-	UPROPERTY()
+	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	const class UNovaCelestialBody* SunBody;
 
-	// Sky mesh
-	UPROPERTY()
-	class UStaticMeshComponent* SkyboxComponent;
-
-	// Sun light
-	UPROPERTY()
-	class UDirectionalLightComponent* SunlightComponent;
+	// Sun light for atmosphere lighting
+	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
+	class UDirectionalLightComponent* Sunlight;
 
 	// Sky light
-	UPROPERTY()
-	class USkyLightComponent* SkylightComponent;
+	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
+	class USkyLightComponent* Skylight;
 
+	// Sky mesh
+	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
+	class UStaticMeshComponent* Skybox;
+
+	// Sky light
+	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
+	class USkyAtmosphereComponent* Atmosphere;
+
+	/*----------------------------------------------------
+	    Data
+	----------------------------------------------------*/
+
+protected:
 	// Celestial body map
 	UPROPERTY()
 	TMap<const class UNovaCelestialBody*, class UStaticMeshComponent*> CelestialToComponent;
-
-	// Atmosphere meshes
-	UPROPERTY()
-	TArray<class UStaticMeshComponent*> AtmosphereComponents;
 };
