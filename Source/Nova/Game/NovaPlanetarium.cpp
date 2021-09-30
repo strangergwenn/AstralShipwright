@@ -147,8 +147,9 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 			// Planet
 			else
 			{
-				const double CurrentRelativePeriod = FMath::Fmod(GameState->GetCurrentTime().AsMinutes(), Body->RotationPeriod);
-				const double BodyRotationAngle     = Body->Phase + 360.0 * (CurrentRelativePeriod / Body->RotationPeriod);
+				const double CurrentRelativePeriod =
+					FMath::Fmod(GameState->GetCurrentTime().AsMinutes(), static_cast<double>(Body->RotationPeriod));
+				const double BodyRotationAngle = Body->Phase + 360.0 * (CurrentRelativePeriod / Body->RotationPeriod);
 
 				const FVector2D PlayerCartesianLocation = PlayerLocation->GetCartesianLocation();
 				const double    OrbitRotationAngle =
