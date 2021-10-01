@@ -18,8 +18,6 @@
 #include "Components/SkyAtmosphereComponent.h"
 #include "Materials/MaterialInstanceConstant.h"
 
-#define CELESTIAL_SCALE 1.0
-
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
@@ -29,9 +27,14 @@ ANovaPlanetarium::ANovaPlanetarium() : Super()
 	RootComponent = CreateDefaultSubobject<USceneComponent>("Root");
 
 	// Create sunlight
+	SunRotator = CreateDefaultSubobject<USceneComponent>("SunRotator");
+	SunRotator->SetupAttachment(RootComponent);
+
+	// Create sunlight
 	Sunlight = CreateDefaultSubobject<UDirectionalLightComponent>("Sunlight");
-	Sunlight->SetupAttachment(RootComponent);
-	Sunlight->bUsedAsAtmosphereSunLight = true;
+	Sunlight->SetupAttachment(SunRotator);
+	Sunlight->bUsedAsAtmosphereSunLight        = true;
+	Sunlight->bPerPixelAtmosphereTransmittance = true;
 
 	// Create skylight
 	Skylight = CreateDefaultSubobject<USkyLightComponent>("Skylight");
@@ -66,6 +69,7 @@ void ANovaPlanetarium::BeginPlay()
 	NLOG("ANovaPlanetarium::BeginPlay");
 
 	// Check everything
+	NCHECK(SunRotator);
 	NCHECK(Sunlight);
 	NCHECK(Skylight);
 	NCHECK(Skybox);
@@ -106,6 +110,7 @@ void ANovaPlanetarium::BeginPlay()
 void ANovaPlanetarium::Tick(float DeltaSeconds)
 {
 	// Check everything
+	NCHECK(SunRotator);
 	NCHECK(Sunlight);
 	NCHECK(Skylight);
 	NCHECK(Skybox);
@@ -119,8 +124,8 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 	const FNovaOrbitalLocation* PlayerLocation = OrbitalSimulation->GetPlayerLocation();
 	NCHECK(PlayerLocation);
 
-	float CurrentSunAngle = 0;
-	float CurrentSkyAngle = 0;
+	float CurrentSunSkyAngle    = 0;
+	float SunDistanceFromPlanet = 0;
 
 	// Process bodies
 	for (const TPair<const UNovaCelestialBody*, UStaticMeshComponent*> BodyAndComponent : CelestialToComponent)
@@ -133,45 +138,44 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 			float   CurrentAngle    = 0;
 			FVector CurrentPosition = FVector::ZeroVector;
 
-			// Sun
-			if (Body == SunBody)
-			{
-				CurrentPosition = -FVector(Body->Radius + PlayerLocation->Geometry.Body->Altitude.GetValue(), 0, 0);
-
-				CurrentPosition = CurrentPosition.RotateAngleAxis(85, FVector(0, 0, 1));    // DEBUG
-				// CurrentPosition = CurrentPosition.RotateAngleAxis(45, FVector(0, 0, 1));    // DEBUG
-
-				CurrentSunAngle = FMath::RadiansToDegrees((-CurrentPosition).HeadingAngle());
-			}
-
 			// Planet
-			else
+			if (Body != SunBody)
 			{
-				const double CurrentRelativePeriod =
+				const double RelativeBodySpinTime =
 					FMath::Fmod(GameState->GetCurrentTime().AsMinutes(), static_cast<double>(Body->RotationPeriod));
-				const double BodyRotationAngle = Body->Phase + 360.0 * (CurrentRelativePeriod / Body->RotationPeriod);
+				const double RelativeBodySpinAngle = 360.0 * (RelativeBodySpinTime / Body->RotationPeriod);
+				const double AbsoluteBodySpinAngle = Body->Phase + RelativeBodySpinAngle;
 
 				const FVector2D PlayerCartesianLocation = PlayerLocation->GetCartesianLocation();
 				const double    OrbitRotationAngle =
 					FMath::RadiansToDegrees(FVector(PlayerCartesianLocation.X, PlayerCartesianLocation.Y, 0).HeadingAngle());
 
-				CurrentAngle    = -BodyRotationAngle - OrbitRotationAngle;
-				CurrentPosition = FVector(Body->Radius + PlayerLocation->Geometry.StartAltitude, 0, 0);
-				CurrentSkyAngle = CurrentAngle;
+				// Position
+				CurrentAngle    = -AbsoluteBodySpinAngle - OrbitRotationAngle;
+				CurrentPosition = FVector(Body->Radius + PlayerLocation->Geometry.StartAltitude, 0, 0) * 1000 * 100;
 
-				// Atmosphere
-				Atmosphere->SetWorldLocation(CELESTIAL_SCALE * CurrentPosition * 1000 * 100);
-				Atmosphere->BottomRadius = CELESTIAL_SCALE * Body->Radius;
+				// This is the only planetary body for now so we'll apply sun & atmosphere there
+				{
+					SunRotator->SetWorldLocation(CurrentPosition);
+					Atmosphere->SetWorldLocation(CurrentPosition);
+					Atmosphere->BottomRadius = Body->Radius;
+
+					SunDistanceFromPlanet = Body->Altitude.GetValue() * 1000 * 100;
+					CurrentSunSkyAngle    = -OrbitRotationAngle;
+				}
 			}
 
 			// Apply transforms
 			Component->SetWorldRotation(FRotator(0, CurrentAngle, 0));
-			Component->SetWorldLocation(CELESTIAL_SCALE * CurrentPosition * 1000 * 100);
-			Component->SetWorldScale3D(CELESTIAL_SCALE * 2.0 * Body->Radius * 1000 * FVector(1, 1, 1));
+			Component->SetWorldLocation(CurrentPosition);
+			Component->SetWorldScale3D(2.0 * Body->Radius * 1000 * FVector(1, 1, 1));
 		}
 	}
 
 	// Rotate sky box & sun
-	Sunlight->SetWorldRotation(FRotator(-5, CurrentSunAngle, 0));
-	Skybox->SetWorldRotation(FRotator(0, CurrentSkyAngle, 0));
+	CelestialToComponent[SunBody]->SetRelativeLocation(FVector(-SunDistanceFromPlanet, 0, 0));
+	SunRotator->SetWorldRotation(FRotator(0, CurrentSunSkyAngle, 0));
+	Skybox->SetWorldRotation(FRotator(0, CurrentSunSkyAngle, 0));
+
+	FVector SunDistanceMKM = CelestialToComponent[SunBody]->GetComponentLocation() / (1000 * 1000 * 1000 * 100);
 };

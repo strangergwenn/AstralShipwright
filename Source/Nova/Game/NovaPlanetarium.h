@@ -28,9 +28,9 @@ public:
 	----------------------------------------------------*/
 
 protected:
-	// Sun body
+	// Sun parent component
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
-	const class UNovaCelestialBody* SunBody;
+	class USceneComponent* SunRotator;
 
 	// Sun light for atmosphere lighting
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
@@ -44,7 +44,7 @@ protected:
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	class UStaticMeshComponent* Skybox;
 
-	// Sky light
+	// Atmosphere
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	class USkyAtmosphereComponent* Atmosphere;
 
@@ -53,6 +53,10 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+	// Sun body
+	UPROPERTY()
+	const class UNovaCelestialBody* SunBody;
+
 	// Celestial body map
 	UPROPERTY()
 	TMap<const class UNovaCelestialBody*, class UStaticMeshComponent*> CelestialToComponent;

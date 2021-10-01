@@ -20,7 +20,7 @@
 UNovaPostProcessComponent::UNovaPostProcessComponent() : Super(), CurrentPreset(0), TargetPreset(0), CurrentPresetAlpha(0.0f)
 {
 	// Resources
-	static ConstructorHelpers::FClassFinder<AActor> PostProcessActorClassRef(TEXT("/Game/Gameplay/Common/BP_PostProcess"));
+	static ConstructorHelpers::FClassFinder<AActor> PostProcessActorClassRef(TEXT("/Game/Environment/BP_PostProcess"));
 	PostProcessActorClass = PostProcessActorClassRef.Class;
 
 	// Settings
