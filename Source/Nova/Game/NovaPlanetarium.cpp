@@ -99,7 +99,10 @@ void ANovaPlanetarium::BeginPlay()
 			if (Component->GetName() == Body->PlanetariumName.ToString())
 			{
 				NLOG("ANovaPlanetarium::BeginPlay : found mesh for '%s'", *Body->PlanetariumName.ToString());
-				CelestialToComponent.Add(Body, Cast<UStaticMeshComponent>(Component));
+
+				UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component);
+				Mesh->CreateAndSetMaterialInstanceDynamic(0);
+				CelestialToComponent.Add(Body, Mesh);
 			}
 		}
 	}
@@ -163,6 +166,10 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 					SunDistanceFromPlanet = Body->Altitude.GetValue() * 1000 * 100;
 					CurrentSunSkyAngle    = -OrbitRotationAngle;
 				}
+
+				// Add light direction
+				float LightOffsetRatio = (CurrentSunSkyAngle - CurrentPosition.Rotation().Yaw) / 360.0f;
+				Cast<UMaterialInstanceDynamic>(Component->GetMaterial(0))->SetScalarParameterValue("LightOffsetRatio", LightOffsetRatio);
 			}
 
 			// Apply transforms
