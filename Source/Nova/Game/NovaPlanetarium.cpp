@@ -11,12 +11,13 @@
 
 #include "Nova/Nova.h"
 
+#include "Materials/MaterialInstanceConstant.h"
 #include "EngineUtils.h"
 #include "Engine.h"
+
 #include "Components/DirectionalLightComponent.h"
 #include "Components/SkyLightComponent.h"
 #include "Components/SkyAtmosphereComponent.h"
-#include "Materials/MaterialInstanceConstant.h"
 
 /*----------------------------------------------------
     Constructor
@@ -185,4 +186,17 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 	Skybox->SetWorldRotation(FRotator(0, CurrentSunSkyAngle, 0));
 
 	FVector SunDistanceMKM = CelestialToComponent[SunBody]->GetComponentLocation() / (1000 * 1000 * 1000 * 100);
+
+	// Rotate billboards
+	TArray<UStaticMeshComponent*> BillboardCandidates;
+	GetComponents<UStaticMeshComponent>(BillboardCandidates);
+	for (UStaticMeshComponent* BillboardCandidate : BillboardCandidates)
+	{
+		if (BillboardCandidate->GetName().Contains("Billboard"))
+		{
+			FRotator Rotation = BillboardCandidate->GetRelativeRotation();
+			Rotation.Yaw      = FMath::RadiansToDegrees(BillboardCandidate->GetComponentLocation().HeadingAngle()) + 90;
+			BillboardCandidate->SetRelativeRotation(Rotation);
+		}
+	}
 };
