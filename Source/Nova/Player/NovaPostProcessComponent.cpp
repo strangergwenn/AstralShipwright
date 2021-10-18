@@ -59,21 +59,24 @@ void UNovaPostProcessComponent::BeginPlay()
 			// Replace the material by a dynamic variant
 			if (PostProcessVolume)
 			{
-				const TArray<FWeightedBlendable>& Blendables = PostProcessVolume->Settings.WeightedBlendables.Array;
+				TArray<FWeightedBlendable> Blendables = PostProcessVolume->Settings.WeightedBlendables.Array;
+				PostProcessVolume->Settings.WeightedBlendables.Array.Empty();
 
-				if (Blendables.Num())
+				for (FWeightedBlendable Blendable : Blendables)
 				{
-					UMaterialInterface* BaseMaterial = Cast<UMaterialInterface>(Blendables[0].Object);
+					UMaterialInterface* BaseMaterial = Cast<UMaterialInterface>(Blendable.Object);
 					NCHECK(BaseMaterial);
 
-					PostProcessMaterial = UMaterialInstanceDynamic::Create(BaseMaterial, GetWorld());
-					NCHECK(PostProcessMaterial);
+					UMaterialInstanceDynamic* MaterialInstance = UMaterialInstanceDynamic::Create(BaseMaterial, GetWorld());
+					if (!IsValid(PostProcessMaterial))
+					{
+						PostProcessMaterial = MaterialInstance;
+					}
 
-					PostProcessVolume->Settings.WeightedBlendables.Array.Empty();
-					PostProcessVolume->Settings.AddBlendable(PostProcessMaterial, 1.0f);
-
-					NLOG("UNovaPostProcessComponent::BeginPlay : post-process setup complete");
+					PostProcessVolume->Settings.AddBlendable(MaterialInstance, 1.0f);
 				}
+
+				NLOG("UNovaPostProcessComponent::BeginPlay : post-process setup complete");
 			}
 		}
 	}

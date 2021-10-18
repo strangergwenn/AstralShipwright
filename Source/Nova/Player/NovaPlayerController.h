@@ -42,7 +42,7 @@ struct FNovaPostProcessSetting : public FNovaPostProcessSettingBase
 
 		// Built-in
 		, AutoExposureBrightness(1)
-		, GrainIntensity(0)
+		, GrainIntensity(0.1f)
 		, SceneColorTint(FLinearColor::White)
 	{}
 
