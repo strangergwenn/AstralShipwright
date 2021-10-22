@@ -131,14 +131,17 @@ public:
 	/** Get the current spacecraft mass */
 	float GetCurrentMass() const;
 
-	/** Dock at a particular location */
+	/** Dock at the predefined location */
 	void Dock(FSimpleDelegate Callback = FSimpleDelegate());
 
 	/** Undock from the current dock */
 	void Undock(FSimpleDelegate Callback = FSimpleDelegate());
 
-	/** Check the dock state */
+	/** Check if we are docked */
 	bool IsDocked() const;
+
+	/** Check if we are docking*/
+	bool IsDocking() const;
 
 	/** Load the persistent state of systems from the spacecraft */
 	void LoadSystems();

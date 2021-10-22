@@ -210,6 +210,11 @@ bool ANovaSpacecraftPawn::IsDocked() const
 	return IsValid(MovementComponent) && MovementComponent->GetState() == ENovaMovementState::Docked;
 }
 
+bool ANovaSpacecraftPawn::IsDocking() const
+{
+	return IsValid(MovementComponent) && MovementComponent->GetState() == ENovaMovementState::Docking;
+}
+
 void ANovaSpacecraftPawn::LoadSystems()
 {
 	NLOG("ANovaSpacecraftPawn::LoadSystems ('%s')", *GetRoleString(this));
