@@ -99,7 +99,10 @@ struct FNovaAdditionalComponent
 	TArray<FSoftObjectPath> GetAsyncAssets() const
 	{
 		TArray<FSoftObjectPath> Result;
-		Result.Add(AdditionalAsset.ToSoftObjectPath());
+		if (!AdditionalAsset.IsNull())
+		{
+			Result.Add(AdditionalAsset.ToSoftObjectPath());
+		}
 		return Result;
 	}
 };
