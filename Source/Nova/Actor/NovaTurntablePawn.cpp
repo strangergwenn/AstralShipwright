@@ -47,7 +47,9 @@ ANovaTurntablePawn::ANovaTurntablePawn()
 	CameraArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraArmComponent"));
 	CameraArmComponent->SetupAttachment(CameraPitchComponent);
 	CameraArmComponent->TargetArmLength  = 2000;
-	CameraArmComponent->bDoCollisionTest = false;
+	CameraArmComponent->bDoCollisionTest = true;
+	CameraArmComponent->ProbeSize        = 100;
+	CameraArmComponent->ProbeChannel     = ECC_WorldDynamic;
 
 	// Create camera component
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
