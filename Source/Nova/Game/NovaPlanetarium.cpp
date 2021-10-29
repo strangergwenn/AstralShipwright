@@ -156,7 +156,7 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 
 				// Position
 				CurrentAngle    = -AbsoluteBodySpinAngle - OrbitRotationAngle;
-				CurrentPosition = FVector(Body->Radius + PlayerLocation->Geometry.StartAltitude, 0, 0) * 1000 * 100;
+				CurrentPosition = -FVector(0, 0, Body->Radius + PlayerLocation->Geometry.StartAltitude) * 1000 * 100;
 
 				// This is the only planetary body for now so we'll apply sun & atmosphere there
 				{
@@ -174,7 +174,7 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 			}
 
 			// Apply transforms
-			Component->SetWorldRotation(FRotator(0, CurrentAngle, 0));
+			Component->SetWorldRotation(FRotator(CurrentAngle, 0, 0));
 			Component->SetWorldLocation(CurrentPosition);
 			Component->SetWorldScale3D(2.0 * Body->Radius * 1000 * FVector(1, 1, 1));
 		}
@@ -182,8 +182,8 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 
 	// Rotate sky box & sun
 	CelestialToComponent[SunBody]->SetRelativeLocation(FVector(-SunDistanceFromPlanet, 0, 0));
-	SunRotator->SetWorldRotation(FRotator(0, CurrentSunSkyAngle, 0));
-	Skybox->SetWorldRotation(FRotator(0, CurrentSunSkyAngle, 0));
+	SunRotator->SetWorldRotation(FRotator(CurrentSunSkyAngle, 0, 0));
+	Skybox->SetWorldRotation(FRotator(CurrentSunSkyAngle, 0, 0));
 
 	FVector SunDistanceMKM = CelestialToComponent[SunBody]->GetComponentLocation() / (1000 * 1000 * 1000 * 100);
 
