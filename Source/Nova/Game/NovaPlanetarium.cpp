@@ -156,7 +156,7 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 
 				// Position
 				CurrentAngle    = -AbsoluteBodySpinAngle - OrbitRotationAngle;
-				CurrentPosition = -FVector(0, 0, Body->Radius + PlayerLocation->Geometry.StartAltitude) * 1000 * 100;
+				CurrentPosition = -FVector(0, 0, Body->Radius + PlayerCartesianLocation.Size()) * 1000 * 100;
 
 				// This is the only planetary body for now so we'll apply sun & atmosphere there
 				{
@@ -174,7 +174,7 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 			}
 
 			// Apply transforms
-			Component->SetWorldRotation(FRotator(CurrentAngle, 0, 90));
+			Component->SetWorldRotation(FRotator(CurrentAngle, 90, 90));
 			Component->SetWorldLocation(CurrentPosition);
 			Component->SetWorldScale3D(2.0 * Body->Radius * 1000 * FVector(1, 1, 1));
 		}
@@ -184,8 +184,8 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 	if (IsValid(CelestialToComponent[SunBody]))
 	{
 		CelestialToComponent[SunBody]->SetRelativeLocation(FVector(-SunDistanceFromPlanet, 0, 0));
-		SunRotator->SetWorldRotation(FRotator(CurrentSunSkyAngle, 0, 0));
-		Skybox->SetWorldRotation(FRotator(CurrentSunSkyAngle, 0, 0));
+		SunRotator->SetWorldRotation(FRotator(CurrentSunSkyAngle, 90, 0));
+		Skybox->SetWorldRotation(FRotator(CurrentSunSkyAngle, 90, 0));
 	}
 
 	// Rotate billboards
