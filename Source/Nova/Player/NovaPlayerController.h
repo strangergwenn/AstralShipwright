@@ -41,7 +41,6 @@ struct FNovaPostProcessSetting : public FNovaPostProcessSettingBase
 	    //, ChromaIntensity(1)
 
 		// Built-in
-		, AutoExposureBrightness(1)
 		, GrainIntensity(0.1f)
 		, SceneColorTint(FLinearColor::White)
 	{}
@@ -50,7 +49,6 @@ struct FNovaPostProcessSetting : public FNovaPostProcessSettingBase
 	// float ChromaIntensity;
 
 	// Built-in effects
-	float        AutoExposureBrightness;
 	float        GrainIntensity;
 	FLinearColor SceneColorTint;
 };

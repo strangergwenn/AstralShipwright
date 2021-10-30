@@ -112,16 +112,10 @@ ANovaPlayerController::ANovaPlayerController()
 		        // Alpha));
 
 				// Built-in settings (overrides)
-				Volume->Settings.bOverride_AutoExposureMinBrightness = true;
-				Volume->Settings.bOverride_AutoExposureMaxBrightness = true;
-				Volume->Settings.bOverride_GrainIntensity            = true;
-				Volume->Settings.bOverride_SceneColorTint            = true;
+				Volume->Settings.bOverride_GrainIntensity = true;
+				Volume->Settings.bOverride_SceneColorTint = true;
 
 				// Built in settings (values)
-				Volume->Settings.AutoExposureMinBrightness =
-					FMath::Lerp(MyCurrent->AutoExposureBrightness, MyTarget->AutoExposureBrightness, Alpha);
-				Volume->Settings.AutoExposureMaxBrightness =
-					FMath::Lerp(MyCurrent->AutoExposureBrightness, MyTarget->AutoExposureBrightness, Alpha);
 				Volume->Settings.GrainIntensity = FMath::Lerp(MyCurrent->GrainIntensity, MyTarget->GrainIntensity, Alpha);
 				Volume->Settings.SceneColorTint = FMath::Lerp(MyCurrent->SceneColorTint, MyTarget->SceneColorTint, Alpha);
 			}));
