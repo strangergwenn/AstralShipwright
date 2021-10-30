@@ -309,6 +309,10 @@ public:
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> CargoSkirt = nullptr;
 
+	// Is this the most forward of compartment
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	bool IsForwardCompartment;
+
 	// Compartment mass in T
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Mass = 10;

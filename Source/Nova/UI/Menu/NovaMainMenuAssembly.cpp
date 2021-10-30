@@ -1712,6 +1712,11 @@ bool SNovaMainMenuAssembly::IsAddCompartmentEnabled() const
 	{
 		return true;
 	}
+	else if (IsValid(SpacecraftPawn->GetCompartment(SelectedCompartmentIndex).Description) &&
+			 SpacecraftPawn->GetCompartment(SelectedCompartmentIndex).Description->IsForwardCompartment)
+	{
+		return false;
+	}
 	else
 	{
 		return SelectedCompartmentIndex != INDEX_NONE;

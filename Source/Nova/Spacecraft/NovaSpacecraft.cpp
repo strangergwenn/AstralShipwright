@@ -950,7 +950,10 @@ TArray<const UNovaCompartmentDescription*> FNovaSpacecraft::GetCompatibleCompart
 
 	for (const UNovaCompartmentDescription* Description : UNovaAssetManager::Get()->GetAssets<UNovaCompartmentDescription>())
 	{
-		CompartmentDescriptions.Add(Description);
+		if (!Description->IsForwardCompartment || IsFirstCompartment(CompartmentIndex))
+		{
+			CompartmentDescriptions.Add(Description);
+		}
 	}
 
 	return CompartmentDescriptions;
