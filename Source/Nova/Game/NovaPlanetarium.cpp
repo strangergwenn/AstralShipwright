@@ -174,7 +174,7 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 			}
 
 			// Apply transforms
-			Component->SetWorldRotation(FRotator(CurrentAngle, 0, 0));
+			Component->SetWorldRotation(FRotator(CurrentAngle, 0, 90));
 			Component->SetWorldLocation(CurrentPosition);
 			Component->SetWorldScale3D(2.0 * Body->Radius * 1000 * FVector(1, 1, 1));
 		}
