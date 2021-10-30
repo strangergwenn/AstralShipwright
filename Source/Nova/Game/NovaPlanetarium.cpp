@@ -181,11 +181,12 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 	}
 
 	// Rotate sky box & sun
-	CelestialToComponent[SunBody]->SetRelativeLocation(FVector(-SunDistanceFromPlanet, 0, 0));
-	SunRotator->SetWorldRotation(FRotator(CurrentSunSkyAngle, 0, 0));
-	Skybox->SetWorldRotation(FRotator(CurrentSunSkyAngle, 0, 0));
-
-	FVector SunDistanceMKM = CelestialToComponent[SunBody]->GetComponentLocation() / (1000 * 1000 * 1000 * 100);
+	if (IsValid(CelestialToComponent[SunBody]))
+	{
+		CelestialToComponent[SunBody]->SetRelativeLocation(FVector(-SunDistanceFromPlanet, 0, 0));
+		SunRotator->SetWorldRotation(FRotator(CurrentSunSkyAngle, 0, 0));
+		Skybox->SetWorldRotation(FRotator(CurrentSunSkyAngle, 0, 0));
+	}
 
 	// Rotate billboards
 	TArray<UStaticMeshComponent*> BillboardCandidates;
