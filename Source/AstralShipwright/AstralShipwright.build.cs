@@ -43,7 +43,7 @@ public class AstralShipwright : ModuleRules
         if (Target.Platform.IsInGroup(UnrealPlatformGroup.Windows))
         {
             PrivateDependencyModuleNames.AddRange(new string[] {
-                "DLSS"
+                //"DLSS"
             });
         }
 

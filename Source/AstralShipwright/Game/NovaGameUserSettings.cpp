@@ -6,7 +6,7 @@
 #include "Modules/ModuleManager.h"
 #include "RenderCore.h"
 
-#if PLATFORM_WINDOWS
+#if PLATFORM_WINDOWS && 0
 #include "DLSS.h"
 #endif    // PLATFORM_WINDOWS
 
@@ -39,7 +39,7 @@ bool UNovaGameUserSettings::IsHDRSupported() const
 
 bool UNovaGameUserSettings::IsDLSSSupported() const
 {
-#if PLATFORM_WINDOWS
+#if PLATFORM_WINDOWS && 0
 	IDLSSModuleInterface* DLSSModule = &FModuleManager::LoadModuleChecked<IDLSSModuleInterface>(TEXT("DLSS"));
 	if (DLSSModule)
 	{
