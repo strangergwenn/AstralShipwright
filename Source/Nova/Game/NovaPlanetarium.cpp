@@ -1,4 +1,4 @@
-﻿// Nova project - Gwennaël Arbona
+// Nova project - Gwennaël Arbona
 
 #include "NovaPlanetarium.h"
 #include "NovaGameState.h"
@@ -34,8 +34,7 @@ ANovaPlanetarium::ANovaPlanetarium() : Super()
 	// Create sunlight
 	Sunlight = CreateDefaultSubobject<UDirectionalLightComponent>("Sunlight");
 	Sunlight->SetupAttachment(SunRotator);
-	Sunlight->bUsedAsAtmosphereSunLight        = true;
-	Sunlight->bPerPixelAtmosphereTransmittance = true;
+	Sunlight->bAtmosphereSunLight = true;
 
 	// Create skylight
 	Skylight = CreateDefaultSubobject<USkyLightComponent>("Skylight");
@@ -109,6 +108,8 @@ void ANovaPlanetarium::BeginPlay()
 	}
 
 	NCHECK(CelestialToComponent.Num() == CelestialBodies.Num());
+
+	Sunlight->SetAtmosphereSunLight(true);
 }
 
 void ANovaPlanetarium::Tick(float DeltaSeconds)
