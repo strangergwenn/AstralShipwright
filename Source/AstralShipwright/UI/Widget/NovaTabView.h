@@ -22,7 +22,7 @@ public:
 	virtual void OnFocusChanged(TSharedPtr<class SNovaButton> FocusButton) override;
 
 	/** Set the parent tab view */
-	void Initialize(int32 Index, bool IsBlurred, TSharedPtr<class SNovaTabView> Parent);
+	void Initialize(int32 Index, bool IsBlurred, class SNovaTabView* Parent);
 
 	/** Start showing this menu */
 	virtual void Show();
@@ -59,8 +59,8 @@ protected:
 	float CurrentAlpha;
 
 	// Widgets
-	TSharedPtr<class SScrollBox>   MainContainer;
-	TSharedPtr<class SNovaTabView> ParentTabView;
+	TSharedPtr<class SScrollBox> MainContainer;
+	class SNovaTabView*          ParentTabView;
 };
 
 /** Tab view class that takes multiple tab slots, and optional toolbar widgets */
@@ -82,35 +82,6 @@ public:
 		SLATE_ATTRIBUTE(bool, Blur)
 
 		SLATE_SLOT_END_ARGS()
-
-		FSlot() : TSlotBase<FSlot>()
-		{}
-
-		void Construct(const FChildren& SlotOwner, FSlotArguments&& InArgs)
-		{
-			TSlotBase<FSlot>::Construct(SlotOwner, MoveTemp(InArgs));
-			if (InArgs._Header.IsSet())
-			{
-				HeaderAttr = MoveTemp(InArgs._Header);
-			}
-			if (InArgs._HeaderHelp.IsSet())
-			{
-				HeaderHelpAttr = MoveTemp(InArgs._HeaderHelp);
-			}
-			if (InArgs._Visible.IsSet())
-			{
-				VisibleAttr = MoveTemp(InArgs._Visible);
-			}
-			if (InArgs._Blur.IsSet())
-			{
-				BlurredAttr = MoveTemp(InArgs._Blur);
-			}
-		}
-
-		TAttribute<FText> HeaderAttr;
-		TAttribute<FText> HeaderHelpAttr;
-		TAttribute<bool>  VisibleAttr;
-		TAttribute<bool>  BlurredAttr;
 	};
 
 public:
@@ -217,14 +188,16 @@ protected:
 	----------------------------------------------------*/
 
 	// Data
-	int32                DesiredTabIndex;
-	int32                CurrentTabIndex;
-	TArray<const FSlot*> Slots;
-	float                CurrentBlurAlpha;
+	int32 DesiredTabIndex;
+	int32 CurrentTabIndex;
+	float CurrentBlurAlpha;
 
 	// Widgets
 	TSharedPtr<SBorder>         HeaderContainer;
 	TSharedPtr<SHorizontalBox>  Header;
 	TSharedPtr<SWidgetSwitcher> Content;
-	TArray<SNovaTabPanel*>      Panels;
+
+	// Tab contents
+	TArray<SNovaTabPanel*>   Panels;
+	TArray<TAttribute<bool>> PanelVisibility;
 };
