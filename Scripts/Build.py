@@ -116,7 +116,7 @@ for platform in projectPlatforms:
 		
 		# Executable
 		'BuildCookRun',
-		'-ue4exe=UnrealEditor-Cmd.exe',
+		'-unrealexe=UnrealEditor-Cmd.exe',
 
 		# Project
 		'-project="' + projectFile + '"',
