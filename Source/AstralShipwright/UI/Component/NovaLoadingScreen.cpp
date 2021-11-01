@@ -87,23 +87,10 @@ float SNovaLoadingScreen::GetCurrentTime() const
 int32 SNovaLoadingScreen::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect,
 	FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
-	while (AnimatedMaterialInstance->IsUnreachable())
-	{
-		FPlatformProcess::Sleep(0.001f);
-	}
-	NCHECK(!AnimatedMaterialInstance->IsUnreachable());
-
 	return SCompoundWidget::OnPaint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 }
 
 void SNovaLoadingScreen::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
 {
 	SCompoundWidget::Tick(AllottedGeometry, CurrentTime, DeltaTime);
-
-	if (AnimatedMaterialInstance)
-	{
-		// AnimatedMaterialInstance->SetScalarParameterValue("Time", LoadingScreenTime);
-	}
-
-	LoadingScreenTime += DeltaTime;
 }
