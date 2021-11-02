@@ -97,13 +97,11 @@ ANovaPlayerController::ANovaPlayerController()
 				const FNovaPostProcessSetting* MyTarget         = static_cast<const FNovaPostProcessSetting*>(Target.Get());
 
 				// Config-driven settings
-				Volume->Settings.bOverride_BloomMethod = true;
-				// Volume->Settings.bOverride_ScreenPercentage                = true;
+				Volume->Settings.bOverride_BloomMethod                     = true;
 				Volume->Settings.bOverride_DynamicGlobalIlluminationMethod = true;
 				Volume->Settings.bOverride_ReflectionMethod                = true;
 				Volume->Settings.BloomMethod                               = GameUserSettings->EnableCinematicBloom ? BM_FFT : BM_SOG;
-				// Volume->Settings.ScreenPercentage                          = GameUserSettings->ScreenPercentage;
-				Volume->Settings.RayTracingAO = GameUserSettings->EnableRaytracedAO;
+				Volume->Settings.RayTracingAO                              = GameUserSettings->EnableRaytracedAO;
 				Volume->Settings.DynamicGlobalIlluminationMethod =
 					GameUserSettings->EnableLumen ? EDynamicGlobalIlluminationMethod::Lumen : EDynamicGlobalIlluminationMethod::ScreenSpace;
 				Volume->Settings.ReflectionMethod =

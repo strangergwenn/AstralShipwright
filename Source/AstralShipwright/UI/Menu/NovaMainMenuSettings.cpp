@@ -800,6 +800,7 @@ void SNovaMainMenuSettings::OnAntiAliasingChanged(float Value)
 void SNovaMainMenuSettings::OnScreenPercentageChanged(float Value)
 {
 	GameUserSettings->ScreenPercentage = Value;
+	GameUserSettings->ApplySettings(false);
 	GameUserSettings->SaveSettings();
 }
 
