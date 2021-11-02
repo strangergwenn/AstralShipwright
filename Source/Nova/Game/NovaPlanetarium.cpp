@@ -34,7 +34,7 @@ ANovaPlanetarium::ANovaPlanetarium() : Super()
 	// Create sunlight
 	Sunlight = CreateDefaultSubobject<UDirectionalLightComponent>("Sunlight");
 	Sunlight->SetupAttachment(SunRotator);
-	Sunlight->bAtmosphereSunLight = true;
+	Sunlight->bUsedAsAtmosphereSunLight = true;
 
 	// Create skylight
 	Skylight = CreateDefaultSubobject<USkyLightComponent>("Skylight");
