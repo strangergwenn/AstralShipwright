@@ -186,7 +186,7 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 	{
 		CelestialToComponent[SunBody]->SetRelativeLocation(FVector(-SunDistanceFromPlanet, 0, 0));
 		SunRotator->SetWorldRotation(FRotator(CurrentSunSkyAngle, 90, 0));
-		Skybox->SetWorldRotation(FRotator(CurrentSunSkyAngle, 90, 0));
+		Skybox->SetWorldRotation(FRotator(CurrentSunSkyAngle, 90, 90));
 	}
 
 	// Rotate billboards
@@ -196,8 +196,9 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 	{
 		if (BillboardCandidate->GetName().Contains("Billboard"))
 		{
-			FRotator Rotation = BillboardCandidate->GetRelativeRotation();
-			Rotation.Yaw      = FMath::RadiansToDegrees(BillboardCandidate->GetComponentLocation().HeadingAngle()) + 90;
+			FRotator Rotation = FRotator::ZeroRotator;
+			Rotation.Pitch    = 90;
+			Rotation.Yaw      = FMath::RadiansToDegrees(BillboardCandidate->GetComponentLocation().HeadingAngle()) - 90;
 			BillboardCandidate->SetRelativeRotation(Rotation);
 		}
 	}
