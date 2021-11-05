@@ -196,10 +196,7 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 	{
 		if (BillboardCandidate->GetName().Contains("Billboard"))
 		{
-			FRotator Rotation = FRotator::ZeroRotator;
-			Rotation.Pitch    = 90;
-			Rotation.Yaw      = FMath::RadiansToDegrees(BillboardCandidate->GetComponentLocation().HeadingAngle()) - 90;
-			BillboardCandidate->SetRelativeRotation(Rotation);
+			BillboardCandidate->SetWorldRotation(FRotator(90 - CurrentSunSkyAngle, -90, 0));
 		}
 	}
 };
