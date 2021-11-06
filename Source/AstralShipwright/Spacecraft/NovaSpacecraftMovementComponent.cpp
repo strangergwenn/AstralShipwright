@@ -550,7 +550,7 @@ void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 	}
 
 	// Update the linear velocity based on acceleration
-	auto UpdateVelocity = [](float& Value, float Target, float MaxDelta)
+	auto UpdateVelocity = [](auto& Value, auto Target, auto MaxDelta)
 	{
 		Value = FMath::Clamp(Target, Value - MaxDelta, Value + MaxDelta);
 	};
@@ -637,7 +637,7 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 	}
 
 	// Update the angular velocity based on acceleration
-	auto UpdateVelocity = [](float& Value, float Target, float MaxDelta)
+	auto UpdateVelocity = [](double& Value, double Target, double MaxDelta)
 	{
 		Value = FMath::Clamp(Target, Value - MaxDelta, Value + MaxDelta);
 	};

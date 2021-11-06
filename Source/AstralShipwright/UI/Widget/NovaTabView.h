@@ -74,49 +74,43 @@ public:
 	class FSlot : public TSlotBase<FSlot>
 	{
 	public:
-		FSlot() : TSlotBase<FSlot>(), Blurred(false), HeaderText(), HeaderHelpText()
+		SLATE_SLOT_BEGIN_ARGS(FSlot, TSlotBase<FSlot>)
+
+		SLATE_ATTRIBUTE(FText, Header)
+		SLATE_ATTRIBUTE(FText, HeaderHelp)
+		SLATE_ATTRIBUTE(bool, Visible)
+		SLATE_ATTRIBUTE(bool, Blur)
+
+		SLATE_SLOT_END_ARGS()
+
+		FSlot() : TSlotBase<FSlot>()
 		{}
 
-		FSlot& Header(FText Text)
+		void Construct(const FChildren& SlotOwner, FSlotArguments&& InArgs)
 		{
-			HeaderText = Text;
-			return *this;
+			TSlotBase<FSlot>::Construct(SlotOwner, MoveTemp(InArgs));
+			if (InArgs._Header.IsSet())
+			{
+				HeaderAttr = MoveTemp(InArgs._Header);
+			}
+			if (InArgs._HeaderHelp.IsSet())
+			{
+				HeaderHelpAttr = MoveTemp(InArgs._HeaderHelp);
+			}
+			if (InArgs._Visible.IsSet())
+			{
+				VisibleAttr = MoveTemp(InArgs._Visible);
+			}
+			if (InArgs._Blur.IsSet())
+			{
+				BlurredAttr = MoveTemp(InArgs._Blur);
+			}
 		}
 
-		FSlot& HeaderHelp(FText Text)
-		{
-			HeaderHelpText = Text;
-			return *this;
-		}
-
-		FSlot& Visible(const TAttribute<bool>& State)
-		{
-			IsVisible = State;
-			return *this;
-		}
-
-		FSlot& Visible(const TAttribute<bool>::FGetter& Delegate)
-		{
-			IsVisible.Bind(Delegate);
-			return *this;
-		}
-
-		FSlot& Blur()
-		{
-			Blurred = true;
-			return *this;
-		}
-
-		FSlot& Expose(FSlot*& OutVarToInit)
-		{
-			OutVarToInit = this;
-			return *this;
-		}
-
-		bool             Blurred;
-		FText            HeaderText;
-		FText            HeaderHelpText;
-		TAttribute<bool> IsVisible;
+		TAttribute<FText> HeaderAttr;
+		TAttribute<FText> HeaderHelpAttr;
+		TAttribute<bool>  VisibleAttr;
+		TAttribute<bool>  BlurredAttr;
 	};
 
 public:
@@ -127,7 +121,7 @@ public:
 	SLATE_BEGIN_ARGS(SNovaTabView) : _LeftNavigation(), _RightNavigation(), _End(), _Header()
 	{}
 
-	SLATE_SUPPORTS_SLOT(FSlot)
+	SLATE_SLOT_ARGUMENT(FSlot, Slots)
 
 	SLATE_NAMED_SLOT(FArguments, LeftNavigation)
 
@@ -153,9 +147,9 @@ public:
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
 	/** Creates a new widget slot */
-	static SNovaTabView::FSlot& Slot()
+	static FSlot::FSlotArguments Slot()
 	{
-		return *(new SNovaTabView::FSlot());
+		return FSlot::FSlotArguments(MakeUnique<FSlot>());
 	}
 
 	/** Set the next tab index */
@@ -223,10 +217,10 @@ protected:
 	----------------------------------------------------*/
 
 	// Data
-	int32                        DesiredTabIndex;
-	int32                        CurrentTabIndex;
-	TArray<SNovaTabView::FSlot*> SlotInfo;
-	float                        CurrentBlurAlpha;
+	int32                DesiredTabIndex;
+	int32                CurrentTabIndex;
+	TArray<const FSlot*> Slots;
+	float                CurrentBlurAlpha;
 
 	// Widgets
 	TSharedPtr<SBorder>         HeaderContainer;

@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.0",
+	"EngineAssociation": "{4F0B82BC-495D-831C-3FF0-9FBCAB89E6EE}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -317,7 +317,7 @@
 		},
 		{
 			"Name": "GPULightmass",
-			"Enabled": true
+			"Enabled": false
 		},
 		{
 			"Name": "DLSS",

@@ -97,7 +97,7 @@ bool UNovaSessionsManager::IsOnline() const
 
 		if (Sessions.IsValid() && UserId.IsValid())
 		{
-			return Sessions->IsPlayerInSession(GameSessionName, *UserId);
+			return Sessions->IsPlayerInSession(NAME_GameSession, *UserId);
 		}
 	}
 
@@ -127,14 +127,14 @@ bool UNovaSessionsManager::StartSession(FString URL, int32 MaxNumPlayers, bool P
 			ActionAfterError = FNovaSessionAction(GetWorld()->GetName());
 
 			// Player is already in session, leave it
-			if (Sessions->IsPlayerInSession(GameSessionName, *UserId))
+			if (Sessions->IsPlayerInSession(NAME_GameSession, *UserId))
 			{
 				ActionAfterDestroy = FNovaSessionAction(URL, MaxNumPlayers, Public);
 				NetworkState       = ENovaNetworkState::JoiningDestroying;
 
 				OnDestroySessionCompleteDelegateHandle =
 					Sessions->AddOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegate);
-				return Sessions->DestroySession(GameSessionName);
+				return Sessions->DestroySession(NAME_GameSession);
 			}
 
 			// Player isn't in a session, create it
@@ -160,7 +160,7 @@ bool UNovaSessionsManager::StartSession(FString URL, int32 MaxNumPlayers, bool P
 				// Start
 				OnCreateSessionCompleteDelegateHandle =
 					Sessions->AddOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegate);
-				return Sessions->CreateSession(*UserId, GameSessionName, *SessionSettings);
+				return Sessions->CreateSession(*UserId, NAME_GameSession, *SessionSettings);
 			}
 		}
 	}
@@ -186,7 +186,7 @@ bool UNovaSessionsManager::EndSession(FString URL)
 			NetworkState       = ENovaNetworkState::Ending;
 
 			OnDestroySessionCompleteDelegateHandle = Sessions->AddOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegate);
-			return Sessions->DestroySession(GameSessionName);
+			return Sessions->DestroySession(NAME_GameSession);
 		}
 	}
 
@@ -202,14 +202,14 @@ void UNovaSessionsManager::SetSessionAdvertised(bool Public)
 		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
 		if (Sessions.IsValid())
 		{
-			FOnlineSessionSettings* Settings = Sessions->GetSessionSettings(GameSessionName);
+			FOnlineSessionSettings* Settings = Sessions->GetSessionSettings(NAME_GameSession);
 
 			if (Settings && Settings->bShouldAdvertise != Public)
 			{
 				NLOG("UNovaSessionsManager::SetSessionAdvertised %d", Public);
 
 				Settings->bShouldAdvertise = Public;
-				Sessions->UpdateSession(GameSessionName, *Settings, true);
+				Sessions->UpdateSession(NAME_GameSession, *Settings, true);
 			}
 		}
 	}
@@ -269,7 +269,7 @@ bool UNovaSessionsManager::JoinSearchResult(const FOnlineSessionSearchResult& Se
 		if (Sessions.IsValid() && UserId.IsValid())
 		{
 			// Player is already in session, leave it
-			if (Sessions->IsPlayerInSession(GameSessionName, *UserId))
+			if (Sessions->IsPlayerInSession(NAME_GameSession, *UserId))
 			{
 				OnDestroySessionCompleteDelegateHandle =
 					Sessions->AddOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegate);
@@ -279,7 +279,7 @@ bool UNovaSessionsManager::JoinSearchResult(const FOnlineSessionSearchResult& Se
 
 				NetworkState = ENovaNetworkState::JoiningDestroying;
 
-				return Sessions->DestroySession(GameSessionName);
+				return Sessions->DestroySession(NAME_GameSession);
 			}
 
 			// Join directly
@@ -289,7 +289,7 @@ bool UNovaSessionsManager::JoinSearchResult(const FOnlineSessionSearchResult& Se
 
 				OnJoinSessionCompleteDelegateHandle = Sessions->AddOnJoinSessionCompleteDelegate_Handle(OnJoinSessionCompleteDelegate);
 
-				return Sessions->JoinSession(*Player->GetPreferredUniqueNetId(), GameSessionName, SearchResult);
+				return Sessions->JoinSession(*Player->GetPreferredUniqueNetId(), NAME_GameSession, SearchResult);
 			}
 		}
 	}
@@ -342,7 +342,7 @@ bool UNovaSessionsManager::InviteFriend(FUniqueNetIdRepl FriendUserId)
 		FUniqueNetIdRepl  UserId   = Player->GetPreferredUniqueNetId();
 
 		// Send invite
-		return Sessions->SendSessionInviteToFriend(*UserId, GameSessionName, *FriendUserId);
+		return Sessions->SendSessionInviteToFriend(*UserId, NAME_GameSession, *FriendUserId);
 	}
 
 	return false;
@@ -465,7 +465,7 @@ void UNovaSessionsManager::OnFindSessionsComplete(bool bWasSuccessful)
 	{
 		Sessions->ClearOnFindSessionsCompleteDelegate_Handle(OnFindSessionsCompleteDelegateHandle);
 
-		EOnlineSessionState::Type SessionState = Sessions->GetSessionState(GameSessionName);
+		EOnlineSessionState::Type SessionState = Sessions->GetSessionState(NAME_GameSession);
 		if (SessionState == EOnlineSessionState::NoSession || SessionState == EOnlineSessionState::Ended)
 		{
 			NetworkState = ENovaNetworkState::Offline;
@@ -587,7 +587,7 @@ void UNovaSessionsManager::OnFindFriendSessionComplete(
 		// Handle error
 		else
 		{
-			EOnlineSessionState::Type SessionState = Sessions->GetSessionState(GameSessionName);
+			EOnlineSessionState::Type SessionState = Sessions->GetSessionState(NAME_GameSession);
 			if (SessionState == EOnlineSessionState::NoSession || SessionState == EOnlineSessionState::Ended)
 			{
 				NetworkState = ENovaNetworkState::Offline;
@@ -676,7 +676,7 @@ void UNovaSessionsManager::ProcessAction(FNovaSessionAction Action)
 			ULocalPlayer* Player                = GameInstance->GetFirstGamePlayer();
 			OnJoinSessionCompleteDelegateHandle = Sessions->AddOnJoinSessionCompleteDelegate_Handle(OnJoinSessionCompleteDelegate);
 
-			Sessions->JoinSession(*Player->GetPreferredUniqueNetId(), GameSessionName, Action.SessionToJoin);
+			Sessions->JoinSession(*Player->GetPreferredUniqueNetId(), NAME_GameSession, Action.SessionToJoin);
 		}
 
 		// We are playing alone, reload a level

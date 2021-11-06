@@ -27,9 +27,10 @@ public class AstralShipwright : ModuleRules
             "RHI",
             "RenderCore",
 
-            "Http",
+            "HTTP",
             "OnlineSubsystem",
-            "OnlineSubsystemUtils"
+            "OnlineSubsystemUtils",
+            "NetCore"
         });
 
         if (Target.Type == TargetType.Editor)

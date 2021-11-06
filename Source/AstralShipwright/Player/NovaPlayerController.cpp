@@ -97,13 +97,13 @@ ANovaPlayerController::ANovaPlayerController()
 				const FNovaPostProcessSetting* MyTarget         = static_cast<const FNovaPostProcessSetting*>(Target.Get());
 
 				// Config-driven settings
-				Volume->Settings.bOverride_BloomMethod                     = true;
-				Volume->Settings.bOverride_ScreenPercentage                = true;
+				Volume->Settings.bOverride_BloomMethod = true;
+				// Volume->Settings.bOverride_ScreenPercentage                = true;
 				Volume->Settings.bOverride_DynamicGlobalIlluminationMethod = true;
 				Volume->Settings.bOverride_ReflectionMethod                = true;
 				Volume->Settings.BloomMethod                               = GameUserSettings->EnableCinematicBloom ? BM_FFT : BM_SOG;
-				Volume->Settings.ScreenPercentage                          = GameUserSettings->ScreenPercentage;
-				Volume->Settings.RayTracingAO                              = GameUserSettings->EnableRaytracedAO;
+				// Volume->Settings.ScreenPercentage                          = GameUserSettings->ScreenPercentage;
+				Volume->Settings.RayTracingAO = GameUserSettings->EnableRaytracedAO;
 				Volume->Settings.DynamicGlobalIlluminationMethod =
 					GameUserSettings->EnableLumen ? EDynamicGlobalIlluminationMethod::Lumen : EDynamicGlobalIlluminationMethod::ScreenSpace;
 				Volume->Settings.ReflectionMethod =
@@ -118,12 +118,12 @@ ANovaPlayerController::ANovaPlayerController()
 		        // Alpha));
 
 				// Built-in settings (overrides)
-				Volume->Settings.bOverride_GrainIntensity = true;
-				Volume->Settings.bOverride_SceneColorTint = true;
+				Volume->Settings.bOverride_FilmGrainIntensity = true;
+				Volume->Settings.bOverride_SceneColorTint     = true;
 
 				// Built in settings (values)
-				Volume->Settings.GrainIntensity = FMath::Lerp(MyCurrent->GrainIntensity, MyTarget->GrainIntensity, Alpha);
-				Volume->Settings.SceneColorTint = FMath::Lerp(MyCurrent->SceneColorTint, MyTarget->SceneColorTint, Alpha);
+				Volume->Settings.FilmGrainIntensity = FMath::Lerp(MyCurrent->GrainIntensity, MyTarget->GrainIntensity, Alpha);
+				Volume->Settings.SceneColorTint     = FMath::Lerp(MyCurrent->SceneColorTint, MyTarget->SceneColorTint, Alpha);
 			}));
 }
 

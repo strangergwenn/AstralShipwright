@@ -198,7 +198,7 @@ public:
 		// clang-format on
 
 		UpdateCallback = InArgs._OnUpdate;
-		ColorAndOpacity.BindRaw(this, &SNovaFadingWidget::GetLinearColor);
+		SetColorAndOpacity(TAttribute<FLinearColor>(this, &SNovaFadingWidget::GetLinearColor));
 	}
 
 	void SetObjectList(TArray<FNovaOrbitalObject> NewObjectList)

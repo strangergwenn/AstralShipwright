@@ -102,7 +102,7 @@ void SNovaLoadingScreen::Tick(const FGeometry& AllottedGeometry, const double Cu
 
 	if (AnimatedMaterialInstance)
 	{
-		AnimatedMaterialInstance->SetScalarParameterValue("Time", LoadingScreenTime);
+		// AnimatedMaterialInstance->SetScalarParameterValue("Time", LoadingScreenTime);
 	}
 
 	LoadingScreenTime += DeltaTime;
