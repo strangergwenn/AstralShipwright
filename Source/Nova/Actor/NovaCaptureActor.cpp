@@ -36,6 +36,7 @@ FNovaAssetPreviewSettings::FNovaAssetPreviewSettings()
 	, UsePowerfulLight(false)
 	, Offset(FVector::ZeroVector)
 	, Rotation(FRotator::ZeroRotator)
+	, RelativeXOffset(0.0f)
 	, Scale(1.0f)
 {}
 
@@ -256,7 +257,7 @@ void ANovaCaptureActor::ConfigureScene(const FNovaAssetPreviewSettings& Settings
 	// Apply offset
 	CameraArmComponent->SetWorldLocation(CurrentOrigin);
 	CameraCapture->SetRelativeLocation(ProjectedOffset);
-	PreviewActor->SetActorRelativeLocation(Settings.Offset);
+	PreviewActor->SetActorRelativeLocation(Settings.Offset + Settings.RelativeXOffset * Bounds.W);
 	PreviewActor->SetActorRelativeRotation(Settings.Rotation);
 	PreviewActor->SetActorScale3D(Settings.Scale * FVector(1.0f, 1.0f, 1.0f));
 }

@@ -18,6 +18,7 @@ struct FNovaAssetPreviewSettings
 	bool     UsePowerfulLight;
 	FVector  Offset;
 	FRotator Rotation;
+	float    RelativeXOffset;
 	float    Scale;
 };
 
