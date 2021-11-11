@@ -144,7 +144,7 @@ FNovaAssetPreviewSettings UNovaCompartmentDescription::GetPreviewSettings() cons
 	Settings.RequireCustomPrimitives = true;
 	Settings.UsePowerfulLight        = true;
 	Settings.Rotation                = FRotator(0, 180, 0);
-	Settings.RelativeXOffset         = -0.7f;
+	Settings.RelativeXOffset         = -0.8f;
 	Settings.Scale *= 0.9f;
 
 	return Settings;
