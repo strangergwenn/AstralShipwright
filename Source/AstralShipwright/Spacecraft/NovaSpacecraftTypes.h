@@ -14,8 +14,9 @@
 UENUM()
 enum class ENovaEquipmentType : uint8
 {
-	Standard,
-	Aft
+	Standard,       // Equipment that may transit cargo, humans, fuel
+	Unconnected,    // Simplified equipment that only needs a few wires
+	Aft             // Engine equipment
 };
 
 /** Type of bulkhead to use */
