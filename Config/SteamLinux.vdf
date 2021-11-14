@@ -1,7 +1,7 @@
 "AppBuild"
 {
 	"AppID" "1728180"
-	"Desc" "UE5 - Linux"
+	"Desc" "Linux"
 
 	"ContentRoot" "..\Packaged\Linux"
 	"BuildOutput" "..\Steam"
