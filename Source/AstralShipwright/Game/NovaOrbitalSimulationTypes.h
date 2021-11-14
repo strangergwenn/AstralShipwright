@@ -157,7 +157,7 @@ struct FNovaOrbitGeometry
 	{
 		NCHECK(Body);
 		const double PhaseDelta = (DeltaTime / GetOrbitalPeriod()) * 360;
-		double       Result     = StartPhase + (Unwind ? FMath::Fmod(PhaseDelta, 360.0) : PhaseDelta);
+		double       Result     = StartPhase + (Unwind ? fmod(PhaseDelta, 360.0) : PhaseDelta);
 
 		if (Unwind)
 		{
