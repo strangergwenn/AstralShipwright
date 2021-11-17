@@ -11,6 +11,8 @@
 
 #include "Nova.h"
 
+#include "Widgets/Layout/SBackgroundBlur.h"
+
 #define LOCTEXT_NAMESPACE "SNovaMainMenuHome"
 
 /*----------------------------------------------------
@@ -29,26 +31,73 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 	// clang-format off
 	ChildSlot
 	[
-		SNew(SHorizontalBox)
-
 		// Main box
-		+ SHorizontalBox::Slot()
-		.VAlign(VAlign_Top)
-		.AutoWidth()
-		[
-			SNew(SHorizontalBox)
+		SNew(SVerticalBox)
+		
+		+ SVerticalBox::Slot()
 
-			+ SHorizontalBox::Slot()
-			[
-				SNovaDefaultNew(SNovaLargeButton)
-				.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
-				.Text(LOCTEXT("Launch", "Launch game"))
-				.HelpText(LOCTEXT("LaunchHelp", "Start a new session"))
-				.OnClicked(this, &SNovaMainMenuHome::OnLaunchGame)
-			]
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.HAlign(HAlign_Center)
+		[
+			SNew(SImage)
+			.Image(FNovaStyleSet::GetBrush("Common/SB_AstralShipwright"))
 		]
 
-		+ SHorizontalBox::Slot()
+		+ SVerticalBox::Slot()
+
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.VAlign(VAlign_Bottom)
+		[
+			SNew(SBackgroundBlur)
+			.BlurRadius(Theme.BlurRadius)
+			.BlurStrength(Theme.BlurStrength)
+			.bApplyAlphaToBlur(true)
+			.Padding(0)
+			[
+				SNew(SBorder)
+				.BorderImage(&Theme.MainMenuBackground)
+				.Padding(Theme.ContentPadding)
+				[
+					SNew(SHorizontalBox)
+
+					+ SHorizontalBox::Slot()
+
+					+ SHorizontalBox::Slot()
+					[
+						SNovaDefaultNew(SNovaLargeButton)
+						.Theme("MainMenuButton")
+						.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
+						.Text(LOCTEXT("Launch1", "Slot 1"))
+						.HelpText(LOCTEXT("LaunchHelp1", "Load save data from the first save slot"))
+						.OnClicked(FSimpleDelegate::CreateLambda([this]() { OnLaunchGame(1); } ))
+					]
+
+					+ SHorizontalBox::Slot()
+					[
+						SNovaDefaultNew(SNovaLargeButton)
+						.Theme("MainMenuButton")
+						.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
+						.Text(LOCTEXT("Launch2", "Slot 2"))
+						.HelpText(LOCTEXT("LaunchHelp2", "Load save data from the second save slot"))
+						.OnClicked(FSimpleDelegate::CreateLambda([this]() { OnLaunchGame(2); } ))
+					]
+
+					+ SHorizontalBox::Slot()
+					[
+						SNovaDefaultNew(SNovaLargeButton)
+						.Theme("MainMenuButton")
+						.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
+						.Text(LOCTEXT("Launch3", "Slot 3"))
+						.HelpText(LOCTEXT("LaunchHelp3", "Load save data from the third save slot"))
+						.OnClicked(FSimpleDelegate::CreateLambda([this]() { OnLaunchGame(3); } ))
+					]
+
+					+ SHorizontalBox::Slot()
+				]
+			]
+		]
 	];
 	// clang-format on
 }
@@ -75,9 +124,9 @@ void SNovaMainMenuHome::Hide()
     Callbacks
 ----------------------------------------------------*/
 
-void SNovaMainMenuHome::OnLaunchGame()
+void SNovaMainMenuHome::OnLaunchGame(uint32 Index)
 {
-	MenuManager->GetPC()->StartGame("1", true);
+	MenuManager->GetPC()->StartGame(FString::FromInt(Index), true);
 }
 
 #undef LOCTEXT_NAMESPACE

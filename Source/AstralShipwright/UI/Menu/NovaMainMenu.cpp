@@ -101,7 +101,7 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 				+ SHorizontalBox::Slot()
 				.HAlign(HAlign_Left)
 				[
-					SAssignNew(Tooltip, SNovaText)
+					SAssignNew(Tooltip, SNovaRichText)
 					.TextStyle(&Theme.MainFont)
 					.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenu::GetTooltipText))
 				]
@@ -139,7 +139,6 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		.Header(LOCTEXT("HomeMenuTitle", "Home"))
 		.HeaderHelp(LOCTEXT("MainMenuTitleHelp", "Start playing"))
 		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::IsHomeMenuVisible))
-		.Blur()
 		[
 			SAssignNew(HomeMenu, SNovaMainMenuHome)
 			.Menu(this)
@@ -393,7 +392,7 @@ FText SNovaMainMenu::GetCloseHelpText() const
 
 FText SNovaMainMenu::GetTooltipText() const
 {
-	return CurrentTooltipText;
+	return FText::FromString(TEXT("<img src=\"/Text/Info\"/> ") + CurrentTooltipText.ToString());
 }
 
 FText SNovaMainMenu::GetDateText() const

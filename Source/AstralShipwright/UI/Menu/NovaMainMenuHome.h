@@ -44,7 +44,7 @@ protected:
 	    Callbacks
 	----------------------------------------------------*/
 
-	void OnLaunchGame();
+	void OnLaunchGame(uint32 Index);
 
 	/*----------------------------------------------------
 	    Data

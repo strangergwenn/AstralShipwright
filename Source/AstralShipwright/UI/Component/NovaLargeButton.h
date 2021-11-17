@@ -14,6 +14,7 @@ class SNovaLargeButton : public SNovaButton
 	SLATE_ATTRIBUTE(FText, Text)
 	SLATE_ATTRIBUTE(FText, HelpText)
 	SLATE_ATTRIBUTE(FName, Action)
+	SLATE_ARGUMENT(FName, Theme)
 	SLATE_ATTRIBUTE(const FSlateBrush*, Icon)
 	SLATE_EVENT(FSimpleDelegate, OnClicked)
 
@@ -22,13 +23,14 @@ class SNovaLargeButton : public SNovaButton
 public:
 	void Construct(const FArguments& InArgs)
 	{
-		const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme();
+		const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(InArgs._Theme);
 
 		// clang-format off
 		SNovaButton::Construct(SNovaButton::FArguments()
 			.Size("LargeButtonSize")
 			.HelpText(InArgs._HelpText)
 			.Action(InArgs._Action)
+			.Theme(InArgs._Theme)
 			.BorderRotation(45)
 			.Header()
 			[
