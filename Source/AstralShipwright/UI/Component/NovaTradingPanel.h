@@ -58,7 +58,8 @@ protected:
 	TOptional<float> GetCargoProgress() const;
 
 	FText GetCargoAmount() const;
-	FText GetCargoCapacity() const;
+	FText GetCargoMinValue() const;
+	FText GetCargoMaxValue() const;
 	FText GetCargoDetails() const;
 
 	FText            GetTransactionDetails() const;
@@ -81,7 +82,7 @@ protected:
 	// Slate widgets
 	TSharedPtr<class SNovaSlider>            AmountSlider;
 	TSharedPtr<class SNovaTradableAssetItem> ResourceItem;
-	TSharedPtr<class SHorizontalBox>         UnitsBox;
+	TSharedPtr<class SHorizontalBox>         CaptionBox;
 	TSharedPtr<class SNovaInfoText>          InfoText;
 
 	// Data

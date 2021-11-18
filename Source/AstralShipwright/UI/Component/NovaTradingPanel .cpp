@@ -29,123 +29,140 @@ void SNovaTradingPanel::Construct(const FArguments& InArgs)
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 
 	SNovaModalPanel::Construct(SNovaModalPanel::FArguments().Menu(InArgs._Menu));
+	uint32 TextWidth = FNovaStyleSet::GetButtonSize("DoubleButtonSize").Width - Theme.ContentPadding.Left - Theme.ContentPadding.Right;
 
 	// clang-format off
-		SAssignNew(InternalWidget, SHorizontalBox)
+	SAssignNew(InternalWidget, SHorizontalBox)
 
-		+ SHorizontalBox::Slot()
+	+ SHorizontalBox::Slot()
 
-		+ SHorizontalBox::Slot()
-		.AutoWidth()
+	+ SHorizontalBox::Slot()
+	.AutoWidth()
+	[
+		SNew(SVerticalBox)
+
+		+ SVerticalBox::Slot()
+		.AutoHeight()
 		[
-			SNew(SVerticalBox)
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
+			SNew(SNovaButtonLayout)
+			.Size("DoubleButtonSize")
 			[
-				SNew(SNovaButtonLayout)
-				.Size("DoubleButtonSize")
+				SNew(SVerticalBox)
+
+				// Asset render
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(Theme.VerticalContentPadding)
 				[
-					SNew(SVerticalBox)
+					SAssignNew(ResourceItem, SNovaTradableAssetItem)
+					.Dark(true)
+				]
 
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.Padding(Theme.VerticalContentPadding)
+				// Text box
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SBorder)
+					.BorderImage(&Theme.MainMenuGenericBackground)
+					.Padding(Theme.ContentPadding)
 					[
-						SNew(STextBlock)
-						.TextStyle(&Theme.MainFont)
-						.Text(this, &SNovaTradingPanel::GetResourceDetails)
-						.AutoWrapText(true)
-						.WrapTextAt(FNovaStyleSet::GetButtonSize("DoubleButtonSize").Width)
-					]
+						SNew(SVerticalBox)
 
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SAssignNew(ResourceItem, SNovaTradableAssetItem)
-						.Dark(true)
-					]
-
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.Padding(Theme.VerticalContentPadding)
-					[
-						SNew(STextBlock)
-						.TextStyle(&Theme.MainFont)
-						.Text(this, &SNovaTradingPanel::GetCargoDetails)
-						.AutoWrapText(true)
-						.WrapTextAt(FNovaStyleSet::GetButtonSize("DoubleButtonSize").Width)
-					]
-
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.Padding(Theme.VerticalContentPadding)
-					[
-						SNew(SProgressBar)
-						.Style(&Theme.ProgressBarStyle)
-						.Percent(this, &SNovaTradingPanel::GetCargoProgress)
-					]
-
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.Padding(Theme.VerticalContentPadding)
-					[
-						SAssignNew(UnitsBox, SHorizontalBox)
-
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(Theme.VerticalContentPadding)
 						[
 							SNew(STextBlock)
 							.TextStyle(&Theme.MainFont)
-							.Text(FText::FromString("0"))
+							.Text(this, &SNovaTradingPanel::GetResourceDetails)
+							.AutoWrapText(true)
+							.WrapTextAt(TextWidth)
 						]
 
-						+ SHorizontalBox::Slot()
-
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(Theme.VerticalContentPadding)
 						[
-							SNew(STextBlock)
-							.TextStyle(&Theme.MainFont)
-							.Text(this, &SNovaTradingPanel::GetCargoAmount)
+							SNew(SProgressBar)
+							.Style(&Theme.ProgressBarStyle)
+							.Percent(this, &SNovaTradingPanel::GetCargoProgress)
 						]
 
-						+ SHorizontalBox::Slot()
-
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(Theme.VerticalContentPadding)
 						[
 							SNew(STextBlock)
 							.TextStyle(&Theme.MainFont)
-							.Text(this, &SNovaTradingPanel::GetCargoCapacity)
+							.Text(this, &SNovaTradingPanel::GetCargoDetails)
+							.AutoWrapText(true)
+							.WrapTextAt(TextWidth)
 						]
 					]
 				]
-			]
 
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SNovaDefaultAssignNew(AmountSlider, SNovaSlider)
-				.Size("DoubleButtonSize")
-				.ValueStep(10.0f)
-			]
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(Theme.VerticalContentPadding)
-			[
-				SNew(SNovaButtonLayout)
-				.Size("DoubleButtonSize")
+				// Caption box
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(Theme.VerticalContentPadding)
 				[
-					SAssignNew(InfoText, SNovaInfoText)
-					.Text(this, &SNovaTradingPanel::GetTransactionDetails)
-					.Type(this, &SNovaTradingPanel::GetTransactionType)
+					SAssignNew(CaptionBox, SHorizontalBox)
+
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNew(STextBlock)
+						.TextStyle(&Theme.MainFont)
+						.Text(this, &SNovaTradingPanel::GetCargoMinValue)
+					]
+
+					+ SHorizontalBox::Slot()
+
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNew(STextBlock)
+						.TextStyle(&Theme.MainFont)
+						.Text(this, &SNovaTradingPanel::GetCargoAmount)
+					]
+
+					+ SHorizontalBox::Slot()
+
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNew(STextBlock)
+						.TextStyle(&Theme.MainFont)
+						.Text(this, &SNovaTradingPanel::GetCargoMaxValue)
+					]
 				]
 			]
 		]
+
+		// Slider
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNovaDefaultAssignNew(AmountSlider, SNovaSlider)
+			.Size("DoubleButtonSize")
+			.ValueStep(10.0f)
+		]
+
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
+		[
+			SNew(SNovaButtonLayout)
+			.Size("DoubleButtonSize")
+			[
+				SAssignNew(InfoText, SNovaInfoText)
+				.Text(this, &SNovaTradingPanel::GetTransactionDetails)
+				.Type(this, &SNovaTradingPanel::GetTransactionType)
+			]
+		]
+	]
 		
-		+ SHorizontalBox::Slot();
+	+ SHorizontalBox::Slot();
 	// clang-format on
 }
 
@@ -212,8 +229,9 @@ void SNovaTradingPanel::ShowPanelInternal(
 	if (AllowTrade)
 	{
 		InfoText->SetVisibility(EVisibility::Visible);
-		UnitsBox->SetVisibility(EVisibility::Visible);
+		CaptionBox->SetVisibility(EVisibility::Visible);
 		AmountSlider->SetVisibility(EVisibility::Visible);
+		AmountSlider->SetMinValue(MinAmount);
 		AmountSlider->SetMaxValue(MaxAmount);
 		AmountSlider->SetCurrentValue(InitialAmount);
 
@@ -224,7 +242,7 @@ void SNovaTradingPanel::ShowPanelInternal(
 	else
 	{
 		InfoText->SetVisibility(EVisibility::Collapsed);
-		UnitsBox->SetVisibility(EVisibility::Collapsed);
+		CaptionBox->SetVisibility(EVisibility::Collapsed);
 		AmountSlider->SetVisibility(EVisibility::Collapsed);
 
 		Show(LOCTEXT("InspectTitle", "Inspect cargo slot"), FText(), FSimpleDelegate());
@@ -262,9 +280,14 @@ FText SNovaTradingPanel::GetCargoAmount() const
 		LOCTEXT("CargoAmountFormat", "{amount} T"), TEXT("amount"), FText::AsNumber(FMath::RoundToInt(AmountSlider->GetCurrentValue())));
 }
 
-FText SNovaTradingPanel::GetCargoCapacity() const
+FText SNovaTradingPanel::GetCargoMinValue() const
 {
-	return FText::FormatNamed(LOCTEXT("CargoCapacityFormat", "{capacity} T"), TEXT("capacity"), FText::AsNumber(MaxAmount));
+	return FText::FormatNamed(LOCTEXT("CargoMinFormat", "{min} T (min)"), TEXT("min"), FText::AsNumber(MinAmount));
+}
+
+FText SNovaTradingPanel::GetCargoMaxValue() const
+{
+	return FText::FormatNamed(LOCTEXT("CargoMaxFormat", "{max} T (max)"), TEXT("max"), FText::AsNumber(MaxAmount));
 }
 
 FText SNovaTradingPanel::GetCargoDetails() const

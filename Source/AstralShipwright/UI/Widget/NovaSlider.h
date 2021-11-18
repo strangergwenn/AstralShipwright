@@ -62,6 +62,9 @@ public:
 	/** Get the maximum value */
 	float GetMaxValue() const;
 
+	/** Set the minimum value */
+	void SetMinValue(float Value);
+
 	/** Set the maximum value */
 	void SetMaxValue(float Value);
 

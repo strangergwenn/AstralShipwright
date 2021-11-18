@@ -160,9 +160,14 @@ float SNovaSlider::GetMaxValue() const
 	return Slider->GetMaxValue();
 }
 
+void SNovaSlider::SetMinValue(float Value)
+{
+	Slider->SetMinAndMaxValues(Value, Slider->GetMaxValue());
+}
+
 void SNovaSlider::SetMaxValue(float Value)
 {
-	Slider->SetMinAndMaxValues(0, Value);
+	Slider->SetMinAndMaxValues(Slider->GetMinValue(), Value);
 }
 
 void SNovaSlider::SetCurrentValue(float Value)
