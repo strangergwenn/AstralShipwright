@@ -405,7 +405,7 @@ FOptionalSize SNovaButton::GetVisualWidth() const
 	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
 
 	float DisabledOffset =
-		FMath::InterpEaseInOut(0.0f, Size.DisabledAnimationSize.X, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+		FMath::InterpEaseInOut(0.0, Size.DisabledAnimationSize.X, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
 	float FocusedOffset = State.CurrentUserSizeAnimationAlpha * Size.UserAnimationSize.X;
 	float Width         = Size.Width + DisabledOffset + FocusedOffset;
 
@@ -423,7 +423,7 @@ FOptionalSize SNovaButton::GetVisualHeight() const
 	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
 
 	float DisabledOffset =
-		FMath::InterpEaseInOut(0.0f, Size.DisabledAnimationSize.Y, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+		FMath::InterpEaseInOut(0.0, Size.DisabledAnimationSize.Y, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
 	float FocusedOffset = State.CurrentUserSizeAnimationAlpha * Size.UserAnimationSize.Y;
 	float Height        = Size.Height + DisabledOffset + FocusedOffset;
 
@@ -441,7 +441,7 @@ FOptionalSize SNovaButton::GetLayoutWidth() const
 	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
 
 	float DisabledOffset =
-		FMath::InterpEaseInOut(0.0f, Size.DisabledAnimationSize.X, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+		FMath::InterpEaseInOut(0.0, Size.DisabledAnimationSize.X, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
 	float FocusedOffset = State.CurrentUserSizeAnimationAlpha * Size.UserAnimationSize.X;
 
 	return Size.Width + DisabledOffset + FocusedOffset;
@@ -453,7 +453,7 @@ FOptionalSize SNovaButton::GetLayoutHeight() const
 	const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(SizeName);
 
 	float DisabledOffset =
-		FMath::InterpEaseInOut(0.0f, Size.DisabledAnimationSize.Y, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
+		FMath::InterpEaseInOut(0.0, Size.DisabledAnimationSize.Y, State.CurrentDisabledAnimationAlpha, ENovaUIConstants::EaseLight);
 	float FocusedOffset = State.CurrentUserSizeAnimationAlpha * Size.UserAnimationSize.Y;
 
 	return Size.Height + DisabledOffset + FocusedOffset;
