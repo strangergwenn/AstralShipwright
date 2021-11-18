@@ -7,7 +7,7 @@ public class AstralShipwright : ModuleRules
     public AstralShipwright(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-		PublicIncludePaths.Add("AstralShipwright");
+        PublicIncludePaths.Add("AstralShipwright");
         PrivatePCHHeaderFile = "Nova.h";
 
         PrivateDependencyModuleNames.AddRange(new string[] {
@@ -43,7 +43,7 @@ public class AstralShipwright : ModuleRules
         if (Target.Platform.IsInGroup(UnrealPlatformGroup.Windows))
         {
             PrivateDependencyModuleNames.AddRange(new string[] {
-                //"DLSS"
+                "DLSS"
             });
         }
 

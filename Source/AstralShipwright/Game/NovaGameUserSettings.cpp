@@ -6,7 +6,7 @@
 #include "Modules/ModuleManager.h"
 #include "RenderCore.h"
 
-#define HAS_DLSS PLATFORM_WINDOWS && 0
+#define HAS_DLSS PLATFORM_WINDOWS && 1
 
 #if HAS_DLSS
 #include "DLSS.h"
@@ -26,8 +26,16 @@ UNovaGameUserSettings::UNovaGameUserSettings()
 void UNovaGameUserSettings::ApplyCustomGraphicsSettings()
 {
 #if HAS_DLSS
+	EnableDLSS = EnableDLSS && IsDLSSSupported();
+
+	// Toggle VRS
+	IConsoleVariable* VRSVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.VRS.Enable"));
+	if (VRSVar)
+	{
+		VRSVar->Set(EnableDLSS ? 0 : 1, ECVF_SetByConsole);
+	}
+
 	// Toggle DLSS
-	EnableDLSS                = EnableDLSS && IsDLSSSupported();
 	IConsoleVariable* DLSSVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.NGX.DLSS.Enable"));
 	if (DLSSVar)
 	{
