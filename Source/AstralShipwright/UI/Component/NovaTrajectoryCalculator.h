@@ -18,8 +18,8 @@ class SNovaTrajectoryCalculator : public SCompoundWidget
 		: _MenuManager(nullptr)
 		, _Panel(nullptr)
 		, _FadeTime(ENovaUIConstants::FadeDurationShort)
-		, _MinAltitude(100)
-		, _MaxAltitude(1000)
+		, _MinAltitude(200)
+		, _MaxAltitude(2000)
 		, _DeltaVActionName(NAME_None)
 		, _DurationActionName(NAME_None)
 	{}
