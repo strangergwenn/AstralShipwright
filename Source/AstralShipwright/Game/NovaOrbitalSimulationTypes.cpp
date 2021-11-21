@@ -1,6 +1,7 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaOrbitalSimulationTypes.h"
+#include "Spacecraft/NovaSpacecraft.h"
 
 /*----------------------------------------------------
     Simulation structures
@@ -30,6 +31,19 @@ FNovaOrbit FNovaTrajectory::GetFinalOrbit() const
 	FinalGeometry.StartPhase         = fmod(FinalGeometry.EndPhase, 360.0f);
 
 	return FNovaOrbit(FinalGeometry, GetArrivalTime());
+}
+
+float FNovaTrajectory::GetTotalPropellantUsed(int32 SpacecraftIndex, const FNovaSpacecraftPropulsionMetrics& Metrics)
+{
+	float PropellantUsed = 0;
+
+	for (const FNovaManeuver& Maneuver : Maneuvers)
+	{
+		NCHECK(SpacecraftIndex >= 0 && SpacecraftIndex < Maneuver.ThrustFactors.Num());
+		PropellantUsed += Maneuver.Duration.AsSeconds() * Metrics.PropellantRate * Maneuver.ThrustFactors[SpacecraftIndex];
+	}
+
+	return PropellantUsed;
 }
 
 FNovaOrbitalLocation FNovaTrajectory::GetCurrentLocation(FNovaTime CurrentTime) const

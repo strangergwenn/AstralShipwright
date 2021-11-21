@@ -289,6 +289,7 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNo
 	Reset();
 
 	// Run trajectory calculations over a range of altitudes
+	PlayerIdentifiers = SpacecraftIdentifiers;
 	const TSharedPtr<FNovaTrajectoryParameters>& Parameters =
 		OrbitalSimulation->PrepareTrajectory(Source, Destination, FNovaTime::FromMinutes(1), SpacecraftIdentifiers);
 	SimulatedTrajectories.Reserve((Slider->GetMaxValue() - Slider->GetMinValue()) / AltitudeStep + 1);
@@ -444,7 +445,8 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 		NCHECK(GameState);
 		if (IsValid(GameState))
 		{
-			for (const FGuid& Identifier : GameState->GetPlayerSpacecraftIdentifiers())
+			int32 CurrentSpacecraftIndex = 0;
+			for (const FGuid& Identifier : PlayerIdentifiers)
 			{
 				const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Identifier);
 
@@ -455,10 +457,10 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 					NCHECK(PropellantSystem);
 
 					// Process remaining propellant
-					float FuelToBeUsed = Spacecraft->GetPropulsionMetrics().GetRequiredPropellant(
-						(*TrajectoryPtr)->TotalDeltaV, Spacecraft->GetCurrentCargoMass());
-					float FuelRemaining = PropellantSystem->GetCurrentPropellantMass();
-					if (HasEnoughPropellant && FuelToBeUsed > FuelRemaining)
+					float PropellantRemaining = PropellantSystem->GetCurrentPropellantMass();
+					float PropellantUsed =
+						(*TrajectoryPtr)->GetTotalPropellantUsed(CurrentSpacecraftIndex, Spacecraft->GetPropulsionMetrics());
+					if (HasEnoughPropellant && PropellantUsed > PropellantRemaining)
 					{
 						HasEnoughPropellant = false;
 					}
@@ -474,11 +476,13 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 
 					// Format the propellant data
 					TrajectoryDetails += FText::FormatNamed(
-						LOCTEXT("TrajectoryFuelFormat", "{spacecraft}: {used} T of propellant required ({remaining} T remaining)"),
-						TEXT("spacecraft"), Spacecraft->GetName(), TEXT("used"), FText::AsNumber(FuelToBeUsed, &Options), TEXT("remaining"),
-						FText::AsNumber(FuelRemaining, &Options))
+						LOCTEXT("TrajectoryPropellantFormat", "{spacecraft}: {used} T of propellant required ({remaining} T remaining)"),
+						TEXT("spacecraft"), Spacecraft->GetName(), TEXT("used"), FText::AsNumber(PropellantUsed, &Options),
+						TEXT("remaining"), FText::AsNumber(PropellantRemaining, &Options))
 											 .ToString();
 				}
+
+				CurrentSpacecraftIndex++;
 			}
 		}
 

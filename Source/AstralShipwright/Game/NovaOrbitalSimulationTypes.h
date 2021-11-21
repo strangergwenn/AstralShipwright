@@ -426,6 +426,9 @@ struct FNovaTrajectory
 		return FinalManeuver.Time + FinalManeuver.Duration;
 	}
 
+	/** Get how many tons of propellant will be used */
+	float GetTotalPropellantUsed(int32 SpacecraftIndex, const struct FNovaSpacecraftPropulsionMetrics& Metrics);
+
 	/** Get the number of remaining maneuvers */
 	int32 GetRemainingManeuverCount(FNovaTime CurrentTime) const
 	{

@@ -102,6 +102,7 @@ protected:
 	int32                            AltitudeStep;
 
 	// Trajectory data
+	TArray<FGuid>                                   PlayerIdentifiers;
 	TMap<float, TSharedPtr<struct FNovaTrajectory>> SimulatedTrajectories;
 	float                                           MinDeltaV;
 	float                                           MinDeltaVWithTolerance;
