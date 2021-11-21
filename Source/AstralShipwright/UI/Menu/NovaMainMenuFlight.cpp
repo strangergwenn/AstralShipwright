@@ -280,7 +280,13 @@ bool SNovaMainMenuFlight::IsUndockEnabled() const
 
 bool SNovaMainMenuFlight::IsDockEnabled() const
 {
-	return IsValid(PC) && IsValid(SpacecraftMovement) && SpacecraftMovement->CanDock();
+	if (OrbitalSimulation)
+	{
+		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
+		return PlayerTrajectory == nullptr && IsValid(PC) && IsValid(SpacecraftMovement) && SpacecraftMovement->CanDock();
+	}
+
+	return false;
 }
 
 bool SNovaMainMenuFlight::IsManeuveringEnabled() const
