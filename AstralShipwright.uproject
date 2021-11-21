@@ -407,12 +407,24 @@
 		},
 		{
 			"Name": "Bridge",
-			"Enabled": true,
+			"Enabled": false,
 			"SupportedTargetPlatforms": [
 				"Win64",
 				"Mac",
 				"Linux"
 			]
+		},
+		{
+			"Name": "FastBuildController",
+			"Enabled": false
+		},
+		{
+			"Name": "PlasticSourceControl",
+			"Enabled": false
+		},
+		{
+			"Name": "ResonanceAudio",
+			"Enabled": false
 		}
 	],
 	"TargetPlatforms": [
