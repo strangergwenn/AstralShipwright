@@ -68,7 +68,7 @@ public:
 	    Callbacks
 	----------------------------------------------------*/
 
-	void OnRefuelPropellant();
+	void OnRefillPropellant();
 
 	void OnTradeWithSlot(int32 Index, ENovaResourceType Type);
 

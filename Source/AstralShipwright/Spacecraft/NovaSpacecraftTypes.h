@@ -14,7 +14,7 @@
 UENUM()
 enum class ENovaEquipmentType : uint8
 {
-	Standard,       // Equipment that may transit cargo, humans, fuel
+	Standard,       // Equipment that may transit cargo, humans, propellant
 	Unconnected,    // Simplified equipment that only needs a few wires
 	Aft             // Engine equipment
 };

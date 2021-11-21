@@ -163,7 +163,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 			]
 		]
 
-		// Fuel use
+		// Propellant use
 		+ SVerticalBox::Slot()
 		.Padding(Theme.VerticalContentPadding)
 		[

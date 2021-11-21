@@ -113,7 +113,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 					{
 						return SpacecraftPawn && SpacecraftPawn->IsDocked();
 					})))
-					.OnClicked(this, &SNovaMainMenuInventory::OnRefuelPropellant)
+					.OnClicked(this, &SNovaMainMenuInventory::OnRefillPropellant)
 				]
 			]
 		]
@@ -400,7 +400,7 @@ FText SNovaMainMenuInventory::GetPropellantText() const
     Callbacks
 ----------------------------------------------------*/
 
-void SNovaMainMenuInventory::OnRefuelPropellant()
+void SNovaMainMenuInventory::OnRefillPropellant()
 {
 	TradingModalPanel->Trade(PC, UNovaResource::GetPropellant(), INDEX_NONE);
 }

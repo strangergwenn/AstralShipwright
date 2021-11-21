@@ -184,7 +184,7 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		// Inventory menu
 		+ SNovaTabView::Slot()
 		.Header(LOCTEXT("InventoryMenuTitle", "Inventory"))
-		.HeaderHelp(LOCTEXT("InventoryMenuTitleHelp", "Manage your spacecraft's fuel and cargo"))
+		.HeaderHelp(LOCTEXT("InventoryMenuTitleHelp", "Manage your spacecraft's propellant and cargo"))
 		.Visible(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenu::AreGameMenusVisible))
 		.Blur()
 		[
