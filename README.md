@@ -1,6 +1,6 @@
 # Astral Shipwright
 
-Astral Shipwright is a spaceship building game coming to Steam in 2022.
+Astral Shipwright is a shipbuilding game coming to Steam in 2022.
 
  - [Website](http:/astralshipwright.com)
  - [Store page](https://store.steampowered.com/app/1728180/Astral_Shipwright)
