@@ -428,7 +428,7 @@ TSharedPtr<SNovaButton> SNovaMenu::GetFocusedButton()
 {
 	for (TSharedPtr<SNovaButton> Button : CurrentNavigationButtons)
 	{
-		if (Button->IsFocused() && Button->IsButtonEnabled())
+		if (Button->IsFocused() && Button->GetVisibility() == EVisibility::Visible)
 		{
 			return Button;
 		}
@@ -561,10 +561,7 @@ TSharedPtr<SNovaButton> SNovaMenu::GetNextButtonInternal(
 			if (DestinationWidget.IsValid() && Candidates.Contains(DestinationWidget))
 			{
 				SNovaButton* DestinationButton = static_cast<SNovaButton*>(DestinationWidget.Get());
-				if (DestinationButton->IsButtonEnabled())
-				{
-					return SharedThis(DestinationButton);
-				}
+				return SharedThis(DestinationButton);
 			}
 		}
 	}

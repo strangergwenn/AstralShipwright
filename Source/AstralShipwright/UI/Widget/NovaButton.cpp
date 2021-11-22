@@ -244,6 +244,10 @@ void SNovaButton::Tick(const FGeometry& AllottedGeometry, const double CurrentTi
 	}
 	else
 	{
+		if (IsFocused())
+		{
+			TargetSizeAnim = 1.0f;
+		}
 		TargetDisabledAnim = 1.0f;
 	}
 	if (State.CurrentTimeSinceClicked < Theme.AnimationDuration)

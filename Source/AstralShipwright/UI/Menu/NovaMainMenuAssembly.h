@@ -219,7 +219,9 @@ protected:
 	FText               GenerateModuleTooltip(const class UNovaModuleDescription* Module) const;
 
 	// Compartment equipment list
+	bool                IsEquipmentListEnabled() const;
 	EVisibility         GetEquipmentListVisibility() const;
+	FText               GetEquipmentListHelpText() const;
 	TSharedRef<SWidget> GenerateEquipmentItem(const class UNovaEquipmentDescription* Equipment) const;
 	FText               GetEquipmentListTitle(const class UNovaEquipmentDescription* Equipment) const;
 	FText               GenerateEquipmentTooltip(const class UNovaEquipmentDescription* Equipment) const;
@@ -329,6 +331,7 @@ protected:
 	TSharedPtr<SEditableText>                 SpacecraftNameText;
 	TSharedPtr<class SNovaSlider>             DisplayFilter;
 	TSharedPtr<class SNovaButton>             SaveButton;
+	TSharedPtr<class SNovaButton>             BackButton;
 	TSharedPtr<class SNovaModalPanel>         GenericModalPanel;
 	TSharedPtr<class SNovaAssemblyModalPanel> AssemblyModalPanel;
 	TSharedPtr<SVerticalBox>                  MenuBox;

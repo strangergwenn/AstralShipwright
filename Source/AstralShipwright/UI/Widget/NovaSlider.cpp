@@ -124,25 +124,32 @@ void SNovaSlider::Tick(const FGeometry& AllottedGeometry, const double CurrentTi
 
 bool SNovaSlider::HorizontalAnalogInput(float Value)
 {
-	float Range = Slider->GetMaxValue() - Slider->GetMinValue();
-
-	if (Analog)
+	if (IsButtonEnabled())
 	{
-		OnSliderValueChanged(CurrentValue + SliderAnalogSpeed * Range * Value);
-	}
-	else if (Slider->GetValue() == CurrentValue)
-	{
-		if (Value >= 1.0f)
-		{
-			OnIncrement();
-		}
-		else if (Value <= -1.0f)
-		{
-			OnDecrement();
-		}
-	}
+		float Range = Slider->GetMaxValue() - Slider->GetMinValue();
 
-	return true;
+		if (Analog)
+		{
+			OnSliderValueChanged(CurrentValue + SliderAnalogSpeed * Range * Value);
+		}
+		else if (Slider->GetValue() == CurrentValue)
+		{
+			if (Value >= 1.0f)
+			{
+				OnIncrement();
+			}
+			else if (Value <= -1.0f)
+			{
+				OnDecrement();
+			}
+		}
+
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 float SNovaSlider::GetCurrentValue() const

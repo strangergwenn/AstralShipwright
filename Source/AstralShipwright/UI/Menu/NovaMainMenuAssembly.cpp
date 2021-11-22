@@ -337,8 +337,9 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 									SNovaNew(SNovaCompartmentList)
 									.Panel(this)
 									.Action(FNovaPlayerInput::MenuPrimary)
+									.ActionFocusable(true)
 									.TitleText(LOCTEXT("BuildCompartment", "Insert compartment"))
-									.HelpText(LOCTEXT("BuildCompartmentHelp", "Insert a new compartment forward of selected one"))
+									.HelpText(LOCTEXT("BuildCompartmentHelp", "Insert a new compartment forward of the selected one"))
 									.OnSelfRefresh(SNovaCompartmentList::FNovaOnSelfRefresh::CreateLambda([&]()
 										{
 											int32 NewIndex = GetNewBuildIndex(true);
@@ -356,6 +357,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								[
 									SNovaNew(SNovaButton)
 									.Action(FNovaPlayerInput::MenuSecondary)
+									.ActionFocusable(true)
 									.Text(LOCTEXT("EditCompartment", "Edit compartment"))
 									.HelpText(LOCTEXT("EditCompartmentHelp", "Add modules and equipment to the selected compartment"))
 									.Enabled(this, &SNovaMainMenuAssembly::IsEditCompartmentEnabled)
@@ -512,8 +514,9 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SNovaNew(SNovaButton)
+								SNovaAssignNew(BackButton, SNovaButton)
 								.Action(FNovaPlayerInput::MenuCancel)
+								.ActionFocusable(true)
 								.Text(LOCTEXT("CompartmentBack", "Back to assembly"))
 								.HelpText(LOCTEXT("CompartmentBackHelp", "Go back to the main assembly"))
 								.OnClicked(this, &SNovaMainMenuAssembly::OnBackToAssembly)
@@ -526,6 +529,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								SNovaAssignNew(ModuleListView, SNovaModuleList)
 								.Panel(this)
 								.Action(FNovaPlayerInput::MenuPrimary)
+								.ActionFocusable(true)
 								.ItemsSource(&ModuleList)
 								.ListButtonSize("LargeListButtonSize")
 								.TitleText(LOCTEXT("ModuleListTitle", "Module"))
@@ -544,11 +548,12 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								SNovaAssignNew(EquipmentListView, SNovaEquipmentList)
 								.Panel(this)
 								.Action(FNovaPlayerInput::MenuPrimary)
+								.ActionFocusable(true)
 								.ItemsSource(&EquipmentList)
 								.ListButtonSize("LargeListButtonSize")
 								.TitleText(LOCTEXT("EquipmentListTitle", "Equipment"))
-								.HelpText(LOCTEXT("EquipmentListHelp", "Change the equipment for this slot"))
-								.Enabled(this, &SNovaMainMenuAssembly::IsCompartmentPanelVisible)
+								.HelpText(this, &SNovaMainMenuAssembly::GetEquipmentListHelpText)
+								.Enabled(this, &SNovaMainMenuAssembly::IsEquipmentListEnabled)
 								.Visibility(this, &SNovaMainMenuAssembly::GetEquipmentListVisibility)
 								.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateEquipmentItem)
 								.OnGenerateName(this, &SNovaMainMenuAssembly::GetEquipmentListTitle)
@@ -562,6 +567,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								SNovaAssignNew(HullTypeListView, SNovaHullTypeList)
 								.Panel(this)
 								.Action(FNovaPlayerInput::MenuSecondary)
+								.ActionFocusable(true)
 								.ItemsSource(&HullTypeList)
 								.ListButtonSize("LargeListButtonSize")
 								.TitleText(LOCTEXT("HullListTitle", "Hull type"))
@@ -711,6 +717,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							[
 								SNovaNew(SNovaButton)
 								.Action(FNovaPlayerInput::MenuCancel)
+								.ActionFocusable(true)
 								.Text(LOCTEXT("CompartmentBack", "Back to assembly"))
 								.HelpText(LOCTEXT("CompartmentBackHelp", "Go back to the main assembly"))
 								.OnClicked(this, &SNovaMainMenuAssembly::OnBackToAssembly)
@@ -1327,6 +1334,10 @@ TSharedPtr<SNovaButton> SNovaMainMenuAssembly::GetDefaultFocusButton() const
 	{
 		return DirtyIntensity;
 	}
+	else if (CurrentPanelState == ENovaMainMenuAssemblyState::Compartment && BackButton->IsButtonEnabled())
+	{
+		return BackButton;
+	}
 	else
 	{
 		return nullptr;
@@ -1559,9 +1570,26 @@ FText SNovaMainMenuAssembly::GenerateModuleTooltip(const UNovaModuleDescription*
     Compartment equipment list
 ----------------------------------------------------*/
 
+bool SNovaMainMenuAssembly::IsEquipmentListEnabled() const
+{
+	return IsCompartmentPanelVisible() && IsEquipmentEnabled(GetSelectedEquipmentIndex());
+}
+
 EVisibility SNovaMainMenuAssembly::GetEquipmentListVisibility() const
 {
-	return (!IsModuleSelected() && IsEquipmentEnabled(GetSelectedEquipmentIndex())) ? EVisibility::Visible : EVisibility::Collapsed;
+	return IsModuleSelected() ? EVisibility::Collapsed : EVisibility::Visible;
+}
+
+FText SNovaMainMenuAssembly::GetEquipmentListHelpText() const
+{
+	FText Help;
+
+	if ((IsCompartmentPanelVisible() && IsEquipmentEnabled(GetSelectedModuleIndex(), &Help)) || Help.IsEmpty())
+	{
+		return LOCTEXT("EquipmentListHelp", "Change the equipment for this slot");
+	}
+
+	return Help;
 }
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEquipmentItem(const UNovaEquipmentDescription* Equipment) const

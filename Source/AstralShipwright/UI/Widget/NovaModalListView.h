@@ -31,6 +31,7 @@ private:
 		: _Panel(nullptr)
 		, _ItemsSource(nullptr)
 		, _Enabled(true)
+		, _ActionFocusable(false)
 		, _Horizontal(false)
 		, _ButtonTheme("DefaultButton")
 		, _ButtonSize("DefaultButtonSize")
@@ -45,6 +46,7 @@ private:
 	SLATE_ATTRIBUTE(FName, Action)
 	SLATE_ATTRIBUTE(bool, Enabled)
 	SLATE_ATTRIBUTE(bool, Focusable)
+	SLATE_ARGUMENT(bool, ActionFocusable)
 
 	SLATE_ARGUMENT(FSimpleDelegate, OnDoubleClicked)
 	SLATE_ARGUMENT(FNovaOnSelfRefresh, OnSelfRefresh)
@@ -84,6 +86,7 @@ public:
 						  : TAttribute<FText>())
 				.HelpText(HelpText)
 				.Action(InArgs._Action)
+				.ActionFocusable(InArgs._ActionFocusable)
 				.Theme(InArgs._ButtonTheme)
 				.UserSizeCallback(InArgs._UserSizeCallback)
 				.Size(InArgs._ButtonSize)
