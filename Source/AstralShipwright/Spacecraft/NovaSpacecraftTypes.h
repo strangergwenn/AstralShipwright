@@ -431,10 +431,6 @@ public:
 	// Whether the module needs tank piping
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	bool NeedsPiping = false;
-
-	// Whether the module allow a single connection for a train of identical modules
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	bool AllowCommonWiring = false;
 };
 
 /** Description of a propellant module */
