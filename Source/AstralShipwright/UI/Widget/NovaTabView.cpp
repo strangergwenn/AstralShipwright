@@ -54,10 +54,11 @@ void SNovaTabPanel::OnFocusChanged(TSharedPtr<class SNovaButton> FocusButton)
 	}
 }
 
-void SNovaTabPanel::Initialize(int32 Index, bool IsBlurred, SNovaTabView* Parent)
+void SNovaTabPanel::Initialize(int32 Index, bool IsBlurred, const FSlateBrush* OptionalBackground, SNovaTabView* Parent)
 {
 	Blurred       = IsBlurred;
 	TabIndex      = Index;
+	Background    = OptionalBackground;
 	ParentTabView = Parent;
 }
 
@@ -127,6 +128,14 @@ void SNovaTabView::Construct(const FArguments& InArgs)
 				.BlurStrength(this, &SNovaTabView::GetBlurStrength)
 				.Padding(0)
 			]
+		]
+
+		// Optional background overlay
+		+ SOverlay::Slot()
+		[
+			SNew(SBorder)
+			.BorderImage(this, &SNovaTabView::GetGlobalBackground)
+			.BorderBackgroundColor(this, &SNovaTabView::GetGlobalBackgroundColor)
 		]
 
 		+ SOverlay::Slot()
@@ -257,7 +266,11 @@ void SNovaTabView::Construct(const FArguments& InArgs)
 
 		// Add content
 		SNovaTabPanel* TabPanel = static_cast<SNovaTabPanel*>(Arg.GetAttachedWidget().Get());
-		TabPanel->Initialize(Index, Arg._Blur.Get(), this);
+		TabPanel->Initialize(Index,
+			Arg._Blur.IsSet() ? Arg._Blur.Get() : false,
+			Arg._Background.IsSet() ? Arg._Background.Get() : false, 
+			this);
+
 		Content->AddSlot()
 		[
 			Arg.GetAttachedWidget().ToSharedRef()
@@ -356,11 +369,6 @@ int32 SNovaTabView::GetDesiredTabIndex() const
 	return DesiredTabIndex;
 }
 
-float SNovaTabView::GetCurrentTabAlpha() const
-{
-	return GetCurrentTabContent()->GetCurrentAlpha();
-}
-
 bool SNovaTabView::IsTabVisible(int32 Index) const
 {
 	NCHECK(Index >= 0 && Index < PanelVisibility.Num());
@@ -394,12 +402,22 @@ bool SNovaTabView::IsTabEnabled(int32 Index) const
 
 FLinearColor SNovaTabView::GetColor() const
 {
-	return FLinearColor(1.0f, 1.0f, 1.0f, GetCurrentTabAlpha());
+	return FLinearColor(1.0f, 1.0f, 1.0f, GetCurrentTabContent()->GetCurrentAlpha());
 }
 
 FSlateColor SNovaTabView::GetBackgroundColor() const
 {
 	return FLinearColor(1.0f, 1.0f, 1.0f, CurrentBlurAlpha);
+}
+
+FSlateColor SNovaTabView::GetGlobalBackgroundColor() const
+{
+	return FLinearColor(1.0f, 1.0f, 1.0f, GetCurrentTabContent()->GetCurrentAlpha());
+}
+
+const FSlateBrush* SNovaTabView::GetGlobalBackground() const
+{
+	return GetCurrentTabContent()->GetBackground();
 }
 
 bool SNovaTabView::IsBlurSplit() const

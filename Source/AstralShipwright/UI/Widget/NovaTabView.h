@@ -22,7 +22,7 @@ public:
 	virtual void OnFocusChanged(TSharedPtr<class SNovaButton> FocusButton) override;
 
 	/** Set the parent tab view */
-	void Initialize(int32 Index, bool IsBlurred, class SNovaTabView* Parent);
+	void Initialize(int32 Index, bool IsBlurred, const FSlateBrush* OptionalBackground, class SNovaTabView* Parent);
 
 	/** Start showing this menu */
 	virtual void Show();
@@ -51,10 +51,19 @@ public:
 		return Blurred;
 	}
 
+	/** Get the optional explicit blur background */
+	const FSlateBrush* GetBackground() const
+	{
+		return Background;
+	}
+
 protected:
+	// Parameters
+	bool               Blurred;
+	int32              TabIndex;
+	const FSlateBrush* Background;
+
 	// Data
-	bool  Blurred;
-	int32 TabIndex;
 	bool  CurrentVisible;
 	float CurrentAlpha;
 
@@ -80,6 +89,7 @@ public:
 		SLATE_ATTRIBUTE(FText, HeaderHelp)
 		SLATE_ATTRIBUTE(bool, Visible)
 		SLATE_ATTRIBUTE(bool, Blur)
+		SLATE_ATTRIBUTE(const FSlateBrush*, Background)
 
 		SLATE_SLOT_END_ARGS()
 	};
@@ -138,9 +148,6 @@ public:
 	/** Get the desired widget slot to activate */
 	int32 GetDesiredTabIndex() const;
 
-	/** Get the current alpha */
-	float GetCurrentTabAlpha() const;
-
 	/** Check if the tab at a specific index is visible */
 	bool IsTabVisible(int32 Index) const;
 
@@ -158,11 +165,17 @@ protected:
 	/** Check if this tab can be made active */
 	bool IsTabEnabled(int32 Index) const;
 
-	/** Get the current color for the entire panel */
+	/** Get the current color for the tab contents */
 	FLinearColor GetColor() const;
 
-	/** Get the current color for the entire panel */
+	/** Get the current background color for the tab contents */
 	FSlateColor GetBackgroundColor() const;
+
+	/** Get the current background color for the entire view widget including color */
+	FSlateColor GetGlobalBackgroundColor() const;
+
+	/** Get the optional explicit blur background */
+	const FSlateBrush* GetGlobalBackground() const;
 
 	/** Check if we're rendering the split-blur effect or a simple fullscreen one */
 	bool IsBlurSplit() const;
