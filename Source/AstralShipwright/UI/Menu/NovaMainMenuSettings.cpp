@@ -369,7 +369,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		AntiAliasingSlider = AddSettingSlider(GraphicsContainer, LOCTEXT("AntiAliasingQuality", "Anti-aliasing quality"),
 			LOCTEXT("AntiAliasingQualityHelp", "Set the quality of the anti-aliasing process"),
 			FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnAntiAliasingChanged));
-		ScreenPercentageSlider = AddSettingSlider(GraphicsContainer, LOCTEXT("ScreenPercentage", "Screen percentage ({value}%)"),
+		ScreenPercentageSlider = AddSettingSlider(GraphicsContainer, LOCTEXT("ResolutionScale", "Resolution scale ({value}%)"),
 			LOCTEXT("ScreenPercentageHelp", "Render the game at a higher or lower resolution compared to the display"),
 			FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnScreenPercentageChanged),
 			50, 150, 10, TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenuSettings::IsScreenPercentageSupported)));

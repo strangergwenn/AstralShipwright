@@ -25,8 +25,9 @@ UNovaGameUserSettings::UNovaGameUserSettings()
 
 void UNovaGameUserSettings::ApplyCustomGraphicsSettings()
 {
-#if HAS_DLSS
 	EnableDLSS = EnableDLSS && IsDLSSSupported();
+
+#if HAS_DLSS
 
 	// Toggle VRS
 	IConsoleVariable* VRSVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.VRS.Enable"));
@@ -47,7 +48,7 @@ void UNovaGameUserSettings::ApplyCustomGraphicsSettings()
 	IConsoleVariable* ScreenPercentageVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.ScreenPercentage"));
 	if (ScreenPercentageVar)
 	{
-		ScreenPercentageVar->Set(ScreenPercentage, ECVF_SetByConsole);
+		ScreenPercentageVar->Set(EnableDLSS ? 100 : ScreenPercentage, ECVF_SetByConsole);
 	}
 }
 
