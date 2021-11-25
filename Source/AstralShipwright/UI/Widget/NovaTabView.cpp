@@ -268,7 +268,7 @@ void SNovaTabView::Construct(const FArguments& InArgs)
 		SNovaTabPanel* TabPanel = static_cast<SNovaTabPanel*>(Arg.GetAttachedWidget().Get());
 		TabPanel->Initialize(Index,
 			Arg._Blur.IsSet() ? Arg._Blur.Get() : false,
-			Arg._Background.IsSet() ? Arg._Background.Get() : false, 
+			Arg._Background.IsSet() ? Arg._Background.Get() : nullptr, 
 			this);
 
 		Content->AddSlot()
