@@ -195,82 +195,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 			.HAlign(HAlign_Center)
 			.Padding(Theme.ContentPadding)
 			[
-				SNew(SVerticalBox)
-
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				.Padding(Theme.VerticalContentPadding)
-				.HAlign(HAlign_Center)
-				[
-					SNew(STextBlock)
-					.TextStyle(&Theme.HeadingFont)
-					.Text(LOCTEXT("Graphics", "Quality settings"))
-					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
-				]
-
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SAssignNew(GraphicsContainer, SVerticalBox)
-				]
-				
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNovaAssignNew(LumenButton, SNovaButton)
-					.Toggle(true)
-					.Text(LOCTEXT("Lumen", "Enable Lumen"))
-					.HelpText(LOCTEXT("LumenHelp", "Enable the high-quality Lumen lighting"))
-					.OnClicked(this, &SNovaMainMenuSettings::OnLumenToggled)
-					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
-				]
-				
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNovaAssignNew(DLSSButton, SNovaButton)
-					.Toggle(true)
-					.Text(LOCTEXT("DLSS", "Enable DLSS"))
-					.HelpText(LOCTEXT("DLSSHelp", "Enable DLSS support to improve performance on NVIDIA RTX hardware"))
-					.OnClicked(this, &SNovaMainMenuSettings::OnDLSSToggled)
-					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
-					.Enabled(this, &SNovaMainMenuSettings::IsDLSSSupported)
-				]
-
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNovaAssignNew(RaytracedShadowsButton, SNovaButton)
-					.Toggle(true)
-					.Text(LOCTEXT("EnableRaytracedShadows", "Enable raytraced shadows"))
-					.HelpText(LOCTEXT("EnableRaytracedShadowsHelp", "Enable the use of DXR hardware for raytraced shadows"))
-					.OnClicked(this, &SNovaMainMenuSettings::OnRaytracedShadowsToggled)
-					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
-					.Enabled(this, &SNovaMainMenuSettings::IsRaytracingSupported)
-				]
-
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNovaAssignNew(RaytracedAOutton, SNovaButton)
-					.Toggle(true)
-					.Text(LOCTEXT("EnableRaytracedSAO", "Enable raytraced AO"))
-					.HelpText(LOCTEXT("EnableRaytracedAOHelp", "Enable the use of DXR hardware for raytraced ambient occlusion"))
-					.OnClicked(this, &SNovaMainMenuSettings::OnRaytracedAOToggled)
-					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
-					.Enabled(this, &SNovaMainMenuSettings::IsRaytracingSupported)
-				]
-
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					SNovaAssignNew(CinematicBloomButton, SNovaButton)
-					.Toggle(true)
-					.Text(LOCTEXT("EnableCinematicBloom", "Cinematic bloom"))
-					.HelpText(LOCTEXT("EnableCinematicBloomHelp", "Enable convolution bloom for improved bloom quality"))
-					.OnClicked(this, &SNovaMainMenuSettings::OnCinematicBloomToggled)
-					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
-				]
+				SAssignNew(GraphicsContainer, SVerticalBox)
 			]
 
 			// Key bindings panel
@@ -352,8 +277,19 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		80, 110, 5);
 
 	if (!MenuManager->IsOnConsole())
-	{
-		// Build graphics settings
+	{		
+		GraphicsContainer->AddSlot()
+		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
+		.HAlign(HAlign_Center)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.HeadingFont)
+			.Text(LOCTEXT("Graphics", "Quality settings"))
+			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+		];
+
+		// Build quality settings
 		ViewDistanceSlider = AddSettingSlider(GraphicsContainer, LOCTEXT("ViewDistanceQuality", "View distance"),
 			LOCTEXT("ViewDistanceQualityHelp", "Set the distance over which game objects will be rendered"),
 			FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnViewDistanceChanged));
@@ -373,6 +309,65 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 			LOCTEXT("ScreenPercentageHelp", "Render the game at a higher or lower resolution compared to the display"),
 			FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnScreenPercentageChanged),
 			50, 150, 10, TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenuSettings::IsScreenPercentageSupported)));
+		
+		// Build additional options
+		GraphicsContainer->AddSlot()
+		.AutoHeight()
+		[
+			SNovaAssignNew(LumenButton, SNovaButton)
+			.Toggle(true)
+			.Text(LOCTEXT("Lumen", "Enable Lumen"))
+			.HelpText(LOCTEXT("LumenHelp", "Enable the high-quality Lumen lighting"))
+			.OnClicked(this, &SNovaMainMenuSettings::OnLumenToggled)
+			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+		];
+		
+		GraphicsContainer->AddSlot()
+		.AutoHeight()
+		[
+			SNovaAssignNew(DLSSButton, SNovaButton)
+			.Toggle(true)
+			.Text(LOCTEXT("DLSS", "Enable DLSS"))
+			.HelpText(LOCTEXT("DLSSHelp", "Enable DLSS support to improve performance on NVIDIA RTX hardware"))
+			.OnClicked(this, &SNovaMainMenuSettings::OnDLSSToggled)
+			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+			.Enabled(this, &SNovaMainMenuSettings::IsDLSSSupported)
+		];
+		
+		GraphicsContainer->AddSlot()
+		.AutoHeight()
+		[
+			SNovaAssignNew(RaytracedShadowsButton, SNovaButton)
+			.Toggle(true)
+			.Text(LOCTEXT("EnableRaytracedShadows", "Enable raytraced shadows"))
+			.HelpText(LOCTEXT("EnableRaytracedShadowsHelp", "Enable the use of DXR hardware for raytraced shadows"))
+			.OnClicked(this, &SNovaMainMenuSettings::OnRaytracedShadowsToggled)
+			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+			.Enabled(this, &SNovaMainMenuSettings::IsRaytracingSupported)
+		];
+		
+		GraphicsContainer->AddSlot()
+		.AutoHeight()
+		[
+			SNovaAssignNew(RaytracedAOutton, SNovaButton)
+			.Toggle(true)
+			.Text(LOCTEXT("EnableRaytracedSAO", "Enable raytraced AO"))
+			.HelpText(LOCTEXT("EnableRaytracedAOHelp", "Enable the use of DXR hardware for raytraced ambient occlusion"))
+			.OnClicked(this, &SNovaMainMenuSettings::OnRaytracedAOToggled)
+			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+			.Enabled(this, &SNovaMainMenuSettings::IsRaytracingSupported)
+		];
+		
+		GraphicsContainer->AddSlot()
+		.AutoHeight()
+		[
+			SNovaAssignNew(CinematicBloomButton, SNovaButton)
+			.Toggle(true)
+			.Text(LOCTEXT("EnableCinematicBloom", "Cinematic bloom"))
+			.HelpText(LOCTEXT("EnableCinematicBloomHelp", "Enable convolution bloom for improved bloom quality"))
+			.OnClicked(this, &SNovaMainMenuSettings::OnCinematicBloomToggled)
+			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+		];
 
 		// Build key bindings title
 		BindingsContainer->ClearChildren();
