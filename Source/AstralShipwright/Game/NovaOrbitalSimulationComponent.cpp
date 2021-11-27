@@ -390,7 +390,7 @@ bool UNovaOrbitalSimulationComponent::CanCommitTrajectory(const TSharedPtr<FNova
 	{
 		if (Help)
 		{
-			*Help = LOCTEXT("CannotCommitTrajectoryHost", "Only the hosting player can commit to a trajectory");
+			*Help = LOCTEXT("CannotCommitFlightPlanHost", "Only the hosting player can commit to a flight plan");
 		}
 		return false;
 	}
@@ -398,7 +398,7 @@ bool UNovaOrbitalSimulationComponent::CanCommitTrajectory(const TSharedPtr<FNova
 	{
 		if (Help)
 		{
-			*Help = LOCTEXT("CannotCommitTrajectoryValidity", "The selected trajectory is not valid");
+			*Help = LOCTEXT("CannotCommitFlightPlanValidity", "The selected flight plan is not valid");
 		}
 		return false;
 	}
@@ -406,7 +406,7 @@ bool UNovaOrbitalSimulationComponent::CanCommitTrajectory(const TSharedPtr<FNova
 	{
 		if (Help)
 		{
-			*Help = LOCTEXT("CannotCommitTrajectoryTime", "The selected trajectory starts in the past");
+			*Help = LOCTEXT("CannotCommitFlightPlanTime", "The selected flight plan starts in the past");
 		}
 		return false;
 	}
@@ -414,7 +414,7 @@ bool UNovaOrbitalSimulationComponent::CanCommitTrajectory(const TSharedPtr<FNova
 	{
 		if (Help)
 		{
-			*Help = LOCTEXT("CannotCommitTrajectoryDocked", "A spacecraft is still docked");
+			*Help = LOCTEXT("CannotCommitFlightPlanDocked", "A spacecraft is still docked");
 		}
 		return false;
 	}

@@ -170,8 +170,8 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					.AutoHeight()
 					[
 						SNovaAssignNew(AuthorizeManeuverButton, SNovaButton)
-						.Text(LOCTEXT("AbortTrajectory", "Abort trajectory"))
-						.HelpText(LOCTEXT("AbortTrajectoryHelp", "Terminate the current trajectory and stay on the current orbit"))
+						.Text(LOCTEXT("AbortFlightPlan", "Terminate flight plan"))
+						.HelpText(LOCTEXT("AbortTrajectoryHelp", "Terminate the current flight plan and stay on the current orbit"))
 						.OnClicked(FSimpleDelegate::CreateLambda([this]()
 						{
 							OrbitalSimulation->AbortTrajectory(GameState->GetPlayerSpacecraftIdentifiers());

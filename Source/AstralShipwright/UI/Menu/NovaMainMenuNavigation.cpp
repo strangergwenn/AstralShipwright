@@ -769,7 +769,7 @@ bool SNovaMainMenuNavigation::CanCommitTrajectoryInternal(FText* Details) const
 		{
 			if (Details)
 			{
-				*Details = LOCTEXT("CanCommitTrajectoryIdentical", "The selected trajectory goes to your current location");
+				*Details = LOCTEXT("CanCommitFlightPlanIdentical", "The selected flight plan goes to your current location");
 			}
 			return false;
 		}
@@ -808,7 +808,7 @@ FText SNovaMainMenuNavigation::GetCommitTrajectoryHelpText() const
 	FText Help;
 	if (CanCommitTrajectoryInternal(&Help))
 	{
-		return LOCTEXT("CommitTrajectoryHelp", "Commit to the currently selected trajectory");
+		return LOCTEXT("CommitFlightPlanHelp", "Commit to the currently selected flight plan");
 	}
 	else
 	{

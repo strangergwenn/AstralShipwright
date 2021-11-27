@@ -51,7 +51,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 		[
 			SNew(STextBlock)
 			.TextStyle(&Theme.HeadingFont)
-			.Text(LOCTEXT("TrajectoryTitle", "Trajectory"))
+			.Text(LOCTEXT("FlightPlanTitle", "Flight plan"))
 		]
 
 		// Controls
@@ -66,7 +66,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 			[
 				InArgs._Panel->SNovaNew(SNovaButton)
 				.Text(LOCTEXT("MinimizeDeltaV", "Minimize propellant"))
-				.HelpText(LOCTEXT("MinimizeDeltaVHelp", "Configure the trajectory to minimize the delta-v cost"))
+				.HelpText(LOCTEXT("MinimizeDeltaVHelp", "Configure the flight plan to minimize the delta-v cost"))
 				.Action(InArgs._DeltaVActionName)
 				.OnClicked(this, &SNovaTrajectoryCalculator::OptimizeForDeltaV)
 				.Enabled(this, &SNovaTrajectoryCalculator::CanEditTrajectory)
@@ -77,7 +77,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 			[
 				InArgs._Panel->SNovaNew(SNovaButton)
 				.Text(LOCTEXT("MinimizeTravelTime", "Minimize travel time"))
-				.HelpText(LOCTEXT("MinimizeTravelTimeHelp", "Configure the trajectory to minimize the travel time"))
+				.HelpText(LOCTEXT("MinimizeTravelTimeHelp", "Configure the flight plan to minimize the travel time"))
 				.Action(InArgs._DurationActionName)
 				.OnClicked(this, &SNovaTrajectoryCalculator::OptimizeForDuration)
 				.Enabled(this, &SNovaTrajectoryCalculator::CanEditTrajectory)
@@ -476,7 +476,7 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 
 					// Format the propellant data
 					TrajectoryDetails += FText::FormatNamed(
-						LOCTEXT("TrajectoryPropellantFormat", "{spacecraft}: {used} T of propellant required ({remaining} T remaining)"),
+						LOCTEXT("FlightPlanPropellantFormat", "{spacecraft}: {used} T of propellant required ({remaining} T remaining)"),
 						TEXT("spacecraft"), Spacecraft->GetName(), TEXT("used"), FText::AsNumber(PropellantUsed, &Options),
 						TEXT("remaining"), FText::AsNumber(PropellantRemaining, &Options))
 											 .ToString();
