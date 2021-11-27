@@ -321,7 +321,12 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
-		PC->SharedTransition(ENovaPlayerCameraState::Default);
+		PC->SharedTransition(ENovaPlayerCameraState::Default,    //
+			FNovaAsyncAction::CreateLambda(
+				[&]()
+				{
+					GameMode->SetCurrentAreaVisible(false);
+				}));
 	}
 
 	virtual ENovaGameStateIdentifier UpdateState() override
@@ -355,6 +360,7 @@ public:
 			FNovaAsyncAction::CreateLambda(
 				[&]()
 				{
+					GameMode->SetCurrentAreaVisible(true);
 					GameState->SetUsingTrajectoryMovement(true);
 				}));
 	}

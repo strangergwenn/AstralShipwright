@@ -70,6 +70,9 @@ public:
 	/** Change the current area */
 	void ChangeArea(const class UNovaArea* Area);
 
+	/** Change the current area visibility */
+	void SetCurrentAreaVisible(bool Visibility);
+
 	/** Change the current area to orbit*/
 	void ChangeAreaToOrbit();
 

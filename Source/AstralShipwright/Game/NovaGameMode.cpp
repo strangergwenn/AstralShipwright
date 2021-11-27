@@ -239,7 +239,6 @@ void ANovaGameMode::ResetSpacecraft()
 void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 {
 	NCHECK(IsValid(Area));
-	NCHECK(Area->IsValidLowLevelFast());
 
 	NLOG("ANovaGameMode::ChangeArea : '%s'", *Area->LevelName.ToString());
 
@@ -252,6 +251,22 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 	}
 
 	ResetSpacecraft();
+}
+
+void ANovaGameMode::SetCurrentAreaVisible(bool Visibility)
+{
+	const UNovaArea* CurrentArea = GetGameState<ANovaGameState>()->GetCurrentArea();
+	NCHECK(IsValid(CurrentArea));
+
+	NLOG("ANovaGameMode::SetAreaVisible : '%s' -> %d", *CurrentArea->LevelName.ToString(), Visibility);
+
+	ULevelStreaming* Level = UGameplayStatics::GetStreamingLevel(this, CurrentArea->LevelName);
+	NCHECK(Level)
+	{
+		Level->SetShouldBeVisible(Visibility);
+
+		GetWorld()->FlushLevelStreaming(EFlushLevelStreamingType::Visibility);
+	}
 }
 
 void ANovaGameMode::ChangeAreaToOrbit()
