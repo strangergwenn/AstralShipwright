@@ -66,4 +66,7 @@ protected:
 	// Exhausts
 	UPROPERTY()
 	TArray<FNovaThrusterExhaust> ThrusterExhausts;
+
+	// Local data
+	FCollisionQueryParams ThrusterTraceParams;
 };

@@ -7,6 +7,9 @@
 
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
+#include "DrawDebugHelpers.h"
+
+#define SHOW_TRACES 0
 
 /*----------------------------------------------------
     Constructor
@@ -37,6 +40,9 @@ void UNovaSpacecraftThrusterComponent::BeginPlay()
 	FAttachmentTransformRules AttachRules(EAttachmentRule::KeepWorld, false);
 	INovaMeshInterface*       ParentMesh = Cast<INovaMeshInterface>(GetAttachParent());
 	NCHECK(ParentMesh);
+
+	ThrusterTraceParams.bTraceComplex = true;
+	ThrusterTraceParams.AddIgnoredComponent(Cast<UPrimitiveComponent>(ParentMesh));
 
 	// Find all exhaust sockets
 	do
@@ -74,6 +80,7 @@ void UNovaSpacecraftThrusterComponent::BeginPlay()
 
 			// Move on
 			ThrusterExhausts.Add(Exhaust);
+			ThrusterTraceParams.AddIgnoredComponent(Exhaust.Mesh);
 		}
 
 		CurrentSocketIndex++;
@@ -95,8 +102,9 @@ void UNovaSpacecraftThrusterComponent::TickComponent(float DeltaTime, ELevelTick
 		NCHECK(ParentMesh);
 
 		// Initialize thrust data
-		FVector LinearAcceleration  = MovementComponent->GetThrusterAcceleration();
-		FVector AngularAcceleration = MovementComponent->GetThrusterAngularAcceleration();
+		FHitResult HitResult;
+		FVector    LinearAcceleration  = MovementComponent->GetThrusterAcceleration();
+		FVector    AngularAcceleration = MovementComponent->GetThrusterAngularAcceleration();
 
 		// Update all exhaust effects
 		for (FNovaThrusterExhaust& Exhaust : ThrusterExhausts)
@@ -109,25 +117,43 @@ void UNovaSpacecraftThrusterComponent::TickComponent(float DeltaTime, ELevelTick
 			}
 			else
 			{
-				// Get location
+				// Get transform data
 				FVector  SocketLocation;
 				FRotator SocketRotation;
 				Cast<UPrimitiveComponent>(ParentMesh)->GetSocketWorldLocationAndRotation(Exhaust.Name, SocketLocation, SocketRotation);
 				FVector EngineDirection = SocketRotation.RotateVector(FVector(1.0f, 0, 0));
 				FVector EngineOffset    = (SocketLocation - GetOwner()->GetActorLocation()) / 100;
 
-				// Get linear alpha
-				float LinearAlpha = -FVector::DotProduct(EngineDirection, LinearAcceleration.GetSafeNormal());
-
-				// Get Angular alpha
-				FVector TorqueDirection = FVector::CrossProduct(EngineOffset, EngineDirection).GetSafeNormal();
-				float   AngularAlpha    = 0;
-				if (!AngularAcceleration.IsNearlyZero())
+				// Did we collide ?
+				if (GetWorld()->LineTraceSingleByChannel(HitResult, SocketLocation, SocketLocation + EngineDirection * 1000,
+						ECollisionChannel::ECC_WorldDynamic, ThrusterTraceParams))
 				{
-					AngularAlpha = FVector::DotProduct(TorqueDirection, AngularAcceleration.GetSafeNormal());
+#if SHOW_TRACES
+					DrawDebugLine(GetWorld(), SocketLocation, SocketLocation + EngineDirection * 1000, FColor::Red, false);
+#endif
+					EngineIntensity = 0;
 				}
 
-				EngineIntensity = FMath::Max(LinearAlpha + AngularAlpha, 0.0f);
+				// Proceed with intensity calculation
+				else
+				{
+#if SHOW_TRACES
+					DrawDebugLine(GetWorld(), SocketLocation, SocketLocation + EngineDirection * 1000, FColor::Green, false);
+#endif
+
+					// Get linear alpha
+					float LinearAlpha = -FVector::DotProduct(EngineDirection, LinearAcceleration.GetSafeNormal());
+
+					// Get Angular alpha
+					FVector TorqueDirection = FVector::CrossProduct(EngineOffset, EngineDirection).GetSafeNormal();
+					float   AngularAlpha    = 0;
+					if (!AngularAcceleration.IsNearlyZero())
+					{
+						AngularAlpha = FVector::DotProduct(TorqueDirection, AngularAcceleration.GetSafeNormal());
+					}
+
+					EngineIntensity = FMath::Max(LinearAlpha + AngularAlpha, 0.0f);
+				}
 			}
 
 			// Apply power
