@@ -376,14 +376,74 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 		Issues.Add(LOCTEXT("InsufficientDeltaV", "This spacecraft does not have enough delta-v"));
 	}
 
-	bool HasAnyThruster = false;
+	struct FNovaHatchModuleGroup
+	{
+		FNovaHatchModuleGroup() : HasHatch(false)
+		{}
 
-	// Check equipment for required items, invalid pairings
+		TArray<const UNovaModuleDescription*> Modules;
+		bool                                  HasHatch;
+	};
+
+	// Prepare for detailed analysis
+	bool                          HasAnyThruster = false;
+	TArray<FNovaHatchModuleGroup> ModuleGroups;
+
 	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
 	{
 		const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
 		if (::IsValid(Compartment.Description))
 		{
+			// Check modules for hatch groups
+			for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+			{
+				const FNovaModuleSlot&        ModuleSlot        = Compartment.Description->GetModuleSlot(ModuleIndex);
+				const FNovaCompartmentModule& CompartmentModule = Compartment.Modules[ModuleIndex];
+				const UNovaModuleDescription* Module            = CompartmentModule.Description;
+				const UNovaModuleDescription* OtherModule       = nullptr;
+				FNovaHatchModuleGroup*        ModuleGroup       = nullptr;
+
+				if (Module && IsHatchModule(Module))
+				{
+					// We already have a previous entry
+					if (IsHatchModuleInPreviousCompartment(CompartmentIndex, ModuleIndex, OtherModule))
+					{
+						for (FNovaHatchModuleGroup& Group : ModuleGroups)
+						{
+							if (Group.Modules.Last() == OtherModule)
+							{
+								ModuleGroup = &Group;
+								Group.Modules.Add(Module);
+								break;
+							}
+						}
+					}
+
+					// New group
+					else
+					{
+						FNovaHatchModuleGroup Group;
+						Group.Modules.Add(Module);
+						ModuleGroups.Add(Group);
+						ModuleGroup = &ModuleGroups.Last();
+					}
+
+					NCHECK(ModuleGroup);
+
+					// Check for hatches
+					for (FName EquipmentSlot : ModuleSlot.LinkedEquipments)
+					{
+						const UNovaEquipmentDescription* Equipment = Compartment.GetEquipmentySocket(EquipmentSlot);
+						if (Equipment && Equipment->IsA<UNovaHatchDescription>())
+						{
+							ModuleGroup->HasHatch = true;
+							break;
+						}
+					}
+				}
+			}
+
+			// Check equipment for required items, invalid pairings
 			for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
 			{
 				const UNovaEquipmentDescription* Equipment = Compartment.Equipment[EquipmentIndex];
@@ -407,6 +467,15 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 					HasAnyThruster = true;
 				}
 			}
+		}
+	}
+
+	// Check for hatches
+	for (FNovaHatchModuleGroup& Group : ModuleGroups)
+	{
+		if (!Group.HasHatch)
+		{
+			Issues.Add(LOCTEXT("NoHatch", "A group of cargo modules doesn't have a hatch attached"));
 		}
 	}
 
@@ -1036,7 +1105,7 @@ bool FNovaSpacecraft::IsSameModuleInPreviousCompartment(int32 CompartmentIndex, 
 	const FNovaCompartmentModule& Module                  = Compartment.Modules[ModuleIndex];
 	FName                         CurrentModuleSocketName = Compartment.Description->GetModuleSlot(ModuleIndex).SocketName;
 
-	for (int32 Index = CompartmentIndex - 1; Index >= 0; Index--)
+	for (int32 Index = CompartmentIndex - 1; Index >= FMath::Max(0, CompartmentIndex - 2); Index--)
 	{
 		const FNovaCompartment& PreviousCompartment = Compartments[Index];
 		if (PreviousCompartment.IsValid())
@@ -1054,7 +1123,7 @@ bool FNovaSpacecraft::IsSameModuleInNextCompartment(int32 CompartmentIndex, int3
 	const FNovaCompartmentModule& Module                  = Compartment.Modules[ModuleIndex];
 	FName                         CurrentModuleSocketName = Compartment.Description->GetModuleSlot(ModuleIndex).SocketName;
 
-	for (int32 Index = CompartmentIndex + 1; Index < Compartments.Num(); Index++)
+	for (int32 Index = CompartmentIndex + 1; Index < FMath::Min(Compartments.Num(), CompartmentIndex + 2); Index++)
 	{
 		const FNovaCompartment& NextCompartment = Compartments[Index];
 		if (NextCompartment.IsValid())
@@ -1065,5 +1134,33 @@ bool FNovaSpacecraft::IsSameModuleInNextCompartment(int32 CompartmentIndex, int3
 
 	return false;
 };
+
+bool FNovaSpacecraft::IsHatchModuleInPreviousCompartment(
+	int32 CompartmentIndex, int32 ModuleIndex, const UNovaModuleDescription*& FoundModule) const
+{
+	const FNovaCompartment&       Compartment             = Compartments[CompartmentIndex];
+	const FNovaCompartmentModule& Module                  = Compartment.Modules[ModuleIndex];
+	FName                         CurrentModuleSocketName = Compartment.Description->GetModuleSlot(ModuleIndex).SocketName;
+
+	for (int32 Index = CompartmentIndex - 1; Index >= FMath::Max(0, CompartmentIndex - 2); Index--)
+	{
+		const FNovaCompartment& PreviousCompartment = Compartments[Index];
+		if (PreviousCompartment.IsValid())
+		{
+			FoundModule = PreviousCompartment.GetModuleBySocket(CurrentModuleSocketName);
+			if (FoundModule && IsHatchModule(FoundModule))
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+};
+
+bool FNovaSpacecraft::IsHatchModule(const UNovaModuleDescription* Module) const
+{
+	return Module->IsA<UNovaCargoModuleDescription>() /* || Module->IsA<UnovaCrewModuleDescription>()*/;
+}
 
 #undef LOCTEXT_NAMESPACE

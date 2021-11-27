@@ -506,6 +506,12 @@ protected:
 	/** Check whether the module at CompartmentIndex.ModuleIndex has a matching clone in front of it */
 	bool IsSameModuleInNextCompartment(int32 CompartmentIndex, int32 ModuleIndex) const;
 
+	/** Check whether the module at CompartmentIndex.ModuleIndex has another hatch-needing module behind it */
+	bool IsHatchModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex, const UNovaModuleDescription*& FoundModule) const;
+
+	/** Check if this is a hatch module */
+	bool IsHatchModule(const UNovaModuleDescription* Module) const;
+
 public:
 	// Compartment data
 	UPROPERTY()

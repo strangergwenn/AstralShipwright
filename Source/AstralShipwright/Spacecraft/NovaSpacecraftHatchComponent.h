@@ -9,7 +9,7 @@
 
 #include "NovaSpacecraftHatchComponent.generated.h"
 
-/** Main drive component class that attaches to a mesh to add engine effects */
+/** Hatch equipment addition */
 UCLASS(ClassGroup = (Nova), meta = (BlueprintSpawnableComponent))
 class UNovaSpacecraftHatchComponent
 	: public UStaticMeshComponent

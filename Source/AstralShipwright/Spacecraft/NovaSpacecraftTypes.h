@@ -150,6 +150,10 @@ public:
 	// Whether to force a simple connection pipe on this slot when no module is used
 	UPROPERTY(Category = Compartment, EditDefaultsOnly)
 	bool ForceSkirtPiping;
+
+	// Connected equipment slot names
+	UPROPERTY(Category = Compartment, EditDefaultsOnly)
+	TArray<FName> LinkedEquipments;
 };
 
 /** Equipment slot metadata */
@@ -557,4 +561,11 @@ public:
 	// Thruster thrust in kN
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Thrust = 500;
+};
+
+/** Description of a hatch equipment */
+UCLASS(ClassGroup = (Nova))
+class UNovaHatchDescription : public UNovaEquipmentDescription
+{
+	GENERATED_BODY()
 };
