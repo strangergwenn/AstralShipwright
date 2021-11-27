@@ -462,6 +462,26 @@ struct FNovaTrajectory
 		return nullptr;
 	}
 
+	/** Get the previous maneuver */
+	const FNovaManeuver* GetPreviousManeuver(FNovaTime CurrentTime) const
+	{
+		const FNovaManeuver* PreviousManeuver = nullptr;
+
+		for (const FNovaManeuver& Maneuver : Maneuvers)
+		{
+			if (Maneuver.Time > CurrentTime)
+			{
+				return PreviousManeuver;
+			}
+			else
+			{
+				PreviousManeuver = &Maneuver;
+			}
+		}
+
+		return PreviousManeuver;
+	}
+
 	/** Get the next maneuver */
 	const FNovaManeuver* GetNextManeuver(FNovaTime CurrentTime) const
 	{

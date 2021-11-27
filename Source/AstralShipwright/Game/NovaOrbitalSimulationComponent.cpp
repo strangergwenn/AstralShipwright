@@ -370,6 +370,11 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	return Trajectory;
 }
 
+bool UNovaOrbitalSimulationComponent::IsOnTrajectory(const FGuid& SpacecraftIdentifier) const
+{
+	return SpacecraftTrajectoryDatabase.Get(SpacecraftIdentifier) != nullptr;
+}
+
 bool UNovaOrbitalSimulationComponent::IsOnStartedTrajectory(const FGuid& SpacecraftIdentifier) const
 {
 	const FNovaTrajectory* Trajectory = SpacecraftTrajectoryDatabase.Get(SpacecraftIdentifier);
@@ -462,14 +467,30 @@ void UNovaOrbitalSimulationComponent::AbortTrajectory(const TArray<FGuid>& Space
 
 	FNovaOrbit CommonAbortOrbit;
 	bool       FoundCommonOrbit = false;
+	FVector2D  StartLocation    = GetPlayerLocation()->GetCartesianLocation();
+
+	// Check for unstarted trajectories
+	{
+		const FNovaTrajectory* Trajectory = SpacecraftTrajectoryDatabase.Get(SpacecraftIdentifiers[0]);
+		if (Trajectory == nullptr || Trajectory->GetStartTime() > GetCurrentTime())
+		{
+			SpacecraftTrajectoryDatabase.Remove(SpacecraftIdentifiers);
+			return;
+		}
+	}
 
 	// Compute the final orbit and ensure all spacecraft are going there
 	for (const FGuid& Identifier : SpacecraftIdentifiers)
 	{
 		const FNovaTrajectory* Trajectory = SpacecraftTrajectoryDatabase.Get(Identifier);
-		if (Trajectory)
+
+		if (Trajectory && Trajectory->GetStartTime() <= GetCurrentTime())
 		{
-			const FNovaOrbit AbortOrbit = FNovaOrbit(Trajectory->GetCurrentLocation(GetCurrentTime()).Geometry, GetCurrentTime());
+			const FNovaManeuver* PreviousManeuver = Trajectory->GetPreviousManeuver(GetCurrentTime());
+			NCHECK(PreviousManeuver);
+			FNovaTime InsertionTime = PreviousManeuver->Time;
+
+			const FNovaOrbit AbortOrbit = FNovaOrbit(Trajectory->GetCurrentLocation(GetCurrentTime()).Geometry, InsertionTime);
 			NCHECK(!FoundCommonOrbit || AbortOrbit == CommonAbortOrbit);
 			FoundCommonOrbit = true;
 			CommonAbortOrbit = AbortOrbit;
@@ -478,7 +499,15 @@ void UNovaOrbitalSimulationComponent::AbortTrajectory(const TArray<FGuid>& Space
 
 	// Commit the change
 	NCHECK(FoundCommonOrbit);
+	CommonAbortOrbit.Geometry.EndPhase = CommonAbortOrbit.Geometry.StartPhase + 360;
 	SetOrbit(SpacecraftIdentifiers, MakeShared<FNovaOrbit>(CommonAbortOrbit));
+
+	// Be safe
+	ProcessSpacecraftOrbits();
+	FVector2D EndLocation = GetPlayerLocation()->GetCartesianLocation();
+	NLOG("UNovaOrbitalSimulationComponent::SetOrbit : %.03f/%.03f -> %.03f/%.03f", StartLocation.X, StartLocation.Y, EndLocation.X,
+		EndLocation.Y);
+	NCHECK(EndLocation == StartLocation);
 }
 
 void UNovaOrbitalSimulationComponent::SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit)

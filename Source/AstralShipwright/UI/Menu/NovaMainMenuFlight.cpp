@@ -169,6 +169,22 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
+						SNovaAssignNew(AuthorizeManeuverButton, SNovaButton)
+						.Text(LOCTEXT("AbortTrajectory", "Abort trajectory"))
+						.HelpText(LOCTEXT("AbortTrajectoryHelp", "Terminate the current trajectory and stay on the current orbit"))
+						.OnClicked(FSimpleDelegate::CreateLambda([this]()
+						{
+							OrbitalSimulation->AbortTrajectory(GameState->GetPlayerSpacecraftIdentifiers());
+						}))
+						.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+						{
+							return OrbitalSimulation && GameState && OrbitalSimulation->IsOnTrajectory(GameState->GetPlayerSpacecraftIdentifier());
+						})))
+					]
+			
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
 						SNovaAssignNew(DockButton, SNovaButton)
 						.Text(LOCTEXT("Dock", "Dock"))
 						.HelpText(LOCTEXT("DockHelp", "Dock at the station"))

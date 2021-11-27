@@ -51,6 +51,9 @@ public:
 	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const TSharedPtr<struct FNovaTrajectoryParameters>& Parameters, float PhasingAltitude);
 
 	/** Check if this spacecraft is on a trajectory */
+	bool IsOnTrajectory(const FGuid& SpacecraftIdentifier) const;
+
+	/** Check if this spacecraft is on a trajectory that started */
 	bool IsOnStartedTrajectory(const FGuid& SpacecraftIdentifier) const;
 
 	/** Check if this trajectory can be started */

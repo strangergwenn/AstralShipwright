@@ -79,12 +79,12 @@ protected:
 
 protected:
 	// Game objects
-	TWeakObjectPtr<UNovaMenuManager>             MenuManager;
-	class ANovaPlayerController*                 PC;
-	class ANovaSpacecraftPawn*                   SpacecraftPawn;
-	class UNovaSpacecraftMovementComponent*      SpacecraftMovement;
-	class ANovaGameState*                        GameState;
-	const class UNovaOrbitalSimulationComponent* OrbitalSimulation;
+	TWeakObjectPtr<UNovaMenuManager>        MenuManager;
+	class ANovaPlayerController*            PC;
+	class ANovaSpacecraftPawn*              SpacecraftPawn;
+	class UNovaSpacecraftMovementComponent* SpacecraftMovement;
+	class ANovaGameState*                   GameState;
+	class UNovaOrbitalSimulationComponent*  OrbitalSimulation;
 
 	// Slate widgets
 	TSharedPtr<class SNovaButton> UndockButton;
