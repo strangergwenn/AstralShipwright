@@ -273,6 +273,13 @@ FNovaSpacecraftCompartmentMetrics::FNovaSpacecraftCompartmentMetrics(const FNova
 						Thrust += Engine->Thrust;
 						TotalEngineISPTimesThrust += Engine->SpecificImpulse * Engine->Thrust;
 					}
+
+					// Handle external propellant tank
+					const UNovaPropellantEquipmentDescription* PropellantTank = Cast<UNovaPropellantEquipmentDescription>(Equipment);
+					if (PropellantTank)
+					{
+						PropellantMassCapacity += PropellantTank->PropellantMass;
+					}
 				}
 			}
 		}

@@ -569,3 +569,15 @@ class UNovaHatchDescription : public UNovaEquipmentDescription
 {
 	GENERATED_BODY()
 };
+
+/** Description of a propellant tank equipment */
+UCLASS(ClassGroup = (Nova))
+class UNovaPropellantEquipmentDescription : public UNovaEquipmentDescription
+{
+	GENERATED_BODY()
+
+public:
+	// Module propellant mass in T
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	float PropellantMass = 50;
+};
