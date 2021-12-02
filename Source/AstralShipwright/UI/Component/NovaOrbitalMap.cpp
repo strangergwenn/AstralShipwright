@@ -88,7 +88,7 @@ void SNovaOrbitalMap::Construct(const FArguments& InArgs)
 	TrajectoryInflationRatio   = 1.2f;
 
 	// Camera filter settings, based on the defaults
-	CameraFilter.Velocity *= 150;
+	CameraFilter.Velocity *= 100;
 	CameraFilter.Acceleration *= 75;
 	CameraFilter.Resistance *= 10;
 }
@@ -369,13 +369,11 @@ void SNovaOrbitalMap::AddPlanet(const FVector2D& Pos, const class UNovaCelestial
 	Brush.Pos   = Pos * CurrentDrawScale;
 	BatchedBrushes.AddUnique(Brush);
 
-	FVector2D BrushSize = Brush.Brush->GetImageSize();
-
-	// Add text label
+	// Planet name
 	FNovaBatchedText Text;
 	Text.Text      = Planet->Name.ToUpper();
-	Text.Pos       = Brush.Pos - FVector2D(0, Planet->Image.GetImageSize().Y);
-	Text.TextStyle = &Theme.HeadingFont;
+	Text.Pos       = Brush.Pos;
+	Text.TextStyle = &Theme.NotificationFont;
 	BatchedTexts.Add(Text);
 }
 
@@ -749,7 +747,7 @@ int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& All
 			AllottedGeometry.ToPaintGeometry(TextSize, FSlateLayoutTransform(CurrentOrigin + Text.Pos - TextSize / 2));
 
 		FSlateDrawElement::MakeText(
-			OutDrawElements, LayerId, TextGeometry, Text.Text, Text.TextStyle->Font, ESlateDrawEffect::None, TextColor);
+			OutDrawElements, LayerId, TextGeometry, Text.Text, Text.TextStyle->Font, ESlateDrawEffect::NoPixelSnapping, TextColor);
 	}
 
 	return SCompoundWidget::OnPaint(PaintArgs, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);

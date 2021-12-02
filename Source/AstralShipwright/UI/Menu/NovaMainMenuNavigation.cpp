@@ -257,22 +257,29 @@ class SNovaSidePanel : public SNovaFadingWidget<false>
 public:
 	void Construct(const FArguments& InArgs)
 	{
-		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+		const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
+		const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
 
 		// clang-format off
 		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments().Content()
 		[
-			SNew(SBackgroundBlur)
-			.BlurRadius(InArgs._Panel, &SNovaTabPanel::GetBlurRadius)
-			.BlurStrength(InArgs._Panel, &SNovaTabPanel::GetBlurStrength)
-			.bApplyAlphaToBlur(true)
-			.Padding(0)
+			SNew(SBorder)
+			.BorderImage(&ButtonTheme.Border)
+			.Padding(FMargin(0, 0, 1, 0))
 			[
-				SNew(SBorder)
-				.BorderImage(&Theme.MainMenuBackground)
-				.Padding(Theme.ContentPadding)
+				SNew(SBackgroundBlur)
+				.BlurRadius(InArgs._Panel, &SNovaTabPanel::GetBlurRadius)
+				.BlurStrength(InArgs._Panel, &SNovaTabPanel::GetBlurStrength)
+				.bApplyAlphaToBlur(true)
+				.Padding(0)
 				[
-					InArgs._Content.Widget
+					SNew(SBorder)
+					.BorderImage(&Theme.MainMenuGenericBorder)
+					.Padding(Theme.ContentPadding)
+					.HAlign(HAlign_Center)
+					[
+						InArgs._Content.Widget
+					]
 				]
 			]
 		]);
@@ -378,16 +385,31 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 					// Header
 					+ SScrollBox::Slot()
 					[
-						SNew(SBorder)
-						.BorderImage(new FSlateNoResource)
-						.Padding(Theme.VerticalContentPadding)
-						.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([=]()
-						{
-							return AreaTitle->GetText().IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible;
-						})))
+						SNew(SHorizontalBox)
+
+						+ SHorizontalBox::Slot()
 						[
-							SAssignNew(AreaTitle, STextBlock)
-							.TextStyle(&Theme.HeadingFont)
+							SNew(SBorder)
+							.BorderImage(new FSlateNoResource)
+							.Padding(Theme.VerticalContentPadding)
+							.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([=]()
+							{
+								return AreaTitle->GetText().IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible;
+							})))
+							[
+								SAssignNew(AreaTitle, STextBlock)
+								.TextStyle(&Theme.HeadingFont)
+							]
+						]
+
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNovaNew(SNovaButton)
+							.Size("SmallButtonSize")
+							.Icon(FNovaStyleSet::GetBrush("Icon/SB_Remove"))
+							.HelpText(LOCTEXT("CloseSidePanelHelp", "Close the side panel"))
+							.OnClicked(this, &SNovaMainMenuNavigation::OnHideSidePanel)
 						]
 					]
 
@@ -557,12 +579,10 @@ void SNovaMainMenuNavigation::OnClicked(const FVector2D& Position)
 				SidePanelContainer->SetObjectList(SelectedObjectList);
 			}
 
-			// Case 3 : existing selection, no selection at all (close)
+			// Case 3 : existing selection, no selection at all (do nothing)
 			else if (!HasAnyHoveredObject)
 			{
 				SelectedObjectList = {};
-				SidePanel->SetVisible(false);
-				SidePanelContainer->SetObjectList({});
 			}
 		}
 	}
@@ -819,6 +839,13 @@ FText SNovaMainMenuNavigation::GetCommitTrajectoryHelpText() const
 /*----------------------------------------------------
     Callbacks
 ----------------------------------------------------*/
+
+void SNovaMainMenuNavigation::OnHideSidePanel()
+{
+	SelectedObjectList = {};
+	SidePanel->SetVisible(false);
+	SidePanelContainer->SetObjectList({});
+}
 
 void SNovaMainMenuNavigation::OnTrajectoryChanged(TSharedPtr<FNovaTrajectory> Trajectory, bool HasEnoughPropellant)
 {

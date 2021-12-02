@@ -81,6 +81,9 @@ protected:
 	    Callbacks
 	----------------------------------------------------*/
 protected:
+	// Side panel
+	void OnHideSidePanel();
+
 	// Trajectories
 	void OnTrajectoryChanged(TSharedPtr<struct FNovaTrajectory> Trajectory, bool HasEnoughPropellant);
 	void OnCommitTrajectory();

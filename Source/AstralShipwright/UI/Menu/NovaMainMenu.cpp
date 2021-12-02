@@ -175,6 +175,7 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		.Header(LOCTEXT("NavigationMenuTitle", "Navigation"))
 		.HeaderHelp(LOCTEXT("NavigationMenuTitleHelp", "Plot trajectories"))
 		.Visible(this, &SNovaMainMenu::AreGameMenusVisible)
+		.Background(FNovaStyleSet::GetBrush("Map/SB_Background"))
 		.Blur(true)
 		[
 			SAssignNew(NavigationMenu, SNovaMainMenuNavigation)
