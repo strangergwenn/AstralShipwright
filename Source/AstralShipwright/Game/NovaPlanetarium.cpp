@@ -147,7 +147,7 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 			if (Body != SunBody)
 			{
 				const double RelativeBodySpinTime =
-					fmod(GameState->GetCurrentTime().AsMinutes(), static_cast<double>(Body->RotationPeriod));
+					FMath::Fmod(GameState->GetCurrentTime().AsMinutes(), static_cast<double>(Body->RotationPeriod));
 				const double RelativeBodySpinAngle = 360.0 * (RelativeBodySpinTime / Body->RotationPeriod);
 				const double AbsoluteBodySpinAngle = Body->Phase + RelativeBodySpinAngle;
 

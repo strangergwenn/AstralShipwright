@@ -15,6 +15,7 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 		: BlurRadius(0)
 		, BlurStrength(0)
 		, PositiveColor(FLinearColor::Blue)
+		, ContrastingColor(FLinearColor::Yellow)
 		, NegativeColor(FLinearColor::Red)
 		, NeutralColor(FLinearColor::Gray)
 		, NotificationDisplayWidth(0)
@@ -59,6 +60,7 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = General) float BlurRadius;
 	UPROPERTY(EditDefaultsOnly, Category = General) float BlurStrength;
 	UPROPERTY(EditDefaultsOnly, Category = General) FLinearColor PositiveColor;
+	UPROPERTY(EditDefaultsOnly, Category = General) FLinearColor ContrastingColor;
 	UPROPERTY(EditDefaultsOnly, Category = General) FLinearColor NegativeColor;
 	UPROPERTY(EditDefaultsOnly, Category = General) FLinearColor NeutralColor;
 	UPROPERTY(EditDefaultsOnly, Category = General) int32 NotificationDisplayWidth;

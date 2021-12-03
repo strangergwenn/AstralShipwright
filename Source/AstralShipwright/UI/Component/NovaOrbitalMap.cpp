@@ -220,8 +220,6 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 	}
 
 	FNovaSplineStyle AreaStyle(FLinearColor(1, 1, 1, 0.5f));
-	AreaStyle.WidthInner = 4;
-	AreaStyle.WidthOuter = 4;
 
 	// Orbit merging structure
 	struct FNovaMergedOrbitGeometry : FNovaOrbitGeometry
@@ -250,7 +248,8 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 					   OtherOrbit.StartPhase == Geometry.StartPhase && OtherOrbit.EndPhase == Geometry.EndPhase;
 			});
 
-		FNovaOrbitalObject Point = FNovaOrbitalObject(AreaAndOrbitalLocation.Key, OrbitalLocation.GetCartesianLocation());
+		float              BaseAltitude = GetObjectBaseAltitude(Geometry.Body);
+		FNovaOrbitalObject Point = FNovaOrbitalObject(AreaAndOrbitalLocation.Key, OrbitalLocation.GetCartesianLocation(BaseAltitude));
 
 		if (ExistingGeometry)
 		{
@@ -278,9 +277,11 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 		return;
 	}
 
-	FNovaSplineStyle SpacecraftStyle(FLinearColor::Blue);
-	SpacecraftStyle.WidthInner = 3;
-	SpacecraftStyle.WidthOuter = 3;
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	FNovaSplineStyle      OrbitStyle(Theme.PositiveColor);
+	OrbitStyle.ColorInner = FLinearColor::Black;
+	OrbitStyle.WidthOuter = 5;
+	OrbitStyle.WidthInner = 1;
 
 	// Add the current orbit
 	for (const auto SpacecraftIdentifierAndOrbitalLocation : OrbitalSimulation->GetAllSpacecraftLocations())
@@ -293,9 +294,10 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 
 			TArray<FNovaOrbitalObject> Objects;
 
-			Objects.Add(FNovaOrbitalObject(Identifier, Location.GetCartesianLocation()));
+			float BaseAltitude = GetObjectBaseAltitude(Location.Geometry.Body);
+			Objects.Add(FNovaOrbitalObject(Identifier, Location.GetCartesianLocation(BaseAltitude)));
 
-			AddOrbit(Origin, nullptr, Location.Geometry, Objects, SpacecraftStyle);
+			AddOrbit(Origin, nullptr, Location.Geometry, Objects, OrbitStyle);
 			CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Location.Geometry.GetHighestAltitude());
 		}
 	}
@@ -310,9 +312,9 @@ void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
 		return;
 	}
 
-	FNovaSplineStyle OrbitStyle    = FNovaSplineStyle(FLinearColor::Red);
-	FNovaSplineStyle ManeuverStyle = FNovaSplineStyle(FLinearColor::Yellow);
-	ManeuverStyle.WidthOuter       = 3;
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	FNovaSplineStyle      OrbitStyle(Theme.PositiveColor);
+	FNovaSplineStyle      ManeuverStyle(Theme.PositiveColor);
 
 	// Add the current trajectory
 	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
@@ -326,14 +328,17 @@ void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
 
 void SNovaOrbitalMap::ProcessTrajectoryPreview(const FVector2D& Origin, float DeltaTime)
 {
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	FNovaSplineStyle      OrbitStyle(Theme.ContrastingColor);
+	FNovaSplineStyle      ManeuverStyle(Theme.ContrastingColor);
+
 	CurrentPreviewProgress += DeltaTime / TrajectoryPreviewDuration;
 	CurrentPreviewProgress = FMath::Min(CurrentPreviewProgress, 1.0f);
 
 	// Add the preview trajectory
 	if (CurrentPreviewTrajectory.IsValid())
 	{
-		AddTrajectory(Origin, *CurrentPreviewTrajectory, nullptr, CurrentPreviewProgress, FNovaSplineStyle(FColor::Purple),
-			FNovaSplineStyle(FLinearColor::Yellow));
+		AddTrajectory(Origin, *CurrentPreviewTrajectory, nullptr, CurrentPreviewProgress, OrbitStyle, ManeuverStyle);
 		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, CurrentPreviewTrajectory->GetHighestAltitude());
 	};
 }
@@ -403,11 +408,12 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 #endif
 
 			// Determine the absolute position
-			AbsolutePosition = MakeShared<FVector2D>(SpacecraftLocation->GetCartesianLocation());
+			float BaseAltitude = GetObjectBaseAltitude(SpacecraftLocation->Geometry.Body);
+			AbsolutePosition   = MakeShared<FVector2D>(SpacecraftLocation->GetCartesianLocation(BaseAltitude));
 			Objects.Add(FNovaOrbitalObject(Spacecraft->Identifier, *AbsolutePosition));
 
 			// Determine the physical angle
-			const FVector2D RelativePosition = SpacecraftLocation->GetCartesianLocation<false>();
+			const FVector2D RelativePosition = SpacecraftLocation->GetCartesianLocation<false>(BaseAltitude);
 			float           CartesianAngle =
 				-FMath::RadiansToDegrees(FVector(RelativePosition.X, RelativePosition.Y, 0).GetSafeNormal().HeadingAngle());
 
@@ -474,7 +480,9 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 	{
 		if (Maneuver.Time + Maneuver.Duration > OrbitalSimulation->GetCurrentTime())
 		{
-			ManeuverObjects.Add(FNovaOrbitalObject(Maneuver, Trajectory.GetCurrentLocation(Maneuver.Time).GetCartesianLocation()));
+			float BaseAltitude = GetObjectBaseAltitude(Trajectory.Transfers[0].Geometry.Body);
+			ManeuverObjects.Add(
+				FNovaOrbitalObject(Maneuver, Trajectory.GetCurrentLocation(Maneuver.Time).GetCartesianLocation(BaseAltitude)));
 		}
 	}
 
@@ -502,8 +510,8 @@ bool SNovaOrbitalMap::AddOrbit(const FVector2D& Position, const TSharedPtr<FVect
 {
 	const FVector2D LocalPosition = Position * CurrentDrawScale;
 
-	const float RadiusA       = CurrentDrawScale * Geometry.StartAltitude;
-	const float RadiusB       = CurrentDrawScale * Geometry.OppositeAltitude;
+	const float RadiusA       = CurrentDrawScale * (GetObjectBaseAltitude(Geometry.Body) + Geometry.StartAltitude);
+	const float RadiusB       = CurrentDrawScale * (GetObjectBaseAltitude(Geometry.Body) + Geometry.OppositeAltitude);
 	const float SemiMajorAxis = 0.5f * (RadiusA + RadiusB);
 	const float SemiMinorAxis = FMath::Sqrt(RadiusA * RadiusB);
 	const float Phase         = Geometry.StartPhase;
@@ -513,7 +521,7 @@ bool SNovaOrbitalMap::AddOrbit(const FVector2D& Position, const TSharedPtr<FVect
 
 	for (const FNovaOrbitalObject& Object : Objects)
 	{
-		AddOrbitalObject(Object, Style.ColorInner);
+		AddOrbitalObject(Object, Style.ColorOuter);
 	}
 
 	return AddOrbitInternal(
@@ -540,9 +548,10 @@ void SNovaOrbitalMap::AddOrbitalObject(FNovaOrbitalObject Object, const FLinearC
 
 	// Add the point
 	FNovaBatchedPoint Point;
-	Point.Pos   = Object.Position;
-	Point.Color = Color;
-	Point.Scale = IsObjectHovered ? 2.0f : 1.5f;
+	Point.Pos        = Object.Position;
+	Point.Color      = Color;
+	Point.Scale      = IsObjectHovered ? 2.0f : 1.5f;
+	Point.IsManeuver = Object.Maneuver.IsValid();
 	BatchedPoints.AddUnique(Point);
 
 	// Add the text
@@ -713,25 +722,25 @@ int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& All
 		FLinearColor ColorInner = Spline.ColorInner;
 		ColorInner.A            = CurrentAlpha.Get();
 
-		FSlateDrawElement::MakeCubicBezierSpline(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), CurrentOrigin + Spline.P0,
-			CurrentOrigin + Spline.P1, CurrentOrigin + Spline.P2, CurrentOrigin + Spline.P3, Spline.WidthOuter * AllottedGeometry.Scale,
-			ESlateDrawEffect::NoPixelSnapping, ColorOuter);
+		FSlateDrawElement::MakeCubicBezierSpline(OutDrawElements, LayerId + 1, AllottedGeometry.ToPaintGeometry(),
+			CurrentOrigin + Spline.P0, CurrentOrigin + Spline.P1, CurrentOrigin + Spline.P2, CurrentOrigin + Spline.P3,
+			Spline.WidthOuter * AllottedGeometry.Scale, ESlateDrawEffect::NoPixelSnapping, ColorOuter);
 
-		FSlateDrawElement::MakeCubicBezierSpline(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), CurrentOrigin + Spline.P0,
-			CurrentOrigin + Spline.P1, CurrentOrigin + Spline.P2, CurrentOrigin + Spline.P3, Spline.WidthInner * AllottedGeometry.Scale,
-			ESlateDrawEffect::NoPixelSnapping, ColorInner);
+		FSlateDrawElement::MakeCubicBezierSpline(OutDrawElements, LayerId + 2, AllottedGeometry.ToPaintGeometry(),
+			CurrentOrigin + Spline.P0, CurrentOrigin + Spline.P1, CurrentOrigin + Spline.P2, CurrentOrigin + Spline.P3,
+			Spline.WidthInner * AllottedGeometry.Scale, ESlateDrawEffect::NoPixelSnapping, ColorInner);
 	}
 
 	// Draw batched points
 	for (const FNovaBatchedPoint& Point : BatchedPoints)
 	{
-		const FSlateBrush* Brush     = FNovaStyleSet::GetBrush("Map/SB_OrbitalObject");
+		const FSlateBrush* Brush     = FNovaStyleSet::GetBrush(Point.IsManeuver ? "Map/SB_Maneuver" : "Map/SB_OrbitalObject");
 		FVector2D          BrushSize = Brush->GetImageSize() * Point.Scale;
 
 		FLinearColor Color = Point.Color;
 		Color.A            = CurrentAlpha.Get();
 
-		FSlateDrawElement::MakeBox(OutDrawElements, LayerId,
+		FSlateDrawElement::MakeBox(OutDrawElements, LayerId + 3,
 			AllottedGeometry.ToPaintGeometry(BrushSize, FSlateLayoutTransform(CurrentOrigin + Point.Pos - BrushSize / 2)), Brush,
 			ESlateDrawEffect::NoPixelSnapping, Color);
 	}
@@ -747,7 +756,7 @@ int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& All
 			AllottedGeometry.ToPaintGeometry(TextSize, FSlateLayoutTransform(CurrentOrigin + Text.Pos - TextSize / 2));
 
 		FSlateDrawElement::MakeText(
-			OutDrawElements, LayerId, TextGeometry, Text.Text, Text.TextStyle->Font, ESlateDrawEffect::NoPixelSnapping, TextColor);
+			OutDrawElements, LayerId + 4, TextGeometry, Text.Text, Text.TextStyle->Font, ESlateDrawEffect::NoPixelSnapping, TextColor);
 	}
 
 	return SCompoundWidget::OnPaint(PaintArgs, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);

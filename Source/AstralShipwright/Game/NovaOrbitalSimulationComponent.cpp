@@ -234,7 +234,7 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 		SourcePhase                     = CircularizeAtStart ? Geometry.StartPhase : Geometry.StartPhase + 180;
 		SourceAltitudeA                 = CircularizeAtStart ? Geometry.StartAltitude : Geometry.OppositeAltitude;
 		SourceAltitudeB                 = CircularizeAtStart ? Geometry.OppositeAltitude : Geometry.StartAltitude;
-		const double WaitingPhaseDelta  = fmod(SourcePhase - InitialSourcePhase + 360.0, 360.0);
+		const double WaitingPhaseDelta  = FMath::Fmod(SourcePhase - InitialSourcePhase + 360.0, 360.0);
 		InitialWaitingDuration          = (WaitingPhaseDelta / 360.0) * Geometry.GetOrbitalPeriod();
 	}
 
@@ -253,11 +253,23 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	// Compute the new destination parameters after both transfers, ignoring the phasing orbit
 	const FNovaTime TotalTransferDuration                = InitialWaitingDuration + TransferA.Duration + TransferB.Duration;
 	const double    DestinationPhaseChangeDuringTransfer = (TotalTransferDuration / DestinationOrbitPeriod) * 360.0;
-	const double    NewDestinationPhaseAfterTransfers    = fmod(DestinationPhase + DestinationPhaseChangeDuringTransfer, 360.0);
-	double          PhaseDelta                           = fmod(NewDestinationPhaseAfterTransfers - SourcePhase + 360.0, 360.0);
+	const double    NewDestinationPhaseAfterTransfers    = FMath::Fmod(DestinationPhase + DestinationPhaseChangeDuringTransfer, 360.0);
+	double          PhaseDelta                           = FMath::Fmod(NewDestinationPhaseAfterTransfers - SourcePhase + 360.0, 360.0);
+
+	// Ensure the phasing delta has the correct sign
 	if (PhasingOrbitPeriod > DestinationOrbitPeriod)
 	{
-		PhaseDelta = PhaseDelta - 360.0;
+		while (PhaseDelta > 0)
+		{
+			PhaseDelta -= 360.0;
+		}
+	}
+	else
+	{
+		while (PhaseDelta < 0)
+		{
+			PhaseDelta += 360.0;
+		}
 	}
 
 	// Compute the time spent waiting
@@ -337,8 +349,8 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 
 	// Confirm the final spacecraft phase matches the destination's
 	const double DestinationPhasingAngle = (PhasingDuration / PhasingOrbitPeriod) * 360.0;
-	const double FinalDestinationPhase   = fmod(DestinationPhase + (TotalTravelDuration / DestinationOrbitPeriod) * 360, 360.0);
-	const double FinalSpacecraftPhase    = fmod(SourcePhase + PhasingAngle, 360.0);
+	const double FinalDestinationPhase   = FMath::Fmod(DestinationPhase + (TotalTravelDuration / DestinationOrbitPeriod) * 360, 360.0);
+	const double FinalSpacecraftPhase    = FMath::Fmod(SourcePhase + PhasingAngle, 360.0);
 
 #if 0
 	NLOG("--------------------------------------------------------------------------------");
@@ -363,6 +375,8 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	{
 		NCHECK(FMath::Abs(FMath::UnwindDegrees(FinalSpacecraftPhase) - FMath::UnwindDegrees(FinalDestinationPhase)) < 0.0001);
 		NCHECK(FMath::Abs((Trajectory->GetStartTime() - Parameters->StartTime).AsSeconds()) < 1);
+		NCHECK(Trajectory->TotalTravelDuration > 0);
+		NCHECK(PhasingDuration.AsSeconds() >= 0);
 	}
 
 #endif

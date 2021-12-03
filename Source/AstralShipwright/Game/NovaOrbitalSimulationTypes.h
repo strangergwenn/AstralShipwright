@@ -157,7 +157,7 @@ struct FNovaOrbitGeometry
 	{
 		NCHECK(Body);
 		const double PhaseDelta = (DeltaTime / GetOrbitalPeriod()) * 360;
-		double       Result     = StartPhase + (Unwind ? fmod(PhaseDelta, 360.0) : PhaseDelta);
+		double       Result     = StartPhase + (Unwind ? FMath::Fmod(PhaseDelta, 360.0) : PhaseDelta);
 
 		if (Unwind)
 		{
@@ -253,11 +253,16 @@ struct FNovaOrbitalLocation
 
 	/** Get the Cartesian coordinates for this location */
 	template <bool AbsolutePosition = true>
-	FVector2D GetCartesianLocation() const
+	FVector2D GetCartesianLocation(float BaseAltitude = 0) const
 	{
+		if (BaseAltitude == 0)
+		{
+			BaseAltitude = Geometry.Body->Radius;
+		}
+
 		// Extract orbital parameters
-		const float SemiMajorAxis     = 0.5f * (Geometry.StartAltitude + Geometry.OppositeAltitude);
-		const float SemiMinorAxis     = FMath::Sqrt(Geometry.StartAltitude * Geometry.OppositeAltitude);
+		const float SemiMajorAxis     = 0.5f * (2.0f * BaseAltitude + Geometry.StartAltitude + Geometry.OppositeAltitude);
+		const float SemiMinorAxis     = FMath::Sqrt((BaseAltitude + Geometry.StartAltitude) * (BaseAltitude + Geometry.OppositeAltitude));
 		const float Eccentricity      = FMath::Sqrt(1.0f - FMath::Square(SemiMinorAxis) / FMath::Square(SemiMajorAxis));
 		const float HalfFocalDistance = SemiMajorAxis * Eccentricity;
 
@@ -278,7 +283,7 @@ struct FNovaOrbitalLocation
 		const FVector2D BasePosition = FVector2D(StartFast ? -X : X, Y).GetRotated(-Geometry.StartPhase);
 		if (AbsolutePosition)
 		{
-			const float OriginOffsetSize = SemiMajorAxis - Geometry.OppositeAltitude;
+			const float OriginOffsetSize = SemiMajorAxis - Geometry.OppositeAltitude - BaseAltitude;
 			return BasePosition + FVector2D(OriginOffsetSize, 0).GetRotated(-Geometry.StartPhase);
 		}
 		else
