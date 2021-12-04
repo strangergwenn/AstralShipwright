@@ -157,7 +157,7 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 
 				// Position
 				CurrentAngle    = -AbsoluteBodySpinAngle - OrbitRotationAngle;
-				CurrentPosition = -FVector(0, 0, Body->Radius + PlayerCartesianLocation.Size()) * 1000 * 100;
+				CurrentPosition = -FVector(0, 0, PlayerCartesianLocation.Size()) * 1000 * 100;
 
 				// This is the only planetary body for now so we'll apply sun & atmosphere there
 				{

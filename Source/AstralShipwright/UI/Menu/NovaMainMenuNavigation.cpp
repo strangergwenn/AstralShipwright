@@ -113,7 +113,7 @@ public:
 	}
 
 public:
-	void SetObjectList(const ANovaGameState* GameState, TArray<FNovaOrbitalObject> ObjectList)
+	void SetObjectList(const ANovaGameState* GameState, TSharedPtr<SNovaOrbitalMap> OrbitalMap, TArray<FNovaOrbitalObject> ObjectList)
 	{
 		if (IsValid(GameState))
 		{
@@ -153,11 +153,15 @@ public:
 			};
 
 			// Color builder
-			auto GetColor = [Theme](const FNovaOrbitalObject& Object)
+			auto GetColor = [OrbitalMap, Theme](const FNovaOrbitalObject& Object)
 			{
-				if (Object.Maneuver.IsValid())
+				if (OrbitalMap->GetPreviewTrajectory().IsValid() && Object.Maneuver.IsValid())
 				{
 					return Theme.ContrastingColor;
+				}
+				else if (Object.Maneuver.IsValid())
+				{
+					return Theme.PositiveColor;
 				}
 				else if (Object.SpacecraftIdentifier != FGuid())
 				{
@@ -567,7 +571,7 @@ void SNovaMainMenuNavigation::Tick(const FGeometry& AllottedGeometry, const doub
 	}
 
 	// Update the hover block
-	HoverText->SetObjectList(GameState, CurrentHoveredObjects);
+	HoverText->SetObjectList(GameState, OrbitalMap, CurrentHoveredObjects);
 }
 
 void SNovaMainMenuNavigation::Show()
