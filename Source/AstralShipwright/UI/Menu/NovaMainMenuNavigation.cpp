@@ -342,6 +342,11 @@ public:
 		DesiredState = NewState;
 	}
 
+	bool IsVisible() const
+	{
+		return CurrentState;
+	}
+
 	void Reset()
 	{
 		DesiredState = false;
@@ -571,6 +576,7 @@ void SNovaMainMenuNavigation::Show()
 
 	ResetDestination();
 	SidePanel->Reset();
+	OrbitalMap->Reset();
 }
 
 void SNovaMainMenuNavigation::Hide()
@@ -579,6 +585,7 @@ void SNovaMainMenuNavigation::Hide()
 
 	ResetDestination();
 	SidePanel->Reset();
+	OrbitalMap->Reset();
 }
 
 void SNovaMainMenuNavigation::UpdateGameObjects()
@@ -616,9 +623,7 @@ void SNovaMainMenuNavigation::OnClicked(const FVector2D& Position)
 		{
 			if (HasValidObject)
 			{
-				SelectedObjectList = HoveredObjects;
-				SidePanel->SetVisible(true);
-				SidePanelContainer->SetObjectList(SelectedObjectList);
+				OnShowSidePanel(HoveredObjects);
 			}
 		}
 		else
@@ -626,8 +631,7 @@ void SNovaMainMenuNavigation::OnClicked(const FVector2D& Position)
 			// Case 2 : existing selection, new valid selection (change)
 			if (HasValidObject)
 			{
-				SelectedObjectList = HoveredObjects;
-				SidePanelContainer->SetObjectList(SelectedObjectList);
+				OnShowSidePanel(HoveredObjects);
 			}
 
 			// Case 3 : existing selection, no selection at all (do nothing)
@@ -637,6 +641,49 @@ void SNovaMainMenuNavigation::OnClicked(const FVector2D& Position)
 			}
 		}
 	}
+}
+
+FReply SNovaMainMenuNavigation::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)
+{
+	FReply Result = SNovaTabPanel::OnKeyDown(MyGeometry, InKeyEvent);
+
+	if (MenuManager->IsUsingGamepad() && MenuManager->GetMenu()->IsActionKey(FNovaPlayerInput::MenuConfirm, InKeyEvent.GetKey()))
+	{
+		if (IsValid(GameState))
+		{
+			bool                       HasValidObject      = false;
+			bool                       HasAnyHoveredObject = false;
+			TArray<FNovaOrbitalObject> HoveredObjects      = OrbitalMap->GetHoveredOrbitalObjects();
+
+			// Check whether the current selection is relevant
+			for (const FNovaOrbitalObject& Object : HoveredObjects)
+			{
+				HasAnyHoveredObject = true;
+
+				if (Object.Area.IsValid() || Object.SpacecraftIdentifier != FGuid())
+				{
+					HasValidObject = true;
+					break;
+				}
+			}
+
+			//  No existing selection, new valid selection (open)
+			if (SelectedObjectList.Num() == 0 && HasValidObject)
+			{
+				OnShowSidePanel(HoveredObjects);
+
+				return FReply::Handled();
+			}
+		}
+	}
+	else if (MenuManager->IsUsingGamepad() && MenuManager->GetMenu()->IsActionKey(FNovaPlayerInput::MenuCancel, InKeyEvent.GetKey()))
+	{
+		OnHideSidePanel();
+
+		return FReply::Handled();
+	}
+
+	return Result;
 }
 
 void SNovaMainMenuNavigation::HorizontalAnalogInput(float Value)
@@ -891,11 +938,25 @@ FText SNovaMainMenuNavigation::GetCommitTrajectoryHelpText() const
     Callbacks
 ----------------------------------------------------*/
 
+void SNovaMainMenuNavigation::OnShowSidePanel(const TArray<FNovaOrbitalObject>& HoveredObjects)
+{
+	NLOG("SNovaMainMenuNavigation::OnShowSidePanel");
+
+	SelectedObjectList = HoveredObjects;
+	SidePanel->SetVisible(true);
+	SidePanelContainer->SetObjectList(SelectedObjectList);
+}
+
 void SNovaMainMenuNavigation::OnHideSidePanel()
 {
-	SelectedObjectList = {};
-	SidePanel->SetVisible(false);
-	SidePanelContainer->SetObjectList({});
+	if (SidePanel->IsVisible())
+	{
+		NLOG("SNovaMainMenuNavigation::OnHideSidePanel");
+
+		SelectedObjectList = {};
+		SidePanel->SetVisible(false);
+		SidePanelContainer->SetObjectList({});
+	}
 }
 
 void SNovaMainMenuNavigation::OnTrajectoryChanged(TSharedPtr<FNovaTrajectory> Trajectory, bool HasEnoughPropellant)

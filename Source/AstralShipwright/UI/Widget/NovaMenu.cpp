@@ -107,20 +107,16 @@ void SNovaMenu::Tick(const FGeometry& AllottedGeometry, const double CurrentTime
 		}
 
 		// Pass analog input when using gamepad
-		bool                    HorizontalInputConsumed = false;
-		bool                    VerticalInputConsumed   = false;
-		TSharedPtr<SNovaButton> Button                  = GetFocusedButton();
+		bool                    AnalogInputConsumed = false;
+		TSharedPtr<SNovaButton> Button              = GetFocusedButton();
 		if (MenuManager->IsUsingGamepad() && Button.IsValid())
 		{
-			HorizontalInputConsumed = Button->HorizontalAnalogInput(CurrentAnalogInput.X);
-			VerticalInputConsumed   = Button->VerticalAnalogInput(CurrentAnalogInput.Y);
+			AnalogInputConsumed = Button->HorizontalAnalogInput(CurrentAnalogInput.X);
+			AnalogInputConsumed |= Button->VerticalAnalogInput(CurrentAnalogInput.Y);
 		}
-		if (!HorizontalInputConsumed)
+		if (!AnalogInputConsumed)
 		{
 			CurrentNavigationPanel->HorizontalAnalogInput(CurrentAnalogInput.X);
-		}
-		if (!VerticalInputConsumed)
-		{
 			CurrentNavigationPanel->VerticalAnalogInput(CurrentAnalogInput.Y);
 		}
 	}
@@ -277,6 +273,10 @@ FReply SNovaMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEve
 	MenuManager->SetUsingGamepad(Key.IsGamepadKey());
 
 	// Pass the event down
+	if (CurrentNavigationPanel)
+	{
+		Result = CurrentNavigationPanel->OnKeyDown(CurrentNavigationPanel->GetCachedGeometry(), KeyEvent);
+	}
 	if (FocusedButton.IsValid())
 	{
 		Result = FocusedButton->OnKeyDown(FocusedButton->GetCachedGeometry(), KeyEvent);

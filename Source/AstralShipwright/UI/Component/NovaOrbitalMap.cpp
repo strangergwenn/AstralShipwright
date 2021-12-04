@@ -88,7 +88,7 @@ void SNovaOrbitalMap::Construct(const FArguments& InArgs)
 	TrajectoryInflationRatio   = 1.2f;
 
 	// Camera filter settings, based on the defaults
-	CameraFilter.Velocity *= 100;
+	CameraFilter.Velocity *= 125;
 	CameraFilter.Acceleration *= 75;
 	CameraFilter.Resistance *= 10;
 }
@@ -112,7 +112,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	HoveredOrbitalObjects.Empty();
 
 	// Integrate analog input
-	const float     PositionFreedom = 0.5f;
+	const float     PositionFreedom = 1.0f;
 	const FVector2D HalfLocalSize   = GetTickSpaceGeometry().GetLocalSize() / 2;
 	CameraFilter.ApplyFilter(CurrentPosition, CurrentVelocity, TargetPosition, DeltaTime, MenuManager->IsUsingGamepad());
 	CurrentPosition.X = FMath::Clamp(CurrentPosition.X, PositionFreedom * -HalfLocalSize.X, PositionFreedom * HalfLocalSize.X);
@@ -135,7 +135,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 		FNovaBatchedPoint Point;
 		Point.Pos   = -CurrentPosition;
 		Point.Color = FLinearColor::White;
-		Point.Scale = 0.25;
+		Point.Scale = 1.0f;
 		Point.Brush = FNovaStyleSet::GetBrush("Map/SB_Crosshair");
 		BatchedPoints.AddUnique(Point);
 	}
@@ -206,6 +206,11 @@ void SNovaOrbitalMap::VerticalAnalogInput(float Value)
 	{
 		TargetPosition.Y -= Value;
 	}
+}
+
+void SNovaOrbitalMap::Reset()
+{
+	CurrentPosition = FVector2D::ZeroVector;
 }
 
 /*----------------------------------------------------

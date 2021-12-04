@@ -45,6 +45,8 @@ public:
 
 	virtual void OnClicked(const FVector2D& Position) override;
 
+	virtual FReply OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) override;
+
 	virtual void HorizontalAnalogInput(float Value) override;
 
 	virtual void VerticalAnalogInput(float Value) override;
@@ -82,6 +84,7 @@ protected:
 	----------------------------------------------------*/
 protected:
 	// Side panel
+	void OnShowSidePanel(const TArray<FNovaOrbitalObject>& HoveredObjects);
 	void OnHideSidePanel();
 
 	// Trajectories

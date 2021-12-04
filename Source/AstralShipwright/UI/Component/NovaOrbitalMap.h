@@ -182,6 +182,9 @@ public:
 	/** Pass vertical input to the map */
 	void VerticalAnalogInput(float Value);
 
+	/** Reset the map */
+	void Reset();
+
 protected:
 	/*----------------------------------------------------
 	    High-level internals
