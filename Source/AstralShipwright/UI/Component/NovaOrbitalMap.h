@@ -40,10 +40,10 @@ struct FNovaBatchedPoint
 		return Pos == Other.Pos && Color == Other.Color && Scale == Other.Scale;
 	}
 
-	FVector2D    Pos;
-	FLinearColor Color;
-	float        Scale;
-	bool         IsManeuver;
+	FVector2D          Pos;
+	FLinearColor       Color;
+	float              Scale;
+	const FSlateBrush* Brush;
 };
 
 /** Batched data for drawing a quad */
@@ -88,6 +88,22 @@ struct FNovaOrbitalObject
 	{
 		Maneuver = MakeShared<FNovaManeuver>(M);
 		Position = P;
+	}
+
+	const FSlateBrush* GetBrush() const
+	{
+		if (Maneuver.IsValid())
+		{
+			return FNovaStyleSet::GetBrush("Map/SB_Maneuver");
+		}
+		else if (Area.IsValid())
+		{
+			return FNovaStyleSet::GetBrush("Map/SB_OrbitalObject");
+		}
+		else
+		{
+			return FNovaStyleSet::GetBrush("Map/SB_Spacecraft");
+		}
 	}
 
 	bool operator==(const FNovaOrbitalObject& Other) const

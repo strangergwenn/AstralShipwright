@@ -136,6 +136,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 		Point.Pos   = -CurrentPosition;
 		Point.Color = FLinearColor::White;
 		Point.Scale = 0.25;
+		Point.Brush = FNovaStyleSet::GetBrush("Map/SB_Crosshair");
 		BatchedPoints.AddUnique(Point);
 	}
 
@@ -548,10 +549,10 @@ void SNovaOrbitalMap::AddOrbitalObject(FNovaOrbitalObject Object, const FLinearC
 
 	// Add the point
 	FNovaBatchedPoint Point;
-	Point.Pos        = Object.Position;
-	Point.Color      = Color;
-	Point.Scale      = IsObjectHovered ? 2.0f : 1.5f;
-	Point.IsManeuver = Object.Maneuver.IsValid();
+	Point.Pos   = Object.Position;
+	Point.Color = Color;
+	Point.Scale = IsObjectHovered ? 2.0f : 1.5f;
+	Point.Brush = Object.GetBrush();
 	BatchedPoints.AddUnique(Point);
 
 	// Add the text
@@ -734,14 +735,13 @@ int32 SNovaOrbitalMap::OnPaint(const FPaintArgs& PaintArgs, const FGeometry& All
 	// Draw batched points
 	for (const FNovaBatchedPoint& Point : BatchedPoints)
 	{
-		const FSlateBrush* Brush     = FNovaStyleSet::GetBrush(Point.IsManeuver ? "Map/SB_Maneuver" : "Map/SB_OrbitalObject");
-		FVector2D          BrushSize = Brush->GetImageSize() * Point.Scale;
+		FVector2D BrushSize = Point.Brush->GetImageSize() * Point.Scale;
 
 		FLinearColor Color = Point.Color;
 		Color.A            = CurrentAlpha.Get();
 
 		FSlateDrawElement::MakeBox(OutDrawElements, LayerId + 3,
-			AllottedGeometry.ToPaintGeometry(BrushSize, FSlateLayoutTransform(CurrentOrigin + Point.Pos - BrushSize / 2)), Brush,
+			AllottedGeometry.ToPaintGeometry(BrushSize, FSlateLayoutTransform(CurrentOrigin + Point.Pos - BrushSize / 2)), Point.Brush,
 			ESlateDrawEffect::NoPixelSnapping, Color);
 	}
 

@@ -29,30 +29,64 @@
     Hover details stack
 ----------------------------------------------------*/
 
-/** Fading text widget with a background */
+/** Fading text widget with a background, inheriting SNovaFadingWidget for simplicity */
 class SNovaHoverStackEntry : public SNovaText
 {
 public:
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
 		SNovaText::Construct(SNovaText::FArguments()
 								 .TextStyle(&Theme.MainFont)
-								 .WrapTextAt(STACK_PANEL_WIDTH - Theme.ContentPadding.Left - Theme.ContentPadding.Right));
+								 .WrapTextAt(STACK_PANEL_WIDTH - Theme.ContentPadding.Left - Theme.ContentPadding.Right - 24));
 
 		// clang-format off
 		ChildSlot
 		[
 			SNew(SBorder)
-			.BorderImage(&Theme.MainMenuBackground)
+			.BorderImage(&Theme.MainMenuGenericBackground)
 			.Padding(Theme.ContentPadding)
 			.BorderBackgroundColor(this, &SNovaFadingWidget::GetSlateColor)
 			[
-				TextBlock.ToSharedRef()
+				SNew(SHorizontalBox)
+
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.VAlign(VAlign_Center)
+				[
+					SNew(SImage)
+					.Image_Lambda([=]()
+					{
+						return Brush;
+					})
+					.ColorAndOpacity_Lambda([=]()
+					{
+						FLinearColor NewColor = Color;
+						NewColor.A *= CurrentAlpha;
+						return NewColor;
+					})
+				]
+
+				+ SHorizontalBox::Slot()
+				.VAlign(VAlign_Center)
+				[
+					TextBlock.ToSharedRef()
+				]
 			]
 		];
 		// clang-format on
 	}
+
+	void SetBrushAndColor(const FSlateBrush* NewBrush, const FLinearColor NewColor)
+	{
+		Brush = NewBrush;
+		Color = NewColor;
+	}
+
+protected:
+	const FSlateBrush* Brush;
+	FLinearColor       Color;
 };
 
 /** Text stack with fading lines */
@@ -118,6 +152,23 @@ public:
 				}
 			};
 
+			// Color builder
+			auto GetColor = [Theme](const FNovaOrbitalObject& Object)
+			{
+				if (Object.Maneuver.IsValid())
+				{
+					return Theme.ContrastingColor;
+				}
+				else if (Object.SpacecraftIdentifier != FGuid())
+				{
+					return Theme.PositiveColor;
+				}
+				else
+				{
+					return FLinearColor::White;
+				}
+			};
+
 			// Grow the text item list if too small
 			int32 TextItemsToAdd = ObjectList.Num() - TextItemList.Num();
 			if (TextItemsToAdd > 0)
@@ -155,11 +206,11 @@ public:
 			{
 				TSharedPtr<SNovaHoverStackEntry>& Item = TextItemList[Index];
 
-				FText Text = FText::FromString(FString(TEXT("• ")) + GetText(Object).ToString());
-				bool  InstantUpdate =
+				bool InstantUpdate =
 					Index < PreviousObjects.Num() && PreviousObjects[Index].Maneuver.IsValid() && Object.Maneuver.IsValid();
 
-				Item->SetText(Text, InstantUpdate);
+				Item->SetText(GetText(Object), InstantUpdate);
+				Item->SetBrushAndColor(Object.GetBrush(), GetColor(Object));
 				Index++;
 			}
 		}
