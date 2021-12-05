@@ -233,11 +233,17 @@ public:
 	/** Get a compartment */
 	const FNovaCompartment& GetCompartment(int32 Index) const;
 
+	/** Get a compartment component */
+	const class UNovaSpacecraftCompartmentComponent* GetCompartmentComponent(int32 Index) const;
+
 	/** Get a compartment description */
 	FNovaSpacecraftCompartmentMetrics GetCompartmentMetrics(int32 Index) const;
 
 	/** Get the current number of compartments */
 	int32 GetCompartmentCount() const;
+
+	/** Get the current number of compartment components */
+	int32 GetCompartmentComponentCount() const;
 
 	/** Return which compartment index a primitive belongs to, or INDEX_NONE */
 	int32 GetCompartmentIndexByPrimitive(const class UPrimitiveComponent* Component);

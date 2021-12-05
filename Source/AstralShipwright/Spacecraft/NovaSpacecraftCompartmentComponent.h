@@ -61,6 +61,12 @@ public:
 		return -GetCompartmentLength(Assembly) / 2 - FVector(0, 0, GetComponentLocation().Z);
 	}
 
+	/** Get the main structural mesh */
+	const class UPrimitiveComponent* GetMainStructure() const
+	{
+		return Cast<UPrimitiveComponent>(MainStructure.Mesh);
+	}
+
 	/*----------------------------------------------------
 	    Processing methods
 	----------------------------------------------------*/
