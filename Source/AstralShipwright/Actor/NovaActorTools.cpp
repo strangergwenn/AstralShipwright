@@ -69,7 +69,7 @@ double UNovaActorTools::SolveVelocity(double& CurrentVelocity, double TargetVelo
 	double MaximumAcceleration, double MaximumVelocity, double DeadDistance, float DeltaTime)
 {
 	// Get the input data
-	double DeltaPosition  = (TargetLocation - CurrentLocation) / 100.0f;
+	double DeltaPosition  = TargetLocation - CurrentLocation;
 	double TargetDistance = FMath::Max(0.0f, FMath::Abs(DeltaPosition) - DeadDistance);
 	double DeltaVelocity  = TargetVelocity - CurrentVelocity;
 
@@ -90,12 +90,7 @@ double UNovaActorTools::SolveVelocity(double& CurrentVelocity, double TargetVelo
 	else
 	{
 		double MaxAccurateVelocity = FMath::Min((TargetDistance - DistanceToStop) / DeltaTime, MaximumVelocity);
-		if (DistanceToStop > TargetDistance)
-		{
-			MaxAccurateVelocity = FMath::Min(MaxAccurateVelocity, FMath::Abs(CurrentVelocity));
-		}
-
-		VelocityChange = FMath::Sign(DeltaVelocity) * MaxAccurateVelocity + TargetVelocity;
+		VelocityChange             = FMath::Sign(DeltaPosition) * MaxAccurateVelocity + TargetVelocity;
 	}
 
 	// Update the velocity with limited acceleration
@@ -112,7 +107,7 @@ double UNovaActorTools::SolveVelocity(FVector& CurrentVelocity, const FVector& T
 	const FVector& TargetLocation, double MaximumAcceleration, double MaximumVelocity, double DeadDistance, float DeltaTime)
 {
 	// Get the position data
-	const FVector DeltaPosition  = (TargetLocation - CurrentLocation) / 100.0f;
+	const FVector DeltaPosition  = TargetLocation - CurrentLocation;
 	double        TargetDistance = FMath::Max(0.0f, DeltaPosition.Size() - DeadDistance);
 
 	// Get the velocity data
@@ -136,13 +131,8 @@ double UNovaActorTools::SolveVelocity(FVector& CurrentVelocity, const FVector& T
 	}
 	else
 	{
-		float MaxAccurateVelocity = FMath::Min((TargetDistance - DistanceToStop) / DeltaTime, MaximumVelocity);
-		if (DistanceToStop > TargetDistance)
-		{
-			MaxAccurateVelocity = FMath::Min(MaxAccurateVelocity, CurrentVelocity.Size());
-		}
-
-		VelocityChange = DeltaPosition.GetSafeNormal() * MaxAccurateVelocity + TargetVelocity;
+		double MaxAccurateVelocity = FMath::Min((TargetDistance - DistanceToStop) / DeltaTime, MaximumVelocity);
+		VelocityChange             = DeltaPosition.GetSafeNormal() * MaxAccurateVelocity + TargetVelocity;
 	}
 
 	// Update the velocity with limited acceleration
