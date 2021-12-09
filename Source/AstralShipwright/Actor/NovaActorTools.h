@@ -27,6 +27,14 @@ public:
 	/** Get half of the ping time in seconds for this player */
 	static float GetPlayerLatency(const class APlayerState* PC);
 
+	/** Determine the velocity needed to match a target position and velocity, return the distance */
+	static double SolveVelocity(double& CurrentVelocity, double TargetVelocity, double CurrentLocation, double TargetLocation,
+		double MaximumAcceleration, double MaximumVelocity, double DeadDistance, float DeltaTime);
+
+	/** Determine the velocity needed to match a target position and velocity, return the distance */
+	static double SolveVelocity(FVector& CurrentVelocity, const FVector& TargetVelocity, const FVector& CurrentLocation,
+		const FVector& TargetLocation, double MaximumAcceleration, double MaximumVelocity, double DeadDistance, float DeltaTime);
+
 	/** Apply collision effects on velocity */
 	static FVector GetVelocityCollisionResponse(
 		const FVector& Velocity, const FHitResult& Hit, float BaseRestitution = 1.0f, const FVector& WorldUp = FVector(0, 0, 1));

@@ -65,6 +65,98 @@ float UNovaActorTools::GetPlayerLatency(const class APlayerState* PlayerState)
 	}
 }
 
+double UNovaActorTools::SolveVelocity(double& CurrentVelocity, double TargetVelocity, double CurrentLocation, double TargetLocation,
+	double MaximumAcceleration, double MaximumVelocity, double DeadDistance, float DeltaTime)
+{
+	// Get the input data
+	double DeltaPosition  = (TargetLocation - CurrentLocation) / 100.0f;
+	double TargetDistance = FMath::Max(0.0f, FMath::Abs(DeltaPosition) - DeadDistance);
+	double DeltaVelocity  = TargetVelocity - CurrentVelocity;
+
+	// Determine the time left to reach the final desired velocity
+	double TimeToFinalVelocity = 0.0;
+	if (!FMath::IsNearlyZero(DeltaVelocity))
+	{
+		TimeToFinalVelocity = FMath::Abs(DeltaVelocity) / MaximumAcceleration;
+	}
+
+	// Update desired velocity to match location & velocity inputs best
+	double VelocityChange;
+	double DistanceToStop = (FMath::Abs(DeltaVelocity) / 2.0) * (TimeToFinalVelocity + DeltaTime);
+	if (DistanceToStop > TargetDistance)
+	{
+		VelocityChange = TargetVelocity;
+	}
+	else
+	{
+		double MaxAccurateVelocity = FMath::Min((TargetDistance - DistanceToStop) / DeltaTime, MaximumVelocity);
+		if (DistanceToStop > TargetDistance)
+		{
+			MaxAccurateVelocity = FMath::Min(MaxAccurateVelocity, FMath::Abs(CurrentVelocity));
+		}
+
+		VelocityChange = FMath::Sign(DeltaVelocity) * MaxAccurateVelocity + TargetVelocity;
+	}
+
+	// Update the velocity with limited acceleration
+	auto UpdateVelocity = [](double& Value, double Target, double MaxDelta)
+	{
+		Value = FMath::Clamp(Target, Value - MaxDelta, Value + MaxDelta);
+	};
+	UpdateVelocity(CurrentVelocity, VelocityChange, MaximumAcceleration * DeltaTime);
+
+	return TargetDistance;
+}
+
+double UNovaActorTools::SolveVelocity(FVector& CurrentVelocity, const FVector& TargetVelocity, const FVector& CurrentLocation,
+	const FVector& TargetLocation, double MaximumAcceleration, double MaximumVelocity, double DeadDistance, float DeltaTime)
+{
+	// Get the position data
+	const FVector DeltaPosition  = (TargetLocation - CurrentLocation) / 100.0f;
+	double        TargetDistance = FMath::Max(0.0f, DeltaPosition.Size() - DeadDistance);
+
+	// Get the velocity data
+	FVector DeltaVelocity     = TargetVelocity - CurrentVelocity;
+	FVector DeltaVelocityAxis = DeltaVelocity;
+	DeltaVelocityAxis.Normalize();
+
+	// Determine the time left to reach the final desired velocity
+	double TimeToFinalVelocity = 0.0;
+	if (!FMath::IsNearlyZero(DeltaVelocity.SizeSquared()))
+	{
+		TimeToFinalVelocity = DeltaVelocity.Size() / MaximumAcceleration;
+	}
+
+	// Update desired velocity to match location & velocity inputs best
+	FVector VelocityChange;
+	float   DistanceToStop = (DeltaVelocity.Size() / 2.0) * (TimeToFinalVelocity + DeltaTime);
+	if (DistanceToStop > TargetDistance)
+	{
+		VelocityChange = TargetVelocity;
+	}
+	else
+	{
+		float MaxAccurateVelocity = FMath::Min((TargetDistance - DistanceToStop) / DeltaTime, MaximumVelocity);
+		if (DistanceToStop > TargetDistance)
+		{
+			MaxAccurateVelocity = FMath::Min(MaxAccurateVelocity, CurrentVelocity.Size());
+		}
+
+		VelocityChange = DeltaPosition.GetSafeNormal() * MaxAccurateVelocity + TargetVelocity;
+	}
+
+	// Update the velocity with limited acceleration
+	auto UpdateVelocity = [](double& Value, double Target, double MaxDelta)
+	{
+		Value = FMath::Clamp(Target, Value - MaxDelta, Value + MaxDelta);
+	};
+	UpdateVelocity(CurrentVelocity.X, VelocityChange.X, MaximumAcceleration * DeltaTime);
+	UpdateVelocity(CurrentVelocity.Y, VelocityChange.Y, MaximumAcceleration * DeltaTime);
+	UpdateVelocity(CurrentVelocity.Z, VelocityChange.Z, MaximumAcceleration * DeltaTime);
+
+	return TargetDistance;
+}
+
 FVector UNovaActorTools::GetVelocityCollisionResponse(
 	const FVector& Velocity, const FHitResult& Hit, float BaseRestitution, const FVector& WorldUp)
 {

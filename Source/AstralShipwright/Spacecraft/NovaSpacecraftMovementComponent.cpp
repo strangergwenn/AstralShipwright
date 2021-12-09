@@ -512,51 +512,9 @@ void UNovaSpacecraftMovementComponent::ProcessMeasurementsAfterAttitude(float De
 
 void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 {
-	// Get the position data
-	const FVector DeltaPosition          = (AttitudeCommand.Location - UpdatedComponent->GetComponentLocation()) / 100.0f;
-	const FVector DeltaPositionDirection = DeltaPosition.GetSafeNormal();
-	LinearAttitudeDistance               = FMath::Max(0.0f, DeltaPosition.Size() - LinearDeadDistance);
-
-	// Get the velocity data
-	FVector DeltaVelocity     = AttitudeCommand.Velocity - CurrentLinearVelocity;
-	FVector DeltaVelocityAxis = DeltaVelocity;
-	DeltaVelocityAxis.Normalize();
-
-	// Determine the time left to reach the final desired velocity
-	float TimeToFinalVelocity = 0;
-	if (!FMath::IsNearlyZero(DeltaVelocity.SizeSquared()))
-	{
-		TimeToFinalVelocity = DeltaVelocity.Size() / GetMaximumAcceleration();
-	}
-
-	// Update desired velocity to match location & velocity inputs best
-	FVector RelativeResultSpeed;
-	float   DistanceToStop = (DeltaVelocity.Size() / 2) * (TimeToFinalVelocity + DeltaTime);
-	if (DistanceToStop > LinearAttitudeDistance)
-	{
-		RelativeResultSpeed = AttitudeCommand.Velocity;
-	}
-	else
-	{
-		float MaxPreciseSpeed = FMath::Min((LinearAttitudeDistance - DistanceToStop) / DeltaTime, MaxLinearVelocity);
-		if (DistanceToStop > LinearAttitudeDistance)
-		{
-			MaxPreciseSpeed = FMath::Min(MaxPreciseSpeed, CurrentLinearVelocity.Size());
-		}
-
-		RelativeResultSpeed = DeltaPositionDirection;
-		RelativeResultSpeed *= MaxPreciseSpeed;
-		RelativeResultSpeed += AttitudeCommand.Velocity;
-	}
-
-	// Update the linear velocity based on acceleration
-	auto UpdateVelocity = [](auto& Value, auto Target, auto MaxDelta)
-	{
-		Value = FMath::Clamp(Target, Value - MaxDelta, Value + MaxDelta);
-	};
-	UpdateVelocity(CurrentLinearVelocity.X, RelativeResultSpeed.X, GetMaximumAcceleration() * DeltaTime);
-	UpdateVelocity(CurrentLinearVelocity.Y, RelativeResultSpeed.Y, GetMaximumAcceleration() * DeltaTime);
-	UpdateVelocity(CurrentLinearVelocity.Z, RelativeResultSpeed.Z, GetMaximumAcceleration() * DeltaTime);
+	LinearAttitudeDistance =
+		UNovaActorTools::SolveVelocity(CurrentLinearVelocity, AttitudeCommand.Velocity, UpdatedComponent->GetComponentLocation(),
+			AttitudeCommand.Location, GetMaximumAcceleration(), MaxLinearVelocity, LinearDeadDistance, DeltaTime);
 }
 
 void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
