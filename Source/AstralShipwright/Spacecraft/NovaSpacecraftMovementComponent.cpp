@@ -223,6 +223,11 @@ bool UNovaSpacecraftMovementComponent::CanUndock() const
 	return IsInitialized() && GetState() == ENovaMovementState::Docked;
 }
 
+bool UNovaSpacecraftMovementComponent::IsDockedOrDocking() const
+{
+	return IsInitialized() && (GetState() == ENovaMovementState::Docked || GetState() == ENovaMovementState::Docking);
+}
+
 void UNovaSpacecraftMovementComponent::Dock(FSimpleDelegate Callback)
 {
 	NLOG("UNovaSpacecraftMovementComponent::Dock ('%s')", *GetRoleString(this));
@@ -513,8 +518,8 @@ void UNovaSpacecraftMovementComponent::ProcessMeasurementsAfterAttitude(float De
 void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 {
 	LinearAttitudeDistance =
-		UNovaActorTools::SolveVelocity(CurrentLinearVelocity, AttitudeCommand.Velocity, UpdatedComponent->GetComponentLocation(),
-			AttitudeCommand.Location, GetMaximumAcceleration(), MaxLinearVelocity, LinearDeadDistance, DeltaTime);
+		UNovaActorTools::SolveVelocity(CurrentLinearVelocity, AttitudeCommand.Velocity, UpdatedComponent->GetComponentLocation() / 100.0,
+			AttitudeCommand.Location / 100.0, GetMaximumAcceleration(), MaxLinearVelocity, LinearDeadDistance, DeltaTime);
 }
 
 void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)

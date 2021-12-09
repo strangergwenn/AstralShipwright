@@ -115,6 +115,9 @@ public:
 	/*** Can we undock */
 	bool CanUndock() const;
 
+	/** Check if the spacecraft is already docked, or docking, but not undocking */
+	bool IsDockedOrDocking() const;
+
 	/** Dock at a particular location */
 	void Dock(FSimpleDelegate Callback = FSimpleDelegate());
 
@@ -223,39 +226,39 @@ protected:
 
 public:
 	// Distance under which we consider stopped
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float LinearDeadDistance;
 
 	// Maximum moving velocity in m/s
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float MaxLinearVelocity;
 
 	// Maximum moving acceleration in m/s-2 while docking
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float MaxSlowLinearAcceleration;
 
 	// Distance under which we consider stopped
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float AngularDeadDistance;
 
 	// Maximum turn rate in °/s (pitch & roll)
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float MaxAngularVelocity;
 
 	// How much to underestimate stopping distances
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float AngularOvershootRatio;
 
 	// Dot product value over which we consider vectors to be collinear
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float AngularColinearityThreshold;
 
 	// Base restitution coefficient of hits
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float RestitutionCoefficient;
 
 	// Collision shake
-	UPROPERTY(Category = Gaia, EditDefaultsOnly)
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	TSubclassOf<class UCameraShakeBase> HitShake;
 
 	/*----------------------------------------------------

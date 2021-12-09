@@ -33,6 +33,30 @@ public:
 	UPROPERTY(Category = Nova, EditAnywhere)
 	int32 RingIndex;
 
+	// Distance under which we consider stopped
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float LinearDeadDistance;
+
+	// Maximum moving velocity in m/s
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float MaxLinearVelocity;
+
+	// Maximum moving acceleration in m/s-2
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float LinearAcceleration;
+
+	// Distance under which we consider stopped
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float AngularDeadDistance;
+
+	// Maximum turn rate in °/s (pitch & roll)
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float MaxAngularVelocity;
+
+	// Maximum turn acceleration in °/s-2
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float AngularAcceleration;
+
 protected:
 	/*----------------------------------------------------
 	    Data
@@ -50,4 +74,8 @@ protected:
 	// Socket data
 	FVector  SocketRelativeLocation;
 	FRotator SocketRelativeRotation;
+
+	// Animation data
+	double CurrentLinearVelocity;
+	double CurrentRollVelocity;
 };
