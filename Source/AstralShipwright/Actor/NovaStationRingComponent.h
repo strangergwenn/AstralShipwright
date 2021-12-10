@@ -17,12 +17,15 @@ public:
 	UNovaStationRingComponent();
 
 	/*----------------------------------------------------
-	    Inherited
+	    Public methods
 	----------------------------------------------------*/
 
 	virtual void BeginPlay() override;
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	/** Check if the ring system is currently active */
+	bool IsOperating() const;
 
 	/*----------------------------------------------------
 	    Properties

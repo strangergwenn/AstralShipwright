@@ -99,70 +99,82 @@ void UNovaStationRingComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 	}
 
 	// Process the ring logic
+	if (IsOperating())
+	{
+		const USceneComponent* TargetComponent = nullptr;
+
+		FVector  CurrentLocation = GetComponentLocation();
+		FRotator CurrentRotation = GetComponentRotation();
+		double   TargetLocation  = CurrentLocation.X;
+		double   TargetRoll      = CurrentRotation.Roll;
+
+		if (IsValid(PreviousRing))
+		{
+			TargetLocation = PreviousRing->GetComponentLocation().X - 1000;
+		}
+
+		// Target hatch components, or the central structure
+		if (RingIndex < AttachedSpacecraft->GetCompartmentComponentCount())
+		{
+			const UNovaSpacecraftCompartmentComponent* Compartment = AttachedSpacecraft->GetCompartmentComponent(RingIndex);
+			NCHECK(Compartment);
+
+			TargetComponent = Compartment->GetMainStructure();
+
+			// Find hatches
+			bool                     FoundHatch = false;
+			TArray<USceneComponent*> Children;
+			Compartment->GetChildrenComponents(true, Children);
+			for (const USceneComponent* Child : Children)
+			{
+				if (Child->IsA<UNovaSpacecraftHatchComponent>())
+				{
+					TargetComponent = Child->GetAttachParent();
+					FoundHatch      = true;
+					break;
+				}
+			}
+
+			// Target hatches
+			if (IsValid(TargetComponent))
+			{
+				// DrawDebugLine(GetWorld(), TargetComponent->GetComponentLocation(),
+				//	GetSocketTransform("Base", RTS_World).GetTranslation(), FColor::Red);
+
+				FVector RelativeTargetLocation =
+					AttachedSpacecraft->GetTransform().InverseTransformPosition(TargetComponent->GetComponentLocation());
+				TargetLocation = AttachedSpacecraft->GetActorLocation().X + RelativeTargetLocation.X;
+
+				if (FoundHatch)
+				{
+					TargetRoll = FMath::RadiansToDegrees(FMath::Atan2(RelativeTargetLocation.Y, RelativeTargetLocation.Z));
+				}
+			}
+		}
+
+		// Solve for velocities
+		UNovaActorTools::SolveVelocity(CurrentLinearVelocity, 0.0, CurrentLocation.X / 100.0, TargetLocation / 100.0, LinearAcceleration,
+			MaxLinearVelocity, LinearDeadDistance, DeltaTime);
+		UNovaActorTools::SolveVelocity(CurrentRollVelocity, 0.0, CurrentRotation.Roll, TargetRoll, AngularAcceleration, MaxAngularVelocity,
+			AngularDeadDistance, DeltaTime);
+
+		// Integrate velocity to derive position
+		CurrentLocation.X += CurrentLinearVelocity * 100.0 * DeltaTime;
+		CurrentRotation.Roll += CurrentRollVelocity * DeltaTime;
+		SetWorldLocation(CurrentLocation);
+		SetWorldRotation(CurrentRotation);
+	}
+}
+
+bool UNovaStationRingComponent::IsOperating() const
+{
 	if (IsValid(AttachedSpacecraft) && AttachedSpacecraft->IsIdle())
 	{
 		const UNovaSpacecraftMovementComponent* MovementComponent = Cast<ANovaSpacecraftPawn>(AttachedSpacecraft)->GetSpacecraftMovement();
 		NCHECK(MovementComponent);
-		if (MovementComponent->IsDockedOrDocking())
-		{
-			const USceneComponent* TargetComponent = nullptr;
 
-			FVector  CurrentLocation = GetComponentLocation();
-			FRotator CurrentRotation = GetComponentRotation();
-			double   TargetLocation  = CurrentLocation.X;
-			double   TargetRoll      = CurrentRotation.Roll;
-
-			if (IsValid(PreviousRing))
-			{
-				TargetLocation = PreviousRing->GetComponentLocation().X - 1000;
-			}
-
-			// Target hatch components, or the central structure
-			if (RingIndex < AttachedSpacecraft->GetCompartmentComponentCount())
-			{
-				const UNovaSpacecraftCompartmentComponent* Compartment = AttachedSpacecraft->GetCompartmentComponent(RingIndex);
-				NCHECK(Compartment);
-
-				TargetComponent = Compartment->GetMainStructure();
-
-				// Find hatches
-				TArray<USceneComponent*> Children;
-				Compartment->GetChildrenComponents(true, Children);
-				for (const USceneComponent* Child : Children)
-				{
-					if (Child->IsA<UNovaSpacecraftHatchComponent>())
-					{
-						TargetComponent = Child->GetAttachParent();
-						break;
-					}
-				}
-
-				// Target hatches
-				if (IsValid(TargetComponent))
-				{
-					// DrawDebugLine(GetWorld(), TargetComponent->GetComponentLocation(),
-					//	GetSocketTransform("Base", RTS_World).GetTranslation(), FColor::Red);
-
-					FVector RelativeTargetLocation =
-						AttachedSpacecraft->GetTransform().InverseTransformPosition(TargetComponent->GetComponentLocation());
-					double Roll = FMath::RadiansToDegrees(FMath::Atan2(RelativeTargetLocation.Y, RelativeTargetLocation.Z));
-
-					TargetLocation = AttachedSpacecraft->GetActorLocation().X + RelativeTargetLocation.X;
-					TargetRoll     = Roll;
-				}
-			}
-
-			// Solve for velocities
-			UNovaActorTools::SolveVelocity(CurrentLinearVelocity, 0.0, CurrentLocation.X / 100.0, TargetLocation / 100.0,
-				LinearAcceleration, MaxLinearVelocity, LinearDeadDistance, DeltaTime);
-			UNovaActorTools::SolveVelocity(CurrentRollVelocity, 0.0, CurrentRotation.Roll, TargetRoll, AngularAcceleration,
-				MaxAngularVelocity, AngularDeadDistance, DeltaTime);
-
-			// Integrate velocity to derive position
-			CurrentLocation.X += CurrentLinearVelocity * 100.0 * DeltaTime;
-			CurrentRotation.Roll += CurrentRollVelocity * DeltaTime;
-			SetWorldLocation(CurrentLocation);
-			SetWorldRotation(CurrentRotation);
-		}
+		return MovementComponent->IsDockedOrDocking();
 	}
+
+	return false;
 }
