@@ -27,6 +27,24 @@ public:
 	/** Check if the ring system is currently active */
 	bool IsOperating() const;
 
+	/** Get the target spacecraft */
+	const class ANovaSpacecraftPawn* GetCurrentSpacecraft() const
+	{
+		return AttachedSpacecraft;
+	}
+
+	/** Get the target component */
+	const class USceneComponent* GetCurrentTarget() const
+	{
+		return TargetComponent;
+	}
+
+	/** Is the current target a hatch ? Necessary because hatch behavior is a secondary component */
+	bool IsCurrentTargetHatch() const
+	{
+		return TargetComponentIsHatch;
+	}
+
 	/*----------------------------------------------------
 	    Properties
 	----------------------------------------------------*/
@@ -74,6 +92,9 @@ protected:
 	UPROPERTY()
 	const class UNovaStationRingComponent* PreviousRing;
 
+	UPROPERTY()
+	const class USceneComponent* TargetComponent;
+
 	// Socket data
 	FVector  SocketRelativeLocation;
 	FRotator SocketRelativeRotation;
@@ -81,4 +102,5 @@ protected:
 	// Animation data
 	double CurrentLinearVelocity;
 	double CurrentRollVelocity;
+	bool   TargetComponentIsHatch;
 };

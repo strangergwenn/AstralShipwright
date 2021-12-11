@@ -273,6 +273,12 @@ public:
 		return DisplayFilterType;
 	}
 
+	/** Check the current filter index */
+	int32 GetCompartmentFilter() const
+	{
+		return DisplayFilterIndex;
+	}
+
 	/** Check if we're currently focusing a single compartment */
 	bool IsFilteringCompartment() const
 	{

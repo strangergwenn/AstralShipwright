@@ -14,8 +14,6 @@
 
 #include "DrawDebugHelpers.h"
 
-#define SHOW_TRACES 0
-
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
@@ -64,6 +62,9 @@ void UNovaStationRingComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	TargetComponent        = nullptr;
+	TargetComponentIsHatch = false;
+
 	// Find a player start to work with
 	if (!IsValid(AttachedPlayerStart))
 	{
@@ -101,8 +102,6 @@ void UNovaStationRingComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 	// Process the ring logic
 	if (IsOperating())
 	{
-		const USceneComponent* TargetComponent = nullptr;
-
 		FVector  CurrentLocation = GetComponentLocation();
 		FRotator CurrentRotation = GetComponentRotation();
 		double   TargetLocation  = CurrentLocation.X;
@@ -122,15 +121,14 @@ void UNovaStationRingComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 			TargetComponent = Compartment->GetMainStructure();
 
 			// Find hatches
-			bool                     FoundHatch = false;
 			TArray<USceneComponent*> Children;
 			Compartment->GetChildrenComponents(true, Children);
 			for (const USceneComponent* Child : Children)
 			{
 				if (Child->IsA<UNovaSpacecraftHatchComponent>())
 				{
-					TargetComponent = Child->GetAttachParent();
-					FoundHatch      = true;
+					TargetComponent        = Child->GetAttachParent();
+					TargetComponentIsHatch = true;
 					break;
 				}
 			}
@@ -138,16 +136,17 @@ void UNovaStationRingComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 			// Target hatches
 			if (IsValid(TargetComponent))
 			{
-				// DrawDebugLine(GetWorld(), TargetComponent->GetComponentLocation(),
-				//	GetSocketTransform("Base", RTS_World).GetTranslation(), FColor::Red);
-
 				FVector RelativeTargetLocation =
 					AttachedSpacecraft->GetTransform().InverseTransformPosition(TargetComponent->GetComponentLocation());
 				TargetLocation = AttachedSpacecraft->GetActorLocation().X + RelativeTargetLocation.X;
 
-				if (FoundHatch)
+				if (TargetComponentIsHatch)
 				{
-					TargetRoll = FMath::RadiansToDegrees(FMath::Atan2(RelativeTargetLocation.Y, RelativeTargetLocation.Z));
+					TargetRoll = 90.0 + FMath::RadiansToDegrees(FMath::Atan2(RelativeTargetLocation.Y, RelativeTargetLocation.Z));
+					if (TargetRoll >= 180.0)
+					{
+						TargetRoll -= 360.0;
+					}
 				}
 			}
 		}
