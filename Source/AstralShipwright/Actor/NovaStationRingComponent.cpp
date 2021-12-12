@@ -146,7 +146,7 @@ void UNovaStationRingComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 
 				if (TargetComponentIsHatch)
 				{
-					TargetRoll = 90.0 + FMath::RadiansToDegrees(FMath::Atan2(RelativeTargetLocation.Y, RelativeTargetLocation.Z));
+					TargetRoll = FMath::RadiansToDegrees(FMath::Atan2(RelativeTargetLocation.Y, RelativeTargetLocation.Z));
 					if (TargetRoll >= 180.0)
 					{
 						TargetRoll -= 360.0;

@@ -60,26 +60,25 @@ void UNovaStationDockComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		}
 
 		FVector CurrentLocation = GetRelativeLocation();
-		double  TargetLocation  = CurrentLocation.Y;
+		double  TargetLocation  = CurrentLocation.Z;
 
 		// Process target
 		if (RingComponent->IsDockEnabled())
 		{
 			const USceneComponent* TargetComponent = RingComponent->GetCurrentTarget();
-			TargetLocation = RingComponent->GetComponentTransform().InverseTransformPosition(TargetComponent->GetSocketLocation("Dock")).Y -
-							 SocketRelativeLocation.Y;
+			TargetLocation = SocketRelativeLocation.Y + RingComponent->GetComponentTransform().InverseTransformPosition(TargetComponent->GetSocketLocation("Dock")).Z;
 		}
 		else
 		{
-			TargetLocation = -SocketRelativeLocation.Y - RingComponent->GetSocketTransform("Base", RTS_Component).GetTranslation().Z;
+			TargetLocation = RingComponent->GetSocketTransform("Base", RTS_Component).GetTranslation().Z + SocketRelativeLocation.Y;
 		}
 
 		// Solve for velocities
-		UNovaActorTools::SolveVelocity(CurrentLinearVelocity, 0.0, CurrentLocation.Y, TargetLocation, LinearAcceleration, MaxLinearVelocity,
+		UNovaActorTools::SolveVelocity(CurrentLinearVelocity, 0.0, CurrentLocation.Z, TargetLocation, LinearAcceleration, MaxLinearVelocity,
 			LinearDeadDistance, DeltaTime);
 
 		// Integrate velocity to derive position
-		CurrentLocation.Y += CurrentLinearVelocity * DeltaTime;
+		CurrentLocation.Z += CurrentLinearVelocity * DeltaTime;
 		SetRelativeLocation(CurrentLocation);
 	}
 }
