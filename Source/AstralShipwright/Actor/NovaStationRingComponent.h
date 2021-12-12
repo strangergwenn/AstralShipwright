@@ -27,6 +27,9 @@ public:
 	/** Check if the ring system is currently active */
 	bool IsOperating() const;
 
+	/** Check if the dock should be trying to dock */
+	bool IsDockEnabled() const;
+
 	/** Get the target spacecraft */
 	const class ANovaSpacecraftPawn* GetCurrentSpacecraft() const
 	{
@@ -102,5 +105,7 @@ protected:
 	// Animation data
 	double CurrentLinearVelocity;
 	double CurrentRollVelocity;
+	double CurrentLinearDistance;
+	double CurrentRollDistance;
 	bool   TargetComponentIsHatch;
 };

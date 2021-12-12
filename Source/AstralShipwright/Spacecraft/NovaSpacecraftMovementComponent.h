@@ -115,8 +115,8 @@ public:
 	/*** Can we undock */
 	bool CanUndock() const;
 
-	/** Check if the spacecraft is already docked, or docking, but not undocking */
-	bool IsDockedOrDocking() const;
+	/** Check if the spacecraft is already docked */
+	bool IsDocked() const;
 
 	/** Dock at a particular location */
 	void Dock(FSimpleDelegate Callback = FSimpleDelegate());

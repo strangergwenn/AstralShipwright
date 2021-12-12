@@ -18,8 +18,8 @@ UNovaStationDockComponent::UNovaStationDockComponent() : Super(), CurrentLinearV
 {
 	// Defaults
 	LinearDeadDistance = 1;
-	MaxLinearVelocity  = 10;
-	LinearAcceleration = 20;
+	MaxLinearVelocity  = 1000;
+	LinearAcceleration = 1000;
 
 	// Settings
 	PrimaryComponentTick.bCanEverTick = true;
@@ -59,37 +59,27 @@ void UNovaStationDockComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 			Dematerialize();
 		}
 
-		if (RingComponent->IsOperating())
+		FVector CurrentLocation = GetRelativeLocation();
+		double  TargetLocation  = CurrentLocation.Y;
+
+		// Process target
+		if (RingComponent->IsDockEnabled())
 		{
-			FVector CurrentLocation = GetRelativeLocation();
-			double  TargetLocation  = CurrentLocation.Y;
-
-			// Process target
 			const USceneComponent* TargetComponent = RingComponent->GetCurrentTarget();
-			if (IsValid(TargetComponent) && RingComponent->IsCurrentTargetHatch())
-			{
-				DrawDebugLine(GetWorld(), TargetComponent->GetComponentLocation(), GetSocketTransform("Dock", RTS_World).GetTranslation(),
-					FColor::Green);
-
-				FVector Distance = TargetComponent->GetComponentLocation() - GetSocketTransform("Dock", RTS_World).GetTranslation();
-				NLOG("%f %f %f / target at %f %f %f / arm at %f %f %f / ring at %f %f %f", Distance.X, Distance.Y, Distance.Z,
-					TargetComponent->GetComponentLocation().X, TargetComponent->GetComponentLocation().Y,
-					TargetComponent->GetComponentLocation().Z, GetComponentLocation().X, GetComponentLocation().Y, GetComponentLocation().Z,
-					RingComponent->GetComponentLocation().X, RingComponent->GetComponentLocation().Y,
-					RingComponent->GetComponentLocation().Z);
-
-				TargetLocation =
-					RingComponent->GetComponentTransform().InverseTransformPosition(TargetComponent->GetComponentLocation()).Y -
-					SocketRelativeLocation.Y;
-			}
-
-			// Solve for velocities
-			UNovaActorTools::SolveVelocity(CurrentLinearVelocity, 0.0, CurrentLocation.Y / 100.0, TargetLocation / 100.0,
-				LinearAcceleration, MaxLinearVelocity, LinearDeadDistance, DeltaTime);
-
-			// Integrate velocity to derive position
-			CurrentLocation.Y += CurrentLinearVelocity * 100.0 * DeltaTime;
-			SetRelativeLocation(CurrentLocation);
+			TargetLocation = RingComponent->GetComponentTransform().InverseTransformPosition(TargetComponent->GetSocketLocation("Dock")).Y -
+							 SocketRelativeLocation.Y;
 		}
+		else
+		{
+			TargetLocation = -SocketRelativeLocation.Y - RingComponent->GetSocketTransform("Base", RTS_Component).GetTranslation().Z;
+		}
+
+		// Solve for velocities
+		UNovaActorTools::SolveVelocity(CurrentLinearVelocity, 0.0, CurrentLocation.Y, TargetLocation, LinearAcceleration, MaxLinearVelocity,
+			LinearDeadDistance, DeltaTime);
+
+		// Integrate velocity to derive position
+		CurrentLocation.Y += CurrentLinearVelocity * DeltaTime;
+		SetRelativeLocation(CurrentLocation);
 	}
 }

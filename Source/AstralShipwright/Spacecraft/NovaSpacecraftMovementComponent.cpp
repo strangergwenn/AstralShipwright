@@ -223,9 +223,9 @@ bool UNovaSpacecraftMovementComponent::CanUndock() const
 	return IsInitialized() && GetState() == ENovaMovementState::Docked;
 }
 
-bool UNovaSpacecraftMovementComponent::IsDockedOrDocking() const
+bool UNovaSpacecraftMovementComponent::IsDocked() const
 {
-	return IsInitialized() && (GetState() == ENovaMovementState::Docked || GetState() == ENovaMovementState::Docking);
+	return IsInitialized() && GetState() == ENovaMovementState::Docked;
 }
 
 void UNovaSpacecraftMovementComponent::Dock(FSimpleDelegate Callback)

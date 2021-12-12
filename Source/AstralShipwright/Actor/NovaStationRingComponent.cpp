@@ -22,9 +22,9 @@ UNovaStationRingComponent::UNovaStationRingComponent() : Super(), CurrentLinearV
 {
 	// Defaults
 	LinearDeadDistance  = 1;
-	MaxLinearVelocity   = 50;
-	LinearAcceleration  = 10;
-	AngularDeadDistance = 1;
+	MaxLinearVelocity   = 5000;
+	LinearAcceleration  = 1000;
+	AngularDeadDistance = 0.01;
 	MaxAngularVelocity  = 60;
 	AngularAcceleration = 10;
 
@@ -62,8 +62,11 @@ void UNovaStationRingComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// Initialize state
 	TargetComponent        = nullptr;
 	TargetComponentIsHatch = false;
+	CurrentLinearDistance  = 0;
+	CurrentRollDistance    = 0;
 
 	// Find a player start to work with
 	if (!IsValid(AttachedPlayerStart))
@@ -137,7 +140,7 @@ void UNovaStationRingComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 			if (IsValid(TargetComponent))
 			{
 				FVector RelativeTargetLocation =
-					AttachedSpacecraft->GetTransform().InverseTransformPosition(TargetComponent->GetComponentLocation());
+					AttachedSpacecraft->GetTransform().InverseTransformPosition(TargetComponent->GetSocketLocation("Dock"));
 				TargetLocation = AttachedSpacecraft->GetActorLocation().X + RelativeTargetLocation.X;
 
 				if (TargetComponentIsHatch)
@@ -152,13 +155,13 @@ void UNovaStationRingComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		}
 
 		// Solve for velocities
-		UNovaActorTools::SolveVelocity(CurrentLinearVelocity, 0.0, CurrentLocation.X / 100.0, TargetLocation / 100.0, LinearAcceleration,
-			MaxLinearVelocity, LinearDeadDistance, DeltaTime);
-		UNovaActorTools::SolveVelocity(CurrentRollVelocity, 0.0, CurrentRotation.Roll, TargetRoll, AngularAcceleration, MaxAngularVelocity,
-			AngularDeadDistance, DeltaTime);
+		CurrentLinearDistance = UNovaActorTools::SolveVelocity(CurrentLinearVelocity, 0.0, CurrentLocation.X, TargetLocation,
+			LinearAcceleration, MaxLinearVelocity, LinearDeadDistance, DeltaTime);
+		CurrentRollDistance   = UNovaActorTools::SolveVelocity(CurrentRollVelocity, 0.0, CurrentRotation.Roll, TargetRoll,
+            AngularAcceleration, MaxAngularVelocity, AngularDeadDistance, DeltaTime);
 
 		// Integrate velocity to derive position
-		CurrentLocation.X += CurrentLinearVelocity * 100.0 * DeltaTime;
+		CurrentLocation.X += CurrentLinearVelocity * DeltaTime;
 		CurrentRotation.Roll += CurrentRollVelocity * DeltaTime;
 		SetWorldLocation(CurrentLocation);
 		SetWorldRotation(CurrentRotation);
@@ -172,8 +175,14 @@ bool UNovaStationRingComponent::IsOperating() const
 		const UNovaSpacecraftMovementComponent* MovementComponent = Cast<ANovaSpacecraftPawn>(AttachedSpacecraft)->GetSpacecraftMovement();
 		NCHECK(MovementComponent);
 
-		return MovementComponent->IsDockedOrDocking();
+		return MovementComponent->IsDocked();
 	}
 
 	return false;
+}
+
+bool UNovaStationRingComponent::IsDockEnabled() const
+{
+	return IsOperating() && IsValid(TargetComponent) && IsCurrentTargetHatch() && CurrentLinearDistance < LinearDeadDistance &&
+		   CurrentRollDistance < AngularDeadDistance;
 }
