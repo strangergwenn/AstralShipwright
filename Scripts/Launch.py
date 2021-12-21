@@ -43,16 +43,16 @@ projectConfigFile.close()
 if engineDir != 'None':
 	if not os.path.exists(engineDir):
 		sys.exit('Engine directory provided in project.json does not exist')
-if 'UE4_ROOT' in os.environ:
-	engineDir = os.environ['UE4_ROOT']
+if 'UE_ROOT' in os.environ:
+	engineDir = os.environ['UE_ROOT']
 	if not os.path.exists(engineDir):
-		sys.exit('Engine directory provided in %UE4_ROOT% does not exist')
+		sys.exit('Engine directory provided in %UE_ROOT% does not exist')
 else:
-	sys.exit('Engine directory was set neither in project.json nor UE4_ROOT environment variable')
+	sys.exit('Engine directory was set neither in project.json nor UE_ROOT environment variable')
 
 # Generate paths
 projectFile = os.path.join(os.getcwd(), '..', projectName + '.uproject')
-engineExecutable = os.path.join(engineDir, 'Engine', 'Binaries', 'Win64', 'UE4Editor.exe')
+engineExecutable = os.path.join(engineDir, 'Engine', 'Binaries', 'Win64', 'UnrealEditor.exe')
 
 
 #-------------------------------------------------------------------------------

@@ -406,16 +406,24 @@ FText SNovaMainMenu::GetTooltipText() const
 FText SNovaMainMenu::GetDateText() const
 {
 	const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-	NCHECK(GameState);
+	if (IsValid(GameState))
+	{
+		return ::GetDateText(GameState->GetCurrentTime());
+	}
 
-	return ::GetDateText(GameState->GetCurrentTime());
+	return FText();
 }
 
 FText SNovaMainMenu::GetInfoText() const
 {
-	FNovaCredits PlayerCredits = MenuManager->GetPC()->GetAccountBalance();
+	if (IsValid(MenuManager->GetPC()))
+	{
+		FNovaCredits PlayerCredits = MenuManager->GetPC()->GetAccountBalance();
 
-	return FText::FormatNamed(LOCTEXT("InfoText", "{credits} in account"), TEXT("credits"), GetPriceText(PlayerCredits));
+		return FText::FormatNamed(LOCTEXT("InfoText", "{credits} in account"), TEXT("credits"), GetPriceText(PlayerCredits));
+	}
+
+	return FText();
 }
 
 FSlateColor SNovaMainMenu::GetManipulatorColor() const
