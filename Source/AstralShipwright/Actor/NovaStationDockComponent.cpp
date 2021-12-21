@@ -5,6 +5,8 @@
 
 #include "Actor/NovaActorTools.h"
 #include "Spacecraft/NovaSpacecraftPawn.h"
+#include "System/NovaMenuManager.h"
+#include "UI/Menu/NovaMainMenu.h"
 
 #include "Nova.h"
 
@@ -44,19 +46,22 @@ void UNovaStationDockComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	const UNovaStationRingComponent* RingComponent = Cast<UNovaStationRingComponent>(GetAttachParent());
+	UNovaMenuManager*                MenuManager   = UNovaMenuManager::Get();
 
 	// Process the dock logic
-	if (IsValid(RingComponent))
+	if (IsValid(RingComponent) && IsValid(MenuManager))
 	{
-		// Show up only when outside assembly
 		const ANovaSpacecraftPawn* Spacecraft = RingComponent->GetCurrentSpacecraft();
-		if (!IsValid(Spacecraft) || Spacecraft->GetCompartmentFilter() == INDEX_NONE)
+		const SNovaMainMenu*       MainMenu   = static_cast<SNovaMainMenu*>(MenuManager->GetMenu().Get());
+
+		// Show up only when outside assembly
+		if (MainMenu && MainMenu->IsOnAssemblyMenu() || IsValid(Spacecraft) && Spacecraft->GetCompartmentFilter() != INDEX_NONE)
 		{
-			Materialize();
+			Dematerialize();
 		}
 		else
 		{
-			Dematerialize();
+			Materialize();
 		}
 
 		FVector CurrentLocation = GetRelativeLocation();
@@ -66,7 +71,8 @@ void UNovaStationDockComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		if (RingComponent->IsDockEnabled())
 		{
 			const USceneComponent* TargetComponent = RingComponent->GetCurrentTarget();
-			TargetLocation = SocketRelativeLocation.Y + RingComponent->GetComponentTransform().InverseTransformPosition(TargetComponent->GetSocketLocation("Dock")).Z;
+			TargetLocation                         = SocketRelativeLocation.Y +
+							 RingComponent->GetComponentTransform().InverseTransformPosition(TargetComponent->GetSocketLocation("Dock")).Z;
 		}
 		else
 		{

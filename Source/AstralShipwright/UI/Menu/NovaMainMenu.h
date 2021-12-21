@@ -53,6 +53,9 @@ public:
 	/** Stop displaying the tooltip */
 	void HideTooltip(SWidget* TargetWidget);
 
+	/** Are we on the assembly menu */
+	bool IsOnAssemblyMenu() const;
+
 	virtual FReply OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent) override;
 
 	/*----------------------------------------------------

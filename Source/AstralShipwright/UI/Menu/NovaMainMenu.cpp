@@ -292,6 +292,11 @@ void SNovaMainMenu::HideTooltip(SWidget* TargetWidget)
 	}
 }
 
+bool SNovaMainMenu::IsOnAssemblyMenu() const
+{
+	return TabView->GetCurrentTabIndex() == static_cast<int32>(ENovaMainMenuType::Assembly);
+}
+
 FReply SNovaMainMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent)
 {
 	FReply Result = SNovaMenu::OnKeyDown(MyGeometry, KeyEvent);
