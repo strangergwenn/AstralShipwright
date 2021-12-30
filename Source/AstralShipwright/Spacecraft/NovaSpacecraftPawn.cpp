@@ -627,7 +627,7 @@ void ANovaSpacecraftPawn::UpdateAssembly()
 
 		// Build the assembly
 		int32         ValidIndex = 0;
-		TArray<int32> RemovedCompartments;
+		TArray<int32> CompartmentIndicesToRemove;
 		for (int32 CompartmentIndex = 0; CompartmentIndex < Spacecraft->Compartments.Num(); CompartmentIndex++)
 		{
 			UNovaSpacecraftCompartmentComponent* PreviousCompartmentComponent =
@@ -642,16 +642,20 @@ void ANovaSpacecraftPawn::UpdateAssembly()
 			}
 			else
 			{
-				RemovedCompartments.Add(CompartmentIndex);
+				CompartmentIndicesToRemove.Add(CompartmentIndex);
 			}
 		}
 
 		// Destroy removed compartments
-		for (int32 Index : RemovedCompartments)
+		int32 RemovedComponentCount = 0;
+		for (int32 Index : CompartmentIndicesToRemove)
 		{
-			Spacecraft->Compartments.RemoveAt(Index);
-			CompartmentComponents[Index]->DestroyComponent();
-			CompartmentComponents.RemoveAt(Index);
+			int32 UpdatedIndex = Index - RemovedComponentCount;
+			RemovedComponentCount++;
+
+			Spacecraft->Compartments.RemoveAt(UpdatedIndex);
+			CompartmentComponents[UpdatedIndex]->DestroyComponent();
+			CompartmentComponents.RemoveAt(UpdatedIndex);
 		}
 
 		// Complete the process
