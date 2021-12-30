@@ -60,14 +60,6 @@ public:
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	bool EnableLumen;
 
-	/** Enable DXR shadows */
-	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
-	bool EnableRaytracedShadows;
-
-	/** Enable DXR ambient occlusion */
-	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
-	bool EnableRaytracedAO;
-
 	/** Enable convolution bloom */
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	bool EnableCinematicBloom;

@@ -101,7 +101,6 @@ ANovaPlayerController::ANovaPlayerController()
 				Volume->Settings.bOverride_DynamicGlobalIlluminationMethod = true;
 				Volume->Settings.bOverride_ReflectionMethod                = true;
 				Volume->Settings.BloomMethod                               = GameUserSettings->EnableCinematicBloom ? BM_FFT : BM_SOG;
-				Volume->Settings.RayTracingAO                              = GameUserSettings->EnableRaytracedAO;
 				Volume->Settings.DynamicGlobalIlluminationMethod =
 					GameUserSettings->EnableLumen ? EDynamicGlobalIlluminationMethod::Lumen : EDynamicGlobalIlluminationMethod::ScreenSpace;
 				Volume->Settings.ReflectionMethod =
@@ -304,16 +303,6 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 
 		// Update contracts
 		UNovaContractManager::Get()->OnEvent(FNovaContractEvent(ENovaContratEventType::Tick));
-
-		// Update lights
-		for (ASpotLight* Light : TActorRange<ASpotLight>(GetWorld()))
-		{
-			Light->GetLightComponent()->SetCastRaytracedShadow(GameUserSettings->EnableRaytracedShadows);
-		}
-		for (ASkyLight* Light : TActorRange<ASkyLight>(GetWorld()))
-		{
-			Light->GetLightComponent()->SetCastRaytracedShadow(GameUserSettings->EnableRaytracedShadows);
-		}
 
 		// Disable overlays in photo mode
 		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();

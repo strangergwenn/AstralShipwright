@@ -87,12 +87,10 @@ void UNovaGameUserSettings::SetToDefaults()
 	FOV                = 90.0f;
 
 	// Graphics
-	EnableDLSS             = false;
-	EnableLumen            = false;
-	EnableRaytracedShadows = false;
-	EnableRaytracedAO      = false;
-	EnableCinematicBloom   = false;
-	ScreenPercentage       = 100.0f;
+	EnableDLSS           = false;
+	EnableLumen          = true;
+	EnableCinematicBloom = false;
+	ScreenPercentage     = 100.0f;
 }
 
 void UNovaGameUserSettings::ApplySettings(bool bCheckForCommandLineOverrides)

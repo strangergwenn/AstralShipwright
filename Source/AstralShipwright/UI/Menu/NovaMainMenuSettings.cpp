@@ -337,30 +337,6 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		GraphicsContainer->AddSlot()
 		.AutoHeight()
 		[
-			SNovaAssignNew(RaytracedShadowsButton, SNovaButton)
-			.Toggle(true)
-			.Text(LOCTEXT("EnableRaytracedShadows", "Enable raytraced shadows"))
-			.HelpText(LOCTEXT("EnableRaytracedShadowsHelp", "Enable the use of DXR hardware for raytraced shadows"))
-			.OnClicked(this, &SNovaMainMenuSettings::OnRaytracedShadowsToggled)
-			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
-			.Enabled(this, &SNovaMainMenuSettings::IsRaytracingSupported)
-		];
-		
-		GraphicsContainer->AddSlot()
-		.AutoHeight()
-		[
-			SNovaAssignNew(RaytracedAOutton, SNovaButton)
-			.Toggle(true)
-			.Text(LOCTEXT("EnableRaytracedSAO", "Enable raytraced AO"))
-			.HelpText(LOCTEXT("EnableRaytracedAOHelp", "Enable the use of DXR hardware for raytraced ambient occlusion"))
-			.OnClicked(this, &SNovaMainMenuSettings::OnRaytracedAOToggled)
-			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
-			.Enabled(this, &SNovaMainMenuSettings::IsRaytracingSupported)
-		];
-		
-		GraphicsContainer->AddSlot()
-		.AutoHeight()
-		[
 			SNovaAssignNew(CinematicBloomButton, SNovaButton)
 			.Toggle(true)
 			.Text(LOCTEXT("EnableCinematicBloom", "Cinematic bloom"))
@@ -449,8 +425,6 @@ void SNovaMainMenuSettings::Show()
 
 		DLSSButton->SetActive(GameUserSettings->EnableDLSS);
 		LumenButton->SetActive(GameUserSettings->EnableLumen);
-		RaytracedShadowsButton->SetActive(GameUserSettings->EnableRaytracedShadows);
-		RaytracedAOutton->SetActive(GameUserSettings->EnableRaytracedAO);
 		CinematicBloomButton->SetActive(GameUserSettings->EnableCinematicBloom);
 
 		UpdateResolutionList();
@@ -725,11 +699,6 @@ EVisibility SNovaMainMenuSettings::GetPCVisibility() const
 	return MenuManager->IsOnConsole() ? EVisibility::Collapsed : EVisibility::Visible;
 }
 
-bool SNovaMainMenuSettings::IsRaytracingSupported() const
-{
-	return IsRayTracingEnabled();
-}
-
 bool SNovaMainMenuSettings::IsScreenPercentageSupported() const
 {
 	return !GameUserSettings->EnableDLSS;
@@ -809,20 +778,6 @@ void SNovaMainMenuSettings::OnDLSSToggled()
 void SNovaMainMenuSettings::OnLumenToggled()
 {
 	GameUserSettings->EnableLumen = LumenButton->IsActive();
-	GameUserSettings->ApplySettings(false);
-	GameUserSettings->SaveSettings();
-}
-
-void SNovaMainMenuSettings::OnRaytracedShadowsToggled()
-{
-	GameUserSettings->EnableRaytracedShadows = RaytracedShadowsButton->IsActive();
-	GameUserSettings->ApplySettings(false);
-	GameUserSettings->SaveSettings();
-}
-
-void SNovaMainMenuSettings::OnRaytracedAOToggled()
-{
-	GameUserSettings->EnableRaytracedAO = RaytracedAOutton->IsActive();
 	GameUserSettings->ApplySettings(false);
 	GameUserSettings->SaveSettings();
 }

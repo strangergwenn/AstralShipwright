@@ -65,7 +65,6 @@ public:
 protected:
 	// Are we on the PC platform
 	EVisibility GetPCVisibility() const;
-	bool        IsRaytracingSupported() const;
 	bool        IsScreenPercentageSupported() const;
 	bool        IsDLSSSupported() const;
 	bool        IsHDRSupported() const;
@@ -83,8 +82,6 @@ protected:
 	void OnScreenPercentageChanged(float Value);
 	void OnDLSSToggled();
 	void OnLumenToggled();
-	void OnRaytracedShadowsToggled();
-	void OnRaytracedAOToggled();
 	void OnCinematicBloomToggled();
 
 	// Culture list
@@ -148,7 +145,5 @@ protected:
 	TSharedPtr<class SNovaSlider> ScreenPercentageSlider;
 	TSharedPtr<class SNovaButton> DLSSButton;
 	TSharedPtr<class SNovaButton> LumenButton;
-	TSharedPtr<class SNovaButton> RaytracedShadowsButton;
-	TSharedPtr<class SNovaButton> RaytracedAOutton;
 	TSharedPtr<class SNovaButton> CinematicBloomButton;
 };
