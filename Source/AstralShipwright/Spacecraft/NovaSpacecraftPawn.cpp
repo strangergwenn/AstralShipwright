@@ -363,9 +363,9 @@ int32 ANovaSpacecraftPawn::GetCompartmentCount() const
 
 	if (Spacecraft)
 	{
-		for (const FNovaCompartment& Assembly : Spacecraft->Compartments)
+		for (const FNovaCompartment& Compartment : Spacecraft->Compartments)
 		{
-			if (Assembly.IsValid())
+			if (Compartment.IsValid())
 			{
 				Count++;
 			}
@@ -430,24 +430,17 @@ void ANovaSpacecraftPawn::SetSpacecraft(const FNovaSpacecraft* NewSpacecraft)
 		NCHECK(NewSpacecraft != nullptr);
 		NLOG("ANovaAssembly::SetSpacecraft (%d compartments)", NewSpacecraft->Compartments.Num());
 
-		// Clean up first
-		if (Spacecraft)
+		// Initialize missing physical compartments
+		for (int32 CompartmentIndex = CompartmentComponents.Num(); CompartmentIndex < NewSpacecraft->Compartments.Num(); CompartmentIndex++)
 		{
-			for (int32 Index = 0; Index < Spacecraft->Compartments.Num(); Index++)
-			{
-				RemoveCompartment(Index);
-			}
-		}
-
-		// Initialize physical compartments
-		for (const FNovaCompartment& Assembly : NewSpacecraft->Compartments)
-		{
+			const FNovaCompartment& Assembly = NewSpacecraft->Compartments[CompartmentIndex];
 			NCHECK(Assembly.Description);
 			CompartmentComponents.Add(CreateCompartment(Assembly));
 		}
 
 		// Start assembling, using a copy of the target assembly data
 		Spacecraft = NewSpacecraft->GetSharedCopy();
+		NCHECK(Spacecraft->Compartments.Num() == CompartmentComponents.Num());
 		StartAssemblyUpdate();
 	}
 }
