@@ -201,7 +201,7 @@ protected:
 	void ProcessMovement(float DeltaTime);
 
 	/** Process trajectory movement */
-	void ProcessTrajectoryMovement(float DeltaTime);
+	void ProcessOrbitalMovement(float DeltaTime);
 
 	/** Apply hit effects */
 	virtual void OnHit(const FHitResult& Hit, const FVector& HitVelocity);
@@ -282,6 +282,10 @@ protected:
 	// Main drive switch
 	UPROPERTY(Replicated)
 	bool MainDriveEnabled;
+
+	// Trajectory movement data
+	FVector PreviousOrbitalLocation;
+	FVector CurrentOrbitalLocation;
 
 	// Acceleration data
 	float LinearAcceleration;

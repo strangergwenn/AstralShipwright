@@ -7,11 +7,11 @@
     Simulation structures
 ----------------------------------------------------*/
 
-float FNovaTrajectory::GetHighestAltitude() const
+double FNovaTrajectory::GetHighestAltitude() const
 {
 	NCHECK(IsValid());
 
-	float MaximumAltitude = 0;
+	double MaximumAltitude = 0;
 
 	for (const FNovaOrbit& Transfer : Transfers)
 	{
@@ -33,9 +33,9 @@ FNovaOrbit FNovaTrajectory::GetFinalOrbit() const
 	return FNovaOrbit(FinalGeometry, GetArrivalTime());
 }
 
-float FNovaTrajectory::GetTotalPropellantUsed(int32 SpacecraftIndex, const FNovaSpacecraftPropulsionMetrics& Metrics)
+double FNovaTrajectory::GetTotalPropellantUsed(int32 SpacecraftIndex, const FNovaSpacecraftPropulsionMetrics& Metrics)
 {
-	float PropellantUsed = 0;
+	double PropellantUsed = 0;
 
 	for (const FNovaManeuver& Maneuver : Maneuvers)
 	{

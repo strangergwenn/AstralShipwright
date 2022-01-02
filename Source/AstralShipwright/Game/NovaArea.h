@@ -41,6 +41,10 @@ class UNovaArea : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
+	UNovaArea() : UseAsMovementReference(true)
+	{}
+
+public:
 	// Body orbited
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	const class UNovaCelestialBody* Body;
@@ -52,6 +56,10 @@ public:
 	// Initial phase on the orbit in degrees
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Phase;
+
+	// Whether this area should be used as the point of reference for movement
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	bool UseAsMovementReference;
 
 	// Sub-level to load
 	UPROPERTY(Category = Properties, EditDefaultsOnly)

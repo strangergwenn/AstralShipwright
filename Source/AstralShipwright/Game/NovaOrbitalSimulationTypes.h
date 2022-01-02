@@ -50,7 +50,7 @@ public:
 	}
 
 	/** Get a radius value in meters from altitude above ground in km */
-	double GetRadius(float CurrentAltitude) const
+	double GetRadius(double CurrentAltitude) const
 	{
 		return (static_cast<double>(Radius) + static_cast<double>(CurrentAltitude)) * 1000.0;
 	}
@@ -98,13 +98,13 @@ struct FNovaOrbitGeometry
 	FNovaOrbitGeometry() : Body(nullptr), StartAltitude(0), OppositeAltitude(0), StartPhase(0), EndPhase(0)
 	{}
 
-	FNovaOrbitGeometry(const UNovaCelestialBody* P, float SA, float SP)
+	FNovaOrbitGeometry(const UNovaCelestialBody* P, double SA, double SP)
 		: Body(P), StartAltitude(SA), OppositeAltitude(SA), StartPhase(SP), EndPhase(SP + 360)
 	{
 		NCHECK(::IsValid(Body));
 	}
 
-	FNovaOrbitGeometry(const UNovaCelestialBody* P, float SA, float EA, float SP, float EP)
+	FNovaOrbitGeometry(const UNovaCelestialBody* P, double SA, double EA, double SP, double EP)
 		: Body(P), StartAltitude(SA), OppositeAltitude(EA), StartPhase(SP), EndPhase(EP)
 	{
 		NCHECK(::IsValid(Body));
@@ -134,7 +134,7 @@ struct FNovaOrbitGeometry
 	}
 
 	/** Get the maximum altitude reached by this orbit */
-	float GetHighestAltitude() const
+	double GetHighestAltitude() const
 	{
 		return FMath::Max(StartAltitude, OppositeAltitude);
 	}
@@ -147,7 +147,7 @@ struct FNovaOrbitGeometry
 		const double RadiusB = Body->GetRadius(OppositeAltitude);
 		const double µ       = Body->GetGravitationalParameter();
 
-		const float SemiMajorAxis = 0.5f * (RadiusA + RadiusB);
+		const double SemiMajorAxis = 0.5f * (RadiusA + RadiusB);
 		return FNovaTime::FromMinutes(2.0 * PI * sqrt(pow(SemiMajorAxis, 3.0) / µ) / 60.0);
 	}
 
@@ -171,16 +171,16 @@ struct FNovaOrbitGeometry
 	const UNovaCelestialBody* Body;
 
 	UPROPERTY()
-	float StartAltitude;
+	double StartAltitude;
 
 	UPROPERTY()
-	float OppositeAltitude;
+	double OppositeAltitude;
 
 	UPROPERTY()
-	float StartPhase;
+	double StartPhase;
 
 	UPROPERTY()
-	float EndPhase;
+	double EndPhase;
 };
 
 /** Orbit + time of insertion, allowing prediction of where a spacecraft will be at any time */
@@ -236,7 +236,7 @@ struct FNovaOrbitalLocation
 	FNovaOrbitalLocation() : Geometry(), Phase(0)
 	{}
 
-	FNovaOrbitalLocation(const FNovaOrbitGeometry& G, float P) : Geometry(G), Phase(P)
+	FNovaOrbitalLocation(const FNovaOrbitGeometry& G, double P) : Geometry(G), Phase(P)
 	{}
 
 	/** Check for validity */
@@ -253,7 +253,7 @@ struct FNovaOrbitalLocation
 
 	/** Get the Cartesian coordinates for this location */
 	template <bool AbsolutePosition = true>
-	FVector2D GetCartesianLocation(float BaseAltitude = 0) const
+	FVector2D GetCartesianLocation(double BaseAltitude = 0) const
 	{
 		if (BaseAltitude == 0)
 		{
@@ -261,13 +261,13 @@ struct FNovaOrbitalLocation
 		}
 
 		// Extract orbital parameters
-		const float SemiMajorAxis     = 0.5f * (2.0f * BaseAltitude + Geometry.StartAltitude + Geometry.OppositeAltitude);
-		const float SemiMinorAxis     = FMath::Sqrt((BaseAltitude + Geometry.StartAltitude) * (BaseAltitude + Geometry.OppositeAltitude));
-		const float Eccentricity      = FMath::Sqrt(1.0f - FMath::Square(SemiMinorAxis) / FMath::Square(SemiMajorAxis));
-		const float HalfFocalDistance = SemiMajorAxis * Eccentricity;
+		const double SemiMajorAxis     = 0.5f * (2.0f * BaseAltitude + Geometry.StartAltitude + Geometry.OppositeAltitude);
+		const double SemiMinorAxis     = FMath::Sqrt((BaseAltitude + Geometry.StartAltitude) * (BaseAltitude + Geometry.OppositeAltitude));
+		const double Eccentricity      = FMath::Sqrt(1.0f - FMath::Square(SemiMinorAxis) / FMath::Square(SemiMajorAxis));
+		const double HalfFocalDistance = SemiMajorAxis * Eccentricity;
 
 		// Process the phase
-		float      RelativePhase = -FMath::DegreesToRadians(FMath::UnwindDegrees(Phase - Geometry.StartPhase));
+		double     RelativePhase = -FMath::DegreesToRadians(FMath::UnwindDegrees(Phase - Geometry.StartPhase));
 		const bool StartFast     = Geometry.StartAltitude < Geometry.OppositeAltitude;
 		if (StartFast)
 		{
@@ -275,15 +275,15 @@ struct FNovaOrbitalLocation
 		}
 
 		// Build the Cartesian coordinates
-		const float R = (SemiMajorAxis * (1.0f - FMath::Square(Eccentricity))) / (1.0f + Eccentricity * FMath::Cos(RelativePhase));
-		const float X = HalfFocalDistance + R * FMath::Cos(RelativePhase);
-		const float Y = R * FMath::Sin(RelativePhase);
+		const double R = (SemiMajorAxis * (1.0f - FMath::Square(Eccentricity))) / (1.0f + Eccentricity * FMath::Cos(RelativePhase));
+		const double X = HalfFocalDistance + R * FMath::Cos(RelativePhase);
+		const double Y = R * FMath::Sin(RelativePhase);
 
 		// Return the transformed coordinates
 		const FVector2D BasePosition = FVector2D(StartFast ? -X : X, Y).GetRotated(-Geometry.StartPhase);
 		if (AbsolutePosition)
 		{
-			const float OriginOffsetSize = SemiMajorAxis - Geometry.OppositeAltitude - BaseAltitude;
+			const double OriginOffsetSize = SemiMajorAxis - Geometry.OppositeAltitude - BaseAltitude;
 			return BasePosition + FVector2D(OriginOffsetSize, 0).GetRotated(-Geometry.StartPhase);
 		}
 		else
@@ -296,7 +296,7 @@ struct FNovaOrbitalLocation
 	FNovaOrbitGeometry Geometry;
 
 	UPROPERTY()
-	float Phase;
+	double Phase;
 };
 
 /*** Orbit-altering maneuver */
@@ -308,15 +308,15 @@ struct FNovaManeuver
 	FNovaManeuver() : DeltaV(0), Phase(0)
 	{}
 
-	FNovaManeuver(float DV, float P, FNovaTime T, FNovaTime D, const TArray<float>& TF)
+	FNovaManeuver(double DV, double P, FNovaTime T, FNovaTime D, const TArray<float>& TF)
 		: DeltaV(DV), Phase(P), Time(T), Duration(D), ThrustFactors(TF)
 	{}
 
 	UPROPERTY()
-	float DeltaV;
+	double DeltaV;
 
 	UPROPERTY()
-	float Phase;
+	double Phase;
 
 	UPROPERTY()
 	FNovaTime Time;
@@ -398,7 +398,7 @@ struct FNovaTrajectory
 	}
 
 	/** Get the maximum altitude reached by this trajectory */
-	float GetHighestAltitude() const;
+	double GetHighestAltitude() const;
 
 	/** Compute the final orbit this trajectory will put the spacecraft in */
 	FNovaOrbit GetFinalOrbit() const;
@@ -432,7 +432,7 @@ struct FNovaTrajectory
 	}
 
 	/** Get how many tons of propellant will be used */
-	float GetTotalPropellantUsed(int32 SpacecraftIndex, const struct FNovaSpacecraftPropulsionMetrics& Metrics);
+	double GetTotalPropellantUsed(int32 SpacecraftIndex, const struct FNovaSpacecraftPropulsionMetrics& Metrics);
 
 	/** Get the number of remaining maneuvers */
 	int32 GetRemainingManeuverCount(FNovaTime CurrentTime) const
@@ -513,7 +513,7 @@ struct FNovaTrajectory
 	FNovaTime TotalTravelDuration;
 
 	UPROPERTY()
-	float TotalDeltaV;
+	double TotalDeltaV;
 };
 
 /*----------------------------------------------------

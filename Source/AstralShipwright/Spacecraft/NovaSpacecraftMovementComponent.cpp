@@ -30,6 +30,9 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 
 	, MainDriveEnabled(false)
 
+	, PreviousOrbitalLocation(FVector::ZeroVector)
+	, CurrentOrbitalLocation(FVector::ZeroVector)
+
 	, CurrentLinearVelocity(FVector::ZeroVector)
 	, CurrentAngularVelocity(FVector::ZeroVector)
 
@@ -141,17 +144,11 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 
 	// Run movement implementation
 	ProcessMeasurementsBeforeAttitude(DeltaTime);
-	if (IsValid(GameState) && GameState->IsUsingTrajectoryMovement())
-	{
-		ProcessTrajectoryMovement(DeltaTime);
-	}
-	else
-	{
-		ProcessLinearAttitude(DeltaTime);
-		ProcessAngularAttitude(DeltaTime);
-		ProcessMeasurementsAfterAttitude(DeltaTime);
-		ProcessMovement(DeltaTime);
-	}
+	ProcessOrbitalMovement(DeltaTime);
+	ProcessLinearAttitude(DeltaTime);
+	ProcessAngularAttitude(DeltaTime);
+	ProcessMeasurementsAfterAttitude(DeltaTime);
+	ProcessMovement(DeltaTime);
 }
 
 void UNovaSpacecraftMovementComponent::Initialize(const ANovaPlayerStart* Start)
@@ -365,7 +362,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 			{
 				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Docking : starting");
 
-				AttitudeCommand.Location  = MovementCommand.Target->GetActorLocation();
+				AttitudeCommand.Location  = MovementCommand.Target->GetActorLocation() - CurrentOrbitalLocation;
 				AttitudeCommand.Direction = FVector(1, 0, 0);
 			}
 			else if (LinearAttitudeIdle && AngularAttitudeIdle)
@@ -385,7 +382,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 			{
 				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Undocking : starting");
 
-				AttitudeCommand.Location = DockState.Actor->GetWaitingPointLocation();
+				AttitudeCommand.Location = DockState.Actor->GetWaitingPointLocation() - CurrentOrbitalLocation;
 			}
 			else if (LinearAttitudeIdle && AngularAttitudeIdle)
 			{
@@ -517,9 +514,9 @@ void UNovaSpacecraftMovementComponent::ProcessMeasurementsAfterAttitude(float De
 
 void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 {
-	LinearAttitudeDistance =
-		UNovaActorTools::SolveVelocity(CurrentLinearVelocity, AttitudeCommand.Velocity, UpdatedComponent->GetComponentLocation() / 100.0,
-			AttitudeCommand.Location / 100.0, GetMaximumAcceleration(), MaxLinearVelocity, LinearDeadDistance, DeltaTime);
+	LinearAttitudeDistance = UNovaActorTools::SolveVelocity(CurrentLinearVelocity, AttitudeCommand.Velocity,
+		(UpdatedComponent->GetComponentLocation() - CurrentOrbitalLocation) / 100.0, AttitudeCommand.Location / 100.0,
+		GetMaximumAcceleration(), MaxLinearVelocity, LinearDeadDistance, DeltaTime);
 }
 
 void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
@@ -625,7 +622,7 @@ void UNovaSpacecraftMovementComponent::ProcessMovement(float DeltaTime)
 
 		// Move safely and ensure de-penetration if required
 		FHitResult Hit;
-		FVector    ActorTranslation = CurrentLinearVelocity * 100 * DeltaTime;
+		FVector    ActorTranslation = (CurrentOrbitalLocation - PreviousOrbitalLocation) + CurrentLinearVelocity * 100 * DeltaTime;
 		SafeMoveUpdatedComponent(ActorTranslation, ActorRotation, true, Hit);
 
 		// Process invalid location
@@ -646,93 +643,52 @@ void UNovaSpacecraftMovementComponent::ProcessMovement(float DeltaTime)
 	}
 }
 
-void UNovaSpacecraftMovementComponent::ProcessTrajectoryMovement(float DeltaTime)
+void UNovaSpacecraftMovementComponent::ProcessOrbitalMovement(float DeltaTime)
 {
-	const ANovaGameState*  GameState  = GetWorld()->GetGameState<ANovaGameState>();
-	const FNovaTrajectory* Trajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
+	// Get basic game state pointers
+	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(GameState);
+	const UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
+	NCHECK(OrbitalSimulation);
+	const UNovaArea* CurrentArea = GameState->GetCurrentArea();
+	NCHECK(CurrentArea);
+	const ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
+	NCHECK(SpacecraftPawn);
+	const FNovaOrbitalLocation* PlayerLocation = OrbitalSimulation->GetPlayerLocation();
+	NCHECK(PlayerLocation);
 
-	if (DockState.Actor && Trajectory && Trajectory->IsValid())
+	// Derive movement from the location of all bodies
+	const FNovaOrbitalLocation* SpacecraftLocation = OrbitalSimulation->GetSpacecraftLocation(SpacecraftPawn->GetSpacecraftIdentifier());
+	if (DockState.Actor && SpacecraftLocation)
 	{
-		const FNovaTime StartTime         = Trajectory->GetStartTime();
-		const FNovaTime ManeuverStartTime = Trajectory->GetFirstManeuverStartTime();
-		const FNovaTime ArrivalTime       = Trajectory->GetArrivalTime();
-		const FNovaTime CurrentTime       = GameState->GetCurrentTime();
-		const bool      IsEnteringArea    = FMath::Abs(CurrentTime - ArrivalTime) < FMath::Abs(CurrentTime - ManeuverStartTime);
-
-		double CurrentPosition = 0;
-		double CurrentVelocity = 0;
-		double RemainingTime   = IsEnteringArea ? (ArrivalTime - CurrentTime).AsSeconds() : (CurrentTime - StartTime).AsSeconds();
-		RemainingTime          = FMath::Max(RemainingTime, 0.0);
-
-		// Decompose the trajectory into segments of acceleration x duration
-		FNovaTime                     CurrentManeuverTime = Trajectory->GetStartTime();
-		TArray<TPair<double, double>> AccelerationsAndDurations;
-		for (const FNovaManeuver& Maneuver : Trajectory->Maneuvers)
+		// Get the relative orbital location
+		FVector2D LocationInKilometers = FVector2D::ZeroVector;
+		if (CurrentArea->UseAsMovementReference)
 		{
-			if (Maneuver.Time > CurrentManeuverTime)
-			{
-				AccelerationsAndDurations.Add(TPair<double, double>(0, (Maneuver.Time - CurrentManeuverTime).AsSeconds()));
-			}
-			AccelerationsAndDurations.Add(
-				TPair<double, double>(Maneuver.DeltaV / Maneuver.Duration.AsSeconds(), Maneuver.Duration.AsSeconds()));
-			CurrentManeuverTime = Maneuver.Time + Maneuver.Duration;
+			const FNovaOrbitalLocation& AreaLocation = OrbitalSimulation->GetAreaLocation(CurrentArea);
+
+			LocationInKilometers = SpacecraftLocation->GetCartesianLocation<true>() - AreaLocation.GetCartesianLocation<true>();
 		}
-		NCHECK(CurrentManeuverTime == ArrivalTime);
-
-		// Segment processing function
-		auto ProcessSegment = [&](int32 SegmentIndex)
-		{
-			const double& Acceleration  = AccelerationsAndDurations[SegmentIndex].Key;
-			const double& Duration      = AccelerationsAndDurations[SegmentIndex].Value;
-			const double  StartVelocity = CurrentVelocity;
-			const double  EffectiveTime = FMath::Min(RemainingTime, Duration);
-
-			CurrentVelocity += Acceleration * EffectiveTime;
-			CurrentPosition += EffectiveTime * (CurrentVelocity + StartVelocity) / 2.0;
-
-			RemainingTime -= EffectiveTime;
-			return RemainingTime > 0;
-		};
-
-		// When entering, start from the desired end goal and go back in time
-		if (IsEnteringArea)
-		{
-			for (int32 SegmentIndex = AccelerationsAndDurations.Num() - 1; SegmentIndex >= 0; SegmentIndex--)
-			{
-				if (!ProcessSegment(SegmentIndex))
-				{
-					break;
-				}
-			}
-		}
-
-		// When exiting, process them linearly
 		else
 		{
-			for (int32 SegmentIndex = 0; SegmentIndex < AccelerationsAndDurations.Num(); SegmentIndex++)
-			{
-				if (!ProcessSegment(SegmentIndex))
-				{
-					break;
-				}
-			}
+
+			LocationInKilometers = SpacecraftLocation->GetCartesianLocation<true>() - PlayerLocation->GetCartesianLocation<true>();
 		}
 
-		// Get the current direction to apply
-		int32         CurrentManeuverIndex  = IsEnteringArea ? Trajectory->Maneuvers.Num() - 1 : 0;
-		float         ClosestManeuverDeltaV = Trajectory->Maneuvers[CurrentManeuverIndex].DeltaV;
-		const FVector Direction             = DockState.Actor->GetInterfacePointDirection(ClosestManeuverDeltaV);
-		UpdatedComponent->SetWorldRotation(Direction.Rotation());
+		// Transform the location accounting for angle and scale
+		const FVector2D PlayerDirection       = PlayerLocation->GetCartesianLocation().GetSafeNormal();
+		double          PlayerAngle           = 180 + FMath::RadiansToDegrees(FMath::Atan2(PlayerDirection.X, PlayerDirection.Y));
+		LocationInKilometers                  = LocationInKilometers.GetRotated(PlayerAngle);
+		const FVector RelativeOrbitalLocation = FVector(0, -LocationInKilometers.X, LocationInKilometers.Y) * 1000 * 100;
 
-		// Get the current location to apply
-		FVector Location = DockState.Actor->GetWaitingPointLocation() + 100 * CurrentPosition * DockState.Actor->GetOrbitalAxis();
-		UpdatedComponent->SetWorldLocation(Location);
+		// Derive the required translation from the previous state
+		PreviousOrbitalLocation = CurrentOrbitalLocation;
+		CurrentOrbitalLocation  = RelativeOrbitalLocation;
 
-		// Signal the end location we want for when the non-trajectory state machine kicks back in
-		if (IsEnteringArea && GetLocalRole() == ROLE_Authority)
-		{
-			AttitudeCommand.Location = DockState.Actor->GetWaitingPointLocation();
-		}
+#if 0
+		NLOG("%f %f (%f %f) // %f %f %f", CurrentOrbitalLocation.X, CurrentOrbitalLocation.Y, PreviousOrbitalLocation.X,
+			PreviousOrbitalLocation.Y, AttitudeCommand.Location.X, AttitudeCommand.Location.Y, AttitudeCommand.Location.Z);
+#endif
 	}
 }
 
@@ -782,6 +738,7 @@ FTransform UNovaSpacecraftMovementComponent::GetInitialTransform() const
 		if (NextManeuver)
 		{
 			FRotator DesiredRotation = DockState.Actor->GetInterfacePointDirection(NextManeuver->DeltaV).Rotation();
+			// FRotator DesiredRotation = DockState.Actor->GetOrbitalAxis().Rotation();
 
 			// Exit maneuver
 			if (Trajectory->GetFirstManeuverStartTime() > CurrentTime)
@@ -801,7 +758,8 @@ FTransform UNovaSpacecraftMovementComponent::GetInitialTransform() const
 			else
 			{
 				NLOG("UNovaSpacecraftMovementComponent::GetInitialTransform : enter maneuver");
-				return FTransform(DesiredRotation, DockState.Actor->GetInterfacePointLocation(NextManeuver->DeltaV));
+				return FTransform(DesiredRotation,
+					/*DockState.Actor->GetInterfacePointLocation(NextManeuver->DeltaV)*/ DockState.Actor->GetWaitingPointLocation());
 			}
 		}
 	}

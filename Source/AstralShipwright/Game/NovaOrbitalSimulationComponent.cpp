@@ -455,6 +455,7 @@ void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& Sp
 
 	FNovaOrbit CommonFinalOrbit;
 	bool       FoundCommonOrbit = false;
+	FVector2D  StartLocation    = GetPlayerLocation()->GetCartesianLocation();
 
 	// Compute the final orbit and ensure all spacecraft are going there
 	for (const FGuid& Identifier : SpacecraftIdentifiers)
@@ -472,6 +473,20 @@ void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& Sp
 	// Commit the change
 	NCHECK(FoundCommonOrbit);
 	SetOrbit(SpacecraftIdentifiers, MakeShared<FNovaOrbit>(CommonFinalOrbit));
+
+	// Dump area locations for debugging
+	for (const UNovaArea* Area : Areas)
+	{
+		FVector2D AreaLocation = GetAreaLocation(Area).GetCartesianLocation<true>();
+		NLOG("UNovaOrbitalSimulationComponent::CompleteTrajectory : '%s' -> %f/%f", *Area->GetName(), AreaLocation.X, AreaLocation.Y);
+	}
+
+	// Be safe and only allow location snapping up to 100m
+	ProcessSpacecraftOrbits();
+	FVector2D EndLocation = GetPlayerLocation()->GetCartesianLocation();
+	NLOG("UNovaOrbitalSimulationComponent::CompleteTrajectory : %f/%f -> %f/%f", StartLocation.X, StartLocation.Y, EndLocation.X,
+		EndLocation.Y);
+	NCHECK(FVector2D::Distance(EndLocation, StartLocation) < 0.1);
 }
 
 void UNovaOrbitalSimulationComponent::AbortTrajectory(const TArray<FGuid>& SpacecraftIdentifiers)
@@ -519,8 +534,7 @@ void UNovaOrbitalSimulationComponent::AbortTrajectory(const TArray<FGuid>& Space
 	// Be safe
 	ProcessSpacecraftOrbits();
 	FVector2D EndLocation = GetPlayerLocation()->GetCartesianLocation();
-	NLOG("UNovaOrbitalSimulationComponent::SetOrbit : %.03f/%.03f -> %.03f/%.03f", StartLocation.X, StartLocation.Y, EndLocation.X,
-		EndLocation.Y);
+	NLOG("UNovaOrbitalSimulationComponent::SetOrbit : %f/%f -> %f/%f", StartLocation.X, StartLocation.Y, EndLocation.X, EndLocation.Y);
 	NCHECK(EndLocation == StartLocation);
 }
 
