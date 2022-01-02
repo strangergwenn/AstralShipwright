@@ -55,7 +55,7 @@ void UNovaStationDockComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		const SNovaMainMenu*       MainMenu   = static_cast<SNovaMainMenu*>(MenuManager->GetMenu().Get());
 
 		// Show up only when outside assembly
-		if (MainMenu && MainMenu->IsOnAssemblyMenu() || IsValid(Spacecraft) && Spacecraft->GetCompartmentFilter() != INDEX_NONE)
+		if ((MainMenu && MainMenu->IsOnAssemblyMenu()) || (IsValid(Spacecraft) && Spacecraft->GetCompartmentFilter() != INDEX_NONE))
 		{
 			Dematerialize();
 		}
