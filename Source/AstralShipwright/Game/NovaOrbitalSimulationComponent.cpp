@@ -515,11 +515,19 @@ void UNovaOrbitalSimulationComponent::AbortTrajectory(const TArray<FGuid>& Space
 
 		if (Trajectory && Trajectory->GetStartTime() <= GetCurrentTime())
 		{
-			const FNovaManeuver* PreviousManeuver = Trajectory->GetPreviousManeuver(GetCurrentTime());
-			NCHECK(PreviousManeuver);
-			FNovaTime InsertionTime = PreviousManeuver->Time;
+			FNovaOrbit AbortOrbit;
 
-			const FNovaOrbit AbortOrbit = FNovaOrbit(Trajectory->GetCurrentLocation(GetCurrentTime()).Geometry, InsertionTime);
+			const FNovaManeuver* PreviousManeuver = Trajectory->GetPreviousManeuver(GetCurrentTime());
+			if (PreviousManeuver)
+			{
+				FNovaTime InsertionTime = PreviousManeuver->Time;
+				AbortOrbit              = FNovaOrbit(Trajectory->GetCurrentLocation(GetCurrentTime()).Geometry, InsertionTime);
+			}
+			else
+			{
+				AbortOrbit = *GetSpacecraftOrbit(Identifier);
+			}
+
 			NCHECK(!FoundCommonOrbit || AbortOrbit == CommonAbortOrbit);
 			FoundCommonOrbit = true;
 			CommonAbortOrbit = AbortOrbit;
