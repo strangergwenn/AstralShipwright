@@ -701,7 +701,7 @@ FVector UNovaSpacecraftMovementComponent::GetManeuverDirection() const
 	NCHECK(IsValid(GameState));
 	const FNovaTrajectory* Trajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
 
-	const FNovaManeuver* Maneuver = Trajectory ? Trajectory->GetCurrentManeuver(GameState->GetCurrentTime()) : nullptr;
+	const FNovaManeuver* Maneuver = Trajectory ? Trajectory->GetManeuver(GameState->GetCurrentTime()) : nullptr;
 	if (Maneuver == nullptr)
 	{
 		Maneuver = Trajectory ? Trajectory->GetNextManeuver(GameState->GetCurrentTime()) : nullptr;

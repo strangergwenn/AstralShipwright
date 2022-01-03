@@ -487,8 +487,7 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 		if (Maneuver.Time + Maneuver.Duration > OrbitalSimulation->GetCurrentTime())
 		{
 			float BaseAltitude = GetObjectBaseAltitude(Trajectory.Transfers[0].Geometry.Body);
-			ManeuverObjects.Add(
-				FNovaOrbitalObject(Maneuver, Trajectory.GetCurrentLocation(Maneuver.Time).GetCartesianLocation(BaseAltitude)));
+			ManeuverObjects.Add(FNovaOrbitalObject(Maneuver, Trajectory.GetLocation(Maneuver.Time).GetCartesianLocation(BaseAltitude)));
 		}
 	}
 
@@ -498,7 +497,7 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 		for (const FNovaOrbit& Transfer : Trajectory.GetRelevantOrbitsForManeuver(Maneuver))
 		{
 			FNovaOrbitGeometry ManeuverGeometry = Transfer.Geometry;
-			float              ManeuverEndPhase = Transfer.GetCurrentPhase<false>(Maneuver.Time + Maneuver.Duration);
+			float              ManeuverEndPhase = Transfer.GetPhase<false>(Maneuver.Time + Maneuver.Duration);
 			ManeuverGeometry.EndPhase           = FMath::Min(ManeuverGeometry.EndPhase, ManeuverEndPhase);
 			ManeuverGeometry.EndPhase           = FMath::Min(ManeuverGeometry.EndPhase, CurrentProgressPhase);
 

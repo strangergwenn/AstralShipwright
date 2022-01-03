@@ -153,7 +153,7 @@ struct FNovaOrbitGeometry
 
 	/** Get the current phase on this orbit */
 	template <bool Unwind>
-	double GetCurrentPhase(FNovaTime DeltaTime) const
+	double GetPhase(FNovaTime DeltaTime) const
 	{
 		NCHECK(Body);
 		const double PhaseDelta = (DeltaTime / GetOrbitalPeriod()) * 360;
@@ -181,50 +181,6 @@ struct FNovaOrbitGeometry
 
 	UPROPERTY()
 	double EndPhase;
-};
-
-/** Orbit + time of insertion, allowing prediction of where a spacecraft will be at any time */
-USTRUCT(Atomic)
-struct FNovaOrbit
-{
-	GENERATED_BODY()
-
-	FNovaOrbit() : Geometry()
-	{}
-
-	FNovaOrbit(const FNovaOrbitGeometry& G, FNovaTime T) : Geometry(G), InsertionTime(T)
-	{
-		NCHECK(Geometry.Body != nullptr);
-	}
-
-	bool operator==(const FNovaOrbit& Other) const
-	{
-		return Geometry == Other.Geometry && InsertionTime == Other.InsertionTime;
-	}
-
-	bool operator!=(const FNovaOrbit& Other) const
-	{
-		return !operator==(Other);
-	}
-
-	/** Check for validity */
-	bool IsValid() const
-	{
-		return Geometry.IsValid() && InsertionTime.IsValid();
-	}
-
-	/** Get the current phase on this orbit */
-	template <bool Unwind>
-	double GetCurrentPhase(FNovaTime CurrentTime) const
-	{
-		return Geometry.GetCurrentPhase<Unwind>(CurrentTime - InsertionTime);
-	}
-
-	UPROPERTY()
-	FNovaOrbitGeometry Geometry;
-
-	UPROPERTY()
-	FNovaTime InsertionTime;
 };
 
 /** Current location of a spacecraft or sector, including orbit + phase */
@@ -297,6 +253,57 @@ struct FNovaOrbitalLocation
 
 	UPROPERTY()
 	double Phase;
+};
+
+/** Orbit + time of insertion, allowing prediction of where a spacecraft will be at any time */
+USTRUCT(Atomic)
+struct FNovaOrbit
+{
+	GENERATED_BODY()
+
+	FNovaOrbit() : Geometry()
+	{}
+
+	FNovaOrbit(const FNovaOrbitGeometry& G, FNovaTime T) : Geometry(G), InsertionTime(T)
+	{
+		NCHECK(Geometry.Body != nullptr);
+	}
+
+	bool operator==(const FNovaOrbit& Other) const
+	{
+		return Geometry == Other.Geometry && InsertionTime == Other.InsertionTime;
+	}
+
+	bool operator!=(const FNovaOrbit& Other) const
+	{
+		return !operator==(Other);
+	}
+
+	/** Check for validity */
+	bool IsValid() const
+	{
+		return Geometry.IsValid() && InsertionTime.IsValid();
+	}
+
+	/** Get the current phase on this orbit */
+	template <bool Unwind>
+	double GetPhase(FNovaTime CurrentTime) const
+	{
+		return Geometry.GetPhase<Unwind>(CurrentTime - InsertionTime);
+	}
+
+	/** Get the full location on this orbit */
+	FNovaOrbitalLocation GetLocation(FNovaTime CurrentTime) const
+	{
+		double CurrentPhase = GetPhase<true>(CurrentTime);
+		return FNovaOrbitalLocation(Geometry, CurrentPhase);
+	}
+
+	UPROPERTY()
+	FNovaOrbitGeometry Geometry;
+
+	UPROPERTY()
+	FNovaTime InsertionTime;
 };
 
 /*** Orbit-altering maneuver */
@@ -450,11 +457,11 @@ struct FNovaTrajectory
 		return Count;
 	}
 
-	/** Get the current location in orbit */
-	FNovaOrbitalLocation GetCurrentLocation(FNovaTime CurrentTime) const;
+	/** Get the location in orbit at the current time */
+	FNovaOrbitalLocation GetLocation(FNovaTime CurrentTime) const;
 
-	/** Get the current maneuver */
-	const FNovaManeuver* GetCurrentManeuver(FNovaTime CurrentTime) const
+	/** Get the maneuver at the current time */
+	const FNovaManeuver* GetManeuver(FNovaTime CurrentTime) const
 	{
 		for (const FNovaManeuver& Maneuver : Maneuvers)
 		{

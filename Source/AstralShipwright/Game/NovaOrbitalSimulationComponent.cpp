@@ -198,7 +198,7 @@ TSharedPtr<FNovaTrajectoryParameters> UNovaOrbitalSimulationComponent::PrepareTr
 	// Get basic parameters
 	Parameters->StartTime             = GetCurrentTime() + DeltaTime;
 	Parameters->Source                = *Source;
-	Parameters->DestinationPhase      = Destination->GetCurrentPhase<true>(GetCurrentTime() + DeltaTime);
+	Parameters->DestinationPhase      = Destination->GetPhase<true>(GetCurrentTime() + DeltaTime);
 	Parameters->DestinationAltitude   = Destination->Geometry.StartAltitude;
 	Parameters->SpacecraftIdentifiers = SpacecraftIdentifiers;
 
@@ -216,7 +216,7 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 	const FNovaTime& StartTime           = Parameters->StartTime;
 	double           SourceAltitudeA     = Parameters->Source.Geometry.StartAltitude;
 	double           SourceAltitudeB     = Parameters->Source.Geometry.StartAltitude;
-	double           SourcePhase         = Parameters->Source.GetCurrentPhase<true>(StartTime);
+	double           SourcePhase         = Parameters->Source.GetPhase<true>(StartTime);
 	const double     DestinationAltitude = Parameters->DestinationAltitude;
 	const double     DestinationPhase    = Parameters->DestinationPhase;
 
@@ -521,7 +521,7 @@ void UNovaOrbitalSimulationComponent::AbortTrajectory(const TArray<FGuid>& Space
 			if (PreviousManeuver)
 			{
 				FNovaTime InsertionTime = PreviousManeuver->Time;
-				AbortOrbit              = FNovaOrbit(Trajectory->GetCurrentLocation(GetCurrentTime()).Geometry, InsertionTime);
+				AbortOrbit              = FNovaOrbit(Trajectory->GetLocation(GetCurrentTime()).Geometry, InsertionTime);
 			}
 			else
 			{
@@ -707,7 +707,7 @@ void UNovaOrbitalSimulationComponent::ProcessAreas()
 	for (const UNovaArea* Area : Areas)
 	{
 		// Update the position
-		double CurrentPhase = GetAreaOrbit(Area)->Geometry.GetCurrentPhase<true>(GetCurrentTime());
+		double CurrentPhase = GetAreaOrbit(Area)->Geometry.GetPhase<true>(GetCurrentTime());
 
 #if 0
 		NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits : %s has phase %f", *Area->Name.ToString(), CurrentPhase);
@@ -731,8 +731,7 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 	for (const FNovaOrbitDatabaseEntry& DatabaseEntry : SpacecraftOrbitDatabase.Get())
 	{
 		// Update the position
-		double                     CurrentPhase = DatabaseEntry.Orbit.GetCurrentPhase<true>(GetCurrentTime());
-		const FNovaOrbitalLocation NewLocation  = FNovaOrbitalLocation(DatabaseEntry.Orbit.Geometry, CurrentPhase);
+		const FNovaOrbitalLocation NewLocation = DatabaseEntry.Orbit.GetLocation(GetCurrentTime());
 
 #if 0
 		NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits : %s has phase %f, sphase %f, ephase %f",
@@ -764,7 +763,7 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 		if (GetCurrentTime() >= DatabaseEntry.Trajectory.GetFirstManeuverStartTime())
 		{
 			// Compute the new location
-			FNovaOrbitalLocation NewLocation = DatabaseEntry.Trajectory.GetCurrentLocation(GetCurrentTime());
+			FNovaOrbitalLocation NewLocation = DatabaseEntry.Trajectory.GetLocation(GetCurrentTime());
 			if (!NewLocation.IsValid())
 			{
 				NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories : missing trajectory data");

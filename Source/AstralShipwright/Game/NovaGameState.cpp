@@ -598,7 +598,7 @@ void ANovaGameState::ProcessTrajectoryAbort()
 
 	// Check whether the trajectory is less than 10s away from starting
 	const FNovaTrajectory* PlayerTrajectory    = OrbitalSimulationComponent->GetPlayerTrajectory();
-	bool                   IsTrajectoryStarted = PlayerTrajectory && PlayerTrajectory->GetCurrentManeuver(GetCurrentTime()) == nullptr &&
+	bool                   IsTrajectoryStarted = PlayerTrajectory && PlayerTrajectory->GetManeuver(GetCurrentTime()) == nullptr &&
 							   (PlayerTrajectory->GetNextManeuverStartTime(GetCurrentTime()) - GetCurrentTime()).AsSeconds() < 10;
 
 	// Invalidate the trajectory if a player doesn't match conditions
@@ -622,7 +622,7 @@ void ANovaGameState::ProcessTrajectoryAbort()
 	}
 
 	// Disable main drive as soon as the maneuver is ongoing
-	if (PlayerTrajectory && PlayerTrajectory->GetCurrentManeuver(GetCurrentTime()) != nullptr)
+	if (PlayerTrajectory && PlayerTrajectory->GetManeuver(GetCurrentTime()) != nullptr)
 	{
 		for (ANovaSpacecraftPawn* Pawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 		{

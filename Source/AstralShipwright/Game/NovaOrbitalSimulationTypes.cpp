@@ -46,7 +46,7 @@ double FNovaTrajectory::GetTotalPropellantUsed(int32 SpacecraftIndex, const FNov
 	return PropellantUsed;
 }
 
-FNovaOrbitalLocation FNovaTrajectory::GetCurrentLocation(FNovaTime CurrentTime) const
+FNovaOrbitalLocation FNovaTrajectory::GetLocation(FNovaTime CurrentTime) const
 {
 	FNovaOrbit LastValidTransfer;
 

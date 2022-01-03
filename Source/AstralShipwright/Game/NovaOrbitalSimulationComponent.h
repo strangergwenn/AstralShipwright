@@ -194,7 +194,7 @@ public:
 
 		if (Trajectory)
 		{
-			const FNovaManeuver* Maneuver = Trajectory->GetCurrentManeuver(GetCurrentTime());
+			const FNovaManeuver* Maneuver = Trajectory->GetManeuver(GetCurrentTime());
 			if (Maneuver)
 			{
 				int32 SpacecraftIndex = GetSpacecraftTrajectoryIndex(Identifier);
