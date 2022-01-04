@@ -318,9 +318,12 @@ void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
 		return;
 	}
 
+	// Style
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 	FNovaSplineStyle      OrbitStyle(Theme.PositiveColor);
 	FNovaSplineStyle      ManeuverStyle(Theme.PositiveColor);
+	ManeuverStyle.WidthInner = 4.0f;
+	ManeuverStyle.WidthOuter = 4.0f;
 
 	// Add the current trajectory
 	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
@@ -334,9 +337,12 @@ void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
 
 void SNovaOrbitalMap::ProcessTrajectoryPreview(const FVector2D& Origin, float DeltaTime)
 {
+	// Style
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 	FNovaSplineStyle      OrbitStyle(Theme.ContrastingColor);
 	FNovaSplineStyle      ManeuverStyle(Theme.ContrastingColor);
+	ManeuverStyle.WidthInner = 4.0f;
+	ManeuverStyle.WidthOuter = 4.0f;
 
 	CurrentPreviewProgress += DeltaTime / TrajectoryPreviewDuration;
 	CurrentPreviewProgress = FMath::Min(CurrentPreviewProgress, 1.0f);
@@ -484,10 +490,12 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 	TArray<FNovaOrbitalObject> ManeuverObjects;
 	for (const FNovaManeuver& Maneuver : Trajectory.Maneuvers)
 	{
-		if (Maneuver.Time + Maneuver.Duration > OrbitalSimulation->GetCurrentTime())
+		const FNovaOrbitalLocation ManeuverLocation = Trajectory.GetLocation(Maneuver.Time);
+
+		if ((Maneuver.Time + Maneuver.Duration > OrbitalSimulation->GetCurrentTime()) && ManeuverLocation.Phase < CurrentProgressPhase)
 		{
-			float BaseAltitude = GetObjectBaseAltitude(Trajectory.Transfers[0].Geometry.Body);
-			ManeuverObjects.Add(FNovaOrbitalObject(Maneuver, Trajectory.GetLocation(Maneuver.Time).GetCartesianLocation(BaseAltitude)));
+			double BaseAltitude = GetObjectBaseAltitude(Trajectory.Transfers[0].Geometry.Body);
+			ManeuverObjects.Add(FNovaOrbitalObject(Maneuver, ManeuverLocation.GetCartesianLocation(BaseAltitude)));
 		}
 	}
 
