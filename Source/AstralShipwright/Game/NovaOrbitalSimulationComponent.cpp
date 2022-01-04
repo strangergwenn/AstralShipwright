@@ -279,9 +279,10 @@ TSharedPtr<FNovaTrajectory> UNovaOrbitalSimulationComponent::ComputeTrajectory(
 
 	// Start building trajectory
 	FNovaSpacecraftFleet        Fleet(Parameters->SpacecraftIdentifiers, Cast<ANovaGameState>(GetOwner()));
-	TSharedPtr<FNovaTrajectory> Trajectory   = MakeShared<FNovaTrajectory>();
-	FNovaTime                   CurrentTime  = StartTime + InitialWaitingDuration;
-	double                      CurrentPhase = SourcePhase;
+	TSharedPtr<FNovaTrajectory> Trajectory = MakeShared<FNovaTrajectory>();
+	Trajectory->InitialOrbit               = Parameters->Source;
+	FNovaTime CurrentTime                  = StartTime + InitialWaitingDuration;
+	double    CurrentPhase                 = SourcePhase;
 
 	// Departure burn on first transfer
 	FNovaSpacecraftFleetManeuver FleetManeuver        = Fleet.AddManeuver(TransferA.StartDeltaV);
@@ -620,6 +621,21 @@ UNovaOrbitalSimulationComponent* UNovaOrbitalSimulationComponent::Get(const UObj
 	return nullptr;
 }
 
+FVector2D UNovaOrbitalSimulationComponent::GetPlayerCartesianLocation() const
+{
+	const ANovaGameState* GameState        = GetOwner<ANovaGameState>();
+	const FGuid&          PlayerIdentifier = GameState->GetPlayerSpacecraftIdentifier();
+
+	if (PlayerIdentifier.IsValid())
+	{
+		return GetSpacecraftCartesianLocation(PlayerIdentifier);
+	}
+	else
+	{
+		return FVector2D::ZeroVector;
+	}
+}
+
 const FNovaOrbit* UNovaOrbitalSimulationComponent::GetPlayerOrbit() const
 {
 	const ANovaGameState* GameState        = GetOwner<ANovaGameState>();
@@ -732,6 +748,9 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 	{
 		// Update the position
 		const FNovaOrbitalLocation NewLocation = DatabaseEntry.Orbit.GetLocation(GetCurrentTime());
+		FNovaCartesianLocation     NewCartesianLocation;
+		NewCartesianLocation.Location = NewLocation.GetCartesianLocation();
+		NewCartesianLocation.Velocity = NewLocation.GetOrbitalVelocity();
 
 #if 0
 		NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits : %s has phase %f, sphase %f, ephase %f",
@@ -749,6 +768,16 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 			else
 			{
 				SpacecraftOrbitalLocations.Add(Identifier, NewLocation);
+			}
+
+			FNovaCartesianLocation* CartesianEntry = SpacecraftCartesianLocations.Find(Identifier);
+			if (CartesianEntry)
+			{
+				*CartesianEntry = NewCartesianLocation;
+			}
+			else
+			{
+				SpacecraftCartesianLocations.Add(Identifier, NewCartesianLocation);
 			}
 		}
 	}
@@ -769,6 +798,11 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 				NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories : missing trajectory data");
 			}
 
+			// Precompute Cartesian and velocity
+			FNovaCartesianLocation NewCartesianLocation;
+			NewCartesianLocation.Location = DatabaseEntry.Trajectory.GetCartesianLocation(GetCurrentTime());
+			NewCartesianLocation.Velocity = NewLocation.GetOrbitalVelocity();
+
 #if 0
 			NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories : %s has phase %f, with sphase %f, ephase %f",
 				*DatabaseEntry.Identifiers[0].ToString(), NewLocation.Phase, NewLocation.Geometry.StartPhase,
@@ -786,6 +820,16 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 				else
 				{
 					SpacecraftOrbitalLocations.Add(Identifier, NewLocation);
+				}
+
+				FNovaCartesianLocation* CartesianEntry = SpacecraftCartesianLocations.Find(Identifier);
+				if (CartesianEntry)
+				{
+					*CartesianEntry = NewCartesianLocation;
+				}
+				else
+				{
+					SpacecraftCartesianLocations.Add(Identifier, NewCartesianLocation);
 				}
 			}
 

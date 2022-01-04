@@ -201,13 +201,28 @@ struct FNovaOrbitalLocation
 		return Geometry.IsValid() && Phase >= 0;
 	}
 
-	/** Get the linear distance between this location and another */
+	/** Get the linear distance between this location and another in km */
 	float GetDistanceTo(const FNovaOrbitalLocation& Other) const
 	{
 		return (GetCartesianLocation() - Other.GetCartesianLocation()).Size();
 	}
 
-	/** Get the Cartesian coordinates for this location */
+	/** Get the current orbital velocity in m/s */
+	FVector2D GetOrbitalVelocity() const
+	{
+		NCHECK(::IsValid(Geometry.Body));
+		const double RadiusA       = Geometry.Body->GetRadius(Geometry.StartAltitude);
+		const double RadiusB       = Geometry.Body->GetRadius(Geometry.OppositeAltitude);
+		const double µ             = Geometry.Body->GetGravitationalParameter();
+		const double SemiMajorAxis = 0.5f * (RadiusA + RadiusB);
+
+		const FVector2D CartesianLocation = GetCartesianLocation();
+
+		return FMath::Sqrt(µ * (2.0 / (CartesianLocation.Size() * 1000.0) - 1.0 / SemiMajorAxis)) *
+			   CartesianLocation.GetSafeNormal().GetRotated(90.0);
+	}
+
+	/** Get the Cartesian coordinates for this location in km */
 	template <bool AbsolutePosition = true>
 	FVector2D GetCartesianLocation(double BaseAltitude = 0) const
 	{
@@ -217,9 +232,9 @@ struct FNovaOrbitalLocation
 		}
 
 		// Extract orbital parameters
-		const double SemiMajorAxis     = 0.5f * (2.0f * BaseAltitude + Geometry.StartAltitude + Geometry.OppositeAltitude);
+		const double SemiMajorAxis     = 0.5 * (2.0 * BaseAltitude + Geometry.StartAltitude + Geometry.OppositeAltitude);
 		const double SemiMinorAxis     = FMath::Sqrt((BaseAltitude + Geometry.StartAltitude) * (BaseAltitude + Geometry.OppositeAltitude));
-		const double Eccentricity      = FMath::Sqrt(1.0f - FMath::Square(SemiMinorAxis) / FMath::Square(SemiMajorAxis));
+		const double Eccentricity      = FMath::Sqrt(1.0 - FMath::Square(SemiMinorAxis) / FMath::Square(SemiMajorAxis));
 		const double HalfFocalDistance = SemiMajorAxis * Eccentricity;
 
 		// Process the phase
@@ -231,7 +246,7 @@ struct FNovaOrbitalLocation
 		}
 
 		// Build the Cartesian coordinates
-		const double R = (SemiMajorAxis * (1.0f - FMath::Square(Eccentricity))) / (1.0f + Eccentricity * FMath::Cos(RelativePhase));
+		const double R = (SemiMajorAxis * (1.0 - FMath::Square(Eccentricity))) / (1.0 + Eccentricity * FMath::Cos(RelativePhase));
 		const double X = HalfFocalDistance + R * FMath::Cos(RelativePhase);
 		const double Y = R * FMath::Sin(RelativePhase);
 
@@ -285,7 +300,7 @@ struct FNovaOrbit
 		return Geometry.IsValid() && InsertionTime.IsValid();
 	}
 
-	/** Get the current phase on this orbit */
+	/** Get the current phase on this orbit in degrees */
 	template <bool Unwind>
 	double GetPhase(FNovaTime CurrentTime) const
 	{
@@ -404,7 +419,7 @@ struct FNovaTrajectory
 		return false;
 	}
 
-	/** Get the maximum altitude reached by this trajectory */
+	/** Get the maximum altitude reached by this trajectory in km  */
 	double GetHighestAltitude() const;
 
 	/** Compute the final orbit this trajectory will put the spacecraft in */
@@ -457,8 +472,11 @@ struct FNovaTrajectory
 		return Count;
 	}
 
-	/** Get the location in orbit at the current time */
+	/** Get the location in orbit at the current time in km */
 	FNovaOrbitalLocation GetLocation(FNovaTime CurrentTime) const;
+
+	/** Get the Cartesian location in orbit at the current time including maneuver smoothing in km */
+	FVector2D GetCartesianLocation(FNovaTime CurrentTime) const;
 
 	/** Get the maneuver at the current time */
 	const FNovaManeuver* GetManeuver(FNovaTime CurrentTime) const
@@ -511,7 +529,11 @@ struct FNovaTrajectory
 	/** Get the orbits that a maneuver is going from and to */
 	TArray<FNovaOrbit> GetRelevantOrbitsForManeuver(const FNovaManeuver& Maneuver) const;
 
-	UPROPERTY() TArray<FNovaOrbit> Transfers;
+	UPROPERTY()
+	FNovaOrbit InitialOrbit;
+
+	UPROPERTY()
+	TArray<FNovaOrbit> Transfers;
 
 	UPROPERTY()
 	TArray<FNovaManeuver> Maneuvers;

@@ -654,29 +654,28 @@ void UNovaSpacecraftMovementComponent::ProcessOrbitalMovement(float DeltaTime)
 	NCHECK(CurrentArea);
 	const ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
 	NCHECK(SpacecraftPawn);
-	const FNovaOrbitalLocation* PlayerLocation = OrbitalSimulation->GetPlayerLocation();
-	NCHECK(PlayerLocation);
 
 	// Derive movement from the location of all bodies
-	const FNovaOrbitalLocation* SpacecraftLocation = OrbitalSimulation->GetSpacecraftLocation(SpacecraftPawn->GetSpacecraftIdentifier());
-	if (DockState.Actor && SpacecraftLocation)
+	if (DockState.Actor)
 	{
+		const FVector2D PlayerLocation     = OrbitalSimulation->GetPlayerCartesianLocation();
+		const FVector2D SpacecraftLocation = OrbitalSimulation->GetSpacecraftCartesianLocation(SpacecraftPawn->GetSpacecraftIdentifier());
+
 		// Get the relative orbital location
-		FVector2D LocationInKilometers = FVector2D::ZeroVector;
+		FVector2D LocationInKilometers;
 		if (CurrentArea->UseAsMovementReference)
 		{
-			const FNovaOrbitalLocation& AreaLocation = OrbitalSimulation->GetAreaLocation(CurrentArea);
+			const FVector2D AreaLocation = OrbitalSimulation->GetAreaLocation(CurrentArea).GetCartesianLocation<true>();
 
-			LocationInKilometers = SpacecraftLocation->GetCartesianLocation<true>() - AreaLocation.GetCartesianLocation<true>();
+			LocationInKilometers = SpacecraftLocation - AreaLocation;
 		}
 		else
 		{
-
-			LocationInKilometers = SpacecraftLocation->GetCartesianLocation<true>() - PlayerLocation->GetCartesianLocation<true>();
+			LocationInKilometers = SpacecraftLocation - PlayerLocation;
 		}
 
 		// Transform the location accounting for angle and scale
-		const FVector2D PlayerDirection       = PlayerLocation->GetCartesianLocation().GetSafeNormal();
+		const FVector2D PlayerDirection       = PlayerLocation.GetSafeNormal();
 		double          PlayerAngle           = 180 + FMath::RadiansToDegrees(FMath::Atan2(PlayerDirection.X, PlayerDirection.Y));
 		LocationInKilometers                  = LocationInKilometers.GetRotated(PlayerAngle);
 		const FVector RelativeOrbitalLocation = FVector(0, -LocationInKilometers.X, LocationInKilometers.Y) * 1000 * 100;
@@ -684,11 +683,6 @@ void UNovaSpacecraftMovementComponent::ProcessOrbitalMovement(float DeltaTime)
 		// Derive the required translation from the previous state
 		PreviousOrbitalLocation = CurrentOrbitalLocation;
 		CurrentOrbitalLocation  = RelativeOrbitalLocation;
-
-#if 0
-		NLOG("%f %f (%f %f) // %f %f %f", CurrentOrbitalLocation.X, CurrentOrbitalLocation.Y, PreviousOrbitalLocation.X,
-			PreviousOrbitalLocation.Y, AttitudeCommand.Location.X, AttitudeCommand.Location.Y, AttitudeCommand.Location.Z);
-#endif
 	}
 }
 

@@ -48,24 +48,77 @@ double FNovaTrajectory::GetTotalPropellantUsed(int32 SpacecraftIndex, const FNov
 
 FNovaOrbitalLocation FNovaTrajectory::GetLocation(FNovaTime CurrentTime) const
 {
-	FNovaOrbit LastValidTransfer;
-
+	FNovaOrbit CurrentTransfer = InitialOrbit;
 	for (const FNovaOrbit& Transfer : Transfers)
 	{
 		if (Transfer.InsertionTime <= CurrentTime)
 		{
-			LastValidTransfer = Transfer;
+			CurrentTransfer = Transfer;
 		}
 	}
 
-	if (LastValidTransfer.IsValid())
+	return CurrentTransfer.IsValid() ? CurrentTransfer.GetLocation(CurrentTime) : FNovaOrbitalLocation();
+}
+
+FVector2D FNovaTrajectory::GetCartesianLocation(FNovaTime CurrentTime) const
+{
+	FNovaOrbit PreviousTransfer;
+	FNovaOrbit CurrentTransfer       = InitialOrbit;
+	bool       HasFoundValidTransfer = false;
+	bool       IsOnLastTransfer      = false;
+
+	// Find the current transfer
+	for (int32 TransferIndex = 0; TransferIndex < Transfers.Num(); TransferIndex++)
 	{
-		return FNovaOrbitalLocation(LastValidTransfer.Geometry, LastValidTransfer.GetCurrentPhase<false>(CurrentTime));
+		const FNovaOrbit& Transfer = Transfers[TransferIndex];
+
+		if (Transfer.InsertionTime <= CurrentTime)
+		{
+			PreviousTransfer      = CurrentTransfer;
+			CurrentTransfer       = Transfer;
+			HasFoundValidTransfer = true;
+
+			if (TransferIndex == Transfers.Num() - 1)
+			{
+				IsOnLastTransfer = true;
+			}
+		}
 	}
-	else
+
+	if (HasFoundValidTransfer)
 	{
-		return FNovaOrbitalLocation();
+		FNovaOrbitalLocation CurrentSimulatedLocation = CurrentTransfer.GetLocation(CurrentTime);
+		const FNovaManeuver* CurrentManeuver          = GetManeuver(CurrentTime);
+
+		// Trajectories are computed as a series of transfers with instantaneous maneuvers between them.
+		// This is accurate enough for simulation, but is not acceptable for movement, which this method is responsible for.
+		// As a result, physical acceleration is injected here after the fact by blending the simulation with the previous orbit.
+		if (CurrentManeuver)
+		{
+			FVector2D StartLocation;
+			FVector2D EndLocation;
+
+			if (IsOnLastTransfer)
+			{
+				StartLocation = CurrentSimulatedLocation.GetCartesianLocation();
+				EndLocation   = GetFinalOrbit().GetLocation(CurrentTime).GetCartesianLocation();
+			}
+			else
+			{
+				StartLocation = PreviousTransfer.GetLocation(CurrentTime).GetCartesianLocation();
+				EndLocation   = CurrentSimulatedLocation.GetCartesianLocation();
+			}
+
+			const double Alpha = (CurrentTime - CurrentManeuver->Time) / CurrentManeuver->Duration;
+			return FMath::Lerp(StartLocation, EndLocation, Alpha);
+		}
+		else
+		{
+			return CurrentSimulatedLocation.GetCartesianLocation();
+		}
 	}
+
+	return InitialOrbit.GetLocation(CurrentTime).GetCartesianLocation();
 }
 
 TArray<FNovaOrbit> FNovaTrajectory::GetRelevantOrbitsForManeuver(const FNovaManeuver& Maneuver) const

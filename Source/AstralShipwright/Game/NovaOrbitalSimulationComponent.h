@@ -11,6 +11,13 @@
 
 #include "NovaOrbitalSimulationComponent.generated.h"
 
+/** Precomputed Cartesian location data */
+struct FNovaCartesianLocation
+{
+	FVector2D Location;
+	FVector2D Velocity;
+};
+
 /** Orbital simulation component that ticks orbiting spacecraft */
 UCLASS(ClassGroup = (Nova))
 class UNovaOrbitalSimulationComponent : public UActorComponent
@@ -130,6 +137,41 @@ public:
 	const TMap<FGuid, FNovaOrbitalLocation>& GetAllSpacecraftLocations() const
 	{
 		return SpacecraftOrbitalLocations;
+	}
+
+	/*----------------------------------------------------
+	    Cartesian getters
+	----------------------------------------------------*/
+
+	/** Get a spacecraft's Cartesian location in km */
+	FVector2D GetPlayerCartesianLocation() const;
+
+	/** Get a spacecraft's Cartesian location in km  */
+	FVector2D GetSpacecraftCartesianLocation(const FGuid& Identifier) const
+	{
+		const FNovaCartesianLocation* CartesianLocation = SpacecraftCartesianLocations.Find(Identifier);
+		if (CartesianLocation != nullptr)
+		{
+			return CartesianLocation->Location;
+		}
+		else
+		{
+			return FVector2D::ZeroVector;
+		}
+	}
+
+	/** Get a spacecraft's orbital velocity in m/s */
+	FVector2D GetSpacecraftOrbitalVelocity(const FGuid& Identifier) const
+	{
+		const FNovaCartesianLocation* CartesianLocation = SpacecraftCartesianLocations.Find(Identifier);
+		if (CartesianLocation != nullptr)
+		{
+			return CartesianLocation->Velocity;
+		}
+		else
+		{
+			return FVector2D::ZeroVector;
+		}
 	}
 
 	/*----------------------------------------------------
@@ -258,6 +300,7 @@ private:
 	TArray<const class UNovaArea*>                     Areas;
 	TMap<const class UNovaArea*, FNovaOrbitalLocation> AreaOrbitalLocations;
 	TMap<FGuid, FNovaOrbitalLocation>                  SpacecraftOrbitalLocations;
+	TMap<FGuid, FNovaCartesianLocation>                SpacecraftCartesianLocations;
 
 	// Local state
 	FNovaTime TimeOfNextPlayerManeuver;
