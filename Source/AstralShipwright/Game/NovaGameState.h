@@ -312,8 +312,8 @@ private:
 	ENovaTimeDilation ServerTimeDilation;
 
 	// General state
-	const class ANovaPlayerState*  CurrentPlayerState;
-	TArray<const class UNovaArea*> Areas;
+	UPROPERTY()
+	const class ANovaPlayerState* CurrentPlayerState;
 
 	// Time processing state
 	double ClientTime;

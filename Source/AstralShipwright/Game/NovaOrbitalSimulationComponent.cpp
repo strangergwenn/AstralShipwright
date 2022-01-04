@@ -175,7 +175,7 @@ FNovaTime UNovaOrbitalSimulationComponent::GetCurrentTime() const
 }
 
 /*----------------------------------------------------
-    Trajectory & orbiting interface
+    Trajectory interface
 ----------------------------------------------------*/
 
 TSharedPtr<FNovaTrajectoryParameters> UNovaOrbitalSimulationComponent::PrepareTrajectory(const TSharedPtr<FNovaOrbit>& Source,
@@ -571,7 +571,7 @@ void UNovaOrbitalSimulationComponent::MergeOrbit(const TArray<FGuid>& Spacecraft
 }
 
 /*----------------------------------------------------
-    Simple trajectory & orbiting getters
+    Trajectory & orbiting getters
 ----------------------------------------------------*/
 
 int32 UNovaOrbitalSimulationComponent::GetPlayerSpacecraftIndex(const FGuid& Identifier) const
@@ -593,10 +593,6 @@ int32 UNovaOrbitalSimulationComponent::GetPlayerSpacecraftIndex(const FGuid& Ide
 
 	return INDEX_NONE;
 }
-
-/*----------------------------------------------------
-    Trajectory & orbiting getters
-----------------------------------------------------*/
 
 UNovaOrbitalSimulationComponent* UNovaOrbitalSimulationComponent::Get(const UObject* Outer)
 {
