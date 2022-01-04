@@ -27,14 +27,9 @@ struct FNovaHohmannTransfer
 	{
 		const double SourceSemiMajorAxis = 0.5f * (ManeuverRadius + OriginalRadius);
 
-#if 1
 		// StartDeltaV = VTransfer1 - VSource
 		StartDeltaV = sqrt((2.0 * µ * DestinationRadius) / (ManeuverRadius * (ManeuverRadius + DestinationRadius))) -
 					  sqrt(µ * ((2.0 / ManeuverRadius) - (1.0 / SourceSemiMajorAxis)));
-#else
-		// StartDeltaV = VTransfer1 - VSource, factorized with VSource
-		StartDeltaV = sqrt(µ / ManeuverRadius) * (sqrt((2.0 * DestinationRadius) / (ManeuverRadius + DestinationRadius)) - 1.0);
-#endif
 
 		// EndDeltaV = VDest - VTransfer2
 		EndDeltaV = sqrt(µ / DestinationRadius) * (1.0 - sqrt((2.0 * ManeuverRadius) / (ManeuverRadius + DestinationRadius)));
