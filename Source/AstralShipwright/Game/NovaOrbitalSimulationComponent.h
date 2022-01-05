@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 
 #include "NovaArea.h"
+#include "NovaAsteroid.h"
 #include "NovaOrbitalSimulationTypes.h"
 #include "NovaOrbitalSimulationDatabases.h"
 
@@ -96,6 +97,12 @@ public:
 		return MakeShared<FNovaOrbit>(FNovaOrbitGeometry(Area->Body, Area->Altitude, Area->Phase), FNovaTime());
 	}
 
+	/** Get the orbital data for an asteroid */
+	TSharedPtr<FNovaOrbit> GetAsteroidOrbit(const FNovaAsteroid& Asteroid) const
+	{
+		return MakeShared<FNovaOrbit>(FNovaOrbitGeometry(Asteroid.Body, Asteroid.Altitude, Asteroid.Phase), FNovaTime());
+	}
+
 	/** Get an area's location */
 	const FNovaOrbitalLocation& GetAreaLocation(const UNovaArea* Area) const
 	{
@@ -106,6 +113,18 @@ public:
 	const TMap<const UNovaArea*, FNovaOrbitalLocation>& GetAllAreasLocations() const
 	{
 		return AreaOrbitalLocations;
+	}
+
+	/** Get an asteroid's location */
+	const FNovaOrbitalLocation& GetAsteroidLocation(const FGuid Identifier) const
+	{
+		return AsteroidOrbitalLocations[Identifier];
+	}
+
+	/** Get all asteroid's locations */
+	const TMap<FGuid, FNovaOrbitalLocation>& GetAllAsteroidsLocations() const
+	{
+		return AsteroidOrbitalLocations;
 	}
 
 	/** Get a spacecraft's orbit */
@@ -261,6 +280,9 @@ protected:
 	/** Update all area's position */
 	void ProcessAreas();
 
+	/** Update all asteroid's position */
+	void ProcessAsteroids();
+
 	/** Update the current orbit of spacecraft */
 	void ProcessSpacecraftOrbits();
 
@@ -300,6 +322,7 @@ private:
 
 	// Simulation state
 	TMap<const class UNovaArea*, FNovaOrbitalLocation> AreaOrbitalLocations;
+	TMap<FGuid, FNovaOrbitalLocation>                  AsteroidOrbitalLocations;
 	TMap<FGuid, FNovaOrbitalLocation>                  SpacecraftOrbitalLocations;
 	TMap<FGuid, FNovaCartesianLocation>                SpacecraftCartesianLocations;
 

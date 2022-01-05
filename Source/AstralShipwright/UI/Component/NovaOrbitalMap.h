@@ -4,6 +4,8 @@
 
 #include "UI/NovaUI.h"
 #include "Actor/NovaActorTools.h"
+
+#include "Game/NovaAsteroid.h"
 #include "Game/NovaGameTypes.h"
 #include "Game/NovaOrbitalSimulationComponent.h"
 
@@ -78,10 +80,17 @@ struct FNovaOrbitalObject
 		Position = P;
 	}
 
-	FNovaOrbitalObject(const FGuid& S, const FVector2D& P) : FNovaOrbitalObject()
+	FNovaOrbitalObject(const FGuid& I, const FVector2D& P, bool IsAsteroid) : FNovaOrbitalObject()
 	{
-		SpacecraftIdentifier = S;
-		Position             = P;
+		if (IsAsteroid)
+		{
+			AsteroidIdentifier = I;
+		}
+		else
+		{
+			SpacecraftIdentifier = I;
+		}
+		Position = P;
 	}
 
 	FNovaOrbitalObject(const FNovaManeuver& M, const FVector2D& P) : FNovaOrbitalObject()
@@ -98,7 +107,11 @@ struct FNovaOrbitalObject
 		}
 		else if (Area.IsValid())
 		{
-			return FNovaStyleSet::GetBrush("Map/SB_OrbitalObject");
+			return FNovaStyleSet::GetBrush("Map/SB_Area");
+		}
+		else if (AsteroidIdentifier.IsValid())
+		{
+			return FNovaStyleSet::GetBrush("Map/SB_Asteroid");
 		}
 		else
 		{
@@ -118,6 +131,7 @@ struct FNovaOrbitalObject
 
 	// Object data
 	TWeakObjectPtr<const class UNovaArea> Area;
+	FGuid                                 AsteroidIdentifier;
 	FGuid                                 SpacecraftIdentifier;
 	TSharedPtr<FNovaManeuver>             Maneuver;
 
@@ -190,8 +204,11 @@ protected:
 	    High-level internals
 	----------------------------------------------------*/
 
-	/** Add orbits to the map */
+	/** Add areas to the map */
 	void ProcessAreas(const FVector2D& Origin);
+
+	/** Add asteroids to the map */
+	void ProcessAsteroids(const FVector2D& Origin);
 
 	/** Add player orbit to the map */
 	void ProcessSpacecraftOrbits(const FVector2D& Origin);

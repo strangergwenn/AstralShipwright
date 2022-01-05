@@ -13,6 +13,10 @@ class UNovaAsteroidConfiguration : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
+	// Body orbited
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	const class UNovaCelestialBody* Body;
+
 	// Total amount of asteroids to spawn in the entire game
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	int32 TotalAsteroidCount;
@@ -29,16 +33,27 @@ public:
 /** Asteroid data object */
 struct FNovaAsteroid
 {
-	FNovaAsteroid() : Identifier(FGuid::NewGuid()), Mesh()
+	FNovaAsteroid() : Identifier(FGuid::NewGuid()), Body(nullptr), Altitude(0), Phase(0), Mesh()
 	{}
 
-	FNovaAsteroid(FRandomStream& RandomStream)
+	FNovaAsteroid(FRandomStream& RandomStream, const class UNovaCelestialBody* B, double A, double P)
 		: Identifier(FGuid(RandomStream.RandHelper(MAX_int32), RandomStream.RandHelper(MAX_int32), RandomStream.RandHelper(MAX_int32),
 			  RandomStream.RandHelper(MAX_int32)))
+		, Body(B)
+		, Altitude(A)
+		, Phase(P)
 		, Mesh()
 	{}
 
-	FGuid                             Identifier;
+	// Identifier
+	FGuid Identifier;
+
+	// Orbital parameters
+	const class UNovaCelestialBody* Body;
+	double                          Altitude;
+	double                          Phase;
+
+	// Physical characteristics
 	TSoftObjectPtr<class UStaticMesh> Mesh;
 };
 

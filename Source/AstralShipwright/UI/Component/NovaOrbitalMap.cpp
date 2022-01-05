@@ -124,6 +124,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	// Run orbital map processes
 	AddPlanet(Origin, DefaultPlanet);
 	ProcessAreas(Origin);
+	ProcessAsteroids(Origin);
 	ProcessSpacecraftOrbits(Origin);
 	ProcessPlayerTrajectory(Origin);
 	ProcessTrajectoryPreview(Origin, DeltaTime);
@@ -220,57 +221,46 @@ void SNovaOrbitalMap::Reset()
 void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 {
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-	if (!IsValid(OrbitalSimulation))
+	if (IsValid(OrbitalSimulation))
 	{
-		return;
-	}
+		FNovaSplineStyle AreaStyle(FLinearColor(1, 1, 1, 0.5f));
 
-	FNovaSplineStyle AreaStyle(FLinearColor(1, 1, 1, 0.5f));
-
-	// Orbit merging structure
-	struct FNovaMergedOrbitGeometry : FNovaOrbitGeometry
-	{
-		FNovaMergedOrbitGeometry(const FNovaOrbitGeometry& Base, const FNovaOrbitalObject& Object) : FNovaOrbitGeometry(Base)
+		for (const auto AreaAndOrbitalLocation : OrbitalSimulation->GetAllAreasLocations())
 		{
-			Objects.Add(Object);
-		}
+			const FNovaOrbitalLocation& OrbitalLocation = AreaAndOrbitalLocation.Value;
+			const FNovaOrbitGeometry&   Geometry        = OrbitalLocation.Geometry;
 
-		TArray<FNovaOrbitalObject> Objects;
-	};
-	TArray<FNovaMergedOrbitGeometry> MergedOrbitGeometries;
+			CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Geometry.GetHighestAltitude());
 
-	// Merge orbits
-	for (const auto AreaAndOrbitalLocation : OrbitalSimulation->GetAllAreasLocations())
-	{
-		const FNovaOrbitalLocation& OrbitalLocation = AreaAndOrbitalLocation.Value;
-		const FNovaOrbitGeometry&   Geometry        = OrbitalLocation.Geometry;
+			float              BaseAltitude = GetObjectBaseAltitude(Geometry.Body);
+			FNovaOrbitalObject Area = FNovaOrbitalObject(AreaAndOrbitalLocation.Key, OrbitalLocation.GetCartesianLocation(BaseAltitude));
 
-		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Geometry.GetHighestAltitude());
-
-		FNovaMergedOrbitGeometry* ExistingGeometry = MergedOrbitGeometries.FindByPredicate(
-			[&](const FNovaMergedOrbitGeometry& OtherOrbit)
-			{
-				return OtherOrbit.StartAltitude == Geometry.StartAltitude && OtherOrbit.OppositeAltitude == Geometry.OppositeAltitude &&
-					   OtherOrbit.StartPhase == Geometry.StartPhase && OtherOrbit.EndPhase == Geometry.EndPhase;
-			});
-
-		float              BaseAltitude = GetObjectBaseAltitude(Geometry.Body);
-		FNovaOrbitalObject Point = FNovaOrbitalObject(AreaAndOrbitalLocation.Key, OrbitalLocation.GetCartesianLocation(BaseAltitude));
-
-		if (ExistingGeometry)
-		{
-			ExistingGeometry->Objects.Add(Point);
-		}
-		else
-		{
-			MergedOrbitGeometries.Add(FNovaMergedOrbitGeometry(Geometry, Point));
+			AddOrbitalObject(Area, AreaStyle.ColorOuter);
 		}
 	}
+}
 
-	// Draw merged orbits
-	for (FNovaMergedOrbitGeometry& Geometry : MergedOrbitGeometries)
+void SNovaOrbitalMap::ProcessAsteroids(const FVector2D& Origin)
+{
+	const ANovaGameState*            GameState         = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+	if (IsValid(OrbitalSimulation))
 	{
-		AddOrbit(Origin, nullptr, Geometry, Geometry.Objects, AreaStyle);
+		FNovaSplineStyle AreaStyle(FLinearColor(1, 1, 1, 0.5f));
+
+		for (const auto AsteroidAndOrbitalLocation : OrbitalSimulation->GetAllAsteroidsLocations())
+		{
+			const FNovaOrbitalLocation& OrbitalLocation = AsteroidAndOrbitalLocation.Value;
+			const FNovaOrbitGeometry&   Geometry        = OrbitalLocation.Geometry;
+
+			CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Geometry.GetHighestAltitude());
+
+			float              BaseAltitude = GetObjectBaseAltitude(Geometry.Body);
+			FNovaOrbitalObject AsteroidObject =
+				FNovaOrbitalObject(AsteroidAndOrbitalLocation.Key, OrbitalLocation.GetCartesianLocation(BaseAltitude), true);
+
+			AddOrbitalObject(AsteroidObject, AreaStyle.ColorOuter);
+		}
 	}
 }
 
@@ -301,7 +291,7 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 			TArray<FNovaOrbitalObject> Objects;
 
 			float BaseAltitude = GetObjectBaseAltitude(Location.Geometry.Body);
-			Objects.Add(FNovaOrbitalObject(Identifier, Location.GetCartesianLocation(BaseAltitude)));
+			Objects.Add(FNovaOrbitalObject(Identifier, Location.GetCartesianLocation(BaseAltitude), false));
 
 			AddOrbit(Origin, nullptr, Location.Geometry, Objects, OrbitStyle);
 			CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Location.Geometry.GetHighestAltitude());
@@ -422,7 +412,7 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 			// Determine the absolute position
 			float BaseAltitude = GetObjectBaseAltitude(SpacecraftLocation->Geometry.Body);
 			AbsolutePosition   = MakeShared<FVector2D>(SpacecraftLocation->GetCartesianLocation(BaseAltitude));
-			Objects.Add(FNovaOrbitalObject(Spacecraft->Identifier, *AbsolutePosition));
+			Objects.Add(FNovaOrbitalObject(Spacecraft->Identifier, *AbsolutePosition, false));
 
 			// Determine the physical angle
 			const FVector2D RelativePosition = SpacecraftLocation->GetCartesianLocation<false>(BaseAltitude);

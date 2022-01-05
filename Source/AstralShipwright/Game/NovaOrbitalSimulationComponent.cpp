@@ -165,6 +165,7 @@ void UNovaOrbitalSimulationComponent::UpdateSimulation()
 	// Run processes
 	ProcessOrbitCleanup();
 	ProcessAreas();
+	ProcessAsteroids();
 	ProcessSpacecraftOrbits();
 	ProcessSpacecraftTrajectories();
 }
@@ -729,6 +730,29 @@ void UNovaOrbitalSimulationComponent::ProcessAreas()
 		else
 		{
 			AreaOrbitalLocations.Add(Area, FNovaOrbitalLocation(GetAreaOrbit(Area)->Geometry, CurrentPhase));
+		}
+	}
+}
+
+void UNovaOrbitalSimulationComponent::ProcessAsteroids()
+{
+	const ANovaGameState* GameState = GetOwner<ANovaGameState>();
+
+	for (const TPair<FGuid, FNovaAsteroid>& IdentifierAndAsteroid : GameState->GetAsteroids())
+	{
+		// Update the position
+		double CurrentPhase = GetAsteroidOrbit(IdentifierAndAsteroid.Value)->Geometry.GetPhase<true>(GetCurrentTime());
+
+		// Add or update the current orbit and position
+		FNovaOrbitalLocation* Entry = AsteroidOrbitalLocations.Find(IdentifierAndAsteroid.Key);
+		if (Entry)
+		{
+			Entry->Phase = CurrentPhase;
+		}
+		else
+		{
+			AsteroidOrbitalLocations.Add(
+				IdentifierAndAsteroid.Key, FNovaOrbitalLocation(GetAsteroidOrbit(IdentifierAndAsteroid.Value)->Geometry, CurrentPhase));
 		}
 	}
 }

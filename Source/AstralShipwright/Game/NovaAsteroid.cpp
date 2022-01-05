@@ -74,7 +74,7 @@ bool FNovaAsteroidSpawner::GetNextAsteroid(double& Altitude, double& Phase, FNov
 		Phase    = RandomStream.FRandRange(0.0, 360.0);
 
 		// Generate the asteroid itself
-		Asteroid      = FNovaAsteroid(RandomStream);
+		Asteroid      = FNovaAsteroid(RandomStream, AsteroidConfiguration->Body, Altitude, Phase);
 		Asteroid.Mesh = AsteroidConfiguration->Meshes[RandomStream.RandHelper(AsteroidConfiguration->Meshes.Num())];
 
 		SpawnedAsteroids++;

@@ -4,7 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
+
+#include "NovaAsteroid.h"
 #include "NovaOrbitalSimulationDatabases.h"
+
 #include "NovaGameState.generated.h"
 
 /** Time dilation settings */
@@ -40,6 +43,8 @@ public:
 	/*----------------------------------------------------
 	    General game state
 	----------------------------------------------------*/
+
+	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
 
@@ -171,6 +176,22 @@ public:
 	bool CanDilateTime(ENovaTimeDilation Dilation) const;
 
 	/*----------------------------------------------------
+	    World management
+	----------------------------------------------------*/
+
+	/** Get a specific asteroid */
+	const FNovaAsteroid* GetAsteroid(FGuid Identifier) const
+	{
+		return AsteroidDatabase.Find(Identifier);
+	}
+
+	/** Get all asteroids */
+	const TMap<FGuid, FNovaAsteroid>& GetAsteroids() const
+	{
+		return AsteroidDatabase;
+	}
+
+	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
 
@@ -261,6 +282,10 @@ private:
 	// General state
 	UPROPERTY()
 	const class ANovaPlayerState* CurrentPlayerState;
+
+	// Asteroids
+	TMap<FGuid, FNovaAsteroid> AsteroidDatabase;
+	FNovaAsteroidSpawner       AsteroidSpawner;
 
 	// Time processing state
 	double ClientTime;

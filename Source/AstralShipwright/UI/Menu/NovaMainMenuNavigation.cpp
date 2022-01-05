@@ -126,6 +126,10 @@ public:
 				{
 					return Object.Area->Name;
 				}
+				else if (Object.AsteroidIdentifier != FGuid())
+				{
+					return FText::FromString(Object.AsteroidIdentifier.ToString(EGuidFormats::Short));
+				}
 				else if (Object.SpacecraftIdentifier != FGuid())
 				{
 					const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Object.SpacecraftIdentifier);

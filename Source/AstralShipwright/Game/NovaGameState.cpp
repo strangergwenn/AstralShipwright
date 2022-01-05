@@ -147,6 +147,25 @@ void ANovaGameState::SerializeJson(
     General game state
 ----------------------------------------------------*/
 
+void ANovaGameState::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Startup the asteroid spawner
+	UNovaAssetManager* AssetManager = GetGameInstance<UNovaGameInstance>()->GetAssetManager();
+	NCHECK(AssetManager);
+	AsteroidSpawner.Start(AssetManager->GetDefaultAsset<UNovaAsteroidConfiguration>());
+	AsteroidDatabase.Empty();
+
+	// Spawn asteroids
+	FNovaAsteroid NewAsteroid;
+	double        Altitude, Phase;
+	while (AsteroidSpawner.GetNextAsteroid(Altitude, Phase, NewAsteroid))
+	{
+		AsteroidDatabase.Add(NewAsteroid.Identifier, NewAsteroid);
+	}
+}
+
 void ANovaGameState::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
