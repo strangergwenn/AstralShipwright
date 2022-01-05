@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
-#include "Spacecraft/NovaSpacecraft.h"
+#include "NovaOrbitalSimulationDatabases.h"
 #include "NovaGameState.generated.h"
 
 /** Time dilation settings */
@@ -15,59 +15,6 @@ enum class ENovaTimeDilation : uint8
 	Level1,
 	Level2,
 	Level3
-};
-
-/** Spacecraft database with fast array replication and fast lookup */
-USTRUCT()
-struct FNovaSpacecraftDatabase : public FFastArraySerializer
-{
-	GENERATED_BODY()
-
-	bool Add(const FNovaSpacecraft& Spacecraft)
-	{
-		return Cache.Add(*this, Array, Spacecraft);
-	}
-
-	void Remove(const FGuid& Identifier)
-	{
-		Cache.Remove(*this, Array, Identifier);
-	}
-
-	const FNovaSpacecraft* Get(const FGuid& Identifier) const
-	{
-		return Cache.Get(Identifier, Array);
-	}
-
-	TArray<FNovaSpacecraft>& Get()
-	{
-		return Array;
-	}
-
-	void UpdateCache()
-	{
-		Cache.Update(Array);
-	}
-
-	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
-	{
-		return FFastArraySerializer::FastArrayDeltaSerialize<FNovaSpacecraft, FNovaSpacecraftDatabase>(Array, DeltaParms, *this);
-	}
-
-protected:
-	UPROPERTY()
-	TArray<FNovaSpacecraft> Array;
-
-	TGuidCacheMap<FNovaSpacecraft> Cache;
-};
-
-/** Enable fast replication */
-template <>
-struct TStructOpsTypeTraits<FNovaSpacecraftDatabase> : public TStructOpsTypeTraitsBase2<FNovaSpacecraftDatabase>
-{
-	enum
-	{
-		WithNetDeltaSerializer = true,
-	};
 };
 
 /** Replicated game state class */

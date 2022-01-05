@@ -7,6 +7,8 @@
 
 #include "NovaArea.h"
 #include "NovaOrbitalSimulationTypes.h"
+#include "NovaOrbitalSimulationDatabases.h"
+
 #include "Game/NovaGameTypes.h"
 
 #include "NovaOrbitalSimulationComponent.generated.h"
