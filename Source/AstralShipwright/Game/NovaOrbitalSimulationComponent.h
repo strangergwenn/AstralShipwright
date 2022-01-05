@@ -298,12 +298,12 @@ private:
 	UPROPERTY(Replicated)
 	FNovaTrajectoryDatabase SpacecraftTrajectoryDatabase;
 
-	// Local object state
-	TArray<const class UNovaArea*>                     Areas;
+	// Simulation state
 	TMap<const class UNovaArea*, FNovaOrbitalLocation> AreaOrbitalLocations;
 	TMap<FGuid, FNovaOrbitalLocation>                  SpacecraftOrbitalLocations;
 	TMap<FGuid, FNovaCartesianLocation>                SpacecraftCartesianLocations;
 
-	// Local state
-	FNovaTime TimeOfNextPlayerManeuver;
+	// General state
+	FNovaTime                      TimeOfNextPlayerManeuver;
+	TArray<const class UNovaArea*> Areas;
 };
