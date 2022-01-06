@@ -4,8 +4,10 @@
 
 #include "UI/NovaUI.h"
 
+#include "Game/NovaOrbitalSimulationTypes.h"
+
 // Callback type
-DECLARE_DELEGATE_TwoParams(FOnTrajectoryChanged, TSharedPtr<struct FNovaTrajectory>, bool);
+DECLARE_DELEGATE_TwoParams(FOnTrajectoryChanged, const FNovaTrajectory&, bool);
 
 /** Orbital trajectory trade-off calculator */
 class SNovaTrajectoryCalculator : public SCompoundWidget
@@ -57,8 +59,8 @@ public:
 	void Reset();
 
 	/** Simulate trajectories to go between orbits */
-	void SimulateTrajectories(const TSharedPtr<struct FNovaOrbit>& Source, const TSharedPtr<struct FNovaOrbit>& Destination,
-		const TArray<FGuid>& SpacecraftIdentifiers);
+	void SimulateTrajectories(
+		const struct FNovaOrbit& Source, const struct FNovaOrbit& Destination, const TArray<FGuid>& SpacecraftIdentifiers);
 
 	/** Optimize for Delta-V */
 	void OptimizeForDeltaV();
@@ -102,15 +104,15 @@ protected:
 	int32                            AltitudeStep;
 
 	// Trajectory data
-	TArray<FGuid>                                   PlayerIdentifiers;
-	TMap<float, TSharedPtr<struct FNovaTrajectory>> SimulatedTrajectories;
-	float                                           MinDeltaV;
-	float                                           MinDeltaVWithTolerance;
-	float                                           MaxDeltaV;
-	float                                           MinDuration;
-	float                                           MaxDuration;
-	float                                           MinDeltaVAltitude;
-	float                                           MinDurationAltitude;
+	TArray<FGuid>                PlayerIdentifiers;
+	TMap<float, FNovaTrajectory> SimulatedTrajectories;
+	float                        MinDeltaV;
+	float                        MinDeltaVWithTolerance;
+	float                        MaxDeltaV;
+	float                        MinDuration;
+	float                        MaxDuration;
+	float                        MinDeltaVAltitude;
+	float                        MinDurationAltitude;
 
 	// Display data
 	TArray<FLinearColor> TrajectoryDeltaVGradientData;

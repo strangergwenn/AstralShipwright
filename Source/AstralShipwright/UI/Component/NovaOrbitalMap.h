@@ -170,16 +170,16 @@ public:
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
 	/** Preview a spacecraft trajectory */
-	void ShowTrajectory(const TSharedPtr<struct FNovaTrajectory>& Trajectory, bool Immediate = false);
+	void ShowTrajectory(const FNovaTrajectory& Trajectory, bool Immediate = false);
 
 	/** Remove the trajectory preview */
 	void ClearTrajectory()
 	{
-		CurrentPreviewTrajectory.Reset();
+		CurrentPreviewTrajectory = FNovaTrajectory();
 	}
 
 	/** Get the preview trajectory */
-	const TSharedPtr<struct FNovaTrajectory>& GetPreviewTrajectory() const
+	const FNovaTrajectory& GetPreviewTrajectory() const
 	{
 		return CurrentPreviewTrajectory;
 	}
@@ -302,15 +302,15 @@ protected:
 	float TrajectoryInflationRatio;
 
 	// Local state
-	FVector2D                          CurrentOrigin;
-	FVector2D                          TargetPosition;
-	FVector2D                          CurrentPosition;
-	FVector2D                          CurrentVelocity;
-	TSharedPtr<struct FNovaTrajectory> CurrentPreviewTrajectory;
-	float                              CurrentPreviewProgress;
-	float                              CurrentDesiredSize;
-	float                              CurrentDrawScale;
-	float                              CurrentZoomSpeed;
+	FVector2D       CurrentOrigin;
+	FVector2D       TargetPosition;
+	FVector2D       CurrentPosition;
+	FVector2D       CurrentVelocity;
+	FNovaTrajectory CurrentPreviewTrajectory;
+	float           CurrentPreviewProgress;
+	float           CurrentDesiredSize;
+	float           CurrentDrawScale;
+	float           CurrentZoomSpeed;
 
 	// Object system
 	TArray<FNovaOrbitalObject> HoveredOrbitalObjects;

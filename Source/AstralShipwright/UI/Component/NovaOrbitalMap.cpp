@@ -176,9 +176,9 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 #endif
 }
 
-void SNovaOrbitalMap::ShowTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, bool Immediate)
+void SNovaOrbitalMap::ShowTrajectory(const FNovaTrajectory& Trajectory, bool Immediate)
 {
-	if (Trajectory.IsValid() && Trajectory->IsValid())
+	if (Trajectory.IsValid())
 	{
 		CurrentPreviewTrajectory = Trajectory;
 		CurrentPreviewProgress   = Immediate ? TrajectoryPreviewDuration : 0;
@@ -340,8 +340,8 @@ void SNovaOrbitalMap::ProcessTrajectoryPreview(const FVector2D& Origin, float De
 	// Add the preview trajectory
 	if (CurrentPreviewTrajectory.IsValid())
 	{
-		AddTrajectory(Origin, *CurrentPreviewTrajectory, nullptr, CurrentPreviewProgress, OrbitStyle, ManeuverStyle);
-		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, CurrentPreviewTrajectory->GetHighestAltitude());
+		AddTrajectory(Origin, CurrentPreviewTrajectory, nullptr, CurrentPreviewProgress, OrbitStyle, ManeuverStyle);
+		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, CurrentPreviewTrajectory.GetHighestAltitude());
 	};
 }
 

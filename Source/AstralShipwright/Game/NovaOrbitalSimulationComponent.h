@@ -21,6 +21,19 @@ struct FNovaCartesianLocation
 	FVector2D Velocity;
 };
 
+/** Trajectory computation parameters */
+struct FNovaTrajectoryParameters
+{
+	FNovaTime     StartTime;
+	FNovaOrbit    Source;
+	double        DestinationAltitude;
+	double        DestinationPhase;
+	TArray<FGuid> SpacecraftIdentifiers;
+
+	const UNovaCelestialBody* Body;
+	double                    µ;
+};
+
 /** Orbital simulation component that ticks orbiting spacecraft */
 UCLASS(ClassGroup = (Nova))
 class UNovaOrbitalSimulationComponent : public UActorComponent
@@ -54,11 +67,11 @@ public:
 
 public:
 	/** Build trajectory parameters from an arbitrary orbit to another  */
-	TSharedPtr<struct FNovaTrajectoryParameters> PrepareTrajectory(const TSharedPtr<FNovaOrbit>& Source,
-		const TSharedPtr<FNovaOrbit>& Destination, FNovaTime DeltaTime, const TArray<FGuid>& SpacecraftIdentifiers) const;
+	FNovaTrajectoryParameters PrepareTrajectory(
+		const FNovaOrbit& Source, const FNovaOrbit& Destination, FNovaTime DeltaTime, const TArray<FGuid>& SpacecraftIdentifiers) const;
 
 	/** Compute a trajectory */
-	TSharedPtr<FNovaTrajectory> ComputeTrajectory(const TSharedPtr<struct FNovaTrajectoryParameters>& Parameters, float PhasingAltitude);
+	FNovaTrajectory ComputeTrajectory(const FNovaTrajectoryParameters& Parameters, float PhasingAltitude);
 
 	/** Check if this spacecraft is on a trajectory */
 	bool IsOnTrajectory(const FGuid& SpacecraftIdentifier) const;
@@ -67,10 +80,10 @@ public:
 	bool IsOnStartedTrajectory(const FGuid& SpacecraftIdentifier) const;
 
 	/** Check if this trajectory can be started */
-	bool CanCommitTrajectory(const TSharedPtr<FNovaTrajectory>& Trajectory, FText* Help = nullptr) const;
+	bool CanCommitTrajectory(const FNovaTrajectory& Trajectory, FText* Help = nullptr) const;
 
 	/** Put spacecraft on a new trajectory */
-	void CommitTrajectory(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory);
+	void CommitTrajectory(const TArray<FGuid>& SpacecraftIdentifiers, const FNovaTrajectory& Trajectory);
 
 	/** Complete the current trajectory of spacecraft */
 	void CompleteTrajectory(const TArray<FGuid>& SpacecraftIdentifiers);
@@ -79,10 +92,10 @@ public:
 	void AbortTrajectory(const TArray<FGuid>& SpacecraftIdentifiers);
 
 	/** Put spacecraft in a particular orbit */
-	void SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit);
+	void SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const FNovaOrbit& Orbit);
 
 	/** Merge different spacecraft in a particular orbit */
-	void MergeOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit);
+	void MergeOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const FNovaOrbit& Orbit);
 
 	/*----------------------------------------------------
 	    Simple trajectory & orbiting getters
@@ -92,15 +105,15 @@ public:
 	static UNovaOrbitalSimulationComponent* Get(const UObject* Outer);
 
 	/** Get the orbital data for an area */
-	TSharedPtr<FNovaOrbit> GetAreaOrbit(const UNovaArea* Area) const
+	FNovaOrbit GetAreaOrbit(const UNovaArea* Area) const
 	{
-		return MakeShared<FNovaOrbit>(FNovaOrbitGeometry(Area->Body, Area->Altitude, Area->Phase), FNovaTime());
+		return FNovaOrbit(FNovaOrbitGeometry(Area->Body, Area->Altitude, Area->Phase), FNovaTime());
 	}
 
 	/** Get the orbital data for an asteroid */
-	TSharedPtr<FNovaOrbit> GetAsteroidOrbit(const FNovaAsteroid& Asteroid) const
+	FNovaOrbit GetAsteroidOrbit(const FNovaAsteroid& Asteroid) const
 	{
-		return MakeShared<FNovaOrbit>(FNovaOrbitGeometry(Asteroid.Body, Asteroid.Altitude, Asteroid.Phase), FNovaTime());
+		return FNovaOrbit(FNovaOrbitGeometry(Asteroid.Body, Asteroid.Altitude, Asteroid.Phase), FNovaTime());
 	}
 
 	/** Get an area's location */

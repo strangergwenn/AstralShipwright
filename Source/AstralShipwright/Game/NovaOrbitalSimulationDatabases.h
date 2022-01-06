@@ -94,13 +94,12 @@ struct FNovaOrbitDatabase : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-	bool Add(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaOrbit>& Orbit)
+	bool Add(const TArray<FGuid>& SpacecraftIdentifiers, const FNovaOrbit& Orbit)
 	{
 		NCHECK(Orbit.IsValid());
-		NCHECK(Orbit->IsValid());
 
 		FNovaOrbitDatabaseEntry TrajectoryData;
-		TrajectoryData.Orbit       = *Orbit;
+		TrajectoryData.Orbit       = Orbit;
 		TrajectoryData.Identifiers = SpacecraftIdentifiers;
 
 		return Cache.Add(*this, Array, TrajectoryData);
@@ -176,13 +175,12 @@ struct FNovaTrajectoryDatabase : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-	bool Add(const TArray<FGuid>& SpacecraftIdentifiers, const TSharedPtr<FNovaTrajectory>& Trajectory)
+	bool Add(const TArray<FGuid>& SpacecraftIdentifiers, const FNovaTrajectory& Trajectory)
 	{
 		NCHECK(Trajectory.IsValid());
-		NCHECK(Trajectory->IsValid());
 
 		FNovaTrajectoryDatabaseEntry TrajectoryData;
-		TrajectoryData.Trajectory  = *Trajectory;
+		TrajectoryData.Trajectory  = Trajectory;
 		TrajectoryData.Identifiers = SpacecraftIdentifiers;
 
 		return Cache.Add(*this, Array, TrajectoryData);

@@ -394,12 +394,7 @@ protected:
 ----------------------------------------------------*/
 
 SNovaMainMenuNavigation::SNovaMainMenuNavigation()
-	: PC(nullptr)
-	, Spacecraft(nullptr)
-	, GameState(nullptr)
-	, OrbitalSimulation(nullptr)
-	, HasHoveredObjects(false)
-	, SelectedDestination(nullptr)
+	: PC(nullptr), Spacecraft(nullptr), GameState(nullptr), OrbitalSimulation(nullptr), HasHoveredObjects(false), DestinationOrbit()
 {}
 
 void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
@@ -458,10 +453,10 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 							.Padding(Theme.VerticalContentPadding)
 							.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([=]()
 							{
-								return AreaTitle->GetText().IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible;
+								return DestinationTitle->GetText().IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible;
 							})))
 							[
-								SAssignNew(AreaTitle, STextBlock)
+								SAssignNew(DestinationTitle, STextBlock)
 								.TextStyle(&Theme.HeadingFont)
 							]
 						]
@@ -485,10 +480,10 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 						.Padding(Theme.VerticalContentPadding)
 						.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([=]()
 						{
-							return AreaDescription->GetText().IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible;
+							return DestinationDescription->GetText().IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible;
 						})))
 						[
-							SAssignNew(AreaDescription, STextBlock)
+							SAssignNew(DestinationDescription, STextBlock)
 							.TextStyle(&Theme.MainFont)
 						]
 					]
@@ -582,7 +577,7 @@ void SNovaMainMenuNavigation::Show()
 {
 	SNovaTabPanel::Show();
 
-	ResetDestination();
+	ResetTrajectory();
 	SidePanel->Reset();
 	OrbitalMap->Reset();
 }
@@ -591,7 +586,7 @@ void SNovaMainMenuNavigation::Hide()
 {
 	SNovaTabPanel::Hide();
 
-	ResetDestination();
+	ResetTrajectory();
 	SidePanel->Reset();
 	OrbitalMap->Reset();
 }
@@ -619,7 +614,7 @@ void SNovaMainMenuNavigation::OnClicked(const FVector2D& Position)
 		{
 			HasAnyHoveredObject = true;
 
-			if (Object.Area.IsValid() || Object.SpacecraftIdentifier != FGuid())
+			if (Object.Area.IsValid() || Object.AsteroidIdentifier != FGuid() || Object.SpacecraftIdentifier != FGuid())
 			{
 				HasValidObject = true;
 				break;
@@ -717,12 +712,17 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 
 	for (const FNovaOrbitalObject& Object : SelectedObjectList)
 	{
+		const UNovaArea*     Area     = Object.Area.Get();
+		const FNovaAsteroid* Asteroid = GameState->GetAsteroid(Object.AsteroidIdentifier);
+
 		// Valid area found
-		if (Object.Area.IsValid() && SelectDestination(Object.Area.Get()))
+		if (Area && ComputeTrajectoryTo(OrbitalSimulation->GetAreaOrbit(Area)))
 		{
+			NLOG("SNovaMainMenuNavigation::SelectDestination : %s", *Area->Name.ToString());
+
 			HasValidDestination = true;
-			AreaTitle->SetText(Object.Area->Name);
-			AreaDescription->SetText(Object.Area->Description);
+			DestinationTitle->SetText(Area->Name);
+			DestinationDescription->SetText(Area->Description);
 
 			// clang-format off
 			StationTrades->AddSlot()
@@ -736,7 +736,7 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 			// clang-format on
 
 			// Add sold resources
-			for (const FNovaResourceTrade& Trade : Object.Area->ResourceTradeMetadata)
+			for (const FNovaResourceTrade& Trade : Area->ResourceTradeMetadata)
 			{
 				if (Trade.ForSale)
 				{
@@ -770,10 +770,10 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 			TArray<TPair<const UNovaResource*, ENovaPriceModifier>> BestDeals;
 			for (int32 Index = 0; Index < Spacecraft->Compartments.Num(); Index++)
 			{
-				auto AddDeal = [this, &BestDeals, &Object, Index](ENovaResourceType Type)
+				auto AddDeal = [this, &BestDeals, &Area, Index](ENovaResourceType Type)
 				{
 					const FNovaSpacecraftCargo& Cargo = Spacecraft->Compartments[Index].GetCargo(Type);
-					if (Cargo.Amount > 0 && !GameState->IsResourceSold(Cargo.Resource, Object.Area.Get()))
+					if (Cargo.Amount > 0 && !GameState->IsResourceSold(Cargo.Resource, Area))
 					{
 						BestDeals.Add(TPair<const UNovaResource*, ENovaPriceModifier>(
 							Cargo.Resource, GameState->GetCurrentPriceModifier(Cargo.Resource)));
@@ -814,28 +814,37 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 				}
 			}
 		}
+
+		// Asteroid found
+		if (Asteroid && ComputeTrajectoryTo(OrbitalSimulation->GetAsteroidOrbit(*Asteroid)))
+		{
+			NLOG("SNovaMainMenuNavigation::SelectDestination : %s", *Asteroid->Identifier.ToString(EGuidFormats::Short));
+
+			HasValidDestination = true;
+			DestinationTitle->SetText(FText::FromString(Asteroid->Identifier.ToString(EGuidFormats::Short)));
+			DestinationDescription->SetText(FText());
+		}
 	}
 
 	// No valid area found
 	if (!HasValidDestination)
 	{
-		ResetDestination();
-		AreaTitle->SetText(FText());
+		ResetTrajectory();
+		DestinationTitle->SetText(FText());
+		DestinationDescription->SetText(FText());
 	}
 }
 
-bool SNovaMainMenuNavigation::SelectDestination(const UNovaArea* Destination)
+bool SNovaMainMenuNavigation::ComputeTrajectoryTo(const FNovaOrbit& Orbit)
 {
-	NLOG("SNovaMainMenuNavigation::SelectDestination : %s", *Destination->Name.ToString());
-
-	if (CanSelectDestination(Destination))
+	if (HasValidSpacecraft())
 	{
-		SelectedDestination = Destination;
+		DestinationOrbit = Orbit;
 
-		if (Destination != GameState->GetCurrentArea())
+		if (Orbit != OrbitalSimulation->GetAreaOrbit(GameState->GetCurrentArea()))
 		{
-			TrajectoryCalculator->SimulateTrajectories(MakeShared<FNovaOrbit>(*OrbitalSimulation->GetPlayerOrbit()),
-				OrbitalSimulation->GetAreaOrbit(Destination), GameState->GetPlayerSpacecraftIdentifiers());
+			TrajectoryCalculator->SimulateTrajectories(
+				*OrbitalSimulation->GetPlayerOrbit(), Orbit, GameState->GetPlayerSpacecraftIdentifiers());
 
 			TrajectoryCalculator->SetVisibility(EVisibility::Visible);
 			CommitButton->SetVisibility(EVisibility::Visible);
@@ -854,12 +863,12 @@ bool SNovaMainMenuNavigation::SelectDestination(const UNovaArea* Destination)
 	}
 }
 
-void SNovaMainMenuNavigation::ResetDestination()
+void SNovaMainMenuNavigation::ResetTrajectory()
 {
 	NLOG("SNovaMainMenuNavigation::ResetDestination");
 
-	SelectedDestination = nullptr;
-	SelectedObjectList  = {};
+	DestinationOrbit   = FNovaOrbit();
+	SelectedObjectList = {};
 
 	OrbitalMap->ClearTrajectory();
 	TrajectoryCalculator->Reset();
@@ -868,7 +877,7 @@ void SNovaMainMenuNavigation::ResetDestination()
 	SidePanelContainer->SetObjectList({});
 }
 
-bool SNovaMainMenuNavigation::CanSelectDestination(const UNovaArea* Destination) const
+bool SNovaMainMenuNavigation::HasValidSpacecraft() const
 {
 	if (IsValid(GameState) && IsValid(OrbitalSimulation))
 	{
@@ -891,7 +900,7 @@ bool SNovaMainMenuNavigation::CanCommitTrajectoryInternal(FText* Details) const
 {
 	if (IsValid(OrbitalSimulation) && IsValid(GameState))
 	{
-		if (SelectedDestination == GameState->GetCurrentArea())
+		if (DestinationOrbit == OrbitalSimulation->GetAreaOrbit(GameState->GetCurrentArea()))
 		{
 			if (Details)
 			{
@@ -967,7 +976,7 @@ void SNovaMainMenuNavigation::OnHideSidePanel()
 	}
 }
 
-void SNovaMainMenuNavigation::OnTrajectoryChanged(TSharedPtr<FNovaTrajectory> Trajectory, bool HasEnoughPropellant)
+void SNovaMainMenuNavigation::OnTrajectoryChanged(const FNovaTrajectory& Trajectory, bool HasEnoughPropellant)
 {
 	CurrentTrajectoryHasEnoughPropellant = HasEnoughPropellant;
 
@@ -983,12 +992,12 @@ void SNovaMainMenuNavigation::OnTrajectoryChanged(TSharedPtr<FNovaTrajectory> Tr
 
 void SNovaMainMenuNavigation::OnCommitTrajectory()
 {
-	const TSharedPtr<FNovaTrajectory>& Trajectory = OrbitalMap->GetPreviewTrajectory();
+	const FNovaTrajectory& Trajectory = OrbitalMap->GetPreviewTrajectory();
 	if (IsValid(OrbitalSimulation) && OrbitalSimulation->CanCommitTrajectory(Trajectory))
 	{
 		OrbitalSimulation->CommitTrajectory(GameState->GetPlayerSpacecraftIdentifiers(), Trajectory);
 
-		ResetDestination();
+		ResetTrajectory();
 	}
 }
 

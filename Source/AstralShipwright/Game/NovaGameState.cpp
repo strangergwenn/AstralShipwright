@@ -394,7 +394,7 @@ void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool Me
 
 			if (CurrentOrbit)
 			{
-				OrbitalSimulationComponent->MergeOrbit(GameState->GetPlayerSpacecraftIdentifiers(), MakeShared<FNovaOrbit>(*CurrentOrbit));
+				OrbitalSimulationComponent->MergeOrbit(GameState->GetPlayerSpacecraftIdentifiers(), *CurrentOrbit);
 				WasMergedWithPlayer = true;
 			}
 		}

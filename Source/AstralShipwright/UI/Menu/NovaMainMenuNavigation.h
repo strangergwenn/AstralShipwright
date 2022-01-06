@@ -59,14 +59,14 @@ protected:
 	/** Re-create the UI in the side panel */
 	void UpdateSidePanel();
 
-	/** Set the current destination */
-	bool SelectDestination(const class UNovaArea* Destination);
+	/** Prepare a trajectory toward a new orbit */
+	bool ComputeTrajectoryTo(const struct FNovaOrbit& Orbit);
 
 	/** Remove the current destination */
-	void ResetDestination();
+	void ResetTrajectory();
 
-	/** Check for destination validity */
-	bool CanSelectDestination(const UNovaArea* Destination) const;
+	/** Check for valid spacecraft */
+	bool HasValidSpacecraft() const;
 
 	/** Check for trajectory validity */
 	bool CanCommitTrajectoryInternal(FText* Details = nullptr) const;
@@ -88,7 +88,7 @@ protected:
 	void OnHideSidePanel();
 
 	// Trajectories
-	void OnTrajectoryChanged(TSharedPtr<struct FNovaTrajectory> Trajectory, bool HasEnoughPropellant);
+	void OnTrajectoryChanged(const struct FNovaTrajectory& Trajectory, bool HasEnoughPropellant);
 	void OnCommitTrajectory();
 
 	/*----------------------------------------------------
@@ -110,15 +110,15 @@ protected:
 	TSharedPtr<class SNovaHoverStack>         HoverText;
 
 	// Side panel widgets
-	TSharedPtr<class STextBlock>                AreaTitle;
-	TSharedPtr<class STextBlock>                AreaDescription;
+	TSharedPtr<class STextBlock>                DestinationTitle;
+	TSharedPtr<class STextBlock>                DestinationDescription;
 	TSharedPtr<class SNovaTrajectoryCalculator> TrajectoryCalculator;
 	TSharedPtr<class SNovaButton>               CommitButton;
 	TSharedPtr<class SVerticalBox>              StationTrades;
 
 	// Local state
 	bool                       HasHoveredObjects;
-	const class UNovaArea*     SelectedDestination;
+	FNovaOrbit                 DestinationOrbit;
 	TArray<FNovaOrbitalObject> SelectedObjectList;
 	bool                       CurrentTrajectoryHasEnoughPropellant;
 };

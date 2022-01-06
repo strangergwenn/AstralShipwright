@@ -194,9 +194,9 @@ void SNovaTrajectoryCalculator::Tick(const FGeometry& AllottedGeometry, const do
 			// Generate the gradients
 			TrajectoryDeltaVGradientData.Empty();
 			TrajectoryDurationGradientData.Empty();
-			for (TPair<float, TSharedPtr<FNovaTrajectory>>& AltitudeAndTrajectory : SimulatedTrajectories)
+			for (const TPair<float, FNovaTrajectory>& AltitudeAndTrajectory : SimulatedTrajectories)
 			{
-				TSharedPtr<FNovaTrajectory>& Trajectory = AltitudeAndTrajectory.Value;
+				const FNovaTrajectory& Trajectory = AltitudeAndTrajectory.Value;
 
 				if (Trajectory.IsValid())
 				{
@@ -206,9 +206,9 @@ void SNovaTrajectoryCalculator::Tick(const FGeometry& AllottedGeometry, const do
 					};
 
 					double DeltaVAlpha = FMath::Clamp(
-						(Transform(Trajectory->TotalDeltaV) - Transform(MinDeltaV)) / (Transform(MaxDeltaV) - Transform(MinDeltaV)), 0.0f,
+						(Transform(Trajectory.TotalDeltaV) - Transform(MinDeltaV)) / (Transform(MaxDeltaV) - Transform(MinDeltaV)), 0.0f,
 						1.0f);
-					double DurationAlpha = FMath::Clamp((Transform(Trajectory->TotalTravelDuration.AsMinutes()) - Transform(MinDuration)) /
+					double DurationAlpha = FMath::Clamp((Transform(Trajectory.TotalTravelDuration.AsMinutes()) - Transform(MinDuration)) /
 															(Transform(MaxDuration) - Transform(MinDuration)),
 						0.0f, 1.0f);
 
@@ -272,8 +272,8 @@ void SNovaTrajectoryCalculator::Reset()
 	MaxDuration            = 0;
 }
 
-void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNovaOrbit>& Source,
-	const TSharedPtr<struct FNovaOrbit>& Destination, const TArray<FGuid>& SpacecraftIdentifiers)
+void SNovaTrajectoryCalculator::SimulateTrajectories(
+	const struct FNovaOrbit& Source, const struct FNovaOrbit& Destination, const TArray<FGuid>& SpacecraftIdentifiers)
 {
 	NCHECK(Source.IsValid());
 	NCHECK(Destination.IsValid());
@@ -290,34 +290,34 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNo
 
 	// Run trajectory calculations over a range of altitudes
 	PlayerIdentifiers = SpacecraftIdentifiers;
-	const TSharedPtr<FNovaTrajectoryParameters>& Parameters =
+	const FNovaTrajectoryParameters& Parameters =
 		OrbitalSimulation->PrepareTrajectory(Source, Destination, FNovaTime::FromMinutes(1), SpacecraftIdentifiers);
 	SimulatedTrajectories.Reserve((Slider->GetMaxValue() - Slider->GetMinValue()) / AltitudeStep + 1);
 	for (float Altitude = Slider->GetMinValue(); Altitude <= Slider->GetMaxValue(); Altitude += AltitudeStep)
 	{
-		TSharedPtr<FNovaTrajectory> Trajectory = OrbitalSimulation->ComputeTrajectory(Parameters, Altitude);
+		FNovaTrajectory Trajectory = OrbitalSimulation->ComputeTrajectory(Parameters, Altitude);
 		SimulatedTrajectories.Add(Altitude, Trajectory);
 	}
 
 	// Pre-process the trajectory data for absolute minimas and maximas
-	for (const TPair<float, TSharedPtr<FNovaTrajectory>>& AltitudeAndTrajectory : SimulatedTrajectories)
+	for (const TPair<float, FNovaTrajectory>& AltitudeAndTrajectory : SimulatedTrajectories)
 	{
-		float                              Altitude   = AltitudeAndTrajectory.Key;
-		const TSharedPtr<FNovaTrajectory>& Trajectory = AltitudeAndTrajectory.Value;
+		float                  Altitude   = AltitudeAndTrajectory.Key;
+		const FNovaTrajectory& Trajectory = AltitudeAndTrajectory.Value;
 
 		if (Trajectory.IsValid())
 		{
-			double TotalTravelDuration = Trajectory->TotalTravelDuration.AsMinutes();
+			double TotalTravelDuration = Trajectory.TotalTravelDuration.AsMinutes();
 
-			if (FMath::IsFinite(Trajectory->TotalDeltaV) && FMath::IsFinite(TotalTravelDuration))
+			if (FMath::IsFinite(Trajectory.TotalDeltaV) && FMath::IsFinite(TotalTravelDuration))
 			{
-				if (Trajectory->TotalDeltaV < MinDeltaV)
+				if (Trajectory.TotalDeltaV < MinDeltaV)
 				{
-					MinDeltaV = Trajectory->TotalDeltaV;
+					MinDeltaV = Trajectory.TotalDeltaV;
 				}
-				if (Trajectory->TotalDeltaV > MaxDeltaV)
+				if (Trajectory.TotalDeltaV > MaxDeltaV)
 				{
-					MaxDeltaV = Trajectory->TotalDeltaV;
+					MaxDeltaV = Trajectory.TotalDeltaV;
 				}
 				if (TotalTravelDuration < MinDuration)
 				{
@@ -334,18 +334,17 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(const TSharedPtr<struct FNo
 
 	// Pre-process the trajectory data again for a smarter minimum delta-V
 	float MinDurationWithinMinDeltaV = FLT_MAX;
-	for (const TPair<float, TSharedPtr<FNovaTrajectory>>& AltitudeAndTrajectory : SimulatedTrajectories)
+	for (const TPair<float, FNovaTrajectory>& AltitudeAndTrajectory : SimulatedTrajectories)
 	{
-		float                              Altitude   = AltitudeAndTrajectory.Key;
-		const TSharedPtr<FNovaTrajectory>& Trajectory = AltitudeAndTrajectory.Value;
+		float                  Altitude   = AltitudeAndTrajectory.Key;
+		const FNovaTrajectory& Trajectory = AltitudeAndTrajectory.Value;
 
-		if (Trajectory.IsValid() && FMath::IsFinite(Trajectory->TotalDeltaV) &&
-			FMath::IsFinite(Trajectory->TotalTravelDuration.AsMinutes()))
+		if (Trajectory.IsValid() && FMath::IsFinite(Trajectory.TotalDeltaV) && FMath::IsFinite(Trajectory.TotalTravelDuration.AsMinutes()))
 		{
-			if (Trajectory->TotalDeltaV < 1.001f * MinDeltaV && Trajectory->TotalTravelDuration.AsMinutes() < MinDurationWithinMinDeltaV)
+			if (Trajectory.TotalDeltaV < 1.001f * MinDeltaV && Trajectory.TotalTravelDuration.AsMinutes() < MinDurationWithinMinDeltaV)
 			{
-				MinDeltaVWithTolerance     = Trajectory->TotalDeltaV;
-				MinDurationWithinMinDeltaV = Trajectory->TotalTravelDuration.AsMinutes();
+				MinDeltaVWithTolerance     = Trajectory.TotalDeltaV;
+				MinDurationWithinMinDeltaV = Trajectory.TotalTravelDuration.AsMinutes();
 				MinDeltaVAltitude          = Altitude;
 			}
 		}
@@ -397,18 +396,14 @@ bool SNovaTrajectoryCalculator::CanEditTrajectory() const
 
 FText SNovaTrajectoryCalculator::GetDeltaVText() const
 {
-	const TSharedPtr<FNovaTrajectory>* TrajectoryPtr = SimulatedTrajectories.Find(CurrentAltitude);
-	if (TrajectoryPtr)
+	const FNovaTrajectory* Trajectory = SimulatedTrajectories.Find(CurrentAltitude);
+	if (Trajectory && Trajectory->IsValid())
 	{
-		const TSharedPtr<FNovaTrajectory>& Trajectory = *TrajectoryPtr;
-		if (Trajectory.IsValid())
-		{
-			FNumberFormattingOptions NumberOptions;
-			NumberOptions.SetMaximumFractionalDigits(1);
+		FNumberFormattingOptions NumberOptions;
+		NumberOptions.SetMaximumFractionalDigits(1);
 
-			return FText::FormatNamed(
-				LOCTEXT("DeltaVFormat", "{deltav} m/s"), TEXT("deltav"), FText::AsNumber(Trajectory->TotalDeltaV, &NumberOptions));
-		}
+		return FText::FormatNamed(
+			LOCTEXT("DeltaVFormat", "{deltav} m/s"), TEXT("deltav"), FText::AsNumber(Trajectory->TotalDeltaV, &NumberOptions));
 	}
 
 	return LOCTEXT("InvalidDeltaV", "No trajectory");
@@ -416,14 +411,10 @@ FText SNovaTrajectoryCalculator::GetDeltaVText() const
 
 FText SNovaTrajectoryCalculator::GetDurationText() const
 {
-	const TSharedPtr<FNovaTrajectory>* TrajectoryPtr = SimulatedTrajectories.Find(CurrentAltitude);
-	if (TrajectoryPtr)
+	const FNovaTrajectory* Trajectory = SimulatedTrajectories.Find(CurrentAltitude);
+	if (Trajectory && Trajectory->IsValid())
 	{
-		const TSharedPtr<FNovaTrajectory>& Trajectory = *TrajectoryPtr;
-		if (Trajectory.IsValid())
-		{
-			return ::GetDurationText(Trajectory->TotalTravelDuration, 2);
-		}
+		return ::GetDurationText(Trajectory->TotalTravelDuration, 2);
 	}
 
 	return LOCTEXT("InvalidDuration", "No trajectory");
@@ -436,8 +427,8 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 
 	FString TrajectoryDetails;
 
-	const TSharedPtr<FNovaTrajectory>* TrajectoryPtr = SimulatedTrajectories.Find(CurrentAltitude);
-	if (TrajectoryPtr)
+	const FNovaTrajectory* Trajectory = SimulatedTrajectories.Find(CurrentAltitude);
+	if (Trajectory)
 	{
 		bool HasEnoughPropellant = true;
 
@@ -458,8 +449,7 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 
 					// Process remaining propellant
 					float PropellantRemaining = PropellantSystem->GetCurrentPropellantMass();
-					float PropellantUsed =
-						(*TrajectoryPtr)->GetTotalPropellantUsed(CurrentSpacecraftIndex, Spacecraft->GetPropulsionMetrics());
+					float PropellantUsed = Trajectory->GetTotalPropellantUsed(CurrentSpacecraftIndex, Spacecraft->GetPropulsionMetrics());
 					if (HasEnoughPropellant && PropellantUsed > PropellantRemaining)
 					{
 						HasEnoughPropellant = false;
@@ -486,7 +476,7 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 			}
 		}
 
-		OnTrajectoryChanged.ExecuteIfBound(*TrajectoryPtr, HasEnoughPropellant);
+		OnTrajectoryChanged.ExecuteIfBound(*Trajectory, HasEnoughPropellant);
 	}
 
 	PropellantText->SetText(FText::FromString(TrajectoryDetails));

@@ -33,7 +33,7 @@ FNovaOrbit FNovaTrajectory::GetFinalOrbit() const
 	return FNovaOrbit(FinalGeometry, GetArrivalTime());
 }
 
-double FNovaTrajectory::GetTotalPropellantUsed(int32 SpacecraftIndex, const FNovaSpacecraftPropulsionMetrics& Metrics)
+double FNovaTrajectory::GetTotalPropellantUsed(int32 SpacecraftIndex, const FNovaSpacecraftPropulsionMetrics& Metrics) const
 {
 	double PropellantUsed = 0;
 
