@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
+#include "NovaAsteroidSimulationComponent.h"
+
 #include "NovaAsteroid.generated.h"
 
 /** Physical asteroid representation */
@@ -23,11 +25,23 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	/** Setup the asteroid effects */
-	void Initialize(const struct FNovaAsteroid& Asteroid);
+	void Initialize(const FNovaAsteroid& InAsteroid);
+
+	/** Check for assets loading */
+	bool IsLoadingAssets() const
+	{
+		return LoadingAssets;
+	}
 
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
+
+	/** Finish spawning */
+	void PostLoadInitialize();
+
+	/** Run the movement process */
+	void ProcessMovement();
 
 	/*----------------------------------------------------
 	    Components
@@ -43,4 +57,7 @@ protected:
 	----------------------------------------------------*/
 
 private:
+	// General state
+	bool          LoadingAssets;
+	FNovaAsteroid Asteroid;
 };

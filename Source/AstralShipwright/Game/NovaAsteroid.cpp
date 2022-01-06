@@ -1,7 +1,11 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaAsteroid.h"
-#include "NovaAsteroidSimulationComponent.h"
+
+#include "NovaGameState.h"
+#include "NovaOrbitalSimulationComponent.h"
+
+#include "System/NovaAssetManager.h"
 
 #include "Components/StaticMeshComponent.h"
 
@@ -9,103 +13,73 @@
     Constructor
 ----------------------------------------------------*/
 
-ANovaAsteroid::ANovaAsteroid() : Super()
+ANovaAsteroid::ANovaAsteroid() : Super(), LoadingAssets(false)
 {
 	// Create the main mesh
 	AsteroidMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Asteroid"));
 	SetRootComponent(AsteroidMesh);
 
 	// Defaults
-	SetActorTickEnabled(true);
+	PrimaryActorTick.bCanEverTick = true;
 	SetReplicates(false);
 	bAlwaysRelevant = true;
 }
 
 /*----------------------------------------------------
-    Internals
+    Interface
 ----------------------------------------------------*/
 
 void ANovaAsteroid::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// float CollisionSize = AsteroidMesh->GetCollisionShape().GetExtent().Size();
-
-	//// Get player ship
-	// AFlareGame* Game = Cast<AFlareGame>(GetWorld()->GetAuthGameMode());
-	// FCHECK(Game);
-	// AFlarePlayerController* PC = Game->GetPC();
-	// FCHECK(PC);
-	// AFlareSpacecraft* ShipPawn = PC->GetShipPawn();
-
-	//// Update if close to player and visible
-	// if (GetWorld()->TimeSeconds - GetLastRenderTime() < 0.5)
-	//{
-	//	// World data
-	//	FVector AsteroidLocation = GetActorLocation();
-	//	FVector SunDirection     = Game->GetPlanetarium()->GetSunDirection();
-	//	SunDirection.Normalize();
-
-	//	// Compute new FX locations
-	//	for (int32 Index = 0; Index < Effects.Num(); Index++)
-	//	{
-	//		FVector RandomDirection = FVector::CrossProduct(SunDirection, EffectsKernels[Index]);
-	//		RandomDirection.Normalize();
-	//		FVector StartPoint = AsteroidLocation + RandomDirection * CollisionSize;
-
-	//		// Trace params
-	//		FHitResult            HitResult(ForceInit);
-	//		FCollisionQueryParams TraceParams(FName(TEXT("Asteroid Trace")), false, NULL);
-	//		TraceParams.bTraceComplex           = true;
-	//		TraceParams.bReturnPhysicalMaterial = false;
-	//		ECollisionChannel CollisionChannel  = ECollisionChannel::ECC_WorldDynamic;
-
-	//		// Trace
-	//		bool FoundHit = GetWorld()->LineTraceSingleByChannel(HitResult, StartPoint, AsteroidLocation, CollisionChannel, TraceParams);
-	//		if (FoundHit && HitResult.Component == this && Effects[Index])
-	//		{
-	//			FVector EffectLocation = HitResult.Location;
-
-	//			if (!Effects[Index]->IsActive())
-	//			{
-	//				Effects[Index]->Activate();
-	//			}
-	//			Effects[Index]->SetWorldLocation(EffectLocation);
-	//			Effects[Index]->SetWorldRotation(SunDirection.Rotation());
-	//		}
-	//		else
-	//		{
-	//			Effects[Index]->Deactivate();
-	//		}
-	//	}
-	//}
-
-	//// Disable all
-	// else
-	//{
-	//	for (int32 Index = 0; Index < Effects.Num(); Index++)
-	//	{
-	//		Effects[Index]->Deactivate();
-	//	}
-	//}
+	if (!IsLoadingAssets())
+	{
+		ProcessMovement();
+	}
 }
 
-void ANovaAsteroid::Initialize(const FNovaAsteroid& Asteroid)
+void ANovaAsteroid::Initialize(const FNovaAsteroid& InAsteroid)
 {
-	// Effects.Empty();
-	// EffectsKernels.Empty();
+	// Initialize to safe defaults
+	LoadingAssets = true;
+	Asteroid      = InAsteroid;
+	SetActorLocation(FVector(0, 0, -1000 * 1000 * 100));
 
-	// int32 Multiplier = Asteroid ? Asteroid->EffectsMultiplier : 1;
+	// Load assets and resume initializing later
+	UNovaAssetManager::Get()->LoadAssets({Asteroid.Mesh.ToSoftObjectPath(), Asteroid.DustEffect.ToSoftObjectPath()},
+		FStreamableDelegate::CreateUObject(this, &ANovaAsteroid::PostLoadInitialize));
+}
 
-	//// Create random effects
-	// for (int32 Index = 0; Index < Multiplier * EffectsCount; Index++)
-	//{
-	//	EffectsKernels.Add(FMath::VRand());
+/*----------------------------------------------------
+    Internals
+----------------------------------------------------*/
 
-	//	UParticleSystemComponent* PSC = UGameplayStatics::SpawnEmitterAttached(
-	//		DustEffect, this, NAME_None, GetActorLocation(), FRotator::ZeroRotator, EAttachLocation::KeepWorldPosition, false);
+void ANovaAsteroid::PostLoadInitialize()
+{
+	NLOG("ANovaAsteroid::PostLoadInitialize : ready to show '%s'", *Asteroid.Identifier.ToString(EGuidFormats::Short));
+	AsteroidMesh->SetStaticMesh(Asteroid.Mesh.Get());
+	LoadingAssets = false;
+}
 
-	//	PSC->SetWorldScale3D(EffectsScale * FVector(1, 1, 1));
-	//	Effects.Add(PSC);
-	//}
+void ANovaAsteroid::ProcessMovement()
+{
+	// Get basic game state pointers
+	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(GameState);
+	const UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
+	NCHECK(OrbitalSimulation);
+
+	// Get locations
+	const FVector2D PlayerLocation       = OrbitalSimulation->GetPlayerCartesianLocation();
+	const FVector2D AsteroidLocation     = OrbitalSimulation->GetAsteroidLocation(Asteroid.Identifier).GetCartesianLocation();
+	FVector2D       LocationInKilometers = AsteroidLocation - PlayerLocation;
+
+	// Transform the location accounting for angle and scale
+	const FVector2D PlayerDirection       = PlayerLocation.GetSafeNormal();
+	double          PlayerAngle           = 180 + FMath::RadiansToDegrees(FMath::Atan2(PlayerDirection.X, PlayerDirection.Y));
+	LocationInKilometers                  = LocationInKilometers.GetRotated(PlayerAngle);
+	const FVector RelativeOrbitalLocation = FVector(0, -LocationInKilometers.X, LocationInKilometers.Y) * 1000 * 100;
+
+	SetActorLocation(RelativeOrbitalLocation);
 }

@@ -66,7 +66,7 @@ void UNovaAsteroidSimulationComponent::TickComponent(float DeltaTime, ELevelTick
 			else if (DistanceFromPlayer > AsteroidDespawnDistanceKm)
 			{
 				ANovaAsteroid** AsteroidEntry = PhysicalAsteroidDatabase.Find(IdentifierAndLocation.Key);
-				if (AsteroidEntry)
+				if (AsteroidEntry && !(*AsteroidEntry)->IsLoadingAssets())
 				{
 					NLOG("UNovaAsteroidSimulationComponent::TickComponent : removing '%s'",
 						*IdentifierAndLocation.Key.ToString(EGuidFormats::Short));
