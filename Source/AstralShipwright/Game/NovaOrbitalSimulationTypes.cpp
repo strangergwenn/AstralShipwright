@@ -65,7 +65,6 @@ FVector2D FNovaTrajectory::GetCartesianLocation(FNovaTime CurrentTime) const
 	FNovaOrbit PreviousTransfer;
 	FNovaOrbit CurrentTransfer       = InitialOrbit;
 	bool       HasFoundValidTransfer = false;
-	bool       IsOnLastTransfer      = false;
 
 	// Find the current transfer
 	for (int32 TransferIndex = 0; TransferIndex < Transfers.Num(); TransferIndex++)
@@ -77,18 +76,25 @@ FVector2D FNovaTrajectory::GetCartesianLocation(FNovaTime CurrentTime) const
 			PreviousTransfer      = CurrentTransfer;
 			CurrentTransfer       = Transfer;
 			HasFoundValidTransfer = true;
-
-			if (TransferIndex == Transfers.Num() - 1)
-			{
-				IsOnLastTransfer = true;
-			}
 		}
 	}
 
 	if (HasFoundValidTransfer)
 	{
 		FNovaOrbitalLocation CurrentSimulatedLocation = CurrentTransfer.GetLocation(CurrentTime);
-		const FNovaManeuver* CurrentManeuver          = GetManeuver(CurrentTime);
+
+		// Get the current maneuver
+		bool                 IsOnLastManeuver = false;
+		const FNovaManeuver* CurrentManeuver  = nullptr;
+		for (int32 ManeuverIndex = 0; ManeuverIndex < Maneuvers.Num(); ManeuverIndex++)
+		{
+			const FNovaManeuver& Maneuver = Maneuvers[ManeuverIndex];
+			if (Maneuver.Time <= CurrentTime && CurrentTime <= Maneuver.Time + Maneuver.Duration)
+			{
+				CurrentManeuver  = &Maneuver;
+				IsOnLastManeuver = ManeuverIndex == Maneuvers.Num() - 1;
+			}
+		}
 
 		// Trajectories are computed as a series of transfers with instantaneous maneuvers between them.
 		// This is accurate enough for simulation, but is not acceptable for movement, which this method is responsible for.
@@ -98,7 +104,7 @@ FVector2D FNovaTrajectory::GetCartesianLocation(FNovaTime CurrentTime) const
 			FVector2D StartLocation;
 			FVector2D EndLocation;
 
-			if (IsOnLastTransfer)
+			if (IsOnLastManeuver)
 			{
 				StartLocation = CurrentSimulatedLocation.GetCartesianLocation();
 				EndLocation   = GetFinalOrbit().GetLocation(CurrentTime).GetCartesianLocation();
