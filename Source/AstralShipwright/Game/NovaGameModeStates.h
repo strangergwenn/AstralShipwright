@@ -11,6 +11,7 @@
 #include "Player/NovaPlayerController.h"
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
+#include "System/NovaAssetManager.h"
 
 #include "Nova.h"
 
@@ -289,20 +290,29 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
-		PC->SharedTransition(ENovaPlayerCameraState::CinematicEnvironment,
-			FNovaAsyncAction::CreateLambda(
-				[&]()
-				{
-					TPair<const UNovaArea*, float> NearestAreaAndDistance = OrbitalSimulationComponent->GetPlayerNearestAreaAndDistance();
-					GameMode->ChangeArea(NearestAreaAndDistance.Key);
-				}));
+		TPair<const UNovaArea*, float> NearestAreaAndDistance = OrbitalSimulationComponent->GetPlayerNearestAreaAndDistance();
+
+		// Below 10km distance, we assume this 100% has to be a station
+		// TODO : this won't work with spacecraft and so a travel target needs to be known
+		IsStillInSpace = NearestAreaAndDistance.Value > 10;
+
+		// If we're nearing a station, show the cinematic cutscene, else skip straight to coast state
+		if (!IsStillInSpace)
+		{
+			PC->SharedTransition(ENovaPlayerCameraState::CinematicEnvironment,    //
+				FNovaAsyncAction::CreateLambda(
+					[&, NearestAreaAndDistance]()
+					{
+						GameMode->ChangeArea(NearestAreaAndDistance.Key);
+					}));
+		}
 	}
 
 	virtual ENovaGameStateIdentifier UpdateState() override
 	{
 		FNovaGameModeState::UpdateState();
 
-		if (GetSecondsInState() > ENovaGameModeStateTiming::AreaIntroductionDuration)
+		if (IsStillInSpace || GetSecondsInState() > ENovaGameModeStateTiming::AreaIntroductionDuration)
 		{
 			return ENovaGameStateIdentifier::ArrivalCoast;
 		}
@@ -311,6 +321,9 @@ public:
 			return ENovaGameStateIdentifier::ArrivalIntro;
 		}
 	}
+
+private:
+	bool IsStillInSpace;
 };
 
 // Arrival stage 2 : coast until proximity
