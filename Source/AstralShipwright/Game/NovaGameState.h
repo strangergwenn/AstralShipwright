@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
 
-#include "NovaAsteroid.h"
 #include "NovaOrbitalSimulationDatabases.h"
 
 #include "NovaGameState.generated.h"
@@ -180,16 +179,10 @@ public:
 	----------------------------------------------------*/
 
 	/** Get a specific asteroid */
-	const FNovaAsteroid* GetAsteroid(FGuid Identifier) const
-	{
-		return AsteroidDatabase.Find(Identifier);
-	}
+	const struct FNovaAsteroid* GetAsteroid(FGuid Identifier) const;
 
 	/** Get all asteroids */
-	const TMap<FGuid, FNovaAsteroid>& GetAsteroids() const
-	{
-		return AsteroidDatabase;
-	}
+	const TMap<FGuid, struct FNovaAsteroid>& GetAsteroids() const;
 
 	/*----------------------------------------------------
 	    Internals
@@ -250,9 +243,13 @@ protected:
 	----------------------------------------------------*/
 
 protected:
-	// Global orbital simulation manager
+	// Global orbital simulation component
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	class UNovaOrbitalSimulationComponent* OrbitalSimulationComponent;
+
+	// Asteroid simulation component
+	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
+	class UNovaAsteroidSimulationComponent* AsteroidSimulationComponent;
 
 	/*----------------------------------------------------
 	    Data
@@ -282,10 +279,6 @@ private:
 	// General state
 	UPROPERTY()
 	const class ANovaPlayerState* CurrentPlayerState;
-
-	// Asteroids
-	TMap<FGuid, FNovaAsteroid> AsteroidDatabase;
-	FNovaAsteroidSpawner       AsteroidSpawner;
 
 	// Time processing state
 	double ClientTime;

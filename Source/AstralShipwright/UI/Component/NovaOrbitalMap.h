@@ -5,8 +5,8 @@
 #include "UI/NovaUI.h"
 #include "Actor/NovaActorTools.h"
 
-#include "Game/NovaAsteroid.h"
 #include "Game/NovaGameTypes.h"
+#include "Game/NovaAsteroidSimulationComponent.h"
 #include "Game/NovaOrbitalSimulationComponent.h"
 
 #include "Widgets/SCompoundWidget.h"
@@ -121,7 +121,8 @@ struct FNovaOrbitalObject
 
 	bool operator==(const FNovaOrbitalObject& Other) const
 	{
-		return Area == Other.Area && SpacecraftIdentifier == Other.SpacecraftIdentifier && Maneuver == Other.Maneuver;
+		return Area == Other.Area && AsteroidIdentifier == Other.AsteroidIdentifier && SpacecraftIdentifier == Other.SpacecraftIdentifier &&
+			   Maneuver == Other.Maneuver;
 	}
 
 	bool operator!=(const FNovaOrbitalObject& Other) const

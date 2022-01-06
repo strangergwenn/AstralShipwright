@@ -6,7 +6,7 @@
 #include "Components/ActorComponent.h"
 
 #include "NovaArea.h"
-#include "NovaAsteroid.h"
+#include "NovaAsteroidSimulationComponent.h"
 #include "NovaOrbitalSimulationTypes.h"
 #include "NovaOrbitalSimulationDatabases.h"
 

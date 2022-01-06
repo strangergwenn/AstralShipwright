@@ -4,6 +4,7 @@
 
 #include "NovaArea.h"
 #include "NovaGameTypes.h"
+#include "NovaAsteroidSimulationComponent.h"
 #include "NovaOrbitalSimulationComponent.h"
 
 #include "Actor/NovaActorTools.h"
@@ -45,7 +46,8 @@ ANovaGameState::ANovaGameState()
 	, TimeSinceEvent(0)
 {
 	// Setup simulation component
-	OrbitalSimulationComponent = CreateDefaultSubobject<UNovaOrbitalSimulationComponent>(TEXT("OrbitalSimulationComponent"));
+	OrbitalSimulationComponent  = CreateDefaultSubobject<UNovaOrbitalSimulationComponent>(TEXT("OrbitalSimulationComponent"));
+	AsteroidSimulationComponent = CreateDefaultSubobject<UNovaAsteroidSimulationComponent>(TEXT("AsteroidSimulationComponent"));
 
 	// Settings
 	bReplicates = true;
@@ -151,19 +153,10 @@ void ANovaGameState::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Startup the asteroid spawner
+	// Startup the asteroid manager
 	UNovaAssetManager* AssetManager = GetGameInstance<UNovaGameInstance>()->GetAssetManager();
 	NCHECK(AssetManager);
-	AsteroidSpawner.Start(AssetManager->GetDefaultAsset<UNovaAsteroidConfiguration>());
-	AsteroidDatabase.Empty();
-
-	// Spawn asteroids
-	FNovaAsteroid NewAsteroid;
-	double        Altitude, Phase;
-	while (AsteroidSpawner.GetNextAsteroid(Altitude, Phase, NewAsteroid))
-	{
-		AsteroidDatabase.Add(NewAsteroid.Identifier, NewAsteroid);
-	}
+	AsteroidSimulationComponent->Initialize(AssetManager->GetDefaultAsset<UNovaAsteroidConfiguration>());
 }
 
 void ANovaGameState::Tick(float DeltaTime)
@@ -468,6 +461,16 @@ void ANovaGameState::SetTimeDilation(ENovaTimeDilation Dilation)
 bool ANovaGameState::CanDilateTime(ENovaTimeDilation Dilation) const
 {
 	return GetLocalRole() == ROLE_Authority;
+}
+
+const FNovaAsteroid* ANovaGameState::GetAsteroid(FGuid Identifier) const
+{
+	return AsteroidSimulationComponent->GetAsteroidDatabase().Find(Identifier);
+}
+
+const TMap<FGuid, FNovaAsteroid>& ANovaGameState::GetAsteroids() const
+{
+	return AsteroidSimulationComponent->GetAsteroidDatabase();
 }
 
 /*----------------------------------------------------

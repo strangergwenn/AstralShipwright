@@ -2,73 +2,45 @@
 
 #pragma once
 
-#include "EngineMinimal.h"
-#include "NovaGameTypes.h"
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+
 #include "NovaAsteroid.generated.h"
 
-/** Asteroid catalog & metadata */
+/** Physical asteroid representation */
 UCLASS(ClassGroup = (Nova))
-class UNovaAsteroidConfiguration : public UNovaAssetDescription
+class ANovaAsteroid : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	// Body orbited
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	const class UNovaCelestialBody* Body;
+	ANovaAsteroid();
 
-	// Total amount of asteroids to spawn in the entire game
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	int32 TotalAsteroidCount;
+	/*----------------------------------------------------
+	    Interface
+	----------------------------------------------------*/
 
-	// Orbital altitude distribution
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	const class UCurveFloat* AltitudeDistribution;
+	virtual void Tick(float DeltaTime) override;
 
-	// Meshes to use on asteroids
-	UPROPERTY(Category = Assets, EditDefaultsOnly)
-	TArray<TSoftObjectPtr<class UStaticMesh>> Meshes;
-};
+	/** Setup the asteroid effects */
+	void Initialize(const struct FNovaAsteroid& Asteroid);
 
-/** Asteroid data object */
-struct FNovaAsteroid
-{
-	FNovaAsteroid() : Identifier(FGuid::NewGuid()), Body(nullptr), Altitude(0), Phase(0), Mesh()
-	{}
+	/*----------------------------------------------------
+	    Internals
+	----------------------------------------------------*/
 
-	FNovaAsteroid(FRandomStream& RandomStream, const class UNovaCelestialBody* B, double A, double P)
-		: Identifier(FGuid(RandomStream.RandHelper(MAX_int32), RandomStream.RandHelper(MAX_int32), RandomStream.RandHelper(MAX_int32),
-			  RandomStream.RandHelper(MAX_int32)))
-		, Body(B)
-		, Altitude(A)
-		, Phase(P)
-		, Mesh()
-	{}
+	/*----------------------------------------------------
+	    Components
+	----------------------------------------------------*/
 
-	// Identifier
-	FGuid Identifier;
+protected:
+	// Main asteroid mesh
+	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
+	class UStaticMeshComponent* AsteroidMesh;
 
-	// Orbital parameters
-	const class UNovaCelestialBody* Body;
-	double                          Altitude;
-	double                          Phase;
-
-	// Physical characteristics
-	TSoftObjectPtr<class UStaticMesh> Mesh;
-};
-
-/** Asteroid spawning helper */
-struct FNovaAsteroidSpawner
-{
-	/** Reset the spawner */
-	void Start(const UNovaAsteroidConfiguration* Configuration);
-
-	/** Check if a new asteroid can be created and get its details */
-	bool GetNextAsteroid(double& Altitude, double& Phase, FNovaAsteroid& Asteroid);
+	/*----------------------------------------------------
+	    Data
+	----------------------------------------------------*/
 
 private:
-	const UNovaAsteroidConfiguration* AsteroidConfiguration;
-	int32                             SpawnedAsteroids;
-	FRandomStream                     RandomStream;
-	TMultiMap<int32, double>          IntegralToAltitudeTable;
 };
