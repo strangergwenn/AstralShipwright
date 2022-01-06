@@ -9,7 +9,7 @@
 #include "NovaSessionsManager.h"
 
 #include "Game/NovaGameState.h"
-#include "Game/NovaGameUserSettings.h"
+#include "Game/Settings/NovaGameUserSettings.h"
 #include "Player/NovaPlayerController.h"
 #include "Player/NovaGameViewportClient.h"
 

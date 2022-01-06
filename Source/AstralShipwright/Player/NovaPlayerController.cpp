@@ -9,8 +9,8 @@
 
 #include "Game/NovaGameMode.h"
 #include "Game/NovaGameState.h"
-#include "Game/NovaGameUserSettings.h"
-#include "Game/NovaWorldSettings.h"
+#include "Game/Settings/NovaGameUserSettings.h"
+#include "Game/Settings/NovaWorldSettings.h"
 
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"

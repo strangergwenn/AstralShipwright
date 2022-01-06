@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "NovaStaticMeshComponent.h"
+#include "Actor/NovaStaticMeshComponent.h"
 
 #include "NovaStationDockComponent.generated.h"
 

@@ -1,9 +1,9 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaStationRingComponent.h"
-#include "NovaPlayerStart.h"
 
 #include "Actor/NovaActorTools.h"
+#include "Actor/NovaPlayerStart.h"
 
 #include "Spacecraft/NovaSpacecraftCompartmentComponent.h"
 #include "Spacecraft/NovaSpacecraftHatchComponent.h"

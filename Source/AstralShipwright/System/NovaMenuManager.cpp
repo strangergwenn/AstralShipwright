@@ -2,7 +2,7 @@
 
 #include "NovaMenuManager.h"
 
-#include "Game/NovaWorldSettings.h"
+#include "Game/Settings/NovaWorldSettings.h"
 #include "Player/NovaGameViewportClient.h"
 #include "Player/NovaPlayerController.h"
 
