@@ -245,7 +245,7 @@ public:
 	}
 };
 
-// Departure stage 2 : pit state, wait until we fast-forward or arrive naturally
+// Departure stage 2 : wait until we fast-forward or arrive naturally
 class FNovaDepartureCoastState : public FNovaGameModeState
 {
 public:
@@ -290,11 +290,10 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
-		TPair<const UNovaArea*, float> NearestAreaAndDistance = OrbitalSimulationComponent->GetPlayerNearestAreaAndDistance();
-
 		// Below 10km distance, we assume this 100% has to be a station
 		// TODO : this won't work with spacecraft and so a travel target needs to be known
-		IsStillInSpace = NearestAreaAndDistance.Value > 10;
+		auto NearestAreaAndDistance = OrbitalSimulationComponent->GetPlayerNearestAreaAndDistance();
+		IsStillInSpace              = NearestAreaAndDistance.Value > 10;
 
 		// If we're nearing a station, show the cinematic cutscene, else skip straight to coast state
 		if (!IsStillInSpace)
@@ -369,7 +368,12 @@ public:
 
 		IsWaitingDelay = false;
 
-		PC->SharedTransition(ENovaPlayerCameraState::CinematicSpacecraft,    //
+		// Below 10km distance, we assume this 100% has to be a station
+		// TODO : this won't work with spacecraft and so a travel target needs to be known
+		auto NearestAreaAndDistance = OrbitalSimulationComponent->GetPlayerNearestAreaAndDistance();
+		bool IsStillInSpace         = NearestAreaAndDistance.Value > 10;
+
+		PC->SharedTransition(IsStillInSpace ? ENovaPlayerCameraState::None : ENovaPlayerCameraState::CinematicSpacecraft,
 			FNovaAsyncAction::CreateLambda(
 				[&]()
 				{

@@ -549,6 +549,11 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 		case ENovaPlayerCameraState::FastForward:
 			GetMenuManager()->CloseMenu(Action, Condition);
 			break;
+
+		// Unchanged states
+		default:
+		case ENovaPlayerCameraState::None:
+			break;
 	}
 }
 

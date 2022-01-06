@@ -18,11 +18,11 @@ UENUM()
 enum class ENovaPlayerCameraState : uint8
 {
 	Default,
-	Chase,
 	CinematicSpacecraft,
 	CinematicEnvironment,
 	FastForward,
-	PhotoMode
+	PhotoMode,
+	None
 };
 
 /** High level post processing targets */
