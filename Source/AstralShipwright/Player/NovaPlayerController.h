@@ -20,9 +20,9 @@ enum class ENovaPlayerCameraState : uint8
 	Default,
 	CinematicSpacecraft,
 	CinematicEnvironment,
+	CinematicOrbit,
 	FastForward,
-	PhotoMode,
-	None
+	PhotoMode
 };
 
 /** High level post processing targets */

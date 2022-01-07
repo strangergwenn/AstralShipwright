@@ -373,7 +373,7 @@ public:
 		auto NearestAreaAndDistance = OrbitalSimulationComponent->GetPlayerNearestAreaAndDistance();
 		bool IsStillInSpace         = NearestAreaAndDistance.Value > 10;
 
-		PC->SharedTransition(IsStillInSpace ? ENovaPlayerCameraState::None : ENovaPlayerCameraState::CinematicSpacecraft,
+		PC->SharedTransition(IsStillInSpace ? ENovaPlayerCameraState::CinematicOrbit : ENovaPlayerCameraState::CinematicSpacecraft,
 			FNovaAsyncAction::CreateLambda(
 				[&]()
 				{

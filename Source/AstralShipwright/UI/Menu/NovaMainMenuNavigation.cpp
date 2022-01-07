@@ -128,7 +128,7 @@ public:
 				}
 				else if (Object.AsteroidIdentifier != FGuid())
 				{
-					return FText::FromString(Object.AsteroidIdentifier.ToString(EGuidFormats::Short));
+					return FText::FromString(Object.AsteroidIdentifier.ToString(EGuidFormats::Short).ToUpper());
 				}
 				else if (Object.SpacecraftIdentifier != FGuid())
 				{
@@ -821,7 +821,7 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 			NLOG("SNovaMainMenuNavigation::SelectDestination : %s", *Asteroid->Identifier.ToString(EGuidFormats::Short));
 
 			HasValidDestination = true;
-			DestinationTitle->SetText(FText::FromString(Asteroid->Identifier.ToString(EGuidFormats::Short)));
+			DestinationTitle->SetText(FText::FromString(Asteroid->Identifier.ToString(EGuidFormats::Short).ToUpper()));
 			DestinationDescription->SetText(FText());
 		}
 	}
@@ -841,7 +841,9 @@ bool SNovaMainMenuNavigation::ComputeTrajectoryTo(const FNovaOrbit& Orbit)
 	{
 		DestinationOrbit = Orbit;
 
-		if (Orbit != OrbitalSimulation->GetAreaOrbit(GameState->GetCurrentArea()))
+		const FNovaOrbit* CurrentOrbit = OrbitalSimulation->GetPlayerOrbit();
+
+		if (CurrentOrbit && Orbit != *CurrentOrbit)
 		{
 			TrajectoryCalculator->SimulateTrajectories(
 				*OrbitalSimulation->GetPlayerOrbit(), Orbit, GameState->GetPlayerSpacecraftIdentifiers());
@@ -900,7 +902,8 @@ bool SNovaMainMenuNavigation::CanCommitTrajectoryInternal(FText* Details) const
 {
 	if (IsValid(OrbitalSimulation) && IsValid(GameState))
 	{
-		if (DestinationOrbit == OrbitalSimulation->GetAreaOrbit(GameState->GetCurrentArea()))
+		const FNovaOrbit* CurrentOrbit = OrbitalSimulation->GetPlayerOrbit();
+		if (CurrentOrbit && DestinationOrbit == *CurrentOrbit)
 		{
 			if (Details)
 			{

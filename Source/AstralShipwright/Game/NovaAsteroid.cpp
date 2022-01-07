@@ -45,6 +45,7 @@ void ANovaAsteroid::Initialize(const FNovaAsteroid& InAsteroid)
 	LoadingAssets = true;
 	Asteroid      = InAsteroid;
 	SetActorLocation(FVector(0, 0, -1000 * 1000 * 100));
+	SetActorScale3D(50 * FVector(1, 1, 1));
 
 	// Load assets and resume initializing later
 	UNovaAssetManager::Get()->LoadAssets({Asteroid.Mesh.ToSoftObjectPath(), Asteroid.DustEffect.ToSoftObjectPath()},

@@ -161,6 +161,10 @@ void UNovaSpacecraftMovementComponent::Initialize(const ANovaPlayerStart* Start)
 	DockState.Actor = Start;
 	ResetState();
 
+	// Reset orbital values
+	CurrentOrbitalLocation  = FVector::ZeroVector;
+	PreviousOrbitalLocation = FVector::ZeroVector;
+
 	// Reset attitude
 	FTransform DesiredTransform = GetInitialTransform();
 	UpdatedComponent->SetWorldTransform(DesiredTransform);
@@ -732,7 +736,6 @@ FTransform UNovaSpacecraftMovementComponent::GetInitialTransform() const
 		if (NextManeuver)
 		{
 			FRotator DesiredRotation = DockState.Actor->GetInterfacePointDirection(NextManeuver->DeltaV).Rotation();
-			// FRotator DesiredRotation = DockState.Actor->GetOrbitalAxis().Rotation();
 
 			// Exit maneuver
 			if (Trajectory->GetFirstManeuverStartTime() > CurrentTime)
@@ -752,8 +755,7 @@ FTransform UNovaSpacecraftMovementComponent::GetInitialTransform() const
 			else
 			{
 				NLOG("UNovaSpacecraftMovementComponent::GetInitialTransform : enter maneuver");
-				return FTransform(DesiredRotation,
-					/*DockState.Actor->GetInterfacePointLocation(NextManeuver->DeltaV)*/ DockState.Actor->GetWaitingPointLocation());
+				return FTransform(DesiredRotation, DockState.Actor->GetWaitingPointLocation());
 			}
 		}
 	}

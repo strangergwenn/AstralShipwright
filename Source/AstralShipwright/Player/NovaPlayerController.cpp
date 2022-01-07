@@ -7,6 +7,7 @@
 #include "Actor/NovaActorTools.h"
 #include "Actor/NovaTurntablePawn.h"
 
+#include "Game/NovaAsteroid.h"
 #include "Game/NovaGameMode.h"
 #include "Game/NovaGameState.h"
 #include "Game/Settings/NovaGameUserSettings.h"
@@ -322,10 +323,15 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 
 	// During cutscenes, use the closest camera viewpoint and focus the player ship
 	if (IsReady() && (CurrentCameraState == ENovaPlayerCameraState::CinematicSpacecraft ||
-						 CurrentCameraState == ENovaPlayerCameraState::CinematicEnvironment))
+						 CurrentCameraState == ENovaPlayerCameraState::CinematicEnvironment ||
+						 CurrentCameraState == ENovaPlayerCameraState::CinematicOrbit))
 	{
+		// Get points of interest nearby
 		TArray<AActor*> Viewpoints;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaPlayerViewpoint::StaticClass(), Viewpoints);
+		TArray<AActor*> Asteroids;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
+		FVector PlayerLocation = GetPawn()->GetActorLocation();
 
 		// Get the first viewpoint actor and extract its transform
 		const ANovaPlayerViewpoint* PlayerViewpoint = nullptr;
@@ -341,7 +347,7 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 			Location = PlayerViewpoint->GetActorLocation();
 			if (CurrentCameraState == ENovaPlayerCameraState::CinematicSpacecraft)
 			{
-				Rotation = (GetPawn()->GetActorLocation() - Location).Rotation();
+				Rotation = (PlayerLocation - Location).Rotation();
 			}
 			else
 			{
@@ -352,6 +358,18 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 				Rotation +=
 					FRotator(0, AnimationAlpha * PlayerViewpoint->CameraPanAmount, AnimationAlpha * PlayerViewpoint->CameraTiltAmount);
 				Location += Rotation.Vector() * AnimationAlpha * PlayerViewpoint->CameraTravelingAmount;
+			}
+		}
+		else if (CurrentCameraState == ENovaPlayerCameraState::CinematicOrbit)
+		{
+			if (Asteroids.Num() > 0)
+			{
+				UNovaActorTools::SortActorsByClosestDistance(Asteroids, PlayerLocation);
+				FVector AsteroidLocation = Asteroids[0]->GetActorLocation();
+
+				Location = PlayerLocation + (PlayerLocation - AsteroidLocation).GetSafeNormal() * 10000;
+				Rotation = (AsteroidLocation - PlayerLocation).Rotation();
+				Rotation.Pitch -= 20;
 			}
 		}
 	}
@@ -546,13 +564,9 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 		// UI disabled states
 		case ENovaPlayerCameraState::CinematicSpacecraft:
 		case ENovaPlayerCameraState::CinematicEnvironment:
+		case ENovaPlayerCameraState::CinematicOrbit:
 		case ENovaPlayerCameraState::FastForward:
 			GetMenuManager()->CloseMenu(Action, Condition);
-			break;
-
-		// Unchanged states
-		default:
-		case ENovaPlayerCameraState::None:
 			break;
 	}
 }

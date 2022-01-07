@@ -522,7 +522,7 @@ void UNovaOrbitalSimulationComponent::AbortTrajectory(const TArray<FGuid>& Space
 	ProcessSpacecraftOrbits();
 	FVector2D EndLocation = GetPlayerLocation()->GetCartesianLocation();
 	NLOG("UNovaOrbitalSimulationComponent::SetOrbit : %f/%f -> %f/%f", StartLocation.X, StartLocation.Y, EndLocation.X, EndLocation.Y);
-	NCHECK(EndLocation == StartLocation);
+	NCHECK(FVector2D::Distance(EndLocation, StartLocation) < 0.1);
 }
 
 void UNovaOrbitalSimulationComponent::SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const FNovaOrbit& Orbit)
