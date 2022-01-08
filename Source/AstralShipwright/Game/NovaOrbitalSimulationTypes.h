@@ -202,7 +202,7 @@ struct FNovaOrbitalLocation
 	}
 
 	/** Get the linear distance between this location and another in km */
-	float GetDistanceTo(const FNovaOrbitalLocation& Other) const
+	double GetDistanceTo(const FNovaOrbitalLocation& Other) const
 	{
 		return (GetCartesianLocation() - Other.GetCartesianLocation()).Size();
 	}

@@ -244,24 +244,10 @@ public:
 	}
 
 	/** Get the closest area and the associated distance from an arbitrary location */
-	TPair<const UNovaArea*, float> GetNearestAreaAndDistance(const FNovaOrbitalLocation& Location) const;
+	TPair<const UNovaArea*, double> GetNearestAreaAndDistance(const FNovaOrbitalLocation& Location) const;
 
-	/** Get the closest area and the associated distance from the player*/
-	TPair<const UNovaArea*, float> GetPlayerNearestAreaAndDistance() const
-	{
-		const FNovaTrajectory*      PlayerTrajectory = GetPlayerTrajectory();
-		const FNovaOrbitalLocation* PlayerLocation   = GetPlayerLocation();
-
-		if (PlayerTrajectory)
-		{
-			if (PlayerLocation)
-			{
-				return GetNearestAreaAndDistance(*PlayerLocation);
-			}
-		}
-
-		return TPair<const UNovaArea*, float>(nullptr, MAX_FLT);
-	}
+	/** Get the closest area and the associated distance from the player when the current trajectory completes */
+	TPair<const UNovaArea*, double> GetPlayerNearestAreaAndDistanceAtArrival() const;
 
 	/** Get the current thrust factor for a spacecraft */
 	float GetCurrentSpacecraftThrustFactor(const FGuid& Identifier) const

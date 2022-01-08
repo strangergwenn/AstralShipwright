@@ -290,10 +290,8 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
-		// Below 10km distance, we assume this 100% has to be a station
-		// TODO : this won't work with spacecraft and so a travel target needs to be known
-		auto NearestAreaAndDistance = OrbitalSimulationComponent->GetPlayerNearestAreaAndDistance();
-		IsStillInSpace              = NearestAreaAndDistance.Value > 10;
+		auto NearestAreaAndDistance = OrbitalSimulationComponent->GetPlayerNearestAreaAndDistanceAtArrival();
+		IsStillInSpace              = NearestAreaAndDistance.Value > ENovaConstants::TrajectoryDistanceError;
 
 		// If we're nearing a station, show the cinematic cutscene, else skip straight to coast state
 		if (!IsStillInSpace)
@@ -368,10 +366,8 @@ public:
 
 		IsWaitingDelay = false;
 
-		// Below 10km distance, we assume this 100% has to be a station
-		// TODO : this won't work with spacecraft and so a travel target needs to be known
-		auto NearestAreaAndDistance = OrbitalSimulationComponent->GetPlayerNearestAreaAndDistance();
-		bool IsStillInSpace         = NearestAreaAndDistance.Value > 10;
+		auto NearestAreaAndDistance = OrbitalSimulationComponent->GetPlayerNearestAreaAndDistanceAtArrival();
+		bool IsStillInSpace         = NearestAreaAndDistance.Value > ENovaConstants::TrajectoryDistanceError;
 
 		PC->SharedTransition(IsStillInSpace ? ENovaPlayerCameraState::CinematicOrbit : ENovaPlayerCameraState::CinematicSpacecraft,
 			FNovaAsyncAction::CreateLambda(

@@ -460,12 +460,12 @@ void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& Sp
 		NLOG("UNovaOrbitalSimulationComponent::CompleteTrajectory : '%s' -> %f/%f", *Area->GetName(), AreaLocation.X, AreaLocation.Y);
 	}
 
-	// Be safe and only allow location snapping up to 100m
+	// Be safe
 	ProcessSpacecraftOrbits();
 	FVector2D EndLocation = GetPlayerLocation()->GetCartesianLocation();
 	NLOG("UNovaOrbitalSimulationComponent::CompleteTrajectory : %f/%f -> %f/%f", StartLocation.X, StartLocation.Y, EndLocation.X,
 		EndLocation.Y);
-	NCHECK(FVector2D::Distance(EndLocation, StartLocation) < 0.1);
+	NCHECK(FVector2D::Distance(EndLocation, StartLocation) < ENovaConstants::TrajectoryDistanceError);
 }
 
 void UNovaOrbitalSimulationComponent::AbortTrajectory(const TArray<FGuid>& SpacecraftIdentifiers)
@@ -522,7 +522,7 @@ void UNovaOrbitalSimulationComponent::AbortTrajectory(const TArray<FGuid>& Space
 	ProcessSpacecraftOrbits();
 	FVector2D EndLocation = GetPlayerLocation()->GetCartesianLocation();
 	NLOG("UNovaOrbitalSimulationComponent::SetOrbit : %f/%f -> %f/%f", StartLocation.X, StartLocation.Y, EndLocation.X, EndLocation.Y);
-	NCHECK(FVector2D::Distance(EndLocation, StartLocation) < 0.1);
+	NCHECK(FVector2D::Distance(EndLocation, StartLocation) < ENovaConstants::TrajectoryDistanceError);
 }
 
 void UNovaOrbitalSimulationComponent::SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const FNovaOrbit& Orbit)
@@ -653,14 +653,14 @@ const FNovaOrbitalLocation* UNovaOrbitalSimulationComponent::GetPlayerLocation()
 	}
 }
 
-TPair<const UNovaArea*, float> UNovaOrbitalSimulationComponent::GetNearestAreaAndDistance(const FNovaOrbitalLocation& Location) const
+TPair<const UNovaArea*, double> UNovaOrbitalSimulationComponent::GetNearestAreaAndDistance(const FNovaOrbitalLocation& Location) const
 {
 	const UNovaArea* ClosestArea     = nullptr;
-	float            ClosestDistance = MAX_FLT;
+	double           ClosestDistance = MAX_FLT;
 
 	for (const TPair<const UNovaArea*, FNovaOrbitalLocation>& Entry : AreaOrbitalLocations)
 	{
-		float Distance = Entry.Value.GetDistanceTo(Location);
+		double Distance = Entry.Value.GetDistanceTo(Location);
 		if (Distance < ClosestDistance)
 		{
 			ClosestArea     = Entry.Key;
@@ -669,6 +669,34 @@ TPair<const UNovaArea*, float> UNovaOrbitalSimulationComponent::GetNearestAreaAn
 	}
 
 	return TPair<const UNovaArea*, float>(ClosestArea, ClosestDistance);
+}
+
+TPair<const UNovaArea*, double> UNovaOrbitalSimulationComponent::GetPlayerNearestAreaAndDistanceAtArrival() const
+{
+	const UNovaArea* ClosestArea     = nullptr;
+	double           ClosestDistance = MAX_FLT;
+
+	const FNovaTrajectory* PlayerTrajectory = GetPlayerTrajectory();
+	if (PlayerTrajectory)
+	{
+		FNovaTime  ArrivalTime     = PlayerTrajectory->GetArrivalTime();
+		FNovaOrbit ArrivalOrbit    = PlayerTrajectory->GetFinalOrbit();
+		FVector2D  ArrivalLocation = ArrivalOrbit.GetLocation(ArrivalTime).GetCartesianLocation();
+
+		for (const UNovaArea* Area : Areas)
+		{
+			FVector2D AreaArrivalLocation = GetAreaOrbit(Area).GetLocation(ArrivalTime).GetCartesianLocation();
+			double    Distance            = FVector2D::Distance(ArrivalLocation, AreaArrivalLocation);
+
+			if (Distance < ClosestDistance)
+			{
+				ClosestArea     = Area;
+				ClosestDistance = Distance;
+			}
+		}
+	}
+
+	return TPair<const UNovaArea*, double>(ClosestArea, ClosestDistance);
 }
 
 /*----------------------------------------------------

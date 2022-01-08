@@ -26,7 +26,8 @@ constexpr float  SkirtCapacityMultiplier = 1.1f;
 const FDateTime ZeroTime     = FDateTime(2340, 2, 10, 8);
 const FString   DefaultLevel = TEXT("Space");
 
-constexpr float StandardGravity = 9.807f;
+constexpr float  StandardGravity         = 9.807f;
+constexpr double TrajectoryDistanceError = 0.1;
 
 };    // namespace ENovaConstants
 
