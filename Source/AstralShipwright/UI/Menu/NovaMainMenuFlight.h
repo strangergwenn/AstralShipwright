@@ -58,7 +58,6 @@ protected:
 	bool IsDockEnabled() const;
 
 	bool IsManeuveringEnabled() const;
-	bool IsMainDriveAvailable() const;
 
 	/*----------------------------------------------------
 	    Callbacks
@@ -71,7 +70,6 @@ protected:
 	void OnDock();
 
 	void OnAlignToManeuver();
-	void OnEnableMainDrive();
 
 	/*----------------------------------------------------
 	    Data
@@ -90,6 +88,5 @@ protected:
 	TSharedPtr<class SNovaButton> UndockButton;
 	TSharedPtr<class SNovaButton> DockButton;
 	TSharedPtr<class SNovaButton> AlignManeuverButton;
-	TSharedPtr<class SNovaButton> AuthorizeManeuverButton;
 	TSharedPtr<class SNovaButton> FastForwardButton;
 };

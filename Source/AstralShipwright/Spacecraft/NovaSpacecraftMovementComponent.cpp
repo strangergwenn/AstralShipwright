@@ -28,8 +28,6 @@
 UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	: Super()
 
-	, MainDriveEnabled(false)
-
 	, PreviousOrbitalLocation(FVector::ZeroVector)
 	, CurrentOrbitalLocation(FVector::ZeroVector)
 
@@ -294,35 +292,14 @@ bool UNovaSpacecraftMovementComponent::IsAlignedToNextManeuver() const
 	return false;
 }
 
-void UNovaSpacecraftMovementComponent::EnableMainDrive()
+bool UNovaSpacecraftMovementComponent::IsMainDriveEnabled() const
 {
-	NLOG("UNovaSpacecraftMovementComponent::EnableMainDrive ('%s')", *GetRoleString(this));
+	// Fetch the trajectory state
+	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(IsValid(GameState));
+	const FNovaTrajectory* PlayerTrajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
 
-	// Server
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		MainDriveEnabled = true;
-	}
-
-	// Authoritative client
-	else if (GetLocalRole() == ROLE_AutonomousProxy)
-	{
-		ServerEnableMainDrive();
-	}
-}
-
-void UNovaSpacecraftMovementComponent::DisableMainDrive()
-{
-	NLOG("UNovaSpacecraftMovementComponent::DisableMainDrive");
-
-	NCHECK(GetLocalRole() == ROLE_Authority);
-
-	MainDriveEnabled = false;
-}
-
-void UNovaSpacecraftMovementComponent::ServerEnableMainDrive_Implementation()
-{
-	EnableMainDrive();
+	return PlayerTrajectory && GetState() == ENovaMovementState::Idle && IsAlignedToNextManeuver();
 }
 
 /*----------------------------------------------------
@@ -750,7 +727,6 @@ void UNovaSpacecraftMovementComponent::GetLifetimeReplicatedProps(TArray<FLifeti
 	DOREPLIFETIME(UNovaSpacecraftMovementComponent, MovementCommand);
 	DOREPLIFETIME(UNovaSpacecraftMovementComponent, AttitudeCommand);
 	DOREPLIFETIME(UNovaSpacecraftMovementComponent, DockState);
-	DOREPLIFETIME(UNovaSpacecraftMovementComponent, MainDriveEnabled);
 }
 
 #undef LOCTEXT_NAMESPACE

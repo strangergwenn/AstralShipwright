@@ -159,17 +159,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
-						SNovaAssignNew(AuthorizeManeuverButton, SNovaButton)
-						.Text(LOCTEXT("AuthorizeManeuverButton", "Authorize maneuver"))
-						.HelpText(LOCTEXT("AuthorizeManeuverButtonHelp", "Allow the main drive to fire for maneuvers"))
-						.OnClicked(this, &SNovaMainMenuFlight::OnEnableMainDrive)
-						.Enabled(this, &SNovaMainMenuFlight::IsMainDriveAvailable)
-					]
-			
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNovaAssignNew(AuthorizeManeuverButton, SNovaButton)
+						SNovaNew(SNovaButton)
 						.Text(LOCTEXT("AbortFlightPlan", "Terminate flight plan"))
 						.HelpText(LOCTEXT("AbortTrajectoryHelp", "Terminate the current flight plan and stay on the current orbit"))
 						.OnClicked(FSimpleDelegate::CreateLambda([this]()
@@ -266,10 +256,6 @@ TSharedPtr<SNovaButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 	{
 		return AlignManeuverButton;
 	}
-	else if (IsMainDriveAvailable())
-	{
-		return AuthorizeManeuverButton;
-	}
 	else if (CanFastForward())
 	{
 		return FastForwardButton;
@@ -318,19 +304,6 @@ bool SNovaMainMenuFlight::IsManeuveringEnabled() const
 	return false;
 }
 
-bool SNovaMainMenuFlight::IsMainDriveAvailable() const
-{
-	if (OrbitalSimulation)
-	{
-		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
-
-		return PlayerTrajectory && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Idle &&
-			   SpacecraftMovement->IsAlignedToNextManeuver() && !SpacecraftMovement->IsMainDriveEnabled();
-	}
-
-	return false;
-}
-
 /*----------------------------------------------------
     Callbacks
 ----------------------------------------------------*/
@@ -361,14 +334,6 @@ void SNovaMainMenuFlight::OnAlignToManeuver()
 	if (IsValid(SpacecraftMovement))
 	{
 		SpacecraftMovement->AlignToNextManeuver();
-	}
-}
-
-void SNovaMainMenuFlight::OnEnableMainDrive()
-{
-	if (IsValid(SpacecraftMovement))
-	{
-		SpacecraftMovement->EnableMainDrive();
 	}
 }
 
