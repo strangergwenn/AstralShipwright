@@ -736,27 +736,7 @@ FTransform UNovaSpacecraftMovementComponent::GetInitialTransform() const
 		if (NextManeuver)
 		{
 			FRotator DesiredRotation = DockState.Actor->GetInterfacePointDirection(NextManeuver->DeltaV).Rotation();
-
-			// Exit maneuver
-			if (Trajectory->GetFirstManeuverStartTime() > CurrentTime)
-			{
-				NLOG("UNovaSpacecraftMovementComponent::GetInitialTransform : exit maneuver");
-				return FTransform(DesiredRotation, DockState.Actor->GetWaitingPointLocation());
-			}
-
-			// Orbiting between areas
-			else if (Trajectory && Trajectory->GetRemainingManeuverCount(CurrentTime) > 1)
-			{
-				NLOG("UNovaSpacecraftMovementComponent::GetInitialTransform : orbiting");
-				return FTransform(DesiredRotation, FVector::ZeroVector);
-			}
-
-			// Enter maneuver
-			else
-			{
-				NLOG("UNovaSpacecraftMovementComponent::GetInitialTransform : enter maneuver");
-				return FTransform(DesiredRotation, DockState.Actor->GetWaitingPointLocation());
-			}
+			return FTransform(DesiredRotation, DockState.Actor->GetWaitingPointLocation());
 		}
 	}
 
