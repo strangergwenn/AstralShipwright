@@ -159,15 +159,11 @@ void UNovaSpacecraftMovementComponent::Initialize(const ANovaPlayerStart* Start)
 	DockState.Actor = Start;
 	ResetState();
 
-	// Reset orbital values
-	CurrentOrbitalLocation  = FVector::ZeroVector;
-	PreviousOrbitalLocation = FVector::ZeroVector;
-
 	// Reset attitude
-	FTransform DesiredTransform = GetInitialTransform();
-	UpdatedComponent->SetWorldTransform(DesiredTransform);
-	AttitudeCommand.Location  = DesiredTransform.GetLocation();
-	AttitudeCommand.Direction = DesiredTransform.GetRotation().Vector();
+	FTransform InitialTransform = GetInitialTransform();
+	UpdatedComponent->SetWorldTransform(InitialTransform);
+	AttitudeCommand.Location  = InitialTransform.GetLocation();
+	AttitudeCommand.Direction = InitialTransform.GetRotation().Vector();
 
 	// Reset the attitude command
 	if (DockState.IsDocked)
@@ -474,6 +470,8 @@ void UNovaSpacecraftMovementComponent::ResetState()
 	PreviousAngularVelocity     = FVector::ZeroVector;
 	MeasuredAcceleration        = FVector::ZeroVector;
 	MeasuredAngularAcceleration = FVector::ZeroVector;
+	CurrentOrbitalLocation      = FVector::ZeroVector;
+	PreviousOrbitalLocation     = FVector::ZeroVector;
 }
 
 void UNovaSpacecraftMovementComponent::ProcessMeasurementsBeforeAttitude(float DeltaTime)
@@ -692,32 +690,23 @@ FVector UNovaSpacecraftMovementComponent::GetManeuverDirection() const
 
 FTransform UNovaSpacecraftMovementComponent::GetInitialTransform() const
 {
+	FTransform InitialTransform = UpdatedComponent->GetComponentTransform();
+
 	// Start docked
 	if (DockState.IsDocked)
 	{
 		NLOG("UNovaSpacecraftMovementComponent::GetInitialTransform : docked");
-		return DockState.Actor->GetActorTransform();
+		InitialTransform = DockState.Actor->GetActorTransform();
 	}
 
-	// Probably trajectory based
+	// Start at the dock interface
 	else
 	{
-		// Fetch the trajectory state
-		const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
-		NCHECK(IsValid(GameState));
-		FNovaTime              CurrentTime  = GameState->GetCurrentTime();
-		const FNovaTrajectory* Trajectory   = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
-		const FNovaManeuver*   NextManeuver = Trajectory ? Trajectory->GetNextManeuver(CurrentTime) : nullptr;
-
-		// Maneuver override
-		if (NextManeuver)
-		{
-			FRotator DesiredRotation = DockState.Actor->GetInterfacePointDirection(NextManeuver->DeltaV).Rotation();
-			return FTransform(DesiredRotation, DockState.Actor->GetWaitingPointLocation());
-		}
+		NLOG("UNovaSpacecraftMovementComponent::GetInitialTransform : at waiting point");
+		InitialTransform.SetLocation(DockState.Actor->GetWaitingPointLocation());
 	}
 
-	return DockState.Actor->GetActorTransform();
+	return InitialTransform;
 }
 
 void UNovaSpacecraftMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

@@ -248,7 +248,12 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 	if (Area != CurrentArea)
 	{
 		UnloadStreamingLevel(CurrentArea);
-		LoadStreamingLevel(Area);
+		LoadStreamingLevel(Area,    //
+			FSimpleDelegate::CreateLambda(
+				[this]()
+				{
+					ResetSpacecraft();
+				}));
 	}
 
 	ResetSpacecraft();

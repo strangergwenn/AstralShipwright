@@ -190,8 +190,6 @@ public:
 		}
 		else if (OrbitalSimulationComponent->IsPlayerPastFirstManeuver())
 		{
-			GameMode->ResetSpacecraft();
-
 			if (OrbitalSimulationComponent->IsPlayerNearingLastManeuver())
 			{
 				return ENovaGameStateIdentifier::ArrivalIntro;
@@ -203,8 +201,6 @@ public:
 		}
 		else
 		{
-			GameMode->ResetSpacecraft();
-
 			return ENovaGameStateIdentifier::Area;
 		}
 	}
