@@ -274,7 +274,7 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 	}
 
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	FNovaSplineStyle      OrbitStyle(Theme.PositiveColor);
+	FNovaSplineStyle      OrbitStyle(MenuManager->GetHighlightColor());
 	OrbitStyle.ColorInner = FLinearColor::Black;
 	OrbitStyle.WidthOuter = 5;
 	OrbitStyle.WidthInner = 1;
@@ -310,10 +310,10 @@ void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
 
 	// Style
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	FNovaSplineStyle      OrbitStyle(Theme.PositiveColor);
-	FNovaSplineStyle      ManeuverStyle(Theme.PositiveColor);
-	ManeuverStyle.WidthInner = 4.0f;
-	ManeuverStyle.WidthOuter = 4.0f;
+	FNovaSplineStyle      OrbitStyle(MenuManager->GetHighlightColor());
+	FNovaSplineStyle      ManeuverStyle = OrbitStyle;
+	ManeuverStyle.WidthInner            = 4.0f;
+	ManeuverStyle.WidthOuter            = 4.0f;
 
 	// Add the current trajectory
 	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
