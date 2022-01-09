@@ -250,23 +250,7 @@ public:
 	TPair<const UNovaArea*, double> GetPlayerNearestAreaAndDistanceAtArrival() const;
 
 	/** Get the current thrust factor for a spacecraft */
-	float GetCurrentSpacecraftThrustFactor(const FGuid& Identifier) const
-	{
-		const FNovaTrajectory* Trajectory = GetSpacecraftTrajectory(Identifier);
-
-		if (Trajectory)
-		{
-			const FNovaManeuver* Maneuver = Trajectory->GetManeuver(GetCurrentTime());
-			if (Maneuver)
-			{
-				int32 SpacecraftIndex = GetSpacecraftTrajectoryIndex(Identifier);
-				NCHECK(SpacecraftIndex != INDEX_NONE && SpacecraftIndex >= 0 && SpacecraftIndex < Maneuver->ThrustFactors.Num());
-				return Maneuver->ThrustFactors[SpacecraftIndex];
-			}
-		}
-
-		return 0;
-	}
+	float GetCurrentSpacecraftThrustFactor(const FGuid& Identifier, double SlackSeconds = 1.0) const;
 
 	/*----------------------------------------------------
 	    Internals

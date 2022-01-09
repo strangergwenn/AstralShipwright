@@ -699,6 +699,26 @@ TPair<const UNovaArea*, double> UNovaOrbitalSimulationComponent::GetPlayerNeares
 	return TPair<const UNovaArea*, double>(ClosestArea, ClosestDistance);
 }
 
+float UNovaOrbitalSimulationComponent::GetCurrentSpacecraftThrustFactor(const FGuid& Identifier, double SlackSeconds) const
+{
+	const FNovaTrajectory* Trajectory = GetSpacecraftTrajectory(Identifier);
+
+	if (Trajectory)
+	{
+		const FNovaManeuver* CurrentManeuver = Trajectory->GetManeuver(GetCurrentTime());
+		const FNovaManeuver* FutureManeuver  = Trajectory->GetManeuver(GetCurrentTime() + FNovaTime::FromSeconds(SlackSeconds));
+
+		if (CurrentManeuver && FutureManeuver)
+		{
+			int32 SpacecraftIndex = GetSpacecraftTrajectoryIndex(Identifier);
+			NCHECK(SpacecraftIndex != INDEX_NONE && SpacecraftIndex >= 0 && SpacecraftIndex < CurrentManeuver->ThrustFactors.Num());
+			return CurrentManeuver->ThrustFactors[SpacecraftIndex];
+		}
+	}
+
+	return 0;
+}
+
 /*----------------------------------------------------
     Internals
 ----------------------------------------------------*/

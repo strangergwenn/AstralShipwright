@@ -46,6 +46,7 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	LinearDeadDistance          = 1;
 	MaxLinearVelocity           = 50;
 	MaxSlowLinearAcceleration   = 10;
+	MaxDeltaVForThrusters       = 10;
 	AngularDeadDistance         = 0.5f;
 	MaxAngularVelocity          = 60;
 	AngularOvershootRatio       = 1.1f;
@@ -716,6 +717,30 @@ void UNovaSpacecraftMovementComponent::GetLifetimeReplicatedProps(TArray<FLifeti
 	DOREPLIFETIME(UNovaSpacecraftMovementComponent, MovementCommand);
 	DOREPLIFETIME(UNovaSpacecraftMovementComponent, AttitudeCommand);
 	DOREPLIFETIME(UNovaSpacecraftMovementComponent, DockState);
+}
+
+/*----------------------------------------------------
+    Getters
+----------------------------------------------------*/
+
+const FVector UNovaSpacecraftMovementComponent::GetThrusterAcceleration() const
+{
+	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(IsValid(GameState));
+
+	FVector Acceleration = MeasuredAcceleration;
+
+	const FNovaTrajectory* Trajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
+	if (Trajectory)
+	{
+		const FNovaManeuver* CurrentManeuver = Trajectory->GetManeuver(GameState->GetCurrentTime());
+		if (CurrentManeuver && CurrentManeuver->DeltaV < MaxDeltaVForThrusters)
+		{
+			Acceleration += GetManeuverDirection() * LinearAcceleration;
+		}
+	}
+
+	return Acceleration;
 }
 
 #undef LOCTEXT_NAMESPACE

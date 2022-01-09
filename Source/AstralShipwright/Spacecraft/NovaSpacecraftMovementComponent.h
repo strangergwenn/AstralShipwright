@@ -225,6 +225,10 @@ public:
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float MaxSlowLinearAcceleration;
 
+	// Maximum delta-V in m/s for which thrusters shall be enabled
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float MaxDeltaVForThrusters;
+
 	// Distance under which we consider stopped
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float AngularDeadDistance;
@@ -311,10 +315,7 @@ public:
 		return CurrentAngularVelocity;
 	}
 
-	const FVector GetThrusterAcceleration() const
-	{
-		return MeasuredAcceleration;
-	}
+	const FVector GetThrusterAcceleration() const;
 
 	const FVector GetThrusterAngularAcceleration() const
 	{
