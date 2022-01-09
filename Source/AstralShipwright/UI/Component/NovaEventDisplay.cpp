@@ -168,8 +168,8 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 							GetDurationText(TimeBeforeNextManeuver));
 
 						DetailsText    = SpacecraftMovement->IsMainDriveEnabled()
-										   ? LOCTEXT("ImminentManeuverAuthorized", "Spacecraft is authorized to maneuver")
-										   : LOCTEXT("ImminentManeuverNotAuthorized", "Spacecraft is not authorized to maneuver");
+										   ? LOCTEXT("ImminentManeuverAuthorized", "Spacecraft is ready to maneuver")
+										   : LOCTEXT("ImminentManeuverNotAuthorized", "Spacecraft is not ready to maneuver");
 						IsValidDetails = SpacecraftMovement->IsMainDriveEnabled();
 					}
 				}
