@@ -242,6 +242,10 @@ protected:
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float TrajectoryEarlyRequirement;
 
+	// Time in seconds to leave players before a maneuver
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	double TimeMarginBeforeManeuver;
+
 	/*----------------------------------------------------
 	    Components
 	----------------------------------------------------*/

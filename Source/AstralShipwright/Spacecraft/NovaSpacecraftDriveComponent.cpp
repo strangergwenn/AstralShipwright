@@ -66,7 +66,8 @@ void UNovaSpacecraftDriveComponent::TickComponent(float DeltaTime, ELevelTick Ti
 		float EngineIntensity = 0.0f;
 		if (IsValid(OrbitalSimulation) && IsValid(SpacecraftPawn) && !ParentMesh->IsDematerializing())
 		{
-			EngineIntensity = OrbitalSimulation->GetCurrentSpacecraftThrustFactor(SpacecraftPawn->GetSpacecraftIdentifier());
+			EngineIntensity =
+				OrbitalSimulation->GetCurrentSpacecraftThrustFactor(SpacecraftPawn->GetSpacecraftIdentifier(), FNovaTime::FromSeconds(0.8));
 		}
 
 		// Apply power

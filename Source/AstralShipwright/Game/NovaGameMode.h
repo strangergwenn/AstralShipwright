@@ -19,7 +19,6 @@ enum class ENovaGameStateIdentifier : uint8
 
 	// Arrival maneuvers
 	ArrivalIntro,
-	ArrivalCoast,
 	ArrivalProximity
 };
 
@@ -77,6 +76,12 @@ public:
 
 	/** Check if we are in orbit */
 	bool IsInOrbit() const;
+
+	/** Get how long of a warning to get before a maneuver */
+	FNovaTime GetManeuverWarnTime() const;
+
+	/** Get how long of a warning to get before arriving at a destination */
+	FNovaTime GetArrivalWarningTime() const;
 
 	/*----------------------------------------------------
 	    Internals

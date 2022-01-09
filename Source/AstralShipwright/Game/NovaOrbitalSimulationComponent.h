@@ -221,10 +221,18 @@ public:
 	/** Get the player location */
 	const FNovaOrbitalLocation* GetPlayerLocation() const;
 
-	/** Get the time left until a maneuver happens */
-	FNovaTime GetTimeLeftUntilPlayerManeuver() const
+	/** Get the time left until a trajectory starts */
+	FNovaTime GetTimeLeftUntilPlayerTrajectoryStart(FNovaTime TimeMargin = FNovaTime()) const
 	{
-		return GetTimeOfNextPlayerManeuver() - GetCurrentTime() - FNovaTime::FromMinutes(TimeMarginBeforeManeuver);
+		const FNovaTrajectory* Trajectory = GetPlayerTrajectory();
+
+		return Trajectory ? Trajectory->GetFirstManeuverStartTime() - GetCurrentTime() - TimeMargin : MAX_FLT;
+	}
+
+	/** Get the time left until a maneuver happens */
+	FNovaTime GetTimeLeftUntilPlayerManeuver(FNovaTime TimeMargin = FNovaTime()) const
+	{
+		return GetTimeOfNextPlayerManeuver() - GetCurrentTime() - TimeMargin;
 	}
 
 	/** Is the player past the first maneuver of a trajectory */
@@ -250,7 +258,7 @@ public:
 	TPair<const UNovaArea*, double> GetPlayerNearestAreaAndDistanceAtArrival() const;
 
 	/** Get the current thrust factor for a spacecraft */
-	float GetCurrentSpacecraftThrustFactor(const FGuid& Identifier, double SlackSeconds = 1.0) const;
+	float GetCurrentSpacecraftThrustFactor(const FGuid& Identifier, FNovaTime TimeMargin) const;
 
 	/*----------------------------------------------------
 	    Internals
@@ -286,10 +294,6 @@ public:
 	// Delay after a trajectory has started before removing the orbit data
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float OrbitGarbageCollectionDelay;
-
-	// Time in minutes to leave players before a maneuver
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	double TimeMarginBeforeManeuver;
 
 	/*----------------------------------------------------
 	    Data

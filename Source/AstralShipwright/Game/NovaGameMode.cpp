@@ -220,12 +220,10 @@ void ANovaGameMode::FastForward()
 
 bool ANovaGameMode::CanFastForward() const
 {
-	const ANovaGameState* Nova = GetGameState<ANovaGameState>();
-	NCHECK(IsValid(Nova));
+	const ANovaGameState* NovaGameState = GetGameState<ANovaGameState>();
+	NCHECK(IsValid(NovaGameState));
 
-	return (CurrentStateIdentifier == ENovaGameStateIdentifier::Area || CurrentStateIdentifier == ENovaGameStateIdentifier::ArrivalCoast ||
-			   CurrentStateIdentifier == ENovaGameStateIdentifier::Orbit) &&
-		   Nova->CanFastForward();
+	return StateMap[CurrentStateIdentifier]->CanFastForward() && NovaGameState->CanFastForward();
 }
 
 void ANovaGameMode::ResetSpacecraft()
@@ -284,6 +282,18 @@ bool ANovaGameMode::IsInOrbit() const
 	return GetGameState<ANovaGameState>()->GetCurrentArea() == OrbitArea;
 }
 
+FNovaTime ANovaGameMode::GetManeuverWarnTime() const
+{
+	TSharedPtr<FNovaGameModeState> CurrentState = StateMap[CurrentStateIdentifier];
+	return CurrentState->GetManeuverWarningTime();
+}
+
+FNovaTime ANovaGameMode::GetArrivalWarningTime() const
+{
+	TSharedPtr<FNovaGameModeState> CurrentState = StateMap[CurrentStateIdentifier];
+	return CurrentState->GetArrivalWarningTime();
+}
+
 /*----------------------------------------------------
     Internals
 ----------------------------------------------------*/
@@ -312,7 +322,6 @@ void ANovaGameMode::InitializeStateMachine()
 		AddState(ENovaGameStateIdentifier::FastForward, MakeShared<FNovaFastForwardState>(), TEXT("FastForward"));
 		AddState(ENovaGameStateIdentifier::DepartureProximity, MakeShared<FNovaDepartureProximityState>(), TEXT("DepartureProximity"));
 		AddState(ENovaGameStateIdentifier::ArrivalIntro, MakeShared<FNovaArrivalIntroState>(), TEXT("ArrivalIntro"));
-		AddState(ENovaGameStateIdentifier::ArrivalCoast, MakeShared<FNovaArrivalCoastState>(), TEXT("ArrivalCoast"));
 		AddState(ENovaGameStateIdentifier::ArrivalProximity, MakeShared<FNovaArrivalProximityState>(), TEXT("ArrivalProximity"));
 	}
 }
@@ -340,7 +349,7 @@ void ANovaGameMode::ProcessStateMachine()
 		{
 			NLOG("ANovaGameMode::ProcessStateMachine : changing state from %d to %d", CurrentStateIdentifier, NewStateIdentifier);
 
-			// Stop tile dilation
+			// Stop time dilation
 			GetGameState<ANovaGameState>()->SetTimeDilation(ENovaTimeDilation::Normal);
 
 			// Leave the current state
