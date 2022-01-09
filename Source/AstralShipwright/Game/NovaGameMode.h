@@ -16,7 +16,6 @@ enum class ENovaGameStateIdentifier : uint8
 
 	// Exit maneuvers
 	DepartureProximity,
-	DepartureCoast,
 
 	// Arrival maneuvers
 	ArrivalIntro,

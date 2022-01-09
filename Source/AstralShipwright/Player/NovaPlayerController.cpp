@@ -550,9 +550,6 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 			}
 		});
 
-	// TODO : ENovaPlayerCameraState::FastForward is not actually handled, need a black overlay widget
-	// It will produce a few visible frames between the two FF transitions
-
 	// Run the process
 	switch (NewCameraState)
 	{

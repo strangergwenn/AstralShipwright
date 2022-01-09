@@ -238,6 +238,10 @@ protected:
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float EventNotificationDelay;
 
+	// Time in seconds before a trajectory starts at which trajectories need to be committed
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float TrajectoryEarlyRequirement;
+
 	/*----------------------------------------------------
 	    Components
 	----------------------------------------------------*/

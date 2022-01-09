@@ -64,6 +64,7 @@ ANovaGameState::ANovaGameState()
 	FastForwardUpdateTime      = 2 * 60;
 	FastForwardUpdatesPerFrame = 24;
 	EventNotificationDelay     = 0.5f;
+	TrajectoryEarlyRequirement = 10.0;
 }
 
 /*----------------------------------------------------
@@ -493,7 +494,7 @@ bool ANovaGameState::ProcessGameSimulation(FNovaTime DeltaTime)
 	// Update the orbital simulation
 	OrbitalSimulationComponent->UpdateSimulation();
 
-	// Abort trajectories when a player didn't commit the main drive before 10s
+	// Abort trajectories when a player didn't commit in time
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		ProcessTrajectoryAbort();
@@ -621,9 +622,10 @@ void ANovaGameState::ProcessTrajectoryAbort()
 			}
 		}
 
-		// Check whether the trajectory is less than 10s away from starting
-		bool IsTrajectoryStarted = PlayerTrajectory && PlayerTrajectory->GetManeuver(GetCurrentTime()) == nullptr &&
-								   (PlayerTrajectory->GetNextManeuverStartTime(GetCurrentTime()) - GetCurrentTime()).AsSeconds() < 10;
+		// Check whether the trajectory is less than a few seconds away from starting
+		bool IsTrajectoryStarted =
+			PlayerTrajectory && PlayerTrajectory->GetManeuver(GetCurrentTime()) == nullptr &&
+			(PlayerTrajectory->GetNextManeuverStartTime(GetCurrentTime()) - GetCurrentTime()).AsSeconds() < TrajectoryEarlyRequirement;
 
 		// Invalidate the trajectory if a player doesn't match conditions
 		if (AbortTrajectoryImmediately || (AbortTrajectoryIfStarted && IsTrajectoryStarted))

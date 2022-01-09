@@ -144,6 +144,7 @@ public:
 			FNovaAsyncAction::CreateLambda(
 				[&]()
 				{
+					GameState->SetUsingTrajectoryMovement(false);
 					GameMode->ChangeAreaToOrbit();
 				}));
 	}
@@ -232,44 +233,11 @@ public:
 
 		if (GetSecondsInState() > ENovaGameModeStateTiming::CommonCutsceneDelay + ENovaGameModeStateTiming::DepartureCutsceneDuration)
 		{
-			return ENovaGameStateIdentifier::DepartureCoast;
+			return ENovaGameStateIdentifier::Orbit;
 		}
 		else
 		{
 			return ENovaGameStateIdentifier::DepartureProximity;
-		}
-	}
-};
-
-// Departure stage 2 : wait until we fast-forward or arrive naturally
-class FNovaDepartureCoastState : public FNovaGameModeState
-{
-public:
-	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
-	{
-		FNovaGameModeState::EnterState(PreviousState);
-
-		PC->SharedTransition(ENovaPlayerCameraState::Default,    //
-			FNovaAsyncAction::CreateLambda(
-				[&]()
-				{
-					GameState->SetUsingTrajectoryMovement(false);
-					GameMode->ChangeAreaToOrbit();
-				}));
-	}
-
-	virtual ENovaGameStateIdentifier UpdateState() override
-	{
-		FNovaGameModeState::UpdateState();
-
-		if (OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver() <= FNovaTime() &&
-			OrbitalSimulationComponent->IsPlayerNearingLastManeuver())
-		{
-			return ENovaGameStateIdentifier::ArrivalIntro;
-		}
-		else
-		{
-			return ENovaGameStateIdentifier::DepartureCoast;
 		}
 	}
 };

@@ -224,8 +224,7 @@ bool ANovaGameMode::CanFastForward() const
 	NCHECK(IsValid(Nova));
 
 	return (CurrentStateIdentifier == ENovaGameStateIdentifier::Area || CurrentStateIdentifier == ENovaGameStateIdentifier::ArrivalCoast ||
-			   CurrentStateIdentifier == ENovaGameStateIdentifier::Orbit ||
-			   CurrentStateIdentifier == ENovaGameStateIdentifier::DepartureCoast) &&
+			   CurrentStateIdentifier == ENovaGameStateIdentifier::Orbit) &&
 		   Nova->CanFastForward();
 }
 
@@ -312,7 +311,6 @@ void ANovaGameMode::InitializeStateMachine()
 		AddState(ENovaGameStateIdentifier::Orbit, MakeShared<FNovaOrbitState>(), TEXT("Orbit"));
 		AddState(ENovaGameStateIdentifier::FastForward, MakeShared<FNovaFastForwardState>(), TEXT("FastForward"));
 		AddState(ENovaGameStateIdentifier::DepartureProximity, MakeShared<FNovaDepartureProximityState>(), TEXT("DepartureProximity"));
-		AddState(ENovaGameStateIdentifier::DepartureCoast, MakeShared<FNovaDepartureCoastState>(), TEXT("DepartureCoast"));
 		AddState(ENovaGameStateIdentifier::ArrivalIntro, MakeShared<FNovaArrivalIntroState>(), TEXT("ArrivalIntro"));
 		AddState(ENovaGameStateIdentifier::ArrivalCoast, MakeShared<FNovaArrivalCoastState>(), TEXT("ArrivalCoast"));
 		AddState(ENovaGameStateIdentifier::ArrivalProximity, MakeShared<FNovaArrivalProximityState>(), TEXT("ArrivalProximity"));
