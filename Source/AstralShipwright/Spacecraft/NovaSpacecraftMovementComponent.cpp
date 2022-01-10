@@ -224,6 +224,29 @@ bool UNovaSpacecraftMovementComponent::IsDocked() const
 	return IsInitialized() && GetState() == ENovaMovementState::Docked;
 }
 
+bool UNovaSpacecraftMovementComponent::IsAlignedToManeuver() const
+{
+	if (GetNextManeuver())
+	{
+		const FVector ManeuverDirection = GetManeuverDirection();
+		float CurrentAngle = FMath::RadiansToDegrees(acosf(FVector::DotProduct(UpdatedComponent->GetForwardVector(), ManeuverDirection)));
+
+		return CurrentAngle < AngularDeadDistance;
+	}
+
+	return false;
+}
+
+bool UNovaSpacecraftMovementComponent::CanManeuver() const
+{
+	// Fetch the trajectory state
+	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(IsValid(GameState));
+	const FNovaTrajectory* PlayerTrajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
+
+	return PlayerTrajectory && GetState() == ENovaMovementState::Idle && IsAlignedToManeuver();
+}
+
 void UNovaSpacecraftMovementComponent::Dock(FSimpleDelegate Callback)
 {
 	NLOG("UNovaSpacecraftMovementComponent::Dock ('%s')", *GetRoleString(this));
@@ -248,55 +271,15 @@ void UNovaSpacecraftMovementComponent::Stop(FSimpleDelegate Callback)
 	RequestMovement(FNovaMovementCommand(ENovaMovementState::Stopping));
 }
 
-void UNovaSpacecraftMovementComponent::AlignToNextManeuver()
+void UNovaSpacecraftMovementComponent::AlignToManeuver(FSimpleDelegate Callback)
 {
-	// Fetch the trajectory state
-	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
-	NCHECK(IsValid(GameState));
-	const FNovaTrajectory* Trajectory   = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
-	const FNovaManeuver*   NextManeuver = Trajectory ? Trajectory->GetNextManeuver(GameState->GetCurrentTime()) : nullptr;
-
-	// Move to the orientation state
-	if (NextManeuver)
+	if (GetNextManeuver() && !IsAlignedToManeuver())
 	{
-		FVector ManeuverDirection = GetManeuverDirection();
-		if (AttitudeCommand.Direction != ManeuverDirection)
-		{
-			NLOG("UNovaSpacecraftMovementComponent::AlignToNextManeuver : orientating");
-			AttitudeCommand.Direction = ManeuverDirection;
-			MovementCommand.State     = ENovaMovementState::Orientating;
-		}
+		NLOG("UNovaSpacecraftMovementComponent::AlignToManeuver : orientating");
+
+		CompletionCallback = Callback;
+		RequestMovement(FNovaMovementCommand(ENovaMovementState::AlignToManeuver));
 	}
-}
-
-bool UNovaSpacecraftMovementComponent::IsAlignedToNextManeuver() const
-{
-	// Fetch the trajectory state
-	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
-	NCHECK(IsValid(GameState));
-	const FNovaTrajectory* Trajectory   = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
-	const FNovaManeuver*   NextManeuver = Trajectory ? Trajectory->GetNextManeuver(GameState->GetCurrentTime()) : nullptr;
-
-	// Check the orientation state
-	if (NextManeuver)
-	{
-		const FVector ManeuverDirection = GetManeuverDirection();
-		float CurrentAngle = FMath::RadiansToDegrees(acosf(FVector::DotProduct(UpdatedComponent->GetForwardVector(), ManeuverDirection)));
-
-		return CurrentAngle < AngularDeadDistance;
-	}
-
-	return false;
-}
-
-bool UNovaSpacecraftMovementComponent::CanManeuver() const
-{
-	// Fetch the trajectory state
-	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
-	NCHECK(IsValid(GameState));
-	const FNovaTrajectory* PlayerTrajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
-
-	return PlayerTrajectory && GetState() == ENovaMovementState::Idle && IsAlignedToNextManeuver();
 }
 
 /*----------------------------------------------------
@@ -305,12 +288,6 @@ bool UNovaSpacecraftMovementComponent::CanManeuver() const
 
 void UNovaSpacecraftMovementComponent::ProcessState()
 {
-	// Fetch the trajectory state
-	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
-	NCHECK(IsValid(GameState));
-	const FNovaTrajectory* Trajectory   = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
-	const FNovaManeuver*   NextManeuver = Trajectory ? Trajectory->GetNextManeuver(GameState->GetCurrentTime()) : nullptr;
-
 	switch (MovementCommand.State)
 	{
 		// Idle states
@@ -319,10 +296,15 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 			break;
 
 		// Orientating state that serves as a sub-state for Idle without identifying as such
-		case ENovaMovementState::Orientating:
-			if (AngularAttitudeIdle)
+		case ENovaMovementState::AlignToManeuver:
+			if (MovementCommand.Dirty)
+			{
+				AttitudeCommand.Direction = GetManeuverDirection();
+			}
+			else if (AngularAttitudeIdle)
 			{
 				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Orientating : done");
+
 				MovementCommand.State = ENovaMovementState::Idle;
 			}
 			break;
@@ -668,6 +650,15 @@ void UNovaSpacecraftMovementComponent::ProcessOrbitalMovement(float DeltaTime)
 
 void UNovaSpacecraftMovementComponent::OnHit(const FHitResult& Hit, const FVector& HitVelocity)
 {}
+
+const FNovaManeuver* UNovaSpacecraftMovementComponent::GetNextManeuver() const
+{
+	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(IsValid(GameState));
+
+	const FNovaTrajectory* Trajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
+	return Trajectory ? Trajectory->GetNextManeuver(GameState->GetCurrentTime()) : nullptr;
+}
 
 FVector UNovaSpacecraftMovementComponent::GetManeuverDirection() const
 {

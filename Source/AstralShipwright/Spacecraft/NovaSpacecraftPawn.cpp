@@ -440,7 +440,7 @@ void ANovaSpacecraftPawn::SetSpacecraft(const FNovaSpacecraft* NewSpacecraft)
 
 		// Start assembling, using a copy of the target assembly data
 		Spacecraft = NewSpacecraft->GetSharedCopy();
-		NCHECK(Spacecraft->Compartments.Num() == CompartmentComponents.Num());
+		NCHECK(Spacecraft->Compartments.Num() <= CompartmentComponents.Num());
 		StartAssemblyUpdate();
 	}
 }

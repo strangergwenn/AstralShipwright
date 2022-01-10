@@ -16,7 +16,7 @@ enum class ENovaMovementState : uint8
 	Docked,
 	Undocking,
 	Docking,
-	Orientating,
+	AlignToManeuver,
 	Stopping
 };
 
@@ -118,6 +118,12 @@ public:
 	/** Check if the spacecraft is already docked */
 	bool IsDocked() const;
 
+	/** Check if the spacecraft is aligned to the next maneuver */
+	bool IsAlignedToManeuver() const;
+
+	/** Check if the main drive is enabled */
+	bool CanManeuver() const;
+
 	/** Dock at a particular location */
 	void Dock(FSimpleDelegate Callback = FSimpleDelegate());
 
@@ -127,14 +133,8 @@ public:
 	/** Stop right there with no particular target */
 	void Stop(FSimpleDelegate Callback = FSimpleDelegate());
 
-	/** Allow aligning to the next maneuver */
-	void AlignToNextManeuver();
-
-	/** Check if the spacecraft is aligned to the next maneuver */
-	bool IsAlignedToNextManeuver() const;
-
-	/** Check if the main drive is enabled */
-	bool CanManeuver() const;
+	/** Align to the next maneuver */
+	void AlignToManeuver(FSimpleDelegate Callback = FSimpleDelegate());
 
 	/*----------------------------------------------------
 	    High level movement
@@ -193,6 +193,9 @@ protected:
 
 	/** Apply hit effects */
 	virtual void OnHit(const FHitResult& Hit, const FVector& HitVelocity);
+
+	/** Get the next maneuver */
+	const struct FNovaManeuver* GetNextManeuver() const;
 
 	/** Get the direction for the upcoming maneuver */
 	FVector GetManeuverDirection() const;

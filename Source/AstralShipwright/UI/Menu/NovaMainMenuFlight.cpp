@@ -311,7 +311,7 @@ bool SNovaMainMenuFlight::IsManeuveringEnabled() const
 		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
 
 		return PlayerTrajectory && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Idle &&
-			   !SpacecraftMovement->IsAlignedToNextManeuver();
+			   !SpacecraftMovement->IsAlignedToManeuver();
 	}
 
 	return false;
@@ -346,7 +346,7 @@ void SNovaMainMenuFlight::OnAlignToManeuver()
 {
 	if (IsValid(SpacecraftMovement))
 	{
-		SpacecraftMovement->AlignToNextManeuver();
+		SpacecraftMovement->AlignToManeuver();
 	}
 }
 

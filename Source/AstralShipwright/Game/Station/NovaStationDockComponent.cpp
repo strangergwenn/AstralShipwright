@@ -21,7 +21,7 @@ UNovaStationDockComponent::UNovaStationDockComponent() : Super(), CurrentLinearV
 	// Defaults
 	LinearDeadDistance = 1;
 	MaxLinearVelocity  = 1000;
-	LinearAcceleration = 5000;
+	LinearAcceleration = 2000;
 
 	// Settings
 	PrimaryComponentTick.bCanEverTick = true;
