@@ -79,8 +79,15 @@ public:
 	/** Get how long of a warning to get before arriving at a destination */
 	virtual FNovaTime GetArrivalWarningTime() const
 	{
-		return FNovaTime::FromSeconds(
-			ENovaGameModeStateTiming::AreaIntroductionDuration + ENovaGameModeStateTiming::ArrivalCutsceneDuration);
+		if (IsArrivingInSpace())
+		{
+			return FNovaTime::FromSeconds(ENovaGameModeStateTiming::ArrivalCutsceneDuration);
+		}
+		else
+		{
+			return FNovaTime::FromSeconds(
+				ENovaGameModeStateTiming::AreaIntroductionDuration + ENovaGameModeStateTiming::ArrivalCutsceneDuration);
+		}
 	}
 
 	/** Can we fast-forward in this state? */
@@ -100,6 +107,13 @@ protected:
 	double GetSecondsInState() const
 	{
 		return (GameState->GetCurrentTime() - StateStartTime).AsSeconds();
+	}
+
+	/** Check if we are going to a space based destination */
+	bool IsArrivingInSpace() const
+	{
+		auto NearestAreaAndDistance = OrbitalSimulationComponent->GetPlayerNearestAreaAndDistanceAtArrival();
+		return NearestAreaAndDistance.Value > ENovaConstants::TrajectoryDistanceError;
 	}
 
 protected:
@@ -241,8 +255,7 @@ public:
 		{
 			if (OrbitalSimulationComponent->IsPlayerNearingLastManeuver())
 			{
-				auto NearestAreaAndDistance = OrbitalSimulationComponent->GetPlayerNearestAreaAndDistanceAtArrival();
-				if (NearestAreaAndDistance.Value > ENovaConstants::TrajectoryDistanceError)
+				if (IsArrivingInSpace())
 				{
 					return ENovaGameStateIdentifier::ArrivalProximity;
 				}
@@ -257,8 +270,9 @@ public:
 			}
 		}
 
-		// We are no longer under fast forward, and a trajectory is going to start
-		else if (OrbitalSimulationComponent->GetTimeLeftUntilPlayerTrajectoryStart() < ENovaGameModeStateTiming::CommonCutsceneDelay)
+		// We are no longer under fast forward, and a trajectory is going to start from a station
+		else if (OrbitalSimulationComponent->GetTimeLeftUntilPlayerTrajectoryStart() < ENovaGameModeStateTiming::CommonCutsceneDelay &&
+				 GameState->GetCurrentArea() != GameMode->OrbitArea)
 		{
 			return ENovaGameStateIdentifier::DepartureProximity;
 		}
@@ -361,10 +375,7 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
-		auto NearestAreaAndDistance = OrbitalSimulationComponent->GetPlayerNearestAreaAndDistanceAtArrival();
-		bool IsStillInSpace         = NearestAreaAndDistance.Value > ENovaConstants::TrajectoryDistanceError;
-
-		PC->SharedTransition(IsStillInSpace ? ENovaPlayerCameraState::CinematicOrbit : ENovaPlayerCameraState::CinematicSpacecraft,
+		PC->SharedTransition(IsArrivingInSpace() ? ENovaPlayerCameraState::CinematicOrbit : ENovaPlayerCameraState::CinematicSpacecraft,
 			FNovaAsyncAction::CreateLambda(
 				[this]()
 				{
@@ -379,7 +390,7 @@ public:
 
 		if (GetSecondsInState() > ENovaGameModeStateTiming::ArrivalCutsceneDuration)
 		{
-			return ENovaGameStateIdentifier::Area;
+			return IsArrivingInSpace() ? ENovaGameStateIdentifier::Orbit : ENovaGameStateIdentifier::Area;
 		}
 		else
 		{

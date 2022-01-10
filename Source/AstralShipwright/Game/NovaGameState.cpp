@@ -22,6 +22,7 @@
 
 #include "Nova.h"
 
+#include "Engine/LevelStreaming.h"
 #include "Net/UnrealNetwork.h"
 #include "Dom/JsonObject.h"
 #include "EngineUtils.h"
@@ -43,6 +44,7 @@ ANovaGameState::ANovaGameState()
 	, ClientTime(0)
 	, ClientAdditionalTimeDilation(0)
 	, IsFastForward(false)
+	, TimeSinceLastFastForward(0)
 
 	, TimeSinceEvent(0)
 {
@@ -64,6 +66,7 @@ ANovaGameState::ANovaGameState()
 	// Fast forward defaults : 2 days per frame in 2h steps
 	FastForwardUpdateTime      = 2 * 60;
 	FastForwardUpdatesPerFrame = 24;
+	FastForwardDelay           = 0.5;
 
 	// Time defaults
 	EventNotificationDelay     = 0.5f;
@@ -181,8 +184,9 @@ void ANovaGameState::Tick(float DeltaTime)
 	// Process fast forward simulation
 	if (IsFastForward)
 	{
-		int64     Cycles      = FPlatformTime::Cycles64();
-		FNovaTime InitialTime = GetCurrentTime();
+		int64     Cycles         = FPlatformTime::Cycles64();
+		FNovaTime InitialTime    = GetCurrentTime();
+		TimeSinceLastFastForward = 0;
 
 		// Run FastForwardUpdatesPerFrame loops of world updates
 		for (int32 Index = 0; Index < FastForwardUpdatesPerFrame; Index++)
@@ -212,6 +216,8 @@ void ANovaGameState::Tick(float DeltaTime)
 	else
 	{
 		ProcessGameSimulation(FNovaTime::FromSeconds(static_cast<double>(DeltaTime)));
+
+		TimeSinceLastFastForward += DeltaTime;
 	}
 
 	// Update event notification
@@ -235,6 +241,24 @@ void ANovaGameState::SetCurrentArea(const UNovaArea* Area)
 FName ANovaGameState::GetCurrentLevelName() const
 {
 	return CurrentArea ? CurrentArea->LevelName : NAME_None;
+}
+
+bool ANovaGameState::IsLevelStreamingComplete() const
+{
+	for (const ULevelStreaming* Level : GetWorld()->GetStreamingLevels())
+	{
+		if (Level->IsStreamingStatePending())
+		{
+			return false;
+		}
+		else if (Level->IsLevelLoaded())
+		{
+			FString LoadedLevelName = Level->GetWorldAssetPackageFName().ToString();
+			return LoadedLevelName.EndsWith(GetCurrentLevelName().ToString());
+		}
+	}
+
+	return true;
 }
 
 bool ANovaGameState::IsJoinable(FText* Help) const

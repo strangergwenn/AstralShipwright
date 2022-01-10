@@ -67,6 +67,15 @@ public:
 	/** Get the current sub-level name to use */
 	FName GetCurrentLevelName() const;
 
+	/** Check if the game state is ready */
+	bool IsReady()
+	{
+		return GetCurrentArea() != nullptr && IsLevelStreamingComplete() && TimeSinceLastFastForward > FastForwardDelay;
+	}
+
+	/** Check if loading is currently occurring */
+	bool IsLevelStreamingComplete() const;
+
 	/** Enable moving spacecraft based on trajectories */
 	void SetUsingTrajectoryMovement(bool State)
 	{
@@ -248,6 +257,10 @@ protected:
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	int32 FastForwardUpdatesPerFrame;
 
+	// Time in seconds to wait in loading after a fast forward
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float FastForwardDelay;
+
 	// Time to wait in seconds after an event before notifying it with possible others in between
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float EventNotificationDelay;
@@ -302,6 +315,7 @@ private:
 	double ClientTime;
 	double ClientAdditionalTimeDilation;
 	bool   IsFastForward;
+	float  TimeSinceLastFastForward;
 
 	// Event observation system
 	float                          TimeSinceEvent;

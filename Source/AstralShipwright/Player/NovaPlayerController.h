@@ -154,9 +154,6 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerSharedTransitionReady();
 
-	/** Check if loading is currently occurring */
-	bool IsLevelStreamingComplete() const;
-
 	/** Set the current camera state */
 	void SetCameraState(ENovaPlayerCameraState State);
 

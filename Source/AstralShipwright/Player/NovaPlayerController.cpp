@@ -36,7 +36,6 @@
 #include "Components/SkyLightComponent.h"
 
 #include "Engine/LocalPlayer.h"
-#include "Engine/LevelStreaming.h"
 #include "Engine/SpotLight.h"
 #include "Engine/SkyLight.h"
 #include "Engine/Engine.h"
@@ -583,30 +582,6 @@ void ANovaPlayerController::ServerSharedTransitionReady_Implementation()
 	SharedTransitionActive = true;
 }
 
-bool ANovaPlayerController::IsLevelStreamingComplete() const
-{
-	ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
-	if (!IsValid(GameState))
-	{
-		return false;
-	}
-
-	for (const ULevelStreaming* Level : GetWorld()->GetStreamingLevels())
-	{
-		if (Level->IsStreamingStatePending())
-		{
-			return false;
-		}
-		else if (Level->IsLevelLoaded())
-		{
-			FString LoadedLevelName = Level->GetWorldAssetPackageFName().ToString();
-			return LoadedLevelName.EndsWith(GameState->GetCurrentLevelName().ToString());
-		}
-	}
-
-	return true;
-}
-
 void ANovaPlayerController::SetCameraState(ENovaPlayerCameraState State)
 {
 	CurrentCameraState       = State;
@@ -834,9 +809,9 @@ bool ANovaPlayerController::IsReady() const
 
 		// Check game state
 		ANovaGameState* GameState        = GetWorld()->GetGameState<ANovaGameState>();
-		bool            IsGameStateReady = IsValid(GameState) && GameState->GetCurrentArea() != nullptr;
+		bool            IsGameStateReady = IsValid(GameState) && GameState->IsReady();
 
-		return IsLevelStreamingComplete() && IsSpacecraftReady && IsGameStateReady;
+		return IsSpacecraftReady && IsGameStateReady;
 	}
 }
 
