@@ -60,7 +60,7 @@ public:
 	void FastForward();
 
 	/** Check whether we can fast-forward */
-	bool CanFastForward() const;
+	bool CanFastForward(FText* AbortReason = nullptr) const;
 
 	/** Reset all spacecraft movement */
 	void ResetSpacecraft();

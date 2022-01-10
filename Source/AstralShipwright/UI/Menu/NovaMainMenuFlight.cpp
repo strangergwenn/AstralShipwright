@@ -66,7 +66,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					[
 						SNovaAssignNew(FastForwardButton, SNovaButton)
 						.Text(LOCTEXT("FastForward", "Fast forward"))
-						.HelpText(LOCTEXT("FastForwardHelp", "Wait until the next event"))
+						.HelpText(this, &SNovaMainMenuFlight::GetFastFowardHelp)
 						.OnClicked(this, &SNovaMainMenuFlight::FastForward)
 						.Enabled(this, &SNovaMainMenuFlight::CanFastForward)
 					]
@@ -272,6 +272,19 @@ bool SNovaMainMenuFlight::CanFastForward() const
 {
 	const ANovaGameMode* GameMode = MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>();
 	return IsValid(GameMode) && GameMode->CanFastForward();
+}
+
+FText SNovaMainMenuFlight::GetFastFowardHelp() const
+{
+	FText HelpText = LOCTEXT("FastForwardHelp", "Wait until the next event");
+
+	const ANovaGameMode* GameMode = MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>();
+	if (GameMode)
+	{
+		GameMode->CanFastForward(&HelpText);
+	}
+
+	return HelpText;
 }
 
 bool SNovaMainMenuFlight::IsUndockEnabled() const

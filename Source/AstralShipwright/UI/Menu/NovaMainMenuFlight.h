@@ -52,7 +52,8 @@ public:
 	----------------------------------------------------*/
 
 protected:
-	bool CanFastForward() const;
+	bool  CanFastForward() const;
+	FText GetFastFowardHelp() const;
 
 	bool IsUndockEnabled() const;
 	bool IsDockEnabled() const;

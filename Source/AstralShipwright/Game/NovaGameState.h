@@ -19,6 +19,14 @@ enum class ENovaTimeDilation : uint8
 	Level3
 };
 
+/** Trajectory error levels */
+enum class ENovaTrajectoryAction : uint8
+{
+	Continue,
+	AbortIfStarted,
+	AbortImmediately
+};
+
 /** Replicated game state class */
 UCLASS(ClassGroup = (Nova))
 class ANovaGameState : public AGameStateBase
@@ -131,11 +139,14 @@ public:
 	/** Get the current game time */
 	FNovaTime GetCurrentTime() const;
 
+	/** Get the time left until the next event */
+	FNovaTime GetTimeLeftUntilEvent() const;
+
 	/** Simulate the world at full speed until an event */
 	void FastForward();
 
 	/** Check if we can skip time */
-	bool CanFastForward() const;
+	bool CanFastForward(FText* AbortReason = nullptr) const;
 
 	/** Check if we are in a time skip */
 	bool IsInFastForward() const
@@ -201,6 +212,9 @@ protected:
 	/** Automatically abort failed trajectories */
 	void ProcessTrajectoryAbort();
 
+	/** Check if all player spacecraft can currently maneuver */
+	ENovaTrajectoryAction CheckTrajectoryAbort(FText* AbortReason = nullptr) const;
+
 	/** Server replication event for time reconciliation */
 	UFUNCTION()
 	void OnServerTimeReplicated();
@@ -241,10 +255,6 @@ protected:
 	// Time in seconds before a trajectory starts at which trajectories need to be committed
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float TrajectoryEarlyRequirement;
-
-	// Time in seconds to leave players before a maneuver
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	double TimeMarginBeforeManeuver;
 
 	/*----------------------------------------------------
 	    Components

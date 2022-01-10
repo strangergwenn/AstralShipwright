@@ -218,12 +218,12 @@ void ANovaGameMode::FastForward()
 	DesiredStateIdentifier = ENovaGameStateIdentifier::FastForward;
 }
 
-bool ANovaGameMode::CanFastForward() const
+bool ANovaGameMode::CanFastForward(FText* AbortReason) const
 {
 	const ANovaGameState* NovaGameState = GetGameState<ANovaGameState>();
 	NCHECK(IsValid(NovaGameState));
 
-	return StateMap[CurrentStateIdentifier]->CanFastForward() && NovaGameState->CanFastForward();
+	return StateMap[CurrentStateIdentifier]->CanFastForward() && NovaGameState->CanFastForward(AbortReason);
 }
 
 void ANovaGameMode::ResetSpacecraft()

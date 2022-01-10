@@ -134,7 +134,7 @@ public:
 	bool IsAlignedToNextManeuver() const;
 
 	/** Check if the main drive is enabled */
-	bool IsMainDriveEnabled() const;
+	bool CanManeuver() const;
 
 	/*----------------------------------------------------
 	    High level movement

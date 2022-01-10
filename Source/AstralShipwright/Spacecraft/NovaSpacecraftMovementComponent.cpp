@@ -289,7 +289,7 @@ bool UNovaSpacecraftMovementComponent::IsAlignedToNextManeuver() const
 	return false;
 }
 
-bool UNovaSpacecraftMovementComponent::IsMainDriveEnabled() const
+bool UNovaSpacecraftMovementComponent::CanManeuver() const
 {
 	// Fetch the trajectory state
 	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
