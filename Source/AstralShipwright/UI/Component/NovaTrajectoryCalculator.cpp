@@ -21,6 +21,8 @@
 
 #define LOCTEXT_NAMESPACE "SNovaTrajectoryCalculator"
 
+static constexpr int32 TrajectoryStartDelay = 2;
+
 /*----------------------------------------------------
     Construct
 ----------------------------------------------------*/
@@ -291,7 +293,7 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(
 	// Run trajectory calculations over a range of altitudes
 	PlayerIdentifiers = SpacecraftIdentifiers;
 	const FNovaTrajectoryParameters& Parameters =
-		OrbitalSimulation->PrepareTrajectory(Source, Destination, FNovaTime::FromMinutes(1), SpacecraftIdentifiers);
+		OrbitalSimulation->PrepareTrajectory(Source, Destination, FNovaTime::FromMinutes(TrajectoryStartDelay), SpacecraftIdentifiers);
 	SimulatedTrajectories.Reserve((Slider->GetMaxValue() - Slider->GetMinValue()) / AltitudeStep + 1);
 	for (float Altitude = Slider->GetMinValue(); Altitude <= Slider->GetMaxValue(); Altitude += AltitudeStep)
 	{

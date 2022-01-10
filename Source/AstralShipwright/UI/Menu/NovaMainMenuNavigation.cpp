@@ -23,7 +23,8 @@
 
 #define LOCTEXT_NAMESPACE "SNovaMainMenuNavigation"
 
-#define STACK_PANEL_WIDTH 500
+// Settings
+static constexpr int32 StackPanelWidth = 500;
 
 /*----------------------------------------------------
     Hover details stack
@@ -39,7 +40,7 @@ public:
 
 		SNovaText::Construct(SNovaText::FArguments()
 								 .TextStyle(&Theme.MainFont)
-								 .WrapTextAt(STACK_PANEL_WIDTH - Theme.ContentPadding.Left - Theme.ContentPadding.Right - 24));
+								 .WrapTextAt(StackPanelWidth - Theme.ContentPadding.Left - Theme.ContentPadding.Right - 24));
 
 		// clang-format off
 		ChildSlot
@@ -104,7 +105,7 @@ public:
 		ChildSlot
 		[
 			SNew(SBox)
-			.WidthOverride(STACK_PANEL_WIDTH)
+			.WidthOverride(StackPanelWidth)
 			[
 				SAssignNew(Container, SVerticalBox)
 			]

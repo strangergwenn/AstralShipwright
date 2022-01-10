@@ -259,6 +259,20 @@ struct FNovaTime
 		return Minutes * 60.0;
 	}
 
+	static FNovaTime FromDays(double Value)
+	{
+		FNovaTime T;
+		T.Minutes = Value * 24.0 * 60.0;
+		return T;
+	}
+
+	static FNovaTime FromHours(double Value)
+	{
+		FNovaTime T;
+		T.Minutes = Value * 60.0;
+		return T;
+	}
+
 	static FNovaTime FromMinutes(double Value)
 	{
 		FNovaTime T;
