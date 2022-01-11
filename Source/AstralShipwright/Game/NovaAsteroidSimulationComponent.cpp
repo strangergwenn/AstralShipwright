@@ -52,15 +52,13 @@ void UNovaAsteroidSimulationComponent::TickComponent(float DeltaTime, ELevelTick
 
 			// Spawn
 			if (GetPhysicalAsteroid(Identifier) == nullptr &&
-				(Identifier == AlwaysLoadedAsteroid ||
-					DistanceFromPlayer < AsteroidSpawnDistanceKm && PhysicalAsteroidDatabase.Find(Identifier) == nullptr))
+				(Identifier == AlwaysLoadedAsteroid || DistanceFromPlayer < AsteroidSpawnDistanceKm))
 			{
 				ANovaAsteroid* NewAsteroid = GetWorld()->SpawnActor<ANovaAsteroid>();
 				NCHECK(NewAsteroid);
 				NewAsteroid->Initialize(Asteroid);
 
-				NLOG("UNovaAsteroidSimulationComponent::TickComponent : spawning '%s'",
-					*Identifier.ToString(EGuidFormats::Short));
+				NLOG("UNovaAsteroidSimulationComponent::TickComponent : spawning '%s'", *Identifier.ToString(EGuidFormats::Short));
 
 				PhysicalAsteroidDatabase.Add(Identifier, NewAsteroid);
 			}
@@ -72,8 +70,7 @@ void UNovaAsteroidSimulationComponent::TickComponent(float DeltaTime, ELevelTick
 				ANovaAsteroid** AsteroidEntry = PhysicalAsteroidDatabase.Find(Identifier);
 				if (AsteroidEntry && !(*AsteroidEntry)->IsLoadingAssets())
 				{
-					NLOG("UNovaAsteroidSimulationComponent::TickComponent : removing '%s'",
-						*Identifier.ToString(EGuidFormats::Short));
+					NLOG("UNovaAsteroidSimulationComponent::TickComponent : removing '%s'", *Identifier.ToString(EGuidFormats::Short));
 
 					(*AsteroidEntry)->Destroy();
 					PhysicalAsteroidDatabase.Remove(Identifier);
