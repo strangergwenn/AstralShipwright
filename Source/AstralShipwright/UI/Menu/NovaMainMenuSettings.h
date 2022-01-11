@@ -81,7 +81,9 @@ protected:
 	void OnAntiAliasingChanged(float Value);
 	void OnScreenPercentageChanged(float Value);
 	void OnDLSSToggled();
+	void OnNaniteToggled();
 	void OnLumenToggled();
+	void OnLumenHWRTToggled();
 	void OnCinematicBloomToggled();
 
 	// Culture list
@@ -144,6 +146,8 @@ protected:
 	TSharedPtr<class SNovaSlider> AntiAliasingSlider;
 	TSharedPtr<class SNovaSlider> ScreenPercentageSlider;
 	TSharedPtr<class SNovaButton> DLSSButton;
+	TSharedPtr<class SNovaButton> NaniteButton;
 	TSharedPtr<class SNovaButton> LumenButton;
+	TSharedPtr<class SNovaButton> LumenHWRTButton;
 	TSharedPtr<class SNovaButton> CinematicBloomButton;
 };

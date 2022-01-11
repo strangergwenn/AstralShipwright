@@ -44,6 +44,20 @@ void UNovaGameUserSettings::ApplyCustomGraphicsSettings()
 	}
 #endif    // HAS_DLSS
 
+	// Toggle Nanite
+	IConsoleVariable* NaniteVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Nanite"));
+	if (NaniteVar)
+	{
+		NaniteVar->Set(EnableNanite ? 1 : 0, ECVF_SetByConsole);
+	}
+
+	// Toggle Lumen HWRT
+	IConsoleVariable* LumenHWRTVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Lumen.HardwareRayTracing"));
+	if (LumenHWRTVar)
+	{
+		LumenHWRTVar->Set(EnableLumenHWRT ? 1 : 0, ECVF_SetByConsole);
+	}
+
 	// Set screen percentage
 	IConsoleVariable* ScreenPercentageVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.ScreenPercentage"));
 	if (ScreenPercentageVar)
@@ -88,7 +102,9 @@ void UNovaGameUserSettings::SetToDefaults()
 
 	// Graphics
 	EnableDLSS           = false;
+	EnableNanite         = true;
 	EnableLumen          = true;
+	EnableLumenHWRT      = false;
 	EnableCinematicBloom = false;
 	ScreenPercentage     = 100.0f;
 }

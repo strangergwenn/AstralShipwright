@@ -314,11 +314,33 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		GraphicsContainer->AddSlot()
 		.AutoHeight()
 		[
+			SNovaAssignNew(NaniteButton, SNovaButton)
+			.Toggle(true)
+			.Text(LOCTEXT("Nanite", "Enable Nanite"))
+			.HelpText(LOCTEXT("NaniteHelp", "Enable high-density Nanite geometry"))
+			.OnClicked(this, &SNovaMainMenuSettings::OnNaniteToggled)
+			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+		];
+
+		GraphicsContainer->AddSlot()
+		.AutoHeight()
+		[
 			SNovaAssignNew(LumenButton, SNovaButton)
 			.Toggle(true)
 			.Text(LOCTEXT("Lumen", "Enable Lumen"))
 			.HelpText(LOCTEXT("LumenHelp", "Enable the high-quality Lumen lighting"))
 			.OnClicked(this, &SNovaMainMenuSettings::OnLumenToggled)
+			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+		];
+
+		GraphicsContainer->AddSlot()
+		.AutoHeight()
+		[
+			SNovaAssignNew(LumenHWRTButton, SNovaButton)
+			.Toggle(true)
+			.Text(LOCTEXT("LumenRayTracing", "Enable Lumen raytracing support"))
+			.HelpText(LOCTEXT("LumenRayTracingHelp", "Enable hardware raytracing support for Lumen, improving quality on DXR hardware"))
+			.OnClicked(this, &SNovaMainMenuSettings::OnLumenHWRTToggled)
 			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
 		];
 		
@@ -424,7 +446,9 @@ void SNovaMainMenuSettings::Show()
 		ScreenPercentageSlider->SetCurrentValue(GameUserSettings->ScreenPercentage);
 
 		DLSSButton->SetActive(GameUserSettings->EnableDLSS);
+		NaniteButton->SetActive(GameUserSettings->EnableNanite);
 		LumenButton->SetActive(GameUserSettings->EnableLumen);
+		LumenHWRTButton->SetActive(GameUserSettings->EnableLumenHWRT);
 		CinematicBloomButton->SetActive(GameUserSettings->EnableCinematicBloom);
 
 		UpdateResolutionList();
@@ -775,9 +799,23 @@ void SNovaMainMenuSettings::OnDLSSToggled()
 	GameUserSettings->SaveSettings();
 }
 
+void SNovaMainMenuSettings::OnNaniteToggled()
+{
+	GameUserSettings->EnableNanite = NaniteButton->IsActive();
+	GameUserSettings->ApplySettings(false);
+	GameUserSettings->SaveSettings();
+}
+
 void SNovaMainMenuSettings::OnLumenToggled()
 {
 	GameUserSettings->EnableLumen = LumenButton->IsActive();
+	GameUserSettings->ApplySettings(false);
+	GameUserSettings->SaveSettings();
+}
+
+void SNovaMainMenuSettings::OnLumenHWRTToggled()
+{
+	GameUserSettings->EnableLumenHWRT = LumenHWRTButton->IsActive();
 	GameUserSettings->ApplySettings(false);
 	GameUserSettings->SaveSettings();
 }

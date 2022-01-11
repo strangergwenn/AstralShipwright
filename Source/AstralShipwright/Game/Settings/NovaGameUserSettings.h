@@ -56,9 +56,17 @@ public:
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	bool EnableDLSS;
 
+	/** Enable Nanite */
+	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
+	bool EnableNanite;
+
 	/** Enable Lumen */
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	bool EnableLumen;
+
+	/** Enable Lumen support for hardware ray-tracing */
+	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
+	bool EnableLumenHWRT;
 
 	/** Enable convolution bloom */
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
