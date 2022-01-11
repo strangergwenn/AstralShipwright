@@ -89,20 +89,12 @@ public:
 		return UseTrajectoryMovement;
 	}
 
-	/** Return the orbital simulation class */
-	class UNovaOrbitalSimulationComponent* GetOrbitalSimulation() const
-	{
-		return OrbitalSimulationComponent;
-	}
-
 	/** Check whether the game can be joined */
 	bool IsJoinable(FText* Help = nullptr) const;
 
-	/** Check whether any spacecraft is docked */
-	bool IsAnySpacecraftDocked() const;
-
-	/** Check whether all spacecraft are docked */
-	bool AreAllSpacecraftDocked() const;
+	/*----------------------------------------------------
+	    Resources
+	----------------------------------------------------*/
 
 	/** Is a particular resource sold in this area */
 	bool IsResourceSold(const class UNovaResource* Asset, const class UNovaArea* Area = nullptr) const;
@@ -140,6 +132,12 @@ public:
 
 	/** Return the identifiers of all of the player spacecraft */
 	TArray<FGuid> GetPlayerSpacecraftIdentifiers() const;
+
+	/** Check whether any spacecraft is docked */
+	bool IsAnySpacecraftDocked() const;
+
+	/** Check whether all spacecraft are docked */
+	bool AreAllSpacecraftDocked() const;
 
 	/*----------------------------------------------------
 	    Time management
@@ -193,16 +191,6 @@ public:
 
 	/** Check if we can dilate time */
 	bool CanDilateTime(ENovaTimeDilation Dilation) const;
-
-	/*----------------------------------------------------
-	    World management
-	----------------------------------------------------*/
-
-	/** Get a specific asteroid */
-	const struct FNovaAsteroid* GetAsteroid(FGuid Identifier) const;
-
-	/** Get all asteroids */
-	const TMap<FGuid, struct FNovaAsteroid>& GetAsteroids() const;
 
 	/*----------------------------------------------------
 	    Internals
@@ -321,4 +309,21 @@ private:
 	float                          TimeSinceEvent;
 	TArray<FNovaTime>              TimeJumpEvents;
 	TArray<const class UNovaArea*> AreaChangeEvents;
+
+public:
+	/*----------------------------------------------------
+	    Getters
+	----------------------------------------------------*/
+
+	/** Return the orbital simulation component */
+	class UNovaOrbitalSimulationComponent* GetOrbitalSimulation() const
+	{
+		return OrbitalSimulationComponent;
+	}
+
+	/** Return the asteroid simulation component */
+	class UNovaAsteroidSimulationComponent* GetAsteroidSimulation() const
+	{
+		return AsteroidSimulationComponent;
+	}
 };

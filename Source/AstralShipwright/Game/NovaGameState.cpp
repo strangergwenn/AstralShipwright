@@ -277,30 +277,9 @@ bool ANovaGameState::IsJoinable(FText* Help) const
 	return AllSpacecraftDocked;
 }
 
-bool ANovaGameState::IsAnySpacecraftDocked() const
-{
-	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
-	{
-		if (SpacecraftPawn->IsDocked())
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool ANovaGameState::AreAllSpacecraftDocked() const
-{
-	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
-	{
-		if (!SpacecraftPawn->IsDocked())
-		{
-			return false;
-		}
-	}
-	return true;
-}
+/*----------------------------------------------------
+    Resources
+----------------------------------------------------*/
 
 bool ANovaGameState::IsResourceSold(const UNovaResource* Asset, const class UNovaArea* Area) const
 {
@@ -449,6 +428,31 @@ TArray<FGuid> ANovaGameState::GetPlayerSpacecraftIdentifiers() const
 	return Result;
 }
 
+bool ANovaGameState::IsAnySpacecraftDocked() const
+{
+	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+	{
+		if (SpacecraftPawn->IsDocked())
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool ANovaGameState::AreAllSpacecraftDocked() const
+{
+	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+	{
+		if (!SpacecraftPawn->IsDocked())
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 /*----------------------------------------------------
     Time management
 ----------------------------------------------------*/
@@ -519,16 +523,6 @@ void ANovaGameState::SetTimeDilation(ENovaTimeDilation Dilation)
 bool ANovaGameState::CanDilateTime(ENovaTimeDilation Dilation) const
 {
 	return GetLocalRole() == ROLE_Authority;
-}
-
-const FNovaAsteroid* ANovaGameState::GetAsteroid(FGuid Identifier) const
-{
-	return AsteroidSimulationComponent->GetAsteroidDatabase().Find(Identifier);
-}
-
-const TMap<FGuid, FNovaAsteroid>& ANovaGameState::GetAsteroids() const
-{
-	return AsteroidSimulationComponent->GetAsteroidDatabase();
 }
 
 /*----------------------------------------------------

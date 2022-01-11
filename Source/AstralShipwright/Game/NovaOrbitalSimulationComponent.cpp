@@ -1,6 +1,8 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaOrbitalSimulationComponent.h"
+
+#include "NovaAsteroidSimulationComponent.h"
 #include "NovaGameState.h"
 
 #include "Spacecraft/NovaSpacecraft.h"
@@ -765,7 +767,7 @@ void UNovaOrbitalSimulationComponent::ProcessAsteroids()
 {
 	const ANovaGameState* GameState = GetOwner<ANovaGameState>();
 
-	for (const TPair<FGuid, FNovaAsteroid>& IdentifierAndAsteroid : GameState->GetAsteroids())
+	for (const TPair<FGuid, FNovaAsteroid>& IdentifierAndAsteroid : GameState->GetAsteroidSimulation()->GetAsteroids())
 	{
 		// Update the position
 		double CurrentPhase = GetAsteroidOrbit(IdentifierAndAsteroid.Value).Geometry.GetPhase<true>(GetCurrentTime());

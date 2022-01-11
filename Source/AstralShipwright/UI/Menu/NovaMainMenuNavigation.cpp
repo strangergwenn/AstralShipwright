@@ -5,6 +5,7 @@
 #include "NovaMainMenu.h"
 
 #include "Game/NovaArea.h"
+#include "Game/NovaAsteroid.h"
 #include "Game/NovaGameState.h"
 #include "Game/NovaOrbitalSimulationComponent.h"
 
@@ -594,10 +595,11 @@ void SNovaMainMenuNavigation::Hide()
 
 void SNovaMainMenuNavigation::UpdateGameObjects()
 {
-	PC                = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
-	Spacecraft        = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
-	GameState         = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
-	OrbitalSimulation = IsValid(GameState) ? GameState->GetOrbitalSimulation() : nullptr;
+	PC                 = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
+	Spacecraft         = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
+	GameState          = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
+	AsteroidSimulation = IsValid(GameState) ? GameState->GetAsteroidSimulation() : nullptr;
+	OrbitalSimulation  = IsValid(GameState) ? GameState->GetOrbitalSimulation() : nullptr;
 }
 
 void SNovaMainMenuNavigation::OnClicked(const FVector2D& Position)
@@ -714,7 +716,7 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 	for (const FNovaOrbitalObject& Object : SelectedObjectList)
 	{
 		const UNovaArea*     Area     = Object.Area.Get();
-		const FNovaAsteroid* Asteroid = GameState->GetAsteroid(Object.AsteroidIdentifier);
+		const FNovaAsteroid* Asteroid = AsteroidSimulation->GetAsteroid(Object.AsteroidIdentifier);
 
 		// Valid area found
 		if (Area && ComputeTrajectoryTo(OrbitalSimulation->GetAreaOrbit(Area)))

@@ -80,10 +80,29 @@ public:
 	/** Reset the spawner */
 	void Initialize(const UNovaAsteroidConfiguration* Configuration);
 
-	/** Get the asteroid database */
-	const TMap<FGuid, FNovaAsteroid>& GetAsteroidDatabase() const
+	/** Get a specific asteroid */
+	const struct FNovaAsteroid* GetAsteroid(FGuid Identifier) const
+	{
+		return AsteroidDatabase.Find(Identifier);
+	}
+
+	/** Get all asteroids */
+	const TMap<FGuid, struct FNovaAsteroid>& GetAsteroids() const
 	{
 		return AsteroidDatabase;
+	}
+
+	/** Get a physical asteroid */
+	const class ANovaAsteroid* GetPhysicalAsteroid(FGuid Identifier) const
+	{
+		ANovaAsteroid* const* AsteroidPtr = PhysicalAsteroidDatabase.Find(Identifier);
+		return AsteroidPtr ? *AsteroidPtr : nullptr;
+	}
+
+	/** Load the physical asteroid for given identifier */
+	void SetRequestedPhysicalAsteroid(FGuid Identifier)
+	{
+		AlwaysLoadedAsteroid = Identifier;
 	}
 
 	/*----------------------------------------------------
@@ -108,6 +127,7 @@ private:
 	TMultiMap<int32, double> IntegralToAltitudeTable;
 
 	// Asteroid databases
+	FGuid                             AlwaysLoadedAsteroid;
 	TMap<FGuid, FNovaAsteroid>        AsteroidDatabase;
 	TMap<FGuid, class ANovaAsteroid*> PhysicalAsteroidDatabase;
 };

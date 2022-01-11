@@ -46,33 +46,37 @@ void UNovaAsteroidSimulationComponent::TickComponent(float DeltaTime, ELevelTick
 	{
 		for (const TPair<FGuid, FNovaOrbitalLocation>& IdentifierAndLocation : OrbitalSimulation->GetAllAsteroidsLocations())
 		{
+			FGuid                Identifier         = IdentifierAndLocation.Key;
 			double               DistanceFromPlayer = IdentifierAndLocation.Value.GetDistanceTo(*PlayerLocation);
-			const FNovaAsteroid& Asteroid           = AsteroidDatabase[IdentifierAndLocation.Key];
+			const FNovaAsteroid& Asteroid           = AsteroidDatabase[Identifier];
 
 			// Spawn
-			if (DistanceFromPlayer < AsteroidSpawnDistanceKm && PhysicalAsteroidDatabase.Find(IdentifierAndLocation.Key) == nullptr)
+			if (GetPhysicalAsteroid(Identifier) == nullptr &&
+				(Identifier == AlwaysLoadedAsteroid ||
+					DistanceFromPlayer < AsteroidSpawnDistanceKm && PhysicalAsteroidDatabase.Find(Identifier) == nullptr))
 			{
 				ANovaAsteroid* NewAsteroid = GetWorld()->SpawnActor<ANovaAsteroid>();
 				NCHECK(NewAsteroid);
 				NewAsteroid->Initialize(Asteroid);
 
 				NLOG("UNovaAsteroidSimulationComponent::TickComponent : spawning '%s'",
-					*IdentifierAndLocation.Key.ToString(EGuidFormats::Short));
+					*Identifier.ToString(EGuidFormats::Short));
 
-				PhysicalAsteroidDatabase.Add(IdentifierAndLocation.Key, NewAsteroid);
+				PhysicalAsteroidDatabase.Add(Identifier, NewAsteroid);
 			}
 
 			// De-spawn
-			else if (DistanceFromPlayer > AsteroidDespawnDistanceKm)
+			if (GetPhysicalAsteroid(Identifier) != nullptr && !AlwaysLoadedAsteroid.IsValid() &&
+				DistanceFromPlayer > AsteroidDespawnDistanceKm)
 			{
-				ANovaAsteroid** AsteroidEntry = PhysicalAsteroidDatabase.Find(IdentifierAndLocation.Key);
+				ANovaAsteroid** AsteroidEntry = PhysicalAsteroidDatabase.Find(Identifier);
 				if (AsteroidEntry && !(*AsteroidEntry)->IsLoadingAssets())
 				{
 					NLOG("UNovaAsteroidSimulationComponent::TickComponent : removing '%s'",
-						*IdentifierAndLocation.Key.ToString(EGuidFormats::Short));
+						*Identifier.ToString(EGuidFormats::Short));
 
 					(*AsteroidEntry)->Destroy();
-					PhysicalAsteroidDatabase.Remove(IdentifierAndLocation.Key);
+					PhysicalAsteroidDatabase.Remove(Identifier);
 				}
 			}
 		}

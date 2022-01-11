@@ -97,11 +97,12 @@ protected:
 
 protected:
 	// Game objects
-	TWeakObjectPtr<UNovaMenuManager>       MenuManager;
-	class ANovaPlayerController*           PC;
-	const struct FNovaSpacecraft*          Spacecraft;
-	class ANovaGameState*                  GameState;
-	class UNovaOrbitalSimulationComponent* OrbitalSimulation;
+	TWeakObjectPtr<UNovaMenuManager>        MenuManager;
+	class ANovaPlayerController*            PC;
+	const struct FNovaSpacecraft*           Spacecraft;
+	class ANovaGameState*                   GameState;
+	class UNovaOrbitalSimulationComponent*  OrbitalSimulation;
+	class UNovaAsteroidSimulationComponent* AsteroidSimulation;
 
 	// Slate widgets
 	TSharedPtr<SNovaOrbitalMap>               OrbitalMap;
