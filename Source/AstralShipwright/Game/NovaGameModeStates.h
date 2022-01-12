@@ -377,11 +377,10 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
-		PC->SharedTransition(IsArrivingInSpace() ? ENovaPlayerCameraState::CinematicOrbit : ENovaPlayerCameraState::CinematicSpacecraft,
-			FNovaAsyncAction::CreateLambda(
-				[this]()
-				{
-					GameMode->SetCurrentAreaVisible(true);
+		PC->SharedTransition(ENovaPlayerCameraState::CinematicBrake, FNovaAsyncAction::CreateLambda(
+																		 [this]()
+																		 {
+																			 GameMode->SetCurrentAreaVisible(true);
 																			 GameState->SetUsingTrajectoryMovement(true);
 																		 }));
 	}

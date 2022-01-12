@@ -323,7 +323,7 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 	// During cutscenes, use the closest camera viewpoint and focus the player ship
 	if (IsReady() && (CurrentCameraState == ENovaPlayerCameraState::CinematicSpacecraft ||
 						 CurrentCameraState == ENovaPlayerCameraState::CinematicEnvironment ||
-						 CurrentCameraState == ENovaPlayerCameraState::CinematicOrbit))
+						 CurrentCameraState == ENovaPlayerCameraState::CinematicBrake))
 	{
 		// Get points of interest nearby
 		TArray<AActor*> Viewpoints;
@@ -339,18 +339,23 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 			UNovaActorTools::SortActorsByClosestDistance(Viewpoints, GetPawn()->GetActorLocation());
 			PlayerViewpoint = Cast<ANovaPlayerViewpoint>(Viewpoints[0]);
 		}
+		float AnimationDuration =
+			PlayerViewpoint ? PlayerViewpoint->CameraAnimationDuration : GetDefault<ANovaPlayerViewpoint>()->CameraAnimationDuration;
 
-		// Apply the results
 		if (PlayerViewpoint)
 		{
 			Location = PlayerViewpoint->GetActorLocation();
+
+			// Spacecraft focus
 			if (CurrentCameraState == ENovaPlayerCameraState::CinematicSpacecraft)
 			{
 				Rotation = (PlayerLocation - Location).Rotation();
 			}
-			else
+
+			// Environment panning shot
+			else if (CurrentCameraState == ENovaPlayerCameraState::CinematicEnvironment)
 			{
-				float AnimationAlpha = FMath::Clamp(CurrentTimeInCameraState / PlayerViewpoint->CameraAnimationDuration, 0.0f, 1.0f);
+				float AnimationAlpha = FMath::Clamp(CurrentTimeInCameraState / AnimationDuration, 0.0f, 1.0f);
 				AnimationAlpha       = FMath::InterpEaseOut(-0.5f, 0.5f, AnimationAlpha, ENovaUIConstants::EaseStandard);
 
 				Rotation = PlayerViewpoint->GetActorRotation();
@@ -359,17 +364,31 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 				Location += Rotation.Vector() * AnimationAlpha * PlayerViewpoint->CameraTravelingAmount;
 			}
 		}
-		else if (CurrentCameraState == ENovaPlayerCameraState::CinematicOrbit)
-		{
-			if (Asteroids.Num() > 0)
-			{
-				UNovaActorTools::SortActorsByClosestDistance(Asteroids, PlayerLocation);
-				FVector AsteroidLocation = Asteroids[0]->GetActorLocation();
 
-				Location = PlayerLocation + (PlayerLocation - AsteroidLocation).GetSafeNormal() * 10000;
-				Rotation = (AsteroidLocation - PlayerLocation).Rotation();
-				Rotation.Pitch -= 20;
-			}
+		// Braking spacecraft entry
+		if (CurrentCameraState == ENovaPlayerCameraState::CinematicBrake)
+		{
+			constexpr float AnimationStartAngle      = 90;
+			constexpr float AnimationStartTime       = 0.5f;
+			constexpr float AnimationEndTime         = 2.0f;
+			constexpr float RotationBaseDistance     = 10000;
+			constexpr float RotationVariableDistance = 10000;
+
+			// Build animation times
+			float RotationAnimationAlpha = FMath::Clamp(
+				(CurrentTimeInCameraState - AnimationStartTime) / (AnimationDuration - AnimationStartTime - AnimationEndTime), 0.0f, 1.0f);
+			RotationAnimationAlpha = FMath::InterpEaseInOut(0.0f, 1.0f, RotationAnimationAlpha, ENovaUIConstants::EaseStrong);
+
+			// Construct the rotation arc
+			FVector PlayerPitchAxis        = FVector::CrossProduct(-GetPawn()->GetActorForwardVector(), FVector(0, 0, 1));
+			FQuat   PlayerPitchStartOffset = FQuat(PlayerPitchAxis, FMath::DegreesToRadians(AnimationStartAngle));
+			FQuat   PlayerPitchOffset =
+				FQuat(PlayerPitchAxis, -FMath::DegreesToRadians(RotationAnimationAlpha * (180 - AnimationStartAngle)));
+
+			// Proceed
+			Rotation = (PlayerPitchOffset * PlayerPitchStartOffset * GetPawn()->GetActorQuat()).Rotator();
+			Location =
+				PlayerLocation - Rotation.Vector() * (RotationBaseDistance + (1.0f - RotationAnimationAlpha) * RotationVariableDistance);
 		}
 	}
 }
@@ -560,7 +579,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 		// UI disabled states
 		case ENovaPlayerCameraState::CinematicSpacecraft:
 		case ENovaPlayerCameraState::CinematicEnvironment:
-		case ENovaPlayerCameraState::CinematicOrbit:
+		case ENovaPlayerCameraState::CinematicBrake:
 		case ENovaPlayerCameraState::FastForward:
 			GetMenuManager()->CloseMenu(Action, Condition);
 			break;
