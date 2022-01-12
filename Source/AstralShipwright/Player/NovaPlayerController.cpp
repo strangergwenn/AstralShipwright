@@ -877,14 +877,6 @@ void ANovaPlayerController::SetupInputComponent()
 	{
 		InputComponent->BindKey(EKeys::Enter, EInputEvent::IE_Released, this, &ANovaPlayerController::ToggleMenuOrQuit);
 	}
-
-#if WITH_EDITOR
-
-	// Test bindings
-	InputComponent->BindAction("TestJoinSession", EInputEvent::IE_Released, this, &ANovaPlayerController::TestJoin);
-	InputComponent->BindAction("TestActor", EInputEvent::IE_Released, this, &ANovaPlayerController::TestActor);
-
-#endif
 }
 
 void ANovaPlayerController::ToggleMenuOrQuit()
@@ -999,9 +991,6 @@ void ANovaPlayerController::TestJoin()
 		SessionsManager->SearchSessions(true, FOnSessionSearchComplete::CreateUObject(this, &ANovaPlayerController::OnJoinRandomSession));
 	}
 }
-
-void ANovaPlayerController::TestActor()
-{}
 
 #endif
 

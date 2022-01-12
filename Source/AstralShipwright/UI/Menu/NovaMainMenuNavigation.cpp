@@ -512,6 +512,7 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 					[
 						SNovaAssignNew(CommitButton, SNovaButton)
 						.Size("DoubleButtonSize")
+						.Icon(FNovaStyleSet::GetBrush("Icon/SB_StartTrajectory"))
 						.Text(LOCTEXT("StartFlightPlan", "Start flight plan"))
 						.HelpText(this, &SNovaMainMenuNavigation::GetCommitTrajectoryHelpText)
 						.OnClicked(this, &SNovaMainMenuNavigation::OnCommitTrajectory)

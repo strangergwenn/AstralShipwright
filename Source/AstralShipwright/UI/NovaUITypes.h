@@ -25,10 +25,10 @@ constexpr float FadeDurationLong    = 0.4f;
 enum class ENovaNotificationType : uint8
 {
 	Info,
-	Warning,
 	Error,
 	Save,
-	World
+	World,
+	Time
 };
 
 /** Loading screen types */

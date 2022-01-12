@@ -126,10 +126,6 @@ const FSlateBrush* SNovaNotification::GetNotifyIcon() const
 	{
 		return FNovaStyleSet::GetBrush("Icon/SB_Notify_Info");
 	}
-	else if (DesiredNotifyType == ENovaNotificationType::Warning)
-	{
-		return FNovaStyleSet::GetBrush("Icon/SB_Notify_Warning");
-	}
 	else if (DesiredNotifyType == ENovaNotificationType::Error)
 	{
 		return FNovaStyleSet::GetBrush("Icon/SB_Notify_Error");
@@ -141,6 +137,10 @@ const FSlateBrush* SNovaNotification::GetNotifyIcon() const
 	else if (DesiredNotifyType == ENovaNotificationType::World)
 	{
 		return FNovaStyleSet::GetBrush("Icon/SB_Notify_World");
+	}
+	else if (DesiredNotifyType == ENovaNotificationType::Time)
+	{
+		return FNovaStyleSet::GetBrush("Icon/SB_Notify_Time");
 	}
 
 	return nullptr;

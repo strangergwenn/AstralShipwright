@@ -624,16 +624,24 @@ void ANovaGameState::ProcessPlayerEvents(float DeltaTime)
 
 	if (TimeSinceEvent > EventNotificationDelay)
 	{
+		ENovaNotificationType NotificationType = ENovaNotificationType::Info;
+
 		// Handle area changes as the primary information
 		if (AreaChangeEvents.Num())
 		{
-			PrimaryText = AreaChangeEvents[AreaChangeEvents.Num() - 1]->Name;
+			PrimaryText      = AreaChangeEvents[AreaChangeEvents.Num() - 1]->Name;
+			NotificationType = ENovaNotificationType::World;
 		}
 
 		// Handle time skips as the secondary information
 		if (TimeJumpEvents.Num())
 		{
 			FText& Text = PrimaryText.IsEmpty() ? PrimaryText : SecondaryText;
+
+			if (PrimaryText.IsEmpty())
+			{
+				NotificationType = ENovaNotificationType::Time;
+			}
 
 			Text = FText::FormatNamed(LOCTEXT("SharedTransitionTimeFormat", "{duration} have passed"), TEXT("duration"),
 				GetDurationText(TimeJumpEvents[TimeJumpEvents.Num() - 1], 1));
@@ -644,7 +652,7 @@ void ANovaGameState::ProcessPlayerEvents(float DeltaTime)
 			ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetGameInstance()->GetFirstLocalPlayerController());
 			if (IsValid(PC) && PC->IsLocalController())
 			{
-				PC->Notify(PrimaryText, SecondaryText, ENovaNotificationType::World);
+				PC->Notify(PrimaryText, SecondaryText, NotificationType);
 			}
 		}
 

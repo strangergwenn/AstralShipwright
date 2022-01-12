@@ -105,22 +105,13 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 					.TextStyle(&Theme.MainFont)
 					.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenu::GetTooltipText))
 				]
-
-				+ SHorizontalBox::Slot()
-				.HAlign(HAlign_Center)
-				[
-					SNew(STextBlock)
-					.TextStyle(&Theme.MainFont)
-					.Text(this, &SNovaMainMenu::GetDateText)
-					.Visibility(this, &SNovaMainMenu::GetInfoTextVisibility)
-				]
 		
 				+ SHorizontalBox::Slot()
 				.HAlign(HAlign_Right)
 				[
-					SNew(SNovaText)
+					SNew(STextBlock)
 					.TextStyle(&Theme.MainFont)
-					.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenu::GetInfoText))
+					.Text(this, &SNovaMainMenu::GetInfoText)
 					.Visibility(this, &SNovaMainMenu::GetInfoTextVisibility)
 				]
 			]
@@ -403,24 +394,16 @@ FText SNovaMainMenu::GetTooltipText() const
 	return FText::FromString(TEXT("<img src=\"/Text/Info\"/> ") + CurrentTooltipText.ToString());
 }
 
-FText SNovaMainMenu::GetDateText() const
-{
-	const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
-	if (IsValid(GameState))
-	{
-		return ::GetDateText(GameState->GetCurrentTime());
-	}
-
-	return FText();
-}
-
 FText SNovaMainMenu::GetInfoText() const
 {
-	if (IsValid(MenuManager->GetPC()))
+	const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+
+	if (IsValid(GameState) && IsValid(MenuManager->GetPC()))
 	{
 		FNovaCredits PlayerCredits = MenuManager->GetPC()->GetAccountBalance();
 
-		return FText::FormatNamed(LOCTEXT("InfoText", "{credits} in account"), TEXT("credits"), GetPriceText(PlayerCredits));
+		return FText::FormatNamed(LOCTEXT("InfoText", "{date} - {credits} in account"), TEXT("date"),
+			::GetDateText(GameState->GetCurrentTime()), TEXT("credits"), GetPriceText(PlayerCredits));
 	}
 
 	return FText();

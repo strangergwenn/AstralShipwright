@@ -264,7 +264,6 @@ public:
 	void OnJoinRandomFriend(TArray<TSharedRef<FOnlineFriend>> FriendList);
 	void OnJoinRandomSession(TArray<FOnlineSessionSearchResult> SessionList);
 	void TestJoin();
-	void TestActor();
 
 #endif
 
