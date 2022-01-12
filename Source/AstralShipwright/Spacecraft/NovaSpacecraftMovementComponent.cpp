@@ -46,7 +46,7 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	LinearDeadDistance          = 1;
 	MaxLinearVelocity           = 50;
 	MaxSlowLinearAcceleration   = 10;
-	MaxDeltaVForThrusters       = 10;
+	MaxDeltaVForThrusters       = 5;
 	AngularDeadDistance         = 0.5f;
 	MaxAngularVelocity          = 60;
 	AngularOvershootRatio       = 1.1f;

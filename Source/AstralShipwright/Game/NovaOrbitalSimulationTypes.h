@@ -463,7 +463,7 @@ struct FNovaTrajectory
 
 		for (const FNovaManeuver& Maneuver : Maneuvers)
 		{
-			if (Maneuver.Time > CurrentTime)
+			if (Maneuver.Time >= CurrentTime)
 			{
 				Count++;
 			}

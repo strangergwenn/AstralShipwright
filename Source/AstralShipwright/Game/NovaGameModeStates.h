@@ -57,7 +57,8 @@ public:
 	virtual void EnterState(ENovaGameStateIdentifier PreviousStateIdentifier)
 	{
 		NLOG("FNovaGameState::EnterState : entering state '%s'", *StateName);
-		StateStartTime = GameState->GetCurrentTime();
+		StateStartTime            = GameState->GetCurrentTime();
+		StateStartArrivingInSpace = IsArrivingInSpace();
 	}
 
 	/** Run the state and return the desired current state */
@@ -120,6 +121,7 @@ protected:
 	// Local state
 	FString   StateName;
 	FNovaTime StateStartTime;
+	bool      StateStartArrivingInSpace;
 
 	// Outer objects
 	class ANovaPlayerController*           PC;
@@ -380,8 +382,8 @@ public:
 				[this]()
 				{
 					GameMode->SetCurrentAreaVisible(true);
-					GameState->SetUsingTrajectoryMovement(true);
-				}));
+																			 GameState->SetUsingTrajectoryMovement(true);
+																		 }));
 	}
 
 	virtual ENovaGameStateIdentifier UpdateState() override
@@ -390,7 +392,7 @@ public:
 
 		if (GetSecondsInState() > ENovaGameModeStateTiming::ArrivalCutsceneDuration)
 		{
-			return IsArrivingInSpace() ? ENovaGameStateIdentifier::Orbit : ENovaGameStateIdentifier::Area;
+			return StateStartArrivingInSpace ? ENovaGameStateIdentifier::Orbit : ENovaGameStateIdentifier::Area;
 		}
 		else
 		{

@@ -680,6 +680,8 @@ TPair<const UNovaArea*, double> UNovaOrbitalSimulationComponent::GetPlayerNeares
 	const FNovaTrajectory* PlayerTrajectory = GetPlayerTrajectory();
 	if (PlayerTrajectory)
 	{
+		NCHECK(PlayerTrajectory->IsValid());
+
 		FNovaTime  ArrivalTime     = PlayerTrajectory->GetArrivalTime();
 		FNovaOrbit ArrivalOrbit    = PlayerTrajectory->GetFinalOrbit();
 		FVector2D  ArrivalLocation = ArrivalOrbit.GetLocation(ArrivalTime).GetCartesianLocation();

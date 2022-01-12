@@ -39,7 +39,7 @@ void UNovaSpacecraftDriveComponent::BeginPlay()
 	SetStaticMesh(ExhaustMesh);
 
 	// Create exhaust metadata
-	ExhaustPower.SetPeriod(0.4f);
+	ExhaustPower.SetPeriod(0.25f);
 
 	// Create exhaust material
 	ExhaustMaterial = UMaterialInstanceDynamic::Create(GetMaterial(0), GetWorld());
@@ -67,7 +67,7 @@ void UNovaSpacecraftDriveComponent::TickComponent(float DeltaTime, ELevelTick Ti
 		if (IsValid(OrbitalSimulation) && IsValid(SpacecraftPawn) && !ParentMesh->IsDematerializing())
 		{
 			EngineIntensity =
-				OrbitalSimulation->GetCurrentSpacecraftThrustFactor(SpacecraftPawn->GetSpacecraftIdentifier(), FNovaTime::FromSeconds(0.8));
+				OrbitalSimulation->GetCurrentSpacecraftThrustFactor(SpacecraftPawn->GetSpacecraftIdentifier(), FNovaTime::FromSeconds(0.5));
 		}
 
 		// Apply power
