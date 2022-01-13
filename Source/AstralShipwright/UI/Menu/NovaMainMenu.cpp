@@ -391,7 +391,8 @@ FText SNovaMainMenu::GetCloseHelpText() const
 
 FText SNovaMainMenu::GetTooltipText() const
 {
-	return FText::FromString(TEXT("<img src=\"/Text/Info\"/> ") + CurrentTooltipText.ToString());
+	FString TooltipText = CurrentTooltipText.ToString();
+	return TooltipText.Len() > 0 ? FText::FromString(TEXT("<img src=\"/Text/Info\"/> ") + TooltipText) : FText();
 }
 
 FText SNovaMainMenu::GetInfoText() const
