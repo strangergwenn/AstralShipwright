@@ -7,6 +7,18 @@
 
 #include "Online.h"
 
+// Definitions
+constexpr int32 HUDCount = 5;
+
+/** HUD data structure */
+struct FNovaHUDData
+{
+	FText                         HelpText;
+	TSharedPtr<SWidget>           OverviewWidget;
+	TSharedPtr<SWidget>           DetailedWidget;
+	TSharedPtr<class SNovaButton> DefaultFocus;
+};
+
 /** Flight menu */
 class SNovaMainMenuFlight
 	: public SNovaTabPanel
@@ -41,6 +53,10 @@ public:
 
 	virtual void UpdateGameObjects() override;
 
+	virtual void Next() override;
+
+	virtual void Previous() override;
+
 	virtual void HorizontalAnalogInput(float Value) override;
 
 	virtual void VerticalAnalogInput(float Value) override;
@@ -52,11 +68,16 @@ public:
 	----------------------------------------------------*/
 
 protected:
+	FKey GetPreviousItemKey() const;
+	FKey GetNextItemKey() const;
+
 	bool  CanFastForward() const;
 	FText GetFastFowardHelp() const;
 
-	bool IsUndockEnabled() const;
-	bool IsDockEnabled() const;
+	FText GetDockingText() const;
+	FText GetDockingHelp() const;
+
+	bool IsDockingEnabled() const;
 
 	bool IsManeuveringEnabled() const;
 
@@ -65,10 +86,12 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+	void SetHUDIndex(int32 Index);
+	void SetHUDIndexCallback(int32 Index);
+
 	void FastForward();
 
-	void OnUndock();
-	void OnDock();
+	void OnDockUndock();
 
 	void OnAlignToManeuver();
 
@@ -86,8 +109,17 @@ protected:
 	class UNovaOrbitalSimulationComponent*  OrbitalSimulation;
 
 	// Slate widgets
-	TSharedPtr<class SNovaButton> UndockButton;
-	TSharedPtr<class SNovaButton> DockButton;
-	TSharedPtr<class SNovaButton> AlignManeuverButton;
-	TSharedPtr<class SNovaButton> FastForwardButton;
+	TSharedPtr<class SHorizontalBox> HUDSwitcher;
+	TSharedPtr<class SNovaHUDPanel>  HUDPanel;
+	TSharedPtr<class SBox>           HUDBox;
+	TSharedPtr<class SNovaButton>    UndockButton;
+	TSharedPtr<class SNovaButton>    DockButton;
+	TSharedPtr<class SNovaButton>    AlignManeuverButton;
+	TSharedPtr<class SNovaButton>    FastForwardButton;
+	TSharedPtr<class SBox>           InvisibleWidget;
+
+	// HUD state
+	FNovaCarouselAnimation<HUDCount> HUDAnimation;
+	FNovaHUDData                     HUDData[HUDCount];
+	int32                            CurrentHUDIndex;
 };
