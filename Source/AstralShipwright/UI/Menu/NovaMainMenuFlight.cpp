@@ -218,10 +218,10 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 	----------------------------------------------------*/
 
 	SAssignNew(HomeHUD.OverviewWidget, STextBlock)
-		.TextStyle(&Theme.MainFont)
+		.TextStyle(&Theme.InfoFont)
 		.Text(TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([=]()
 		{
-			return SpacecraftPawn->GetSpacecraftCopy().GetName();
+			return SpacecraftPawn ? SpacecraftPawn->GetSpacecraftCopy().GetName() : FText();
 		})));
 
 	/*----------------------------------------------------
@@ -415,9 +415,8 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 
 	// clang-format on
 
-	// Start the HUD
+	// Initialize
 	HUDAnimation.Initialize(FNovaStyleSet::GetButtonTheme().AnimationDuration);
-	SetHUDIndex(HUDCount / 2);
 }
 
 /*----------------------------------------------------
@@ -434,6 +433,11 @@ void SNovaMainMenuFlight::Tick(const FGeometry& AllottedGeometry, const double C
 void SNovaMainMenuFlight::Show()
 {
 	SNovaTabPanel::Show();
+
+	// Start the HUD at center
+	SetHUDIndex(HUDCount / 2);
+	HUDPanel->Reset();
+	HUDAnimation.Update(CurrentHUDIndex, FNovaStyleSet::GetButtonTheme().AnimationDuration);
 }
 
 void SNovaMainMenuFlight::Hide()

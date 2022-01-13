@@ -47,7 +47,7 @@ public:
 		// clang-format on
 
 		// Defaults
-		CurrentDisplayTime = DisplayDuration;
+		Reset();
 	}
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override
@@ -77,6 +77,15 @@ public:
 		{
 			CurrentDisplayTime += DeltaTime;
 		}
+	}
+
+	/** Reset the fading system */
+	void Reset()
+	{
+		CurrentFadeTime    = 0;
+		CurrentDisplayTime = 0;
+		CurrentAlpha       = 0;
+		CurrentDisplayTime = DisplayDuration;
 	}
 
 	/*----------------------------------------------------
