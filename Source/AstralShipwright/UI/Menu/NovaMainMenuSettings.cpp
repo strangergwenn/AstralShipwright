@@ -342,6 +342,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 			.HelpText(LOCTEXT("LumenRayTracingHelp", "Enable hardware raytracing support for Lumen, improving quality on DXR hardware"))
 			.OnClicked(this, &SNovaMainMenuSettings::OnLumenHWRTToggled)
 			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+			.Enabled(this, &SNovaMainMenuSettings::IsRaytracingSupported)
 		];
 		
 		GraphicsContainer->AddSlot()
@@ -736,6 +737,11 @@ bool SNovaMainMenuSettings::IsDLSSSupported() const
 bool SNovaMainMenuSettings::IsHDRSupported() const
 {
 	return GameUserSettings->IsHDRSupported();
+}
+
+bool SNovaMainMenuSettings::IsRaytracingSupported() const
+{
+	return IsRayTracingEnabled();
 }
 
 void SNovaMainMenuSettings::OnFOVChanged(float Value)

@@ -68,6 +68,7 @@ protected:
 	bool        IsScreenPercentageSupported() const;
 	bool        IsDLSSSupported() const;
 	bool        IsHDRSupported() const;
+	bool        IsRaytracingSupported() const;
 
 	// Gameplay settings callbacks
 	void OnFOVChanged(float Value);

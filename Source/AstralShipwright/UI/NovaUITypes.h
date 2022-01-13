@@ -70,3 +70,68 @@ public:
 	static const FName MenuAnalogHorizontal;
 	static const FName MenuAnalogVertical;
 };
+
+/*----------------------------------------------------
+    Helpers
+----------------------------------------------------*/
+
+/** Carousel type animation */
+template <int Size>
+struct FNovaCarouselAnimation
+{
+	FNovaCarouselAnimation() : AnimationDuration(0.0f)
+	{}
+
+	FNovaCarouselAnimation(float Duration, float EaseValue = ENovaUIConstants::EaseLight)
+	{
+		Initialize(Duration, EaseValue);
+	}
+
+	/** Initialize the structure */
+	void Initialize(float Duration, float EaseValue = ENovaUIConstants::EaseLight)
+	{
+		AnimationDuration = Duration;
+		AnimationEase     = EaseValue;
+		CurrentTotalAlpha = 1.0f;
+
+		FMemory::Memset(AlphaValues, 0, Size);
+		FMemory::Memset(InterpolatedAlphaValues, 0, Size);
+	}
+
+	/** Feed the currently selected index */
+	void Update(int32 SelectedIndex, float DeltaTime)
+	{
+		NCHECK(AnimationDuration > 0);
+
+		CurrentTotalAlpha = 0.0f;
+		for (int32 Index = 0; Index < Size; Index++)
+		{
+			if (Index == SelectedIndex)
+			{
+				AlphaValues[Index] += DeltaTime / AnimationDuration;
+			}
+			else
+			{
+				AlphaValues[Index] -= DeltaTime / AnimationDuration;
+			}
+			AlphaValues[Index] = FMath::Clamp(AlphaValues[Index], 0.0f, 1.0f);
+
+			InterpolatedAlphaValues[Index] = FMath::InterpEaseInOut(0.0f, 1.0f, AlphaValues[Index], AnimationEase);
+			CurrentTotalAlpha += InterpolatedAlphaValues[Index];
+		}
+	}
+
+	/** Get the current animation alpha for this index */
+	float GetAlpha(int32 Index) const
+	{
+		return CurrentTotalAlpha > 0.0f ? InterpolatedAlphaValues[Index] / CurrentTotalAlpha : 0.0f;
+	}
+
+private:
+	// Animation data
+	float AnimationDuration;
+	float AnimationEase;
+	float CurrentTotalAlpha;
+	float AlphaValues[Size];
+	float InterpolatedAlphaValues[Size];
+};

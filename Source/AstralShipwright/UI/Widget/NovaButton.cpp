@@ -81,7 +81,7 @@ void SNovaButton::Construct(const FArguments& InArgs)
 					SNew(SBorder)
 					.BorderImage(&Theme.Border)
 					.BorderBackgroundColor(this, &SNovaButton::GetBorderColor)
-					.Padding(FMargin(1))
+					.Padding(FMargin(Theme.Border.GetImageSize() / 2))
 					.RenderTransform(this, &SNovaButton::GetBorderRenderTransform)
 					.RenderTransformPivot(FVector2D(0.5f, 0.5f))
 					[

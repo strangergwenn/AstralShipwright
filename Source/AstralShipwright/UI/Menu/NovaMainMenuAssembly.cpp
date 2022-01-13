@@ -1131,8 +1131,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 	// clang-format on
 
 	// Default settings
-	CompartmentAnimation.Initialize(FNovaStyleSet::GetButtonTheme().AnimationDuration, ENovaUIConstants::EaseLight);
-	ModuleEquipmentAnimation.Initialize(FNovaStyleSet::GetButtonTheme().AnimationDuration, ENovaUIConstants::EaseLight);
+	CompartmentAnimation.Initialize(FNovaStyleSet::GetButtonTheme().AnimationDuration);
+	ModuleEquipmentAnimation.Initialize(FNovaStyleSet::GetButtonTheme().AnimationDuration);
 	SetPanelState(ENovaMainMenuAssemblyState::Assembly);
 }
 
