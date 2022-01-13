@@ -45,6 +45,17 @@ TSharedPtr<SNovaButton> SNovaNavigationPanel::GetDefaultFocusButton() const
 	return nullptr;
 }
 
+bool SNovaNavigationPanel::IsButtonActionAllowed(TSharedPtr<SNovaButton> Button) const
+{
+	TSharedPtr<SWidget> ButtonParentWidget = Button->GetParentWidget();
+	while (ButtonParentWidget.IsValid() && ButtonParentWidget.Get() != this)
+	{
+		ButtonParentWidget = ButtonParentWidget->GetParentWidget();
+	}
+
+	return ButtonParentWidget.IsValid();
+}
+
 TArray<TSharedPtr<SNovaButton>>& SNovaNavigationPanel::GetNavigationButtons()
 {
 	return NavigationButtons;

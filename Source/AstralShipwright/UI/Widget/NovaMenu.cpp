@@ -495,7 +495,10 @@ FReply SNovaMenu::HandleKeyPress(FKey Key)
 		{
 			bool WasFocused = Button->IsFocused();
 
-			Button->OnButtonClicked();
+			if (CurrentNavigationPanel == nullptr || CurrentNavigationPanel->IsButtonActionAllowed(Button))
+			{
+				Button->OnButtonClicked();
+			}
 
 			if (CurrentNavigationPanel && WasFocused && Button->IsButtonActionFocusable())
 			{

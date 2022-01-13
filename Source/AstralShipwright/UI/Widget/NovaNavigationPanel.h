@@ -87,6 +87,9 @@ public:
 	/** Get the ideal default focus button */
 	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const;
 
+	/** Confirm whether a button is allowed to fire its action */
+	bool IsButtonActionAllowed(TSharedPtr<SNovaButton> Button) const;
+
 	/** Reset the focus to the default button, or any button */
 	void ResetNavigation();
 
