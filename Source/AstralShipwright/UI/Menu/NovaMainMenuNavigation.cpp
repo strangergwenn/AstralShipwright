@@ -703,6 +703,11 @@ void SNovaMainMenuNavigation::VerticalAnalogInput(float Value)
 	OrbitalMap->VerticalAnalogInput(Value);
 }
 
+TSharedPtr<SNovaButton> SNovaMainMenuNavigation::GetDefaultFocusButton() const
+{
+	return CommitButton;
+}
+
 /*----------------------------------------------------
     Internals
 ----------------------------------------------------*/

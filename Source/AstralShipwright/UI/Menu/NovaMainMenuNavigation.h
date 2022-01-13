@@ -51,6 +51,8 @@ public:
 
 	virtual void VerticalAnalogInput(float Value) override;
 
+	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
+
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
