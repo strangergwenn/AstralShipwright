@@ -186,7 +186,15 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		.TextStyle(&Theme.MainFont)
 		.Text(LOCTEXT("Power", "Power"));
 
-	SAssignNew(PowerHUD.DetailedWidget, SVerticalBox);
+	SAssignNew(PowerHUD.DetailedWidget, SVerticalBox)
+
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.HeadingFont)
+			.Text(LOCTEXT("Power", "Power"))
+		];
 
 	PowerHUD.DefaultFocus = nullptr;
 	
@@ -199,6 +207,14 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		.Text(LOCTEXT("Attitude", "Attitude"));
 
 	SAssignNew(AttitudeHUD.DetailedWidget, SVerticalBox)
+
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.HeadingFont)
+			.Text(LOCTEXT("Attitude", "Attitude"))
+		]
 	
 		+ SVerticalBox::Slot()
 		.AutoHeight()
@@ -233,6 +249,14 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		.Text(LOCTEXT("Operations", "Operations"));
 
 	SAssignNew(OperationsHUD.DetailedWidget, SVerticalBox)
+
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.HeadingFont)
+			.Text(LOCTEXT("Operations", "Operations"))
+		]
 
 		+ SVerticalBox::Slot()
 		.AutoHeight()
@@ -357,7 +381,15 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		.TextStyle(&Theme.MainFont)
 		.Text(LOCTEXT("Weapons", "Weapons"));
 
-	SAssignNew(WeaponsHUD.DetailedWidget, SVerticalBox);
+	SAssignNew(WeaponsHUD.DetailedWidget, SVerticalBox)
+
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.HeadingFont)
+			.Text(LOCTEXT("Weapons", "Weapons"))
+		];
 
 	WeaponsHUD.DefaultFocus = nullptr;
 	
