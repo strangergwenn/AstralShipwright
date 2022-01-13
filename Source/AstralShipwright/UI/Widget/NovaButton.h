@@ -41,7 +41,7 @@ class SNovaButton : public SButton
 		, _BorderRotation(0)
 		, _Enabled(true)
 		, _Focusable(true)
-		, _ActionFocusable(false)
+		, _ActionFocusable(true)
 		, _Toggle(false)
 	{}
 

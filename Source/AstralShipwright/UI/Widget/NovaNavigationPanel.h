@@ -88,19 +88,19 @@ public:
 	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const;
 
 	/** Confirm whether a button is allowed to fire its action */
-	bool IsButtonActionAllowed(TSharedPtr<SNovaButton> Button) const;
+	virtual bool IsButtonActionAllowed(TSharedPtr<class SNovaButton> Button) const;
 
 	/** Reset the focus to the default button, or any button */
 	void ResetNavigation();
 
 	/** Get all the buttons on this panel that we can navigate to */
-	TArray<TSharedPtr<SNovaButton>>& GetNavigationButtons();
+	TArray<TSharedPtr<class SNovaButton>>& GetNavigationButtons();
 
 	/** Check if the focused button is valid and inside a widget of this panel */
 	bool IsFocusedButtonInsideWidget(TSharedPtr<SWidget> Widget) const;
 
 	/** Check if a particular button is valid and inside a widget of this panel */
-	bool IsButtonInsideWidget(TSharedPtr<SNovaButton> Button, TSharedPtr<SWidget> Widget) const;
+	bool IsButtonInsideWidget(TSharedPtr<class SNovaButton> Button, TSharedPtr<SWidget> Widget) const;
 
 	/** Get the owner menu */
 	class SNovaMenu* GetMenu() const

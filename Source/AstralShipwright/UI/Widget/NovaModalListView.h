@@ -31,7 +31,7 @@ private:
 		: _Panel(nullptr)
 		, _ItemsSource(nullptr)
 		, _Enabled(true)
-		, _ActionFocusable(false)
+		, _ActionFocusable(true)
 		, _Horizontal(false)
 		, _ButtonTheme("DefaultButton")
 		, _ButtonSize("DefaultButtonSize")

@@ -104,7 +104,7 @@ public:
 	void SetFocusedButton(TSharedPtr<class SNovaButton> FocusButton, bool FromNavigation);
 
 	/** Get the currently focused button */
-	TSharedPtr<SNovaButton> GetFocusedButton();
+	TSharedPtr<class SNovaButton> GetFocusedButton();
 
 protected:
 	/** Create a new button that can be triggered by actions */

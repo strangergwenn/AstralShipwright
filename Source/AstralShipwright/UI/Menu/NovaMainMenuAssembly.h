@@ -75,6 +75,8 @@ public:
 
 	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
 
+	virtual bool IsButtonActionAllowed(TSharedPtr<SNovaButton> Button) const override;
+
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
@@ -277,6 +279,7 @@ protected:
 	TSharedPtr<class SNovaSlider>             DisplayFilter;
 	TSharedPtr<class SNovaButton>             SaveButton;
 	TSharedPtr<class SNovaButton>             BackButton;
+	TSharedPtr<class SNovaButton>             EditButton;
 	TSharedPtr<class SNovaModalPanel>         GenericModalPanel;
 	TSharedPtr<class SNovaAssemblyModalPanel> AssemblyModalPanel;
 	TSharedPtr<SVerticalBox>                  MenuBox;
@@ -297,6 +300,9 @@ protected:
 	// Carousel animations
 	FNovaCarouselAnimation<ENovaConstants::MaxCompartmentCount>                                CompartmentAnimation;
 	FNovaCarouselAnimation<ENovaConstants::MaxModuleCount + ENovaConstants::MaxEquipmentCount> ModuleEquipmentAnimation;
+
+	// Compartment list
+	TSharedPtr<SNovaCompartmentList> CompartmentList;
 
 	// Hull type list
 	TArray<const class UNovaHullDescription*> HullTypeList;

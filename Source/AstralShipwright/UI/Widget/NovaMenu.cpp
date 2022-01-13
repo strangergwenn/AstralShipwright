@@ -493,11 +493,13 @@ FReply SNovaMenu::HandleKeyPress(FKey Key)
 	{
 		if (Button->GetActionKey() == Key && Button->IsButtonEnabled() && Button->GetVisibility() == EVisibility::Visible)
 		{
-			bool WasFocused = Button->IsFocused();
+			bool ActionPassedToWidget = false;
+			bool WasFocused           = Button->IsFocused();
 
 			if (CurrentNavigationPanel == nullptr || CurrentNavigationPanel->IsButtonActionAllowed(Button))
 			{
 				Button->OnButtonClicked();
+				ActionPassedToWidget = true;
 			}
 
 			if (CurrentNavigationPanel && WasFocused && Button->IsButtonActionFocusable())
@@ -505,8 +507,11 @@ FReply SNovaMenu::HandleKeyPress(FKey Key)
 				CurrentNavigationPanel->ResetNavigation();
 			}
 
-			Result = FReply::Handled();
-			break;
+			if (ActionPassedToWidget)
+			{
+				Result = FReply::Handled();
+				break;
+			}
 		}
 	}
 

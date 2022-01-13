@@ -109,6 +109,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 					.Text(LOCTEXT("TradePropellant", "Trade propellant"))
 					.HelpText(LOCTEXT("TradePropellantHelp", "Trade propellant with this station"))
 					.Action(FNovaPlayerInput::MenuPrimary)
+					.ActionFocusable(false)
 					.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
 					{
 						return SpacecraftPawn && SpacecraftPawn->IsDocked();

@@ -334,10 +334,9 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								+ SHorizontalBox::Slot()
 								.AutoWidth()
 								[
-									SNovaNew(SNovaCompartmentList)
+									SNovaAssignNew(CompartmentList, SNovaCompartmentList)
 									.Panel(this)
 									.Action(FNovaPlayerInput::MenuPrimary)
-									.ActionFocusable(true)
 									.TitleText(LOCTEXT("BuildCompartment", "Insert compartment"))
 									.HelpText(LOCTEXT("BuildCompartmentHelp", "Insert a new compartment forward of the selected one"))
 									.OnSelfRefresh(SNovaCompartmentList::FNovaOnSelfRefresh::CreateLambda([&]()
@@ -355,9 +354,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								+ SHorizontalBox::Slot()
 								.AutoWidth()
 								[
-									SNovaNew(SNovaButton)
+									SNovaAssignNew(EditButton, SNovaButton)
 									.Action(FNovaPlayerInput::MenuSecondary)
-									.ActionFocusable(true)
 									.Text(LOCTEXT("EditCompartment", "Edit compartment"))
 									.HelpText(LOCTEXT("EditCompartmentHelp", "Add modules and equipment to the selected compartment"))
 									.Enabled(this, &SNovaMainMenuAssembly::IsEditCompartmentEnabled)
@@ -516,7 +514,6 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							[
 								SNovaAssignNew(BackButton, SNovaButton)
 								.Action(FNovaPlayerInput::MenuCancel)
-								.ActionFocusable(true)
 								.Text(LOCTEXT("CompartmentBack", "Back to assembly"))
 								.HelpText(LOCTEXT("CompartmentBackHelp", "Go back to the main assembly"))
 								.OnClicked(this, &SNovaMainMenuAssembly::OnBackToAssembly)
@@ -529,7 +526,6 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								SNovaAssignNew(ModuleListView, SNovaModuleList)
 								.Panel(this)
 								.Action(FNovaPlayerInput::MenuPrimary)
-								.ActionFocusable(true)
 								.ItemsSource(&ModuleList)
 								.ListButtonSize("LargeListButtonSize")
 								.TitleText(LOCTEXT("ModuleListTitle", "Module"))
@@ -548,7 +544,6 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								SNovaAssignNew(EquipmentListView, SNovaEquipmentList)
 								.Panel(this)
 								.Action(FNovaPlayerInput::MenuPrimary)
-								.ActionFocusable(true)
 								.ItemsSource(&EquipmentList)
 								.ListButtonSize("LargeListButtonSize")
 								.TitleText(LOCTEXT("EquipmentListTitle", "Equipment"))
@@ -567,7 +562,6 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								SNovaAssignNew(HullTypeListView, SNovaHullTypeList)
 								.Panel(this)
 								.Action(FNovaPlayerInput::MenuSecondary)
-								.ActionFocusable(true)
 								.ItemsSource(&HullTypeList)
 								.ListButtonSize("LargeListButtonSize")
 								.TitleText(LOCTEXT("HullListTitle", "Hull type"))
@@ -717,7 +711,6 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							[
 								SNovaNew(SNovaButton)
 								.Action(FNovaPlayerInput::MenuCancel)
-								.ActionFocusable(true)
 								.Text(LOCTEXT("CompartmentBack", "Back to assembly"))
 								.HelpText(LOCTEXT("CompartmentBackHelp", "Go back to the main assembly"))
 								.OnClicked(this, &SNovaMainMenuAssembly::OnBackToAssembly)
@@ -1341,6 +1334,26 @@ TSharedPtr<SNovaButton> SNovaMainMenuAssembly::GetDefaultFocusButton() const
 	else
 	{
 		return nullptr;
+	}
+}
+
+bool SNovaMainMenuAssembly::IsButtonActionAllowed(TSharedPtr<SNovaButton> Button) const
+{
+	if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly)
+	{
+		return Button == CompartmentList || Button == EditButton;
+	}
+	else if (CurrentPanelState == ENovaMainMenuAssemblyState::Customization)
+	{
+		return Button == BackButton;
+	}
+	else if (CurrentPanelState == ENovaMainMenuAssemblyState::Compartment)
+	{
+		return Button == ModuleListView || Button == EquipmentListView || Button == HullTypeListView || Button == BackButton;
+	}
+	else
+	{
+		return false;
 	}
 }
 
