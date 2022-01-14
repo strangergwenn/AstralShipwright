@@ -774,7 +774,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						[
-							SNovaNew(SNovaButton)
+							SNovaAssignNew(PhotoModeButton, SNovaButton)
 							.Action(FNovaPlayerInput::MenuAltPrimary)
 							.Text(LOCTEXT("PhotoMode", "Toggle photo mode"))
 							.HelpText(LOCTEXT("PhotoModeHelp", "Hide the interface to show off your spacecraft"))
@@ -1339,22 +1339,29 @@ TSharedPtr<SNovaButton> SNovaMainMenuAssembly::GetDefaultFocusButton() const
 
 bool SNovaMainMenuAssembly::IsButtonActionAllowed(TSharedPtr<SNovaButton> Button) const
 {
+	TArray<TSharedPtr<SNovaButton>> AllowedButtons;
+
+	AllowedButtons.Add(PhotoModeButton);
+	AllowedButtons.Add(DisplayFilter);
+
 	if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly)
 	{
-		return Button == CompartmentList || Button == EditButton;
+		AllowedButtons.Add(CompartmentList);
+		AllowedButtons.Add(EditButton);
 	}
 	else if (CurrentPanelState == ENovaMainMenuAssemblyState::Customization)
 	{
-		return Button == BackButton;
+		AllowedButtons.Add(BackButton);
 	}
 	else if (CurrentPanelState == ENovaMainMenuAssemblyState::Compartment)
 	{
-		return Button == ModuleListView || Button == EquipmentListView || Button == HullTypeListView || Button == BackButton;
+		AllowedButtons.Add(ModuleListView);
+		AllowedButtons.Add(EquipmentListView);
+		AllowedButtons.Add(HullTypeListView);
+		AllowedButtons.Add(BackButton);
 	}
-	else
-	{
-		return false;
-	}
+
+	return AllowedButtons.Contains(Button);
 }
 
 /*----------------------------------------------------

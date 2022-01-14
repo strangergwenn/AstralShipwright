@@ -280,6 +280,7 @@ protected:
 	TSharedPtr<class SNovaButton>             SaveButton;
 	TSharedPtr<class SNovaButton>             BackButton;
 	TSharedPtr<class SNovaButton>             EditButton;
+	TSharedPtr<class SNovaButton>             PhotoModeButton;
 	TSharedPtr<class SNovaModalPanel>         GenericModalPanel;
 	TSharedPtr<class SNovaAssemblyModalPanel> AssemblyModalPanel;
 	TSharedPtr<SVerticalBox>                  MenuBox;
