@@ -20,7 +20,10 @@ void UNovaAISpacecraftDescription::LoadInGame()
 	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
 	if (SpacecraftPawn)
 	{
-		SpacecraftPawn->SetSpacecraft(&Spacecraft);
+		FNovaSpacecraft NewSpacecraft = Spacecraft;
+		NewSpacecraft.Identifier      = SpacecraftPawn->GetSpacecraftIdentifier();
+
+		SpacecraftPawn->SetSpacecraft(&NewSpacecraft);
 	}
 
 #endif    // WITH_EDITOR
