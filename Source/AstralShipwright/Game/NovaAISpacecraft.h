@@ -34,15 +34,3 @@ public:
 	UPROPERTY()
 	FNovaSpacecraft Spacecraft;
 };
-
-/*----------------------------------------------------
-    AI spacecraft data
-----------------------------------------------------*/
-
-/** Spacecraft data */
-struct FNovaAISpacecraft
-{
-	FText Name;
-
-	const UNovaAISpacecraftDescription* Description;
-};

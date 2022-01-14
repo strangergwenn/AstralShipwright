@@ -1185,6 +1185,8 @@ void SNovaMainMenuAssembly::Tick(const FGeometry& AllottedGeometry, const double
 	// Set the hovered compartment
 	if (IsValid(SpacecraftPawn))
 	{
+		SelectedCompartmentIndex = FMath::Min(SelectedCompartmentIndex, SpacecraftPawn->GetCompartmentCount() - 1);
+
 		int32 HighlightedCompartment = INDEX_NONE;
 		if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly && !MenuManager->IsUsingGamepad() && !PC->IsInPhotoMode() &&
 			Menu->IsActiveNavigationPanel(this) && SpacecraftPawn->GetCompartmentCount() > 1)
