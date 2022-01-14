@@ -270,6 +270,10 @@ protected:
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	class UNovaAsteroidSimulationComponent* AsteroidSimulationComponent;
 
+	// AI simulation component
+	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
+	class UNovaAISimulationComponent* AISimulationComponent;
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
@@ -325,5 +329,11 @@ public:
 	class UNovaAsteroidSimulationComponent* GetAsteroidSimulation() const
 	{
 		return AsteroidSimulationComponent;
+	}
+
+	/** Return the AI simulation component */
+	class UNovaAISimulationComponent* GetAISimulation() const
+	{
+		return AISimulationComponent;
 	}
 };

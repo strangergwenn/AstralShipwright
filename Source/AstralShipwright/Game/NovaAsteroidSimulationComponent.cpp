@@ -8,6 +8,8 @@
 #include "NovaOrbitalSimulationComponent.h"
 #include "NovaGameState.h"
 
+#include "Nova.h"
+
 #include "Curves/CurveFloat.h"
 
 // Definitions
@@ -46,9 +48,8 @@ void UNovaAsteroidSimulationComponent::TickComponent(float DeltaTime, ELevelTick
 	{
 		for (const TPair<FGuid, FNovaOrbitalLocation>& IdentifierAndLocation : OrbitalSimulation->GetAllAsteroidsLocations())
 		{
-			FGuid                Identifier         = IdentifierAndLocation.Key;
-			double               DistanceFromPlayer = IdentifierAndLocation.Value.GetDistanceTo(*PlayerLocation);
-			const FNovaAsteroid& Asteroid           = AsteroidDatabase[Identifier];
+			FGuid  Identifier         = IdentifierAndLocation.Key;
+			double DistanceFromPlayer = IdentifierAndLocation.Value.GetDistanceTo(*PlayerLocation);
 
 			// Spawn
 			if (GetPhysicalAsteroid(Identifier) == nullptr &&
@@ -56,7 +57,7 @@ void UNovaAsteroidSimulationComponent::TickComponent(float DeltaTime, ELevelTick
 			{
 				ANovaAsteroid* NewAsteroid = GetWorld()->SpawnActor<ANovaAsteroid>();
 				NCHECK(NewAsteroid);
-				NewAsteroid->Initialize(Asteroid);
+				NewAsteroid->Initialize(AsteroidDatabase[Identifier]);
 
 				NLOG("UNovaAsteroidSimulationComponent::TickComponent : spawning '%s'", *Identifier.ToString(EGuidFormats::Short));
 
@@ -86,6 +87,7 @@ void UNovaAsteroidSimulationComponent::TickComponent(float DeltaTime, ELevelTick
 
 void UNovaAsteroidSimulationComponent::Initialize(const UNovaAsteroidConfiguration* Configuration)
 {
+	NLOG("UNovaAsteroidSimulationComponent::Initialize");
 	NCHECK(Configuration != nullptr);
 	NCHECK(Configuration->AltitudeDistribution != nullptr);
 

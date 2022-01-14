@@ -77,17 +77,17 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	/** Reset the spawner */
+	/** Reset the component */
 	void Initialize(const UNovaAsteroidConfiguration* Configuration);
 
 	/** Get a specific asteroid */
-	const struct FNovaAsteroid* GetAsteroid(FGuid Identifier) const
+	const FNovaAsteroid* GetAsteroid(FGuid Identifier) const
 	{
 		return AsteroidDatabase.Find(Identifier);
 	}
 
 	/** Get all asteroids */
-	const TMap<FGuid, struct FNovaAsteroid>& GetAsteroids() const
+	const TMap<FGuid, FNovaAsteroid>& GetAsteroids() const
 	{
 		return AsteroidDatabase;
 	}

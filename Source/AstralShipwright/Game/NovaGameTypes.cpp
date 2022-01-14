@@ -48,14 +48,17 @@ void UNovaAssetDescription::UpdateAssetRender()
 			break;
 		}
 	}
-	NCHECK(CaptureActors.Num());
-	ANovaCaptureActor* CaptureActor = Cast<ANovaCaptureActor>(CaptureActors[0]);
-	NCHECK(CaptureActor);
 
-	// Capture it
-	CaptureActor->RenderAsset(this, AssetRender);
+	// Capture
+	if (CaptureActors.Num() > 0)
+	{
+		ANovaCaptureActor* CaptureActor = Cast<ANovaCaptureActor>(CaptureActors[0]);
+		NCHECK(CaptureActor);
 
-#endif
+		CaptureActor->RenderAsset(this, AssetRender);
+	}
+
+#endif    // WITH_EDITOR
 }
 
 void UNovaAssetDescription::SaveAsset(TSharedPtr<FJsonObject> Save, FString AssetName, const UNovaAssetDescription* Asset)

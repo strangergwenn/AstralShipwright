@@ -5,6 +5,7 @@
 #include "NovaArea.h"
 #include "NovaGameMode.h"
 #include "NovaGameTypes.h"
+#include "NovaAISimulationComponent.h"
 #include "NovaAsteroidSimulationComponent.h"
 #include "NovaOrbitalSimulationComponent.h"
 
@@ -51,6 +52,7 @@ ANovaGameState::ANovaGameState()
 	// Setup simulation component
 	OrbitalSimulationComponent  = CreateDefaultSubobject<UNovaOrbitalSimulationComponent>(TEXT("OrbitalSimulationComponent"));
 	AsteroidSimulationComponent = CreateDefaultSubobject<UNovaAsteroidSimulationComponent>(TEXT("AsteroidSimulationComponent"));
+	AISimulationComponent       = CreateDefaultSubobject<UNovaAISimulationComponent>(TEXT("AISimulationComponent"));
 
 	// Settings
 	bReplicates = true;
@@ -160,10 +162,12 @@ void ANovaGameState::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Startup the asteroid manager
 	UNovaAssetManager* AssetManager = GetGameInstance<UNovaGameInstance>()->GetAssetManager();
 	NCHECK(AssetManager);
+
+	// Startup the simulation components
 	AsteroidSimulationComponent->Initialize(AssetManager->GetDefaultAsset<UNovaAsteroidConfiguration>());
+	AISimulationComponent->Initialize();
 }
 
 void ANovaGameState::Tick(float DeltaTime)

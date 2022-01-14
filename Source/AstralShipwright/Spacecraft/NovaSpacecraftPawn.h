@@ -83,6 +83,7 @@ class ANovaSpacecraftPawn : public ANovaTurntablePawn
 	friend class UNovaCompartmentDescription;
 	friend class UNovaModuleDescription;
 	friend class UNovaEquipmentDescription;
+	friend class UNovaAISpacecraftDescription;
 
 	GENERATED_BODY()
 
