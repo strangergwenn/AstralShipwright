@@ -133,6 +133,28 @@ public:
 		return Color;
 	}
 
+	TOptional<int32> GetBlurRadius() const
+	{
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+		float CorrectedAlpha =
+			FMath::Clamp((CurrentAlpha - ENovaUIConstants::BlurAlphaOffset) / (1.0f - ENovaUIConstants::BlurAlphaOffset), 0.0f, 1.0f);
+		float BlurAlpha = FMath::InterpEaseInOut(0.0f, 1.0f, CorrectedAlpha, ENovaUIConstants::EaseStandard);
+
+		return static_cast<int32>(BlurAlpha * Theme.BlurRadius);
+	}
+
+	float GetBlurStrength() const
+	{
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+		float CorrectedAlpha =
+			FMath::Clamp((CurrentAlpha - ENovaUIConstants::BlurAlphaOffset) / (1.0f - ENovaUIConstants::BlurAlphaOffset), 0.0f, 1.0f);
+		float BlurAlpha = FMath::InterpEaseInOut(0.0f, 1.0f, CorrectedAlpha, ENovaUIConstants::EaseStandard);
+
+		return BlurAlpha * Theme.BlurStrength;
+	}
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/

@@ -123,8 +123,14 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		.HAlign(HAlign_Center)
 		[
 			SNew(SBackgroundBlur)
-			.BlurRadius(this, &SNovaTabPanel::GetBlurRadius)
-			.BlurStrength(this, &SNovaTabPanel::GetBlurStrength)
+			.BlurRadius(TAttribute<TOptional<int32>>::Create(TAttribute<TOptional<int32>>::FGetter::CreateLambda([=]()
+			{
+				return CurrentAlpha * HUDPanel->GetBlurRadius().Get(0);
+			})))
+			.BlurStrength(TAttribute<float>::Create(TAttribute<float>::FGetter::CreateLambda([=]()
+			{
+				return CurrentAlpha * HUDPanel->GetBlurStrength();
+			})))
 			.bApplyAlphaToBlur(true)
 			.Padding(0)
 			[
@@ -190,6 +196,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 
 		+ SVerticalBox::Slot()
 		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
 		[
 			SNew(STextBlock)
 			.TextStyle(&Theme.HeadingFont)
@@ -210,6 +217,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 
 		+ SVerticalBox::Slot()
 		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
 		[
 			SNew(STextBlock)
 			.TextStyle(&Theme.HeadingFont)
@@ -252,6 +260,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 
 		+ SVerticalBox::Slot()
 		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
 		[
 			SNew(STextBlock)
 			.TextStyle(&Theme.HeadingFont)
@@ -385,6 +394,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 
 		+ SVerticalBox::Slot()
 		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
 		[
 			SNew(STextBlock)
 			.TextStyle(&Theme.HeadingFont)
