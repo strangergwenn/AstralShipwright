@@ -264,7 +264,7 @@ void ANovaSpacecraftPawn::SaveSystems()
 
 			ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 			NCHECK(GameState);
-			GameState->UpdateSpacecraft(UpdatedSpacecraft, false);
+			GameState->UpdatePlayerSpacecraft(UpdatedSpacecraft, false);
 		}
 	}
 	else

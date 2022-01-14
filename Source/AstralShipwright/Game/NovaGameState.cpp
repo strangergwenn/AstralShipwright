@@ -378,14 +378,13 @@ FNovaCredits ANovaGameState::GetCurrentPrice(const UNovaTradableAssetDescription
     Spacecraft management
 ----------------------------------------------------*/
 
-void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool MergeWithPlayer)
+void ANovaGameState::UpdatePlayerSpacecraft(const FNovaSpacecraft& Spacecraft, bool MergeWithPlayer)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 
-	NLOG("ANovaGameState::UpdateSpacecraft");
+	NLOG("ANovaGameState::UpdatePlayerSpacecraft");
 
 	bool IsNew = SpacecraftDatabase.Add(Spacecraft);
-
 	if (IsNew)
 	{
 		// Attempt orbit merging for player spacecraft joining the game
@@ -409,6 +408,19 @@ void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool Me
 			NCHECK(IsValid(CurrentArea));
 			OrbitalSimulationComponent->SetOrbit({Spacecraft.Identifier}, OrbitalSimulationComponent->GetAreaOrbit(GetCurrentArea()));
 		}
+	}
+}
+
+void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, const FNovaOrbit* Orbit)
+{
+	NCHECK(GetLocalRole() == ROLE_Authority);
+
+	NLOG("ANovaGameState::UpdateSpacecraft");
+
+	bool IsNew = SpacecraftDatabase.Add(Spacecraft);
+	if (IsNew && Orbit != nullptr)
+	{
+		OrbitalSimulationComponent->SetOrbit({Spacecraft.Identifier}, *Orbit);
 	}
 }
 

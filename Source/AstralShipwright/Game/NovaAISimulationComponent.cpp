@@ -9,7 +9,12 @@
 
 #include "Spacecraft/NovaSpacecraftPawn.h"
 
+#include "System/NovaAssetManager.h"
+#include "System/NovaGameInstance.h"
+
 #include "Nova.h"
+
+#define LOCTEXT_NAMESPACE "UNovaAISimulationComponent"
 
 // Definitions
 static constexpr int32 SpacecraftSpawnDistanceKm   = 500;
@@ -32,6 +37,25 @@ UNovaAISimulationComponent::UNovaAISimulationComponent() : Super()
 void UNovaAISimulationComponent::Initialize()
 {
 	NLOG("UNovaAISimulationComponent::Initialize");
+
+	// Get game state pointers
+	UNovaAssetManager* AssetManager = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager();
+	NCHECK(AssetManager);
+	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
+	NCHECK(GameState);
+
+	// Spawn spacecraft
+	for (const UNovaAISpacecraftDescription* SpacecraftDescription : AssetManager->GetAssets<UNovaAISpacecraftDescription>())
+	{
+		const class UNovaCelestialBody* DefaultPlanet =
+			AssetManager->GetAsset<UNovaCelestialBody>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
+
+		FNovaSpacecraft Spacecraft = SpacecraftDescription->Spacecraft;
+		FNovaOrbit      Orbit      = FNovaOrbit(FNovaOrbitGeometry(DefaultPlanet, 400, 45), FNovaTime());
+		Spacecraft.Name            = TEXT("Shitty Tug");
+
+		GameState->UpdateSpacecraft(Spacecraft, &Orbit);
+	}
 }
 
 void UNovaAISimulationComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -53,35 +77,38 @@ void UNovaAISimulationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 			FGuid  Identifier         = IdentifierAndLocation.Key;
 			double DistanceFromPlayer = IdentifierAndLocation.Value.GetDistanceTo(*PlayerLocation);
 
-			// const FNovaAISpacecraft* Spacecraft         = SpacecraftDatabase.Find(Identifier);
-
-			// Spawn
-			if (GetPhysicalSpacecraft(Identifier) == nullptr &&
-				(Identifier == AlwaysLoadedSpacecraft || DistanceFromPlayer < SpacecraftSpawnDistanceKm))
+			if (PhysicalSpacecraftDatabase.Contains(Identifier))
 			{
-				ANovaSpacecraftPawn* NewSpacecraft = GetWorld()->SpawnActor<ANovaSpacecraftPawn>();
-				NCHECK(NewSpacecraft);
-
-				// TODO : probably need to pass something to the spacecraft
-
-				NLOG("UNovaAISimulationComponent::TickComponent : spawning '%s'", *Identifier.ToString(EGuidFormats::Short));
-
-				PhysicalSpacecraftDatabase.Add(Identifier, NewSpacecraft);
-			}
-
-			// De-spawn
-			if (GetPhysicalSpacecraft(Identifier) != nullptr && !AlwaysLoadedSpacecraft.IsValid() &&
-				DistanceFromPlayer > SpacecraftDespawnDistanceKm)
-			{
-				ANovaSpacecraftPawn** SpacecraftEntry = PhysicalSpacecraftDatabase.Find(Identifier);
-				if (SpacecraftEntry)
+				// Spawn
+				if (GetPhysicalSpacecraft(Identifier) == nullptr &&
+					(Identifier == AlwaysLoadedSpacecraft || DistanceFromPlayer < SpacecraftSpawnDistanceKm))
 				{
-					NLOG("UNovaAISimulationComponent::TickComponent : removing '%s'", *Identifier.ToString(EGuidFormats::Short));
+					ANovaSpacecraftPawn* NewSpacecraft = GetWorld()->SpawnActor<ANovaSpacecraftPawn>();
+					NCHECK(NewSpacecraft);
 
-					(*SpacecraftEntry)->Destroy();
-					PhysicalSpacecraftDatabase.Remove(Identifier);
+					// TODO : probably need to pass something to the spacecraft
+
+					NLOG("UNovaAISimulationComponent::TickComponent : spawning '%s'", *Identifier.ToString(EGuidFormats::Short));
+
+					PhysicalSpacecraftDatabase.Add(Identifier, NewSpacecraft);
+				}
+
+				// De-spawn
+				if (GetPhysicalSpacecraft(Identifier) != nullptr && !AlwaysLoadedSpacecraft.IsValid() &&
+					DistanceFromPlayer > SpacecraftDespawnDistanceKm)
+				{
+					ANovaSpacecraftPawn** SpacecraftEntry = PhysicalSpacecraftDatabase.Find(Identifier);
+					if (SpacecraftEntry)
+					{
+						NLOG("UNovaAISimulationComponent::TickComponent : removing '%s'", *Identifier.ToString(EGuidFormats::Short));
+
+						(*SpacecraftEntry)->Destroy();
+						PhysicalSpacecraftDatabase.Remove(Identifier);
+					}
 				}
 			}
 		}
 	}
 }
+
+#undef LOCTEXT_NAMESPACE

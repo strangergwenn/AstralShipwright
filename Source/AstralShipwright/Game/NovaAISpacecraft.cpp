@@ -36,7 +36,9 @@ void UNovaAISpacecraftDescription::SaveFromGame()
 
 	if (SpacecraftPawn)
 	{
-		Spacecraft = SpacecraftPawn->GetSpacecraftCopy();
+		Spacecraft            = SpacecraftPawn->GetSpacecraftCopy();
+		Spacecraft.Identifier = Identifier;
+
 		MarkPackageDirty();
 	}
 

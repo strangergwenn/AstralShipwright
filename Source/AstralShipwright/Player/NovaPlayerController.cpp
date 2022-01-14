@@ -673,7 +673,7 @@ void ANovaPlayerController::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft)
 		NCHECK(IsValid(GameState));
 
 		GetPlayerState<ANovaPlayerState>()->SetSpacecraftIdentifier(Spacecraft.Identifier);
-		GameState->UpdateSpacecraft(Spacecraft, true);
+		GameState->UpdatePlayerSpacecraft(Spacecraft, true);
 
 		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
 		if (IsValid(SpacecraftPawn))

@@ -112,8 +112,11 @@ public:
 	    Spacecraft management
 	----------------------------------------------------*/
 
+	/** Register or update a player spacecraft */
+	void UpdatePlayerSpacecraft(const FNovaSpacecraft& Spacecraft, bool MergeWithPlayer);
+
 	/** Register or update a spacecraft */
-	void UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, bool MergeWithPlayer);
+	void UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, const FNovaOrbit* Orbit = nullptr);
 
 	/** Remove a spacecraft */
 	void RemoveSpacecraft(const FGuid& Identifier)

@@ -25,18 +25,6 @@ public:
 	/** Reset the component */
 	void Initialize();
 
-	/** Get a specific spacecraft */
-	const FNovaAISpacecraft* GetSpacecraft(FGuid Identifier) const
-	{
-		return SpacecraftDatabase.Find(Identifier);
-	}
-
-	/** Get all spacecraft */
-	const TMap<FGuid, struct FNovaAISpacecraft>& GetSpacecrafts() const
-	{
-		return SpacecraftDatabase;
-	}
-
 	/** Get a physical spacecraft */
 	const class ANovaSpacecraftPawn* GetPhysicalSpacecraft(FGuid Identifier) const
 	{
@@ -62,6 +50,5 @@ protected:
 private:
 	// Database
 	FGuid                                   AlwaysLoadedSpacecraft;
-	TMap<FGuid, FNovaAISpacecraft>          SpacecraftDatabase;
 	TMap<FGuid, class ANovaSpacecraftPawn*> PhysicalSpacecraftDatabase;
 };
