@@ -76,19 +76,6 @@ public:
 	/** Check if loading is currently occurring */
 	bool IsLevelStreamingComplete() const;
 
-	/** Enable moving spacecraft based on trajectories */
-	void SetUsingTrajectoryMovement(bool State)
-	{
-		NCHECK(GetLocalRole() == ROLE_Authority);
-		UseTrajectoryMovement = State;
-	}
-
-	/** Check whether spacecraft are using trajectory movement */
-	bool IsUsingTrajectoryMovement() const
-	{
-		return UseTrajectoryMovement;
-	}
-
 	/** Check whether the game can be joined */
 	bool IsJoinable(FText* Help = nullptr) const;
 
@@ -292,10 +279,6 @@ private:
 	// Current level-based area
 	UPROPERTY(ReplicatedUsing = OnCurrentAreaReplicated)
 	const class UNovaArea* CurrentArea;
-
-	// When this is enabled, spacecraft will rely on trajectory movement
-	UPROPERTY(Replicated)
-	bool UseTrajectoryMovement;
 
 	// Replicated spacecraft database
 	UPROPERTY(Replicated)

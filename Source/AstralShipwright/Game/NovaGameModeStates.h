@@ -9,9 +9,6 @@
 #include "NovaOrbitalSimulationComponent.h"
 
 #include "Player/NovaPlayerController.h"
-#include "Spacecraft/NovaSpacecraftPawn.h"
-#include "Spacecraft/NovaSpacecraftMovementComponent.h"
-#include "System/NovaAssetManager.h"
 
 #include "Nova.h"
 
@@ -142,12 +139,7 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
-		PC->SharedTransition(ENovaPlayerCameraState::Default,    //
-			FNovaAsyncAction::CreateLambda(
-				[this]()
-				{
-					GameState->SetUsingTrajectoryMovement(false);
-				}));
+		PC->SharedTransition(ENovaPlayerCameraState::Default);
 	}
 
 	virtual ENovaGameStateIdentifier UpdateState() override
@@ -185,7 +177,6 @@ public:
 			FNovaAsyncAction::CreateLambda(
 				[this]()
 				{
-					GameState->SetUsingTrajectoryMovement(false);
 					GameMode->ChangeAreaToOrbit();
 				}));
 	}
@@ -304,12 +295,7 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
-		PC->SharedTransition(ENovaPlayerCameraState::CinematicSpacecraft,    //
-			FNovaAsyncAction::CreateLambda(
-				[this]()
-				{
-					GameState->SetUsingTrajectoryMovement(true);
-				}));
+		PC->SharedTransition(ENovaPlayerCameraState::CinematicSpacecraft);
 	}
 
 	virtual ENovaGameStateIdentifier UpdateState() override
@@ -381,7 +367,6 @@ public:
 																		 [this]()
 																		 {
 																			 GameMode->SetCurrentAreaVisible(true);
-																			 GameState->SetUsingTrajectoryMovement(true);
 																		 }));
 	}
 
