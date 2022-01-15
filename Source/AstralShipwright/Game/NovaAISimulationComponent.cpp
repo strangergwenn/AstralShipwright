@@ -56,7 +56,7 @@ void UNovaAISimulationComponent::Initialize()
 			FNovaOrbit      Orbit      = FNovaOrbit(FNovaOrbitGeometry(DefaultPlanet, 400, 45), FNovaTime());
 			Spacecraft.Name            = TEXT("Shitty Tug");
 
-			PhysicalSpacecraftDatabase.Add(Spacecraft.Identifier, nullptr);
+			SpacecraftDatabase.Add(Spacecraft.Identifier, FNovaAISpacecraftState());
 			GameState->UpdateSpacecraft(Spacecraft, &Orbit);
 		}
 	}
@@ -66,6 +66,18 @@ void UNovaAISimulationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// Run processes
+	ProcessSpawning();
+	ProcessNavigation();
+	ProcessPhysicalMovement();
+}
+
+/*----------------------------------------------------
+    Internals
+----------------------------------------------------*/
+
+void UNovaAISimulationComponent::ProcessSpawning()
+{
 	// Get game state pointers
 	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
 	NCHECK(GameState);
@@ -73,43 +85,64 @@ void UNovaAISimulationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	NCHECK(OrbitalSimulation);
 	const FNovaOrbitalLocation* PlayerLocation = OrbitalSimulation->GetPlayerLocation();
 
-	// Iterate over all spacecraft
+	// Iterate over all spacecraft locations
 	if (PlayerLocation)
 	{
 		for (const TPair<FGuid, FNovaOrbitalLocation>& IdentifierAndLocation : OrbitalSimulation->GetAllSpacecraftLocations())
 		{
-			FGuid  Identifier         = IdentifierAndLocation.Key;
-			double DistanceFromPlayer = IdentifierAndLocation.Value.GetDistanceTo(*PlayerLocation);
+			FGuid                         Identifier         = IdentifierAndLocation.Key;
+			double                        DistanceFromPlayer = IdentifierAndLocation.Value.GetDistanceTo(*PlayerLocation);
+			const FNovaAISpacecraftState* SpacecraftStatePtr = SpacecraftDatabase.Find(Identifier);
 
-			if (PhysicalSpacecraftDatabase.Contains(Identifier))
+			if (SpacecraftStatePtr)
 			{
 				// Spawn
-				if (GetPhysicalSpacecraft(Identifier) == nullptr &&
+				if (!IsValid(SpacecraftStatePtr->PhysicalSpacecraft) &&
 					(Identifier == AlwaysLoadedSpacecraft || DistanceFromPlayer < SpacecraftSpawnDistanceKm))
 				{
 					ANovaSpacecraftPawn* NewSpacecraft = GetWorld()->SpawnActor<ANovaSpacecraftPawn>();
 					NCHECK(NewSpacecraft);
 					NewSpacecraft->SetSpacecraftIdentifier(Identifier);
 
-					NLOG("UNovaAISimulationComponent::TickComponent : spawning '%s'", *Identifier.ToString(EGuidFormats::Short));
+					NLOG("UNovaAISimulationComponent::ProcessSpawning : spawning '%s'", *Identifier.ToString(EGuidFormats::Short));
 
-					PhysicalSpacecraftDatabase.Add(Identifier, NewSpacecraft);
+					SpacecraftDatabase[Identifier].PhysicalSpacecraft = NewSpacecraft;
 				}
 
 				// De-spawn
-				if (GetPhysicalSpacecraft(Identifier) != nullptr && !AlwaysLoadedSpacecraft.IsValid() &&
+				if (IsValid(SpacecraftStatePtr->PhysicalSpacecraft) && !AlwaysLoadedSpacecraft.IsValid() &&
 					DistanceFromPlayer > SpacecraftDespawnDistanceKm)
 				{
-					ANovaSpacecraftPawn** SpacecraftEntry = PhysicalSpacecraftDatabase.Find(Identifier);
-					if (SpacecraftEntry)
-					{
-						NLOG("UNovaAISimulationComponent::TickComponent : removing '%s'", *Identifier.ToString(EGuidFormats::Short));
+					NLOG("UNovaAISimulationComponent::ProcessSpawning : removing '%s'", *Identifier.ToString(EGuidFormats::Short));
 
-						(*SpacecraftEntry)->Destroy();
-						PhysicalSpacecraftDatabase.Remove(Identifier);
-					}
+					SpacecraftStatePtr->PhysicalSpacecraft->Destroy();
+					SpacecraftDatabase[Identifier].PhysicalSpacecraft = nullptr;
 				}
 			}
+		}
+	}
+}
+
+void UNovaAISimulationComponent::ProcessNavigation()
+{
+	// Iterate over the AI database
+	for (TPair<FGuid, FNovaAISpacecraftState>& IdentifierAndSpacecraft : SpacecraftDatabase)
+	{
+		FGuid                   Identifier      = IdentifierAndSpacecraft.Key;
+		FNovaAISpacecraftState& SpacecraftState = IdentifierAndSpacecraft.Value;
+	}
+}
+
+void UNovaAISimulationComponent::ProcessPhysicalMovement()
+{
+	// Iterate over all physical AI spacecraft
+	for (TPair<FGuid, FNovaAISpacecraftState>& IdentifierAndSpacecraft : SpacecraftDatabase)
+	{
+		FGuid                   Identifier      = IdentifierAndSpacecraft.Key;
+		FNovaAISpacecraftState& SpacecraftState = IdentifierAndSpacecraft.Value;
+
+		if (IsValid(SpacecraftState.PhysicalSpacecraft))
+		{
 		}
 	}
 }

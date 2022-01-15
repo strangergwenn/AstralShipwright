@@ -7,10 +7,6 @@
 #include "Spacecraft/NovaSpacecraft.h"
 #include "NovaAISpacecraft.generated.h"
 
-/*----------------------------------------------------
-    AI spacecraft description
-----------------------------------------------------*/
-
 /** Description of an AI spacecraft class */
 UCLASS(ClassGroup = (Nova))
 class UNovaAISpacecraftDescription : public UNovaAssetDescription

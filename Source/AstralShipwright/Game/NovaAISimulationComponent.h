@@ -7,6 +7,19 @@
 #include "NovaAISpacecraft.h"
 #include "NovaAISimulationComponent.generated.h"
 
+/** AI spacecraft data */
+USTRUCT()
+struct FNovaAISpacecraftState
+{
+	FNovaAISpacecraftState() : PhysicalSpacecraft(nullptr)
+	{}
+
+	GENERATED_BODY()
+
+	UPROPERTY()
+	class ANovaSpacecraftPawn* PhysicalSpacecraft;
+};
+
 /** AI spacecraft control component */
 UCLASS(ClassGroup = (Nova))
 class UNovaAISimulationComponent : public UActorComponent
@@ -28,8 +41,8 @@ public:
 	/** Get a physical spacecraft */
 	const class ANovaSpacecraftPawn* GetPhysicalSpacecraft(FGuid Identifier) const
 	{
-		ANovaSpacecraftPawn* const* SpacecraftPawnPtr = PhysicalSpacecraftDatabase.Find(Identifier);
-		return SpacecraftPawnPtr ? *SpacecraftPawnPtr : nullptr;
+		const FNovaAISpacecraftState* SpacecraftStatePtr = SpacecraftDatabase.Find(Identifier);
+		return SpacecraftStatePtr ? SpacecraftStatePtr->PhysicalSpacecraft : nullptr;
 	}
 
 	/** Load the physical spacecraft for given identifier */
@@ -43,12 +56,24 @@ public:
 	----------------------------------------------------*/
 
 protected:
+	/** Handle the spawning and de-spawning of physical spacecraft */
+	void ProcessSpawning();
+
+	/** Handle travel decisions for spacecraft */
+	void ProcessNavigation();
+
+	/** Handle the movement of physical spacecraft */
+	void ProcessPhysicalMovement();
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
 
 private:
 	// Database
-	FGuid                                   AlwaysLoadedSpacecraft;
-	TMap<FGuid, class ANovaSpacecraftPawn*> PhysicalSpacecraftDatabase;
+	UPROPERTY()
+	TMap<FGuid, FNovaAISpacecraftState> SpacecraftDatabase;
+
+	// General state
+	FGuid AlwaysLoadedSpacecraft;
 };
