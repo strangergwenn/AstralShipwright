@@ -248,6 +248,20 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			return SpacecraftPawn ? SpacecraftPawn->GetSpacecraftCopy().GetName() : FText();
 		})));
 
+	SAssignNew(HomeHUD.DetailedWidget, SVerticalBox)
+
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNovaAssignNew(FastForwardButton, SNovaButton)
+			.Action(FNovaPlayerInput::MenuPrimary)
+			.Icon(FNovaStyleSet::GetBrush("Icon/SB_Time"))
+			.Text(LOCTEXT("FastForward", "Fast forward"))
+			.HelpText(this, &SNovaMainMenuFlight::GetFastFowardHelp)
+			.OnClicked(this, &SNovaMainMenuFlight::FastForward)
+			.Enabled(this, &SNovaMainMenuFlight::CanFastForward)
+		];
+
 	/*----------------------------------------------------
 	    Operations
 	----------------------------------------------------*/
@@ -282,16 +296,28 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 				return OrbitalSimulation && GameState && OrbitalSimulation->IsOnTrajectory(GameState->GetPlayerSpacecraftIdentifier());
 			})))
 		]
-
+			
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SNovaAssignNew(FastForwardButton, SNovaButton)
+			SNovaAssignNew(DockButton, SNovaButton)
+			.Action(FNovaPlayerInput::MenuPrimary)
+			.Text(this, &SNovaMainMenuFlight::GetDockingText)
+			.HelpText(this, &SNovaMainMenuFlight::GetDockingHelp)
+			.OnClicked(this, &SNovaMainMenuFlight::OnDockUndock)
+			.Enabled(this, &SNovaMainMenuFlight::IsDockingEnabled)
+		]
+		
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNovaNew(SNovaButton)
 			.Action(FNovaPlayerInput::MenuSecondary)
-			.Text(LOCTEXT("FastForward", "Fast forward"))
-			.HelpText(this, &SNovaMainMenuFlight::GetFastFowardHelp)
-			.OnClicked(this, &SNovaMainMenuFlight::FastForward)
-			.Enabled(this, &SNovaMainMenuFlight::CanFastForward)
+			.Text(LOCTEXT("TestSilentRunning", "Silent running"))
+			.OnClicked(FSimpleDelegate::CreateLambda([&]()
+			{
+				MenuManager->SetInterfaceColor(Theme.NegativeColor, FLinearColor(1.0f, 0.0f, 0.1f));
+			}))
 		]
 			
 #if WITH_EDITOR && 0
@@ -357,28 +383,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			}))
 		]
 #endif // WITH_EDITOR
-			
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		[
-			SNovaAssignNew(DockButton, SNovaButton)
-			.Action(FNovaPlayerInput::MenuPrimary)
-			.Text(this, &SNovaMainMenuFlight::GetDockingText)
-			.HelpText(this, &SNovaMainMenuFlight::GetDockingHelp)
-			.OnClicked(this, &SNovaMainMenuFlight::OnDockUndock)
-			.Enabled(this, &SNovaMainMenuFlight::IsDockingEnabled)
-		]
-		
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		[
-			SNovaNew(SNovaButton)
-			.Text(LOCTEXT("TestSilentRunning", "Silent running"))
-			.OnClicked(FSimpleDelegate::CreateLambda([&]()
-			{
-				MenuManager->SetInterfaceColor(Theme.NegativeColor, FLinearColor(1.0f, 0.0f, 0.1f));
-			}))
-		];
+		;
 
 	OperationsHUD.DefaultFocus = FastForwardButton;
 
