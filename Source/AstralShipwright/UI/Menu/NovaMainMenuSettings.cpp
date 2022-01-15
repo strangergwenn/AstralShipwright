@@ -905,6 +905,8 @@ void SNovaMainMenuSettings::OnApplyCultureSettings()
 
 	GConfig->SetString(TEXT("Internationalization"), TEXT("Culture"), **SelectedCulture.Get(), GGameUserSettingsIni);
 	GConfig->Flush(false, GEditorSettingsIni);
+
+	GameUserSettings->SaveSettings();
 }
 
 /*----------------------------------------------------
