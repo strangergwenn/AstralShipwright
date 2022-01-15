@@ -254,10 +254,12 @@ void ANovaPlayerController::PawnLeavingGame()
 {
 	NLOG("ANovaPlayerController::PawnLeavingGame");
 
-	ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
-	if (IsValid(GameState))
+	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+	ANovaGameState*      GameState      = GetWorld()->GetGameState<ANovaGameState>();
+
+	if (IsValid(SpacecraftPawn) && IsValid(GameState))
 	{
-		FGuid PlayerSpacecraftIdentifier = GetPlayerState<ANovaPlayerState>()->GetSpacecraftIdentifier();
+		FGuid PlayerSpacecraftIdentifier = SpacecraftPawn->GetSpacecraftIdentifier();
 		GameState->RemoveSpacecraft(PlayerSpacecraftIdentifier);
 	}
 
@@ -672,14 +674,13 @@ void ANovaPlayerController::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft)
 		ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 		NCHECK(IsValid(GameState));
 
-		GetPlayerState<ANovaPlayerState>()->SetSpacecraftIdentifier(Spacecraft.Identifier);
 		GameState->UpdatePlayerSpacecraft(Spacecraft, true);
 
 		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-		if (IsValid(SpacecraftPawn))
-		{
-			SpacecraftPawn->ResetSpacecraft();
-		}
+		NCHECK(SpacecraftPawn);
+
+		SpacecraftPawn->SetSpacecraftIdentifier(Spacecraft.Identifier);
+		SpacecraftPawn->ResetSpacecraft();
 	}
 
 	// Tell the server
@@ -943,12 +944,13 @@ void ANovaPlayerController::AnyKey(FKey Key)
 
 const FNovaSpacecraft* ANovaPlayerController::GetSpacecraft() const
 {
-	const ANovaGameState* GameState        = GetWorld()->GetGameState<ANovaGameState>();
-	ANovaPlayerState*     OwnedPlayerState = GetPlayerState<ANovaPlayerState>();
 
-	if (IsValid(GameState) && IsValid(OwnedPlayerState))
+	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+	ANovaGameState*      GameState      = GetWorld()->GetGameState<ANovaGameState>();
+
+	if (IsValid(SpacecraftPawn) && IsValid(GameState))
 	{
-		FGuid PlayerSpacecraftIdentifier = GetPlayerState<ANovaPlayerState>()->GetSpacecraftIdentifier();
+		FGuid PlayerSpacecraftIdentifier = SpacecraftPawn->GetSpacecraftIdentifier();
 		return GameState->GetSpacecraft(PlayerSpacecraftIdentifier);
 	}
 	else

@@ -10,13 +10,13 @@
 
 #include "Game/NovaGameState.h"
 #include "Player/NovaPlayerController.h"
-#include "Player/NovaPlayerState.h"
 #include "System/NovaGameInstance.h"
 #include "System/NovaAssetManager.h"
 
 #include "Nova.h"
 
 #include "UObject/ConstructorHelpers.h"
+#include "Net/UnrealNetwork.h"
 
 #define LOCTEXT_NAMESPACE "ANovaAssembly"
 
@@ -81,15 +81,14 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 		// Fetch the spacecraft from the player state when we are remotely controlled OR no spacecraft was ever set
 		else if (!Spacecraft.IsValid() || !IsLocallyControlled())
 		{
-			const ANovaGameState*   GameState         = GetWorld()->GetGameState<ANovaGameState>();
-			const ANovaPlayerState* OwningPlayerState = GetPlayerState<ANovaPlayerState>();
+			const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 
 			if (IsValid(GameState))
 			{
 				// Creating or updating spacecraft
-				if (IsValid(OwningPlayerState) && OwningPlayerState->GetSpacecraftIdentifier().IsValid())
+				if (RequestedSpacecraftIdentifier.IsValid())
 				{
-					const FNovaSpacecraft* NewSpacecraft = GameState->GetSpacecraft(OwningPlayerState->GetSpacecraftIdentifier());
+					const FNovaSpacecraft* NewSpacecraft = GameState->GetSpacecraft(RequestedSpacecraftIdentifier);
 					if (NewSpacecraft && (!Spacecraft.IsValid() || *NewSpacecraft != *Spacecraft.Get()))
 					{
 						NLOG("ANovaSpacecraftPawn::Tick : updating spacecraft");
@@ -821,6 +820,13 @@ void ANovaSpacecraftPawn::UpdateBounds()
 
 		CurrentExtent = Radius * FVector(1, 1, 1);
 	}
+}
+
+void ANovaSpacecraftPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ANovaSpacecraftPawn, RequestedSpacecraftIdentifier);
 }
 
 #undef LOCTEXT_NAMESPACE

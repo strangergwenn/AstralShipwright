@@ -38,23 +38,27 @@ void UNovaAISimulationComponent::Initialize()
 {
 	NLOG("UNovaAISimulationComponent::Initialize");
 
-	// Get game state pointers
-	UNovaAssetManager* AssetManager = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager();
-	NCHECK(AssetManager);
-	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
-	NCHECK(GameState);
-
-	// Spawn spacecraft
-	for (const UNovaAISpacecraftDescription* SpacecraftDescription : AssetManager->GetAssets<UNovaAISpacecraftDescription>())
+	if (GetOwner()->GetLocalRole() == ROLE_Authority)
 	{
-		const class UNovaCelestialBody* DefaultPlanet =
-			AssetManager->GetAsset<UNovaCelestialBody>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
+		// Get game state pointers
+		UNovaAssetManager* AssetManager = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager();
+		NCHECK(AssetManager);
+		ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
+		NCHECK(GameState);
 
-		FNovaSpacecraft Spacecraft = SpacecraftDescription->Spacecraft;
-		FNovaOrbit      Orbit      = FNovaOrbit(FNovaOrbitGeometry(DefaultPlanet, 400, 45), FNovaTime());
-		Spacecraft.Name            = TEXT("Shitty Tug");
+		// Spawn spacecraft
+		for (const UNovaAISpacecraftDescription* SpacecraftDescription : AssetManager->GetAssets<UNovaAISpacecraftDescription>())
+		{
+			const class UNovaCelestialBody* DefaultPlanet =
+				AssetManager->GetAsset<UNovaCelestialBody>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
 
-		GameState->UpdateSpacecraft(Spacecraft, &Orbit);
+			FNovaSpacecraft Spacecraft = SpacecraftDescription->Spacecraft;
+			FNovaOrbit      Orbit      = FNovaOrbit(FNovaOrbitGeometry(DefaultPlanet, 400, 45), FNovaTime());
+			Spacecraft.Name            = TEXT("Shitty Tug");
+
+			PhysicalSpacecraftDatabase.Add(Spacecraft.Identifier, nullptr);
+			GameState->UpdateSpacecraft(Spacecraft, &Orbit);
+		}
 	}
 }
 
@@ -85,8 +89,7 @@ void UNovaAISimulationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 				{
 					ANovaSpacecraftPawn* NewSpacecraft = GetWorld()->SpawnActor<ANovaSpacecraftPawn>();
 					NCHECK(NewSpacecraft);
-
-					// TODO : probably need to pass something to the spacecraft
+					NewSpacecraft->SetSpacecraftIdentifier(Identifier);
 
 					NLOG("UNovaAISimulationComponent::TickComponent : spawning '%s'", *Identifier.ToString(EGuidFormats::Short));
 

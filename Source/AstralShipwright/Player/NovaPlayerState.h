@@ -19,24 +19,9 @@ public:
 	    Gameplay
 	----------------------------------------------------*/
 
-	/** Share the identifier for the player spacecraft */
-	void SetSpacecraftIdentifier(FGuid Identifier)
-	{
-		SpacecraftIdentifier = Identifier;
-	}
-
-	/** Return the identifier for the player spacecraft */
-	const FGuid& GetSpacecraftIdentifier() const
-	{
-		return SpacecraftIdentifier;
-	}
-
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
 
 private:
-	// Player world storing all spacecraft
-	UPROPERTY(Replicated)
-	FGuid SpacecraftIdentifier;
 };

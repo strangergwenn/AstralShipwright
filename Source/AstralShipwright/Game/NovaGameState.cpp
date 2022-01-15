@@ -174,17 +174,6 @@ void ANovaGameState::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Get a player state
-	CurrentPlayerState = nullptr;
-	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
-	{
-		if (IsValid(PlayerState) && PlayerState->GetSpacecraftIdentifier().IsValid())
-		{
-			CurrentPlayerState = PlayerState;
-			break;
-		}
-	}
-
 	// Process fast forward simulation
 	if (IsFastForward)
 	{
@@ -384,6 +373,8 @@ void ANovaGameState::UpdatePlayerSpacecraft(const FNovaSpacecraft& Spacecraft, b
 
 	NLOG("ANovaGameState::UpdatePlayerSpacecraft");
 
+	PlayerSpacecraftIdentifiers.AddUnique(Spacecraft.Identifier);
+
 	bool IsNew = SpacecraftDatabase.Add(Spacecraft);
 	if (IsNew)
 	{
@@ -422,26 +413,6 @@ void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, const F
 	{
 		OrbitalSimulationComponent->SetOrbit({Spacecraft.Identifier}, *Orbit);
 	}
-}
-
-FGuid ANovaGameState::GetPlayerSpacecraftIdentifier() const
-{
-	return CurrentPlayerState ? CurrentPlayerState->GetSpacecraftIdentifier() : FGuid();
-}
-
-TArray<FGuid> ANovaGameState::GetPlayerSpacecraftIdentifiers() const
-{
-	TArray<FGuid> Result;
-
-	for (const ANovaPlayerState* PlayerState : TActorRange<ANovaPlayerState>(GetWorld()))
-	{
-		if (IsValid(PlayerState))
-		{
-			Result.Add(PlayerState->GetSpacecraftIdentifier());
-		}
-	}
-
-	return Result;
 }
 
 bool ANovaGameState::IsAnySpacecraftDocked() const
@@ -794,6 +765,7 @@ void ANovaGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME(ANovaGameState, CurrentArea);
 
 	DOREPLIFETIME(ANovaGameState, SpacecraftDatabase);
+	DOREPLIFETIME(ANovaGameState, PlayerSpacecraftIdentifiers);
 	DOREPLIFETIME(ANovaGameState, UseTrajectoryMovement);
 	DOREPLIFETIME(ANovaGameState, ServerTime);
 	DOREPLIFETIME(ANovaGameState, ServerTimeDilation);

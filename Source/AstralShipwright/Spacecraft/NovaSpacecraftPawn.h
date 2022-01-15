@@ -103,6 +103,12 @@ public:
 		return TPair<FVector, FVector>(CurrentOrigin, CurrentExtent);
 	}
 
+	/** Share the identifier for the player spacecraft */
+	void SetSpacecraftIdentifier(FGuid Identifier)
+	{
+		RequestedSpacecraftIdentifier = Identifier;
+	}
+
 	/** Return the spacecraft identifier */
 	UFUNCTION(Category = Nova, BlueprintCallable)
 	FGuid GetSpacecraftIdentifier() const
@@ -367,6 +373,10 @@ protected:
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
+
+	// Identifier
+	UPROPERTY(Replicated)
+	FGuid RequestedSpacecraftIdentifier;
 
 	// Assembly data
 	TSharedPtr<FNovaSpacecraft>                        Spacecraft;

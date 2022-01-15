@@ -121,6 +121,7 @@ public:
 	/** Remove a spacecraft */
 	void RemoveSpacecraft(const FGuid& Identifier)
 	{
+		PlayerSpacecraftIdentifiers.Remove(Identifier);
 		SpacecraftDatabase.Remove(Identifier);
 	}
 
@@ -131,10 +132,16 @@ public:
 	}
 
 	/** Return the identifier of one of the player spacecraft */
-	FGuid GetPlayerSpacecraftIdentifier() const;
+	FGuid GetPlayerSpacecraftIdentifier() const
+	{
+		return PlayerSpacecraftIdentifiers.Num() ? PlayerSpacecraftIdentifiers[0] : FGuid();
+	}
 
 	/** Return the identifiers of all of the player spacecraft */
-	TArray<FGuid> GetPlayerSpacecraftIdentifiers() const;
+	TArray<FGuid> GetPlayerSpacecraftIdentifiers() const
+	{
+		return PlayerSpacecraftIdentifiers;
+	}
 
 	/** Check whether any spacecraft is docked */
 	bool IsAnySpacecraftDocked() const;
@@ -294,6 +301,10 @@ private:
 	UPROPERTY(Replicated)
 	FNovaSpacecraftDatabase SpacecraftDatabase;
 
+	// Spacecraft identifiers
+	UPROPERTY(Replicated)
+	TArray<FGuid> PlayerSpacecraftIdentifiers;
+
 	// Replicated world time value in minutes
 	UPROPERTY(ReplicatedUsing = OnServerTimeReplicated)
 	double ServerTime;
@@ -301,10 +312,6 @@ private:
 	// Replicated world time dilation
 	UPROPERTY(Replicated)
 	ENovaTimeDilation ServerTimeDilation;
-
-	// General state
-	UPROPERTY()
-	const class ANovaPlayerState* CurrentPlayerState;
 
 	// Time processing state
 	double ClientTime;
