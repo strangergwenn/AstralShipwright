@@ -340,7 +340,7 @@ public:
 	    Constructor & operators
 	----------------------------------------------------*/
 
-	FNovaSpacecraft() : Identifier(0, 0, 0, 0), PropellantMassAtLaunch(0)
+	FNovaSpacecraft() : Identifier(0, 0, 0, 0), SpacecraftClass(nullptr), PropellantMassAtLaunch(0)
 	{}
 
 	bool operator==(const FNovaSpacecraft& Other) const;
@@ -528,6 +528,9 @@ public:
 	// Customization data
 	UPROPERTY()
 	FNovaSpacecraftCustomization Customization;
+
+	// Optional spacecraft class for AI ships
+	const class UNovaAISpacecraftDescription* SpacecraftClass;
 
 	// Propellant mass while docked - serves as persistent storage
 	// The real-time value while flying is handled by the propellant system

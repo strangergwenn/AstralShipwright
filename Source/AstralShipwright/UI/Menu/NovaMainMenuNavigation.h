@@ -114,7 +114,7 @@ protected:
 
 	// Side panel widgets
 	TSharedPtr<class STextBlock>                DestinationTitle;
-	TSharedPtr<class STextBlock>                DestinationDescription;
+	TSharedPtr<class SRichTextBlock>            DestinationDescription;
 	TSharedPtr<class SNovaTrajectoryCalculator> TrajectoryCalculator;
 	TSharedPtr<class SNovaButton>               CommitButton;
 	TSharedPtr<class SVerticalBox>              StationTrades;

@@ -5,6 +5,7 @@
 #include "NovaMainMenu.h"
 
 #include "Game/NovaArea.h"
+#include "Game/NovaAISpacecraft.h"
 #include "Game/NovaAsteroid.h"
 #include "Game/NovaGameState.h"
 #include "Game/NovaOrbitalSimulationComponent.h"
@@ -485,8 +486,10 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 							return DestinationDescription->GetText().IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible;
 						})))
 						[
-							SAssignNew(DestinationDescription, STextBlock)
+							SAssignNew(DestinationDescription, SRichTextBlock)
 							.TextStyle(&Theme.MainFont)
+							.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
+							+ SRichTextBlock::ImageDecorator()
 						]
 					]
 			
@@ -843,8 +846,21 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 			NLOG("SNovaMainMenuNavigation::SelectDestination : %s", *Object.SpacecraftIdentifier.ToString(EGuidFormats::Short));
 
 			HasValidDestination = true;
-			DestinationTitle->SetText(Spacecraft->GetName());
-			DestinationDescription->SetText(FText());
+			DestinationTitle->SetText(TargetSpacecraft->GetName());
+
+			// Set the class text
+			FText TargetSpacecraftClass;
+			if (TargetSpacecraft->SpacecraftClass)
+			{
+				TargetSpacecraftClass =
+					FText::FormatNamed(LOCTEXT("SpacecraftClassFormat", "{class}-class {classification}"), TEXT("classification"),
+						TargetSpacecraft->GetClassification().ToLower(), TEXT("class"), TargetSpacecraft->SpacecraftClass->Name);
+			}
+			else
+			{
+				TargetSpacecraftClass = TargetSpacecraft->GetClassification().ToLower();
+			}
+			DestinationDescription->SetText(TargetSpacecraftClass);
 		}
 	}
 

@@ -52,10 +52,14 @@ void UNovaAISimulationComponent::Initialize()
 			const class UNovaCelestialBody* DefaultPlanet =
 				AssetManager->GetAsset<UNovaCelestialBody>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
 
-			FNovaSpacecraft Spacecraft = SpacecraftDescription->Spacecraft;
-			FNovaOrbit      Orbit      = FNovaOrbit(FNovaOrbitGeometry(DefaultPlanet, 400, 45), FNovaTime());
-			Spacecraft.Name            = TEXT("Shitty Tug");
+			FNovaOrbit Orbit = FNovaOrbit(FNovaOrbitGeometry(DefaultPlanet, 400, 45), FNovaTime());
 
+			// Create the spacecraft
+			FNovaSpacecraft Spacecraft = SpacecraftDescription->Spacecraft;
+			Spacecraft.Name            = TEXT("Shitty Tug");
+			Spacecraft.SpacecraftClass = SpacecraftDescription;
+
+			// Register the spacecraft
 			SpacecraftDatabase.Add(Spacecraft.Identifier, FNovaAISpacecraftState());
 			GameState->UpdateSpacecraft(Spacecraft, &Orbit);
 		}
