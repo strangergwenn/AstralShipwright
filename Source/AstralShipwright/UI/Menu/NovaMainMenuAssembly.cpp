@@ -1394,29 +1394,8 @@ void SNovaMainMenuAssembly::SetSelectedModuleOrEquipment(int32 Index)
 		NCHECK(EditedCompartmentIndex >= 0 && EditedCompartmentIndex < SpacecraftPawn->GetCompartmentCount());
 		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(EditedCompartmentIndex);
 
-		// Check that a common index maps to a valid module or equipment
-		auto IsValidIndex = [&](int32 CommonIndex)
-		{
-			if (IsModuleIndex(CommonIndex))
-			{
-				if (GetModuleIndex(CommonIndex) >= 0 && GetModuleIndex(CommonIndex) < Compartment.Description->ModuleSlots.Num())
-				{
-					return true;
-				}
-			}
-			else
-			{
-				if (GetEquipmentIndex(CommonIndex) >= 0 && GetEquipmentIndex(CommonIndex) < Compartment.Description->EquipmentSlots.Num())
-				{
-					return true;
-				}
-			}
-
-			return false;
-		};
-
 		// Keep valid indices
-		if (IsValidIndex(Index))
+		if (IsValidCommonIndex(Index, Compartment.Description))
 		{
 			SelectedModuleOrEquipmentIndex = Index;
 		}
@@ -1435,7 +1414,7 @@ void SNovaMainMenuAssembly::SetSelectedModuleOrEquipment(int32 Index)
 					SelectedModuleOrEquipmentIndex = OriginalIndex;
 					break;
 				}
-				else if (IsValidIndex(SelectedModuleOrEquipmentIndex))
+				else if (IsValidCommonIndex(SelectedModuleOrEquipmentIndex, Compartment.Description))
 				{
 					break;
 				}
@@ -1515,6 +1494,30 @@ void SNovaMainMenuAssembly::SetPanelState(ENovaMainMenuAssemblyState State)
 	{
 		SpacecraftPawn->ResetZoom();
 	}
+}
+
+/*----------------------------------------------------
+    Module / equipment index helpers
+----------------------------------------------------*/
+
+bool SNovaMainMenuAssembly::IsValidCommonIndex(int32 Index, const UNovaCompartmentDescription* CompartmentDescription) const
+{
+	if (IsModuleIndex(Index))
+	{
+		if (GetModuleIndex(Index) >= 0 && GetModuleIndex(Index) < CompartmentDescription->ModuleSlots.Num())
+		{
+			return true;
+		}
+	}
+	else
+	{
+		if (GetEquipmentIndex(Index) >= 0 && GetEquipmentIndex(Index) < CompartmentDescription->EquipmentSlots.Num())
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 /*----------------------------------------------------
@@ -2028,8 +2031,19 @@ void SNovaMainMenuAssembly::OnEditCompartment()
 
 	if (IsValid(SpacecraftPawn))
 	{
+		// Update spacecraft filtering
 		SpacecraftPawn->SetDisplayFilter(SpacecraftPawn->GetDisplayFilter(), EditedCompartmentIndex);
 		SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
+
+		// Find the first module or equipment that we can equip
+		for (int32 CommonIndex = 0; CommonIndex <= GetMaxCommonIndex(); CommonIndex++)
+		{
+			if (IsValidCommonIndex(CommonIndex, SpacecraftPawn->GetCompartment(SelectedCompartmentIndex).Description))
+			{
+				SelectedModuleOrEquipmentIndex = CommonIndex;
+				break;
+			}
+		}
 	}
 
 	DesiredPanelState = ENovaMainMenuAssemblyState::Compartment;

@@ -108,6 +108,8 @@ protected:
 		return ENovaConstants::MaxModuleCount + ENovaConstants::MaxEquipmentCount - 1;
 	}
 
+	bool IsValidCommonIndex(int32 Index, const class UNovaCompartmentDescription* CompartmentDescription) const;
+
 	bool IsModuleIndex(int32 Index) const
 	{
 		return Index < ENovaConstants::MaxModuleCount;
