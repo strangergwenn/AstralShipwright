@@ -469,6 +469,12 @@ void SNovaMainMenuFlight::Tick(const FGeometry& AllottedGeometry, const double C
 {
 	SNovaTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
+	// Reset the HUD at center
+	if (MenuManager.IsValid() && !MenuManager->IsIdle() && CurrentHUDIndex != DefaultHUDIndex)
+	{
+		SetHUDIndex(DefaultHUDIndex);
+	}
+
 	HUDAnimation.Update(CurrentHUDIndex, DeltaTime);
 }
 
@@ -477,7 +483,7 @@ void SNovaMainMenuFlight::Show()
 	SNovaTabPanel::Show();
 
 	// Start the HUD at center
-	SetHUDIndex(HUDCount / 2);
+	SetHUDIndex(DefaultHUDIndex);
 	HUDPanel->Reset();
 	HUDAnimation.Update(CurrentHUDIndex, FNovaStyleSet::GetButtonTheme().AnimationDuration);
 }

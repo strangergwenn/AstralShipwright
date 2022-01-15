@@ -8,7 +8,8 @@
 #include "Online.h"
 
 // Definitions
-constexpr int32 HUDCount = 5;
+constexpr int32 HUDCount        = 5;
+constexpr int32 DefaultHUDIndex = 2;
 
 /** HUD data structure */
 struct FNovaHUDData
