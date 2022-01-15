@@ -679,35 +679,36 @@ void ANovaGameState::ProcessTrajectoryAbort()
 
 ENovaTrajectoryAction ANovaGameState::CheckTrajectoryAbort(FText* AbortReason) const
 {
-	// TODO : only player ships
-
 	for (const ANovaSpacecraftPawn* Pawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 	{
-		// Docking or undocking
-		if (Pawn->GetSpacecraftMovement()->GetState() == ENovaMovementState::Docking ||
-			Pawn->GetSpacecraftMovement()->GetState() == ENovaMovementState::Docked)
+		if (Pawn->GetPlayerState())
 		{
-			if (AbortReason)
+			// Docking or undocking
+			if (Pawn->GetSpacecraftMovement()->GetState() == ENovaMovementState::Docking ||
+				Pawn->GetSpacecraftMovement()->GetState() == ENovaMovementState::Docked)
 			{
-				*AbortReason =
-					FText::FormatNamed(LOCTEXT("SpacecraftDocking", "{spacecraft}|plural(one=The,other=A) spacecraft is docking"),
+				if (AbortReason)
+				{
+					*AbortReason =
+						FText::FormatNamed(LOCTEXT("SpacecraftDocking", "{spacecraft}|plural(one=The,other=A) spacecraft is docking"),
+							TEXT("spacecraft"), PlayerArray.Num());
+				}
+
+				return ENovaTrajectoryAction::AbortImmediately;
+			}
+
+			// Maneuvers not cleared by player
+			else if (!Pawn->GetSpacecraftMovement()->CanManeuver())
+			{
+				if (AbortReason)
+				{
+					*AbortReason = FText::FormatNamed(
+						LOCTEXT("SpacecraftNotManeuvering", "{spacecraft}|plural(one=The,other=A) spacecraft isn't correctly oriented"),
 						TEXT("spacecraft"), PlayerArray.Num());
+				}
+
+				return ENovaTrajectoryAction::AbortIfStarted;
 			}
-
-			return ENovaTrajectoryAction::AbortImmediately;
-		}
-
-		// Maneuvers not cleared by player
-		else if (!Pawn->GetSpacecraftMovement()->CanManeuver())
-		{
-			if (AbortReason)
-			{
-				*AbortReason = FText::FormatNamed(
-					LOCTEXT("SpacecraftNotManeuvering", "{spacecraft}|plural(one=The,other=A) spacecraft isn't correctly oriented"),
-					TEXT("spacecraft"), PlayerArray.Num());
-			}
-
-			return ENovaTrajectoryAction::AbortIfStarted;
 		}
 	}
 

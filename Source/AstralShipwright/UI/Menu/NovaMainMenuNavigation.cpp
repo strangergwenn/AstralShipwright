@@ -721,8 +721,9 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 
 	for (const FNovaOrbitalObject& Object : SelectedObjectList)
 	{
-		const UNovaArea*     Area     = Object.Area.Get();
-		const FNovaAsteroid* Asteroid = AsteroidSimulation->GetAsteroid(Object.AsteroidIdentifier);
+		const UNovaArea*       Area             = Object.Area.Get();
+		const FNovaAsteroid*   Asteroid         = AsteroidSimulation->GetAsteroid(Object.AsteroidIdentifier);
+		const FNovaSpacecraft* TargetSpacecraft = GameState->GetSpacecraft(Object.SpacecraftIdentifier);
 
 		// Valid area found
 		if (Area && ComputeTrajectoryTo(OrbitalSimulation->GetAreaOrbit(Area)))
@@ -831,6 +832,18 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 
 			HasValidDestination = true;
 			DestinationTitle->SetText(FText::FromString(Asteroid->Identifier.ToString(EGuidFormats::Short).ToUpper()));
+			DestinationDescription->SetText(FText());
+		}
+
+		// Spacecraft found
+		const FNovaOrbit* TargetSpacecraftOrbit =
+			TargetSpacecraft ? OrbitalSimulation->GetSpacecraftOrbit(Object.SpacecraftIdentifier) : nullptr;
+		if (TargetSpacecraft && TargetSpacecraftOrbit && ComputeTrajectoryTo(*TargetSpacecraftOrbit))
+		{
+			NLOG("SNovaMainMenuNavigation::SelectDestination : %s", *Object.SpacecraftIdentifier.ToString(EGuidFormats::Short));
+
+			HasValidDestination = true;
+			DestinationTitle->SetText(Spacecraft->GetName());
 			DestinationDescription->SetText(FText());
 		}
 	}
