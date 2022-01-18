@@ -439,6 +439,24 @@ bool ANovaGameState::AreAllSpacecraftDocked() const
 	return true;
 }
 
+UActorComponent* ANovaGameState::GetSpacecraftSystem(
+	const struct FNovaSpacecraft* Spacecraft, const TSubclassOf<UActorComponent> ComponentClass) const
+{
+	NCHECK(Spacecraft);
+
+	// TODO : not super clean, could warrant a physical spacecraft table
+
+	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+	{
+		if (::IsValid(SpacecraftPawn) && SpacecraftPawn->GetSpacecraftIdentifier() == Spacecraft->Identifier)
+		{
+			return SpacecraftPawn->FindComponentByClass(ComponentClass);
+		}
+	}
+
+	return nullptr;
+}
+
 /*----------------------------------------------------
     Time management
 ----------------------------------------------------*/

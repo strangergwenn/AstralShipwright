@@ -249,6 +249,16 @@ struct FNovaTime
 		return Minutes / Other.Minutes;
 	}
 
+	double AsDays() const
+	{
+		return Minutes / (60.0 * 24.0);
+	}
+
+	double AsHours() const
+	{
+		return Minutes / 60.0;
+	}
+
 	double AsMinutes() const
 	{
 		return Minutes;

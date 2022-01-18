@@ -448,7 +448,7 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 				if (Spacecraft)
 				{
 					UNovaSpacecraftPropellantSystem* PropellantSystem =
-						Spacecraft->FindComponentByClass<UNovaSpacecraftPropellantSystem>(GameState);
+						GameState->GetSpacecraftSystem<UNovaSpacecraftPropellantSystem>(Spacecraft);
 					NCHECK(PropellantSystem);
 
 					// Process remaining propellant

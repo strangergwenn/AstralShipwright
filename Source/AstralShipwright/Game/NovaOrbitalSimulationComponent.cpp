@@ -65,12 +65,14 @@ struct FNovaSpacecraftFleet
 		{
 			Metrics = Spacecraft->GetPropulsionMetrics();
 
+			UNovaSpacecraftPropellantSystem* PropellantSystem = GameState->GetSpacecraftSystem<UNovaSpacecraftPropellantSystem>(Spacecraft);
+
 			// The core assumption here is that only maneuvers can modify mass, and so the current mass won't change until the next
 			// maneuver. The practical consequence is that trajectories can only ever be plotted while undocked
 			// and any non-propulsion-related transfer of mass should abort the trajectory
 			CurrentCargoMass = Spacecraft->GetCurrentCargoMass();
 			CurrentPropellantMass =
-				Spacecraft->FindComponentByClass<UNovaSpacecraftPropellantSystem>(GameState)->GetCurrentPropellantMass();
+				PropellantSystem ? PropellantSystem->GetCurrentPropellantMass() : Spacecraft->GetPropulsionMetrics().PropellantMassCapacity;
 		}
 
 		FNovaSpacecraftPropulsionMetrics Metrics;

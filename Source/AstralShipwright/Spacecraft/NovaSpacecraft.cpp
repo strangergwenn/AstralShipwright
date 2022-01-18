@@ -598,19 +598,6 @@ FNovaSpacecraftUpgradeCost FNovaSpacecraft::GetUpgradeCost(const ANovaGameState*
 	return Cost;
 }
 
-UActorComponent* FNovaSpacecraft::FindComponentByClass(const AActor* Outer, const TSubclassOf<UActorComponent> ComponentClass) const
-{
-	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(Outer->GetWorld()))
-	{
-		if (::IsValid(SpacecraftPawn) && SpacecraftPawn->GetSpacecraftIdentifier() == Identifier)
-		{
-			return SpacecraftPawn->FindComponentByClass(ComponentClass);
-		}
-	}
-
-	return nullptr;
-}
-
 FText FNovaSpacecraft::GetClassification() const
 {
 	if (Compartments.Num() == 0)

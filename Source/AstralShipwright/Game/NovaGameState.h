@@ -136,6 +136,16 @@ public:
 	/** Check whether all spacecraft are docked */
 	bool AreAllSpacecraftDocked() const;
 
+	/** Get a component of the linked spacecraft pawn if any */
+	template <class T>
+	T* GetSpacecraftSystem(const struct FNovaSpacecraft* Spacecraft) const
+	{
+		return (T*) GetSpacecraftSystem(Spacecraft, T::StaticClass());
+	}
+
+	/** Get a component of the linked spacecraft pawn if any */
+	UActorComponent* GetSpacecraftSystem(const struct FNovaSpacecraft* Spacecraft, TSubclassOf<UActorComponent> ComponentClass) const;
+
 	/*----------------------------------------------------
 	    Time management
 	----------------------------------------------------*/

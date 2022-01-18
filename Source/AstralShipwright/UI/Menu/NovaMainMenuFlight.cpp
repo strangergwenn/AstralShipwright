@@ -320,7 +320,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			}))
 		]
 			
-#if WITH_EDITOR && 0
+#if WITH_EDITOR && 1
 
 		+ SVerticalBox::Slot()
 		.AutoHeight()
