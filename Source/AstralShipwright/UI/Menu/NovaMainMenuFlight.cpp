@@ -533,6 +533,11 @@ void SNovaMainMenuFlight::VerticalAnalogInput(float Value)
 	}
 }
 
+void SNovaMainMenuFlight::OnClicked(const FVector2D& Position)
+{
+	SetHUDIndex(DefaultHUDIndex);
+}
+
 TSharedPtr<SNovaButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 {
 	return HUDData[CurrentHUDIndex].DefaultFocus;

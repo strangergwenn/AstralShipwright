@@ -62,6 +62,8 @@ public:
 
 	virtual void VerticalAnalogInput(float Value) override;
 
+	virtual void OnClicked(const FVector2D& Position) override;
+
 	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
 
 	/*----------------------------------------------------

@@ -140,8 +140,14 @@ FReply SNovaMenu::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerE
 
 	if (CurrentNavigationPanel)
 	{
-		FVector2D Position = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
-		CurrentNavigationPanel->OnClicked(Position);
+		FVector2D   Position           = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
+		FWidgetPath WidgetsUnderCursor = FSlateApplication::Get().LocateWindowUnderMouse(
+			MouseEvent.GetScreenSpacePosition(), FSlateApplication::Get().GetTopLevelWindows(), false, MouseEvent.GetUserIndex());
+
+		if (&WidgetsUnderCursor.GetLastWidget().Get() == CurrentNavigationPanel)
+		{
+			CurrentNavigationPanel->OnClicked(Position);
+		}
 	}
 
 	return FReply::Handled().SetUserFocus(SharedThis(this), EFocusCause::SetDirectly);
@@ -164,8 +170,14 @@ FReply SNovaMenu::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FP
 
 	if (CurrentNavigationPanel)
 	{
-		FVector2D Position = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
-		CurrentNavigationPanel->OnDoubleClicked(Position);
+		FVector2D   Position           = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
+		FWidgetPath WidgetsUnderCursor = FSlateApplication::Get().LocateWindowUnderMouse(
+			MouseEvent.GetScreenSpacePosition(), FSlateApplication::Get().GetTopLevelWindows(), false, MouseEvent.GetUserIndex());
+
+		if (&WidgetsUnderCursor.GetLastWidget().Get() == CurrentNavigationPanel)
+		{
+			CurrentNavigationPanel->OnDoubleClicked(Position);
+		}
 	}
 
 	return Result;
