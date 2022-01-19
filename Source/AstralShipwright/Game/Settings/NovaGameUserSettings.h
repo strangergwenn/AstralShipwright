@@ -68,6 +68,10 @@ public:
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	bool EnableLumenHWRT;
 
+	/** Enable virtual shadow maps */
+	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
+	bool EnableVirtualShadows;
+
 	/** Enable convolution bloom */
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	bool EnableCinematicBloom;

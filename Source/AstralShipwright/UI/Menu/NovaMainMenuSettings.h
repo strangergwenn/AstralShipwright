@@ -85,6 +85,7 @@ protected:
 	void OnNaniteToggled();
 	void OnLumenToggled();
 	void OnLumenHWRTToggled();
+	void OnVirtualShadowsToggled();
 	void OnCinematicBloomToggled();
 
 	// Culture list
@@ -150,5 +151,6 @@ protected:
 	TSharedPtr<class SNovaButton> NaniteButton;
 	TSharedPtr<class SNovaButton> LumenButton;
 	TSharedPtr<class SNovaButton> LumenHWRTButton;
+	TSharedPtr<class SNovaButton> VirtualShadowsButton;
 	TSharedPtr<class SNovaButton> CinematicBloomButton;
 };

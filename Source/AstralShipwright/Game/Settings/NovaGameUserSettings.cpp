@@ -58,6 +58,13 @@ void UNovaGameUserSettings::ApplyCustomGraphicsSettings()
 		LumenHWRTVar->Set(EnableLumenHWRT ? 1 : 0, ECVF_SetByConsole);
 	}
 
+	// Toggle virtual shadow maps
+	IConsoleVariable* VirtualShadowsVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Shadow.Virtual.Enable"));
+	if (VirtualShadowsVar)
+	{
+		VirtualShadowsVar->Set(EnableVirtualShadows ? 1 : 0, ECVF_SetByConsole);
+	}
+
 	// Set screen percentage
 	IConsoleVariable* ScreenPercentageVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.ScreenPercentage"));
 	if (ScreenPercentageVar)
@@ -105,6 +112,7 @@ void UNovaGameUserSettings::SetToDefaults()
 	EnableNanite         = true;
 	EnableLumen          = true;
 	EnableLumenHWRT      = false;
+	EnableVirtualShadows = false;
 	EnableCinematicBloom = false;
 	ScreenPercentage     = 100.0f;
 }

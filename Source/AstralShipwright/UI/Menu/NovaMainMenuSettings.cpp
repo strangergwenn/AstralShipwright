@@ -345,6 +345,17 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
 			.Enabled(this, &SNovaMainMenuSettings::IsRaytracingSupported)
 		];
+
+		GraphicsContainer->AddSlot()
+		.AutoHeight()
+		[
+			SNovaAssignNew(VirtualShadowsButton, SNovaButton)
+			.Toggle(true)
+			.Text(LOCTEXT("VirtualShadows", "Enable virtual shadows"))
+			.HelpText(LOCTEXT("VirtualShadowsHelp", "Enable virtual shadow maps for enhanced shadows"))
+			.OnClicked(this, &SNovaMainMenuSettings::OnVirtualShadowsToggled)
+			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+		];
 		
 		GraphicsContainer->AddSlot()
 		.AutoHeight()
@@ -451,6 +462,7 @@ void SNovaMainMenuSettings::Show()
 		NaniteButton->SetActive(GameUserSettings->EnableNanite);
 		LumenButton->SetActive(GameUserSettings->EnableLumen);
 		LumenHWRTButton->SetActive(GameUserSettings->EnableLumenHWRT);
+		VirtualShadowsButton->SetActive(GameUserSettings->EnableVirtualShadows);
 		CinematicBloomButton->SetActive(GameUserSettings->EnableCinematicBloom);
 
 		UpdateResolutionList();
@@ -823,6 +835,13 @@ void SNovaMainMenuSettings::OnLumenToggled()
 void SNovaMainMenuSettings::OnLumenHWRTToggled()
 {
 	GameUserSettings->EnableLumenHWRT = LumenHWRTButton->IsActive();
+	GameUserSettings->ApplySettings(false);
+	GameUserSettings->SaveSettings();
+}
+
+void SNovaMainMenuSettings::OnVirtualShadowsToggled()
+{
+	GameUserSettings->EnableVirtualShadows = VirtualShadowsButton->IsActive();
 	GameUserSettings->ApplySettings(false);
 	GameUserSettings->SaveSettings();
 }
