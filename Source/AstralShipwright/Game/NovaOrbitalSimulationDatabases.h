@@ -89,6 +89,7 @@ struct TGuidCacheMap
 			{
 				if (*Entry->Value != ArrayItem)
 				{
+					Entry->Key   = Index;
 					Entry->Value = &ArrayItem;
 				}
 			}
@@ -223,6 +224,7 @@ struct TMultiGuidCacheMap
 				// Entry was found, update if necessary
 				if (Entry)
 				{
+					Entry->Key   = Index;
 					Entry->Value = &ArrayItem;
 				}
 

@@ -52,7 +52,7 @@ public:
 	}
 
 	/*----------------------------------------------------
-	    Internals
+	    Internals high-level
 	----------------------------------------------------*/
 
 protected:
@@ -64,6 +64,15 @@ protected:
 
 	/** Handle the movement of physical spacecraft */
 	void ProcessPhysicalMovement();
+
+	/*----------------------------------------------------
+	    Helpers
+	----------------------------------------------------*/
+
+protected:
+	/** Compute a trajectory between two orbits */
+	void StartTrajectory(const struct FNovaOrbit& SourceOrbit, const struct FNovaOrbit& DestinationOrbit, FNovaTime DeltaTime,
+		const TArray<FGuid>& Spacecraft);
 
 	/*----------------------------------------------------
 	    Data

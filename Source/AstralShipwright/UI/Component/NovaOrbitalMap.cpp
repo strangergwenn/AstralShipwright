@@ -125,7 +125,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	AddPlanet(Origin, DefaultPlanet);
 	ProcessAreas(Origin);
 	ProcessAsteroids(Origin);
-	ProcessSpacecraftOrbits(Origin);
+	ProcessPlayerOrbit(Origin);
 	ProcessPlayerTrajectory(Origin);
 	ProcessTrajectoryPreview(Origin, DeltaTime);
 
@@ -264,7 +264,7 @@ void SNovaOrbitalMap::ProcessAsteroids(const FVector2D& Origin)
 	}
 }
 
-void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
+void SNovaOrbitalMap::ProcessPlayerOrbit(const FVector2D& Origin)
 {
 	const ANovaGameState*            GameState         = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
@@ -284,16 +284,27 @@ void SNovaOrbitalMap::ProcessSpacecraftOrbits(const FVector2D& Origin)
 	{
 		const FGuid& Identifier = SpacecraftIdentifierAndOrbitalLocation.Key;
 
-		if (SpacecraftIdentifierAndOrbitalLocation.Value.Geometry.IsValid() && !OrbitalSimulation->IsOnStartedTrajectory(Identifier))
+		if (SpacecraftIdentifierAndOrbitalLocation.Value.Geometry.IsValid())
 		{
 			const FNovaOrbitalLocation& Location = SpacecraftIdentifierAndOrbitalLocation.Value;
 
-			TArray<FNovaOrbitalObject> Objects;
+			float              BaseAltitude = GetObjectBaseAltitude(Location.Geometry.Body);
+			FNovaOrbitalObject Object       = FNovaOrbitalObject(Identifier, Location.GetCartesianLocation(BaseAltitude), false);
 
-			float BaseAltitude = GetObjectBaseAltitude(Location.Geometry.Body);
-			Objects.Add(FNovaOrbitalObject(Identifier, Location.GetCartesianLocation(BaseAltitude), false));
+			// Player orbit
+			if (GameState->GetPlayerSpacecraftIdentifiers().Contains(Identifier) && !OrbitalSimulation->IsOnStartedTrajectory(Identifier))
+			{
+				TArray<FNovaOrbitalObject> Objects;
+				Objects.Add(Object);
+				AddOrbit(Origin, nullptr, Location.Geometry, Objects, OrbitStyle);
+			}
 
-			AddOrbit(Origin, nullptr, Location.Geometry, Objects, OrbitStyle);
+			// Spacecraft position
+			else
+			{
+				AddOrbitalObject(Object, FLinearColor::White);
+			}
+
 			CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Location.Geometry.GetHighestAltitude());
 		}
 	}

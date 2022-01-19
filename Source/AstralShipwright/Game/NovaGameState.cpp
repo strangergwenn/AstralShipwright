@@ -560,12 +560,15 @@ bool ANovaGameState::ProcessGameSimulation(FNovaTime DeltaTime)
 	{
 		for (ANovaSpacecraftPawn* Pawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 		{
-			TArray<UActorComponent*> Components = Pawn->GetComponentsByInterface(UNovaSpacecraftSystemInterface::StaticClass());
-			for (UActorComponent* Component : Components)
+			if (Pawn->GetPlayerState() != nullptr)
 			{
-				INovaSpacecraftSystemInterface* System = Cast<INovaSpacecraftSystemInterface>(Component);
-				NCHECK(System);
-				System->Update(InitialTime, GetCurrentTime());
+				TArray<UActorComponent*> Components = Pawn->GetComponentsByInterface(UNovaSpacecraftSystemInterface::StaticClass());
+				for (UActorComponent* Component : Components)
+				{
+					INovaSpacecraftSystemInterface* System = Cast<INovaSpacecraftSystemInterface>(Component);
+					NCHECK(System);
+					System->Update(InitialTime, GetCurrentTime());
+				}
 			}
 		}
 	}

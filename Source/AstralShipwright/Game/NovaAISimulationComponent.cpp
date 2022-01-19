@@ -59,9 +59,18 @@ void UNovaAISimulationComponent::Initialize()
 			Spacecraft.Name            = TEXT("Shitty Tug");
 			Spacecraft.SpacecraftClass = SpacecraftDescription;
 
+			// DEBUG
+			Spacecraft.UpdatePropulsionMetrics();
+
 			// Register the spacecraft
 			SpacecraftDatabase.Add(Spacecraft.Identifier, FNovaAISpacecraftState());
 			GameState->UpdateSpacecraft(Spacecraft, &Orbit);
+
+			// DEBUG
+			UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
+			NCHECK(OrbitalSimulation);
+			StartTrajectory(
+				Orbit, OrbitalSimulation->GetAreaOrbit(AssetManager->GetAssets<UNovaArea>()[0]), FNovaTime(), {Spacecraft.Identifier});
 		}
 	}
 }
@@ -77,7 +86,7 @@ void UNovaAISimulationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 }
 
 /*----------------------------------------------------
-    Internals
+    Internals high level
 ----------------------------------------------------*/
 
 void UNovaAISimulationComponent::ProcessSpawning()
@@ -149,6 +158,43 @@ void UNovaAISimulationComponent::ProcessPhysicalMovement()
 		{
 		}
 	}
+}
+
+/*----------------------------------------------------
+    Helpers
+----------------------------------------------------*/
+
+void UNovaAISimulationComponent::StartTrajectory(
+	const FNovaOrbit& SourceOrbit, const FNovaOrbit& DestinationOrbit, FNovaTime DeltaTime, const TArray<FGuid>& Spacecraft)
+{
+	// Get game state pointers
+	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
+	NCHECK(GameState);
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
+	NCHECK(OrbitalSimulation);
+
+	// Compute trajectory candidates
+	TArray<FNovaTrajectory>   Candidates;
+	FNovaTrajectoryParameters Parameters = OrbitalSimulation->PrepareTrajectory(SourceOrbit, DestinationOrbit, DeltaTime, Spacecraft);
+	for (float Altitude = 300; Altitude <= 1500; Altitude += 300)
+	{
+		FNovaTrajectory NewTrajectory = OrbitalSimulation->ComputeTrajectory(Parameters, Altitude);
+		if (NewTrajectory.IsValid() && NewTrajectory.TotalTravelDuration.AsDays() < 15)
+		{
+			Candidates.Add(NewTrajectory);
+		}
+	}
+
+	NCHECK(Candidates.Num() > 0);
+
+	// Sort trajectories
+	Candidates.Sort(
+		[](const FNovaTrajectory& A, const FNovaTrajectory& B)
+		{
+			return A.TotalTravelDuration < B.TotalTravelDuration && A.TotalDeltaV < B.TotalDeltaV;
+		});
+
+	OrbitalSimulation->CommitTrajectory(Spacecraft, Candidates[0]);
 }
 
 #undef LOCTEXT_NAMESPACE

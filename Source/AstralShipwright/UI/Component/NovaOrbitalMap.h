@@ -212,7 +212,7 @@ protected:
 	void ProcessAsteroids(const FVector2D& Origin);
 
 	/** Add player orbit to the map */
-	void ProcessSpacecraftOrbits(const FVector2D& Origin);
+	void ProcessPlayerOrbit(const FVector2D& Origin);
 
 	/** Add player trajectory to the map */
 	void ProcessPlayerTrajectory(const FVector2D& Origin);
