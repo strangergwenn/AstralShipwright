@@ -144,7 +144,7 @@ FReply SNovaMenu::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerE
 		FWidgetPath WidgetsUnderCursor = FSlateApplication::Get().LocateWindowUnderMouse(
 			MouseEvent.GetScreenSpacePosition(), FSlateApplication::Get().GetTopLevelWindows(), false, MouseEvent.GetUserIndex());
 
-		if (&WidgetsUnderCursor.GetLastWidget().Get() == CurrentNavigationPanel)
+		if (&WidgetsUnderCursor.GetLastWidget().Get() == CurrentNavigationPanel || CurrentNavigationPanel->IsClickInsideMenuAllowed())
 		{
 			CurrentNavigationPanel->OnClicked(Position);
 		}
@@ -174,7 +174,7 @@ FReply SNovaMenu::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FP
 		FWidgetPath WidgetsUnderCursor = FSlateApplication::Get().LocateWindowUnderMouse(
 			MouseEvent.GetScreenSpacePosition(), FSlateApplication::Get().GetTopLevelWindows(), false, MouseEvent.GetUserIndex());
 
-		if (&WidgetsUnderCursor.GetLastWidget().Get() == CurrentNavigationPanel)
+		if (&WidgetsUnderCursor.GetLastWidget().Get() == CurrentNavigationPanel || CurrentNavigationPanel->IsClickInsideMenuAllowed())
 		{
 			CurrentNavigationPanel->OnDoubleClicked(Position);
 		}

@@ -77,6 +77,11 @@ public:
 
 	virtual bool IsButtonActionAllowed(TSharedPtr<SNovaButton> Button) const override;
 
+	virtual bool IsClickInsideMenuAllowed() const override
+	{
+		return false;
+	}
+
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/

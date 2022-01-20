@@ -66,6 +66,11 @@ public:
 
 	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
 
+	virtual bool IsClickInsideMenuAllowed() const override
+	{
+		return false;
+	}
+
 	/*----------------------------------------------------
 	    Content callbacks
 	----------------------------------------------------*/

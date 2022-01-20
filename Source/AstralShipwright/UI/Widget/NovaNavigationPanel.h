@@ -90,6 +90,12 @@ public:
 	/** Confirm whether a button is allowed to fire its action */
 	virtual bool IsButtonActionAllowed(TSharedPtr<class SNovaButton> Button) const;
 
+	/** Confirm whether OnClicked and OnDoubleClicked will fire when clicked on real menu elements */
+	virtual bool IsClickInsideMenuAllowed() const
+	{
+		return true;
+	}
+
 	/** Reset the focus to the default button, or any button */
 	void ResetNavigation();
 
