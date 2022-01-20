@@ -478,12 +478,20 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 	}
 
 	// Check for hatches
+	int32 CargoModuleGroupsWithoutHatch = 0;
 	for (FNovaHatchModuleGroup& Group : ModuleGroups)
 	{
 		if (!Group.HasHatch)
 		{
-			Issues.Add(LOCTEXT("NoHatch", "A group of cargo modules doesn't have a hatch attached"));
+			CargoModuleGroupsWithoutHatch++;
 		}
+	}
+	if (CargoModuleGroupsWithoutHatch > 0)
+	{
+		Issues.Add(FText::FormatNamed(LOCTEXT("NoHatchFormat",
+										  "{count} {count}|plural(one=stack,other=stacks) of cargo modules "
+										  "{count}|plural(one=doesn't,other=don't) have a hatch attached"),
+			TEXT("count"), FText::AsNumber(CargoModuleGroupsWithoutHatch)));
 	}
 
 	// Check for required equipment
