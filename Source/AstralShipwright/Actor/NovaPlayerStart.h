@@ -57,13 +57,4 @@ protected:
 	// Waiting point for spacecraft that just left dock or is waiting for docking
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	USceneComponent* WaitingPoint;
-
-	/*----------------------------------------------------
-	    Properties
-	----------------------------------------------------*/
-
-public:
-	// Whether ships here should start idle in space
-	UPROPERTY(Category = Nova, EditAnywhere)
-	bool IsInSpace;
 };

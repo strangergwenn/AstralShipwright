@@ -41,7 +41,7 @@ class UNovaArea : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
-	UNovaArea() : UseAsMovementReference(true)
+	UNovaArea() : IsInSpace(false)
 	{}
 
 public:
@@ -57,9 +57,9 @@ public:
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Phase;
 
-	// Whether this area should be used as the point of reference for movement
+	// Check if this area is in space - not used for movement reference, not dockable
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	bool UseAsMovementReference;
+	bool IsInSpace;
 
 	// Sub-level to load
 	UPROPERTY(Category = Properties, EditDefaultsOnly)

@@ -175,7 +175,12 @@ void UNovaSpacecraftMovementComponent::Initialize(const ANovaPlayerStart* Start)
 	}
 	else
 	{
-		if (Start->IsInSpace)
+		const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+		NCHECK(GameState);
+		const UNovaArea* CurrentArea = GameState->GetCurrentArea();
+		NCHECK(CurrentArea);
+
+		if (CurrentArea->IsInSpace)
 		{
 			NLOG("UNovaSpacecraftMovementComponent::Initialize : idle in space at '%s'", Start ? *Start->GetName() : nullptr);
 		}
@@ -206,7 +211,8 @@ bool UNovaSpacecraftMovementComponent::CanDock() const
 	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 	if (GameState)
 	{
-		return IsInitialized() && GetState() == ENovaMovementState::Idle && !DockState.Actor->IsInSpace;
+		const UNovaArea* CurrentArea = GameState->GetCurrentArea();
+		return IsInitialized() && GetState() == ENovaMovementState::Idle && CurrentArea && !CurrentArea->IsInSpace;
 	}
 	else
 	{
@@ -430,9 +436,8 @@ void UNovaSpacecraftMovementComponent::ServerRequestMovement_Implementation(cons
 
 void UNovaSpacecraftMovementComponent::OnDockStateReplicated(const FNovaMovementDockState& PreviousDockState)
 {
-	NLOG("UNovaSpacecraftMovementComponent::OnDockStateReplicated : resetting to '%s' (%d), IsDocked %d, IsInSpace %d",
-		DockState.Actor ? *DockState.Actor->GetName() : TEXT("nullptr"), DockState.Actor != PreviousDockState.Actor, DockState.IsDocked,
-		DockState.Actor ? DockState.Actor->IsInSpace : false);
+	NLOG("UNovaSpacecraftMovementComponent::OnDockStateReplicated : resetting to '%s' (%d), IsDocked %d",
+		DockState.Actor ? *DockState.Actor->GetName() : TEXT("nullptr"), DockState.Actor != PreviousDockState.Actor, DockState.IsDocked);
 
 	if (IsValid(DockState.Actor) && DockState.Actor != PreviousDockState.Actor)
 	{
@@ -625,7 +630,7 @@ void UNovaSpacecraftMovementComponent::ProcessOrbitalMovement(float DeltaTime)
 
 		// Get the relative orbital location
 		FVector2D LocationInKilometers;
-		if (CurrentArea->UseAsMovementReference)
+		if (!CurrentArea->IsInSpace)
 		{
 			const FVector2D AreaLocation = OrbitalSimulation->GetAreaLocation(CurrentArea).GetCartesianLocation<true>();
 

@@ -22,9 +22,6 @@ ANovaPlayerStart::ANovaPlayerStart(const FObjectInitializer& ObjectInitializer) 
 #if WITH_EDITOR
 	PrimaryActorTick.bCanEverTick = true;
 #endif
-
-	// Defaults
-	IsInSpace = false;
 }
 
 /*----------------------------------------------------
