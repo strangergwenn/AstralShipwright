@@ -7,17 +7,27 @@
 #include "NovaAISpacecraft.h"
 #include "NovaAISimulationComponent.generated.h"
 
+/** AI states */
+enum class ENovaAISpacecraftState : uint8
+{
+	Idle,
+	Trajectory,
+	Docked
+};
+
 /** AI spacecraft data */
 USTRUCT()
 struct FNovaAISpacecraftState
 {
-	FNovaAISpacecraftState() : PhysicalSpacecraft(nullptr)
+	FNovaAISpacecraftState() : PhysicalSpacecraft(nullptr), State(ENovaAISpacecraftState::Idle)
 	{}
 
 	GENERATED_BODY()
 
 	UPROPERTY()
 	class ANovaSpacecraftPawn* PhysicalSpacecraft;
+
+	ENovaAISpacecraftState State;
 };
 
 /** AI spacecraft control component */

@@ -59,18 +59,9 @@ void UNovaAISimulationComponent::Initialize()
 			Spacecraft.Name            = TEXT("Shitty Tug");
 			Spacecraft.SpacecraftClass = SpacecraftDescription;
 
-			// DEBUG
-			Spacecraft.UpdatePropulsionMetrics();
-
 			// Register the spacecraft
 			SpacecraftDatabase.Add(Spacecraft.Identifier, FNovaAISpacecraftState());
 			GameState->UpdateSpacecraft(Spacecraft, &Orbit);
-
-			// DEBUG
-			UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
-			NCHECK(OrbitalSimulation);
-			StartTrajectory(
-				Orbit, OrbitalSimulation->GetAreaOrbit(AssetManager->GetAssets<UNovaArea>()[0]), FNovaTime(), {Spacecraft.Identifier});
 		}
 	}
 }
@@ -138,11 +129,55 @@ void UNovaAISimulationComponent::ProcessSpawning()
 
 void UNovaAISimulationComponent::ProcessNavigation()
 {
+	// Get game state pointers
+	UNovaAssetManager* AssetManager = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager();
+	NCHECK(AssetManager);
+	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
+	NCHECK(GameState);
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
+	NCHECK(OrbitalSimulation);
+
 	// Iterate over the AI database
 	for (TPair<FGuid, FNovaAISpacecraftState>& IdentifierAndSpacecraft : SpacecraftDatabase)
 	{
-		FGuid                   Identifier      = IdentifierAndSpacecraft.Key;
-		FNovaAISpacecraftState& SpacecraftState = IdentifierAndSpacecraft.Value;
+		// Get more game state data
+		FGuid                       Identifier      = IdentifierAndSpacecraft.Key;
+		FNovaAISpacecraftState&     SpacecraftState = IdentifierAndSpacecraft.Value;
+		const FNovaOrbitalLocation* SourceLocation  = OrbitalSimulation->GetSpacecraftLocation(Identifier);
+		const FNovaOrbit*           SourceOrbit     = OrbitalSimulation->GetSpacecraftOrbit(Identifier);
+
+		// Issue new orders
+		if (SpacecraftState.State == ENovaAISpacecraftState::Idle)
+		{
+			NCHECK(SourceLocation != nullptr);
+			NCHECK(SourceOrbit != nullptr);
+
+			// Pick a random destination that is not the nearest one
+			TArray<const UNovaArea*> Areas           = AssetManager->GetAssets<UNovaArea>();
+			auto                     AreaAndDistance = OrbitalSimulation->GetNearestAreaAndDistance(*SourceLocation);
+			Areas.Remove(AreaAndDistance.Key);
+			const UNovaArea* Area = Areas[FMath::RandHelper(Areas.Num())];
+			NCHECK(Area);
+
+			// Start the travel
+			StartTrajectory(*SourceOrbit, OrbitalSimulation->GetAreaOrbit(Area), FNovaTime(), {Identifier});
+			SpacecraftState.State = ENovaAISpacecraftState::Trajectory;
+
+			NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' now on trajectory toward '%s'",
+				*Identifier.ToString(EGuidFormats::Short), *Area->Name.ToString());
+		}
+
+		// Wait for arrival
+		else if (SpacecraftState.State == ENovaAISpacecraftState::Trajectory)
+		{
+			const FNovaTrajectory* Trajectory = OrbitalSimulation->GetSpacecraftTrajectory(Identifier);
+			if (Trajectory == nullptr || Trajectory->GetArrivalTime() < GameState->GetCurrentTime())
+			{
+				SpacecraftState.State = ENovaAISpacecraftState::Idle;
+
+				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' now idle", *Identifier.ToString(EGuidFormats::Short));
+			}
+		}
 	}
 }
 
@@ -194,6 +229,7 @@ void UNovaAISimulationComponent::StartTrajectory(
 			return A.TotalTravelDuration < B.TotalTravelDuration && A.TotalDeltaV < B.TotalDeltaV;
 		});
 
+	// Start trajectory
 	OrbitalSimulation->CommitTrajectory(Spacecraft, Candidates[0]);
 }
 
