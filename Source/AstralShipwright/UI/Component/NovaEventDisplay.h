@@ -80,7 +80,6 @@ protected:
 	FLinearColor GetDisplayColor() const;
 
 	FText GetMainText() const;
-	FText GetTimeText() const;
 	FText GetDetailsText() const;
 
 	const FSlateBrush* GetIcon() const;
@@ -96,7 +95,6 @@ protected:
 	// Current state
 	FNovaEventDisplayData DesiredState;
 	FNovaEventDisplayData CurrentState;
-	FText                 TimeText;
 	FText                 DetailsText;
 	bool                  IsValidDetails;
 };

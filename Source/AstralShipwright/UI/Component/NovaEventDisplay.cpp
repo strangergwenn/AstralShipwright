@@ -81,17 +81,6 @@ void SNovaEventDisplay::Construct(const FArguments& InArgs)
 						.AutoHeight()
 						.HAlign(HAlign_Center)
 						[
-							SNew(STextBlock)
-							.TextStyle(&Theme.MainFont)
-							.Text(this, &SNovaEventDisplay::GetTimeText)
-							.WrapTextAt(Theme.EventDisplayWidth)
-							.Visibility(this, &SNovaEventDisplay::GetDetailsVisibility)
-						]
-
-						+ SVerticalBox::Slot()
-						.AutoHeight()
-						.HAlign(HAlign_Center)
-						[
 							SNew(SHorizontalBox)
 
 							+ SHorizontalBox::Slot()
@@ -131,7 +120,6 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 	SNovaFadingWidget::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
 	DesiredState = FNovaEventDisplayData();
-	TimeText     = FText();
 	DetailsText  = FText();
 
 	if (MenuManager.IsValid())
@@ -149,45 +137,36 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 			const FNovaTime&       CurrentGameTime = GameState->GetCurrentTime();
 
 			// Trajectory
-			if (Trajectory)
+			if (Trajectory && Trajectory->GetArrivalTime() > CurrentGameTime)
 			{
-				const FNovaManeuver* CurrentManeuver        = Trajectory->GetManeuver(CurrentGameTime);
-				FNovaTime            TimeBeforeNextManeuver = Trajectory->GetNextManeuverStartTime(CurrentGameTime) - CurrentGameTime -
-												   FNovaTime::FromSeconds(ENovaGameModeStateTiming::CommonCutsceneDelay - 1);
-				FNovaTime TimeLeftInManeuver = CurrentManeuver ? (CurrentManeuver->Time + CurrentManeuver->Duration - CurrentGameTime) : 0;
-
-				// Nearing maneuver
-				if (TimeBeforeNextManeuver > 0 && TimeBeforeNextManeuver < FNovaTime::FromSeconds(60))
-				{
-					DesiredState.Text = LOCTEXT("ImminentManeuver", "Imminent maneuver").ToUpper();
-					DesiredState.Type = ENovaEventDisplayType::StaticTextWithDetails;
-
-					if (CurrentState.Type == ENovaEventDisplayType::StaticTextWithDetails)
-					{
-						TimeText = FText::FormatNamed(LOCTEXT("ImminentManeuverTimeFormat", "{duration} left"), TEXT("duration"),
-							GetDurationText(TimeBeforeNextManeuver));
-
-						DetailsText    = SpacecraftMovement->CanManeuver()
-										   ? LOCTEXT("ImminentManeuverAuthorized", "Spacecraft is ready to maneuver")
-										   : LOCTEXT("ImminentManeuverNotAuthorized", "Spacecraft is not ready to maneuver");
-						IsValidDetails = SpacecraftMovement->CanManeuver();
-					}
-				}
-
 				// Ongoing maneuver
-				else if (TimeLeftInManeuver > 0)
+				const FNovaManeuver* CurrentManeuver = Trajectory->GetManeuver(CurrentGameTime);
+				if (CurrentManeuver)
 				{
+					FNovaTime TimeLeftInManeuver = (CurrentManeuver->Time + CurrentManeuver->Duration - CurrentGameTime);
+
 					DesiredState.Text = FText::FormatNamed(LOCTEXT("CurrentManeuverFormat", "Maneuver ends in {duration}"),
 						TEXT("duration"), GetDurationText(TimeLeftInManeuver));
 					DesiredState.Type = ENovaEventDisplayType::DynamicText;
 				}
 
-				// On trajectory
-				else if (TimeBeforeNextManeuver > 0)
+				// Nearing maneuver
+				else
 				{
+					FNovaTime TimeBeforeNextManeuver = Trajectory->GetNextManeuverStartTime(CurrentGameTime) - CurrentGameTime;
+
 					DesiredState.Text = FText::FormatNamed(LOCTEXT("NextManeuverFormat", "Next maneuver in {duration}"), TEXT("duration"),
 						GetDurationText(TimeBeforeNextManeuver));
+
 					DesiredState.Type = ENovaEventDisplayType::DynamicText;
+
+					if (CurrentState.Type == ENovaEventDisplayType::DynamicText)
+					{
+						DetailsText    = SpacecraftMovement->CanManeuver()
+										   ? LOCTEXT("ImminentManeuverAuthorized", "Spacecraft is ready to maneuver")
+										   : LOCTEXT("ImminentManeuverNotAuthorized", "Spacecraft is not ready to maneuver");
+						IsValidDetails = SpacecraftMovement->CanManeuver();
+					}
 				}
 			}
 
@@ -236,11 +215,6 @@ FLinearColor SNovaEventDisplay::GetDisplayColor() const
 FText SNovaEventDisplay::GetMainText() const
 {
 	return CurrentState.Text;
-}
-
-FText SNovaEventDisplay::GetTimeText() const
-{
-	return TimeText;
 }
 
 FText SNovaEventDisplay::GetDetailsText() const
