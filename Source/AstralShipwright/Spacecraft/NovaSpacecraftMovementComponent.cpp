@@ -661,7 +661,10 @@ const FNovaManeuver* UNovaSpacecraftMovementComponent::GetNextManeuver() const
 	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 	NCHECK(IsValid(GameState));
 
-	const FNovaTrajectory* Trajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
+	const ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
+
+	const FNovaTrajectory* Trajectory =
+		GameState->GetOrbitalSimulation()->GetSpacecraftTrajectory(SpacecraftPawn->GetSpacecraftIdentifier());
 	return Trajectory ? Trajectory->GetNextManeuver(GameState->GetCurrentTime()) : nullptr;
 }
 

@@ -162,10 +162,21 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 
 					if (CurrentState.Type == ENovaEventDisplayType::DynamicText)
 					{
-						DetailsText    = SpacecraftMovement->CanManeuver()
-										   ? LOCTEXT("ImminentManeuverAuthorized", "Spacecraft is ready to maneuver")
-										   : LOCTEXT("ImminentManeuverNotAuthorized", "Spacecraft is not ready to maneuver");
 						IsValidDetails = SpacecraftMovement->CanManeuver();
+						if (IsValidDetails)
+						{
+							DetailsText =
+								FText::FormatNamed(LOCTEXT("ImminentManeuverAuthorized",
+													   "Spacecraft {spacecraft}|plural(one=is,other=are) correctly oriented"),
+									TEXT("spacecraft"), GameState->PlayerArray.Num());
+						}
+						else
+						{
+							DetailsText =
+								FText::FormatNamed(LOCTEXT("ImminentManeuverUnauthorized",
+													   "Spacecraft{spacecraft}|plural(one=isn't,other=aren't) correctly oriented"),
+									TEXT("spacecraft"), GameState->PlayerArray.Num());
+						}
 					}
 				}
 			}

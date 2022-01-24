@@ -155,10 +155,9 @@ void UNovaAISimulationComponent::ProcessNavigation()
 		}
 
 		// Issue new orders
-		if (SpacecraftState.CurrentState == ENovaAISpacecraftState::Idle)
+		if (SpacecraftState.CurrentState == ENovaAISpacecraftState::Idle && SourceOrbit != nullptr)
 		{
 			NCHECK(SourceLocation != nullptr);
-			NCHECK(SourceOrbit != nullptr);
 
 			// Pick a random destination that is not the nearest one
 			TArray<const UNovaArea*> Areas           = AssetManager->GetAssets<UNovaArea>();
@@ -181,7 +180,8 @@ void UNovaAISimulationComponent::ProcessNavigation()
 		{
 			// Detect arrival
 			const FNovaTrajectory* Trajectory = OrbitalSimulation->GetSpacecraftTrajectory(Identifier);
-			if (Trajectory == nullptr || Trajectory->GetArrivalTime() < CurrentTime)
+			if ((CurrentTime - SpacecraftState.CurrentStateStartTime > FNovaTime::FromMinutes(5)) &&
+				(Trajectory == nullptr || Trajectory->GetArrivalTime() < CurrentTime))
 			{
 				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' arriving at station", *Identifier.ToString(EGuidFormats::Short));
 
@@ -223,13 +223,21 @@ void UNovaAISimulationComponent::ProcessNavigation()
 		// Check for complete undocking
 		else if (SpacecraftState.CurrentState == ENovaAISpacecraftState::Undocking)
 		{
-			// Detect idle movement
-			if (IsValid(SpacecraftMovement) && SpacecraftMovement->IsIdle())
+			// Detect no physical ship OR idle and undocked
+			if (!IsValid(SpacecraftMovement) || (SpacecraftMovement->IsIdle() && !SpacecraftMovement->IsDocked()))
 			{
 				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' going idle", *Identifier.ToString(EGuidFormats::Short));
 
 				SpacecraftState.CurrentState          = ENovaAISpacecraftState::Idle;
 				SpacecraftState.CurrentStateStartTime = CurrentTime;
+			}
+
+			// Undock if we're not already undocked
+			else if (IsValid(SpacecraftMovement) && SpacecraftMovement->IsIdle() && SpacecraftMovement->IsDocked())
+			{
+				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' undocking", *Identifier.ToString(EGuidFormats::Short));
+
+				SpacecraftMovement->Undock();
 			}
 		}
 	}
