@@ -689,8 +689,17 @@ FTransform UNovaSpacecraftMovementComponent::GetInitialTransform() const
 {
 	FTransform InitialTransform = UpdatedComponent->GetComponentTransform();
 
+	const ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
+
+	// AI (start at the dock interface)
+	if (IsValid(SpacecraftPawn) && SpacecraftPawn->GetPlayerState() == nullptr)
+	{
+		NLOG("UNovaSpacecraftMovementComponent::GetInitialTransform : AI");
+		InitialTransform.SetLocation(DockState.Actor->GetWaitingPointLocation());
+	}
+
 	// Start docked
-	if (DockState.IsDocked)
+	else if (DockState.IsDocked)
 	{
 		NLOG("UNovaSpacecraftMovementComponent::GetInitialTransform : docked");
 		InitialTransform = DockState.Actor->GetActorTransform();

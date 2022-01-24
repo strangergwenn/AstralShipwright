@@ -8,6 +8,7 @@
 #include "NovaGameState.h"
 
 #include "Spacecraft/NovaSpacecraftPawn.h"
+#include "Spacecraft/NovaSpacecraftMovementComponent.h"
 
 #include "System/NovaAssetManager.h"
 #include "System/NovaGameInstance.h"
@@ -73,7 +74,6 @@ void UNovaAISimulationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	// Run processes
 	ProcessSpawning();
 	ProcessNavigation();
-	ProcessPhysicalMovement();
 }
 
 /*----------------------------------------------------
@@ -145,9 +145,17 @@ void UNovaAISimulationComponent::ProcessNavigation()
 		FNovaAISpacecraftState&     SpacecraftState = IdentifierAndSpacecraft.Value;
 		const FNovaOrbitalLocation* SourceLocation  = OrbitalSimulation->GetSpacecraftLocation(Identifier);
 		const FNovaOrbit*           SourceOrbit     = OrbitalSimulation->GetSpacecraftOrbit(Identifier);
+		FNovaTime                   CurrentTime     = GameState->GetCurrentTime();
+
+		// Get the physical spacecraft movement
+		UNovaSpacecraftMovementComponent* SpacecraftMovement = nullptr;
+		if (IsValid(SpacecraftState.PhysicalSpacecraft))
+		{
+			SpacecraftMovement = SpacecraftState.PhysicalSpacecraft->GetSpacecraftMovement();
+		}
 
 		// Issue new orders
-		if (SpacecraftState.State == ENovaAISpacecraftState::Idle)
+		if (SpacecraftState.CurrentState == ENovaAISpacecraftState::Idle)
 		{
 			NCHECK(SourceLocation != nullptr);
 			NCHECK(SourceOrbit != nullptr);
@@ -159,38 +167,70 @@ void UNovaAISimulationComponent::ProcessNavigation()
 			const UNovaArea* Area = Areas[FMath::RandHelper(Areas.Num())];
 			NCHECK(Area);
 
-			// Start the travel
-			StartTrajectory(*SourceOrbit, OrbitalSimulation->GetAreaOrbit(Area), FNovaTime(), {Identifier});
-			SpacecraftState.State = ENovaAISpacecraftState::Trajectory;
-
 			NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' now on trajectory toward '%s'",
 				*Identifier.ToString(EGuidFormats::Short), *Area->Name.ToString());
+
+			// Start the travel
+			StartTrajectory(*SourceOrbit, OrbitalSimulation->GetAreaOrbit(Area), FNovaTime(), {Identifier});
+			SpacecraftState.CurrentState          = ENovaAISpacecraftState::Trajectory;
+			SpacecraftState.CurrentStateStartTime = CurrentTime;
 		}
 
 		// Wait for arrival
-		else if (SpacecraftState.State == ENovaAISpacecraftState::Trajectory)
+		else if (SpacecraftState.CurrentState == ENovaAISpacecraftState::Trajectory)
 		{
+			// Detect arrival
 			const FNovaTrajectory* Trajectory = OrbitalSimulation->GetSpacecraftTrajectory(Identifier);
-			if (Trajectory == nullptr || Trajectory->GetArrivalTime() < GameState->GetCurrentTime())
+			if (Trajectory == nullptr || Trajectory->GetArrivalTime() < CurrentTime)
 			{
-				SpacecraftState.State = ENovaAISpacecraftState::Idle;
+				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' arriving at station", *Identifier.ToString(EGuidFormats::Short));
 
-				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' now idle", *Identifier.ToString(EGuidFormats::Short));
+				SpacecraftState.CurrentState          = ENovaAISpacecraftState::Station;
+				SpacecraftState.CurrentStateStartTime = CurrentTime;
+			}
+
+			// Align to maneuvers
+			if (IsValid(SpacecraftMovement) && SpacecraftMovement->IsIdle() && !SpacecraftMovement->IsAlignedToManeuver())
+			{
+				// NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' aligning for maneuver",
+				//	*Identifier.ToString(EGuidFormats::Short));
+
+				SpacecraftMovement->AlignToManeuver();
 			}
 		}
-	}
-}
 
-void UNovaAISimulationComponent::ProcessPhysicalMovement()
-{
-	// Iterate over all physical AI spacecraft
-	for (TPair<FGuid, FNovaAISpacecraftState>& IdentifierAndSpacecraft : SpacecraftDatabase)
-	{
-		FGuid                   Identifier      = IdentifierAndSpacecraft.Key;
-		FNovaAISpacecraftState& SpacecraftState = IdentifierAndSpacecraft.Value;
-
-		if (IsValid(SpacecraftState.PhysicalSpacecraft))
+		// Stay at the station for some time
+		else if (SpacecraftState.CurrentState == ENovaAISpacecraftState::Station)
 		{
+			// Detect enough time spent
+			if (CurrentTime - SpacecraftState.CurrentStateStartTime > FNovaTime::FromMinutes(5))
+			{
+				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' undocking", *Identifier.ToString(EGuidFormats::Short));
+
+				SpacecraftState.CurrentState          = ENovaAISpacecraftState::Undocking;
+				SpacecraftState.CurrentStateStartTime = CurrentTime;
+			}
+
+			// Dock if we're not already docked or undocking
+			else if (IsValid(SpacecraftMovement) && SpacecraftMovement->IsIdle() && !SpacecraftMovement->IsDocked())
+			{
+				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' docking", *Identifier.ToString(EGuidFormats::Short));
+
+				SpacecraftMovement->Dock();
+			}
+		}
+
+		// Check for complete undocking
+		else if (SpacecraftState.CurrentState == ENovaAISpacecraftState::Undocking)
+		{
+			// Detect idle movement
+			if (IsValid(SpacecraftMovement) && SpacecraftMovement->IsIdle())
+			{
+				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' going idle", *Identifier.ToString(EGuidFormats::Short));
+
+				SpacecraftState.CurrentState          = ENovaAISpacecraftState::Idle;
+				SpacecraftState.CurrentStateStartTime = CurrentTime;
+			}
 		}
 	}
 }

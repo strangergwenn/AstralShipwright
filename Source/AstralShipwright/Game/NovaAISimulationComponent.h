@@ -12,14 +12,15 @@ enum class ENovaAISpacecraftState : uint8
 {
 	Idle,
 	Trajectory,
-	Docked
+	Station,
+	Undocking
 };
 
 /** AI spacecraft data */
 USTRUCT()
 struct FNovaAISpacecraftState
 {
-	FNovaAISpacecraftState() : PhysicalSpacecraft(nullptr), State(ENovaAISpacecraftState::Idle)
+	FNovaAISpacecraftState() : PhysicalSpacecraft(nullptr), CurrentState(ENovaAISpacecraftState::Idle), CurrentStateStartTime(0)
 	{}
 
 	GENERATED_BODY()
@@ -27,7 +28,9 @@ struct FNovaAISpacecraftState
 	UPROPERTY()
 	class ANovaSpacecraftPawn* PhysicalSpacecraft;
 
-	ENovaAISpacecraftState State;
+	ENovaAISpacecraftState CurrentState;
+
+	FNovaTime CurrentStateStartTime;
 };
 
 /** AI spacecraft control component */
@@ -69,11 +72,8 @@ protected:
 	/** Handle the spawning and de-spawning of physical spacecraft */
 	void ProcessSpawning();
 
-	/** Handle travel decisions for spacecraft */
+	/** Handle travel and movement decisions for spacecraft */
 	void ProcessNavigation();
-
-	/** Handle the movement of physical spacecraft */
-	void ProcessPhysicalMovement();
 
 	/*----------------------------------------------------
 	    Helpers

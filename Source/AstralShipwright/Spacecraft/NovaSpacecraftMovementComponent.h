@@ -118,6 +118,12 @@ public:
 	/** Check if the spacecraft is already docked */
 	bool IsDocked() const;
 
+	/** Check if the ship is idle */
+	bool IsIdle() const
+	{
+		return LinearAttitudeIdle && AngularAttitudeIdle;
+	}
+
 	/** Check if the spacecraft is aligned to the next maneuver */
 	bool IsAlignedToManeuver() const;
 
