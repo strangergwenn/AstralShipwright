@@ -41,7 +41,7 @@ class UNovaArea : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
-	UNovaArea() : IsInSpace(false)
+	UNovaArea() : IsInSpace(false), AIQuota(2)
 	{}
 
 public:
@@ -60,6 +60,10 @@ public:
 	// Check if this area is in space - not used for movement reference, not dockable
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	bool IsInSpace;
+
+	// Amount of AI spacecraft to allow there
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	int32 AIQuota;
 
 	// Sub-level to load
 	UPROPERTY(Category = Properties, EditDefaultsOnly)

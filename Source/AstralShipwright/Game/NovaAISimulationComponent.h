@@ -20,13 +20,17 @@ enum class ENovaAISpacecraftState : uint8
 USTRUCT()
 struct FNovaAISpacecraftState
 {
-	FNovaAISpacecraftState() : PhysicalSpacecraft(nullptr), CurrentState(ENovaAISpacecraftState::Idle), CurrentStateStartTime(0)
+	FNovaAISpacecraftState()
+		: PhysicalSpacecraft(nullptr), TargetArea(nullptr), CurrentState(ENovaAISpacecraftState::Idle), CurrentStateStartTime(0)
 	{}
 
 	GENERATED_BODY()
 
 	UPROPERTY()
 	class ANovaSpacecraftPawn* PhysicalSpacecraft;
+
+	UPROPERTY()
+	const class UNovaArea* TargetArea;
 
 	ENovaAISpacecraftState CurrentState;
 
@@ -69,6 +73,9 @@ public:
 	----------------------------------------------------*/
 
 protected:
+	/** Update the quotas map */
+	void ProcessQuotas();
+
 	/** Handle the spawning and de-spawning of physical spacecraft */
 	void ProcessSpawning();
 
@@ -80,6 +87,9 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+	/** Get a ship name for a tug or mining ship */
+	FString GetTechnicalShipName(FRandomStream& RandomStream, int32 Index) const;
+
 	/** Change the spacecraft state */
 	void SetSpacecraftState(FNovaAISpacecraftState& State, ENovaAISpacecraftState NewState);
 
@@ -97,5 +107,8 @@ private:
 	TMap<FGuid, FNovaAISpacecraftState> SpacecraftDatabase;
 
 	// General state
-	FGuid AlwaysLoadedSpacecraft;
+	TArray<FString>                     TechnicalNamePrefixes;
+	TArray<FString>                     TechnicalNameSuffixes;
+	FGuid                               AlwaysLoadedSpacecraft;
+	TMap<const class UNovaArea*, int32> AreasQuotas;
 };

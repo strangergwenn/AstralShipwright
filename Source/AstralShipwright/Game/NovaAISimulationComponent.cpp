@@ -17,7 +17,14 @@
 
 #define LOCTEXT_NAMESPACE "UNovaAISimulationComponent"
 
-// Definitions
+/*----------------------------------------------------
+    Definitions
+----------------------------------------------------*/
+
+// Procedural generation
+static constexpr int32 InitialTechnicalSpacecraftCount = 42;
+
+// Spawning
 static constexpr int32 SpacecraftSpawnDistanceKm   = 500;
 static constexpr int32 SpacecraftDespawnDistanceKm = 600;
 
@@ -27,6 +34,15 @@ static constexpr int32 SpacecraftDespawnDistanceKm = 600;
 
 UNovaAISimulationComponent::UNovaAISimulationComponent() : Super()
 {
+	// Technical ship names
+	TechnicalNamePrefixes = {TEXT("Analog"), TEXT("Broken"), TEXT("Clockwork"), TEXT("Drab"), TEXT("Electric"), TEXT("Flying"),
+		TEXT("Greasy"), TEXT("Happy"), TEXT("Inert"), TEXT("Jittery"), TEXT("Leaky"), TEXT("Moisty"), TEXT("Noisy"), TEXT("Old"),
+		TEXT("Putrid"), TEXT("Rusty"), TEXT("Sleepy"), TEXT("Troubled"), TEXT("Ugly"), TEXT("Valiant"), TEXT("Wild"), TEXT("Zealous")};
+	TechnicalNameSuffixes = {TEXT("Anvil"), TEXT("Brick"), TEXT("Chariot"), TEXT("Driller"), TEXT("Explorer"), TEXT("Farmer"), TEXT("Gear"),
+		TEXT("Hammer"), TEXT("Ingot"), TEXT("Joker"), TEXT("Knocker"), TEXT("Laborer"), TEXT("Miner"), TEXT("Nail"), TEXT("Operator"),
+		TEXT("Prospector"), TEXT("Quantum"), TEXT("Roller"), TEXT("Shovel"), TEXT("Tug"), TEXT("Unit"), TEXT("Wedge"), TEXT("Whale"),
+		TEXT("Yield"), TEXT("Zero")};
+
 	// Settings
 	PrimaryComponentTick.bCanEverTick = true;
 }
@@ -47,18 +63,30 @@ void UNovaAISimulationComponent::Initialize()
 		ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
 		NCHECK(GameState);
 
-		// Spawn spacecraft
-		for (const UNovaAISpacecraftDescription* SpacecraftDescription : AssetManager->GetAssets<UNovaAISpacecraftDescription>())
-		{
-			const class UNovaCelestialBody* DefaultPlanet =
-				AssetManager->GetAsset<UNovaCelestialBody>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
+		// Get asset lists
+		const class UNovaCelestialBody* DefaultPlanet =
+			AssetManager->GetAsset<UNovaCelestialBody>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
+		NCHECK(DefaultPlanet);
+		TArray<const UNovaAISpacecraftDescription*> SpacecraftDescriptions = AssetManager->GetAssets<UNovaAISpacecraftDescription>();
 
-			FNovaOrbit Orbit = FNovaOrbit(FNovaOrbitGeometry(DefaultPlanet, 400, 45), FNovaTime());
+		// Spawn spacecraft
+		FRandomStream RandomStream;
+		for (int32 Index = 0; Index < InitialTechnicalSpacecraftCount; Index++)
+		{
+			// Get the location
+			int32      InitialAltitude = RandomStream.RandRange(400, 1000);
+			int32      InitialPhase    = RandomStream.RandRange(0, 360);
+			FNovaOrbit Orbit           = FNovaOrbit(FNovaOrbitGeometry(DefaultPlanet, InitialAltitude, InitialPhase), FNovaTime());
+
+			// Get the class
+			const UNovaAISpacecraftDescription* SpacecraftDescription =
+				SpacecraftDescriptions[RandomStream.RandHelper(SpacecraftDescriptions.Num())];
 
 			// Create the spacecraft
 			FNovaSpacecraft Spacecraft = SpacecraftDescription->Spacecraft;
-			Spacecraft.Name            = TEXT("Shitty Tug");
+			Spacecraft.Name            = GetTechnicalShipName(RandomStream, Index);
 			Spacecraft.SpacecraftClass = SpacecraftDescription;
+			Spacecraft.Identifier      = FGuid::NewGuid();
 
 			// Register the spacecraft
 			SpacecraftDatabase.Add(Spacecraft.Identifier, FNovaAISpacecraftState());
@@ -71,14 +99,44 @@ void UNovaAISimulationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// Run processes
+	// Run local processes
 	ProcessSpawning();
-	ProcessNavigation();
+
+	// Run server processes
+	if (GetOwner()->GetLocalRole() == ROLE_Authority)
+	{
+		ProcessQuotas();
+		ProcessNavigation();
+	}
 }
 
 /*----------------------------------------------------
     Internals high level
 ----------------------------------------------------*/
+
+void UNovaAISimulationComponent::ProcessQuotas()
+{
+	AreasQuotas.Empty();
+
+	// Iterate over the AI database
+	for (TPair<FGuid, FNovaAISpacecraftState>& IdentifierAndSpacecraft : SpacecraftDatabase)
+	{
+		const FNovaAISpacecraftState& SpacecraftState = IdentifierAndSpacecraft.Value;
+
+		if (SpacecraftState.TargetArea)
+		{
+			int32* QuotaPtr = AreasQuotas.Find(SpacecraftState.TargetArea);
+			if (QuotaPtr)
+			{
+				(*QuotaPtr)++;
+			}
+			else
+			{
+				AreasQuotas.Add(SpacecraftState.TargetArea, 1);
+			}
+		}
+	}
+}
 
 void UNovaAISimulationComponent::ProcessSpawning()
 {
@@ -164,16 +222,34 @@ void UNovaAISimulationComponent::ProcessNavigation()
 			// Pick a random destination that is not the nearest one
 			TArray<const UNovaArea*> Areas           = AssetManager->GetAssets<UNovaArea>();
 			auto                     AreaAndDistance = OrbitalSimulation->GetNearestAreaAndDistance(*SourceLocation);
+
+			// Remove the nearest destination and all areas over quota
 			Areas.Remove(AreaAndDistance.Key);
-			const UNovaArea* Area = Areas[FMath::RandHelper(Areas.Num())];
-			NCHECK(Area);
+			for (const TPair<const UNovaArea*, int32>& AreaAndQuota : AreasQuotas)
+			{
+				if (AreaAndQuota.Value >= AreaAndQuota.Key->AIQuota)
+				{
+					Areas.Remove(AreaAndQuota.Key);
+				}
+			}
 
-			NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' now on trajectory toward '%s'",
-				*Identifier.ToString(EGuidFormats::Short), *Area->Name.ToString());
+			if (Areas.Num() > 0)
+			{
+				// Pick the area
+				SpacecraftState.TargetArea = Areas[FMath::RandHelper(Areas.Num())];
+				NCHECK(SpacecraftState.TargetArea);
 
-			// Start the travel
-			StartTrajectory(*SourceOrbit, OrbitalSimulation->GetAreaOrbit(Area), FNovaTime::FromSeconds(30), {Identifier});
-			SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Trajectory);
+				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' now on trajectory toward '%s'",
+					*Identifier.ToString(EGuidFormats::Short), *SpacecraftState.TargetArea->Name.ToString());
+
+				// Start the travel
+				StartTrajectory(
+					*SourceOrbit, OrbitalSimulation->GetAreaOrbit(SpacecraftState.TargetArea), FNovaTime::FromSeconds(30), {Identifier});
+				SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Trajectory);
+
+				// Run quotas again
+				ProcessQuotas();
+			}
 		}
 
 		// Wait for arrival
@@ -246,6 +322,13 @@ void UNovaAISimulationComponent::ProcessNavigation()
 /*----------------------------------------------------
     Helpers
 ----------------------------------------------------*/
+
+FString UNovaAISimulationComponent::GetTechnicalShipName(FRandomStream& RandomStream, int32 Index) const
+{
+	FString Prefix = TechnicalNamePrefixes[RandomStream.RandHelper(TechnicalNamePrefixes.Num())];
+	FString Suffix = TechnicalNameSuffixes[RandomStream.RandHelper(TechnicalNameSuffixes.Num())];
+	return Prefix + " " + Suffix + " " + FString::FormatAsNumber(100 + Index);
+}
 
 void UNovaAISimulationComponent::SetSpacecraftState(FNovaAISpacecraftState& State, ENovaAISpacecraftState NewState)
 {
