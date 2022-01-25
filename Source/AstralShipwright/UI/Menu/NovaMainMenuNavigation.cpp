@@ -1021,7 +1021,7 @@ void SNovaMainMenuNavigation::OnTrajectoryChanged(const FNovaTrajectory& Traject
 {
 	CurrentTrajectoryHasEnoughPropellant = HasEnoughPropellant;
 
-	if (Trajectory.IsValid())
+	if (Trajectory.IsValidExtended())
 	{
 		OrbitalMap->ShowTrajectory(Trajectory, false);
 	}

@@ -20,8 +20,9 @@ constexpr int32 MaxCompartmentCount = 10;
 constexpr int32 MaxModuleCount      = 5;
 constexpr int32 MaxEquipmentCount   = 8;
 
-constexpr double ResaleDepreciation      = 0.5;
-constexpr float  SkirtCapacityMultiplier = 1.1f;
+constexpr double ResaleDepreciation        = 0.5;
+constexpr float  SkirtCapacityMultiplier   = 1.1f;
+constexpr int32  MaxTrajectoryDurationDays = 45;
 
 const FDateTime ZeroTime     = FDateTime(2340, 2, 10, 8);
 const FString   DefaultLevel = TEXT("Space");

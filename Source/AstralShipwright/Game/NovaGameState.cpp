@@ -500,14 +500,28 @@ bool ANovaGameState::CanFastForward(FText* AbortReason) const
 {
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		if (GetTimeLeftUntilEvent() > FNovaTime::FromDays(30))
+		// No event upcoming
+		if (GetTimeLeftUntilEvent() > FNovaTime::FromDays(ENovaConstants::MaxTrajectoryDurationDays))
 		{
 			if (AbortReason)
 			{
 				*AbortReason = LOCTEXT("NoEvent", "No upcoming event");
 			}
+			return false;
 		}
 
+		// Maneuvering
+		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
+		if (PlayerTrajectory && PlayerTrajectory->GetManeuver(GetCurrentTime()))
+		{
+			if (AbortReason)
+			{
+				*AbortReason = LOCTEXT("Maneuvering", "A maneuver is ongoing");
+			}
+			return false;
+		}
+
+		// Check trajectory issues
 		return CheckTrajectoryAbort(AbortReason) == ENovaTrajectoryAction::Continue;
 	}
 	else

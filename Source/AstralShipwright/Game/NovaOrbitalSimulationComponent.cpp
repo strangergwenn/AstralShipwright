@@ -521,11 +521,11 @@ void UNovaOrbitalSimulationComponent::AbortTrajectory(const TArray<FGuid>& Space
 	CommonAbortOrbit.Geometry.EndPhase = CommonAbortOrbit.Geometry.StartPhase + 360;
 	SetOrbit(SpacecraftIdentifiers, CommonAbortOrbit);
 
-	// Be safe
+	// Log the distance, don't assert as some inaccuracy is by design (Cartesian location is modified during trajectories)
 	ProcessSpacecraftOrbits();
 	FVector2D EndLocation = GetPlayerLocation()->GetCartesianLocation();
-	NLOG("UNovaOrbitalSimulationComponent::SetOrbit : %f/%f -> %f/%f", StartLocation.X, StartLocation.Y, EndLocation.X, EndLocation.Y);
-	NCHECK(FVector2D::Distance(EndLocation, StartLocation) < ENovaConstants::TrajectoryDistanceError);
+	NLOG("UNovaOrbitalSimulationComponent::SetOrbit : %f/%f -> %f/%f (%f)", StartLocation.X, StartLocation.Y, EndLocation.X, EndLocation.Y,
+		FVector2D::Distance(EndLocation, StartLocation));
 }
 
 void UNovaOrbitalSimulationComponent::SetOrbit(const TArray<FGuid>& SpacecraftIdentifiers, const FNovaOrbit& Orbit)

@@ -167,14 +167,14 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 						{
 							DetailsText =
 								FText::FormatNamed(LOCTEXT("ImminentManeuverAuthorized",
-													   "Spacecraft {spacecraft}|plural(one=is,other=are) correctly oriented"),
+													   "{spacecraft}|plural(one=The,other=All) spacecraft {spacecraft}|plural(one=is,other=are) correctly oriented"),
 									TEXT("spacecraft"), GameState->PlayerArray.Num());
 						}
 						else
 						{
 							DetailsText =
 								FText::FormatNamed(LOCTEXT("ImminentManeuverUnauthorized",
-													   "Spacecraft{spacecraft}|plural(one=isn't,other=aren't) correctly oriented"),
+													   "{spacecraft}|plural(one=The,other=A) spacecraft isn't correctly oriented"),
 									TEXT("spacecraft"), GameState->PlayerArray.Num());
 						}
 					}

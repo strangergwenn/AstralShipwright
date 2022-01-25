@@ -84,14 +84,11 @@ struct TGuidCacheMap
 		{
 			TPair<int32, const T*>* Entry = Map.Find(ArrayItem.Identifier);
 
-			// Entry was found, update if necessary
+			// Entry was found, update
 			if (Entry)
 			{
-				if (*Entry->Value != ArrayItem)
-				{
-					Entry->Key   = Index;
-					Entry->Value = &ArrayItem;
-				}
+				Entry->Key   = Index;
+				Entry->Value = &ArrayItem;
 			}
 
 			// Entry was not found, add it
@@ -115,7 +112,10 @@ struct TGuidCacheMap
 
 		for (auto& IdentifierAndEntry : Map)
 		{
+			// Check that the entry has a key (array index) between 0 and Num
 			NCHECK(IdentifierAndEntry.Value.Key >= 0 && IdentifierAndEntry.Value.Key < Array.Num());
+
+			// Check that the entry has a value (address) matching the actual address of the array entry at key (index)
 			NCHECK(IdentifierAndEntry.Value.Value == &Array[IdentifierAndEntry.Value.Key]);
 		}
 	}
@@ -201,7 +201,10 @@ struct TMultiGuidCacheMap
 
 		if (Entry)
 		{
+			// Check that the entry has a key (array index) between 0 and Num
 			NCHECK(Entry->Key >= 0 && Entry->Key < Array.Num());
+
+			// Check that the entry has a value (address) matching the actual address of the array entry at key (index)
 			NCHECK(Entry->Value == &Array[Entry->Key]);
 		}
 
@@ -221,7 +224,7 @@ struct TMultiGuidCacheMap
 			{
 				TPair<int32, const T*>* Entry = Map.Find(Identifier);
 
-				// Entry was found, update if necessary
+				// Entry was found, update
 				if (Entry)
 				{
 					Entry->Key   = Index;

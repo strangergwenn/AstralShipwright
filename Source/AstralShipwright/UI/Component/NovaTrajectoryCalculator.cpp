@@ -202,7 +202,7 @@ void SNovaTrajectoryCalculator::Tick(const FGeometry& AllottedGeometry, const do
 			{
 				const FNovaTrajectory& Trajectory = AltitudeAndTrajectory.Value;
 
-				if (Trajectory.IsValid())
+				if (Trajectory.IsValidExtended())
 				{
 					auto Transform = [](float Value)
 					{
@@ -309,7 +309,7 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(
 		float                  Altitude   = AltitudeAndTrajectory.Key;
 		const FNovaTrajectory& Trajectory = AltitudeAndTrajectory.Value;
 
-		if (Trajectory.IsValid())
+		if (Trajectory.IsValidExtended())
 		{
 			double TotalTravelDuration = Trajectory.TotalTravelDuration.AsMinutes();
 
@@ -343,7 +343,7 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(
 		float                  Altitude   = AltitudeAndTrajectory.Key;
 		const FNovaTrajectory& Trajectory = AltitudeAndTrajectory.Value;
 
-		if (Trajectory.IsValid() && FMath::IsFinite(Trajectory.TotalDeltaV) && FMath::IsFinite(Trajectory.TotalTravelDuration.AsMinutes()))
+		if (Trajectory.IsValidExtended())
 		{
 			if (Trajectory.TotalDeltaV < 1.001f * MinDeltaV && Trajectory.TotalTravelDuration.AsMinutes() < MinDurationWithinMinDeltaV)
 			{

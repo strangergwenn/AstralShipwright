@@ -397,6 +397,13 @@ struct FNovaTrajectory
 		return true;
 	}
 
+	/** Check for validity and a moderate travel time */
+	bool IsValidExtended() const
+	{
+		return IsValid() && FMath::IsFinite(TotalDeltaV) &&
+			   TotalTravelDuration < FNovaTime::FromDays(ENovaConstants::MaxTrajectoryDurationDays);
+	}
+
 	/** Add a maneuver if it's not zero delta-v */
 	bool Add(const FNovaManeuver& Maneuver)
 	{
