@@ -155,9 +155,14 @@ void UNovaSpacecraftMovementComponent::Initialize(const ANovaPlayerStart* Start)
 	NCHECK(IsValid(Start));
 	NCHECK(IsValid(UpdatedComponent));
 	NCHECK(GetLocalRole() == ROLE_Authority);
+	const ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
 
 	// Reset the state
 	DockState.Actor = Start;
+	if (SpacecraftPawn->GetPlayerState() == nullptr)
+	{
+		DockState.IsDocked = false;
+	}
 	ResetState();
 
 	// Reset attitude
@@ -228,6 +233,11 @@ bool UNovaSpacecraftMovementComponent::CanUndock() const
 bool UNovaSpacecraftMovementComponent::IsDocked() const
 {
 	return IsInitialized() && GetState() == ENovaMovementState::Docked;
+}
+
+bool UNovaSpacecraftMovementComponent::IsDockingUndocking() const
+{
+	return IsInitialized() && (GetState() == ENovaMovementState::Docking || GetState() == ENovaMovementState::Undocking);
 }
 
 bool UNovaSpacecraftMovementComponent::IsAlignedToManeuver() const
@@ -660,8 +670,8 @@ const FNovaManeuver* UNovaSpacecraftMovementComponent::GetNextManeuver() const
 {
 	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 	NCHECK(IsValid(GameState));
-
 	const ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
+	NCHECK(IsValid(SpacecraftPawn));
 
 	const FNovaTrajectory* Trajectory =
 		GameState->GetOrbitalSimulation()->GetSpacecraftTrajectory(SpacecraftPawn->GetSpacecraftIdentifier());
@@ -672,7 +682,11 @@ FVector UNovaSpacecraftMovementComponent::GetManeuverDirection() const
 {
 	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 	NCHECK(IsValid(GameState));
-	const FNovaTrajectory* Trajectory = GameState->GetOrbitalSimulation()->GetPlayerTrajectory();
+	const ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
+	NCHECK(IsValid(SpacecraftPawn));
+
+	const FNovaTrajectory* Trajectory =
+		GameState->GetOrbitalSimulation()->GetSpacecraftTrajectory(SpacecraftPawn->GetSpacecraftIdentifier());
 
 	const FNovaManeuver* Maneuver = Trajectory ? Trajectory->GetManeuver(GameState->GetCurrentTime()) : nullptr;
 	if (Maneuver == nullptr)

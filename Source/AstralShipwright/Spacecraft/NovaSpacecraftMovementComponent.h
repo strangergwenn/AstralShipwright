@@ -115,8 +115,11 @@ public:
 	/*** Can we undock */
 	bool CanUndock() const;
 
-	/** Check if the spacecraft is already docked */
+	/** Check if the spacecraft is docked */
 	bool IsDocked() const;
+
+	/** Check if the spacecraft is docking or undocking */
+	bool IsDockingUndocking() const;
 
 	/** Check if the ship is idle */
 	bool IsIdle() const

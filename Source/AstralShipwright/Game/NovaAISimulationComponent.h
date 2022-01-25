@@ -80,6 +80,9 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+	/** Change the spacecraft state */
+	void SetSpacecraftState(FNovaAISpacecraftState& State, ENovaAISpacecraftState NewState);
+
 	/** Compute a trajectory between two orbits */
 	void StartTrajectory(const struct FNovaOrbit& SourceOrbit, const struct FNovaOrbit& DestinationOrbit, FNovaTime DeltaTime,
 		const TArray<FGuid>& Spacecraft);
