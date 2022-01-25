@@ -15,6 +15,9 @@
 
 #include "Nova.h"
 
+#include "Dom/JsonObject.h"
+#include "JsonObjectConverter.h"
+
 #define LOCTEXT_NAMESPACE "UNovaAISimulationComponent"
 
 /*----------------------------------------------------
@@ -48,52 +51,214 @@ UNovaAISimulationComponent::UNovaAISimulationComponent() : Super()
 }
 
 /*----------------------------------------------------
-    Interface
+    Loading & saving
 ----------------------------------------------------*/
 
-void UNovaAISimulationComponent::Initialize()
+struct FNovaAISpacecraftStateSave
 {
-	NLOG("UNovaAISimulationComponent::Initialize");
+	FGuid                               SpacecraftIdentifier;
+	const UNovaAISpacecraftDescription* SpacecraftClass;
+	FString                             SpacecraftName;
 
-	if (GetOwner()->GetLocalRole() == ROLE_Authority)
+	const UNovaArea*       TargetArea;
+	ENovaAISpacecraftState CurrentState;
+	FNovaTime              CurrentStateStartTime;
+
+	FNovaOrbit      Orbit;
+	FNovaTrajectory Trajectory;
+};
+
+struct FNovaAIStateSave
+{
+	TArray<FNovaAISpacecraftStateSave> SpacecraftStates;
+};
+
+TSharedPtr<FNovaAIStateSave> UNovaAISimulationComponent::Save() const
+{
+	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
+
+	TSharedPtr<FNovaAIStateSave> SaveData = MakeShared<FNovaAIStateSave>();
+
+	// Get game state pointers
+	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
+	NCHECK(GameState);
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
+	NCHECK(OrbitalSimulation);
+
+	// Iterate over the AI database
+	for (const TPair<FGuid, FNovaAISpacecraftState>& IdentifierAndSpacecraft : SpacecraftDatabase)
 	{
-		// Get game state pointers
-		UNovaAssetManager* AssetManager = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager();
-		NCHECK(AssetManager);
-		ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
-		NCHECK(GameState);
+		FNovaAISpacecraftStateSave SpacecraftSaveData;
 
-		// Get asset lists
-		const class UNovaCelestialBody* DefaultPlanet =
-			AssetManager->GetAsset<UNovaCelestialBody>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
-		NCHECK(DefaultPlanet);
-		TArray<const UNovaAISpacecraftDescription*> SpacecraftDescriptions = AssetManager->GetAssets<UNovaAISpacecraftDescription>();
+		FGuid                         Identifier      = IdentifierAndSpacecraft.Key;
+		const FNovaAISpacecraftState& SpacecraftState = IdentifierAndSpacecraft.Value;
+		const FNovaOrbit*             Orbit           = OrbitalSimulation->GetSpacecraftOrbit(Identifier);
+		const FNovaTrajectory*        Trajectory      = OrbitalSimulation->GetSpacecraftTrajectory(Identifier);
 
-		// Spawn spacecraft
-		FRandomStream RandomStream;
-		for (int32 Index = 0; Index < InitialTechnicalSpacecraftCount; Index++)
+		// Spacecraft
+		const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Identifier);
+		NCHECK(Spacecraft);
+		SpacecraftSaveData.SpacecraftIdentifier = Identifier;
+		SpacecraftSaveData.SpacecraftClass      = Spacecraft->SpacecraftClass;
+		SpacecraftSaveData.SpacecraftName       = Spacecraft->Name;
+
+		// State
+		SpacecraftSaveData.TargetArea            = SpacecraftState.TargetArea;
+		SpacecraftSaveData.CurrentState          = SpacecraftState.CurrentState;
+		SpacecraftSaveData.CurrentStateStartTime = SpacecraftState.CurrentStateStartTime;
+
+		// Trajectory & orbit
+		if (Trajectory)
 		{
-			// Get the location
-			int32      InitialAltitude = RandomStream.RandRange(400, 1000);
-			int32      InitialPhase    = RandomStream.RandRange(0, 360);
-			FNovaOrbit Orbit           = FNovaOrbit(FNovaOrbitGeometry(DefaultPlanet, InitialAltitude, InitialPhase), FNovaTime());
+			SpacecraftSaveData.Trajectory = *Trajectory;
+		}
+		else if (Orbit)
+		{
+			SpacecraftSaveData.Orbit = *Orbit;
+		}
 
-			// Get the class
-			const UNovaAISpacecraftDescription* SpacecraftDescription =
-				SpacecraftDescriptions[RandomStream.RandHelper(SpacecraftDescriptions.Num())];
+		// Sanity checks
+		NCHECK(SpacecraftSaveData.SpacecraftIdentifier.IsValid());
+		NCHECK(SpacecraftSaveData.SpacecraftClass != nullptr);
+		NCHECK(SpacecraftSaveData.SpacecraftName.Len() > 0);
 
-			// Create the spacecraft
-			FNovaSpacecraft Spacecraft = SpacecraftDescription->Spacecraft;
-			Spacecraft.Name            = GetTechnicalShipName(RandomStream, Index);
-			Spacecraft.SpacecraftClass = SpacecraftDescription;
-			Spacecraft.Identifier      = FGuid::NewGuid();
+		SaveData->SpacecraftStates.Add(SpacecraftSaveData);
+	}
+
+	return SaveData;
+}
+
+void UNovaAISimulationComponent::Load(TSharedPtr<FNovaAIStateSave> SaveData)
+{
+	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
+
+	NLOG("UNovaAISimulationComponent::Load");
+
+	// Ensure consistency
+	NCHECK(SaveData != nullptr);
+
+	// Get game state pointers
+	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
+	NCHECK(GameState);
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
+	NCHECK(OrbitalSimulation);
+
+	// Load actual data
+	if (SaveData->SpacecraftStates.Num() > 0)
+	{
+		// Iterate over the save data
+		for (const FNovaAISpacecraftStateSave& SpacecraftSaveData : SaveData->SpacecraftStates)
+		{
+			FNovaAISpacecraftState SpacecraftState;
+
+			// Sanity checks
+			NCHECK(SpacecraftSaveData.SpacecraftIdentifier.IsValid());
+			NCHECK(SpacecraftSaveData.SpacecraftClass != nullptr);
+			NCHECK(SpacecraftSaveData.SpacecraftName.Len() > 0);
+
+			// Spacecraft
+			FNovaSpacecraft Spacecraft = SpacecraftSaveData.SpacecraftClass->Spacecraft;
+			Spacecraft.Name            = SpacecraftSaveData.SpacecraftName;
+			Spacecraft.SpacecraftClass = SpacecraftSaveData.SpacecraftClass;
+			Spacecraft.Identifier      = SpacecraftSaveData.SpacecraftIdentifier;
+
+			// Common
+			SpacecraftState.TargetArea            = SpacecraftSaveData.TargetArea;
+			SpacecraftState.CurrentState          = SpacecraftSaveData.CurrentState;
+			SpacecraftState.CurrentStateStartTime = SpacecraftSaveData.CurrentStateStartTime;
 
 			// Register the spacecraft
-			SpacecraftDatabase.Add(Spacecraft.Identifier, FNovaAISpacecraftState());
-			GameState->UpdateSpacecraft(Spacecraft, &Orbit);
+			SpacecraftDatabase.Add(Spacecraft.Identifier, SpacecraftState);
+			GameState->UpdateSpacecraft(Spacecraft, &SpacecraftSaveData.Orbit);
+			if (SpacecraftSaveData.Trajectory.IsValid())
+			{
+				OrbitalSimulation->CommitTrajectory({Spacecraft.Identifier}, SpacecraftSaveData.Trajectory);
+			}
+		}
+	}
+
+	// New game
+	else
+	{
+		CreateGame();
+	}
+}
+
+void UNovaAISimulationComponent::SerializeJson(
+	TSharedPtr<FNovaAIStateSave>& SaveData, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
+{
+	// Writing to save
+	if (Direction == ENovaSerialize::DataToJson)
+	{
+		JsonData = MakeShared<FJsonObject>();
+		TArray<TSharedPtr<FJsonValue>> SpacecraftJsonDataArray;
+
+		for (const FNovaAISpacecraftStateSave& SpacecraftSaveData : SaveData->SpacecraftStates)
+		{
+			TSharedPtr<FJsonObject> SpacecraftJsonData = MakeShared<FJsonObject>();
+
+			// Spacecraft
+			SpacecraftJsonData->SetStringField("SI", SpacecraftSaveData.SpacecraftIdentifier.ToString());
+			UNovaAssetDescription::SaveAsset(SpacecraftJsonData, "SC", SpacecraftSaveData.SpacecraftClass);
+			SpacecraftJsonData->SetStringField("SN", SpacecraftSaveData.SpacecraftName);
+
+			// Common
+			UNovaAssetDescription::SaveAsset(SpacecraftJsonData, "TA", SpacecraftSaveData.TargetArea);
+			SpacecraftJsonData->SetNumberField("CS", static_cast<uint8>(SpacecraftSaveData.CurrentState));
+			SpacecraftJsonData->SetNumberField("CSST", SpacecraftSaveData.CurrentStateStartTime.AsMinutes());
+
+			// Trajectory & orbit
+			SpacecraftJsonData->SetObjectField("O", FJsonObjectConverter::UStructToJsonObject<FNovaOrbit>(SpacecraftSaveData.Orbit));
+			SpacecraftJsonData->SetObjectField(
+				"T", FJsonObjectConverter::UStructToJsonObject<FNovaTrajectory>(SpacecraftSaveData.Trajectory));
+
+			SpacecraftJsonDataArray.Add(MakeShared<FJsonValueObject>(SpacecraftJsonData));
+		}
+
+		JsonData->SetArrayField("States", SpacecraftJsonDataArray);
+	}
+
+	// Reading from save
+	else
+	{
+		SaveData = MakeShared<FNovaAIStateSave>();
+
+		const TArray<TSharedPtr<FJsonValue>>* SpacecraftJsonDataArray;
+		if (JsonData->TryGetArrayField("States", SpacecraftJsonDataArray))
+		{
+			for (TSharedPtr<FJsonValue> SpacecraftJsonValue : *SpacecraftJsonDataArray)
+			{
+				TSharedPtr<FJsonObject> SpacecraftJsonData = SpacecraftJsonValue->AsObject();
+
+				FNovaAISpacecraftStateSave SpacecraftSaveData;
+
+				// Spacecraft
+				NCHECK(FGuid::Parse(SpacecraftJsonData->GetStringField("SI"), SpacecraftSaveData.SpacecraftIdentifier));
+				SpacecraftSaveData.SpacecraftClass =
+					UNovaAssetDescription::LoadAsset<UNovaAISpacecraftDescription>(SpacecraftJsonData, "SC");
+				SpacecraftSaveData.SpacecraftName = SpacecraftJsonData->GetStringField("SN");
+
+				// Common
+				SpacecraftSaveData.TargetArea            = UNovaAssetDescription::LoadAsset<UNovaArea>(SpacecraftJsonData, "TA");
+				SpacecraftSaveData.CurrentState          = static_cast<ENovaAISpacecraftState>(SpacecraftJsonData->GetNumberField("CS"));
+				SpacecraftSaveData.CurrentStateStartTime = FNovaTime::FromMinutes(SpacecraftJsonData->GetNumberField("CSST"));
+
+				// Trajectory & orbit
+				SpacecraftSaveData.CurrentStateStartTime = FNovaTime::FromMinutes(SpacecraftJsonData->GetNumberField("CSST"));
+				FJsonObjectConverter::JsonObjectToUStruct<FNovaOrbit>(
+					SpacecraftJsonData->GetObjectField("O").ToSharedRef(), &SpacecraftSaveData.Orbit);
+				FJsonObjectConverter::JsonObjectToUStruct<FNovaTrajectory>(
+					SpacecraftJsonData->GetObjectField("T").ToSharedRef(), &SpacecraftSaveData.Trajectory);
+
+				SaveData->SpacecraftStates.Add(SpacecraftSaveData);
+			}
 		}
 	}
 }
+
+/*----------------------------------------------------
+    Interface
+----------------------------------------------------*/
 
 void UNovaAISimulationComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -119,7 +284,7 @@ void UNovaAISimulationComponent::ProcessQuotas()
 	AreasQuotas.Empty();
 
 	// Iterate over the AI database
-	for (TPair<FGuid, FNovaAISpacecraftState>& IdentifierAndSpacecraft : SpacecraftDatabase)
+	for (const TPair<FGuid, FNovaAISpacecraftState>& IdentifierAndSpacecraft : SpacecraftDatabase)
 	{
 		const FNovaAISpacecraftState& SpacecraftState = IdentifierAndSpacecraft.Value;
 
@@ -322,6 +487,50 @@ void UNovaAISimulationComponent::ProcessNavigation()
 /*----------------------------------------------------
     Helpers
 ----------------------------------------------------*/
+
+void UNovaAISimulationComponent::CreateGame()
+{
+	NLOG("UNovaAISimulationComponent::CreateGame");
+
+	if (GetOwner()->GetLocalRole() == ROLE_Authority)
+	{
+		// Get game state pointers
+		UNovaAssetManager* AssetManager = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager();
+		NCHECK(AssetManager);
+		ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
+		NCHECK(GameState);
+
+		// Get asset lists
+		const class UNovaCelestialBody* DefaultPlanet =
+			AssetManager->GetAsset<UNovaCelestialBody>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
+		NCHECK(DefaultPlanet);
+		TArray<const UNovaAISpacecraftDescription*> SpacecraftDescriptions = AssetManager->GetAssets<UNovaAISpacecraftDescription>();
+
+		// Spawn spacecraft
+		FRandomStream RandomStream;
+		for (int32 Index = 0; Index < InitialTechnicalSpacecraftCount; Index++)
+		{
+			// Get the location
+			int32      InitialAltitude = RandomStream.RandRange(400, 1000);
+			int32      InitialPhase    = RandomStream.RandRange(0, 360);
+			FNovaOrbit Orbit           = FNovaOrbit(FNovaOrbitGeometry(DefaultPlanet, InitialAltitude, InitialPhase), FNovaTime());
+
+			// Get the class
+			const UNovaAISpacecraftDescription* SpacecraftDescription =
+				SpacecraftDescriptions[RandomStream.RandHelper(SpacecraftDescriptions.Num())];
+
+			// Create the spacecraft
+			FNovaSpacecraft Spacecraft = SpacecraftDescription->Spacecraft;
+			Spacecraft.Name            = GetTechnicalShipName(RandomStream, Index);
+			Spacecraft.SpacecraftClass = SpacecraftDescription;
+			Spacecraft.Identifier      = FGuid::NewGuid();
+
+			// Register the spacecraft
+			SpacecraftDatabase.Add(Spacecraft.Identifier, FNovaAISpacecraftState());
+			GameState->UpdateSpacecraft(Spacecraft, &Orbit);
+		}
+	}
+}
 
 FString UNovaAISimulationComponent::GetTechnicalShipName(FRandomStream& RandomStream, int32 Index) const
 {

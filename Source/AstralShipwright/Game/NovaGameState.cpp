@@ -80,11 +80,12 @@ ANovaGameState::ANovaGameState()
 
 struct FNovaGameStateSave
 {
-	double           TimeAsMinutes;
-	const UNovaArea* CurrentArea;
+	double                              TimeAsMinutes;
+	const UNovaArea*                    CurrentArea;
+	TSharedPtr<struct FNovaAIStateSave> AIData;
 };
 
-TSharedPtr<struct FNovaGameStateSave> ANovaGameState::Save() const
+TSharedPtr<FNovaGameStateSave> ANovaGameState::Save() const
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 
@@ -94,6 +95,9 @@ TSharedPtr<struct FNovaGameStateSave> ANovaGameState::Save() const
 	SaveData->TimeAsMinutes = GetCurrentTime().AsMinutes();
 	SaveData->CurrentArea   = GetCurrentArea();
 
+	// Save AI
+	SaveData->AIData = AISimulationComponent->Save();
+
 	// Ensure consistency
 	NCHECK(SaveData->TimeAsMinutes > 0);
 	NCHECK(IsValid(SaveData->CurrentArea));
@@ -101,7 +105,7 @@ TSharedPtr<struct FNovaGameStateSave> ANovaGameState::Save() const
 	return SaveData;
 }
 
-void ANovaGameState::Load(TSharedPtr<struct FNovaGameStateSave> SaveData)
+void ANovaGameState::Load(TSharedPtr<FNovaGameStateSave> SaveData)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 
@@ -115,10 +119,12 @@ void ANovaGameState::Load(TSharedPtr<struct FNovaGameStateSave> SaveData)
 	// Load time & area
 	ServerTime = SaveData->TimeAsMinutes;
 	SetCurrentArea(SaveData->CurrentArea);
+
+	// Load AI
+	AISimulationComponent->Load(SaveData->AIData);
 }
 
-void ANovaGameState::SerializeJson(
-	TSharedPtr<struct FNovaGameStateSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction)
+void ANovaGameState::SerializeJson(TSharedPtr<FNovaGameStateSave>& SaveData, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
 {
 	// Writing to save
 	if (Direction == ENovaSerialize::DataToJson)
@@ -127,6 +133,11 @@ void ANovaGameState::SerializeJson(
 
 		// Time
 		JsonData->SetNumberField("TimeAsMinutes", SaveData->TimeAsMinutes);
+
+		// AI
+		TSharedPtr<FJsonObject> AIJsonData = MakeShared<FJsonObject>();
+		UNovaAISimulationComponent::SerializeJson(SaveData->AIData, AIJsonData, ENovaSerialize::DataToJson);
+		JsonData->SetObjectField("AI", AIJsonData);
 
 		// Area
 		UNovaAssetDescription::SaveAsset(JsonData, "CurrentArea", SaveData->CurrentArea);
@@ -143,6 +154,11 @@ void ANovaGameState::SerializeJson(
 		{
 			SaveData->TimeAsMinutes = Time;
 		}
+
+		// AI
+		TSharedPtr<FJsonObject> AIJsonData =
+			JsonData->HasTypedField<EJson::Object>("AI") ? JsonData->GetObjectField("AI") : MakeShared<FJsonObject>();
+		UNovaAISimulationComponent::SerializeJson(SaveData->AIData, AIJsonData, ENovaSerialize::JsonToData);
 
 		// Area
 		SaveData->CurrentArea = UNovaAssetDescription::LoadAsset<UNovaArea>(JsonData, "CurrentArea");
@@ -166,7 +182,6 @@ void ANovaGameState::BeginPlay()
 
 	// Startup the simulation components
 	AsteroidSimulationComponent->Initialize(AssetManager->GetDefaultAsset<UNovaAsteroidConfiguration>());
-	AISimulationComponent->Initialize();
 }
 
 void ANovaGameState::Tick(float DeltaTime)
@@ -408,7 +423,7 @@ void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, const F
 	NLOG("ANovaGameState::UpdateSpacecraft");
 
 	bool IsNew = SpacecraftDatabase.Add(Spacecraft);
-	if (IsNew && Orbit != nullptr)
+	if (IsNew && Orbit != nullptr && Orbit->IsValid())
 	{
 		OrbitalSimulationComponent->SetOrbit({Spacecraft.Identifier}, *Orbit);
 	}

@@ -47,13 +47,21 @@ public:
 	UNovaAISimulationComponent();
 
 	/*----------------------------------------------------
+	    Loading & saving
+	----------------------------------------------------*/
+
+	TSharedPtr<struct FNovaAIStateSave> Save() const;
+
+	void Load(TSharedPtr<struct FNovaAIStateSave> SaveData);
+
+	static void SerializeJson(
+		TSharedPtr<struct FNovaAIStateSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
+
+	/*----------------------------------------------------
 	    Interface
 	----------------------------------------------------*/
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	/** Reset the component */
-	void Initialize();
 
 	/** Get a physical spacecraft */
 	const class ANovaSpacecraftPawn* GetPhysicalSpacecraft(FGuid Identifier) const
@@ -87,6 +95,9 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+	/** Create new game data */
+	void CreateGame();
+
 	/** Get a ship name for a tug or mining ship */
 	FString GetTechnicalShipName(FRandomStream& RandomStream, int32 Index) const;
 
