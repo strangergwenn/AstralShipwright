@@ -403,7 +403,7 @@ FText SNovaMainMenuInventory::GetPropellantText() const
 
 void SNovaMainMenuInventory::OnRefillPropellant()
 {
-	TradingModalPanel->Trade(PC, UNovaResource::GetPropellant(), INDEX_NONE);
+	TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), UNovaResource::GetPropellant(), INDEX_NONE);
 }
 
 void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type)
@@ -420,7 +420,7 @@ void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type
 		// Valid resource in hold - allow trading it directly
 		if (IsValid(Cargo.Resource))
 		{
-			TradingModalPanel->Trade(PC, Cargo.Resource, Index);
+			TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), Cargo.Resource, Index);
 		}
 
 		// Cargo hold is empty, pick a resource to buy first
@@ -430,7 +430,7 @@ void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type
 
 			auto BuyResource = [=]()
 			{
-				TradingModalPanel->Trade(PC, ResourceListView->GetSelectedItem(), Index);
+				TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), Index);
 			};
 
 			//	Fill the resource list
@@ -448,7 +448,7 @@ void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type
 	else
 	{
 		NCHECK(IsValid(Cargo.Resource));
-		TradingModalPanel->Inspect(PC, Cargo.Resource, Index);
+		TradingModalPanel->Inspect(PC, GameState->GetCurrentArea(), Cargo.Resource, Index);
 	}
 }
 
@@ -458,7 +458,7 @@ void SNovaMainMenuInventory::OnBuyResource()
 
 	GenericModalPanel->Hide();
 
-	TradingModalPanel->Trade(PC, ResourceListView->GetSelectedItem(), CurrentCompartmentIndex);
+	TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), CurrentCompartmentIndex);
 }
 
 #undef LOCTEXT_NAMESPACE

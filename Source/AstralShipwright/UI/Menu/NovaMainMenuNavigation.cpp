@@ -759,6 +759,7 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 					.AutoHeight()
 					[
 						SNew(SNovaTradableAssetItem)
+						.Area(Area)
 						.Asset(Trade.Resource)
 						.GameState(GameState)
 						.Dark(true)
@@ -789,7 +790,7 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 					if (Cargo.Amount > 0 && !GameState->IsResourceSold(Cargo.Resource, Area))
 					{
 						BestDeals.Add(TPair<const UNovaResource*, ENovaPriceModifier>(
-							Cargo.Resource, GameState->GetCurrentPriceModifier(Cargo.Resource)));
+							Cargo.Resource, GameState->GetCurrentPriceModifier(Cargo.Resource, Area)));
 					}
 				};
 
@@ -814,6 +815,7 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 					.AutoHeight()
 					[
 						SNew(SNovaTradableAssetItem)
+						.Area(Area)
 						.Asset(Deal.Key)
 						.GameState(GameState)
 						.Dark(true)

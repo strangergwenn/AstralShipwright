@@ -372,7 +372,9 @@ bool ANovaGameMode::LoadStreamingLevel(const UNovaArea* Area, FSimpleDelegate Ca
 
 	if (Area->LevelName != NAME_None)
 	{
-		GetGameState<ANovaGameState>()->SetCurrentArea(Area);
+		ANovaGameState* CurrentGameState = GetGameState<ANovaGameState>();
+		CurrentGameState->SetCurrentArea(Area);
+		CurrentGameState->RotatePrices();
 
 		NLOG("ANovaGameMode::LoadStreamingLevel : loading streaming level '%s'", *Area->LevelName.ToString());
 

@@ -9,9 +9,16 @@
 class SNovaTradableAssetItem : public SCompoundWidget
 {
 	SLATE_BEGIN_ARGS(SNovaTradableAssetItem)
-		: _Asset(nullptr), _DefaultAsset(nullptr), _GameState(nullptr), _NoPriceHint(false), _Dark(false), _SelectionIcon(nullptr)
+		: _Area(nullptr)
+		, _Asset(nullptr)
+		, _DefaultAsset(nullptr)
+		, _GameState(nullptr)
+		, _NoPriceHint(false)
+		, _Dark(false)
+		, _SelectionIcon(nullptr)
 	{}
 
+	SLATE_ARGUMENT(const UNovaArea*, Area)
 	SLATE_ARGUMENT(const UNovaTradableAssetDescription*, Asset)
 	SLATE_ARGUMENT(const UNovaTradableAssetDescription*, DefaultAsset)
 	SLATE_ARGUMENT(const ANovaGameState*, GameState)
@@ -22,14 +29,20 @@ class SNovaTradableAssetItem : public SCompoundWidget
 	SLATE_END_ARGS()
 
 public:
-	SNovaTradableAssetItem() : Asset(nullptr)
+	SNovaTradableAssetItem() : Area(nullptr), Asset(nullptr), DefaultAsset(nullptr), GameState(nullptr)
 	{}
 
 	void Construct(const FArguments& InArgs)
 	{
+		Area         = InArgs._Area;
 		Asset        = InArgs._Asset;
 		DefaultAsset = InArgs._DefaultAsset;
 		GameState    = InArgs._GameState;
+
+		if (!Area.IsValid() && GameState.IsValid())
+		{
+			Area = GameState->GetCurrentArea();
+		}
 
 		const FNovaMainTheme&      Theme       = FNovaStyleSet::GetMainTheme();
 		const FNovaButtonTheme&    ButtonTheme = FNovaStyleSet::GetButtonTheme();
@@ -146,6 +159,11 @@ public:
 		// clang-format on
 	}
 
+	void SetArea(const UNovaArea* NewArea)
+	{
+		Area = NewArea;
+	}
+
 	void SetAsset(const UNovaTradableAssetDescription* NewAsset)
 	{
 		Asset = NewAsset;
@@ -201,12 +219,12 @@ protected:
 		{
 			if (Asset.IsValid())
 			{
-				FNovaCredits Price = GameState->GetCurrentPrice(Asset.Get());
+				FNovaCredits Price = GameState->GetCurrentPrice(Asset.Get(), Area.Get(), false);
 				return ::GetPriceText(Price);
 			}
 			else if (DefaultAsset.IsValid())
 			{
-				FNovaCredits Price = GameState->GetCurrentPrice(DefaultAsset.Get());
+				FNovaCredits Price = GameState->GetCurrentPrice(DefaultAsset.Get(), Area.Get(), false);
 				return ::GetPriceText(Price);
 			}
 		}
@@ -218,7 +236,7 @@ protected:
 	{
 		if (Asset.IsValid() && GameState.IsValid())
 		{
-			switch (GameState->GetCurrentPriceModifier(Asset.Get()))
+			switch (GameState->GetCurrentPriceModifier(Asset.Get(), Area.Get()))
 			{
 				case ENovaPriceModifier::Cheap:
 					return FNovaStyleSet::GetBrush("Icon/SB_BelowAverage");
@@ -238,6 +256,7 @@ protected:
 
 protected:
 	// Settings
+	TWeakObjectPtr<const UNovaArea>                     Area;
 	TWeakObjectPtr<const UNovaTradableAssetDescription> Asset;
 	TWeakObjectPtr<const UNovaTradableAssetDescription> DefaultAsset;
 	TWeakObjectPtr<const ANovaGameState>                GameState;

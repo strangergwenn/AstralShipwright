@@ -41,6 +41,8 @@ ANovaGameState::ANovaGameState()
 	, ServerTime(0)
 	, ServerTimeDilation(ENovaTimeDilation::Normal)
 
+	, CurrentPriceRotation(1)
+
 	, ClientTime(0)
 	, ClientAdditionalTimeDilation(0)
 	, IsFastForward(false)
@@ -80,8 +82,10 @@ ANovaGameState::ANovaGameState()
 
 struct FNovaGameStateSave
 {
-	double                              TimeAsMinutes;
-	const UNovaArea*                    CurrentArea;
+	const UNovaArea* CurrentArea;
+	double           TimeAsMinutes;
+	int32            CurrentPriceRotation;
+
 	TSharedPtr<struct FNovaAIStateSave> AIData;
 };
 
@@ -91,9 +95,10 @@ TSharedPtr<FNovaGameStateSave> ANovaGameState::Save() const
 
 	TSharedPtr<FNovaGameStateSave> SaveData = MakeShared<FNovaGameStateSave>();
 
-	// Save time & area
-	SaveData->TimeAsMinutes = GetCurrentTime().AsMinutes();
-	SaveData->CurrentArea   = GetCurrentArea();
+	// Save general state
+	SaveData->CurrentArea          = GetCurrentArea();
+	SaveData->TimeAsMinutes        = GetCurrentTime().AsMinutes();
+	SaveData->CurrentPriceRotation = CurrentPriceRotation;
 
 	// Save AI
 	SaveData->AIData = AISimulationComponent->Save();
@@ -116,9 +121,10 @@ void ANovaGameState::Load(TSharedPtr<FNovaGameStateSave> SaveData)
 	NCHECK(SaveData->TimeAsMinutes >= 0);
 	NCHECK(IsValid(SaveData->CurrentArea));
 
-	// Load time & area
-	ServerTime = SaveData->TimeAsMinutes;
+	// Save general state
 	SetCurrentArea(SaveData->CurrentArea);
+	ServerTime           = SaveData->TimeAsMinutes;
+	CurrentPriceRotation = SaveData->CurrentPriceRotation;
 
 	// Load AI
 	AISimulationComponent->Load(SaveData->AIData);
@@ -131,22 +137,28 @@ void ANovaGameState::SerializeJson(TSharedPtr<FNovaGameStateSave>& SaveData, TSh
 	{
 		JsonData = MakeShared<FJsonObject>();
 
-		// Time
+		// General state
+		UNovaAssetDescription::SaveAsset(JsonData, "CurrentArea", SaveData->CurrentArea);
 		JsonData->SetNumberField("TimeAsMinutes", SaveData->TimeAsMinutes);
+		JsonData->SetNumberField("CurrentPriceRotation", SaveData->CurrentPriceRotation);
 
 		// AI
 		TSharedPtr<FJsonObject> AIJsonData = MakeShared<FJsonObject>();
 		UNovaAISimulationComponent::SerializeJson(SaveData->AIData, AIJsonData, ENovaSerialize::DataToJson);
 		JsonData->SetObjectField("AI", AIJsonData);
-
-		// Area
-		UNovaAssetDescription::SaveAsset(JsonData, "CurrentArea", SaveData->CurrentArea);
 	}
 
 	// Reading from save
 	else
 	{
 		SaveData = MakeShared<FNovaGameStateSave>();
+
+		// Area
+		SaveData->CurrentArea = UNovaAssetDescription::LoadAsset<UNovaArea>(JsonData, "CurrentArea");
+		if (!IsValid(SaveData->CurrentArea))
+		{
+			SaveData->CurrentArea = UNovaAssetManager::Get()->GetDefaultAsset<UNovaArea>();
+		}
 
 		// Time
 		double Time;
@@ -155,17 +167,17 @@ void ANovaGameState::SerializeJson(TSharedPtr<FNovaGameStateSave>& SaveData, TSh
 			SaveData->TimeAsMinutes = Time;
 		}
 
+		// Price rotation
+		int32 PriceRotation;
+		if (JsonData->TryGetNumberField("CurrentPriceRotation", PriceRotation))
+		{
+			SaveData->CurrentPriceRotation = PriceRotation;
+		}
+
 		// AI
 		TSharedPtr<FJsonObject> AIJsonData =
 			JsonData->HasTypedField<EJson::Object>("AI") ? JsonData->GetObjectField("AI") : MakeShared<FJsonObject>();
 		UNovaAISimulationComponent::SerializeJson(SaveData->AIData, AIJsonData, ENovaSerialize::JsonToData);
-
-		// Area
-		SaveData->CurrentArea = UNovaAssetDescription::LoadAsset<UNovaArea>(JsonData, "CurrentArea");
-		if (!IsValid(SaveData->CurrentArea))
-		{
-			SaveData->CurrentArea = UNovaAssetManager::Get()->GetDefaultAsset<UNovaArea>();
-		}
 	}
 }
 
@@ -243,6 +255,13 @@ void ANovaGameState::SetCurrentArea(const UNovaArea* Area)
 
 	AreaChangeEvents.Add(CurrentArea);
 	TimeSinceEvent = 0;
+}
+
+void ANovaGameState::RotatePrices()
+{
+	CurrentPriceRotation++;
+
+	NLOG("ANovaGameState::RotatePrices (now %d)", CurrentPriceRotation);
 }
 
 FName ANovaGameState::GetCurrentLevelName() const
@@ -324,23 +343,36 @@ TArray<const UNovaResource*> ANovaGameState::GetResourcesSold() const
 	return Result;
 }
 
-ENovaPriceModifier ANovaGameState::GetCurrentPriceModifier(const UNovaTradableAssetDescription* Asset) const
+ENovaPriceModifier ANovaGameState::GetCurrentPriceModifier(const UNovaTradableAssetDescription* Asset, const UNovaArea* Area) const
 {
+	NCHECK(Area);
+
+	// Rotate pricing without affecting the current area since the player came here for a reason
+	auto RotatePrice = [Area, this](ENovaPriceModifier Input)
+	{
+		int32 PriceRotation = (Area == GetCurrentArea() ? CurrentPriceRotation - 1 : CurrentPriceRotation) % 3;
+
+		return Input;
+	};
+
+	// Find the relevant trade metadata if any
 	if (IsValid(CurrentArea))
 	{
 		for (const FNovaResourceTrade& Trade : CurrentArea->ResourceTradeMetadata)
 		{
 			if (Trade.Resource == Asset)
 			{
-				return Trade.PriceModifier;
+				return RotatePrice(Trade.PriceModifier);
 			}
 		}
 	}
 
-	return ENovaPriceModifier::Average;
+	// Default to average price
+	return RotatePrice(ENovaPriceModifier::Average);
 }
 
-FNovaCredits ANovaGameState::GetCurrentPrice(const UNovaTradableAssetDescription* Asset, bool SpacecraftPartForSale) const
+FNovaCredits ANovaGameState::GetCurrentPrice(
+	const UNovaTradableAssetDescription* Asset, const UNovaArea* Area, bool SpacecraftPartForSale) const
 {
 	NCHECK(IsValid(Asset));
 	float Multiplier = 1.0f;
@@ -366,7 +398,7 @@ FNovaCredits ANovaGameState::GetCurrentPrice(const UNovaTradableAssetDescription
 	};
 
 	// Find out the current modifier for this transaction
-	Multiplier *= GetPriceModifierValue(GetCurrentPriceModifier(Asset));
+	Multiplier *= GetPriceModifierValue(GetCurrentPriceModifier(Asset, Area));
 
 	// Non-resource assets have a large depreciation value when re-sold
 	if (!Asset->IsA<UNovaResource>() && SpacecraftPartForSale)

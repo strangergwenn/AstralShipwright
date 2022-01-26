@@ -170,11 +170,12 @@ void SNovaTradingPanel::Construct(const FArguments& InArgs)
     Interface
 ----------------------------------------------------*/
 
-void SNovaTradingPanel::ShowPanelInternal(
-	ANovaPlayerController* TargetPC, const UNovaResource* TargetResource, int32 TargetCompartmentIndex, bool AllowTrade)
+void SNovaTradingPanel::ShowPanelInternal(ANovaPlayerController* TargetPC, const UNovaArea* TargetArea, const UNovaResource* TargetResource,
+	int32 TargetCompartmentIndex, bool AllowTrade)
 {
 	PC               = TargetPC;
 	Spacecraft       = PC->GetSpacecraft();
+	Area             = TargetArea;
 	Resource         = TargetResource;
 	CompartmentIndex = TargetCompartmentIndex;
 	IsTradeAllowed   = AllowTrade;
@@ -222,6 +223,7 @@ void SNovaTradingPanel::ShowPanelInternal(
 		Capacity      = PropellantSystem->GetPropellantCapacity();
 		MaxAmount     = Capacity;
 	}
+	ResourceItem->SetArea(TargetArea);
 	ResourceItem->SetAsset(TargetResource);
 	ResourceItem->SetGameState(GameState);
 
@@ -352,7 +354,7 @@ FNovaCredits SNovaTradingPanel::GetTransactionValue() const
 		if (Resource && IsValid(GameState))
 		{
 			float        Amount    = AmountSlider->GetCurrentValue() - InitialAmount;
-			FNovaCredits UnitPrice = GameState->GetCurrentPrice(Resource, Amount < 0);
+			FNovaCredits UnitPrice = GameState->GetCurrentPrice(Resource, Area, Amount < 0);
 			return -Amount * UnitPrice;
 		}
 	}

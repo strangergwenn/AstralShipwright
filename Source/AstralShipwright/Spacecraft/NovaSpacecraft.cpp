@@ -552,7 +552,7 @@ FNovaSpacecraftUpgradeCost FNovaSpacecraft::GetUpgradeCost(const ANovaGameState*
 
 			if (Add)
 			{
-				TotalCostAsNew += GameState->GetCurrentPrice(Asset, false);
+				TotalCostAsNew += GameState->GetCurrentPrice(Asset, GameState->GetCurrentArea(), false);
 			}
 		}
 	};
@@ -593,11 +593,11 @@ FNovaSpacecraftUpgradeCost FNovaSpacecraft::GetUpgradeCost(const ANovaGameState*
 	{
 		if (Entry.Value > 0)
 		{
-			Cost.UpgradeCost += Entry.Value * GameState->GetCurrentPrice(Entry.Key, false);
+			Cost.UpgradeCost += Entry.Value * GameState->GetCurrentPrice(Entry.Key, GameState->GetCurrentArea(), false);
 		}
 		else if (Entry.Value < 0)
 		{
-			Cost.ResaleGain += -Entry.Value * GameState->GetCurrentPrice(Entry.Key, true);
+			Cost.ResaleGain += -Entry.Value * GameState->GetCurrentPrice(Entry.Key, GameState->GetCurrentArea(), true);
 		}
 	}
 	Cost.TotalCost       = TotalCostAsNew + Cost.PaintCost;

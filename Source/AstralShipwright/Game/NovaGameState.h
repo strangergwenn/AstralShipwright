@@ -67,6 +67,9 @@ public:
 	/** Get the current sub-level name to use */
 	FName GetCurrentLevelName() const;
 
+	/** Rotate the prices in the world */
+	void RotatePrices();
+
 	/** Check if the game state is ready */
 	bool IsReady()
 	{
@@ -90,10 +93,11 @@ public:
 	TArray<const class UNovaResource*> GetResourcesSold() const;
 
 	/** Get the current price modifier of an asset */
-	ENovaPriceModifier GetCurrentPriceModifier(const class UNovaTradableAssetDescription* Asset) const;
+	ENovaPriceModifier GetCurrentPriceModifier(const class UNovaTradableAssetDescription* Asset, const class UNovaArea* Area) const;
 
 	/** Get the current price of an asset */
-	FNovaCredits GetCurrentPrice(const class UNovaTradableAssetDescription* Asset, bool SpacecraftPartForSale = false) const;
+	FNovaCredits GetCurrentPrice(
+		const class UNovaTradableAssetDescription* Asset, const class UNovaArea* Area, bool SpacecraftPartForSale) const;
 
 	/*----------------------------------------------------
 	    Spacecraft management
@@ -305,6 +309,9 @@ private:
 	// Replicated world time dilation
 	UPROPERTY(Replicated)
 	ENovaTimeDilation ServerTimeDilation;
+
+	// Current state
+	int32 CurrentPriceRotation;
 
 	// Time processing state
 	double ClientTime;
