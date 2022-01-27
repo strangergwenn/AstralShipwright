@@ -244,6 +244,15 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 	const UNovaArea* CurrentArea = GetGameState<ANovaGameState>()->GetCurrentArea();
 	if (Area != CurrentArea)
 	{
+		// Change the area and rotate pricing if we were in orbit before
+		ANovaGameState* CurrentGameState = GetGameState<ANovaGameState>();
+		if (CurrentGameState->GetCurrentArea() == OrbitArea)
+		{
+			CurrentGameState->RotatePrices();
+		}
+		CurrentGameState->SetCurrentArea(Area);
+
+		// Change the level
 		UnloadStreamingLevel(CurrentArea);
 		LoadStreamingLevel(Area,    //
 			FSimpleDelegate::CreateLambda(
@@ -372,10 +381,6 @@ bool ANovaGameMode::LoadStreamingLevel(const UNovaArea* Area, FSimpleDelegate Ca
 
 	if (Area->LevelName != NAME_None)
 	{
-		ANovaGameState* CurrentGameState = GetGameState<ANovaGameState>();
-		CurrentGameState->SetCurrentArea(Area);
-		CurrentGameState->RotatePrices();
-
 		NLOG("ANovaGameMode::LoadStreamingLevel : loading streaming level '%s'", *Area->LevelName.ToString());
 
 		FLatentActionInfo Info;

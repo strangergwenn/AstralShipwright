@@ -348,27 +348,53 @@ ENovaPriceModifier ANovaGameState::GetCurrentPriceModifier(const UNovaTradableAs
 	NCHECK(Area);
 
 	// Rotate pricing without affecting the current area since the player came here for a reason
-	auto RotatePrice = [Area, this](ENovaPriceModifier Input)
+	auto RotatePrice = [Area, this](ENovaPriceModifier Input, bool IsForSale)
 	{
 		int32 PriceRotation = (Area == GetCurrentArea() ? CurrentPriceRotation - 1 : CurrentPriceRotation) % 3;
 
-		return Input;
+		ENovaPriceModifier Result = Input;
+
+		// High buying price, low selling price
+		if (PriceRotation == 0 && !IsForSale || PriceRotation == 2 && IsForSale)
+		{
+			Result = static_cast<ENovaPriceModifier>(FMath::Clamp(static_cast<uint8>(Result) + 1,
+				static_cast<uint8>(ENovaPriceModifier::Cheap), static_cast<uint8>(ENovaPriceModifier::Expensive)));
+
+			// NLOG("'%s', ++ %d -> %d", *Area->Name.ToString(), Input, Result);
+		}
+
+		// Low buying price, high selling price
+		else if (PriceRotation == 0 && IsForSale || PriceRotation == 2 && !IsForSale)
+		{
+			Result = static_cast<ENovaPriceModifier>(FMath::Clamp(static_cast<uint8>(Result) - 1,
+				static_cast<uint8>(ENovaPriceModifier::Cheap), static_cast<uint8>(ENovaPriceModifier::Expensive)));
+
+			// NLOG("'%s', -- %d -> %d", *Area->Name.ToString(), Input, Result);
+		}
+
+		// Neutral
+		else if (PriceRotation == 1)
+		{
+			// NLOG("'%s', == %d -> %d", *Area->Name.ToString(), Input, Result);
+		}
+
+		return Result;
 	};
 
-	// Find the relevant trade metadata if any
+	// Find the relevant trade metadata if any, indicating a sale
 	if (IsValid(CurrentArea))
 	{
 		for (const FNovaResourceTrade& Trade : CurrentArea->ResourceTradeMetadata)
 		{
 			if (Trade.Resource == Asset)
 			{
-				return RotatePrice(Trade.PriceModifier);
+				return RotatePrice(Trade.PriceModifier, true);
 			}
 		}
 	}
 
-	// Default to average price
-	return RotatePrice(ENovaPriceModifier::Average);
+	// Default to average price when buying
+	return RotatePrice(ENovaPriceModifier::Average, false);
 }
 
 FNovaCredits ANovaGameState::GetCurrentPrice(
