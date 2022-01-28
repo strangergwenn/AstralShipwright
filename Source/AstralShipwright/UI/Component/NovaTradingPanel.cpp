@@ -238,8 +238,19 @@ void SNovaTradingPanel::ShowPanelInternal(ANovaPlayerController* TargetPC, const
 		AmountSlider->SetCurrentValue(InitialAmount);
 
 		FSimpleDelegate ConfirmTrade = FSimpleDelegate::CreateSP(this, &SNovaTradingPanel::OnConfirmTrade);
-		Show(GameState->IsResourceSold(Resource) ? LOCTEXT("BuyTitle", "Buy resource") : LOCTEXT("SellTitle", "Sell resource"), FText(),
-			ConfirmTrade);
+
+		// Build text details
+		FText TradeTitle;
+		if (GameState->IsResourceSold(Resource))
+		{
+			TradeTitle = LOCTEXT("BuyTitle", "Buy resource");
+		}
+		else if (InitialAmount != 0 && !GameState->IsResourceSold(Resource))
+		{
+			TradeTitle = LOCTEXT("SellTitle", "Sell resource");
+		}
+
+		Show(TradeTitle, FText(), ConfirmTrade);
 	}
 	else
 	{

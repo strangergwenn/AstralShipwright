@@ -69,10 +69,21 @@ public:
 				[
 					SNew(SScaleBox)
 					.Stretch(EStretch::ScaleToFit)
+					.HAlign(HAlign_Left)
+					[
+						SNew(SImage)
+						.Image(InArgs._Dark ? FNovaStyleSet::GetBrush("Common/SB_Corner_Left") : new FSlateNoResource)
+					]
+				]
+
+				+ SOverlay::Slot()
+				[
+					SNew(SScaleBox)
+					.Stretch(EStretch::ScaleToFit)
 					.HAlign(HAlign_Right)
 					[
 						SNew(SImage)
-						.Image(FNovaStyleSet::GetBrush("Common/SB_Corner"))
+						.Image(FNovaStyleSet::GetBrush("Common/SB_Corner_Right"))
 						.ColorAndOpacity(Theme.PositiveColor)
 					]
 				]
@@ -83,30 +94,26 @@ public:
 
 					+ SHorizontalBox::Slot()
 					.AutoWidth()
+					.Padding(Theme.ContentPadding)
 					[
-						SNew(SBorder)
-						.BorderImage(InArgs._Dark ? &Theme.MainMenuDarkBackground : new FSlateNoResource)
-						.Padding(Theme.ContentPadding)
+						SNew(SVerticalBox)
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
 						[
-							SNew(SVerticalBox)
+							SNew(STextBlock)
+							.TextStyle(&Theme.MainFont)
+							.Text(this, &SNovaTradableAssetItem::GetName)
+						]
 
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							[
-								SNew(STextBlock)
-								.TextStyle(&Theme.MainFont)
-								.Text(this, &SNovaTradableAssetItem::GetName)
-							]
-
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							[
-								SNew(SRichTextBlock)
-								.TextStyle(&Theme.MainFont)
-								.Text(this, &SNovaTradableAssetItem::GetDescription)
-								.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
-								+ SRichTextBlock::ImageDecorator()
-							]
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SNew(SRichTextBlock)
+							.TextStyle(&Theme.MainFont)
+							.Text(this, &SNovaTradableAssetItem::GetDescription)
+							.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
+							+ SRichTextBlock::ImageDecorator()
 						]
 					 ]
 
