@@ -51,6 +51,10 @@ public:
 
 	virtual void VerticalAnalogInput(float Value) override;
 
+	virtual void Previous() override;
+
+	virtual void Next() override;
+
 	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
 
 	/*----------------------------------------------------
@@ -86,7 +90,7 @@ protected:
 	----------------------------------------------------*/
 protected:
 	// Side panel
-	void OnShowSidePanel(const TArray<FNovaOrbitalObject>& HoveredObjects);
+	void OnShowSidePanel(const FNovaOrbitalObject& HoveredObjects);
 	void OnHideSidePanel();
 
 	// Trajectories
@@ -110,7 +114,7 @@ protected:
 	TSharedPtr<SNovaOrbitalMap>               OrbitalMap;
 	TSharedPtr<class SNovaSidePanel>          SidePanel;
 	TSharedPtr<class SNovaSidePanelContainer> SidePanelContainer;
-	TSharedPtr<class SNovaHoverStack>         HoverText;
+	TSharedPtr<class SNovaHoverStack>         HoverStack;
 
 	// Side panel widgets
 	TSharedPtr<class STextBlock>                DestinationTitle;
@@ -121,7 +125,9 @@ protected:
 
 	// Local state
 	bool                       HasHoveredObjects;
+	TArray<FNovaOrbitalObject> CurrentHoveredObjects;
+	int32                      CurrentHoveredObjectIndex;
 	FNovaOrbit                 DestinationOrbit;
-	TArray<FNovaOrbitalObject> SelectedObjectList;
+	FNovaOrbitalObject         SelectedObject;
 	bool                       CurrentTrajectoryHasEnoughPropellant;
 };
