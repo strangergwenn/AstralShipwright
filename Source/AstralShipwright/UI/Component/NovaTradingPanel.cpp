@@ -241,7 +241,12 @@ void SNovaTradingPanel::ShowPanelInternal(ANovaPlayerController* TargetPC, const
 
 		// Build text details
 		FText TradeTitle;
-		if (GameState->IsResourceSold(Resource))
+		if (Resource == UNovaResource::GetPropellant())
+		{
+			TradeTitle =
+				FText::FormatNamed(LOCTEXT("PropellantTitleFormat", "Trade propellant with {station}"), TEXT("station"), Area->Name);
+		}
+		else if (GameState->IsResourceSold(Resource))
 		{
 			TradeTitle = FText::FormatNamed(LOCTEXT("BuyTitleFormat", "Buy resource from {station}"), TEXT("station"), Area->Name);
 		}

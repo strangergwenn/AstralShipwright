@@ -56,65 +56,88 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 		.AutoHeight()
 		.Padding(Theme.ContentPadding)
 		[
-			SNew(SVerticalBox)
-			
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(Theme.VerticalContentPadding)
+			SNew(SHorizontalBox)
+
+			// Propellant data
+			+ SHorizontalBox::Slot()
 			[
-				SNew(STextBlock)
-				.TextStyle(&Theme.HeadingFont)
-				.Text(LOCTEXT("Propellant", "Propellant"))
+				SNew(SNovaButtonLayout)
+				[
+					SNew(SVerticalBox)
+
+					+ SVerticalBox::Slot()
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					.Padding(Theme.VerticalContentPadding)
+					[
+						SNew(STextBlock)
+						.TextStyle(&Theme.HeadingFont)
+						.Text(LOCTEXT("Propellant", "Propellant"))
+					]
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					.Padding(Theme.VerticalContentPadding)
+					.HAlign(HAlign_Left)
+					[
+						SNew(SNovaRichText)
+						.TextStyle(&Theme.MainFont)
+						.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuInventory::GetPropellantText))
+					]
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(SProgressBar)
+						.Style(&Theme.ProgressBarStyle)
+						.Percent(this, &SNovaMainMenuInventory::GetPropellantRatio)
+					]
+
+					+ SVerticalBox::Slot()
+				]
 			]
 			
-			+ SVerticalBox::Slot()
-			.AutoHeight()
+			// Propellant button
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
 			[
-				SNew(SHorizontalBox)
-
-				+ SHorizontalBox::Slot()
+				SNovaNew(SNovaButton)
+				.HelpText(LOCTEXT("TradePropellantHelp", "Trade propellant with this station"))
+				.Action(FNovaPlayerInput::MenuPrimary)
+				.ActionFocusable(false)
+				.Size("HighButtonSize")
+				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
+				{
+					return SpacecraftPawn && SpacecraftPawn->IsDocked();
+				})))
+				.OnClicked(this, &SNovaMainMenuInventory::OnRefillPropellant)
+				.Content()
 				[
-					SNew(SNovaButtonLayout)
+					SNew(SOverlay)
+						
+					+ SOverlay::Slot()
 					[
-						SNew(SVerticalBox)
-
-						+ SVerticalBox::Slot()
-
-						+ SVerticalBox::Slot()
-						.AutoHeight()
-						.Padding(Theme.VerticalContentPadding)
-						.HAlign(HAlign_Left)
+						SNew(SScaleBox)
+						.Stretch(EStretch::ScaleToFill)
 						[
-							SNew(SNovaRichText)
-							.TextStyle(&Theme.MainFont)
-							.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuInventory::GetPropellantText))
+							SNew(SImage)
+							.Image(&UNovaResource::GetPropellant()->AssetRender)
 						]
-
-						+ SVerticalBox::Slot()
-						.AutoHeight()
-						[
-							SNew(SProgressBar)
-							.Style(&Theme.ProgressBarStyle)
-							.Percent(this, &SNovaMainMenuInventory::GetPropellantRatio)
-						]
-
-						+ SVerticalBox::Slot()
 					]
-				]
-			
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
-				[
-					SNovaNew(SNovaButton)
-					.Text(LOCTEXT("TradePropellant", "Trade propellant"))
-					.HelpText(LOCTEXT("TradePropellantHelp", "Trade propellant with this station"))
-					.Action(FNovaPlayerInput::MenuPrimary)
-					.ActionFocusable(false)
-					.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
-					{
-						return SpacecraftPawn && SpacecraftPawn->IsDocked();
-					})))
-					.OnClicked(this, &SNovaMainMenuInventory::OnRefillPropellant)
+
+					+ SOverlay::Slot()
+					.VAlign(VAlign_Top)
+					[
+						SNew(SBorder)
+						.BorderImage(&Theme.MainMenuDarkBackground)
+						.Padding(Theme.ContentPadding)
+						[
+							SNew(STextBlock)
+							.TextStyle(&Theme.MainFont)
+							.Text(LOCTEXT("TradePropellant", "Trade propellant"))
+						]
+					]
 				]
 			]
 		]
