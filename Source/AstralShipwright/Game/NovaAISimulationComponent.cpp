@@ -28,8 +28,8 @@
 static constexpr int32 InitialTechnicalSpacecraftCount = 42;
 
 // Spawning
-static constexpr int32 SpacecraftSpawnDistanceKm   = 500;
-static constexpr int32 SpacecraftDespawnDistanceKm = 600;
+static constexpr int32 SpacecraftSpawnDistanceKm   = 100;
+static constexpr int32 SpacecraftDespawnDistanceKm = 200;
 
 /*----------------------------------------------------
     Constructor
@@ -355,8 +355,6 @@ void UNovaAISimulationComponent::ProcessSpawning()
 void UNovaAISimulationComponent::ProcessNavigation()
 {
 	// Get game state pointers
-	UNovaAssetManager* AssetManager = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager();
-	NCHECK(AssetManager);
 	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
 	NCHECK(GameState);
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
@@ -382,26 +380,11 @@ void UNovaAISimulationComponent::ProcessNavigation()
 		// Issue new orders
 		if (SpacecraftState.CurrentState == ENovaAISpacecraftState::Idle && SourceOrbit != nullptr)
 		{
-			NCHECK(SourceLocation != nullptr);
-
-			// Pick a random destination that is not the nearest one
-			TArray<const UNovaArea*> Areas           = AssetManager->GetAssets<UNovaArea>();
-			auto                     AreaAndDistance = OrbitalSimulation->GetNearestAreaAndDistance(*SourceLocation);
-
-			// Remove the nearest destination and all areas over quota
-			Areas.Remove(AreaAndDistance.Key);
-			for (const TPair<const UNovaArea*, int32>& AreaAndQuota : AreasQuotas)
-			{
-				if (AreaAndQuota.Value >= AreaAndQuota.Key->AIQuota)
-				{
-					Areas.Remove(AreaAndQuota.Key);
-				}
-			}
-
-			if (Areas.Num() > 0)
+			const UNovaArea* TargetArea = FindArea(SourceLocation);
+			if (TargetArea)
 			{
 				// Pick the area
-				SpacecraftState.TargetArea = Areas[FMath::RandHelper(Areas.Num())];
+				SpacecraftState.TargetArea = TargetArea;
 				NCHECK(SpacecraftState.TargetArea);
 
 				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' now on trajectory toward '%s'",
@@ -414,6 +397,10 @@ void UNovaAISimulationComponent::ProcessNavigation()
 
 				// Run quotas again
 				ProcessQuotas();
+			}
+			else
+			{
+				SpacecraftState.TargetArea = nullptr;
 			}
 		}
 
@@ -443,12 +430,18 @@ void UNovaAISimulationComponent::ProcessNavigation()
 		// Stay at the station for some time
 		else if (SpacecraftState.CurrentState == ENovaAISpacecraftState::Station)
 		{
-			// Detect enough time spent
+			// Detect enough time spent & valid target available
 			if (CurrentTime - SpacecraftState.CurrentStateStartTime > FNovaTime::FromMinutes(5))
 			{
-				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' undocking", *Identifier.ToString(EGuidFormats::Short));
+				const UNovaArea* TargetArea = FindArea(SourceLocation);
+				if (TargetArea)
+				{
+					NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' undocking toward '%s'",
+						*Identifier.ToString(EGuidFormats::Short), *TargetArea->Name.ToString());
 
-				SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Undocking);
+					SpacecraftState.TargetArea = TargetArea;
+					SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Undocking);
+				}
 			}
 
 			// Dock if we're not already docked or undocking
@@ -583,6 +576,34 @@ void UNovaAISimulationComponent::StartTrajectory(
 
 	// Start trajectory
 	OrbitalSimulation->CommitTrajectory(Spacecraft, Candidates[0]);
+}
+
+const UNovaArea* UNovaAISimulationComponent::FindArea(const FNovaOrbitalLocation* SourceLocation) const
+{
+	NCHECK(SourceLocation != nullptr);
+
+	UNovaAssetManager* AssetManager = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager();
+	NCHECK(AssetManager);
+	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
+	NCHECK(GameState);
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
+	NCHECK(OrbitalSimulation);
+
+	// Pick a random destination that is not the nearest one
+	TArray<const UNovaArea*> Areas           = AssetManager->GetAssets<UNovaArea>();
+	auto                     AreaAndDistance = OrbitalSimulation->GetNearestAreaAndDistance(*SourceLocation);
+
+	// Remove the nearest destination and all areas over quota
+	Areas.Remove(AreaAndDistance.Key);
+	for (const TPair<const UNovaArea*, int32>& AreaAndQuota : AreasQuotas)
+	{
+		if (AreaAndQuota.Value >= AreaAndQuota.Key->AIQuota)
+		{
+			Areas.Remove(AreaAndQuota.Key);
+		}
+	}
+
+	return Areas.Num() > 0 ? Areas[FMath::RandHelper(Areas.Num())] : nullptr;
 }
 
 #undef LOCTEXT_NAMESPACE

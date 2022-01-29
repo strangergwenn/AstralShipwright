@@ -108,6 +108,9 @@ protected:
 	void StartTrajectory(const struct FNovaOrbit& SourceOrbit, const struct FNovaOrbit& DestinationOrbit, FNovaTime DeltaTime,
 		const TArray<FGuid>& Spacecraft);
 
+	/** Find an area to travel to */
+	const class UNovaArea* FindArea(const struct FNovaOrbitalLocation* SourceLocation) const;
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
