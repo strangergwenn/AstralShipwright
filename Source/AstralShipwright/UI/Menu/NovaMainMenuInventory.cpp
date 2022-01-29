@@ -438,7 +438,8 @@ void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type
 			ResourceListView->Refresh(0);
 
 			// Proceed with the modal panel
-			GenericModalPanel->Show(LOCTEXT("SelectResource", "Resources for sale"),
+			GenericModalPanel->Show(FText::FormatNamed(LOCTEXT("SelectResourceFormat", "For sale at {station}"), TEXT("station"),
+										GameState->GetCurrentArea()->Name),
 				ResourceList.Num() == 0 ? LOCTEXT("NoResource", "No resources are available for sale at this station") : FText(),
 				FSimpleDelegate::CreateLambda(BuyResource), FSimpleDelegate(), FSimpleDelegate(), ResourceListView);
 		}

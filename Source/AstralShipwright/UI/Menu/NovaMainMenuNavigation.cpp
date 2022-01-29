@@ -743,7 +743,7 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 			.AutoHeight()
 			[
 				SNew(STextBlock)
-				.Text(LOCTEXT("SoldTitle", "For sale here"))
+				.Text(LOCTEXT("SoldTitle", "Resources for sale here"))
 				.TextStyle(&Theme.HeadingFont)
 			];
 			// clang-format on
@@ -769,15 +769,14 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 			}
 
 			// clang-format off
-			// TODO add deals here
-			/*StationTrades->AddSlot()
+			StationTrades->AddSlot()
 			.Padding(Theme.VerticalContentPadding)
 			.AutoHeight()
 			[
 				SNew(STextBlock)
-				.Text(LOCTEXT("DealsTitle", "Best deals"))
+				.Text(LOCTEXT("DealsTitle", "Best deals for your resources"))
 				.TextStyle(&Theme.HeadingFont)
-			];*/
+			];
 			// clang-format on
 
 			// Create a list of best deals for selling resources
@@ -798,18 +797,19 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 				AddDeal(ENovaResourceType::Bulk);
 				AddDeal(ENovaResourceType::Liquid);
 			}
-
 			BestDeals.Sort(
 				[&](const TPair<const UNovaResource*, ENovaPriceModifier>& A, const TPair<const UNovaResource*, ENovaPriceModifier>& B)
 				{
 					return B.Value < A.Value;
 				});
 
-			// Add the N top deals
-			int32 DealsToShow = 3;
-			for (TPair<const UNovaResource*, ENovaPriceModifier>& Deal : BestDeals)
+			// Add the top N best deals
+			if (BestDeals.Num() > 0)
 			{
-				// clang-format off
+				int32 DealsToShow = 2;
+				for (TPair<const UNovaResource*, ENovaPriceModifier>& Deal : BestDeals)
+				{
+					// clang-format off
 					StationTrades->AddSlot()
 					.Padding(Theme.ContentPadding)
 					.AutoHeight()
@@ -820,13 +820,27 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 						.GameState(GameState)
 						.Dark(true)
 					];
-				// clang-format on
+					// clang-format on
 
-				DealsToShow--;
-				if (DealsToShow <= 0)
-				{
-					break;
+					DealsToShow--;
+					if (DealsToShow <= 0)
+					{
+						break;
+					}
 				}
+			}
+			else
+			{
+				// clang-format off
+				StationTrades->AddSlot()
+				.Padding(Theme.VerticalContentPadding)
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.TextStyle(&Theme.MainFont)
+					.Text(LOCTEXT("NoDealAvailable", "You have no resource to sell at this station"))
+				];
+				// clang-format on
 			}
 		}
 
@@ -860,7 +874,7 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 			}
 			else
 			{
-				TargetSpacecraftClass = TargetSpacecraft->GetClassification().ToLower();
+				TargetSpacecraftClass = TargetSpacecraft->GetClassification();
 			}
 			DestinationDescription->SetText(TargetSpacecraftClass);
 		}

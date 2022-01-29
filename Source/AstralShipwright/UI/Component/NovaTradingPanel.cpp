@@ -243,11 +243,11 @@ void SNovaTradingPanel::ShowPanelInternal(ANovaPlayerController* TargetPC, const
 		FText TradeTitle;
 		if (GameState->IsResourceSold(Resource))
 		{
-			TradeTitle = LOCTEXT("BuyTitle", "Buy resource");
+			TradeTitle = FText::FormatNamed(LOCTEXT("BuyTitleFormat", "Buy resource from {station}"), TEXT("station"), Area->Name);
 		}
 		else if (InitialAmount != 0 && !GameState->IsResourceSold(Resource))
 		{
-			TradeTitle = LOCTEXT("SellTitle", "Sell resource");
+			TradeTitle = FText::FormatNamed(LOCTEXT("SellTitleFormat", "Sell resource to {station}"), TEXT("station"), Area->Name);
 		}
 
 		Show(TradeTitle, FText(), ConfirmTrade);
