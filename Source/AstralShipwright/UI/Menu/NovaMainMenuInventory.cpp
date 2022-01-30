@@ -62,10 +62,9 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 			+ SHorizontalBox::Slot()
 			[
 				SNew(SNovaButtonLayout)
+				.Size("HighButtonSize")
 				[
 					SNew(SVerticalBox)
-
-					+ SVerticalBox::Slot()
 
 					+ SVerticalBox::Slot()
 					.AutoHeight()
