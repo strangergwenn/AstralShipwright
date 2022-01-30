@@ -300,30 +300,40 @@ FText SNovaTradingPanel::GetCargoAmount() const
 
 FText SNovaTradingPanel::GetCargoMinValue() const
 {
-	return FText::FormatNamed(LOCTEXT("CargoMinFormat", "{min} T (min)"), TEXT("min"), FText::AsNumber(MinAmount));
+	FNumberFormattingOptions Options;
+	Options.MaximumFractionalDigits = 1;
+
+	return FText::FormatNamed(LOCTEXT("CargoMinFormat", "{min} T (min)"), TEXT("min"), FText::AsNumber(MinAmount, &Options));
 }
 
 FText SNovaTradingPanel::GetCargoMaxValue() const
 {
-	return FText::FormatNamed(LOCTEXT("CargoMaxFormat", "{max} T (max)"), TEXT("max"), FText::AsNumber(MaxAmount));
+	FNumberFormattingOptions Options;
+	Options.MaximumFractionalDigits = 1;
+
+	return FText::FormatNamed(LOCTEXT("CargoMaxFormat", "{max} T (max)"), TEXT("max"), FText::AsNumber(MaxAmount, &Options));
 }
 
 FText SNovaTradingPanel::GetCargoDetails() const
 {
+	FNumberFormattingOptions Options;
+	Options.MaximumFractionalDigits = 1;
+
 	if (CompartmentIndex == INDEX_NONE)
 	{
 		return FText::FormatNamed(LOCTEXT("CargoDetailsFormat",
 									  "Currently holding {amount} T out of {capacity} T across the spacecraft ({remaining} T remaining)"),
-			TEXT("amount"), FText::AsNumber(InitialAmount), TEXT("capacity"), FText::AsNumber(Capacity), TEXT("remaining"),
-			FText::AsNumber(Capacity - InitialAmount));
+			TEXT("amount"), FText::AsNumber(InitialAmount, &Options), TEXT("capacity"), FText::AsNumber(Capacity, &Options),
+			TEXT("remaining"), FText::AsNumber(Capacity - InitialAmount, &Options));
 	}
 	else
 	{
 		return FText::FormatNamed(
 			LOCTEXT("CargoDetailsFormat",
 				"Currently holding {amount} T out of {capacity} T in compartment {compartment} ({remaining} T remaining)"),
-			TEXT("amount"), FText::AsNumber(InitialAmount), TEXT("capacity"), FText::AsNumber(Capacity), TEXT("compartment"),
-			FText::AsNumber(CompartmentIndex + 1), TEXT("remaining"), FText::AsNumber(Capacity - InitialAmount));
+			TEXT("amount"), FText::AsNumber(InitialAmount, &Options), TEXT("capacity"), FText::AsNumber(Capacity, &Options),
+			TEXT("compartment"), FText::AsNumber(CompartmentIndex + 1, &Options), TEXT("remaining"),
+			FText::AsNumber(Capacity - InitialAmount, &Options));
 	}
 }
 
