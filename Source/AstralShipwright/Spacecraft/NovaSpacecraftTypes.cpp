@@ -160,7 +160,6 @@ void UNovaCompartmentDescription::ConfigurePreviewActor(AActor* Actor) const
 	ANovaSpacecraftPawn* SpacecraftPawn = Cast<ANovaSpacecraftPawn>(Actor);
 	SpacecraftPawn->SetImmediateMode(true);
 	SpacecraftPawn->SetSpacecraft(Spacecraft.Get());
-	SpacecraftPawn->UpdateAssembly();
 }
 
 TArray<FText> UNovaCompartmentDescription::GetDescription() const
@@ -222,7 +221,6 @@ void UNovaModuleDescription::ConfigurePreviewActor(AActor* Actor) const
 
 	SpacecraftPawn->SetImmediateMode(true);
 	SpacecraftPawn->SetSpacecraft(Spacecraft.Get());
-	SpacecraftPawn->UpdateAssembly();
 }
 
 TArray<FText> UNovaModuleDescription::GetDescription() const
@@ -302,7 +300,6 @@ void UNovaEquipmentDescription::ConfigurePreviewActor(AActor* Actor) const
 
 	SpacecraftPawn->SetImmediateMode(true);
 	SpacecraftPawn->SetSpacecraft(Spacecraft.Get());
-	SpacecraftPawn->UpdateAssembly();
 }
 
 TArray<FText> UNovaEquipmentDescription::GetDescription() const

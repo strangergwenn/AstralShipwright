@@ -448,9 +448,6 @@ void ANovaSpacecraftPawn::StartAssemblyUpdate()
 {
 	NCHECK(AssemblyState == ENovaAssemblyState::Idle);
 
-	// In case we have nothing to de-materialize or load, we will move there
-	AssemblyState = ENovaAssemblyState::Moving;
-
 	// Update the spacecraft
 	Spacecraft->UpdatePropulsionMetrics();
 	Spacecraft->UpdateProceduralElements();
@@ -510,6 +507,11 @@ void ANovaSpacecraftPawn::StartAssemblyUpdate()
 		if (ImmediateMode)
 		{
 			UNovaAssetManager::Get()->LoadAssets(RequestedAssets);
+
+			MoveCompartments();
+			BuildCompartments();
+
+			AssemblyState = ENovaAssemblyState::Idle;
 		}
 		else
 		{
@@ -522,6 +524,10 @@ void ANovaSpacecraftPawn::StartAssemblyUpdate()
 																		  WaitingAssetLoading = false;
 																	  }));
 		}
+	}
+	else
+	{
+		AssemblyState = ENovaAssemblyState::Moving;
 	}
 }
 
@@ -568,26 +574,8 @@ void ANovaSpacecraftPawn::UpdateAssembly()
 		// Start the animation
 		if (!StillWaiting && !WaitingAssetLoading)
 		{
-			AssemblyState       = ENovaAssemblyState::Moving;
-			FVector BuildOffset = FVector::ZeroVector;
-
-			// Compute the initial build offset
-			for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
-			{
-				const FNovaCompartment& Compartment =
-					CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment();
-				BuildOffset += CompartmentComponents[CompartmentIndex]->GetCompartmentLength(Compartment);
-			}
-			BuildOffset /= 2;
-
-			// Apply individual offsets to compartments
-			for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
-			{
-				CompartmentComponents[CompartmentIndex]->SetRequestedLocation(BuildOffset);
-				const FNovaCompartment& Compartment =
-					CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment();
-				BuildOffset -= CompartmentComponents[CompartmentIndex]->GetCompartmentLength(Compartment);
-			}
+			AssemblyState = ENovaAssemblyState::Moving;
+			MoveCompartments();
 		}
 	}
 
@@ -613,54 +601,8 @@ void ANovaSpacecraftPawn::UpdateAssembly()
 	// Run the actual building process
 	if (AssemblyState == ENovaAssemblyState::Building)
 	{
-		// Unload unneeded leftover assets
-		for (const FSoftObjectPath& Asset : CurrentAssets)
-		{
-			if (RequestedAssets.Find(Asset) == INDEX_NONE)
-			{
-				UNovaAssetManager::Get()->UnloadAsset(Asset);
-			}
-		}
-		CurrentAssets = RequestedAssets;
-		RequestedAssets.Empty();
-
-		// Build the assembly
-		int32         ValidIndex = 0;
-		TArray<int32> CompartmentIndicesToRemove;
-		for (int32 CompartmentIndex = 0; CompartmentIndex < Spacecraft->Compartments.Num(); CompartmentIndex++)
-		{
-			UNovaSpacecraftCompartmentComponent* PreviousCompartmentComponent =
-				CompartmentIndex > 0 ? CompartmentComponents[CompartmentIndex - 1] : nullptr;
-			const FNovaCompartment* PreviousCompartment = CompartmentIndex > 0 ? &Spacecraft->Compartments[CompartmentIndex - 1] : nullptr;
-			const FNovaCompartment& CurrentCompartment  = Spacecraft->Compartments[CompartmentIndex];
-
-			if (CurrentCompartment.IsValid())
-			{
-				CompartmentComponents[CompartmentIndex]->BuildCompartment(CurrentCompartment, ValidIndex);
-				ValidIndex++;
-			}
-			else
-			{
-				CompartmentIndicesToRemove.Add(CompartmentIndex);
-			}
-		}
-
-		// Destroy removed compartments
-		int32 RemovedComponentCount = 0;
-		for (int32 Index : CompartmentIndicesToRemove)
-		{
-			int32 UpdatedIndex = Index - RemovedComponentCount;
-			RemovedComponentCount++;
-
-			Spacecraft->Compartments.RemoveAt(UpdatedIndex);
-			CompartmentComponents[UpdatedIndex]->DestroyComponent();
-			CompartmentComponents.RemoveAt(UpdatedIndex);
-		}
-
-		// Complete the process
-		DisplayFilterIndex = FMath::Min(DisplayFilterIndex, Spacecraft->Compartments.Num() - 1);
-		AssemblyState      = ENovaAssemblyState::Idle;
-		UpdateDisplayFilter();
+		BuildCompartments();
+		AssemblyState = ENovaAssemblyState::Idle;
 	}
 }
 
@@ -820,6 +762,80 @@ void ANovaSpacecraftPawn::UpdateBounds()
 
 		CurrentExtent = Radius * FVector(1, 1, 1);
 	}
+}
+
+void ANovaSpacecraftPawn::MoveCompartments()
+{
+	FVector BuildOffset = FVector::ZeroVector;
+
+	// Compute the initial build offset
+	for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
+	{
+		const FNovaCompartment& Compartment =
+			CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment();
+		BuildOffset += CompartmentComponents[CompartmentIndex]->GetCompartmentLength(Compartment);
+	}
+	BuildOffset /= 2;
+
+	// Apply individual offsets to compartments
+	for (int32 CompartmentIndex = 0; CompartmentIndex < CompartmentComponents.Num(); CompartmentIndex++)
+	{
+		CompartmentComponents[CompartmentIndex]->SetRequestedLocation(BuildOffset);
+		const FNovaCompartment& Compartment =
+			CompartmentIndex < Spacecraft->Compartments.Num() ? Spacecraft->Compartments[CompartmentIndex] : FNovaCompartment();
+		BuildOffset -= CompartmentComponents[CompartmentIndex]->GetCompartmentLength(Compartment);
+	}
+}
+
+void ANovaSpacecraftPawn::BuildCompartments()
+{
+	// Unload unneeded leftover assets
+	for (const FSoftObjectPath& Asset : CurrentAssets)
+	{
+		if (RequestedAssets.Find(Asset) == INDEX_NONE)
+		{
+			UNovaAssetManager::Get()->UnloadAsset(Asset);
+		}
+	}
+	CurrentAssets = RequestedAssets;
+	RequestedAssets.Empty();
+
+	// Build the assembly
+	int32         ValidIndex = 0;
+	TArray<int32> CompartmentIndicesToRemove;
+	for (int32 CompartmentIndex = 0; CompartmentIndex < Spacecraft->Compartments.Num(); CompartmentIndex++)
+	{
+		UNovaSpacecraftCompartmentComponent* PreviousCompartmentComponent =
+			CompartmentIndex > 0 ? CompartmentComponents[CompartmentIndex - 1] : nullptr;
+		const FNovaCompartment* PreviousCompartment = CompartmentIndex > 0 ? &Spacecraft->Compartments[CompartmentIndex - 1] : nullptr;
+		const FNovaCompartment& CurrentCompartment  = Spacecraft->Compartments[CompartmentIndex];
+
+		if (CurrentCompartment.IsValid())
+		{
+			CompartmentComponents[CompartmentIndex]->BuildCompartment(CurrentCompartment, ValidIndex);
+			ValidIndex++;
+		}
+		else
+		{
+			CompartmentIndicesToRemove.Add(CompartmentIndex);
+		}
+	}
+
+	// Destroy removed compartments
+	int32 RemovedComponentCount = 0;
+	for (int32 Index : CompartmentIndicesToRemove)
+	{
+		int32 UpdatedIndex = Index - RemovedComponentCount;
+		RemovedComponentCount++;
+
+		Spacecraft->Compartments.RemoveAt(UpdatedIndex);
+		CompartmentComponents[UpdatedIndex]->DestroyComponent();
+		CompartmentComponents.RemoveAt(UpdatedIndex);
+	}
+
+	// Complete the process
+	DisplayFilterIndex = FMath::Min(DisplayFilterIndex, Spacecraft->Compartments.Num() - 1);
+	UpdateDisplayFilter();
 }
 
 void ANovaSpacecraftPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

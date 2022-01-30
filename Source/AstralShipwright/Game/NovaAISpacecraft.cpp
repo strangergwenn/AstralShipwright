@@ -2,6 +2,7 @@
 
 #include "NovaAISpacecraft.h"
 
+#include "Actor/NovaCaptureActor.h"
 #include "Player/NovaPlayerController.h"
 #include "Spacecraft/NovaSpacecraftPawn.h"
 
@@ -75,4 +76,27 @@ ANovaSpacecraftPawn* UNovaAISpacecraftDescription::GetSpacecraftPawn() const
 	}
 
 	return nullptr;
+}
+
+FNovaAssetPreviewSettings UNovaAISpacecraftDescription::GetPreviewSettings() const
+{
+	FNovaAssetPreviewSettings Settings;
+
+	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
+	Settings.RequireCustomPrimitives = true;
+	Settings.UsePowerfulLight        = true;
+	Settings.Rotation                = FRotator(0, 180, 0);
+	Settings.RelativeXOffset         = -0.5f / Spacecraft.Compartments.Num();
+	Settings.Scale *= 1.25f;
+
+	return Settings;
+}
+
+void UNovaAISpacecraftDescription::ConfigurePreviewActor(AActor* Actor) const
+{
+	NCHECK(Actor->GetClass() == ANovaSpacecraftPawn::StaticClass());
+	ANovaSpacecraftPawn* SpacecraftPawn = Cast<ANovaSpacecraftPawn>(Actor);
+
+	SpacecraftPawn->SetImmediateMode(true);
+	SpacecraftPawn->SetSpacecraft(&Spacecraft);
 }

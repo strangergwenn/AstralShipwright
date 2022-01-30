@@ -22,6 +22,11 @@ public:
 	UFUNCTION(Category = Nova, BlueprintCallable, CallInEditor)
 	void SaveFromGame();
 
+public:
+	FNovaAssetPreviewSettings GetPreviewSettings() const override;
+
+	void ConfigurePreviewActor(AActor* Actor) const override;
+
 private:
 	/** Fetch the player's spacecraft pawn */
 	class ANovaSpacecraftPawn* GetSpacecraftPawn() const;

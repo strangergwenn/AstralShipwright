@@ -347,6 +347,12 @@ protected:
 	/** Update the bounds */
 	void UpdateBounds();
 
+	/** Start moving compartments */
+	void MoveCompartments();
+
+	/** Build compartments */
+	void BuildCompartments();
+
 	/*----------------------------------------------------
 	    Properties
 	----------------------------------------------------*/
