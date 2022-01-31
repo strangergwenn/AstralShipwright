@@ -803,10 +803,11 @@ void FNovaSpacecraft::UpdateProceduralElements()
 
 		if (Compartment.IsValid())
 		{
-			// TODO : outer skirt would be used for compartment that have side modules, when the following (aft) compartment does not
-			Compartment.NeedsOuterSkirt = false;
+			// Add outer skirt if we have the same compartment behind us
+			Compartment.NeedsOuterSkirt =
+				CompartmentIndex == 0 || Compartments[CompartmentIndex - 1].Description == Compartments[CompartmentIndex].Description;
 
-			// TODO : review whether main piping & wiring can ever be undesired - maybe on extremities with no module ?
+			// Always add main piping & wiring
 			Compartment.NeedsMainPiping = true;
 			Compartment.NeedsMainWiring = true;
 
@@ -830,42 +831,35 @@ void FNovaSpacecraft::UpdateProceduralElements()
 				if (Module.Description)
 				{
 					Module.NeedsWiring = true;
-					// NLOG("FNovaSpacecraft::UpdateProceduralElements : compartment %d, module %d", CompartmentIndex, ModuleIndex);
 
 					// Define bulkheads
 					if (IsFirstCompartment(CompartmentIndex))
 					{
 						Module.ForwardBulkheadType = ENovaBulkheadType::Outer;
-						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> forward bulkhead is Outer");
 					}
 					else if (IsSameModuleInPreviousCompartment(CompartmentIndex, ModuleIndex))
 					{
 						Module.ForwardBulkheadType = ENovaBulkheadType::Skirt;
 						Module.NeedsWiring         = false;
-						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> forward bulkhead is Skirt");
 					}
 
 					if (IsLastCompartment(CompartmentIndex))
 					{
 						Module.AftBulkheadType = ENovaBulkheadType::Outer;
-						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> aft bulkhead is Outer");
 					}
 					else if (IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
 					{
 						Module.AftBulkheadType = ENovaBulkheadType::Skirt;
-						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> aft bulkhead is Skirt");
 					}
 
 					// Define piping
 					if (Module.Description->NeedsPiping && !IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
 					{
 						Module.SkirtPipingType = ENovaSkirtPipingType::Connection;
-						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> skirt piping is Connection");
 					}
 					else
 					{
 						Module.SkirtPipingType = ENovaSkirtPipingType::Simple;
-						// NLOG("FNovaSpacecraft::UpdateProceduralElements : -> skirt piping is Simple");
 					}
 				}
 			}
