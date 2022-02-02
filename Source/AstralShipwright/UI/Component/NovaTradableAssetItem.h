@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Game/NovaArea.h"
 #include "Game/NovaGameTypes.h"
 #include "Widgets/Layout/SScaleBox.h"
 

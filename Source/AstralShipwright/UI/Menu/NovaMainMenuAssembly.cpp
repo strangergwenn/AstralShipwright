@@ -73,7 +73,7 @@ public:
 		FSimpleDelegate ConfirmRevertChanges = FSimpleDelegate::CreateLambda(
 			[=]()
 			{
-				SpacecraftPawn->ResetSpacecraft();
+				SpacecraftPawn->RevertModifications();
 			});
 
 		// Reversal confirmation callback
@@ -1209,6 +1209,7 @@ void SNovaMainMenuAssembly::Show()
 
 	if (IsValid(SpacecraftPawn))
 	{
+		SpacecraftPawn->SetEditing(true);
 		SpacecraftNameText->SetText(SpacecraftPawn->GetSpacecraftCopy().GetName());
 
 		// Reset the compartment view
@@ -1233,6 +1234,7 @@ void SNovaMainMenuAssembly::Hide()
 	// Reset the pawn
 	if (IsValid(SpacecraftPawn))
 	{
+		SpacecraftPawn->SetEditing(false);
 		SpacecraftPawn->SetDisplayFilter(ENovaAssemblyDisplayFilter::All, INDEX_NONE);
 		SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
 		SpacecraftPawn->SetHighlightedCompartment(INDEX_NONE);

@@ -103,6 +103,12 @@ public:
 		return TPair<FVector, FVector>(CurrentOrigin, CurrentExtent);
 	}
 
+	/** Start editing the spacecraft */
+	void SetEditing(bool IsEditing)
+	{
+		EditingSpacecraft = IsEditing;
+	}
+
 	/** Share the identifier for the player spacecraft */
 	void SetSpacecraftIdentifier(FGuid Identifier)
 	{
@@ -113,7 +119,7 @@ public:
 	UFUNCTION(Category = Nova, BlueprintCallable)
 	FGuid GetSpacecraftIdentifier() const
 	{
-		return Spacecraft.IsValid() ? Spacecraft->Identifier : FGuid();
+		return RequestedSpacecraftIdentifier;
 	}
 
 	/** Get the spacecraft movement component */
@@ -195,10 +201,7 @@ public:
 	bool HasModifications() const;
 
 	/** Revert the pawn to the game state version */
-	void ResetSpacecraft()
-	{
-		Spacecraft.Reset();
-	}
+	void RevertModifications();
 
 	/** Revert the pawn to the game state version */
 	bool IsSpacecraftValid(FText* Details = nullptr) const
@@ -389,6 +392,7 @@ protected:
 	ENovaAssemblyState                                 AssemblyState;
 	TArray<class UNovaSpacecraftCompartmentComponent*> CompartmentComponents;
 	bool                                               SelfDestruct;
+	bool                                               EditingSpacecraft;
 
 	// Asset loading
 	bool                    WaitingAssetLoading;

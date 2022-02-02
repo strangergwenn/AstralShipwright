@@ -28,9 +28,13 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 	: Super()
 	, AssemblyState(ENovaAssemblyState::Idle)
 	, SelfDestruct(false)
+	, EditingSpacecraft(false)
+
 	, WaitingAssetLoading(false)
+
 	, HighlightedCompartment(ENovaUIConstants::FadeDurationMinimal)
 	, OutlinedCompartment(ENovaUIConstants::FadeDurationMinimal)
+
 	, DisplayFilterType(ENovaAssemblyDisplayFilter::All)
 	, DisplayFilterIndex(INDEX_NONE)
 	, ImmediateMode(false)
@@ -78,8 +82,8 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 			Destroy();
 		}
 
-		// Fetch the spacecraft from the player state when we are remotely controlled OR no spacecraft was ever set
-		else if (!Spacecraft.IsValid() || !IsLocallyControlled())
+		// While not updating the spacecraft, always update to the game state
+		else if (!EditingSpacecraft)
 		{
 			const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 
@@ -179,6 +183,23 @@ bool ANovaSpacecraftPawn::HasModifications() const
 
 	const FNovaSpacecraft* CurrentSpacecraft = PC->GetSpacecraft();
 	return CurrentSpacecraft && Spacecraft.IsValid() && *Spacecraft != *CurrentSpacecraft;
+}
+
+void ANovaSpacecraftPawn::RevertModifications()
+{
+	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	if (IsValid(GameState) && RequestedSpacecraftIdentifier.IsValid())
+	{
+		const FNovaSpacecraft* NewSpacecraft = GameState->GetSpacecraft(RequestedSpacecraftIdentifier);
+		if (NewSpacecraft)
+		{
+			SetSpacecraft(NewSpacecraft);
+		}
+		else
+		{
+			Spacecraft.Reset();
+		}
+	}
 }
 
 float ANovaSpacecraftPawn::GetCurrentMass() const
