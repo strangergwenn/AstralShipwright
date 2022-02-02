@@ -117,7 +117,7 @@ void UNovaStationRingComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 
 		// Target hatch components, or the central structure
 		int32 CompartmentIndex = RingIndex - (ENovaConstants::MaxCompartmentCount - AttachedSpacecraft->GetCompartmentComponentCount()) / 2;
-		if (CompartmentIndex >= 0 && CompartmentIndex < AttachedSpacecraft->GetCompartmentComponentCount())
+		if (CompartmentIndex >= 0 && CompartmentIndex < AttachedSpacecraft->GetCompartmentCount())
 		{
 			const UNovaSpacecraftCompartmentComponent* Compartment = AttachedSpacecraft->GetCompartmentComponent(CompartmentIndex);
 			NCHECK(Compartment);
