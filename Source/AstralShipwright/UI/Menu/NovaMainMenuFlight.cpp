@@ -262,6 +262,8 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.Enabled(this, &SNovaMainMenuFlight::CanFastForward)
 		];
 
+	HomeHUD.DefaultFocus = FastForwardButton;
+
 	/*----------------------------------------------------
 	    Operations
 	----------------------------------------------------*/
@@ -385,7 +387,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 #endif // WITH_EDITOR
 		;
 
-	OperationsHUD.DefaultFocus = FastForwardButton;
+	OperationsHUD.DefaultFocus = DockButton;
 
 	/*----------------------------------------------------
 	    Weapons
