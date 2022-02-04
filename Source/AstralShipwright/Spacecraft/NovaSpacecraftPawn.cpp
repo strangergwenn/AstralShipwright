@@ -187,6 +187,8 @@ bool ANovaSpacecraftPawn::HasModifications() const
 
 void ANovaSpacecraftPawn::RevertModifications()
 {
+	SetEditing(false);
+
 	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 	if (IsValid(GameState) && RequestedSpacecraftIdentifier.IsValid())
 	{
@@ -305,6 +307,8 @@ void ANovaSpacecraftPawn::ServerSaveSystems_Implementation()
 void ANovaSpacecraftPawn::ApplyAssembly()
 {
 	NLOG("ANovaAssembly::ApplyAssembly");
+
+	SetEditing(false);
 
 	ANovaPlayerController* PC = GetController<ANovaPlayerController>();
 	NCHECK(IsValid(PC) && PC->IsLocalController());

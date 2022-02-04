@@ -1234,7 +1234,6 @@ void SNovaMainMenuAssembly::Hide()
 	// Reset the pawn
 	if (IsValid(SpacecraftPawn))
 	{
-		SpacecraftPawn->SetEditing(false);
 		SpacecraftPawn->SetDisplayFilter(ENovaAssemblyDisplayFilter::All, INDEX_NONE);
 		SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
 		SpacecraftPawn->SetHighlightedCompartment(INDEX_NONE);

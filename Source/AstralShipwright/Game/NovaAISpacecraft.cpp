@@ -24,6 +24,7 @@ void UNovaAISpacecraftDescription::LoadInGame()
 		FNovaSpacecraft NewSpacecraft = Spacecraft;
 		NewSpacecraft.Identifier      = SpacecraftPawn->GetSpacecraftIdentifier();
 
+		SpacecraftPawn->SetEditing(true);
 		SpacecraftPawn->SetSpacecraft(&NewSpacecraft);
 	}
 
