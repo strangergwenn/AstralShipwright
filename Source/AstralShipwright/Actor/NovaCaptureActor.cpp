@@ -71,7 +71,9 @@ ANovaCaptureActor::ANovaCaptureActor()
 	CameraCapture->ShowFlags.SetGrid(false);
 	CameraCapture->FOVAngle                     = 70;
 	CameraCapture->bAlwaysPersistRenderingState = true;
-	CameraCapture->bUseRayTracingIfEnabled      = true;
+	CameraCapture->bUseRayTracingIfEnabled      = false;
+	CameraCapture->ShowFlags.SetLumenReflections(true);
+	CameraCapture->ShowFlags.SetLumenGlobalIllumination(true);
 
 	// Settings
 	bIsEditorOnlyActor = true;
