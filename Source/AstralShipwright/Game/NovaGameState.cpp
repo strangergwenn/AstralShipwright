@@ -386,7 +386,7 @@ ENovaPriceModifier ANovaGameState::GetCurrentPriceModifier(const UNovaTradableAs
 	{
 		for (const FNovaResourceTrade& Trade : CurrentArea->ResourceTradeMetadata)
 		{
-			if (Trade.Resource == Asset)
+			if (Trade.Resource == Asset && Trade.ForSale)
 			{
 				return RotatePrice(Trade.PriceModifier, true);
 			}
