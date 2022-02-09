@@ -143,8 +143,8 @@ FNovaAssetPreviewSettings UNovaCompartmentDescription::GetPreviewSettings() cons
 	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
 	Settings.RequireCustomPrimitives = true;
 	Settings.Rotation                = FRotator(0, 180, 0);
-	Settings.RelativeXOffset         = -0.8f;
-	Settings.Scale *= 0.9f;
+	Settings.RelativeXOffset         = -0.125f;
+	Settings.Scale *= 0.75f;
 
 	return Settings;
 }
