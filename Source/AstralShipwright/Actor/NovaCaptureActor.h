@@ -15,7 +15,6 @@ struct FNovaAssetPreviewSettings
 	TSubclassOf<class AActor> Class;
 
 	bool     RequireCustomPrimitives;
-	bool     UsePowerfulLight;
 	FVector  Offset;
 	FRotator Rotation;
 	float    RelativeXOffset;

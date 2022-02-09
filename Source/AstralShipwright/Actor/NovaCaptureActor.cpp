@@ -33,7 +33,6 @@
 FNovaAssetPreviewSettings::FNovaAssetPreviewSettings()
 	: Class(AStaticMeshActor::StaticClass())
 	, RequireCustomPrimitives(false)
-	, UsePowerfulLight(false)
 	, Offset(FVector::ZeroVector)
 	, Rotation(FRotator::ZeroRotator)
 	, RelativeXOffset(0.0f)

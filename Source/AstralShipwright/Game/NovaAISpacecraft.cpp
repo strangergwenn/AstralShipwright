@@ -85,7 +85,6 @@ FNovaAssetPreviewSettings UNovaAISpacecraftDescription::GetPreviewSettings() con
 
 	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
 	Settings.RequireCustomPrimitives = true;
-	Settings.UsePowerfulLight        = true;
 	Settings.Rotation                = FRotator(0, 180, 0);
 	Settings.RelativeXOffset         = -0.5f / Spacecraft.Compartments.Num();
 	Settings.Scale *= 1.25f;

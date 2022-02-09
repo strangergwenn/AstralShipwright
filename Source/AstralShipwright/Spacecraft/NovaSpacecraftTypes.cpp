@@ -142,7 +142,6 @@ FNovaAssetPreviewSettings UNovaCompartmentDescription::GetPreviewSettings() cons
 
 	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
 	Settings.RequireCustomPrimitives = true;
-	Settings.UsePowerfulLight        = true;
 	Settings.Rotation                = FRotator(0, 180, 0);
 	Settings.RelativeXOffset         = -0.8f;
 	Settings.Scale *= 0.9f;
@@ -204,7 +203,6 @@ FNovaAssetPreviewSettings UNovaModuleDescription::GetPreviewSettings() const
 
 	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
 	Settings.RequireCustomPrimitives = true;
-	Settings.UsePowerfulLight        = true;
 
 	return Settings;
 }
@@ -283,7 +281,6 @@ FNovaAssetPreviewSettings UNovaEquipmentDescription::GetPreviewSettings() const
 
 	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
 	Settings.RequireCustomPrimitives = true;
-	Settings.UsePowerfulLight        = true;
 
 	return Settings;
 }
