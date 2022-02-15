@@ -2,11 +2,116 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "EngineMinimal.h"
+#include "Engine/DataAsset.h"
 #include "Engine/StreamableManager.h"
-#include "Game/NovaGameTypes.h"
-
 #include "NovaAssetManager.generated.h"
+
+/*----------------------------------------------------
+    Description base classes
+----------------------------------------------------*/
+
+/** Interface for objects that will provide a description interface */
+class INovaDescriptibleInterface
+{
+public:
+	/** Return the full description of this asset as inline text */
+	FText GetInlineDescription() const
+	{
+		return GetFormattedDescription("  ");
+	}
+
+	/** Return the full description of this asset as paragraph text */
+	FText GetParagraphDescription() const
+	{
+		return GetFormattedDescription("\n");
+	}
+
+	/** Return the formatted description of this asset */
+	FText GetFormattedDescription(FString Delimiter) const;
+
+	/** Return details on this asset */
+	virtual TArray<FText> GetDescription() const
+	{
+		return TArray<FText>();
+	}
+};
+
+/** Asset description */
+UCLASS(ClassGroup = (Nova))
+class UNovaAssetDescription
+	: public UDataAsset
+	, public INovaDescriptibleInterface
+{
+	GENERATED_BODY()
+
+public:
+	/** Procedurally generate a screenshot of this asset */
+	UFUNCTION(Category = Nova, BlueprintCallable, CallInEditor)
+	void UpdateAssetRender();
+
+	// Write an asset description to JSON
+	static void SaveAsset(TSharedPtr<class FJsonObject> Save, FString AssetName, const UNovaAssetDescription* Asset);
+
+	// Get an asset description from JSON
+	static const UNovaAssetDescription* LoadAsset(TSharedPtr<class FJsonObject> Save, FString AssetName);
+
+	template <typename T>
+	static const T* LoadAsset(TSharedPtr<class FJsonObject> Save, FString AssetName)
+	{
+		return Cast<T>(LoadAsset(Save, AssetName));
+	}
+
+	/** Get a list of assets to load before use*/
+	virtual TArray<FSoftObjectPath> GetAsyncAssets() const
+	{
+		TArray<FSoftObjectPath> Result;
+
+		for (TFieldIterator<FSoftObjectProperty> PropIt(GetClass()); PropIt; ++PropIt)
+		{
+			FSoftObjectProperty* Property = *PropIt;
+			FSoftObjectPtr       Ptr      = Property->GetPropertyValue(Property->ContainerPtrToValuePtr<int32>(this));
+			if (!Ptr.IsNull())
+			{
+				Result.AddUnique(Ptr.ToSoftObjectPath());
+			}
+		}
+
+		return Result;
+	}
+
+	/** Get the desired display settings when taking shots of this asset */
+	virtual struct FNovaAssetPreviewSettings GetPreviewSettings() const;
+
+	/** Configure the target actor for taking shots of this asset */
+	virtual void ConfigurePreviewActor(class AActor* Actor) const
+	{}
+
+public:
+	// Identifier
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	FGuid Identifier;
+
+	// Display name
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	FText Name;
+
+	// Whether this asset is a special hidden one
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	bool Hidden;
+
+	// Whether this asset is a special default asset
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	bool Default;
+
+	// Generated texture file
+	UPROPERTY()
+	FSlateBrush AssetRender;
+};
+
+/*----------------------------------------------------
+    Asset manager
+----------------------------------------------------*/
 
 /** Catalog of dynamic assets to load in game */
 UCLASS(ClassGroup = (Nova))
@@ -31,7 +136,7 @@ public:
 	}
 
 	/** Find the component with the GUID that matches Identifier */
-	const class UNovaAssetDescription* GetAsset(FGuid Identifier) const
+	const UNovaAssetDescription* GetAsset(FGuid Identifier) const
 	{
 		const UNovaAssetDescription* const* Entry = Catalog.Find(Identifier);
 
@@ -98,11 +203,11 @@ public:
 
 	// All assets
 	UPROPERTY()
-	TMap<FGuid, const class UNovaAssetDescription*> Catalog;
+	TMap<FGuid, const UNovaAssetDescription*> Catalog;
 
 	// Default assets
 	UPROPERTY()
-	TMap<TSubclassOf<UNovaAssetDescription>, const class UNovaAssetDescription*> DefaultAssets;
+	TMap<TSubclassOf<UNovaAssetDescription>, const UNovaAssetDescription*> DefaultAssets;
 
 	// Asynchronous asset loader
 	FStreamableManager StreamableManager;
