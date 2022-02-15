@@ -133,6 +133,10 @@ private:
 	UPROPERTY()
 	class UNovaMenuManager* MenuManager;
 
+	// Sound manager object
+	UPROPERTY()
+	class UNovaSoundManager* SoundManager;
+
 	// Contract manager object
 	UPROPERTY()
 	class UNovaContractManager* ContractManager;

@@ -5,6 +5,7 @@
 #include "NovaAssetManager.h"
 #include "NovaContractManager.h"
 #include "NovaMenuManager.h"
+#include "NovaSoundManager.h"
 #include "NovaSaveManager.h"
 #include "NovaSessionsManager.h"
 
@@ -151,6 +152,11 @@ void UNovaGameInstance::Init()
 	MenuManager = NewObject<UNovaMenuManager>(this, UNovaMenuManager::StaticClass(), TEXT("MenuManager"));
 	NCHECK(MenuManager);
 	MenuManager->Initialize(this);
+
+	// Create the sound manager
+	SoundManager = NewObject<UNovaSoundManager>(this, UNovaSoundManager::StaticClass(), TEXT("SoundManager"));
+	NCHECK(SoundManager);
+	SoundManager->Initialize(this);
 
 	// Create the contract manager
 	ContractManager = NewObject<UNovaContractManager>(this, UNovaContractManager::StaticClass(), TEXT("ContractManager"));
