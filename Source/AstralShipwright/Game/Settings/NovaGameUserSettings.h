@@ -48,6 +48,18 @@ public:
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	float GamepadSensitivity;
 
+	/** Global sound volume */
+	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
+	int32 MasterVolume;
+
+	/** Music volume */
+	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
+	int32 MusicVolume;
+
+	/** Music volume */
+	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
+	int32 EffectsVolume;
+
 	/** Vertical FOV in degrees */
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	float FOV;

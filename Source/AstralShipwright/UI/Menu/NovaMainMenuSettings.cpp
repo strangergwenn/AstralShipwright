@@ -14,6 +14,7 @@
 #include "UI/Widget/NovaModalPanel.h"
 
 #include "System/NovaMenuManager.h"
+#include "System/NovaSoundManager.h"
 
 #include "Nova.h"
 
@@ -101,6 +102,22 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 					.Text(LOCTEXT("EnableCrashReport", "Enable crash reports"))
 					.HelpText(LOCTEXT("EnableCrashReportHelp", "Send anonymous debugging information to Deimos Games when the game crashes"))
 					.OnClicked(this, &SNovaMainMenuSettings::OnCrashReportToggled)
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(Theme.VerticalContentPadding)
+				.HAlign(HAlign_Center)
+				[
+					SNew(STextBlock)
+					.TextStyle(&Theme.HeadingFont)
+					.Text(LOCTEXT("Sound", "Sound settings"))
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SAssignNew(SoundContainer, SVerticalBox)
 				]
 			]
 
@@ -276,6 +293,20 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		LOCTEXT("FOVHelp", "Set the horizontal field of view in degrees"),
 		FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnFOVChanged),
 		80, 110, 5);
+	
+	// Build sound options
+	MasterVolumeSlider = AddSettingSlider(SoundContainer, LOCTEXT("MasterVolume", "Master volume"),
+		LOCTEXT("MasterVolumeHelp", "Set the master game volume"),
+		FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnMasterVolumeChanged),
+		0, 10, 1);
+	MusicVolumeSlider = AddSettingSlider(SoundContainer, LOCTEXT("MusicVolume", "Music volume"),
+		LOCTEXT("MusicVolumeHelp", "Set the music volume"),
+		FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnMusicVolumeChanged),
+		0, 10, 1);
+	EffectsVolumeSlider = AddSettingSlider(SoundContainer, LOCTEXT("EffectsVolume", "Effects volume"),
+		LOCTEXT("EffectsVolumeHelp", "Set the game effects volume"),
+		FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnEffectsVolumeChanged),
+		0, 10, 1);
 
 	if (!MenuManager->IsOnConsole())
 	{		
@@ -481,6 +512,11 @@ void SNovaMainMenuSettings::Show()
 	// Gameplay options
 	FOVSlider->SetCurrentValue(GameUserSettings->FOV);
 	CrashReportButton->SetActive(GameUserSettings->EnableCrashReports);
+
+	// Sound options
+	MasterVolumeSlider->SetCurrentValue(GameUserSettings->MasterVolume);
+	MusicVolumeSlider->SetCurrentValue(GameUserSettings->MusicVolume);
+	EffectsVolumeSlider->SetCurrentValue(GameUserSettings->EffectsVolume);
 }
 
 TSharedPtr<SNovaButton> SNovaMainMenuSettings::GetDefaultFocusButton() const
@@ -766,6 +802,39 @@ void SNovaMainMenuSettings::OnFOVChanged(float Value)
 void SNovaMainMenuSettings::OnCrashReportToggled()
 {
 	GameUserSettings->EnableCrashReports = CrashReportButton->IsActive();
+	GameUserSettings->SaveSettings();
+}
+
+void SNovaMainMenuSettings::OnMasterVolumeChanged(float Value)
+{
+	GameUserSettings->MasterVolume = Value;
+
+	UNovaSoundManager* SoundManager = MenuManager->GetGameInstance()->GetSoundManager();
+	NCHECK(SoundManager);
+	SoundManager->SetMasterVolume(Value);
+
+	GameUserSettings->SaveSettings();
+}
+
+void SNovaMainMenuSettings::OnMusicVolumeChanged(float Value)
+{
+	GameUserSettings->MusicVolume = Value;
+
+	UNovaSoundManager* SoundManager = MenuManager->GetGameInstance()->GetSoundManager();
+	NCHECK(SoundManager);
+	SoundManager->SetMusicVolume(Value);
+
+	GameUserSettings->SaveSettings();
+}
+
+void SNovaMainMenuSettings::OnEffectsVolumeChanged(float Value)
+{
+	GameUserSettings->EffectsVolume = Value;
+
+	UNovaSoundManager* SoundManager = MenuManager->GetGameInstance()->GetSoundManager();
+	NCHECK(SoundManager);
+	SoundManager->SetEffectsVolume(Value);
+
 	GameUserSettings->SaveSettings();
 }
 

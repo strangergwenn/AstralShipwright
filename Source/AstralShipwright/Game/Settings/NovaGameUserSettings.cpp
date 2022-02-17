@@ -1,6 +1,9 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaGameUserSettings.h"
+
+#include "System/NovaGameInstance.h"
+#include "System/NovaSoundManager.h"
 #include "Nova.h"
 
 #include "Modules/ModuleManager.h"
@@ -106,6 +109,11 @@ void UNovaGameUserSettings::SetToDefaults()
 	MouseSensitivity   = 0.8f;
 	GamepadSensitivity = 2.0f;
 	FOV                = 90.0f;
+
+	// Sound
+	MasterVolume  = 10;
+	MusicVolume   = 10;
+	EffectsVolume = 10;
 
 	// Graphics
 	EnableDLSS           = false;

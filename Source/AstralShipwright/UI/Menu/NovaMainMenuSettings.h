@@ -74,6 +74,11 @@ protected:
 	void OnFOVChanged(float Value);
 	void OnCrashReportToggled();
 
+	// Sound settings callbacks
+	void OnMasterVolumeChanged(float Value);
+	void OnMusicVolumeChanged(float Value);
+	void OnEffectsVolumeChanged(float Value);
+
 	// Graphics settings callbacks
 	void OnViewDistanceChanged(float Value);
 	void OnShadowChanged(float Value);
@@ -132,6 +137,12 @@ protected:
 	TSharedPtr<SNovaModalListView<TSharedPtr<FString>>> CultureListView;
 	TSharedPtr<class SNovaSlider>                       FOVSlider;
 	TSharedPtr<class SNovaButton>                       CrashReportButton;
+
+	// Sound settings widgets
+	TSharedPtr<SVerticalBox>      SoundContainer;
+	TSharedPtr<class SNovaSlider> MasterVolumeSlider;
+	TSharedPtr<class SNovaSlider> MusicVolumeSlider;
+	TSharedPtr<class SNovaSlider> EffectsVolumeSlider;
 
 	// Display settings widgets
 	TSharedPtr<SNovaModalListView<TSharedPtr<struct FScreenResolutionRHI>>> ResolutionListView;

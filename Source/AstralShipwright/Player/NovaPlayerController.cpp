@@ -20,6 +20,7 @@
 #include "System/NovaContractManager.h"
 #include "System/NovaGameInstance.h"
 #include "System/NovaMenuManager.h"
+#include "System/NovaSoundManager.h"
 #include "System/NovaSaveManager.h"
 #include "System/NovaSessionsManager.h"
 
@@ -233,6 +234,12 @@ void ANovaPlayerController::BeginPlay()
 		// Setup systems
 		GetMenuManager()->BeginPlay(this);
 		GetSoundManager()->BeginPlay(this);
+
+		// Setup sound
+		UNovaGameUserSettings* GameUserSettings = Cast<UNovaGameUserSettings>(GEngine->GetGameUserSettings());
+		GetSoundManager()->SetMasterVolume(GameUserSettings->MasterVolume);
+		GetSoundManager()->SetMusicVolume(GameUserSettings->MusicVolume);
+		GetSoundManager()->SetEffectsVolume(GameUserSettings->EffectsVolume);
 	}
 
 	// Initialize persistent objects
