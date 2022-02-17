@@ -45,7 +45,7 @@ void FNovaSoundInstance::Update(float DeltaTime)
 		}
 
 		// Determine new volume
-		float VolumeDelta = (ShouldPlay ? 1.0f : 0.0f) * DeltaTime;
+		float VolumeDelta = (ShouldPlay ? 1.0f : -1.0f) * DeltaTime;
 		float NewVolume   = FMath::Clamp(CurrentVolume + VolumeDelta * SoundFadeSpeed, 0.0f, 1.0f);
 
 		// Update playback
@@ -161,7 +161,7 @@ void UNovaSoundManager::BeginPlay(ANovaPlayerController* PC)
 
 void UNovaSoundManager::SetMusicTrack(FName Track)
 {
-	NLOG("UNovaSoundManager::SetMusicVolume %s", *Track.ToString());
+	NLOG("UNovaSoundManager::SetMusicTrack : '%s'", *Track.ToString());
 
 	NCHECK(MusicTracks.Contains(Track));
 
@@ -212,6 +212,9 @@ void UNovaSoundManager::Tick(float DeltaSeconds)
 	{
 		if (CurrentMusicTrack != DesiredMusicTrack && MusicInstance.IsIdle())
 		{
+			NLOG("UNovaSoundManager::Tick : switching track from '%s' to '%s'", *CurrentMusicTrack.ToString(),
+				*DesiredMusicTrack.ToString());
+
 			MusicInstance.SoundComponent->SetSound(MusicTracks[DesiredMusicTrack]);
 			CurrentMusicTrack = DesiredMusicTrack;
 		}

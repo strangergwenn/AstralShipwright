@@ -17,6 +17,9 @@ struct FNovaMusicCatalogEntry
 {
 	GENERATED_BODY()
 
+	FNovaMusicCatalogEntry() : Name(NAME_None), Track(nullptr)
+	{}
+
 	/** Track name */
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	FName Name;
@@ -31,6 +34,10 @@ UCLASS(ClassGroup = (Nova))
 class UNovaSoundSetup : public UNovaAssetDescription
 {
 	GENERATED_BODY()
+
+public:
+	UNovaSoundSetup() : MasterSoundMix(nullptr), MasterSoundClass(nullptr), MusicSoundClass(nullptr), EffectsSoundClass(nullptr)
+	{}
 
 public:
 	// Musical tracks
