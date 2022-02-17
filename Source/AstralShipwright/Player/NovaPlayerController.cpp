@@ -230,7 +230,9 @@ void ANovaPlayerController::BeginPlay()
 			ClientLoadPlayer();
 		}
 
+		// Setup systems
 		GetMenuManager()->BeginPlay(this);
+		GetSoundManager()->BeginPlay(this);
 	}
 
 	// Initialize persistent objects
@@ -272,15 +274,7 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 
 	if (IsLocalPlayerController())
 	{
-		UNovaSessionsManager*  SessionsManager  = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
 		UNovaGameUserSettings* GameUserSettings = Cast<UNovaGameUserSettings>(GEngine->GetGameUserSettings());
-
-		// Process the menu system
-		UNovaMenuManager* MenuManager = GetMenuManager();
-		if (IsValid(MenuManager))
-		{
-			MenuManager->Tick(DeltaTime);
-		}
 
 		// Process FOV
 		NCHECK(PlayerCameraManager);
@@ -294,6 +288,8 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 		// Show network errors
 		UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
 		NCHECK(GameInstance);
+		UNovaSessionsManager* SessionsManager = GameInstance->GetSessionsManager();
+		NCHECK(SessionsManager);
 		if (SessionsManager->GetNetworkError() != LastNetworkError)
 		{
 			LastNetworkError = SessionsManager->GetNetworkError();

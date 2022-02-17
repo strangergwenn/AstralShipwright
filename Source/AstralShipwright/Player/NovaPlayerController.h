@@ -311,6 +311,13 @@ public:
 		return GetGameInstance<UNovaGameInstance>()->GetMenuManager();
 	}
 
+	/** Get the sound manager */
+	UFUNCTION(Category = Nova, BlueprintCallable)
+	class UNovaSoundManager* GetSoundManager() const
+	{
+		return GetGameInstance<UNovaGameInstance>()->GetSoundManager();
+	}
+
 	/** Get a turntable actor */
 	UFUNCTION(Category = Nova, BlueprintCallable)
 	class ANovaSpacecraftPawn* GetSpacecraftPawn() const;

@@ -8,6 +8,7 @@
 #include "Actor/NovaActorTools.h"
 #include "CoreMinimal.h"
 #include "SlateBasics.h"
+#include "Tickable.h"
 #include "NovaMenuManager.generated.h"
 
 /** Menu states */
@@ -38,6 +39,7 @@ UCLASS(ClassGroup = (Nova))
 class UNovaMenuManager
 	: public UObject
 	, public TSharedFromThis<UNovaMenuManager>
+	, public FTickableGameObject
 {
 	GENERATED_BODY()
 
@@ -54,9 +56,6 @@ public:
 	/** Start playing on a new level */
 	void BeginPlay(class ANovaPlayerController* PC);
 
-	/** Tick the menu */
-	void Tick(float DeltaSeconds);
-
 	/** Get the game instance */
 	class UNovaGameInstance* GetGameInstance() const
 	{
@@ -67,6 +66,28 @@ public:
 	void FreezeLoadingScreen()
 	{
 		LoadingScreenFrozen = true;
+	}
+
+	/*----------------------------------------------------
+	    Tick
+	----------------------------------------------------*/
+
+	virtual void              Tick(float DeltaTime) override;
+	virtual ETickableTickType GetTickableTickType() const override
+	{
+		return ETickableTickType::Always;
+	}
+	virtual TStatId GetStatId() const override
+	{
+		RETURN_QUICK_DECLARE_CYCLE_STAT(UNovaMenuManager, STATGROUP_Tickables);
+	}
+	virtual bool IsTickableWhenPaused() const
+	{
+		return true;
+	}
+	virtual bool IsTickableInEditor() const
+	{
+		return false;
 	}
 
 	/*----------------------------------------------------

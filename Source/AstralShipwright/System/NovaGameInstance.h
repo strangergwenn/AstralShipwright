@@ -85,7 +85,6 @@ public:
 	}
 
 	/** Get the contract manager */
-	UFUNCTION(Category = Nova, BlueprintCallable)
 	class UNovaContractManager* GetContractManager() const
 	{
 		return ContractManager;
@@ -101,6 +100,12 @@ public:
 	class UNovaMenuManager* GetMenuManager() const
 	{
 		return MenuManager;
+	}
+
+	/** Get the sound manager */
+	class UNovaSoundManager* GetSoundManager() const
+	{
+		return SoundManager;
 	}
 
 	/** Restart the game from the level in save data */

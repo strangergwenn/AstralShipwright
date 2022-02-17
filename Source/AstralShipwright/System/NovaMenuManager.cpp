@@ -135,7 +135,7 @@ void UNovaMenuManager::BeginPlay(ANovaPlayerController* PC)
 
 void UNovaMenuManager::Tick(float DeltaTime)
 {
-	if (GetPC() && GetPC()->IsReady() && GetPC()->GetGameTimeSinceCreation() > 1.0f)
+	if (IsValid(GameInstance) && IsValid(GameInstance->GetFirstLocalPlayerController()) && GetPC()->IsReady() && GetPC()->GetGameTimeSinceCreation() > 1.0f)
 	{
 		switch (CurrentMenuState)
 		{
