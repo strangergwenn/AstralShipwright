@@ -91,7 +91,7 @@ UNovaSoundManager::UNovaSoundManager()
 
 	, OwningGameInstance(nullptr)
 	, AudioDevice()
-	, MenuManager(nullptr)
+	, PlayerController(nullptr)
 	, CurrentMusicTrack(NAME_None)
 	, DesiredMusicTrack(NAME_None)
 
@@ -105,20 +105,12 @@ UNovaSoundManager::UNovaSoundManager()
     Public methods
 ----------------------------------------------------*/
 
-void UNovaSoundManager::Initialize(class UNovaGameInstance* Instance)
-{
-	NLOG("UNovaSoundManager::Initialize");
-
-	// Get references
-	OwningGameInstance = Instance;
-	MenuManager        = OwningGameInstance->GetMenuManager();
-}
-
 void UNovaSoundManager::BeginPlay(ANovaPlayerController* PC)
 {
 	NLOG("UNovaSoundManager::BeginPlay");
 
 	// Get references
+	PlayerController = PC;
 	NCHECK(OwningGameInstance);
 	const UNovaAssetManager* AssetManager = OwningGameInstance->GetAssetManager();
 	NCHECK(AssetManager);
@@ -150,7 +142,7 @@ void UNovaSoundManager::BeginPlay(ANovaPlayerController* PC)
 
 	// Initialize the music instance
 	SoundInstances.Empty();
-	MusicInstance = FNovaSoundInstance(PC,    //
+	MusicInstance = FNovaSoundInstance(PlayerController,    //
 		FNovaSoundInstanceCallback::CreateLambda(
 			[this]()
 			{
@@ -170,7 +162,8 @@ void UNovaSoundManager::SetMusicTrack(FName Track)
 
 void UNovaSoundManager::AddSound(USoundBase* Sound, FNovaSoundInstanceCallback Callback, bool ChangePitchWithFade, float FadeSpeed)
 {
-	SoundInstances.Add(FNovaSoundInstance(this, Callback, Sound, ChangePitchWithFade, FadeSpeed));
+	NCHECK(IsValid(PlayerController));
+	SoundInstances.Add(FNovaSoundInstance(PlayerController, Callback, Sound, ChangePitchWithFade, FadeSpeed));
 }
 
 void UNovaSoundManager::SetMasterVolume(int32 Volume)
@@ -229,8 +222,10 @@ void UNovaSoundManager::Tick(float DeltaSeconds)
 	}
 
 	// Check if we should fade out audio effects
-	if (AudioDevice && MenuManager && MasterSoundMix && EffectsSoundClass)
+	if (AudioDevice && MasterSoundMix && EffectsSoundClass)
 	{
+		UNovaMenuManager* MenuManager = UNovaMenuManager::Get();
+
 		if (MenuManager->IsMenuOpening())
 		{
 			EffectsVolumeMultiplier -= DeltaSeconds / ENovaUIConstants::FadeDurationShort;

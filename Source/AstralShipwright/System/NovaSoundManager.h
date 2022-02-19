@@ -127,9 +127,6 @@ public:
 	    Public methods
 	----------------------------------------------------*/
 
-	/** Initialize this class */
-	void Initialize(class UNovaGameInstance* Instance);
-
 	/** Start playing on a new level */
 	void BeginPlay(class ANovaPlayerController* PC);
 
@@ -181,7 +178,7 @@ private:
 
 	// General state
 	FAudioDeviceHandle             AudioDevice;
-	class UNovaMenuManager*        MenuManager;
+	class ANovaPlayerController*   PlayerController;
 	TMap<FName, class USoundBase*> MusicTracks;
 	FName                          CurrentMusicTrack;
 	FName                          DesiredMusicTrack;

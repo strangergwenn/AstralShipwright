@@ -156,7 +156,6 @@ void UNovaGameInstance::Init()
 	// Create the sound manager
 	SoundManager = NewObject<UNovaSoundManager>(this, UNovaSoundManager::StaticClass(), TEXT("SoundManager"));
 	NCHECK(SoundManager);
-	SoundManager->Initialize(this);
 
 	// Create the contract manager
 	ContractManager = NewObject<UNovaContractManager>(this, UNovaContractManager::StaticClass(), TEXT("ContractManager"));
