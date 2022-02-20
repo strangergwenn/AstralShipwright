@@ -172,13 +172,12 @@ public:
 	----------------------------------------------------*/
 
 private:
-	// Game instance
+	// Player owner
 	UPROPERTY()
-	class UNovaGameInstance* OwningGameInstance;
+	class ANovaPlayerController* PlayerController;
 
 	// General state
 	FAudioDeviceHandle             AudioDevice;
-	class ANovaPlayerController*   PlayerController;
 	TMap<FName, class USoundBase*> MusicTracks;
 	FName                          CurrentMusicTrack;
 	FName                          DesiredMusicTrack;

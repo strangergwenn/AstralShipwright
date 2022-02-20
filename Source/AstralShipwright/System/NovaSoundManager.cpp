@@ -89,9 +89,9 @@ bool FNovaSoundInstance::IsIdle()
 UNovaSoundManager::UNovaSoundManager()
 	: Super()
 
-	, OwningGameInstance(nullptr)
-	, AudioDevice()
 	, PlayerController(nullptr)
+
+	, AudioDevice()
 	, CurrentMusicTrack(NAME_None)
 	, DesiredMusicTrack(NAME_None)
 
@@ -110,9 +110,9 @@ void UNovaSoundManager::BeginPlay(ANovaPlayerController* PC)
 	NLOG("UNovaSoundManager::BeginPlay");
 
 	// Get references
-	PlayerController = PC;
-	NCHECK(OwningGameInstance);
-	const UNovaAssetManager* AssetManager = OwningGameInstance->GetAssetManager();
+	PlayerController                      = PC;
+	UNovaGameInstance*       GameInstance = PC->GetGameInstance<UNovaGameInstance>();
+	const UNovaAssetManager* AssetManager = GameInstance->GetAssetManager();
 	NCHECK(AssetManager);
 	const UNovaSoundSetup* SoundSetup = AssetManager->GetDefaultAsset<UNovaSoundSetup>();
 
@@ -133,7 +133,7 @@ void UNovaSoundManager::BeginPlay(ANovaPlayerController* PC)
 	}
 
 	// Initialize the sound device and master mix
-	AudioDevice = OwningGameInstance->GetWorld()->GetAudioDevice();
+	AudioDevice = GameInstance->GetWorld()->GetAudioDevice();
 	if (AudioDevice)
 	{
 		NCHECK(MasterSoundMix);
