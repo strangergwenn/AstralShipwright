@@ -607,8 +607,8 @@ bool SNovaMainMenuFlight::IsDockingEnabled() const
 	if (OrbitalSimulation && IsValid(PC) && IsValid(SpacecraftMovement) && IsValid(SpacecraftPawn))
 	{
 		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
-		return PlayerTrajectory == nullptr && SpacecraftMovement->CanDock() ||
-			   !SpacecraftPawn->HasModifications() && SpacecraftPawn->IsSpacecraftValid() && SpacecraftMovement->CanUndock();
+		return (PlayerTrajectory == nullptr && SpacecraftMovement->CanDock()) ||
+			   (!SpacecraftPawn->HasModifications() && SpacecraftPawn->IsSpacecraftValid() && SpacecraftMovement->CanUndock());
 	}
 	return false;
 }
