@@ -21,11 +21,11 @@ struct FNovaMusicCatalogEntry
 	{}
 
 	/** Track name */
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	UPROPERTY(Category = Sound, EditDefaultsOnly)
 	FName Name;
 
 	/** Sound asset */
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	UPROPERTY(Category = Sound, EditDefaultsOnly)
 	class USoundBase* Track;
 };
 
@@ -41,23 +41,23 @@ public:
 
 public:
 	// Musical tracks
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	UPROPERTY(Category = Sound, EditDefaultsOnly)
 	TArray<FNovaMusicCatalogEntry> Tracks;
 
 	// Master sound mixer
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	UPROPERTY(Category = Sound, EditDefaultsOnly)
 	class USoundMix* MasterSoundMix;
 
 	// Master sound class
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	UPROPERTY(Category = Sound, EditDefaultsOnly)
 	class USoundClass* MasterSoundClass;
 
 	// Music sound class
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	UPROPERTY(Category = Sound, EditDefaultsOnly)
 	class USoundClass* MusicSoundClass;
 
 	// Effects sound class
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	UPROPERTY(Category = Sound, EditDefaultsOnly)
 	class USoundClass* EffectsSoundClass;
 };
 
