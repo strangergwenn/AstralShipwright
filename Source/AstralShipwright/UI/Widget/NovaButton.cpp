@@ -142,16 +142,15 @@ void SNovaButton::Construct(const FArguments& InArgs)
 		SAssignNew(Box, SHorizontalBox);
 		
 		// Create the icon/action box
-		TSharedPtr<SOverlay> IconOverlay;
+		TSharedPtr<SHorizontalBox> IconLayout;
 		if (HasIcon || HasAction)
 		{
 			Box->AddSlot()
 			.AutoWidth()
 			[
 				SNew(SBox)
-				.Padding(Theme.IconPadding)
 				[
-					SAssignNew(IconOverlay, SOverlay)
+					SAssignNew(IconLayout, SHorizontalBox)
 				]
 			];
 		}
@@ -184,9 +183,10 @@ void SNovaButton::Construct(const FArguments& InArgs)
 		// Add icon if set or bound
 		if (HasIcon)
 		{
-			IconOverlay->AddSlot()
+			IconLayout->AddSlot()
 			.HAlign(HAlign_Left)
 			.VAlign(VAlign_Center)
+			.Padding(Theme.IconPadding)
 			[
 				SNew(SImage)
 				.Image(this, &SNovaButton::GetIconBrush)
@@ -196,9 +196,9 @@ void SNovaButton::Construct(const FArguments& InArgs)
 		// Add the action key if any
 		if (HasAction)
 		{
-			IconOverlay->AddSlot()
+			IconLayout->AddSlot()
 			.VAlign(VAlign_Center)
-			.Padding(HasIcon ? FMargin(25, 0, 0, 0) : FMargin(0))
+			.Padding(Theme.IconPadding)
 			[
 				SNew(SNovaKeyLabel)
 				.Key(this, &SNovaButton::GetActionKey)
