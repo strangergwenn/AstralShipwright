@@ -7,7 +7,7 @@
 	
 	"itch": 
 	{
-		"project": "nova",
+		"project": "astral-shipwright",
 		"branches": ["windows", "linux"],
 		"directories": ["Windows", "Linux"]
 	},
