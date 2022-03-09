@@ -357,7 +357,7 @@ ENovaPriceModifier ANovaGameState::GetCurrentPriceModifier(const UNovaTradableAs
 		// High buying price, low selling price
 		if ((PriceRotation == 0 && !IsForSale) || (PriceRotation == 2 && IsForSale))
 		{
-			Result = static_cast<ENovaPriceModifier>(FMath::Clamp(static_cast<uint8>(Result) + 1,
+			Result = static_cast<ENovaPriceModifier>(FMath::Clamp<uint8>(static_cast<uint8>(Result) + 1,
 				static_cast<uint8>(ENovaPriceModifier::Cheap), static_cast<uint8>(ENovaPriceModifier::Expensive)));
 
 			// NLOG("'%s', ++ %d -> %d", *Area->Name.ToString(), Input, Result);
@@ -366,7 +366,7 @@ ENovaPriceModifier ANovaGameState::GetCurrentPriceModifier(const UNovaTradableAs
 		// Low buying price, high selling price
 		else if ((PriceRotation == 0 && IsForSale) || (PriceRotation == 2 && !IsForSale))
 		{
-			Result = static_cast<ENovaPriceModifier>(FMath::Clamp(static_cast<uint8>(Result) - 1,
+			Result = static_cast<ENovaPriceModifier>(FMath::Clamp<uint8>(static_cast<uint8>(Result) - 1,
 				static_cast<uint8>(ENovaPriceModifier::Cheap), static_cast<uint8>(ENovaPriceModifier::Expensive)));
 
 			// NLOG("'%s', -- %d -> %d", *Area->Name.ToString(), Input, Result);
