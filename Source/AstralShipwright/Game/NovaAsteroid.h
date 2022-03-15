@@ -57,6 +57,11 @@ protected:
 	----------------------------------------------------*/
 
 private:
+
+	// Material
+	UPROPERTY()
+	class UMaterialInstanceDynamic* MaterialInstance;
+
 	// General state
 	bool          LoadingAssets;
 	FNovaAsteroid Asteroid;

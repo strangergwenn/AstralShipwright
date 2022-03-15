@@ -37,7 +37,7 @@ public:
 /** Asteroid data object */
 struct FNovaAsteroid
 {
-	FNovaAsteroid() : Identifier(FGuid::NewGuid()), Body(nullptr), Altitude(0), Phase(0), Mesh()
+	FNovaAsteroid() : Identifier(FGuid::NewGuid()), Body(nullptr), Altitude(0), Phase(0), Mesh(), Scale(0)
 	{}
 
 	FNovaAsteroid(FRandomStream& RandomStream, const class UNovaCelestialBody* B, double A, double P)
@@ -47,6 +47,7 @@ struct FNovaAsteroid
 		, Altitude(A)
 		, Phase(P)
 		, Mesh()
+		, Scale(RandomStream.FRandRange(30, 70))
 	{}
 
 	// Identifier
@@ -60,6 +61,7 @@ struct FNovaAsteroid
 	// Physical characteristics
 	TSoftObjectPtr<class UStaticMesh>     Mesh;
 	TSoftObjectPtr<class UParticleSystem> DustEffect;
+	float                                 Scale;
 };
 
 /** Asteroid spawning & update manager */
