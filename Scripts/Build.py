@@ -153,7 +153,7 @@ for platform in projectPlatforms:
 			baseChunkName = projectName + '-' + cleanPlatformNames[platform] + '-'
 		
 			# Wipe generated files that aren't needed
-			if re.match('.*\.((pdb)|(debug))', filename):
+			if re.match('.*\.((pdb)|(debug)|(sym))', filename):
 				if 'ThirdParty' in root or not projectKeepPdbs:
 					shutil.move(absoluteFilename, releaseOutputDir)
 			elif re.match('Manifest.*\.txt', filename):
