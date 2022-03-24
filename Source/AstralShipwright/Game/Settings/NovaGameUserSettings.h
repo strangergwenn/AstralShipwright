@@ -64,6 +64,10 @@ public:
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	float FOV;
 
+	/** Enable TSR */
+	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
+	bool EnableTSR;
+
 	/** Enable DLSS */
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	bool EnableDLSS;

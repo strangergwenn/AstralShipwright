@@ -206,6 +206,12 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 					.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
 					.Enabled(this, &SNovaMainMenuSettings::IsHDRSupported)
 				]*/
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SAssignNew(ScalingContainer, SVerticalBox)
+				]
 			]
 
 			// Graphics settings
@@ -310,6 +316,17 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 
 	if (!MenuManager->IsOnConsole())
 	{		
+		ScalingContainer->AddSlot()
+		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
+		.HAlign(HAlign_Center)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.HeadingFont)
+			.Text(LOCTEXT("ResolutionScaling", "Resolution scaling"))
+			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+		];
+
 		GraphicsContainer->AddSlot()
 		.AutoHeight()
 		.Padding(Theme.VerticalContentPadding)
@@ -337,7 +354,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		AntiAliasingSlider = AddSettingSlider(GraphicsContainer, LOCTEXT("AntiAliasingQuality", "Anti-aliasing quality"),
 			LOCTEXT("AntiAliasingQualityHelp", "Set the quality of the anti-aliasing process"),
 			FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnAntiAliasingChanged));
-		ScreenPercentageSlider = AddSettingSlider(GraphicsContainer, LOCTEXT("ResolutionScale", "Resolution scale ({value}%)"),
+		ScreenPercentageSlider = AddSettingSlider(ScalingContainer, LOCTEXT("ResolutionScale", "Resolution scale ({value}%)"),
 			LOCTEXT("ScreenPercentageHelp", "Render the game at a higher or lower resolution compared to the display"),
 			FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnScreenPercentageChanged),
 			50, 150, 10, TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateSP(this, &SNovaMainMenuSettings::IsScreenPercentageSupported)));
@@ -388,7 +405,19 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
 		];
 		
-		GraphicsContainer->AddSlot()
+		ScalingContainer->AddSlot()
+		.AutoHeight()
+		[
+			SNovaAssignNew(TSRButton, SNovaButton)
+			.Toggle(true)
+			.Text(LOCTEXT("TSR", "Enable TSR"))
+			.HelpText(LOCTEXT("TSRHelp", "Enable temporal super resolution for improved screen percentage quality"))
+			.OnClicked(this, &SNovaMainMenuSettings::OnTSRToggled)
+			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+			.Enabled(this, &SNovaMainMenuSettings::IsTSRSupported)
+		];
+		
+		ScalingContainer->AddSlot()
 		.AutoHeight()
 		[
 			SNovaAssignNew(DLSSButton, SNovaButton)
@@ -489,6 +518,7 @@ void SNovaMainMenuSettings::Show()
 		AntiAliasingSlider->SetCurrentValue(GameUserSettings->GetAntiAliasingQuality());
 		ScreenPercentageSlider->SetCurrentValue(GameUserSettings->ScreenPercentage);
 
+		TSRButton->SetActive(GameUserSettings->EnableTSR);
 		DLSSButton->SetActive(GameUserSettings->EnableDLSS);
 		NaniteButton->SetActive(GameUserSettings->EnableNanite);
 		LumenButton->SetActive(GameUserSettings->EnableLumen);
@@ -775,7 +805,12 @@ EVisibility SNovaMainMenuSettings::GetPCVisibility() const
 
 bool SNovaMainMenuSettings::IsScreenPercentageSupported() const
 {
-	return !GameUserSettings->EnableDLSS;
+	return IsTSRSupported();
+}
+
+bool SNovaMainMenuSettings::IsTSRSupported() const
+{
+	return !(IsDLSSSupported() && GameUserSettings->EnableDLSS);
 }
 
 bool SNovaMainMenuSettings::IsDLSSSupported() const
@@ -876,6 +911,13 @@ void SNovaMainMenuSettings::OnAntiAliasingChanged(float Value)
 void SNovaMainMenuSettings::OnScreenPercentageChanged(float Value)
 {
 	GameUserSettings->ScreenPercentage = Value;
+	GameUserSettings->ApplySettings(false);
+	GameUserSettings->SaveSettings();
+}
+
+void SNovaMainMenuSettings::OnTSRToggled()
+{
+	GameUserSettings->EnableTSR = TSRButton->IsActive();
 	GameUserSettings->ApplySettings(false);
 	GameUserSettings->SaveSettings();
 }

@@ -28,6 +28,13 @@ UNovaGameUserSettings::UNovaGameUserSettings()
 
 void UNovaGameUserSettings::ApplyCustomGraphicsSettings()
 {
+	// Toggle TSR
+	IConsoleVariable* TSRVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.AntiAliasingMethod"));
+	if (TSRVar)
+	{
+		TSRVar->Set(EnableTSR ? 4 : 2, ECVF_SetByConsole);
+	}
+
 	EnableDLSS = EnableDLSS && IsDLSSSupported();
 
 #if HAS_DLSS
@@ -60,6 +67,7 @@ void UNovaGameUserSettings::ApplyCustomGraphicsSettings()
 	{
 		LumenHWRTVar->Set(EnableLumenHWRT ? 1 : 0, ECVF_SetByConsole);
 	}
+
 
 	// Toggle virtual shadow maps
 	IConsoleVariable* VirtualShadowsVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Shadow.Virtual.Enable"));
@@ -116,6 +124,7 @@ void UNovaGameUserSettings::SetToDefaults()
 	EffectsVolume = 10;
 
 	// Graphics
+	EnableTSR            = true;
 	EnableDLSS           = false;
 	EnableNanite         = true;
 	EnableLumen          = true;

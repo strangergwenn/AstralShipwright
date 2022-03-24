@@ -66,6 +66,7 @@ protected:
 	// Are we on the PC platform
 	EVisibility GetPCVisibility() const;
 	bool        IsScreenPercentageSupported() const;
+	bool        IsTSRSupported() const;
 	bool        IsDLSSSupported() const;
 	bool        IsHDRSupported() const;
 	bool        IsRaytracingSupported() const;
@@ -86,6 +87,7 @@ protected:
 	void OnPostProcessChanged(float Value);
 	void OnAntiAliasingChanged(float Value);
 	void OnScreenPercentageChanged(float Value);
+	void OnTSRToggled();
 	void OnDLSSToggled();
 	void OnNaniteToggled();
 	void OnLumenToggled();
@@ -151,6 +153,7 @@ protected:
 	TSharedPtr<class SNovaButton>                                           HDRButton;
 
 	// Graphics settings widgets
+	TSharedPtr<SVerticalBox>      ScalingContainer;
 	TSharedPtr<SVerticalBox>      GraphicsContainer;
 	TSharedPtr<class SNovaSlider> ViewDistanceSlider;
 	TSharedPtr<class SNovaSlider> ShadowSlider;
@@ -159,6 +162,7 @@ protected:
 	TSharedPtr<class SNovaSlider> AntiAliasingSlider;
 	TSharedPtr<class SNovaSlider> ScreenPercentageSlider;
 	TSharedPtr<class SNovaButton> DLSSButton;
+	TSharedPtr<class SNovaButton> TSRButton;
 	TSharedPtr<class SNovaButton> NaniteButton;
 	TSharedPtr<class SNovaButton> LumenButton;
 	TSharedPtr<class SNovaButton> LumenHWRTButton;
