@@ -26,6 +26,7 @@ public class AstralShipwright : ModuleRules
             "MoviePlayer",
             "RHI",
             "RenderCore",
+            "Niagara",
 
             "HTTP",
             "OnlineSubsystem",

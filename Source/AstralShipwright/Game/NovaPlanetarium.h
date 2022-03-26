@@ -23,6 +23,9 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
+	/** Get the physical sun direction */
+	FVector GetSunDirection() const;
+
 	/*----------------------------------------------------
 	    Components
 	----------------------------------------------------*/

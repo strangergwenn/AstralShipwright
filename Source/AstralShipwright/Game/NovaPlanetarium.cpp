@@ -203,3 +203,8 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 		}
 	}
 };
+
+FVector ANovaPlanetarium::GetSunDirection() const
+{
+	return Sunlight->GetDirection();
+}

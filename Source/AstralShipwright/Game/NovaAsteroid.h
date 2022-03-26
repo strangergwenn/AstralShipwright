@@ -43,6 +43,9 @@ public:
 	/** Run the movement process */
 	void ProcessMovement();
 
+	/** Run the dust particles */
+	void ProcessDust();
+
 	/*----------------------------------------------------
 	    Components
 	----------------------------------------------------*/
@@ -57,7 +60,6 @@ protected:
 	----------------------------------------------------*/
 
 private:
-
 	// Material
 	UPROPERTY()
 	class UMaterialInstanceDynamic* MaterialInstance;
@@ -65,4 +67,8 @@ private:
 	// General state
 	bool          LoadingAssets;
 	FNovaAsteroid Asteroid;
+
+	// Dust state
+	TArray<FVector>                  DustSources;
+	TArray<class UNiagaraComponent*> DustEmitters;
 };

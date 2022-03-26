@@ -157,7 +157,7 @@ bool UNovaAsteroidSimulationComponent::CreateAsteroid(double& Altitude, double& 
 		// Generate the asteroid itself
 		Asteroid            = FNovaAsteroid(RandomStream, AsteroidConfiguration->Body, Altitude, Phase);
 		Asteroid.Mesh       = AsteroidConfiguration->Meshes[RandomStream.RandHelper(AsteroidConfiguration->Meshes.Num())];
-		Asteroid.DustEffect = AsteroidConfiguration->DustEffects[RandomStream.RandHelper(AsteroidConfiguration->DustEffects.Num())];
+		Asteroid.DustEffect = AsteroidConfiguration->DustEffect;
 
 		SpawnedAsteroids++;
 		return true;

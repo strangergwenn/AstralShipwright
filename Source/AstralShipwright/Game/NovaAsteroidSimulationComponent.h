@@ -29,9 +29,9 @@ public:
 	UPROPERTY(Category = Assets, EditDefaultsOnly)
 	TArray<TSoftObjectPtr<class UStaticMesh>> Meshes;
 
-	// Dust particle effects to use on asteroids
+	// Dust particle effect to use on asteroids
 	UPROPERTY(Category = Assets, EditDefaultsOnly)
-	TArray<TSoftObjectPtr<class UParticleSystem>> DustEffects;
+	TSoftObjectPtr<class UNiagaraSystem> DustEffect;
 };
 
 /** Asteroid data object */
@@ -48,6 +48,7 @@ struct FNovaAsteroid
 		, Phase(P)
 		, Mesh()
 		, Scale(RandomStream.FRandRange(30, 70))
+		, EffectsCount(RandomStream.FRandRange(10, 20))
 	{}
 
 	// Identifier
@@ -59,9 +60,10 @@ struct FNovaAsteroid
 	double                          Phase;
 
 	// Physical characteristics
-	TSoftObjectPtr<class UStaticMesh>     Mesh;
-	TSoftObjectPtr<class UParticleSystem> DustEffect;
-	float                                 Scale;
+	TSoftObjectPtr<class UStaticMesh>    Mesh;
+	TSoftObjectPtr<class UNiagaraSystem> DustEffect;
+	float                                Scale;
+	int32                                EffectsCount;
 };
 
 /** Asteroid spawning & update manager */
