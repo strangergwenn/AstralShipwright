@@ -1,6 +1,7 @@
 Assets/
 Binaries/
-Build/
+Build/*/ChunkLayerInfo
+Build/*/FileOpenOrder
 Content/
 DerivedDataCache/
 Intermediate/
