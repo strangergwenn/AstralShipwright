@@ -5,6 +5,7 @@
 #include "Nova.h"
 
 #include "Components/DecalComponent.h"
+#include "Components/LightComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
@@ -59,5 +60,14 @@ void ANovaStationDock::BeginPlay()
 		}
 
 		DynamicMaterial->SetVectorParameterValue("PaintColor", DecalColor);
+	}
+
+	// Process lights
+	TArray<ULightComponent*> LightComponents;
+	GetComponents(LightComponents);
+	for (ULightComponent* Component : LightComponents)
+	{
+		FLinearColor TonedDownColor = LightColor.Desaturate(0.9f);
+		Component->SetLightColor(TonedDownColor);
 	}
 }
