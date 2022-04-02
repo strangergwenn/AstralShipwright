@@ -72,11 +72,11 @@ void UNovaStationDockComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		{
 			const USceneComponent* TargetComponent = RingComponent->GetCurrentTarget();
 			TargetLocation                         = SocketRelativeLocation.Y +
-							 RingComponent->GetComponentTransform().InverseTransformPosition(TargetComponent->GetSocketLocation("Dock")).Z;
+			                 RingComponent->GetComponentTransform().InverseTransformPosition(TargetComponent->GetSocketLocation("Dock")).Z;
 		}
 		else
 		{
-			TargetLocation = RingComponent->GetSocketTransform("Base", RTS_Component).GetTranslation().Z + SocketRelativeLocation.Y;
+			TargetLocation = RingComponent->GetSocketTransform("Base", RTS_Component).GetTranslation().Z + SocketRelativeLocation.Y - 1000;
 		}
 
 		// Solve for velocities
