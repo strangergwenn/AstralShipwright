@@ -11,6 +11,7 @@
 #include "Nova.h"
 
 #include "DrawDebugHelpers.h"
+#include "Engine/LocalPlayer.h"
 
 /*----------------------------------------------------
     Constructor
@@ -22,6 +23,7 @@ UNovaStationDockComponent::UNovaStationDockComponent() : Super(), CurrentLinearV
 	LinearDeadDistance = 1;
 	MaxLinearVelocity  = 1000;
 	LinearAcceleration = 2000;
+	CameraBoxExtent    = 500;
 
 	// Settings
 	PrimaryComponentTick.bCanEverTick = true;
@@ -54,8 +56,22 @@ void UNovaStationDockComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		const ANovaSpacecraftPawn* Spacecraft = RingComponent->GetCurrentSpacecraft();
 		const SNovaMainMenu*       MainMenu   = static_cast<SNovaMainMenu*>(MenuManager->GetMenu().Get());
 
-		// Show up only when outside assembly
-		if ((MainMenu && MainMenu->IsOnAssemblyMenu()) || (IsValid(Spacecraft) && Spacecraft->GetCompartmentFilter() != INDEX_NONE))
+		// Test for collision
+		FVector            CameraLocation;
+		FRotator           CameraRotation;
+		APlayerController* PC = GetWorld()->GetFirstPlayerController();
+		PC->GetPlayerViewPoint(CameraLocation, CameraRotation);
+		FVector LocalCameraLocation = GetComponentTransform().InverseTransformPosition(CameraLocation);
+		FBox    CameraCollider =
+			FBox(LocalCameraLocation - CameraBoxExtent * FVector(1, 1, 1), LocalCameraLocation + CameraBoxExtent * FVector(1, 1, 1));
+
+		// Compute visibility filters
+		bool CameraIsInside       = GetStaticMesh()->GetBoundingBox().Intersect(CameraCollider);
+		bool IsOnAssembly         = MainMenu && MainMenu->IsOnAssemblyMenu();
+		bool SpacecraftIsFiltered = IsValid(Spacecraft) && Spacecraft->GetCompartmentFilter() != INDEX_NONE;
+
+		// Update materialization
+		if (CameraIsInside || IsOnAssembly || SpacecraftIsFiltered)
 		{
 			Dematerialize();
 		}
@@ -64,10 +80,9 @@ void UNovaStationDockComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 			Materialize();
 		}
 
+		// Process dock target
 		FVector CurrentLocation = GetRelativeLocation();
 		double  TargetLocation  = CurrentLocation.Z;
-
-		// Process target
 		if (RingComponent->IsDockEnabled())
 		{
 			const USceneComponent* TargetComponent = RingComponent->GetCurrentTarget();
@@ -87,4 +102,4 @@ void UNovaStationDockComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		CurrentLocation.Z += CurrentLinearVelocity * DeltaTime;
 		SetRelativeLocation(CurrentLocation);
 	}
-}
+};

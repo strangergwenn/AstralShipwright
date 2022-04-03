@@ -41,6 +41,10 @@ public:
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float LinearAcceleration;
 
+	// Size of the collision box around cameras in units
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float CameraBoxExtent;
+
 protected:
 	/*----------------------------------------------------
 	    Data
