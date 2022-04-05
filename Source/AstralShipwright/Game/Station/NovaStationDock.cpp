@@ -2,6 +2,9 @@
 
 #include "NovaStationDock.h"
 
+#include "Game/NovaArea.h"
+#include "Game/NovaGameState.h"
+
 #include "Nova.h"
 
 #include "Components/DecalComponent.h"
@@ -14,13 +17,7 @@
 ----------------------------------------------------*/
 
 ANovaStationDock::ANovaStationDock() : Super()
-{
-	// Defaults
-	PaintColor     = FLinearColor::White;
-	LightColor     = FLinearColor::White;
-	DecalColor     = FLinearColor::Black;
-	DirtyIntensity = 0.5f;
-}
+{}
 
 /*----------------------------------------------------
     Inherited
@@ -29,6 +26,12 @@ ANovaStationDock::ANovaStationDock() : Super()
 void ANovaStationDock::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Get current area
+	ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(IsValid(GameState));
+	const UNovaArea* Area = GameState->GetCurrentArea();
+	NCHECK(Area);
 
 	// Process meshes
 	TArray<UStaticMeshComponent*> MeshComponents;
@@ -42,9 +45,9 @@ void ANovaStationDock::BeginPlay()
 			NCHECK(DynamicMaterial);
 		}
 
-		DynamicMaterial->SetVectorParameterValue("PaintColor", PaintColor);
-		DynamicMaterial->SetVectorParameterValue("LightColor", LightColor);
-		DynamicMaterial->SetScalarParameterValue("DirtyIntensity", DirtyIntensity);
+		DynamicMaterial->SetVectorParameterValue("PaintColor", Area->PaintColor);
+		DynamicMaterial->SetVectorParameterValue("LightColor", Area->LightColor);
+		DynamicMaterial->SetScalarParameterValue("DirtyIntensity", Area->DirtyIntensity);
 	}
 
 	// Process decals
@@ -59,7 +62,7 @@ void ANovaStationDock::BeginPlay()
 			NCHECK(DynamicMaterial);
 		}
 
-		DynamicMaterial->SetVectorParameterValue("PaintColor", DecalColor);
+		DynamicMaterial->SetVectorParameterValue("PaintColor", Area->DecalColor);
 	}
 
 	// Process lights
@@ -67,7 +70,7 @@ void ANovaStationDock::BeginPlay()
 	GetComponents(LightComponents);
 	for (ULightComponent* Component : LightComponents)
 	{
-		FLinearColor TonedDownColor = LightColor.Desaturate(0.9f);
+		FLinearColor TonedDownColor = Area->LightColor.Desaturate(0.9f);
 		Component->SetLightColor(TonedDownColor);
 	}
 }

@@ -41,7 +41,16 @@ class UNovaArea : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
-	UNovaArea() : IsInSpace(false), AIQuota(2)
+	UNovaArea()
+		: IsInSpace(false)
+		, AIQuota(2)
+
+		, Sign(nullptr)
+
+		, PaintColor(FLinearColor::White)
+		, LightColor(FLinearColor::White)
+		, DecalColor(FLinearColor::Black)
+		, DirtyIntensity(0.5f)
 	{}
 
 public:
@@ -76,4 +85,24 @@ public:
 	// Resources sold in this area
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	TArray<FNovaResourceTrade> ResourceTradeMetadata;
+
+	// Signage to use for this station
+	UPROPERTY(Category = Style, EditAnywhere)
+	const class UStaticMesh* Sign;
+
+	// Paint color to apply on all meshes
+	UPROPERTY(Category = Style, EditAnywhere)
+	FLinearColor PaintColor;
+
+	// Color to apply on spotlights and signs
+	UPROPERTY(Category = Style, EditAnywhere)
+	FLinearColor LightColor;
+
+	// Color to apply on decals
+	UPROPERTY(Category = Style, EditAnywhere)
+	FLinearColor DecalColor;
+
+	// Ring index
+	UPROPERTY(Category = Style, EditAnywhere)
+	float DirtyIntensity;
 };
