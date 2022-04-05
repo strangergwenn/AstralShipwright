@@ -59,6 +59,7 @@ public:
 	void SetCurrentArea(const class UNovaArea* Area);
 
 	/** Get the current area we are at */
+	UFUNCTION(Category = Nova, BlueprintCallable)
 	const class UNovaArea* GetCurrentArea() const
 	{
 		return CurrentArea;

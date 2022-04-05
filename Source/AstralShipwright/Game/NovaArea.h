@@ -35,7 +35,7 @@ public:
 };
 
 /** World area description */
-UCLASS(ClassGroup = (Nova))
+UCLASS(ClassGroup = (Nova), BlueprintType)
 class UNovaArea : public UNovaAssetDescription
 {
 	GENERATED_BODY()
@@ -87,22 +87,22 @@ public:
 	TArray<FNovaResourceTrade> ResourceTradeMetadata;
 
 	// Signage to use for this station
-	UPROPERTY(Category = Style, EditAnywhere)
+	UPROPERTY(Category = Style, BlueprintReadOnly)
 	const class UStaticMesh* Sign;
 
 	// Paint color to apply on all meshes
-	UPROPERTY(Category = Style, EditAnywhere)
+	UPROPERTY(Category = Style, BlueprintReadOnly)
 	FLinearColor PaintColor;
 
 	// Color to apply on spotlights and signs
-	UPROPERTY(Category = Style, EditAnywhere)
+	UPROPERTY(Category = Style, BlueprintReadOnly)
 	FLinearColor LightColor;
 
 	// Color to apply on decals
-	UPROPERTY(Category = Style, EditAnywhere)
+	UPROPERTY(Category = Style, BlueprintReadOnly)
 	FLinearColor DecalColor;
 
 	// Ring index
-	UPROPERTY(Category = Style, EditAnywhere)
+	UPROPERTY(Category = Style, BlueprintReadOnly)
 	float DirtyIntensity;
 };
