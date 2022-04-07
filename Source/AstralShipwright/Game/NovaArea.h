@@ -87,22 +87,22 @@ public:
 	TArray<FNovaResourceTrade> ResourceTradeMetadata;
 
 	// Signage to use for this station
-	UPROPERTY(Category = Style, BlueprintReadOnly)
+	UPROPERTY(Category = Style, EditDefaultsOnly, BlueprintReadOnly)
 	const class UStaticMesh* Sign;
 
 	// Paint color to apply on all meshes
-	UPROPERTY(Category = Style, BlueprintReadOnly)
+	UPROPERTY(Category = Style, EditDefaultsOnly, BlueprintReadOnly)
 	FLinearColor PaintColor;
 
 	// Color to apply on spotlights and signs
-	UPROPERTY(Category = Style, BlueprintReadOnly)
+	UPROPERTY(Category = Style, EditDefaultsOnly, BlueprintReadOnly)
 	FLinearColor LightColor;
 
 	// Color to apply on decals
-	UPROPERTY(Category = Style, BlueprintReadOnly)
+	UPROPERTY(Category = Style, EditDefaultsOnly, BlueprintReadOnly)
 	FLinearColor DecalColor;
 
 	// Ring index
-	UPROPERTY(Category = Style, BlueprintReadOnly)
+	UPROPERTY(Category = Style, EditDefaultsOnly, BlueprintReadOnly)
 	float DirtyIntensity;
 };
