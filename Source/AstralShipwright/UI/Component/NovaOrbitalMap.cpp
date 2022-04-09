@@ -104,7 +104,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	// Debug data
 	FVector2D                       Origin = FVector2D::ZeroVector;
 	const class UNovaCelestialBody* DefaultPlanet =
-		MenuManager->GetGameInstance()->GetAssetManager()->GetAsset<UNovaCelestialBody>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
+		MenuManager->GetGameInstance()->GetAssetManager()->GetDefaultAsset<UNovaCelestialBody>();
 
 	// Reset state
 	ClearBatches();
@@ -619,7 +619,7 @@ bool SNovaOrbitalMap::AddOrbitInternal(const FNovaSplineOrbit& Orbit, const FNov
 		auto Transform = [&Orbit, SplineIndex](const FVector2D& ControlPoint)
 		{
 			return Orbit.Origin + FVector2D(-Orbit.OriginOffset, 0).GetRotated(-Orbit.Phase) +
-				   ControlPoint.GetRotated(-Orbit.Phase - SplineIndex * 90.0f);
+			       ControlPoint.GetRotated(-Orbit.Phase - SplineIndex * 90.0f);
 		};
 		FVector2D P0 = Transform(BezierPoints[0]);
 		FVector2D P1 = Transform(BezierPoints[1]);

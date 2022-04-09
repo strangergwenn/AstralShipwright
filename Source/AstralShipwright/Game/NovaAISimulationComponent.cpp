@@ -494,8 +494,7 @@ void UNovaAISimulationComponent::CreateGame()
 		NCHECK(GameState);
 
 		// Get asset lists
-		const class UNovaCelestialBody* DefaultPlanet =
-			AssetManager->GetAsset<UNovaCelestialBody>(FGuid("{0619238A-4DD1-E28B-5F86-A49734CEF648}"));
+		const class UNovaCelestialBody* DefaultPlanet = AssetManager->GetDefaultAsset<UNovaCelestialBody>();
 		NCHECK(DefaultPlanet);
 		TArray<const UNovaAISpacecraftDescription*> SpacecraftDescriptions = AssetManager->GetAssets<UNovaAISpacecraftDescription>();
 
