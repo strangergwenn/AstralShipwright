@@ -11,13 +11,18 @@
 #include "Components/LightComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
 ANovaStationDock::ANovaStationDock() : Super()
-{}
+{
+	// Defaults
+	SystemDistance = 5000;
+}
 
 /*----------------------------------------------------
     Inherited
@@ -38,6 +43,7 @@ void ANovaStationDock::BeginPlay()
 	GetComponents(MeshComponents);
 	for (UStaticMeshComponent* Component : MeshComponents)
 	{
+		// Create or get a material instance
 		UMaterialInstanceDynamic* DynamicMaterial = Cast<UMaterialInstanceDynamic>(Component->GetMaterial(0));
 		if (DynamicMaterial == nullptr)
 		{
@@ -45,9 +51,19 @@ void ANovaStationDock::BeginPlay()
 			NCHECK(DynamicMaterial);
 		}
 
+		// Set material parameters
 		DynamicMaterial->SetVectorParameterValue("PaintColor", Area->PaintColor);
 		DynamicMaterial->SetVectorParameterValue("LightColor", Area->LightColor);
 		DynamicMaterial->SetScalarParameterValue("DirtyIntensity", Area->DirtyIntensity);
+
+		// Spawn effects
+		FVector          ParticleSystemLocation = Component->GetComponentLocation() + SystemDistance * Component->GetUpVector();
+		UNiagaraSystem** ParticleSystemEntry    = MeshToSystem.Find(Component->GetStaticMesh());
+		if (ParticleSystemEntry)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAttached(*ParticleSystemEntry, Component, NAME_None, ParticleSystemLocation,
+				Component->GetRightVector().Rotation(), EAttachLocation::KeepWorldPosition, false);
+		}
 	}
 
 	// Process decals
