@@ -274,7 +274,7 @@ void SNovaTradingPanel::ShowPanelInternal(ANovaPlayerController* TargetPC, const
 bool SNovaTradingPanel::IsConfirmEnabled() const
 {
 	return IsTradeAllowed && AmountSlider->GetCurrentValue() != InitialAmount && PC.IsValid() &&
-		   PC->CanAffordTransaction(GetTransactionValue());
+	       PC->CanAffordTransaction(GetTransactionValue());
 }
 
 FText SNovaTradingPanel::GetResourceDetails() const
@@ -321,7 +321,7 @@ FText SNovaTradingPanel::GetCargoDetails() const
 
 	if (CompartmentIndex == INDEX_NONE)
 	{
-		return FText::FormatNamed(LOCTEXT("CargoDetailsFormat",
+		return FText::FormatNamed(LOCTEXT("CargoDetailsFormatFull",
 									  "Currently holding {amount} T out of {capacity} T across the spacecraft ({remaining} T remaining)"),
 			TEXT("amount"), FText::AsNumber(InitialAmount, &Options), TEXT("capacity"), FText::AsNumber(Capacity, &Options),
 			TEXT("remaining"), FText::AsNumber(Capacity - InitialAmount, &Options));
