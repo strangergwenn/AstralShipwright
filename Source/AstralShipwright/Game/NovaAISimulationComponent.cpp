@@ -323,8 +323,13 @@ void UNovaAISimulationComponent::ProcessSpawning()
 
 			if (SpacecraftStatePtr)
 			{
+				// Ships are considered private when they're at any unloaded station
+				bool StationPrivate = SpacecraftStatePtr->CurrentState == ENovaAISpacecraftState::Station &&
+				                      IsValid(SpacecraftStatePtr->TargetArea) &&
+				                      SpacecraftStatePtr->TargetArea->LevelName != GameState->GetCurrentLevelName();
+
 				// Spawn
-				if (!IsValid(SpacecraftStatePtr->PhysicalSpacecraft) &&
+				if (!IsValid(SpacecraftStatePtr->PhysicalSpacecraft) && !StationPrivate &&
 					(Identifier == AlwaysLoadedSpacecraft || DistanceFromPlayer < SpacecraftSpawnDistanceKm))
 				{
 					ANovaSpacecraftPawn* NewSpacecraft = GetWorld()->SpawnActor<ANovaSpacecraftPawn>();
@@ -340,7 +345,7 @@ void UNovaAISimulationComponent::ProcessSpawning()
 
 				// De-spawn
 				if (IsValid(SpacecraftStatePtr->PhysicalSpacecraft) && !AlwaysLoadedSpacecraft.IsValid() &&
-					DistanceFromPlayer > SpacecraftDespawnDistanceKm)
+					(DistanceFromPlayer > SpacecraftDespawnDistanceKm || StationPrivate))
 				{
 					NLOG("UNovaAISimulationComponent::ProcessSpawning : removing '%s'", *Identifier.ToString(EGuidFormats::Short));
 

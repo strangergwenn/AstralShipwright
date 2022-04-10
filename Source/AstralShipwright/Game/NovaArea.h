@@ -43,7 +43,7 @@ class UNovaArea : public UNovaAssetDescription
 public:
 	UNovaArea()
 		: IsInSpace(false)
-		, AIQuota(2)
+		, AIQuota(3)
 
 		, Sign(nullptr)
 
