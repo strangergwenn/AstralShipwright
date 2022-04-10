@@ -46,10 +46,10 @@ ANovaTurntablePawn::ANovaTurntablePawn()
 	// Create camera spring arm
 	CameraArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraArmComponent"));
 	CameraArmComponent->SetupAttachment(CameraPitchComponent);
-	CameraArmComponent->TargetArmLength  = 2000;
+	CameraArmComponent->TargetArmLength  = 10000;
 	CameraArmComponent->bDoCollisionTest = true;
 	CameraArmComponent->ProbeSize        = 100;
-	CameraArmComponent->ProbeChannel     = ECC_WorldDynamic;
+	CameraArmComponent->ProbeChannel     = ECC_Visibility;
 
 	// Create camera component
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -71,7 +71,7 @@ ANovaTurntablePawn::ANovaTurntablePawn()
 
 	// Camera control defaults
 	CameraMinTilt = -80.0f;
-	CameraMaxTilt = 20.0f;
+	CameraMaxTilt = 60.0f;
 }
 
 /*----------------------------------------------------
