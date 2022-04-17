@@ -435,18 +435,16 @@ void UNovaAISimulationComponent::ProcessNavigation()
 		// Stay at the station for some time
 		else if (SpacecraftState.CurrentState == ENovaAISpacecraftState::Station)
 		{
-			// Detect enough time spent & valid target available
-			if (CurrentTime - SpacecraftState.CurrentStateStartTime > FNovaTime::FromMinutes(5))
-			{
-				const UNovaArea* TargetArea = FindArea(SourceLocation);
-				if (TargetArea)
-				{
-					NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' undocking toward '%s'",
-						*Identifier.ToString(EGuidFormats::Short), *TargetArea->Name.ToString());
+			const UNovaArea* TargetArea = FindArea(SourceLocation);
 
-					SpacecraftState.TargetArea = TargetArea;
-					SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Undocking);
-				}
+			// Detect enough time spent & valid target available
+			if (TargetArea && CurrentTime - SpacecraftState.CurrentStateStartTime > FNovaTime::FromMinutes(5))
+			{
+				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' undocking toward '%s'",
+					*Identifier.ToString(EGuidFormats::Short), *TargetArea->Name.ToString());
+
+				SpacecraftState.TargetArea = TargetArea;
+				SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Undocking);
 			}
 
 			// Dock if we're not already docked or undocking
