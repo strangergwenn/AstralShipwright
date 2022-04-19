@@ -181,7 +181,7 @@ struct FNovaSpacecraftCustomization
 	bool operator==(const FNovaSpacecraftCustomization& Other) const
 	{
 		return DirtyIntensity == Other.DirtyIntensity && StructuralPaint == Other.StructuralPaint && HullPaint == Other.HullPaint &&
-			   DetailPaint == Other.DetailPaint;
+		       DetailPaint == Other.DetailPaint;
 	}
 
 	bool operator!=(const FNovaSpacecraftCustomization& Other) const
@@ -253,7 +253,7 @@ struct FNovaSpacecraftPropulsionMetrics
 		NCHECK(ExhaustVelocity > 0);
 
 		float Duration = (((DryMass + CurrentCargoMass + CurrentPropellantMass) * 1000.0f * ExhaustVelocity) / (EngineThrust * 1000.0f)) *
-						 (1.0f - exp(-abs(DeltaV) / ExhaustVelocity));
+		                 (1.0f - exp(-abs(DeltaV) / ExhaustVelocity));
 		float PropellantUsed = PropellantRate * Duration;
 
 		CurrentPropellantMass -= PropellantUsed;
@@ -490,11 +490,23 @@ protected:
 	/** Check whether this is the last (engine) compartment */
 	bool IsLastCompartment(int32 CompartmentIndex) const;
 
-	/** Check whether the module at CompartmentIndex.ModuleIndex has a matching clone behind it */
-	bool IsSameModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex) const;
-
 	/** Check whether the module at CompartmentIndex.ModuleIndex has a matching clone in front of it */
-	bool IsSameModuleInNextCompartment(int32 CompartmentIndex, int32 ModuleIndex) const;
+	bool IsSameModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex) const
+	{
+		return IsAnyModuleInPreviousCompartment(CompartmentIndex, ModuleIndex, true);
+	}
+
+	/** Check whether the module at CompartmentIndex.ModuleIndex has a matching clone behind it */
+	bool IsSameModuleInNextCompartment(int32 CompartmentIndex, int32 ModuleIndex) const
+	{
+		return IsAnyModuleInNextCompartment(CompartmentIndex, ModuleIndex, true);
+	}
+
+	/** Check whether the module at CompartmentIndex.ModuleIndex has any other module in front of it */
+	bool IsAnyModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType = false) const;
+
+	/** Check whether the module at CompartmentIndex.ModuleIndex has any other module behind it */
+	bool IsAnyModuleInNextCompartment(int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType = false) const;
 
 	/** Check whether the module at CompartmentIndex.ModuleIndex has another hatch-needing module behind it */
 	bool IsHatchModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex, const UNovaModuleDescription*& FoundModule) const;

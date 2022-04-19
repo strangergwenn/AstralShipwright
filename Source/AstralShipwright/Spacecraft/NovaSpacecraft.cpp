@@ -852,12 +852,12 @@ void FNovaSpacecraft::UpdateProceduralElements()
 						Module.AftBulkheadType = ENovaBulkheadType::Skirt;
 					}
 
-					// Define piping
+					// Define skirt piping
 					if (Module.Description->NeedsPiping && !IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
 					{
 						Module.SkirtPipingType = ENovaSkirtPipingType::Connection;
 					}
-					else
+					else if (IsAnyModuleInNextCompartment(CompartmentIndex, ModuleIndex))
 					{
 						Module.SkirtPipingType = ENovaSkirtPipingType::Simple;
 					}
@@ -1095,7 +1095,7 @@ bool FNovaSpacecraft::IsLastCompartment(int32 CompartmentIndex) const
 	return true;
 }
 
-bool FNovaSpacecraft::IsSameModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex) const
+bool FNovaSpacecraft::IsAnyModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType) const
 {
 	const FNovaCompartment&       Compartment             = Compartments[CompartmentIndex];
 	const FNovaCompartmentModule& Module                  = Compartment.Modules[ModuleIndex];
@@ -1106,14 +1106,15 @@ bool FNovaSpacecraft::IsSameModuleInPreviousCompartment(int32 CompartmentIndex, 
 		const FNovaCompartment& PreviousCompartment = Compartments[Index];
 		if (PreviousCompartment.IsValid())
 		{
-			return PreviousCompartment.GetModuleBySocket(CurrentModuleSocketName) == Module.Description;
+			const UNovaModuleDescription* PreviousModule = PreviousCompartment.GetModuleBySocket(CurrentModuleSocketName);
+			return ((RequireSameType && PreviousModule == Module.Description) || (!RequireSameType && PreviousModule));
 		}
 	}
 
 	return false;
 };
 
-bool FNovaSpacecraft::IsSameModuleInNextCompartment(int32 CompartmentIndex, int32 ModuleIndex) const
+bool FNovaSpacecraft::IsAnyModuleInNextCompartment(int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType) const
 {
 	const FNovaCompartment&       Compartment             = Compartments[CompartmentIndex];
 	const FNovaCompartmentModule& Module                  = Compartment.Modules[ModuleIndex];
@@ -1124,7 +1125,8 @@ bool FNovaSpacecraft::IsSameModuleInNextCompartment(int32 CompartmentIndex, int3
 		const FNovaCompartment& NextCompartment = Compartments[Index];
 		if (NextCompartment.IsValid())
 		{
-			return NextCompartment.GetModuleBySocket(CurrentModuleSocketName) == Module.Description;
+			const UNovaModuleDescription* NextModule = NextCompartment.GetModuleBySocket(CurrentModuleSocketName);
+			return ((RequireSameType && NextModule == Module.Description) || (!RequireSameType && NextModule));
 		}
 	}
 
