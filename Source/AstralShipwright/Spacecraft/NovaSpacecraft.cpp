@@ -804,8 +804,8 @@ void FNovaSpacecraft::UpdateProceduralElements()
 		if (Compartment.IsValid())
 		{
 			// Add outer skirt if we have the same compartment behind us
-			Compartment.NeedsOuterSkirt =
-				CompartmentIndex == 0 || Compartments[CompartmentIndex - 1].Description == Compartments[CompartmentIndex].Description;
+			Compartment.NeedsOuterSkirt = (CompartmentIndex + 1 < Compartments.Num()) &&
+			                              (Compartments[CompartmentIndex + 1].Description == Compartments[CompartmentIndex].Description);
 
 			// Always add main piping & wiring
 			Compartment.NeedsMainPiping = true;
