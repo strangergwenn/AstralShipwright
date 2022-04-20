@@ -9,12 +9,14 @@
 /** Module construction element */
 struct FNovaModuleAssembly
 {
+	FNovaAssemblyElement SkirtStructure{ENovaAssemblyElementType::Structure};
 	FNovaAssemblyElement Segment{ENovaAssemblyElementType::Module};
 	FNovaAssemblyElement ForwardBulkhead{ENovaAssemblyElementType::Module};
 	FNovaAssemblyElement AftBulkhead{ENovaAssemblyElementType::Module};
 	FNovaAssemblyElement ConnectionPiping{ENovaAssemblyElementType::Wiring};
 	FNovaAssemblyElement CollectorPiping{ENovaAssemblyElementType::Wiring};
 	FNovaAssemblyElement ConnectionWiring{ENovaAssemblyElementType::Wiring};
+	FNovaAssemblyElement SkirtHull{ENovaAssemblyElementType::Hull};
 };
 
 /** Equipment construction element */
@@ -165,11 +167,9 @@ protected:
 
 	// Main elements
 	FNovaAssemblyElement MainStructure{ENovaAssemblyElementType::Structure};
-	FNovaAssemblyElement OuterStructure{ENovaAssemblyElementType::Structure};
 	FNovaAssemblyElement MainPiping{ENovaAssemblyElementType::Wiring};
 	FNovaAssemblyElement MainWiring{ENovaAssemblyElementType::Wiring};
 	FNovaAssemblyElement MainHull{ENovaAssemblyElementType::Hull};
-	FNovaAssemblyElement OuterHull{ENovaAssemblyElementType::Hull};
 
 	// Modules & equipment
 	FNovaModuleAssembly    Modules[ENovaConstants::MaxModuleCount];

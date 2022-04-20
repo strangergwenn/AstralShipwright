@@ -35,7 +35,8 @@ enum class ENovaSkirtPipingType : uint8
 {
 	None,
 	Simple,
-	Connection
+	Connection,
+	ShortConnection
 };
 
 /** Possible hull styles */
@@ -147,13 +148,17 @@ public:
 	UPROPERTY(Category = Compartment, EditDefaultsOnly)
 	FName SocketName;
 
-	// Whether to force a simple connection pipe on this slot when no module is used
+	// Force a simple pipe on this slot when no module is used and disable collector piping
 	UPROPERTY(Category = Compartment, EditDefaultsOnly)
 	bool ForceSkirtPiping;
 
 	// Connected equipment slot names
 	UPROPERTY(Category = Compartment, EditDefaultsOnly)
 	TArray<FName> LinkedEquipments;
+
+	// Skirt-supported equipment slot names
+	UPROPERTY(Category = Compartment, EditDefaultsOnly)
+	TArray<FName> SupportedEquipments;
 };
 
 /** Equipment slot metadata */
@@ -219,12 +224,6 @@ public:
 	/** Get a list of equipment slot indices grouped with the slot at Index */
 	TArray<int32> GetGroupedEquipmentSlotsIndices(int32 Index) const;
 
-	/** Return the appropriate main piping mesh */
-	TSoftObjectPtr<class UStaticMesh> GetMainPiping(bool Enabled) const
-	{
-		return Enabled ? MainPiping : nullptr;
-	}
-
 	/** Return the appropriate skirt piping mesh */
 	TSoftObjectPtr<class UStaticMesh> GetSkirtPiping(ENovaSkirtPipingType Type) const
 	{
@@ -237,6 +236,8 @@ public:
 				return SimpleSkirtPiping;
 			case ENovaSkirtPipingType::Connection:
 				return ConnectionSkirtPiping;
+			case ENovaSkirtPipingType::ShortConnection:
+				return ShortConnectionSkirtPiping;
 		}
 	}
 
@@ -244,13 +245,7 @@ public:
 	TSoftObjectPtr<class UStaticMesh> GetMainHull(const class UNovaHullDescription* Hull) const;
 
 	/** Return the appropriate outer hull mesh */
-	TSoftObjectPtr<class UStaticMesh> GetOuterHull(const class UNovaHullDescription* Hull) const;
-
-	/** Return the appropriate main wiring mesh */
-	TSoftObjectPtr<class UStaticMesh> GetMainWiring(bool Enabled) const
-	{
-		return Enabled ? MainWiring : nullptr;
-	}
+	TSoftObjectPtr<class UStaticMesh> GetSkirtHull(const class UNovaHullDescription* Hull) const;
 
 	/** Return the appropriate module-connection wiring mesh */
 	TSoftObjectPtr<class UStaticMesh> GetConnectionWiring(bool Enabled) const
@@ -275,7 +270,7 @@ public:
 
 	// Skirt structural element
 	UPROPERTY(Category = Structure, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> OuterStructure = nullptr;
+	TSoftObjectPtr<class UStaticMesh> SkirtStructure = nullptr;
 
 	// Tank skirt - forward side of the module behind will be empty
 	UPROPERTY(Category = Structure, EditDefaultsOnly)
@@ -297,6 +292,10 @@ public:
 	UPROPERTY(Category = Piping, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> ConnectionSkirtPiping = nullptr;
 
+	// Tank-connected piping (skirt, shortened)
+	UPROPERTY(Category = Piping, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> ShortConnectionSkirtPiping = nullptr;
+
 	// Side collector piping element
 	UPROPERTY(Category = Piping, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> CollectorPiping = nullptr;
@@ -309,7 +308,7 @@ public:
 	UPROPERTY(Category = Wiring, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> ConnectionWiring = nullptr;
 
-	// Decorative outer hull - soft mesh
+	// Decorative outer hull - soft padding
 	UPROPERTY(Category = Hull, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> SoftHull = nullptr;
 
@@ -317,9 +316,13 @@ public:
 	UPROPERTY(Category = Hull, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> RigidHull = nullptr;
 
-	// Decorative outer hull (skirt) // TODO REVIEW
+	// Decorative outer hull - soft padding (skirt)
 	UPROPERTY(Category = Hull, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> OuterHull = nullptr;
+	TSoftObjectPtr<class UStaticMesh> SkirtSoftHull = nullptr;
+
+	// Decorative outer hull - rigid variant (skirt)
+	UPROPERTY(Category = Hull, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> SkirtRigidHull = nullptr;
 
 	// Is this the most forward of compartment
 	UPROPERTY(Category = Properties, EditDefaultsOnly)

@@ -22,18 +22,12 @@ FNovaCompartmentModule::FNovaCompartmentModule()
 	, ForwardBulkheadType(ENovaBulkheadType::None)
 	, AftBulkheadType(ENovaBulkheadType::None)
 	, SkirtPipingType(ENovaSkirtPipingType::None)
-	, NeedsWiring(false)
+	, NeedsConnectionWiring(false)
 	, NeedsCollectorPiping(false)
+	, NeedsOuterSkirt(false)
 {}
 
-FNovaCompartment::FNovaCompartment()
-	: Description(nullptr)
-	, HullType(nullptr)
-	, Modules{FNovaCompartmentModule()}
-	, Equipment{nullptr}
-	, NeedsOuterSkirt(false)
-	, NeedsMainPiping(false)
-	, NeedsMainWiring(false)
+FNovaCompartment::FNovaCompartment() : Description(nullptr), HullType(nullptr), Modules{FNovaCompartmentModule()}, Equipment{nullptr}
 {}
 
 FNovaCompartment::FNovaCompartment(const class UNovaCompartmentDescription* K) : FNovaCompartment()
@@ -804,36 +798,25 @@ void FNovaSpacecraft::UpdateProceduralElements()
 
 		if (Compartment.IsValid())
 		{
-			// Add outer skirt if we have the same compartment behind us
-			Compartment.NeedsOuterSkirt = (CompartmentIndex + 1 < Compartments.Num()) &&
-			                              (Compartments[CompartmentIndex + 1].Description == Compartments[CompartmentIndex].Description);
-
-			// Always add main piping & wiring
-			Compartment.NeedsMainPiping = true;
-			Compartment.NeedsMainWiring = true;
-
 			// Process modules
 			for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
 			{
-				FNovaCompartmentModule& Module = Compartment.Modules[ModuleIndex];
+				FNovaCompartmentModule& Module     = Compartment.Modules[ModuleIndex];
+				const FNovaModuleSlot&  ModuleSlot = Compartment.Description->GetModuleSlot(ModuleIndex);
 
 				// Reset state
-				Module.ForwardBulkheadType  = ENovaBulkheadType::Standard;
-				Module.AftBulkheadType      = ENovaBulkheadType::Standard;
-				Module.SkirtPipingType      = ENovaSkirtPipingType::None;
-				Module.NeedsWiring          = false;
-				Module.NeedsCollectorPiping = false;
-
-				// Handle forced piping
-				if (Compartment.Description->GetModuleSlot(ModuleIndex).ForceSkirtPiping)
-				{
-					Module.SkirtPipingType = ENovaSkirtPipingType::Simple;
-				}
+				Module.ForwardBulkheadType   = ENovaBulkheadType::Standard;
+				Module.AftBulkheadType       = ENovaBulkheadType::Standard;
+				Module.SkirtPipingType       = ENovaSkirtPipingType::None;
+				Module.NeedsConnectionWiring = false;
+				Module.NeedsCollectorPiping  = false;
+				Module.NeedsOuterSkirt       = false;
 
 				if (Module.Description)
 				{
-					Module.NeedsWiring          = true;
-					Module.NeedsCollectorPiping = true;
+					// Defaults
+					Module.NeedsConnectionWiring = true;
+					Module.NeedsCollectorPiping  = !ModuleSlot.ForceSkirtPiping;
 
 					// Define bulkheads
 					if (IsFirstCompartment(CompartmentIndex))
@@ -842,10 +825,9 @@ void FNovaSpacecraft::UpdateProceduralElements()
 					}
 					else if (IsSameModuleInPreviousCompartment(CompartmentIndex, ModuleIndex))
 					{
-						Module.ForwardBulkheadType = ENovaBulkheadType::Skirt;
-						Module.NeedsWiring         = false;
+						Module.ForwardBulkheadType   = ENovaBulkheadType::Skirt;
+						Module.NeedsConnectionWiring = false;
 					}
-
 					if (IsLastCompartment(CompartmentIndex))
 					{
 						Module.AftBulkheadType = ENovaBulkheadType::Outer;
@@ -855,18 +837,37 @@ void FNovaSpacecraft::UpdateProceduralElements()
 						Module.AftBulkheadType = ENovaBulkheadType::Skirt;
 					}
 
-					// Define skirt piping
-					if (!IsAnyModuleInNextCompartment(CompartmentIndex, ModuleIndex))
+					// Check for supported equipments
+					bool HasSupportedEquipment = false;
+					for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
 					{
-						Module.SkirtPipingType = ENovaSkirtPipingType::None;
-					}
-					else if (Module.Description->NeedsPiping && !IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
+						if (ModuleSlot.SupportedEquipments.Contains(Compartment.Description->GetEquipmentSlot(EquipmentIndex).SocketName) &&
+							Compartment.Equipment[EquipmentIndex])
+						{
+							HasSupportedEquipment = true;
+							break;
+						}
+					};
+
+					// Define skirt piping: no module or supported equipment vs regular piping
+					if (!IsAnyModuleInNextCompartment(CompartmentIndex, ModuleIndex) && !HasSupportedEquipment &&
+						!ModuleSlot.ForceSkirtPiping)
 					{
-						Module.SkirtPipingType = ENovaSkirtPipingType::Connection;
+						Module.SkirtPipingType =
+							Module.Description->NeedsPiping ? ENovaSkirtPipingType::ShortConnection : ENovaSkirtPipingType::None;
 					}
 					else
 					{
-						Module.SkirtPipingType = ENovaSkirtPipingType::Simple;
+						Module.NeedsOuterSkirt = true;
+
+						if (Module.Description->NeedsPiping && !IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
+						{
+							Module.SkirtPipingType = ENovaSkirtPipingType::Connection;
+						}
+						else
+						{
+							Module.SkirtPipingType = ENovaSkirtPipingType::Simple;
+						}
 					}
 				}
 			}

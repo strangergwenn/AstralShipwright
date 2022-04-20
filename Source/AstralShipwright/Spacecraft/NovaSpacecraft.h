@@ -38,8 +38,9 @@ struct FNovaCompartmentModule
 
 	ENovaSkirtPipingType SkirtPipingType;
 
-	bool NeedsWiring;
+	bool NeedsConnectionWiring;
 	bool NeedsCollectorPiping;
+	bool NeedsOuterSkirt;
 };
 
 /** Compartment cargo entry */
@@ -159,12 +160,6 @@ struct FNovaCompartment
 
 	UPROPERTY()
 	FNovaSpacecraftCargo LiquidCargo;
-
-	bool NeedsOuterSkirt;
-
-	bool NeedsMainPiping;
-
-	bool NeedsMainWiring;
 };
 
 /** Spacecraft customization data */

@@ -107,9 +107,20 @@ TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetMainHull(const UNova
 	}
 }
 
-TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetOuterHull(const UNovaHullDescription* Hull) const
+TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetSkirtHull(const UNovaHullDescription* Hull) const
 {
-	return IsValid(Hull) ? OuterHull : nullptr;
+	if (!IsValid(Hull))
+	{
+		return nullptr;
+	}
+	else if (Hull->Type == ENovaHullType::SoftCladding)
+	{
+		return SkirtSoftHull;
+	}
+	else
+	{
+		return SkirtRigidHull;
+	}
 }
 
 TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetBulkhead(
