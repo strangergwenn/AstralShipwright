@@ -13,6 +13,7 @@ struct FNovaModuleAssembly
 	FNovaAssemblyElement ForwardBulkhead{ENovaAssemblyElementType::Module};
 	FNovaAssemblyElement AftBulkhead{ENovaAssemblyElementType::Module};
 	FNovaAssemblyElement ConnectionPiping{ENovaAssemblyElementType::Wiring};
+	FNovaAssemblyElement CollectorPiping{ENovaAssemblyElementType::Wiring};
 	FNovaAssemblyElement ConnectionWiring{ENovaAssemblyElementType::Wiring};
 };
 

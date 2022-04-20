@@ -39,6 +39,7 @@ struct FNovaCompartmentModule
 	ENovaSkirtPipingType SkirtPipingType;
 
 	bool NeedsWiring;
+	bool NeedsCollectorPiping;
 };
 
 /** Compartment cargo entry */

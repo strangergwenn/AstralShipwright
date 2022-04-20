@@ -94,17 +94,15 @@ void UNovaSpacecraftCompartmentComponent::ProcessCompartment(const FNovaCompartm
 		Callback.Execute(Element, Asset, AdditionalComponent);
 	};
 
+	const UNovaCompartmentDescription* CompDesc = Compartment.Description;
+
 	// Process the structural elements
-	const UNovaCompartmentDescription* CompartmentDescription = Compartment.Description;
-	ProcessElement(MainStructure, CompartmentDescription ? CompartmentDescription->MainStructure : nullptr);
-	ProcessElement(OuterStructure,
-		CompartmentDescription ? (Compartment.NeedsOuterSkirt ? CompartmentDescription->OuterStructure : nullptr) : nullptr);
-	ProcessElement(MainPiping, CompartmentDescription ? CompartmentDescription->GetMainPiping(Compartment.NeedsMainPiping) : nullptr);
-	ProcessElement(MainWiring, CompartmentDescription ? CompartmentDescription->GetMainWiring(Compartment.NeedsMainWiring) : nullptr);
-	ProcessElement(MainHull, CompartmentDescription ? CompartmentDescription->GetMainHull(Compartment.HullType) : nullptr);
-	ProcessElement(OuterHull, CompartmentDescription
-								  ? (Compartment.NeedsOuterSkirt ? CompartmentDescription->GetOuterHull(Compartment.HullType) : nullptr)
-								  : nullptr);
+	ProcessElement(MainStructure, CompDesc ? CompDesc->MainStructure : nullptr);
+	ProcessElement(OuterStructure, CompDesc ? (Compartment.NeedsOuterSkirt ? CompDesc->OuterStructure : nullptr) : nullptr);
+	ProcessElement(MainPiping, CompDesc ? CompDesc->GetMainPiping(Compartment.NeedsMainPiping) : nullptr);
+	ProcessElement(MainWiring, CompDesc ? CompDesc->GetMainWiring(Compartment.NeedsMainWiring) : nullptr);
+	ProcessElement(MainHull, CompDesc ? CompDesc->GetMainHull(Compartment.HullType) : nullptr);
+	ProcessElement(OuterHull, CompDesc ? (Compartment.NeedsOuterSkirt ? CompDesc->GetOuterHull(Compartment.HullType) : nullptr) : nullptr);
 
 	// Process modules
 	for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
@@ -128,19 +126,16 @@ void UNovaSpacecraftCompartmentComponent::ProcessModule(FNovaModuleAssembly& Ass
 		Callback.Execute(Element, Asset, AdditionalComponent);
 	};
 
-	const UNovaCompartmentDescription* CompartmentDescription = Compartment.Description;
-	const UNovaModuleDescription*      ModuleDescription      = Module.Description;
+	const UNovaCompartmentDescription* CompDesc   = Compartment.Description;
+	const UNovaModuleDescription*      ModuleDesc = Module.Description;
 
 	// Process the module elements
-	ProcessElement(Assembly.Segment, ModuleDescription ? ModuleDescription->Segment : nullptr);
-	ProcessElement(Assembly.ForwardBulkhead,
-		CompartmentDescription ? CompartmentDescription->GetBulkhead(ModuleDescription, Module.ForwardBulkheadType, true) : nullptr);
-	ProcessElement(Assembly.AftBulkhead,
-		CompartmentDescription ? CompartmentDescription->GetBulkhead(ModuleDescription, Module.AftBulkheadType, false) : nullptr);
-	ProcessElement(
-		Assembly.ConnectionPiping, CompartmentDescription ? CompartmentDescription->GetSkirtPiping(Module.SkirtPipingType) : nullptr);
-	ProcessElement(
-		Assembly.ConnectionWiring, CompartmentDescription ? CompartmentDescription->GetConnectionWiring(Module.NeedsWiring) : nullptr);
+	ProcessElement(Assembly.Segment, ModuleDesc ? ModuleDesc->Segment : nullptr);
+	ProcessElement(Assembly.ForwardBulkhead, CompDesc ? CompDesc->GetBulkhead(ModuleDesc, Module.ForwardBulkheadType, true) : nullptr);
+	ProcessElement(Assembly.AftBulkhead, CompDesc ? CompDesc->GetBulkhead(ModuleDesc, Module.AftBulkheadType, false) : nullptr);
+	ProcessElement(Assembly.ConnectionPiping, CompDesc ? CompDesc->GetSkirtPiping(Module.SkirtPipingType) : nullptr);
+	ProcessElement(Assembly.CollectorPiping, CompDesc && Module.NeedsCollectorPiping ? CompDesc->CollectorPiping : nullptr);
+	ProcessElement(Assembly.ConnectionWiring, CompDesc ? CompDesc->GetConnectionWiring(Module.NeedsWiring) : nullptr);
 }
 
 void UNovaSpacecraftCompartmentComponent::ProcessEquipment(FNovaEquipmentAssembly& Assembly,
@@ -203,18 +198,19 @@ void UNovaSpacecraftCompartmentComponent::UpdateCustomization()
 	UpdateCustomization(MainHull);
 	UpdateCustomization(OuterHull);
 
-	for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+	for (FNovaModuleAssembly& ModuleAssembly : Modules)
 	{
-		UpdateCustomization(Modules[ModuleIndex].AftBulkhead);
-		UpdateCustomization(Modules[ModuleIndex].ForwardBulkhead);
-		UpdateCustomization(Modules[ModuleIndex].Segment);
-		UpdateCustomization(Modules[ModuleIndex].ConnectionPiping);
-		UpdateCustomization(Modules[ModuleIndex].ConnectionWiring);
+		UpdateCustomization(ModuleAssembly.AftBulkhead);
+		UpdateCustomization(ModuleAssembly.ForwardBulkhead);
+		UpdateCustomization(ModuleAssembly.Segment);
+		UpdateCustomization(ModuleAssembly.ConnectionPiping);
+		UpdateCustomization(ModuleAssembly.CollectorPiping);
+		UpdateCustomization(ModuleAssembly.ConnectionWiring);
 	}
 
-	for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
+	for (FNovaEquipmentAssembly& EquipmentAssembly : Equipment)
 	{
-		UpdateCustomization(Equipment[EquipmentIndex].Equipment);
+		UpdateCustomization(EquipmentAssembly.Equipment);
 	}
 }
 
@@ -234,6 +230,7 @@ void UNovaSpacecraftCompartmentComponent::BuildModule(
 	SetElementOffset(Assembly.ForwardBulkhead, BaseTransform.GetLocation() + StructureOffset + BulkheadOffset, Rotation);
 	SetElementOffset(Assembly.AftBulkhead, BaseTransform.GetLocation() + StructureOffset - BulkheadOffset, Rotation);
 	SetElementOffset(Assembly.ConnectionPiping, BaseTransform.GetLocation() + StructureOffset, Rotation);
+	SetElementOffset(Assembly.CollectorPiping, BaseTransform.GetLocation() + StructureOffset, Rotation);
 	SetElementOffset(Assembly.ConnectionWiring, BaseTransform.GetLocation() + StructureOffset, Rotation);
 }
 

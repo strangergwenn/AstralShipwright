@@ -270,52 +270,56 @@ public:
 
 public:
 	// Main structural element
-	UPROPERTY(Category = Elements, EditDefaultsOnly)
+	UPROPERTY(Category = Structure, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> MainStructure = nullptr;
 
-	// Skirt structural element // TODO REVIEW
-	UPROPERTY(Category = Elements, EditDefaultsOnly)
+	// Skirt structural element
+	UPROPERTY(Category = Structure, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> OuterStructure = nullptr;
 
-	// Main piping element
-	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> MainPiping = nullptr;
-
-	// Simple direct piping (skirt)
-	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> SimpleSkirtPiping = nullptr;
-
-	// Tank-connected piping (skirt)
-	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> ConnectionSkirtPiping = nullptr;
-
-	// Module-connected wiring
-	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> MainWiring = nullptr;
-
-	// Module-connected wiring
-	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> ConnectionWiring = nullptr;
-
-	// Decorative outer hull - soft mesh
-	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> SoftHull = nullptr;
-
-	// Decorative outer hull - rigid variant
-	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> RigidHull = nullptr;
-
-	// Decorative outer hull (skirt) // TODO REVIEW
-	UPROPERTY(Category = Elements, EditDefaultsOnly)
-	TSoftObjectPtr<class UStaticMesh> OuterHull = nullptr;
-
 	// Tank skirt - forward side of the module behind will be empty
-	UPROPERTY(Category = Elements, EditDefaultsOnly)
+	UPROPERTY(Category = Structure, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> TankSkirt = nullptr;
 
 	// Cargo skirt - forward side of the module behind will be empty
-	UPROPERTY(Category = Elements, EditDefaultsOnly)
+	UPROPERTY(Category = Structure, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> CargoSkirt = nullptr;
+
+	// Main piping element
+	UPROPERTY(Category = Piping, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> MainPiping = nullptr;
+
+	// Simple direct piping (skirt)
+	UPROPERTY(Category = Piping, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> SimpleSkirtPiping = nullptr;
+
+	// Tank-connected piping (skirt)
+	UPROPERTY(Category = Piping, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> ConnectionSkirtPiping = nullptr;
+
+	// Side collector piping element
+	UPROPERTY(Category = Piping, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> CollectorPiping = nullptr;
+
+	// Module-connected wiring
+	UPROPERTY(Category = Wiring, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> MainWiring = nullptr;
+
+	// Module-connected wiring
+	UPROPERTY(Category = Wiring, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> ConnectionWiring = nullptr;
+
+	// Decorative outer hull - soft mesh
+	UPROPERTY(Category = Hull, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> SoftHull = nullptr;
+
+	// Decorative outer hull - rigid variant
+	UPROPERTY(Category = Hull, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> RigidHull = nullptr;
+
+	// Decorative outer hull (skirt) // TODO REVIEW
+	UPROPERTY(Category = Hull, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> OuterHull = nullptr;
 
 	// Is this the most forward of compartment
 	UPROPERTY(Category = Properties, EditDefaultsOnly)

@@ -23,6 +23,7 @@ FNovaCompartmentModule::FNovaCompartmentModule()
 	, AftBulkheadType(ENovaBulkheadType::None)
 	, SkirtPipingType(ENovaSkirtPipingType::None)
 	, NeedsWiring(false)
+	, NeedsCollectorPiping(false)
 {}
 
 FNovaCompartment::FNovaCompartment()
@@ -817,10 +818,11 @@ void FNovaSpacecraft::UpdateProceduralElements()
 				FNovaCompartmentModule& Module = Compartment.Modules[ModuleIndex];
 
 				// Reset state
-				Module.ForwardBulkheadType = ENovaBulkheadType::Standard;
-				Module.AftBulkheadType     = ENovaBulkheadType::Standard;
-				Module.SkirtPipingType     = ENovaSkirtPipingType::None;
-				Module.NeedsWiring         = false;
+				Module.ForwardBulkheadType  = ENovaBulkheadType::Standard;
+				Module.AftBulkheadType      = ENovaBulkheadType::Standard;
+				Module.SkirtPipingType      = ENovaSkirtPipingType::None;
+				Module.NeedsWiring          = false;
+				Module.NeedsCollectorPiping = false;
 
 				// Handle forced piping
 				if (Compartment.Description->GetModuleSlot(ModuleIndex).ForceSkirtPiping)
@@ -830,7 +832,8 @@ void FNovaSpacecraft::UpdateProceduralElements()
 
 				if (Module.Description)
 				{
-					Module.NeedsWiring = true;
+					Module.NeedsWiring          = true;
+					Module.NeedsCollectorPiping = true;
 
 					// Define bulkheads
 					if (IsFirstCompartment(CompartmentIndex))
@@ -853,11 +856,15 @@ void FNovaSpacecraft::UpdateProceduralElements()
 					}
 
 					// Define skirt piping
-					if (Module.Description->NeedsPiping && !IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
+					if (!IsAnyModuleInNextCompartment(CompartmentIndex, ModuleIndex))
+					{
+						Module.SkirtPipingType = ENovaSkirtPipingType::None;
+					}
+					else if (Module.Description->NeedsPiping && !IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
 					{
 						Module.SkirtPipingType = ENovaSkirtPipingType::Connection;
 					}
-					else if (IsAnyModuleInNextCompartment(CompartmentIndex, ModuleIndex))
+					else
 					{
 						Module.SkirtPipingType = ENovaSkirtPipingType::Simple;
 					}
