@@ -106,6 +106,10 @@ public:
 	/** Start editing the spacecraft */
 	void SetEditing(bool IsEditing)
 	{
+		if (IsEditing != EditingSpacecraft)
+		{
+			NLOG("ANovaSpacecraftPawn::SetEditing %d", IsEditing);
+		}
 		EditingSpacecraft = IsEditing;
 	}
 

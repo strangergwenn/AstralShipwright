@@ -86,6 +86,7 @@ public:
 				{
 					PC->ProcessTransaction(-Cost.TotalChangeCost);
 					SpacecraftPawn->ApplyAssembly();
+					SpacecraftPawn->SetEditing(true);
 					PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
 				});
 
@@ -1564,11 +1565,11 @@ FText SNovaMainMenuAssembly::GetModuleListHelpText() const
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateModuleItem(const UNovaModuleDescription* Module) const
 {
 	return SNew(SNovaTradableAssetItem)
-		.Asset(Module)
-		.DefaultAsset(UNovaAssetManager::Get()->GetDefaultAsset<UNovaModuleDescription>())
-		.GameState(GameState)
-		.NoPriceHint(true)
-		.SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
+	    .Asset(Module)
+	    .DefaultAsset(UNovaAssetManager::Get()->GetDefaultAsset<UNovaModuleDescription>())
+	    .GameState(GameState)
+	    .NoPriceHint(true)
+	    .SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
 			[=]()
 			{
 				return ModuleListView->GetSelectionIcon(Module);
@@ -1621,11 +1622,11 @@ FText SNovaMainMenuAssembly::GetEquipmentListHelpText() const
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEquipmentItem(const UNovaEquipmentDescription* Equipment) const
 {
 	return SNew(SNovaTradableAssetItem)
-		.Asset(Equipment)
-		.DefaultAsset(UNovaAssetManager::Get()->GetDefaultAsset<UNovaEquipmentDescription>())
-		.GameState(GameState)
-		.NoPriceHint(true)
-		.SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
+	    .Asset(Equipment)
+	    .DefaultAsset(UNovaAssetManager::Get()->GetDefaultAsset<UNovaEquipmentDescription>())
+	    .GameState(GameState)
+	    .NoPriceHint(true)
+	    .SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
 			[=]()
 			{
 				return EquipmentListView->GetSelectionIcon(Equipment);
@@ -1657,11 +1658,11 @@ FText SNovaMainMenuAssembly::GenerateEquipmentTooltip(const UNovaEquipmentDescri
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateHullTypeItem(const UNovaHullDescription* Hull) const
 {
 	return SNew(SNovaTradableAssetItem)
-		.Asset(Hull)
-		.DefaultAsset(UNovaAssetManager::Get()->GetDefaultAsset<UNovaHullDescription>())
-		.GameState(GameState)
-		.NoPriceHint(true)
-		.SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
+	    .Asset(Hull)
+	    .DefaultAsset(UNovaAssetManager::Get()->GetDefaultAsset<UNovaHullDescription>())
+	    .GameState(GameState)
+	    .NoPriceHint(true)
+	    .SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
 			[=]()
 			{
 				return HullTypeListView->GetSelectionIcon(Hull);
@@ -1697,24 +1698,24 @@ FText SNovaMainMenuAssembly::GetAssetName(const UNovaTradableAssetDescription* A
 FLinearColor SNovaMainMenuAssembly::GetMainColor() const
 {
 	float Alpha = CurrentPanelState == ENovaMainMenuAssemblyState::Assembly
-					? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard)
-					: 0.0f;
+	                ? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard)
+	                : 0.0f;
 	return FLinearColor(1, 1, 1, Alpha);
 }
 
 FLinearColor SNovaMainMenuAssembly::GetCompartmentColor() const
 {
 	float Alpha = CurrentPanelState == ENovaMainMenuAssemblyState::Compartment
-					? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard)
-					: 0.0f;
+	                ? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard)
+	                : 0.0f;
 	return FLinearColor(1, 1, 1, Alpha);
 }
 
 FLinearColor SNovaMainMenuAssembly::GetCustomizationColor() const
 {
 	float Alpha = CurrentPanelState == ENovaMainMenuAssemblyState::Customization
-					? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard)
-					: 0.0f;
+	                ? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard)
+	                : 0.0f;
 	return FLinearColor(1, 1, 1, Alpha);
 }
 
@@ -1910,7 +1911,7 @@ FText SNovaMainMenuAssembly::GetModuleOrEquipmentText()
 			{
 				const UNovaEquipmentDescription* Equipment     = Compartment.Equipment[EquipmentIndex];
 				FText                            EquipmentText = Equipment ? Equipment->GetInlineDescription()
-																		   : LOCTEXT("EmptyEquipment", "<img src=\"/Text/Equipment\"/> Empty equipment slot");
+				                                                           : LOCTEXT("EmptyEquipment", "<img src=\"/Text/Equipment\"/> Empty equipment slot");
 
 				// Append the pairing information
 				TArray<const FNovaEquipmentSlot*> PairedSlots = Compartment.Description->GetGroupedEquipmentSlots(EquipmentIndex);
