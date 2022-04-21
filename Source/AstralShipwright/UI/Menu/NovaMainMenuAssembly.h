@@ -65,6 +65,10 @@ public:
 
 	virtual void Previous() override;
 
+	virtual void ZoomIn() override;
+
+	virtual void ZoomOut() override;
+
 	virtual void OnClicked(const FVector2D& Position) override;
 
 	virtual void OnDoubleClicked(const FVector2D& Position) override;

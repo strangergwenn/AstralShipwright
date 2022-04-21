@@ -53,10 +53,20 @@ public:
 	}
 
 	/** Next item */
-	virtual void Next();
+	virtual void Next()
+	{}
 
 	/** Previous item */
-	virtual void Previous();
+	virtual void Previous()
+	{}
+
+	/** Zoom in */
+	virtual void ZoomIn()
+	{}
+
+	/** Zoom out */
+	virtual void ZoomOut()
+	{}
 
 	/** Clicked */
 	virtual void OnClicked(const FVector2D& Position)

@@ -28,5 +28,7 @@ const FName FNovaPlayerInput::MenuLeft             = "MenuLeft";
 const FName FNovaPlayerInput::MenuRight            = "MenuRight";
 const FName FNovaPlayerInput::MenuNext             = "MenuNext";
 const FName FNovaPlayerInput::MenuPrevious         = "MenuPrevious";
+const FName FNovaPlayerInput::MenuZoomIn           = "MenuZoomIn";
+const FName FNovaPlayerInput::MenuZoomOut          = "MenuZoomOut";
 const FName FNovaPlayerInput::MenuAnalogHorizontal = "MenuAnalogHorizontal";
 const FName FNovaPlayerInput::MenuAnalogVertical   = "MenuAnalogVertical";

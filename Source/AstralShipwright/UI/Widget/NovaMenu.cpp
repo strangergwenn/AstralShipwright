@@ -212,7 +212,7 @@ FReply SNovaMenu::OnAnalogValueChanged(const FGeometry& MyGeometry, const FAnalo
 	{
 		EUINavigation AnalogNavigation   = EUINavigation::Invalid;
 		float         CurrentInputPeriod = FMath::Lerp(AnalogNavMaxPeriod, AnalogNavMinPeriod,
-            (FMath::Abs(AnalogInputEvent.GetAnalogValue()) - AnalogNavThreshold) / (1.0f - AnalogNavThreshold));
+					(FMath::Abs(AnalogInputEvent.GetAnalogValue()) - AnalogNavThreshold) / (1.0f - AnalogNavThreshold));
 
 		// Handle navigation
 		if (IsAxisKey(FNovaPlayerInput::MenuMoveHorizontal, Key))
@@ -489,6 +489,16 @@ FReply SNovaMenu::HandleKeyPress(FKey Key)
 		else if (IsActionKey(FNovaPlayerInput::MenuPrevious, Key))
 		{
 			CurrentNavigationPanel->Previous();
+			Result = FReply::Handled();
+		}
+		else if (IsActionKey(FNovaPlayerInput::MenuZoomIn, Key))
+		{
+			CurrentNavigationPanel->ZoomIn();
+			Result = FReply::Handled();
+		}
+		else if (IsActionKey(FNovaPlayerInput::MenuZoomOut, Key))
+		{
+			CurrentNavigationPanel->ZoomOut();
 			Result = FReply::Handled();
 		}
 	}

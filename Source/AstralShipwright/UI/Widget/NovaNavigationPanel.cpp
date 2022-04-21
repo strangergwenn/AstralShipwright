@@ -19,12 +19,6 @@ void SNovaNavigationPanel::Construct(const FArguments& InArgs)
     Interaction
 ----------------------------------------------------*/
 
-void SNovaNavigationPanel::Next()
-{}
-
-void SNovaNavigationPanel::Previous()
-{}
-
 TSharedPtr<SNovaButton> SNovaNavigationPanel::GetDefaultFocusButton() const
 {
 	if (DefaultNavigationButton && DefaultNavigationButton->SupportsKeyboardFocus())

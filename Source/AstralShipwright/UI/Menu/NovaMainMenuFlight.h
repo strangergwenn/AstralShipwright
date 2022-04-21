@@ -58,6 +58,10 @@ public:
 
 	virtual void Previous() override;
 
+	virtual void ZoomIn() override;
+
+	virtual void ZoomOut() override;
+
 	virtual void HorizontalAnalogInput(float Value) override;
 
 	virtual void VerticalAnalogInput(float Value) override;

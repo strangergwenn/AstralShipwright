@@ -1280,6 +1280,22 @@ void SNovaMainMenuAssembly::Previous()
 	}
 }
 
+void SNovaMainMenuAssembly::ZoomIn()
+{
+	if (IsValid(SpacecraftPawn))
+	{
+		SpacecraftPawn->ZoomIn();
+	}
+}
+
+void SNovaMainMenuAssembly::ZoomOut()
+{
+	if (IsValid(SpacecraftPawn))
+	{
+		SpacecraftPawn->ZoomOut();
+	}
+}
+
 void SNovaMainMenuAssembly::OnClicked(const FVector2D& Position)
 {
 	if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly && Menu->IsActiveNavigationPanel(this))
@@ -1492,10 +1508,6 @@ void SNovaMainMenuAssembly::SetPanelState(ENovaMainMenuAssemblyState State)
 	// Update UI state
 	ResetNavigation();
 	SlatePrepass(FSlateApplicationBase::Get().GetApplicationScale());
-	if (IsValid(SpacecraftPawn))
-	{
-		SpacecraftPawn->ResetZoom();
-	}
 }
 
 /*----------------------------------------------------

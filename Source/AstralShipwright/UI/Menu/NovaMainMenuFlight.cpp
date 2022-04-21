@@ -519,6 +519,22 @@ void SNovaMainMenuFlight::Previous()
 	SetHUDIndex(FMath::Max(CurrentHUDIndex - 1, 0));
 }
 
+void SNovaMainMenuFlight::ZoomIn()
+{
+	if (IsValid(SpacecraftPawn))
+	{
+		SpacecraftPawn->ZoomIn();
+	}
+}
+
+void SNovaMainMenuFlight::ZoomOut()
+{
+	if (IsValid(SpacecraftPawn))
+	{
+		SpacecraftPawn->ZoomOut();
+	}
+}
+
 void SNovaMainMenuFlight::HorizontalAnalogInput(float Value)
 {
 	if (IsValid(SpacecraftPawn))
@@ -608,7 +624,7 @@ bool SNovaMainMenuFlight::IsDockingEnabled() const
 	{
 		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
 		return (PlayerTrajectory == nullptr && SpacecraftMovement->CanDock()) ||
-			   (!SpacecraftPawn->HasModifications() && SpacecraftPawn->IsSpacecraftValid() && SpacecraftMovement->CanUndock());
+		       (!SpacecraftPawn->HasModifications() && SpacecraftPawn->IsSpacecraftValid() && SpacecraftMovement->CanUndock());
 	}
 	return false;
 }
@@ -620,7 +636,7 @@ bool SNovaMainMenuFlight::IsManeuveringEnabled() const
 		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
 
 		return PlayerTrajectory && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Idle &&
-			   !SpacecraftMovement->IsAlignedToManeuver();
+		       !SpacecraftMovement->IsAlignedToManeuver();
 	}
 
 	return false;

@@ -864,7 +864,6 @@ void ANovaPlayerController::EnterPhotoMode(FName ActionName)
 		[=]()
 		{
 			PhotoModeAction = ActionName;
-			GetSpacecraftPawn()->ZoomIn();
 			SetCameraState(ENovaPlayerCameraState::PhotoMode);
 		}));
 }
@@ -877,7 +876,6 @@ void ANovaPlayerController::ExitPhotoMode()
 		[=]()
 		{
 			PhotoModeAction = NAME_None;
-			GetSpacecraftPawn()->ZoomOut();
 			SetCameraState(ENovaPlayerCameraState::Default);
 		}));
 }

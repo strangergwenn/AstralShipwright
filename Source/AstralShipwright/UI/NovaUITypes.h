@@ -11,8 +11,7 @@ DECLARE_DELEGATE(FNovaAsyncAction);
 DECLARE_DELEGATE_RetVal(bool, FNovaAsyncCondition);
 
 /** UI constants */
-namespace ENovaUIConstants
-{
+namespace ENovaUIConstants {
 constexpr float EaseLight           = 1.5f;
 constexpr float EaseStandard        = 2.0f;
 constexpr float EaseStrong          = 4.0f;
@@ -68,6 +67,8 @@ public:
 	static const FName MenuRight;
 	static const FName MenuNext;
 	static const FName MenuPrevious;
+	static const FName MenuZoomIn;
+	static const FName MenuZoomOut;
 	static const FName MenuAnalogHorizontal;
 	static const FName MenuAnalogVertical;
 };
