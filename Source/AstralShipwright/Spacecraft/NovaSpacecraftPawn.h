@@ -104,13 +104,19 @@ public:
 	}
 
 	/** Start editing the spacecraft */
-	void SetEditing(bool IsEditing)
+	void SetEditing(bool Editing)
 	{
-		if (IsEditing != EditingSpacecraft)
+		if (Editing != EditingSpacecraft)
 		{
-			NLOG("ANovaSpacecraftPawn::SetEditing %d", IsEditing);
+			NLOG("ANovaSpacecraftPawn::SetEditing %d", Editing);
 		}
-		EditingSpacecraft = IsEditing;
+		EditingSpacecraft = Editing;
+	}
+
+	/** Check if we're editing */
+	bool IsEditing() const
+	{
+		return EditingSpacecraft;
 	}
 
 	/** Share the identifier for the player spacecraft */

@@ -130,68 +130,78 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 		auto GameState          = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 		auto OrbitalSimulation  = IsValid(GameState) ? GameState->GetOrbitalSimulation() : nullptr;
 
-		if (IsValid(PC) && IsValid(SpacecraftPawn) && IsValid(GameState) && IsValid(OrbitalSimulation) && !SpacecraftPawn->IsDocked() &&
+		if (IsValid(PC) && IsValid(SpacecraftPawn) && IsValid(GameState) && IsValid(OrbitalSimulation) &&
 			PC->GetCameraState() == ENovaPlayerCameraState::Default)
 		{
-			const FNovaTrajectory* Trajectory      = OrbitalSimulation->GetPlayerTrajectory();
-			const FNovaTime&       CurrentGameTime = GameState->GetCurrentTime();
-
-			// Trajectory
-			if (Trajectory && Trajectory->GetArrivalTime() > CurrentGameTime)
+			if (SpacecraftPawn->IsDocked())
 			{
-				// Ongoing maneuver
-				const FNovaManeuver* CurrentManeuver = Trajectory->GetManeuver(CurrentGameTime);
-				if (CurrentManeuver)
+				if (SpacecraftPawn->HasModifications())
 				{
-					FNovaTime TimeLeftInManeuver = (CurrentManeuver->Time + CurrentManeuver->Duration - CurrentGameTime);
-
-					DesiredState.Text = FText::FormatNamed(LOCTEXT("CurrentManeuverFormat", "Maneuver ends in {duration}"),
-						TEXT("duration"), GetDurationText(TimeLeftInManeuver));
-					DesiredState.Type = ENovaEventDisplayType::DynamicText;
+					DesiredState.Text = LOCTEXT("ModifiedSpacecraft", "Spacecraft has pending changes");
 				}
+			}
+			else
+			{
+				const FNovaTrajectory* Trajectory      = OrbitalSimulation->GetPlayerTrajectory();
+				const FNovaTime&       CurrentGameTime = GameState->GetCurrentTime();
 
-				// Nearing maneuver
-				else
+				// Trajectory
+				if (Trajectory && Trajectory->GetArrivalTime() > CurrentGameTime)
 				{
-					FNovaTime TimeBeforeNextManeuver = Trajectory->GetNextManeuverStartTime(CurrentGameTime) - CurrentGameTime;
-
-					DesiredState.Text = FText::FormatNamed(LOCTEXT("NextManeuverFormat", "Next maneuver in {duration}"), TEXT("duration"),
-						GetDurationText(TimeBeforeNextManeuver));
-
-					DesiredState.Type = ENovaEventDisplayType::DynamicText;
-
-					if (CurrentState.Type == ENovaEventDisplayType::DynamicText)
+					// Ongoing maneuver
+					const FNovaManeuver* CurrentManeuver = Trajectory->GetManeuver(CurrentGameTime);
+					if (CurrentManeuver)
 					{
-						IsValidDetails = SpacecraftMovement->CanManeuver();
-						if (IsValidDetails)
+						FNovaTime TimeLeftInManeuver = (CurrentManeuver->Time + CurrentManeuver->Duration - CurrentGameTime);
+
+						DesiredState.Text = FText::FormatNamed(LOCTEXT("CurrentManeuverFormat", "Maneuver ends in {duration}"),
+							TEXT("duration"), GetDurationText(TimeLeftInManeuver));
+						DesiredState.Type = ENovaEventDisplayType::DynamicText;
+					}
+
+					// Nearing maneuver
+					else
+					{
+						FNovaTime TimeBeforeNextManeuver = Trajectory->GetNextManeuverStartTime(CurrentGameTime) - CurrentGameTime;
+
+						DesiredState.Text = FText::FormatNamed(LOCTEXT("NextManeuverFormat", "Next maneuver in {duration}"),
+							TEXT("duration"), GetDurationText(TimeBeforeNextManeuver));
+
+						DesiredState.Type = ENovaEventDisplayType::DynamicText;
+
+						if (CurrentState.Type == ENovaEventDisplayType::DynamicText)
 						{
-							DetailsText =
-								FText::FormatNamed(LOCTEXT("ImminentManeuverAuthorized",
-													   "{spacecraft}|plural(one=The,other=All) spacecraft {spacecraft}|plural(one=is,other=are) correctly oriented"),
+							IsValidDetails = SpacecraftMovement->CanManeuver();
+							if (IsValidDetails)
+							{
+								DetailsText = FText::FormatNamed(LOCTEXT("ImminentManeuverAuthorized",
+																	 "{spacecraft}|plural(one=The,other=All) spacecraft "
+																	 "{spacecraft}|plural(one=is,other=are) correctly oriented"),
 									TEXT("spacecraft"), GameState->PlayerArray.Num());
-						}
-						else
-						{
-							DetailsText =
-								FText::FormatNamed(LOCTEXT("ImminentManeuverUnauthorized",
-													   "{spacecraft}|plural(one=The,other=A) spacecraft isn't correctly oriented"),
-									TEXT("spacecraft"), GameState->PlayerArray.Num());
+							}
+							else
+							{
+								DetailsText =
+									FText::FormatNamed(LOCTEXT("ImminentManeuverUnauthorized",
+														   "{spacecraft}|plural(one=The,other=A) spacecraft isn't correctly oriented"),
+										TEXT("spacecraft"), GameState->PlayerArray.Num());
+							}
 						}
 					}
 				}
-			}
 
-			// Free flight
-			else
-			{
-				if (GameState->GetCurrentArea()->Hidden)
-				{
-					DesiredState.Text = LOCTEXT("InOrbit", "In orbit");
-				}
+				// Free flight
 				else
 				{
-					DesiredState.Text = FText::FormatNamed(
-						LOCTEXT("FreeFlightFormat", "In orbit at {station}"), TEXT("station"), GameState->GetCurrentArea()->Name);
+					if (GameState->GetCurrentArea()->Hidden)
+					{
+						DesiredState.Text = LOCTEXT("InOrbit", "In orbit");
+					}
+					else
+					{
+						DesiredState.Text = FText::FormatNamed(
+							LOCTEXT("FreeFlightFormat", "In orbit at {station}"), TEXT("station"), GameState->GetCurrentArea()->Name);
+					}
 				}
 			}
 		}
