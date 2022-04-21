@@ -246,8 +246,7 @@ protected:
 	void OnRemoveCompartmentConfirmed();
 
 	// Compartment selection
-	void OnAddCompartment(const class UNovaCompartmentDescription* Compartment, int32 Index, bool Forward = true);
-	void OnCompartmentSelected(int32 Index);
+	void OnAddCompartment(const class UNovaCompartmentDescription* Compartment, int32 Index);
 
 	// Display filters
 	void OnEnterPhotoMode(FName ActionName);
@@ -315,6 +314,8 @@ protected:
 
 	// Compartment list
 	TSharedPtr<SNovaCompartmentList> CompartmentList;
+	bool                             IsNextCompartmentForward;
+	bool                             IsCurrentCompartmentForward;
 
 	// Hull type list
 	TArray<const class UNovaHullDescription*> HullTypeList;

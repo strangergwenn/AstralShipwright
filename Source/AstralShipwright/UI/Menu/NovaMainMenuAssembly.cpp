@@ -340,14 +340,19 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 									.Action(FNovaPlayerInput::MenuSecondary)
 									.TitleText(LOCTEXT("BuildCompartment", "Insert compartment"))
 									.HelpText(LOCTEXT("BuildCompartmentHelp", "Insert a new compartment forward of the selected one"))
-									.OnSelfRefresh(SNovaCompartmentList::FNovaOnSelfRefresh::CreateLambda([&]()
+									.OnSelfRefresh(SNovaCompartmentList::FNovaOnSelfRefresh::CreateLambda([this]()
 										{
-											int32 NewIndex = GetNewBuildIndex(true);
+											IsCurrentCompartmentForward = IsNextCompartmentForward;
+											IsNextCompartmentForward = true;
+
+											NLOG("IsCurrentCompartmentForward %d", IsCurrentCompartmentForward);
+
+											int32 NewIndex = GetNewBuildIndex(IsCurrentCompartmentForward);
 											return SNovaCompartmentList::SelfRefreshType(0, SpacecraftPawn->GetCompatibleCompartments(NewIndex));
 										}))
 									.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateCompartmentItem)
 									.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateCompartmentTooltip)
-									.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnAddCompartment, true)
+									.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnAddCompartment)
 									.Enabled(this, &SNovaMainMenuAssembly::IsAddCompartmentEnabled)
 									.ListButtonSize("LargeListButtonSize")
 								]
@@ -840,11 +845,26 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 			.Size("CompartmentButtonSize")
 			.HelpText(LOCTEXT("SelectCompartmentHelp", "Select this compartment for editing"))
 			.Enabled(this, &SNovaMainMenuAssembly::IsSelectCompartmentEnabled, Index)
-			.OnClicked(this, &SNovaMainMenuAssembly::OnCompartmentSelected, Index)
+			.OnClicked(FSimpleDelegate::CreateLambda([=]()
+			{
+				if (Index < SpacecraftPawn->GetCompartmentCount())
+				{
+					SetSelectedCompartment(Index);
+				}
+				else
+				{
+					SetSelectedCompartment(SpacecraftPawn->GetCompartmentCount() > 0 ? Index - 1 : INDEX_NONE);
+					IsNextCompartmentForward = false;
+					CompartmentList->Show();
+				}
+			}))
 			.OnDoubleClicked(FSimpleDelegate::CreateLambda([=]()
 			{
-				OnCompartmentSelected(Index);
-				OnEditCompartment();
+				if (Index < SpacecraftPawn->GetCompartmentCount())
+				{
+					SetSelectedCompartment(Index);
+					OnEditCompartment();
+				}
 			}))
 			.UserSizeCallback(FNovaButtonUserSizeCallback::CreateLambda([=]
 			{
@@ -1206,7 +1226,8 @@ void SNovaMainMenuAssembly::Show()
 {
 	SNovaTabPanel::Show();
 
-	DesiredPanelState = ENovaMainMenuAssemblyState::Assembly;
+	DesiredPanelState        = ENovaMainMenuAssemblyState::Assembly;
+	IsNextCompartmentForward = true;
 
 	if (IsValid(SpacecraftPawn))
 	{
@@ -1762,7 +1783,7 @@ FText SNovaMainMenuAssembly::GetSelectedFilterText() const
 bool SNovaMainMenuAssembly::IsSelectCompartmentEnabled(int32 Index) const
 {
 	NCHECK(Index >= 0 && Index < ENovaConstants::MaxCompartmentCount);
-	return IsValid(SpacecraftPawn) && Index >= 0 && Index < SpacecraftPawn->GetCompartmentCount();
+	return IsValid(SpacecraftPawn) && Index >= 0 && Index <= SpacecraftPawn->GetCompartmentCount();
 }
 
 bool SNovaMainMenuAssembly::IsAddCompartmentEnabled() const
@@ -2092,9 +2113,9 @@ void SNovaMainMenuAssembly::OnRemoveCompartmentConfirmed()
 	}
 }
 
-void SNovaMainMenuAssembly::OnAddCompartment(const UNovaCompartmentDescription* Compartment, int32 Index, bool Forward)
+void SNovaMainMenuAssembly::OnAddCompartment(const UNovaCompartmentDescription* Compartment, int32 Index)
 {
-	int32 NewIndex = GetNewBuildIndex(Forward);
+	int32 NewIndex = GetNewBuildIndex(IsCurrentCompartmentForward);
 
 	NLOG("SNovaMainMenuAssembly::OnAddCompartment : adding new compartment at index %d ('%s')", NewIndex, *Compartment->Name.ToString());
 
@@ -2103,12 +2124,6 @@ void SNovaMainMenuAssembly::OnAddCompartment(const UNovaCompartmentDescription* 
 		SpacecraftPawn->RequestAssemblyUpdate();
 		SetSelectedCompartment(NewIndex);
 	}
-}
-
-void SNovaMainMenuAssembly::OnCompartmentSelected(int32 Index)
-{
-	NCHECK(Index >= 0 && Index < ENovaConstants::MaxCompartmentCount);
-	SetSelectedCompartment(Index);
 }
 
 /*----------------------------------------------------
