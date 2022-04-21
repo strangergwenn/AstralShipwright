@@ -386,13 +386,6 @@ void SNovaOrbitalMap::AddPlanet(const FVector2D& Pos, const class UNovaCelestial
 	Brush.Brush = &Planet->Image;
 	Brush.Pos   = Pos * CurrentDrawScale;
 	BatchedBrushes.AddUnique(Brush);
-
-	// Planet name
-	FNovaBatchedText Text;
-	Text.Text      = Planet->Name.ToUpper();
-	Text.Pos       = Brush.Pos;
-	Text.TextStyle = &Theme.NotificationFont;
-	BatchedTexts.Add(Text);
 }
 
 void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajectory& Trajectory, const FNovaSpacecraft* Spacecraft,
