@@ -63,13 +63,16 @@ public:
 	----------------------------------------------------*/
 
 protected:
-	// Are we on the PC platform
+	// Platfor msupport getters
 	EVisibility GetPCVisibility() const;
 	bool        IsScreenPercentageSupported() const;
 	bool        IsTSRSupported() const;
 	bool        IsDLSSSupported() const;
 	bool        IsHDRSupported() const;
-	bool        IsRaytracingSupported() const;
+	bool        IsNaniteSupported() const;
+	bool        IsLumenSupported() const;
+	bool        IsLumenHWRTSupported() const;
+	bool        IsVirtualShadowSupported() const;
 
 	// Gameplay settings callbacks
 	void OnFOVChanged(float Value);

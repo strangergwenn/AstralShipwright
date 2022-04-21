@@ -378,6 +378,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 			.HelpText(LOCTEXT("NaniteHelp", "Enable high-density Nanite geometry"))
 			.OnClicked(this, &SNovaMainMenuSettings::OnNaniteToggled)
 			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+			.Enabled(this, &SNovaMainMenuSettings::IsNaniteSupported)
 		];
 
 		GraphicsContainer->AddSlot()
@@ -389,6 +390,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 			.HelpText(LOCTEXT("LumenHelp", "Enable the high-quality Lumen lighting"))
 			.OnClicked(this, &SNovaMainMenuSettings::OnLumenToggled)
 			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+			.Enabled(this, &SNovaMainMenuSettings::IsLumenSupported)
 		];
 
 		GraphicsContainer->AddSlot()
@@ -400,7 +402,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 			.HelpText(LOCTEXT("LumenRayTracingHelp", "Enable hardware raytracing support for Lumen, improving quality on DXR hardware"))
 			.OnClicked(this, &SNovaMainMenuSettings::OnLumenHWRTToggled)
 			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
-			.Enabled(this, &SNovaMainMenuSettings::IsRaytracingSupported)
+			.Enabled(this, &SNovaMainMenuSettings::IsLumenHWRTSupported)
 		];
 
 		GraphicsContainer->AddSlot()
@@ -412,6 +414,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 			.HelpText(LOCTEXT("VirtualShadowsHelp", "Enable virtual shadow maps for enhanced shadows"))
 			.OnClicked(this, &SNovaMainMenuSettings::OnVirtualShadowsToggled)
 			.Visibility(this, &SNovaMainMenuSettings::GetPCVisibility)
+			.Enabled(this, &SNovaMainMenuSettings::IsVirtualShadowSupported)
 		];
 		
 		ScalingContainer->AddSlot()
@@ -528,11 +531,11 @@ void SNovaMainMenuSettings::Show()
 		ScreenPercentageSlider->SetCurrentValue(GameUserSettings->ScreenPercentage);
 
 		TSRButton->SetActive(GameUserSettings->EnableTSR);
-		DLSSButton->SetActive(GameUserSettings->EnableDLSS);
-		NaniteButton->SetActive(GameUserSettings->EnableNanite);
-		LumenButton->SetActive(GameUserSettings->EnableLumen);
-		LumenHWRTButton->SetActive(GameUserSettings->EnableLumenHWRT);
-		VirtualShadowsButton->SetActive(GameUserSettings->EnableVirtualShadows);
+		DLSSButton->SetActive(GameUserSettings->EnableDLSS && GameUserSettings->IsDLSSSupported());
+		NaniteButton->SetActive(GameUserSettings->EnableNanite && GameUserSettings->IsNaniteSupported());
+		LumenButton->SetActive(GameUserSettings->EnableLumen && GameUserSettings->IsLumenSupported());
+		LumenHWRTButton->SetActive(GameUserSettings->EnableLumenHWRT && GameUserSettings->IsLumenHWRTSupported());
+		VirtualShadowsButton->SetActive(GameUserSettings->EnableVirtualShadows && GameUserSettings->IsVirtualShadowSupported());
 		CinematicBloomButton->SetActive(GameUserSettings->EnableCinematicBloom);
 
 		UpdateResolutionList();
@@ -832,9 +835,24 @@ bool SNovaMainMenuSettings::IsHDRSupported() const
 	return GameUserSettings->IsHDRSupported();
 }
 
-bool SNovaMainMenuSettings::IsRaytracingSupported() const
+bool SNovaMainMenuSettings::IsNaniteSupported() const
 {
-	return IsRayTracingEnabled();
+	return GameUserSettings->IsNaniteSupported();
+}
+
+bool SNovaMainMenuSettings::IsLumenSupported() const
+{
+	return GameUserSettings->IsLumenSupported();
+}
+
+bool SNovaMainMenuSettings::IsLumenHWRTSupported() const
+{
+	return GameUserSettings->IsLumenHWRTSupported();
+}
+
+bool SNovaMainMenuSettings::IsVirtualShadowSupported() const
+{
+	return GameUserSettings->IsVirtualShadowSupported();
 }
 
 void SNovaMainMenuSettings::OnFOVChanged(float Value)

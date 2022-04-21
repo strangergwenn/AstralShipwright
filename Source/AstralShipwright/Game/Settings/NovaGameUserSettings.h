@@ -24,6 +24,18 @@ public:
 	/** Check if DLSS is supported */
 	bool IsDLSSSupported() const;
 
+	/** Check if Nanite is supported */
+	bool IsNaniteSupported() const;
+
+	/** Check if Lumen is supported */
+	bool IsLumenSupported() const;
+
+	/** Check if Lumen hardware ray-tracing is supported */
+	bool IsLumenHWRTSupported() const;
+
+	/** Check if virtual shadowmaps are supported */
+	bool IsVirtualShadowSupported() const;
+
 	/*----------------------------------------------------
 	    Inherited
 	----------------------------------------------------*/

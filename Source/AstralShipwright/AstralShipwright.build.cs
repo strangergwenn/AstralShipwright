@@ -17,9 +17,6 @@ public class AstralShipwright : ModuleRules
             "InputCore",
             "AppFramework",
 
-            "Json",
-            "JsonUtilities",
-
             "Slate",
             "SlateCore",
             "UMG",
@@ -27,6 +24,9 @@ public class AstralShipwright : ModuleRules
             "RHI",
             "RenderCore",
             "Niagara",
+
+            "Json",
+            "JsonUtilities",
 
             "HTTP",
             "OnlineSubsystem",

@@ -68,7 +68,6 @@ void UNovaGameUserSettings::ApplyCustomGraphicsSettings()
 		LumenHWRTVar->Set(EnableLumenHWRT ? 1 : 0, ECVF_SetByConsole);
 	}
 
-
 	// Toggle virtual shadow maps
 	IConsoleVariable* VirtualShadowsVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Shadow.Virtual.Enable"));
 	if (VirtualShadowsVar)
@@ -100,6 +99,30 @@ bool UNovaGameUserSettings::IsDLSSSupported() const
 #endif    // HAS_DLSS
 
 	return false;
+}
+
+bool UNovaGameUserSettings::IsNaniteSupported() const
+{
+	return UseNanite(GShaderPlatformForFeatureLevel[GMaxRHIFeatureLevel]);
+}
+
+bool UNovaGameUserSettings::IsLumenSupported() const
+{
+	EShaderPlatform Platform = GShaderPlatformForFeatureLevel[GMaxRHIFeatureLevel];
+
+	return FDataDrivenShaderPlatformInfo::GetSupportsLumenGI(Platform) && !IsForwardShadingEnabled(Platform);
+}
+
+bool UNovaGameUserSettings::IsLumenHWRTSupported() const
+{
+	EShaderPlatform Platform = GShaderPlatformForFeatureLevel[GMaxRHIFeatureLevel];
+
+	return IsLumenSupported() && FDataDrivenShaderPlatformInfo::GetSupportsRayTracing(Platform);
+}
+
+bool UNovaGameUserSettings::IsVirtualShadowSupported() const
+{
+	return IsNaniteSupported();
 }
 
 /*----------------------------------------------------
