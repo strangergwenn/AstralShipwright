@@ -25,17 +25,28 @@
 ----------------------------------------------------*/
 
 // Procedural generation
-static constexpr int32 InitialTechnicalSpacecraftCount = 42;
+static constexpr int32  InitialTechnicalSpacecraftCount = 42;
+static constexpr double InitialMinAltitude              = 400.0;
+static constexpr double InitialMaxAltitude              = 1000.0;
 
 // Spawning
 static constexpr int32 SpacecraftSpawnDistanceKm   = 100;
 static constexpr int32 SpacecraftDespawnDistanceKm = 200;
 
+// Behavior timings in minutes
+static constexpr int32 TrajectoryMinDuration = 5;
+static constexpr int32 StationWaitTime       = 5;
+static constexpr int32 StationPatrolTimeout  = 10;
+
+// Patrol
+static constexpr double PatrolMinAltitude = 400.0;
+static constexpr double PatrolMaxAltitude = 1000.0;
+
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
-UNovaAISimulationComponent::UNovaAISimulationComponent() : Super()
+UNovaAISimulationComponent::UNovaAISimulationComponent() : Super(), PatrolRandomStream(0)
 {
 	// Technical ship names
 	TechnicalNamePrefixes = {TEXT("Analog"), TEXT("Broken"), TEXT("Clockwork"), TEXT("Drab"), TEXT("Electric"), TEXT("Flying"),
@@ -71,6 +82,8 @@ struct FNovaAISpacecraftStateSave
 struct FNovaAIStateSave
 {
 	TArray<FNovaAISpacecraftStateSave> SpacecraftStates;
+
+	int32 PatrolRandomStreamSeed;
 };
 
 TSharedPtr<FNovaAIStateSave> UNovaAISimulationComponent::Save() const
@@ -125,6 +138,9 @@ TSharedPtr<FNovaAIStateSave> UNovaAISimulationComponent::Save() const
 		SaveData->SpacecraftStates.Add(SpacecraftSaveData);
 	}
 
+	// Save patrol state
+	SaveData->PatrolRandomStreamSeed = PatrolRandomStream.GetCurrentSeed();
+
 	return SaveData;
 }
 
@@ -175,6 +191,9 @@ void UNovaAISimulationComponent::Load(TSharedPtr<FNovaAIStateSave> SaveData)
 				OrbitalSimulation->CommitTrajectory({Spacecraft.Identifier}, SpacecraftSaveData.Trajectory);
 			}
 		}
+
+		// Load patrol state
+		PatrolRandomStream = FRandomStream(SaveData->PatrolRandomStreamSeed);
 	}
 
 	// New game
@@ -216,6 +235,7 @@ void UNovaAISimulationComponent::SerializeJson(
 		}
 
 		JsonData->SetArrayField("States", SpacecraftJsonDataArray);
+		JsonData->SetNumberField("PRSS", SaveData->PatrolRandomStreamSeed);
 	}
 
 	// Reading from save
@@ -253,6 +273,8 @@ void UNovaAISimulationComponent::SerializeJson(
 				SaveData->SpacecraftStates.Add(SpacecraftSaveData);
 			}
 		}
+
+		SaveData->PatrolRandomStreamSeed = JsonData->GetNumberField("PRSS");
 	}
 }
 
@@ -386,6 +408,8 @@ void UNovaAISimulationComponent::ProcessNavigation()
 		if (SpacecraftState.CurrentState == ENovaAISpacecraftState::Idle && SourceOrbit != nullptr)
 		{
 			const UNovaArea* TargetArea = FindArea(SourceLocation);
+
+			// Station
 			if (TargetArea)
 			{
 				// Pick the area
@@ -399,14 +423,25 @@ void UNovaAISimulationComponent::ProcessNavigation()
 				StartTrajectory(
 					*SourceOrbit, OrbitalSimulation->GetAreaOrbit(SpacecraftState.TargetArea), FNovaTime::FromSeconds(30), {Identifier});
 				SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Trajectory);
-
-				// Run quotas again
-				ProcessQuotas();
 			}
+
+			// Patrol
 			else
 			{
 				SpacecraftState.TargetArea = nullptr;
+
+				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' now on patrol trajectory",
+					*Identifier.ToString(EGuidFormats::Short));
+
+				// Start the travel
+				FNovaOrbit DestinationOrbit;
+				FindPatrolOrbit(DestinationOrbit);
+				StartTrajectory(*SourceOrbit, DestinationOrbit, FNovaTime::FromSeconds(30), {Identifier});
+				SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Trajectory);
 			}
+
+			// Run quotas again
+			ProcessQuotas();
 		}
 
 		// Wait for arrival
@@ -414,12 +449,23 @@ void UNovaAISimulationComponent::ProcessNavigation()
 		{
 			// Detect arrival
 			const FNovaTrajectory* Trajectory = OrbitalSimulation->GetSpacecraftTrajectory(Identifier);
-			if ((CurrentTime - SpacecraftState.CurrentStateStartTime > FNovaTime::FromMinutes(5)) &&
+			if ((CurrentTime - SpacecraftState.CurrentStateStartTime > FNovaTime::FromMinutes(TrajectoryMinDuration)) &&
 				(Trajectory == nullptr || Trajectory->GetArrivalTime() < CurrentTime))
 			{
-				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' arriving at station", *Identifier.ToString(EGuidFormats::Short));
+				if (SpacecraftState.TargetArea)
+				{
+					NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' arriving at station",
+						*Identifier.ToString(EGuidFormats::Short));
 
-				SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Station);
+					SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Station);
+				}
+				else
+				{
+					NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' arriving at patrol location",
+						*Identifier.ToString(EGuidFormats::Short));
+
+					SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Idle);
+				}
 			}
 
 			// Align to maneuvers
@@ -438,12 +484,20 @@ void UNovaAISimulationComponent::ProcessNavigation()
 			const UNovaArea* TargetArea = FindArea(SourceLocation);
 
 			// Detect enough time spent & valid target available
-			if (TargetArea && CurrentTime - SpacecraftState.CurrentStateStartTime > FNovaTime::FromMinutes(5))
+			if (TargetArea && CurrentTime - SpacecraftState.CurrentStateStartTime > FNovaTime::FromMinutes(StationWaitTime))
 			{
 				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' undocking toward '%s'",
 					*Identifier.ToString(EGuidFormats::Short), *TargetArea->Name.ToString());
 
-				SpacecraftState.TargetArea = TargetArea;
+				SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Undocking);
+			}
+
+			// Detect maximum time spent
+			else if (CurrentTime - SpacecraftState.CurrentStateStartTime > FNovaTime::FromMinutes(StationPatrolTimeout))
+			{
+				NLOG(
+					"UNovaAISimulationComponent::ProcessNavigation : '%s' undocking for patrol", *Identifier.ToString(EGuidFormats::Short));
+
 				SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Undocking);
 			}
 
@@ -506,9 +560,9 @@ void UNovaAISimulationComponent::CreateGame()
 		for (int32 Index = 0; Index < InitialTechnicalSpacecraftCount; Index++)
 		{
 			// Get the location
-			int32      InitialAltitude = RandomStream.RandRange(400, 1000);
-			int32      InitialPhase    = RandomStream.RandRange(0, 360);
-			FNovaOrbit Orbit           = FNovaOrbit(FNovaOrbitGeometry(DefaultPlanet, InitialAltitude, InitialPhase), FNovaTime());
+			const double InitialAltitude = RandomStream.FRandRange(InitialMinAltitude, InitialMaxAltitude);
+			const double InitialPhase    = RandomStream.FRandRange(0.0, 360.0);
+			FNovaOrbit   Orbit           = FNovaOrbit(FNovaOrbitGeometry(DefaultPlanet, InitialAltitude, InitialPhase), FNovaTime());
 
 			// Get the class
 			const UNovaAISpacecraftDescription* SpacecraftDescription =
@@ -558,7 +612,7 @@ void UNovaAISimulationComponent::StartTrajectory(
 	// Compute trajectory candidates
 	TArray<FNovaTrajectory>   Candidates;
 	FNovaTrajectoryParameters Parameters = OrbitalSimulation->PrepareTrajectory(SourceOrbit, DestinationOrbit, DeltaTime, Spacecraft);
-	for (float Altitude = 300; Altitude <= 1500; Altitude += 300)
+	for (float Altitude = 300; Altitude <= 1500; Altitude += 200)
 	{
 		FNovaTrajectory NewTrajectory = OrbitalSimulation->ComputeTrajectory(Parameters, Altitude);
 		if (NewTrajectory.IsValid() && NewTrajectory.TotalTravelDuration.AsDays() < 15)
@@ -584,6 +638,7 @@ const UNovaArea* UNovaAISimulationComponent::FindArea(const FNovaOrbitalLocation
 {
 	NCHECK(SourceLocation != nullptr);
 
+	// Get game state pointers
 	UNovaAssetManager* AssetManager = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager();
 	NCHECK(AssetManager);
 	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
@@ -606,6 +661,19 @@ const UNovaArea* UNovaAISimulationComponent::FindArea(const FNovaOrbitalLocation
 	}
 
 	return Areas.Num() > 0 ? Areas[FMath::RandHelper(Areas.Num())] : nullptr;
+}
+
+void UNovaAISimulationComponent::FindPatrolOrbit(FNovaOrbit& DestinationOrbit) const
+{
+	// Get game state pointers
+	UNovaAssetManager* AssetManager = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager();
+	NCHECK(AssetManager);
+	const UNovaCelestialBody* Body = AssetManager->GetDefaultAsset<UNovaCelestialBody>();
+
+	// Generate a random orbit
+	const double Altitude = PatrolRandomStream.FRandRange(PatrolMinAltitude, PatrolMaxAltitude);
+	const double Phase    = PatrolRandomStream.FRandRange(0.0, 360.0);
+	DestinationOrbit      = FNovaOrbit(FNovaOrbitGeometry(Body, Altitude, Phase), FNovaTime());
 }
 
 #undef LOCTEXT_NAMESPACE

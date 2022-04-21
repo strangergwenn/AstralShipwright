@@ -111,6 +111,9 @@ protected:
 	/** Find an area to travel to */
 	const class UNovaArea* FindArea(const struct FNovaOrbitalLocation* SourceLocation) const;
 
+	/** Find a patrol orbit to travel to */
+	void FindPatrolOrbit(struct FNovaOrbit& DestinationOrbit) const;
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
@@ -125,4 +128,5 @@ private:
 	TArray<FString>                     TechnicalNameSuffixes;
 	FGuid                               AlwaysLoadedSpacecraft;
 	TMap<const class UNovaArea*, int32> AreasQuotas;
+	FRandomStream                       PatrolRandomStream;
 };
