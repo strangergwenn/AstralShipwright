@@ -1783,7 +1783,20 @@ FText SNovaMainMenuAssembly::GetSelectedFilterText() const
 bool SNovaMainMenuAssembly::IsSelectCompartmentEnabled(int32 Index) const
 {
 	NCHECK(Index >= 0 && Index < ENovaConstants::MaxCompartmentCount);
-	return IsValid(SpacecraftPawn) && Index >= 0 && Index <= SpacecraftPawn->GetCompartmentCount();
+
+	if (IsValid(SpacecraftPawn) && Index >= 0)
+	{
+		if (Index < SpacecraftPawn->GetCompartmentCount())
+		{
+			return true;
+		}
+		else if (Index == SpacecraftPawn->GetCompartmentCount())
+		{
+			return Index == 0 || !SpacecraftPawn->GetCompartment(Index - 1).HasAftEquipment();
+		}
+	}
+
+	return false;
 }
 
 bool SNovaMainMenuAssembly::IsAddCompartmentEnabled() const

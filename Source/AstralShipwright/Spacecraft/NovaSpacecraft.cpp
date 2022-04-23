@@ -93,6 +93,22 @@ const UNovaEquipmentDescription* FNovaCompartment::GetEquipmentySocket(FName Soc
 	return nullptr;
 }
 
+bool FNovaCompartment::HasAftEquipment() const
+{
+	if (Description)
+	{
+		for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
+		{
+			if (Equipment[EquipmentIndex] && Description->GetEquipmentSlot(EquipmentIndex).SupportedTypes.Contains(ENovaEquipmentType::Aft))
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 float FNovaCompartment::GetCargoCapacity(ENovaResourceType Type) const
 {
 	float Capacity = 0;
