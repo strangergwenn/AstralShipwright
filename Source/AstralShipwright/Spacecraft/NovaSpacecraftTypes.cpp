@@ -107,6 +107,22 @@ TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetMainHull(const UNova
 	}
 }
 
+TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetDomeHull(const UNovaHullDescription* Hull) const
+{
+	if (!IsValid(Hull))
+	{
+		return nullptr;
+	}
+	else if (Hull->Type == ENovaHullType::SoftCladding)
+	{
+		return DomeSoftHull;
+	}
+	else
+	{
+		return DomeRigidHull;
+	}
+}
+
 TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetSkirtHull(const UNovaHullDescription* Hull) const
 {
 	if (!IsValid(Hull))

@@ -40,7 +40,8 @@ struct FNovaCompartmentModule
 
 	bool NeedsConnectionWiring;
 	bool NeedsCollectorPiping;
-	bool NeedsOuterSkirt;
+	bool NeedsDome;
+	bool NeedsSkirt;
 };
 
 /** Compartment cargo entry */

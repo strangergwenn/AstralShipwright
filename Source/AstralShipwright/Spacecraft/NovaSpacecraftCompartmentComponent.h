@@ -10,12 +10,16 @@
 struct FNovaModuleAssembly
 {
 	FNovaAssemblyElement SkirtStructure{ENovaAssemblyElementType::Structure};
+
 	FNovaAssemblyElement Segment{ENovaAssemblyElementType::Module};
 	FNovaAssemblyElement ForwardBulkhead{ENovaAssemblyElementType::Module};
 	FNovaAssemblyElement AftBulkhead{ENovaAssemblyElementType::Module};
+
 	FNovaAssemblyElement ConnectionPiping{ENovaAssemblyElementType::Wiring};
 	FNovaAssemblyElement CollectorPiping{ENovaAssemblyElementType::Wiring};
 	FNovaAssemblyElement ConnectionWiring{ENovaAssemblyElementType::Wiring};
+
+	FNovaAssemblyElement DomeHull{ENovaAssemblyElementType::Hull};
 	FNovaAssemblyElement SkirtHull{ENovaAssemblyElementType::Hull};
 };
 

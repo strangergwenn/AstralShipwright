@@ -24,7 +24,8 @@ FNovaCompartmentModule::FNovaCompartmentModule()
 	, SkirtPipingType(ENovaSkirtPipingType::None)
 	, NeedsConnectionWiring(false)
 	, NeedsCollectorPiping(false)
-	, NeedsOuterSkirt(false)
+	, NeedsDome(false)
+	, NeedsSkirt(false)
 {}
 
 FNovaCompartment::FNovaCompartment() : Description(nullptr), HullType(nullptr), Modules{FNovaCompartmentModule()}, Equipment{nullptr}
@@ -810,7 +811,8 @@ void FNovaSpacecraft::UpdateProceduralElements()
 				Module.SkirtPipingType       = ENovaSkirtPipingType::None;
 				Module.NeedsConnectionWiring = false;
 				Module.NeedsCollectorPiping  = false;
-				Module.NeedsOuterSkirt       = false;
+				Module.NeedsDome             = false;
+				Module.NeedsSkirt            = false;
 
 				if (Module.Description)
 				{
@@ -858,7 +860,7 @@ void FNovaSpacecraft::UpdateProceduralElements()
 					}
 					else
 					{
-						Module.NeedsOuterSkirt = true;
+						Module.NeedsSkirt = !ModuleSlot.ForceSkirtPiping;
 
 						if (Module.Description->NeedsPiping && !IsSameModuleInNextCompartment(CompartmentIndex, ModuleIndex))
 						{
@@ -868,6 +870,14 @@ void FNovaSpacecraft::UpdateProceduralElements()
 						{
 							Module.SkirtPipingType = ENovaSkirtPipingType::Simple;
 						}
+					}
+
+					// Add skirt domes to non-central modules if the previous compartment is different
+					if ((IsFirstCompartment(CompartmentIndex) ||
+							Compartments[CompartmentIndex - 1].Description != Compartment.Description) &&
+						!ModuleSlot.ForceSkirtPiping)
+					{
+						Module.NeedsDome = true;
 					}
 				}
 			}

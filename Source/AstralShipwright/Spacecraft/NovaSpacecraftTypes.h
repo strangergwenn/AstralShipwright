@@ -244,7 +244,10 @@ public:
 	/** Return the appropriate main hull mesh */
 	TSoftObjectPtr<class UStaticMesh> GetMainHull(const class UNovaHullDescription* Hull) const;
 
-	/** Return the appropriate outer hull mesh */
+	/** Return the appropriate forward dome hull mesh */
+	TSoftObjectPtr<class UStaticMesh> GetDomeHull(const class UNovaHullDescription* Hull) const;
+
+	/** Return the appropriate skirt hull mesh */
 	TSoftObjectPtr<class UStaticMesh> GetSkirtHull(const class UNovaHullDescription* Hull) const;
 
 	/** Return the appropriate module-connection wiring mesh */
@@ -315,6 +318,14 @@ public:
 	// Decorative outer hull - rigid variant
 	UPROPERTY(Category = Hull, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> RigidHull = nullptr;
+
+	// Decorative outer hull - soft padding (forward dome)
+	UPROPERTY(Category = Hull, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> DomeSoftHull = nullptr;
+
+	// Decorative outer hull - rigid variant (forward dome)
+	UPROPERTY(Category = Hull, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> DomeRigidHull = nullptr;
 
 	// Decorative outer hull - soft padding (skirt)
 	UPROPERTY(Category = Hull, EditDefaultsOnly)
