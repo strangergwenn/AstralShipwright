@@ -12,8 +12,7 @@
 ----------------------------------------------------*/
 
 /** Gameplay constants */
-namespace ENovaConstants
-{
+namespace ENovaConstants {
 constexpr int32 MaxContractsCount   = 5;
 constexpr int32 MaxPlayerCount      = 3;
 constexpr int32 MaxCompartmentCount = 10;
@@ -305,6 +304,12 @@ UCLASS(ClassGroup = (Nova))
 class UNovaTradableAssetDescription : public UNovaAssetDescription
 {
 	GENERATED_BODY()
+
+public:
+	virtual bool operator<(const UNovaTradableAssetDescription& Other) const
+	{
+		return BasePrice < Other.BasePrice;
+	}
 
 public:
 	// Base price modulated by the economy

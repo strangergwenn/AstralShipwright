@@ -167,6 +167,17 @@ public:
 		return Result;
 	}
 
+	/** Find all assets of a class and sort */
+	template <typename T>
+	TArray<const T*> GetSortedAssets() const
+	{
+		TArray<const T*> Result = GetAssets<T>();
+
+		Result.Sort();
+
+		return Result;
+	}
+
 	/** Find the default asset of a class */
 	template <typename T>
 	const T* GetDefaultAsset() const

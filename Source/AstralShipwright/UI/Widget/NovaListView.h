@@ -72,6 +72,7 @@ public:
 			.Style(&Theme.ScrollBoxStyle)
 			.ScrollBarVisibility(EVisibility::Collapsed)
 			.Orientation(InArgs._Horizontal ? Orient_Horizontal : Orient_Vertical)
+			.ConsumeMouseWheel(EConsumeMouseWheel::Always)
 		];
 		// clang-format on
 
@@ -186,7 +187,7 @@ public:
 	const FSlateBrush* GetSelectionIcon(const ItemType& Item) const
 	{
 		bool IsInitialItem = InitiallySelectedIndex >= 0 && ItemsSource && InitiallySelectedIndex < ItemsSource->Num() &&
-							 Item == (*ItemsSource)[InitiallySelectedIndex];
+		                     Item == (*ItemsSource)[InitiallySelectedIndex];
 
 		return FNovaStyleSet::GetBrush(IsInitialItem ? "Icon/SB_ListOn" : "Icon/SB_ListOff");
 	}

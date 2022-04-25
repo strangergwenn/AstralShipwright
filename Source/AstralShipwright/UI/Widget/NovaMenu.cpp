@@ -138,7 +138,7 @@ FReply SNovaMenu::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerE
 
 	MenuManager->SetUsingGamepad(false);
 
-	if (CurrentNavigationPanel)
+	if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton && CurrentNavigationPanel)
 	{
 		FVector2D   Position           = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
 		FWidgetPath WidgetsUnderCursor = FSlateApplication::Get().LocateWindowUnderMouse(
