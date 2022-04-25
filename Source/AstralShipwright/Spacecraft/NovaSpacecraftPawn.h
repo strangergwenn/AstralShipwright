@@ -20,10 +20,10 @@ enum class ENovaAssemblyState : uint8
 /** Display modes for assemblies */
 enum class ENovaAssemblyDisplayFilter : uint8
 {
-	ModulesOnly,
-	ModulesStructure,
-	ModulesStructureEquipment,
-	ModulesStructureEquipmentWiring,
+	StructuresOnly,
+	StructureModules,
+	StructureModulesEquipment,
+	StructureModulesEquipmentWiring,
 	All
 };
 

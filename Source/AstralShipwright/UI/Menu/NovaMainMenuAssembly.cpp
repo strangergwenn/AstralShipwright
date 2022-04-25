@@ -800,6 +800,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
+						.Padding(FMargin(5, 0))
 						[
 							SNovaAssignNew(DisplayFilter, SNovaSlider)
 							.Action(FNovaPlayerInput::MenuAltSecondary)
@@ -1758,16 +1759,16 @@ FText SNovaMainMenuAssembly::GetSelectedFilterText() const
 	{
 		switch (SpacecraftPawn->GetDisplayFilter())
 		{
-			case ENovaAssemblyDisplayFilter::ModulesOnly:
-				return LOCTEXT("ModulesOnly", "Modules only");
+			case ENovaAssemblyDisplayFilter::StructuresOnly:
+				return LOCTEXT("StructuresOnly", "Structure only");
 				break;
-			case ENovaAssemblyDisplayFilter::ModulesStructure:
-				return LOCTEXT("ModulesStructure", "Modules & structure");
+			case ENovaAssemblyDisplayFilter::StructureModules:
+				return LOCTEXT("ModulesStructure", "Structure & module");
 				break;
-			case ENovaAssemblyDisplayFilter::ModulesStructureEquipment:
-				return LOCTEXT("ModulesStructureEquipments", "Modules, structure, equipment");
+			case ENovaAssemblyDisplayFilter::StructureModulesEquipment:
+				return LOCTEXT("ModulesStructureEquipments", "Structure, modules & equipment");
 				break;
-			case ENovaAssemblyDisplayFilter::ModulesStructureEquipmentWiring:
+			case ENovaAssemblyDisplayFilter::StructureModulesEquipmentWiring:
 				return LOCTEXT("ModulesStructureEquipmentsWiring", "All internal systems");
 				break;
 			case ENovaAssemblyDisplayFilter::All:

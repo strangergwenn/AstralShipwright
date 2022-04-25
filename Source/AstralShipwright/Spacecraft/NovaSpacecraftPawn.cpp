@@ -209,7 +209,7 @@ float ANovaSpacecraftPawn::GetCurrentMass() const
 	if (Spacecraft.IsValid())
 	{
 		return Spacecraft->GetPropulsionMetrics().DryMass + Spacecraft->GetCurrentCargoMass() +
-			   FindComponentByClass<UNovaSpacecraftPropellantSystem>()->GetCurrentPropellantMass();
+		       FindComponentByClass<UNovaSpacecraftPropellantSystem>()->GetCurrentPropellantMass();
 	}
 
 	return 0;
@@ -647,20 +647,20 @@ void ANovaSpacecraftPawn::UpdateDisplayFilter()
 						// Process the filter type
 						switch (Element.Type)
 						{
-							case ENovaAssemblyElementType::Module:
+							case ENovaAssemblyElementType::Structure:
 								DisplayState = true;
 								break;
 
-							case ENovaAssemblyElementType::Structure:
-								DisplayState = DisplayFilterType >= ENovaAssemblyDisplayFilter::ModulesStructure;
+							case ENovaAssemblyElementType::Module:
+								DisplayState = DisplayFilterType >= ENovaAssemblyDisplayFilter::StructureModules;
 								break;
 
 							case ENovaAssemblyElementType::Equipment:
-								DisplayState = DisplayFilterType >= ENovaAssemblyDisplayFilter::ModulesStructureEquipment;
+								DisplayState = DisplayFilterType >= ENovaAssemblyDisplayFilter::StructureModulesEquipment;
 								break;
 
 							case ENovaAssemblyElementType::Wiring:
-								DisplayState = DisplayFilterType >= ENovaAssemblyDisplayFilter::ModulesStructureEquipmentWiring;
+								DisplayState = DisplayFilterType >= ENovaAssemblyDisplayFilter::StructureModulesEquipmentWiring;
 								break;
 
 							case ENovaAssemblyElementType::Hull:
