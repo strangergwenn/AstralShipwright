@@ -205,9 +205,10 @@ void FNovaCompartment::ModifyCargo(const class UNovaResource* Resource, float& M
 
 void FNovaSpacecraftCustomization::Create()
 {
-	StructuralPaint = UNovaAssetManager::Get()->GetDefaultAsset<UNovaStructuralPaintDescription>();
-	HullPaint       = UNovaAssetManager::Get()->GetDefaultAsset<UNovaStructuralPaintDescription>();
+	StructuralPaint = UNovaAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
+	HullPaint       = UNovaAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
 	DetailPaint     = UNovaAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
+	EnableHullPaint = false;
 }
 
 /*----------------------------------------------------
@@ -728,14 +729,12 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 		}
 
 		// Customization
-		const UNovaStructuralPaintDescription* StructuralPaint =
-			UNovaAssetDescription::LoadAsset<UNovaStructuralPaintDescription>(JsonData, "SP");
+		const UNovaPaintDescription* StructuralPaint = UNovaAssetDescription::LoadAsset<UNovaPaintDescription>(JsonData, "SP");
 		if (StructuralPaint)
 		{
 			This->Customization.StructuralPaint = StructuralPaint;
 		}
-		const UNovaStructuralPaintDescription* HullPaint =
-			UNovaAssetDescription::LoadAsset<UNovaStructuralPaintDescription>(JsonData, "HP");
+		const UNovaPaintDescription* HullPaint = UNovaAssetDescription::LoadAsset<UNovaPaintDescription>(JsonData, "HP");
 		if (HullPaint)
 		{
 			This->Customization.HullPaint = HullPaint;
@@ -1047,7 +1046,7 @@ TArray<const UNovaCompartmentDescription*> FNovaSpacecraft::GetCompatibleCompart
 {
 	TArray<const UNovaCompartmentDescription*> CompartmentDescriptions;
 
-	for (const UNovaCompartmentDescription* Description : UNovaAssetManager::Get()->GetAssets<UNovaCompartmentDescription>())
+	for (const UNovaCompartmentDescription* Description : UNovaAssetManager::Get()->GetSortedAssets<UNovaCompartmentDescription>())
 	{
 		if (Description->IsForwardCompartment && (!IsFirstCompartment(CompartmentIndex) || Compartments.Num() == 0))
 		{
@@ -1062,10 +1061,10 @@ TArray<const UNovaCompartmentDescription*> FNovaSpacecraft::GetCompatibleCompart
 	return CompartmentDescriptions;
 }
 
-TArray<const class UNovaModuleDescription*> FNovaSpacecraft::GetCompatibleModules(int32 CompartmentIndex, int32 SlotIndex) const
+TArray<const UNovaModuleDescription*> FNovaSpacecraft::GetCompatibleModules(int32 CompartmentIndex, int32 SlotIndex) const
 {
 	TArray<const UNovaModuleDescription*> ModuleDescriptions;
-	TArray<const UNovaModuleDescription*> AllModuleDescriptions = UNovaAssetManager::Get()->GetAssets<UNovaModuleDescription>();
+	TArray<const UNovaModuleDescription*> AllModuleDescriptions = UNovaAssetManager::Get()->GetSortedAssets<UNovaModuleDescription>();
 	const FNovaCompartment&               Compartment           = Compartments[CompartmentIndex];
 
 	ModuleDescriptions.Add(nullptr);
@@ -1083,8 +1082,9 @@ TArray<const class UNovaModuleDescription*> FNovaSpacecraft::GetCompatibleModule
 TArray<const UNovaEquipmentDescription*> FNovaSpacecraft::GetCompatibleEquipment(int32 CompartmentIndex, int32 SlotIndex) const
 {
 	TArray<const UNovaEquipmentDescription*> EquipmentDescriptions;
-	TArray<const UNovaEquipmentDescription*> AllEquipmentDescriptions = UNovaAssetManager::Get()->GetAssets<UNovaEquipmentDescription>();
-	const FNovaCompartment&                  Compartment              = Compartments[CompartmentIndex];
+	TArray<const UNovaEquipmentDescription*> AllEquipmentDescriptions =
+		UNovaAssetManager::Get()->GetSortedAssets<UNovaEquipmentDescription>();
+	const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
 
 	EquipmentDescriptions.Add(nullptr);
 	if (Compartment.IsValid() && SlotIndex < Compartment.Description->EquipmentSlots.Num())

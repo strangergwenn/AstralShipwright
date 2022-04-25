@@ -382,30 +382,16 @@ public:
 	UNovaPaintDescription() : PaintColor(FLinearColor::Black)
 	{}
 
-public:
-	// Paint color
-	UPROPERTY(Category = Paint, EditDefaultsOnly)
-	FLinearColor PaintColor;
-};
-
-/** Description of a structural paint asset */
-UCLASS(ClassGroup = (Nova))
-class UNovaStructuralPaintDescription : public UNovaAssetDescription
-{
-	GENERATED_BODY()
-
-public:
-	UNovaStructuralPaintDescription() : PaintColor(FLinearColor::Black), Unpainted(false)
-	{}
+	virtual bool operator<(const UNovaPaintDescription& Other) const
+	{
+		return PaintColor.LinearRGBToHSV().R < Other.PaintColor.LinearRGBToHSV().R &&
+		       PaintColor.LinearRGBToHSV().G > Other.PaintColor.LinearRGBToHSV().G;
+	}
 
 public:
 	// Paint color
 	UPROPERTY(Category = Paint, EditDefaultsOnly)
 	FLinearColor PaintColor;
-
-	// Raw metal
-	UPROPERTY(Category = Paint, EditDefaultsOnly)
-	bool Unpainted;
 };
 
 /*----------------------------------------------------

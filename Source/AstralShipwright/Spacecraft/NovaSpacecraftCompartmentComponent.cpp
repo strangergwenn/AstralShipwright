@@ -406,19 +406,20 @@ void UNovaSpacecraftCompartmentComponent::UpdateCustomization(FNovaAssemblyEleme
 
 	if (Customization.StructuralPaint)
 	{
-		RequestParameter(Element, "StructuralPaint", Customization.StructuralPaint->Unpainted ? 0.0f : 1.0f);
 		RequestParameter(Element, "StructuralPaintColor", Customization.StructuralPaint->PaintColor);
 	}
 
 	if (Customization.HullPaint)
 	{
-		RequestParameter(Element, "HullPaint", Customization.HullPaint->Unpainted ? 0.0f : 1.0f);
+		RequestParameter(Element, "HullPaint", Customization.EnableHullPaint ? 1.0f : 0.0f);
 		RequestParameter(Element, "HullPaintColor", Customization.HullPaint->PaintColor);
 	}
 
 	if (Customization.DetailPaint)
 	{
-		RequestParameter(Element, "PaintColor", Customization.DetailPaint->PaintColor);
+		RequestParameter(Element, "PaintColor",
+			Element.Type == ENovaAssemblyElementType::Equipment ? Customization.HullPaint->PaintColor
+																: Customization.DetailPaint->PaintColor);
 	}
 }
 

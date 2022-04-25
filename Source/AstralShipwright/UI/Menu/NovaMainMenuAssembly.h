@@ -28,9 +28,7 @@ class SNovaMainMenuAssembly
 	typedef SNovaModalListView<const class UNovaEquipmentDescription*>   SNovaEquipmentList;
 	typedef SNovaModalListView<ENovaAssemblyDisplayFilter>               SNovaDisplayFilterList;
 	typedef SNovaModalListView<const class UNovaHullDescription*>        SNovaHullTypeList;
-
-	typedef SNovaListView<const class UNovaPaintDescription*>           SNovaPaintList;
-	typedef SNovaListView<const class UNovaStructuralPaintDescription*> SNovaStructuralPaintList;
+	typedef SNovaModalListView<const class UNovaPaintDescription*>       SNovaPaintList;
 
 	/*----------------------------------------------------
 	    Slate arguments
@@ -229,11 +227,10 @@ protected:
 	FKey GetNextItemKey() const;
 
 	// Paint lists
-	TSharedRef<SWidget> GenerateStructuralPaintItem(const class UNovaStructuralPaintDescription* Paint) const;
-	FText               GenerateStructuralPaintTooltip(const class UNovaStructuralPaintDescription* Paint) const;
-	TSharedRef<SWidget> GenerateHullPaintItem(const class UNovaStructuralPaintDescription* Paint) const;
+	TSharedRef<SWidget> GenerateStructuralPaintItem(const class UNovaPaintDescription* Paint) const;
+	TSharedRef<SWidget> GenerateHullPaintItem(const class UNovaPaintDescription* Paint) const;
 	TSharedRef<SWidget> GenerateDetailPaintItem(const class UNovaPaintDescription* Paint) const;
-	FText               GenerateDetailPaintTooltip(const class UNovaPaintDescription* Paint) const;
+	FText               GeneratePaintTooltip(const class UNovaPaintDescription* Paint) const;
 
 	/*----------------------------------------------------
 	    Callbacks
@@ -259,9 +256,10 @@ protected:
 
 	// Customization
 	void OnOpenCustomization();
-	void OnStructuralPaintSelected(const class UNovaStructuralPaintDescription* Paint, int32 Index);
-	void OnHullPaintSelected(const class UNovaStructuralPaintDescription* Paint, int32 Index);
+	void OnStructuralPaintSelected(const class UNovaPaintDescription* Paint, int32 Index);
+	void OnHullPaintSelected(const class UNovaPaintDescription* Paint, int32 Index);
 	void OnDetailPaintSelected(const class UNovaPaintDescription* Paint, int32 Index);
+	void OnEnableHullPaintToggled();
 	void OnDirtyIntensityChanged(float Value);
 	void OnSpacecraftNameChanged(const FText& InText);
 	void OnConfirmCustomization();
@@ -289,12 +287,14 @@ protected:
 	TSharedPtr<class SNovaSlider>             DisplayFilter;
 	TSharedPtr<class SNovaButton>             SaveButton;
 	TSharedPtr<class SNovaButton>             BackButton;
+	TSharedPtr<class SNovaButton>             BackButton2;
 	TSharedPtr<class SNovaButton>             EditButton;
 	TSharedPtr<class SNovaButton>             PhotoModeButton;
 	TSharedPtr<class SNovaModalPanel>         GenericModalPanel;
 	TSharedPtr<class SNovaAssemblyModalPanel> AssemblyModalPanel;
 	TSharedPtr<SVerticalBox>                  MenuBox;
 	TSharedPtr<class SNovaSlider>             DirtyIntensity;
+	TSharedPtr<class SNovaButton>             EnableHullPaintButton;
 
 	// Panel fading system
 	ENovaMainMenuAssemblyState DesiredPanelState;
@@ -330,9 +330,8 @@ protected:
 	TSharedPtr<SNovaEquipmentList>                 EquipmentListView;
 
 	// Paint lists
-	TArray<const class UNovaPaintDescription*>           GenericPaintList;
-	TArray<const class UNovaStructuralPaintDescription*> StructuralPaintList;
-	TSharedPtr<SNovaStructuralPaintList>                 StructuralPaintListView;
-	TSharedPtr<SNovaStructuralPaintList>                 HullPaintListView;
-	TSharedPtr<SNovaPaintList>                           DetailPaintListView;
+	TArray<const class UNovaPaintDescription*> PaintList;
+	TSharedPtr<SNovaPaintList>                 StructuralPaintListView;
+	TSharedPtr<SNovaPaintList>                 HullPaintListView;
+	TSharedPtr<SNovaPaintList>                 DetailPaintListView;
 };
