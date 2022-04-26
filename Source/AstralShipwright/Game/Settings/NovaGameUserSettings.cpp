@@ -103,7 +103,7 @@ bool UNovaGameUserSettings::IsDLSSSupported() const
 
 bool UNovaGameUserSettings::IsNaniteSupported() const
 {
-	return UseNanite(GShaderPlatformForFeatureLevel[GMaxRHIFeatureLevel]);
+	return DoesRuntimeSupportNanite(GShaderPlatformForFeatureLevel[GMaxRHIFeatureLevel], true, false);
 }
 
 bool UNovaGameUserSettings::IsLumenSupported() const
