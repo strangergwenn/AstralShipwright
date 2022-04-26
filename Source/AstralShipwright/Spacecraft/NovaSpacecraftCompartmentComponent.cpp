@@ -415,7 +415,7 @@ void UNovaSpacecraftCompartmentComponent::UpdateCustomization(FNovaAssemblyEleme
 		RequestParameter(Element, "HullPaintColor", Customization.HullPaint->PaintColor);
 	}
 
-	if (Customization.DetailPaint)
+	if (Customization.DetailPaint && Customization.HullPaint)
 	{
 		RequestParameter(Element, "PaintColor",
 			Element.Type == ENovaAssemblyElementType::Equipment ? Customization.HullPaint->PaintColor
