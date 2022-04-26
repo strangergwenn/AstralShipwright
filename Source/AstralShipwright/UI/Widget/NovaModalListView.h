@@ -81,7 +81,8 @@ public:
 
 		SNovaButton::Construct(
 			SNovaButton::FArguments()
-				.Text((OnGenerateName.IsBound() || TitleText.IsSet() || TitleText.IsBound())
+				.Text(InArgs._ButtonContent.Widget == SNullWidget::NullWidget &&
+							  (OnGenerateName.IsBound() || TitleText.IsSet() || TitleText.IsBound())
 						  ? TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateSP(this, &SNovaModalListView::GetButtonText))
 						  : TAttribute<FText>())
 				.HelpText(HelpText)

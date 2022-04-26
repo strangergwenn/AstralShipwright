@@ -634,6 +634,10 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 										.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GeneratePaintTooltip)
 										.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnStructuralPaintSelected)
 										.ButtonSize("DefaultButtonSize")
+										.ButtonContent()
+										[
+											GeneratePaintListButton(ENovaMainMenuAssemblyPaintType::Structural)
+										]
 									]
 			
 									+ SVerticalBox::Slot()
@@ -648,6 +652,10 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 										.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GeneratePaintTooltip)
 										.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnHullPaintSelected)
 										.ButtonSize("DefaultButtonSize")
+										.ButtonContent()
+										[
+											GeneratePaintListButton(ENovaMainMenuAssemblyPaintType::Hull)
+										]
 									]
 			
 									+ SVerticalBox::Slot()
@@ -662,6 +670,10 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 										.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GeneratePaintTooltip)
 										.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnDetailPaintSelected)
 										.ButtonSize("DefaultButtonSize")
+										.ButtonContent()
+										[
+											GeneratePaintListButton(ENovaMainMenuAssemblyPaintType::Detail)
+										]
 									]
 								]
 							]
@@ -2016,8 +2028,64 @@ FKey SNovaMainMenuAssembly::GetNextItemKey() const
     Paint lists callbacks
 ----------------------------------------------------*/
 
-template <typename T>
-TSharedRef<SWidget> GeneratePaintItem(const UNovaPaintDescription* Paint, const T& List)
+TSharedRef<SWidget> SNovaMainMenuAssembly::GeneratePaintListButton(ENovaMainMenuAssemblyPaintType Type)
+{
+	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
+	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
+
+	// Get the current paint style
+	auto GetSelectedPaintItem = [this, Type]() -> const UNovaPaintDescription*
+	{
+		TSharedPtr<SNovaMainMenuAssembly::SNovaPaintList> List;
+		switch (Type)
+		{
+			case ENovaMainMenuAssemblyPaintType::Structural:
+				List = StructuralPaintListView;
+				break;
+			case ENovaMainMenuAssemblyPaintType::Hull:
+				List = HullPaintListView;
+				break;
+			case ENovaMainMenuAssemblyPaintType::Detail:
+				List = DetailPaintListView;
+				break;
+		}
+
+		NCHECK(List.IsValid());
+		const UNovaPaintDescription* Paint = List->GetSelectedItem();
+		NCHECK(Paint);
+		return Paint;
+	};
+
+	// clang-format off
+	return SNew(SHorizontalBox)
+
+		+ SHorizontalBox::Slot()
+		.VAlign(VAlign_Center)
+		.Padding(ButtonTheme.IconPadding)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.MainFont)
+			.Text_Lambda([=]()
+			{
+				return GetSelectedPaintItem()->Name;
+			})
+		]
+
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		[
+			SNew(SColorBlock)
+			.Size(FVector2D(64, 16))
+			.Color_Lambda([=]()
+			{
+				return GetSelectedPaintItem()->PaintColor;
+			})
+		];
+
+	// clang-format on
+}
+
+TSharedRef<SWidget> GeneratePaintItem(const UNovaPaintDescription* Paint, const TSharedPtr<SNovaMainMenuAssembly::SNovaPaintList>& List)
 {
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 

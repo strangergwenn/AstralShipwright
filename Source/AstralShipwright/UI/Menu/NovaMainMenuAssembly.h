@@ -19,10 +19,18 @@ enum class ENovaMainMenuAssemblyState
 	Customization
 };
 
+enum class ENovaMainMenuAssemblyPaintType : uint8
+{
+	Structural,
+	Hull,
+	Detail
+};
+
 class SNovaMainMenuAssembly
 	: public SNovaTabPanel
 	, public INovaGameMenu
 {
+public:
 	typedef SNovaModalListView<const class UNovaCompartmentDescription*> SNovaCompartmentList;
 	typedef SNovaModalListView<const class UNovaModuleDescription*>      SNovaModuleList;
 	typedef SNovaModalListView<const class UNovaEquipmentDescription*>   SNovaEquipmentList;
@@ -227,6 +235,7 @@ protected:
 	FKey GetNextItemKey() const;
 
 	// Paint lists
+	TSharedRef<SWidget> GeneratePaintListButton(ENovaMainMenuAssemblyPaintType Type);
 	TSharedRef<SWidget> GenerateStructuralPaintItem(const class UNovaPaintDescription* Paint) const;
 	TSharedRef<SWidget> GenerateHullPaintItem(const class UNovaPaintDescription* Paint) const;
 	TSharedRef<SWidget> GenerateDetailPaintItem(const class UNovaPaintDescription* Paint) const;
