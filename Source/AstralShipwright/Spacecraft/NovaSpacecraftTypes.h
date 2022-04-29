@@ -384,8 +384,7 @@ public:
 
 	virtual bool operator<(const UNovaPaintDescription& Other) const
 	{
-		return PaintColor.LinearRGBToHSV().R < Other.PaintColor.LinearRGBToHSV().R &&
-		       PaintColor.LinearRGBToHSV().G > Other.PaintColor.LinearRGBToHSV().G;
+		return PaintColor.LinearRGBToHSV().R < Other.PaintColor.LinearRGBToHSV().R;
 	}
 
 public:

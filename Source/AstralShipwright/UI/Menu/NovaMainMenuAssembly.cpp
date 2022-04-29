@@ -625,54 +625,99 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 									+ SVerticalBox::Slot()
 									.AutoHeight()
 									[
-										SNovaAssignNew(StructuralPaintListView, SNovaPaintList)
-										.Panel(this)
-										.ItemsSource(&PaintList)
-										.TitleText(LOCTEXT("StructuralPaint", "Structural paint"))
-										.HelpText(LOCTEXT("StructuralPaintHelp", "Repaint the spacecraft's internal structures"))
-										.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateStructuralPaintItem)
-										.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GeneratePaintTooltip)
-										.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnStructuralPaintSelected)
-										.ButtonSize("DefaultButtonSize")
-										.ButtonContent()
+										SNew(SHorizontalBox)
+
+										+ SHorizontalBox::Slot()
+										.Padding(Theme.ContentPadding)
+										.VAlign(VAlign_Center)
 										[
-											GeneratePaintListButton(ENovaMainMenuAssemblyPaintType::Structural)
+											SNew(STextBlock)
+											.TextStyle(&Theme.MainFont)
+											.Text(LOCTEXT("StructuralPaintTitle", "Structural paint"))
+										]
+
+										+ SHorizontalBox::Slot()
+										.AutoWidth()
+										[
+											SNovaAssignNew(StructuralPaintListView, SNovaPaintList)
+											.Panel(this)
+											.ItemsSource(&PaintList)
+											.TitleText(LOCTEXT("StructuralPaint", "Structural paint"))
+											.HelpText(LOCTEXT("StructuralPaintHelp", "Repaint the spacecraft's internal structures"))
+											.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateStructuralPaintItem)
+											.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GeneratePaintTooltip)
+											.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnStructuralPaintSelected)
+											.ButtonSize("DefaultButtonSize")
+											.ButtonContent()
+											[
+												GeneratePaintListButton(ENovaMainMenuAssemblyPaintType::Structural)
+											]
 										]
 									]
 			
 									+ SVerticalBox::Slot()
 									.AutoHeight()
 									[
-										SNovaAssignNew(HullPaintListView, SNovaPaintList)
-										.Panel(this)
-										.ItemsSource(&PaintList)
-										.TitleText(LOCTEXT("HullPaint", "Hull paint"))
-										.HelpText(LOCTEXT("HullPaintHelp", "Repaint the spacecraft's hull"))
-										.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateHullPaintItem)
-										.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GeneratePaintTooltip)
-										.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnHullPaintSelected)
-										.ButtonSize("DefaultButtonSize")
-										.ButtonContent()
+										SNew(SHorizontalBox)
+
+										+ SHorizontalBox::Slot()
+										.Padding(Theme.ContentPadding)
+										.VAlign(VAlign_Center)
 										[
-											GeneratePaintListButton(ENovaMainMenuAssemblyPaintType::Hull)
+											SNew(STextBlock)
+											.TextStyle(&Theme.MainFont)
+											.Text(LOCTEXT("HullPaintitle", "Hull paint"))
+										]
+
+										+ SHorizontalBox::Slot()
+										.AutoWidth()
+										[
+											SNovaAssignNew(HullPaintListView, SNovaPaintList)
+											.Panel(this)
+											.ItemsSource(&PaintList)
+											.TitleText(LOCTEXT("HullPaint", "Hull paint"))
+											.HelpText(LOCTEXT("HullPaintHelp", "Repaint the spacecraft's hull"))
+											.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateHullPaintItem)
+											.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GeneratePaintTooltip)
+											.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnHullPaintSelected)
+											.ButtonSize("DefaultButtonSize")
+											.ButtonContent()
+											[
+												GeneratePaintListButton(ENovaMainMenuAssemblyPaintType::Hull)
+											]
 										]
 									]
 			
 									+ SVerticalBox::Slot()
 									.AutoHeight()
 									[
-										SNovaAssignNew(DetailPaintListView, SNovaPaintList)
-										.Panel(this)
-										.ItemsSource(&PaintList)
-										.TitleText(LOCTEXT("DetailPaint", "Accent paint"))
-										.HelpText(LOCTEXT("DetailPaintHelp", "Repaint the spacecraft's wires and decals"))
-										.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateDetailPaintItem)
-										.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GeneratePaintTooltip)
-										.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnDetailPaintSelected)
-										.ButtonSize("DefaultButtonSize")
-										.ButtonContent()
+										SNew(SHorizontalBox)
+
+										+ SHorizontalBox::Slot()
+										.Padding(Theme.ContentPadding)
+										.VAlign(VAlign_Center)
 										[
-											GeneratePaintListButton(ENovaMainMenuAssemblyPaintType::Detail)
+											SNew(STextBlock)
+											.TextStyle(&Theme.MainFont)
+											.Text(LOCTEXT("DetailPaintTitle", "Accent paint"))
+										]
+
+										+ SHorizontalBox::Slot()
+										.AutoWidth()
+										[
+											SNovaAssignNew(DetailPaintListView, SNovaPaintList)
+											.Panel(this)
+											.ItemsSource(&PaintList)
+											.TitleText(LOCTEXT("DetailPaint", "Accent paint"))
+											.HelpText(LOCTEXT("DetailPaintHelp", "Repaint the spacecraft's wires, covers and decals"))
+											.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateDetailPaintItem)
+											.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GeneratePaintTooltip)
+											.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnDetailPaintSelected)
+											.ButtonSize("DefaultButtonSize")
+											.ButtonContent()
+											[
+												GeneratePaintListButton(ENovaMainMenuAssemblyPaintType::Detail)
+											]
 										]
 									]
 								]
