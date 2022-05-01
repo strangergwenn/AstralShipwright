@@ -20,6 +20,11 @@ UNovaSpacecraftDriveComponent::UNovaSpacecraftDriveComponent() : Super()
 	// Settings
 	SetAbsolute(false, false, true);
 	PrimaryComponentTick.bCanEverTick = true;
+
+	// Defaults
+	MaxTemperature      = 1400;
+	TemperatureRampUp   = 1000;
+	TemperatureRampDown = 50;
 }
 
 /*----------------------------------------------------
@@ -40,6 +45,7 @@ void UNovaSpacecraftDriveComponent::BeginPlay()
 
 	// Create exhaust metadata
 	ExhaustPower.SetPeriod(0.25f);
+	CurrentTemperature = 0;
 
 	// Create exhaust material
 	ExhaustMaterial = UMaterialInstanceDynamic::Create(GetMaterial(0), GetWorld());
@@ -75,6 +81,14 @@ void UNovaSpacecraftDriveComponent::TickComponent(float DeltaTime, ELevelTick Ti
 		if (IsValid(ExhaustMaterial))
 		{
 			ExhaustMaterial->SetScalarParameterValue("EngineIntensity", ExhaustPower.Get());
+		}
+
+		// Process temperature
+		CurrentTemperature += ((EngineIntensity == 0) ? -TemperatureRampDown : EngineIntensity * TemperatureRampUp) * DeltaTime;
+		CurrentTemperature = FMath::Clamp(CurrentTemperature, 0, MaxTemperature);
+		if (IsValid(ExhaustMaterial))
+		{
+			ParentMesh->RequestParameter("Temperature", CurrentTemperature);
 		}
 	}
 }

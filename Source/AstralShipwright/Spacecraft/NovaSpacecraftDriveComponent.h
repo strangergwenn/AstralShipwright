@@ -35,6 +35,18 @@ protected:
 	    Data
 	----------------------------------------------------*/
 
+	// Max engine heat effect temperature in °C
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float MaxTemperature;
+
+	// Temperature ramp up speed in °C/s
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float TemperatureRampUp;
+
+	// Temperature ramp down speed in °C/s
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	float TemperatureRampDown;
+
 	// Exhaust template mesh
 	UPROPERTY()
 	class UStaticMesh* ExhaustMesh;
@@ -45,4 +57,7 @@ protected:
 
 	// Current power
 	TNovaTimedAverage<float> ExhaustPower;
+
+	// Temperature
+	float CurrentTemperature;
 };
