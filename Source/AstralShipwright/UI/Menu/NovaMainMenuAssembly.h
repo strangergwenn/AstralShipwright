@@ -37,6 +37,7 @@ public:
 	typedef SNovaModalListView<ENovaAssemblyDisplayFilter>               SNovaDisplayFilterList;
 	typedef SNovaModalListView<const class UNovaHullDescription*>        SNovaHullTypeList;
 	typedef SNovaModalListView<const class UNovaPaintDescription*>       SNovaPaintList;
+	typedef SNovaModalListView<const class UNovaEmblemDescription*>      SNovaEmblemList;
 
 	/*----------------------------------------------------
 	    Slate arguments
@@ -235,11 +236,16 @@ protected:
 	FKey GetNextItemKey() const;
 
 	// Paint lists
-	TSharedRef<SWidget> GeneratePaintListButton(ENovaMainMenuAssemblyPaintType Type);
+	TSharedRef<SWidget> GeneratePaintListButton(ENovaMainMenuAssemblyPaintType Type) const;
 	TSharedRef<SWidget> GenerateStructuralPaintItem(const class UNovaPaintDescription* Paint) const;
 	TSharedRef<SWidget> GenerateHullPaintItem(const class UNovaPaintDescription* Paint) const;
 	TSharedRef<SWidget> GenerateDetailPaintItem(const class UNovaPaintDescription* Paint) const;
 	FText               GeneratePaintTooltip(const class UNovaPaintDescription* Paint) const;
+
+	// Emblem list
+	TSharedRef<SWidget> GenerateEmblemListButton() const;
+	TSharedRef<SWidget> GenerateEmblemItem(const UNovaEmblemDescription* Emblem) const;
+	FText               GenerateEmblemTooltip(const UNovaEmblemDescription* Emblem) const;
 
 	/*----------------------------------------------------
 	    Callbacks
@@ -267,6 +273,7 @@ protected:
 	void OnOpenCustomization();
 	void OnStructuralPaintSelected(const class UNovaPaintDescription* Paint, int32 Index);
 	void OnHullPaintSelected(const class UNovaPaintDescription* Paint, int32 Index);
+	void OnEmblemSelected(const UNovaEmblemDescription* Emblem, int32 Index);
 	void OnDetailPaintSelected(const class UNovaPaintDescription* Paint, int32 Index);
 	void OnEnableHullPaintToggled();
 	void OnDirtyIntensityChanged(float Value);
@@ -343,4 +350,8 @@ protected:
 	TSharedPtr<SNovaPaintList>                 StructuralPaintListView;
 	TSharedPtr<SNovaPaintList>                 HullPaintListView;
 	TSharedPtr<SNovaPaintList>                 DetailPaintListView;
+
+	// Emblem list
+	TArray<const class UNovaEmblemDescription*> EmblemList;
+	TSharedPtr<SNovaEmblemList>                 EmblemListView;
 };

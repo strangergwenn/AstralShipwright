@@ -208,6 +208,7 @@ void FNovaSpacecraftCustomization::Create()
 	StructuralPaint = UNovaAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
 	HullPaint       = UNovaAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
 	DetailPaint     = UNovaAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
+	Emblem          = UNovaAssetManager::Get()->GetDefaultAsset<UNovaEmblemDescription>();
 	EnableHullPaint = false;
 }
 
@@ -657,6 +658,8 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 		UNovaAssetDescription::SaveAsset(JsonData, "SP", This->Customization.StructuralPaint);
 		UNovaAssetDescription::SaveAsset(JsonData, "HP", This->Customization.HullPaint);
 		UNovaAssetDescription::SaveAsset(JsonData, "DP", This->Customization.DetailPaint);
+		UNovaAssetDescription::SaveAsset(JsonData, "E", This->Customization.Emblem);
+		JsonData->SetNumberField("EHP", This->Customization.EnableHullPaint);
 		JsonData->SetNumberField("DI", This->Customization.DirtyIntensity);
 
 		// Compartments
@@ -743,6 +746,16 @@ void FNovaSpacecraft::SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPt
 		if (DetailPaint)
 		{
 			This->Customization.DetailPaint = DetailPaint;
+		}
+		const UNovaEmblemDescription* Emblem = UNovaAssetDescription::LoadAsset<UNovaEmblemDescription>(JsonData, "E");
+		if (Emblem)
+		{
+			This->Customization.Emblem = Emblem;
+		}
+		bool EnableHullPaint;
+		if (JsonData->TryGetBoolField("EHP", EnableHullPaint))
+		{
+			This->Customization.EnableHullPaint = EnableHullPaint;
 		}
 		double DirtyIntensity = 0;
 		if (JsonData->TryGetNumberField("DI", DirtyIntensity))

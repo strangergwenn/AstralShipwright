@@ -419,6 +419,12 @@ void UNovaSpacecraftCompartmentComponent::UpdateCustomization(FNovaAssemblyEleme
 	{
 		RequestParameter(Element, "PaintColor", Customization.DetailPaint->PaintColor);
 	}
+
+	if (Customization.Emblem && Element.Mesh && Element.Type == ENovaAssemblyElementType::Equipment)
+	{
+		Cast<UMaterialInstanceDynamic>(Cast<UPrimitiveComponent>(Element.Mesh)->GetMaterial(0))
+			->SetTextureParameterValue("ColorDecalTexture", Customization.Emblem->Image);
+	}
 }
 
 /*----------------------------------------------------

@@ -173,7 +173,7 @@ struct FNovaSpacecraftCustomization
 	GENERATED_BODY()
 
 	FNovaSpacecraftCustomization()
-		: DirtyIntensity(0.0f), StructuralPaint(nullptr), HullPaint(nullptr), DetailPaint(nullptr), EnableHullPaint(false)
+		: DirtyIntensity(0.0f), StructuralPaint(nullptr), HullPaint(nullptr), DetailPaint(nullptr), Emblem(nullptr), EnableHullPaint(false)
 	{}
 
 	/** Initialize the customization data */
@@ -182,7 +182,7 @@ struct FNovaSpacecraftCustomization
 	bool operator==(const FNovaSpacecraftCustomization& Other) const
 	{
 		return DirtyIntensity == Other.DirtyIntensity && StructuralPaint == Other.StructuralPaint && HullPaint == Other.HullPaint &&
-		       DetailPaint == Other.DetailPaint && EnableHullPaint == Other.EnableHullPaint;
+		       DetailPaint == Other.DetailPaint && Emblem == Other.Emblem && EnableHullPaint == Other.EnableHullPaint;
 	}
 
 	bool operator!=(const FNovaSpacecraftCustomization& Other) const
@@ -201,6 +201,9 @@ struct FNovaSpacecraftCustomization
 
 	UPROPERTY()
 	const UNovaPaintDescription* DetailPaint;
+
+	UPROPERTY()
+	const UNovaEmblemDescription* Emblem;
 
 	UPROPERTY()
 	bool EnableHullPaint;

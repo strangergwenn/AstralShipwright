@@ -725,6 +725,42 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						]
 
 						+ SHorizontalBox::Slot()
+
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(SVerticalBox)
+
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							.Padding(Theme.VerticalContentPadding)
+							[
+								SNew(STextBlock)
+								.TextStyle(&Theme.HeadingFont)
+								.Text(LOCTEXT("EmblemTitle", "Emblem"))
+							]
+							
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNovaAssignNew(EmblemListView, SNovaEmblemList)
+								.Panel(this)
+								.ItemsSource(&EmblemList)
+								.TitleText(LOCTEXT("Emblem", "Emblem"))
+								.HelpText(LOCTEXT("EmblemHelp", "Change the ship's emblem"))
+								.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateEmblemItem)
+								.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateEmblemTooltip)
+								.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnEmblemSelected)
+								.ListButtonSize("LargeListButtonSize")
+								.ButtonSize("InventoryButtonSize")
+								.ButtonContent()
+								[
+									GenerateEmblemListButton()
+								]
+							]
+						]
+
+						+ SHorizontalBox::Slot()
 						
 						// Customization details
 						+ SHorizontalBox::Slot()
@@ -1574,13 +1610,17 @@ void SNovaMainMenuAssembly::SetPanelState(ENovaMainMenuAssemblyState State)
 	{
 		const FNovaSpacecraftCustomization& Customization = SpacecraftPawn->GetCustomization();
 
-		PaintList = UNovaAssetManager::Get()->GetSortedAssets<UNovaPaintDescription>();
+		PaintList  = UNovaAssetManager::Get()->GetSortedAssets<UNovaPaintDescription>();
+		EmblemList = UNovaAssetManager::Get()->GetSortedAssets<UNovaEmblemDescription>();
 
-		EnableHullPaintButton->SetActive(Customization.EnableHullPaint);
-		DirtyIntensity->SetCurrentValue(Customization.DirtyIntensity);
 		StructuralPaintListView->Refresh(PaintList.Find(Customization.StructuralPaint));
 		HullPaintListView->Refresh(PaintList.Find(Customization.HullPaint));
 		DetailPaintListView->Refresh(PaintList.Find(Customization.DetailPaint));
+
+		EmblemListView->Refresh(EmblemList.Find(Customization.Emblem));
+
+		EnableHullPaintButton->SetActive(Customization.EnableHullPaint);
+		DirtyIntensity->SetCurrentValue(Customization.DirtyIntensity);
 	}
 
 	// Assembly sub-menu
@@ -2073,7 +2113,7 @@ FKey SNovaMainMenuAssembly::GetNextItemKey() const
     Paint lists callbacks
 ----------------------------------------------------*/
 
-TSharedRef<SWidget> SNovaMainMenuAssembly::GeneratePaintListButton(ENovaMainMenuAssemblyPaintType Type)
+TSharedRef<SWidget> SNovaMainMenuAssembly::GeneratePaintListButton(ENovaMainMenuAssemblyPaintType Type) const
 {
 	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
 	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
@@ -2188,7 +2228,74 @@ FText SNovaMainMenuAssembly::GeneratePaintTooltip(const UNovaPaintDescription* P
 }
 
 /*----------------------------------------------------
-    Compartment callbacks
+    Emblem callbacks
+----------------------------------------------------*/
+
+TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEmblemListButton() const
+{
+	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
+	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
+
+	// clang-format off
+	return SNew(SScaleBox)
+		.Stretch(EStretch::ScaleToFill)
+		[
+			SNew(SImage)
+			.Image_Lambda([=]()
+			{
+				return &EmblemListView->GetSelectedItem()->Brush;
+			})
+		];
+	// clang-format on
+}
+
+TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEmblemItem(const UNovaEmblemDescription* Emblem) const
+{
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+
+	// clang-format off
+	return SNew(SHorizontalBox)
+
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.VAlign(VAlign_Center)
+		[
+			SNew(SImage)
+			.Image_Lambda([=]()
+			{
+				return EmblemListView->GetSelectionIcon(Emblem);
+			})
+		]
+
+		+ SHorizontalBox::Slot()
+		.VAlign(VAlign_Center)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.MainFont)
+			.Text(Emblem->Name)
+		]
+
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		[
+			SNew(SScaleBox)
+			.Stretch(EStretch::ScaleToFill)
+			[
+				SNew(SImage)
+				.Image(&Emblem->Brush)
+			]
+		];
+
+	// clang-format on
+}
+
+FText SNovaMainMenuAssembly::GenerateEmblemTooltip(const UNovaEmblemDescription* Emblem) const
+{
+	return Emblem->Name;
+}
+
+/*----------------------------------------------------
+Compartment callbacks
 ----------------------------------------------------*/
 
 void SNovaMainMenuAssembly::OnEditCompartment()
@@ -2361,6 +2468,15 @@ void SNovaMainMenuAssembly::OnDetailPaintSelected(const UNovaPaintDescription* P
 
 	FNovaSpacecraftCustomization Customization = SpacecraftPawn->GetCustomization();
 	Customization.DetailPaint                  = Paint;
+	SpacecraftPawn->UpdateCustomization(Customization);
+}
+
+void SNovaMainMenuAssembly::OnEmblemSelected(const UNovaEmblemDescription* Emblem, int32 Index)
+{
+	NLOG("SNovaMainMenuAssembly::OnEmblemSelected : %d", Index);
+
+	FNovaSpacecraftCustomization Customization = SpacecraftPawn->GetCustomization();
+	Customization.Emblem                       = Emblem;
 	SpacecraftPawn->UpdateCustomization(Customization);
 }
 

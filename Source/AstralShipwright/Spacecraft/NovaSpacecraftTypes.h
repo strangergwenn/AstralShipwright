@@ -393,6 +393,31 @@ public:
 	FLinearColor PaintColor;
 };
 
+/** Description of an emblem */
+UCLASS(ClassGroup = (Nova))
+class UNovaEmblemDescription : public UNovaAssetDescription
+{
+	GENERATED_BODY()
+
+public:
+	UNovaEmblemDescription() : Image(nullptr)
+	{}
+
+	virtual bool operator<(const UNovaEmblemDescription& Other) const
+	{
+		return Image && Other.Image && Image->GetName() < Other.Image->GetName();
+	}
+
+public:
+	// Emblem brush
+	UPROPERTY(Category = Paint, EditDefaultsOnly)
+	FSlateBrush Brush;
+
+	// Emblem RGBA image
+	UPROPERTY(Category = Paint, EditDefaultsOnly)
+	class UTexture2D* Image;
+};
+
 /*----------------------------------------------------
     Module data assets
 ----------------------------------------------------*/
