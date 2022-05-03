@@ -26,6 +26,12 @@ public:
 	/** Get the physical sun direction */
 	FVector GetSunDirection() const;
 
+	/** Get the sun location */
+	FVector GetSunLocation() const;
+
+	/** Get the dominant body location */
+	FVector GetPlanetLocation() const;
+
 	/*----------------------------------------------------
 	    Components
 	----------------------------------------------------*/

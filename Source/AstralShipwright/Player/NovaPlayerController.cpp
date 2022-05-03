@@ -5,13 +5,16 @@
 #include "NovaGameViewportClient.h"
 
 #include "Actor/NovaActorTools.h"
+#include "Actor/NovaPlayerStart.h"
 #include "Actor/NovaTurntablePawn.h"
 
 #include "Game/NovaAsteroid.h"
 #include "Game/NovaGameMode.h"
 #include "Game/NovaGameState.h"
+#include "Game/NovaPlanetarium.h"
 #include "Game/Settings/NovaGameUserSettings.h"
 #include "Game/Settings/NovaWorldSettings.h"
+#include "Game/Station/NovaStationDock.h"
 
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
@@ -335,7 +338,14 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaPlayerViewpoint::StaticClass(), Viewpoints);
 		TArray<AActor*> Asteroids;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
-		FVector PlayerLocation = GetPawn()->GetActorLocation();
+		TArray<AActor*> StationDocks;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaStationDock::StaticClass(), StationDocks);
+		TArray<AActor*> Planetariums;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaPlanetarium::StaticClass(), Planetariums);
+
+		// Get player start
+		ANovaSpacecraftPawn*    SpacecraftPawn = GetSpacecraftPawn();
+		const ANovaPlayerStart* PlayerStart    = SpacecraftPawn->GetSpacecraftMovement()->GetPlayerStart();
 
 		// Get the first viewpoint actor and extract its transform
 		const ANovaPlayerViewpoint* PlayerViewpoint = nullptr;
@@ -347,6 +357,7 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 		float AnimationDuration =
 			PlayerViewpoint ? PlayerViewpoint->CameraAnimationDuration : GetDefault<ANovaPlayerViewpoint>()->CameraAnimationDuration;
 
+		FVector PlayerLocation = GetPawn()->GetActorLocation();
 		if (PlayerViewpoint)
 		{
 			Location = PlayerViewpoint->GetActorLocation();
@@ -371,29 +382,25 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 		}
 
 		// Braking spacecraft entry
-		if (CurrentCameraState == ENovaPlayerCameraState::CinematicBrake)
+		if (CurrentCameraState == ENovaPlayerCameraState::CinematicBrake &&
+			((StationDocks.Num() > 0 && IsValid(PlayerStart)) || Asteroids.Num() > 0))
 		{
-			constexpr float AnimationStartAngle      = 90;
-			constexpr float AnimationStartTime       = 0.5f;
-			constexpr float AnimationEndTime         = 2.0f;
-			constexpr float RotationBaseDistance     = 10000;
-			constexpr float RotationVariableDistance = 10000;
+			NCHECK(Planetariums.Num() > 0);
 
-			// Build animation times
-			float RotationAnimationAlpha = FMath::Clamp(
-				(CurrentTimeInCameraState - AnimationStartTime) / (AnimationDuration - AnimationStartTime - AnimationEndTime), 0.0f, 1.0f);
-			RotationAnimationAlpha = FMath::InterpEaseInOut(0.0f, 1.0f, RotationAnimationAlpha, ENovaUIConstants::EaseStrong);
+			// Define scene parameters
+			constexpr double ViewDistance = 50000.0;
+			const FVector    TargetLocation =
+                StationDocks.Num() > 0 ? PlayerStart->GetWaitingPointLocation() : Asteroids[0]->GetActorLocation();
+			const FVector BackdropLocation =
+				StationDocks.Num() > 0 ? PlayerStart->GetActorLocation() : Cast<ANovaPlanetarium>(Planetariums[0])->GetPlanetLocation();
 
-			// Construct the rotation arc
-			FVector PlayerPitchAxis        = FVector::CrossProduct(-GetPawn()->GetActorForwardVector(), FVector(0, 0, 1));
-			FQuat   PlayerPitchStartOffset = FQuat(PlayerPitchAxis, FMath::DegreesToRadians(AnimationStartAngle));
-			FQuat   PlayerPitchOffset =
-				FQuat(PlayerPitchAxis, -FMath::DegreesToRadians(RotationAnimationAlpha * (180 - AnimationStartAngle)));
+			// Define the appropriate viewpoint characteristics
+			const FVector TargetSeparation   = SpacecraftPawn->GetActorLocation() - TargetLocation;
+			const FVector TargetViewpoint    = (SpacecraftPawn->GetActorLocation() + TargetLocation) / 2.0;
+			FVector       ViewpointDirection = (BackdropLocation - TargetViewpoint).GetSafeNormal();
 
-			// Proceed
-			Rotation = (PlayerPitchOffset * PlayerPitchStartOffset * GetPawn()->GetActorQuat()).Rotator();
-			Location =
-				PlayerLocation - Rotation.Vector() * (RotationBaseDistance + (1.0f - RotationAnimationAlpha) * RotationVariableDistance);
+			Location = TargetViewpoint - ViewpointDirection * ViewDistance;
+			Rotation = ViewpointDirection.Rotation();
 		}
 	}
 }

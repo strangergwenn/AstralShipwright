@@ -208,3 +208,13 @@ FVector ANovaPlanetarium::GetSunDirection() const
 {
 	return Sunlight->GetDirection();
 }
+
+FVector ANovaPlanetarium::GetSunLocation() const
+{
+	return IsValid(CelestialToComponent[SunBody]) ? CelestialToComponent[SunBody]->GetComponentLocation() : FVector::ZeroVector;
+}
+
+FVector ANovaPlanetarium::GetPlanetLocation() const
+{
+	return Atmosphere->GetComponentLocation();
+}
