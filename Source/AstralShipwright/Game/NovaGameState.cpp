@@ -491,7 +491,7 @@ bool ANovaGameState::IsAnySpacecraftDocked() const
 {
 	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 	{
-		if (SpacecraftPawn->IsDocked())
+		if (SpacecraftPawn->GetPlayerState() && SpacecraftPawn->IsDocked())
 		{
 			return true;
 		}
@@ -504,11 +504,12 @@ bool ANovaGameState::AreAllSpacecraftDocked() const
 {
 	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 	{
-		if (!SpacecraftPawn->IsDocked())
+		if (SpacecraftPawn->GetPlayerState() && !SpacecraftPawn->IsDocked())
 		{
 			return false;
 		}
 	}
+
 	return true;
 }
 
