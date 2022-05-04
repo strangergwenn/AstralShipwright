@@ -40,16 +40,7 @@ struct FNovaAsteroid
 	FNovaAsteroid() : Identifier(FGuid::NewGuid()), Body(nullptr), Altitude(0), Phase(0), Mesh(), Scale(0)
 	{}
 
-	FNovaAsteroid(FRandomStream& RandomStream, const class UNovaCelestialBody* B, double A, double P)
-		: Identifier(FGuid(RandomStream.RandHelper(MAX_int32), RandomStream.RandHelper(MAX_int32), RandomStream.RandHelper(MAX_int32),
-			  RandomStream.RandHelper(MAX_int32)))
-		, Body(B)
-		, Altitude(A)
-		, Phase(P)
-		, Mesh()
-		, Scale(RandomStream.FRandRange(30, 70))
-		, EffectsCount(RandomStream.FRandRange(10, 20))
-	{}
+	FNovaAsteroid(FRandomStream& RandomStream, const class UNovaCelestialBody* B, double A, double P);
 
 	// Identifier
 	FGuid Identifier;
@@ -63,6 +54,7 @@ struct FNovaAsteroid
 	TSoftObjectPtr<class UStaticMesh>    Mesh;
 	TSoftObjectPtr<class UNiagaraSystem> DustEffect;
 	float                                Scale;
+	FRotator                             Rotation;
 	int32                                EffectsCount;
 };
 

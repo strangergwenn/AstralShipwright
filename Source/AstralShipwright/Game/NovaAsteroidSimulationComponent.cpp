@@ -19,6 +19,22 @@ static constexpr int32 AsteroidSpawnDistanceKm    = 500;
 static constexpr int32 AsteroidDespawnDistanceKm  = 600;
 
 /*----------------------------------------------------
+    Asteroid
+----------------------------------------------------*/
+
+FNovaAsteroid::FNovaAsteroid(FRandomStream& RandomStream, const class UNovaCelestialBody* B, double A, double P)
+	: Identifier(FGuid(RandomStream.RandHelper(MAX_int32), RandomStream.RandHelper(MAX_int32), RandomStream.RandHelper(MAX_int32),
+		  RandomStream.RandHelper(MAX_int32)))
+	, Body(B)
+	, Altitude(A)
+	, Phase(P)
+	, Mesh()
+	, Scale(RandomStream.FRandRange(90, 130))
+	, Rotation(RandomStream.FRandRange(-90, 90), RandomStream.FRandRange(0, 360), 0)
+	, EffectsCount(RandomStream.FRandRange(10, 20))
+{}
+
+/*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 

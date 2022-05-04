@@ -49,6 +49,7 @@ void ANovaAsteroid::Initialize(const FNovaAsteroid& InAsteroid)
 	LoadingAssets = true;
 	Asteroid      = InAsteroid;
 	SetActorLocation(FVector(0, 0, -1000 * 1000 * 100));
+	SetActorRotation(InAsteroid.Rotation);
 	SetActorScale3D(Asteroid.Scale * FVector(1, 1, 1));
 
 	// Load assets and resume initializing later

@@ -397,7 +397,7 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 			// Define the appropriate viewpoint characteristics
 			const FVector TargetSeparation   = SpacecraftPawn->GetActorLocation() - TargetLocation;
 			const FVector TargetViewpoint    = (SpacecraftPawn->GetActorLocation() + TargetLocation) / 2.0;
-			FVector       ViewpointDirection = (BackdropLocation - TargetViewpoint).GetSafeNormal();
+			const FVector ViewpointDirection = (BackdropLocation - TargetViewpoint).GetSafeNormal();
 
 			Location = TargetViewpoint - ViewpointDirection * ViewDistance;
 			Rotation = ViewpointDirection.Rotation();
