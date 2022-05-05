@@ -53,6 +53,7 @@ void ANovaStationDock::BeginPlay()
 
 		// Set material parameters
 		DynamicMaterial->SetVectorParameterValue("PaintColor", Area->PaintColor);
+		DynamicMaterial->SetVectorParameterValue("DecalColor", Area->DecalColor);
 		DynamicMaterial->SetVectorParameterValue("LightColor", Area->LightColor);
 		DynamicMaterial->SetScalarParameterValue("DirtyIntensity", Area->DirtyIntensity);
 
