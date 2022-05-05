@@ -750,11 +750,13 @@ void ANovaSpacecraftPawn::UpdateBounds()
 		Bounds.GetCenterAndExtents(CurrentOrigin, CurrentExtent);
 	}
 
-	// While docked, actual actor bounds work best
+	// While docked, actual actor bounds work best, with some modifier to account for the very narrow shape of ships
 	else if (IsDocked())
 	{
 		FVector Unused;
 		GetActorBounds(true, Unused, CurrentExtent);
+
+		CurrentExtent /= 5.0f;
 	}
 
 	// In other cases, use a point cloud from component origins because we rotate, and the size doesn't change much
