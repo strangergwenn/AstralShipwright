@@ -1,0 +1,21 @@
+"AppBuild"
+{
+	"AppID" "1993250"
+	"Desc" "Windows Demo"
+
+	"ContentRoot" "..\Packaged\Windows"
+	"BuildOutput" "..\Steam"
+
+	"Depots"
+	{
+		"1993251"
+		{
+			"FileMapping"
+			{
+				"LocalPath" "*" 
+				"DepotPath" "."
+				"recursive" "1"
+			}
+		}
+	}
+}

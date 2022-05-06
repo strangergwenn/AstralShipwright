@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Package the game for distribution - make sure to configure project.json
+# Package the game for distribution
 # Usage : Build.py <absolute-output-dir>
+#  - Make sure to configure Build.json
 # 
-# Gwennaël Arbona 2021
+# Gwennaël Arbona 2022
 #-------------------------------------------------------------------------------
 
 import re

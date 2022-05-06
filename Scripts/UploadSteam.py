@@ -9,10 +9,11 @@
 #  - Make sure to configure STEAM_BUILDER in environment with your Steam SDK 'builder' folder
 #  - Make sure to configure Build.json
 # 
-# Gwennaël Arbona 2021
+# Gwennaël Arbona 2022
 #-------------------------------------------------------------------------------
 
 import os
+import sys
 import json
 import subprocess
 
@@ -25,12 +26,15 @@ configDir = '../Config/'
 projectConfigFile = open(os.path.join(configDir, 'Build.json'))
 projectConfig = json.load(projectConfigFile)
 
-# Get optional build settings
-outputDir =                  str(projectConfig.get('outputDir'))
-
 # Get Steam settings
-steamConfig =                projectConfig["steam"]
-steamApps =                  steamConfig["apps"]
+outputDir =   str(projectConfig.get('outputDir'))
+steamConfig = projectConfig["steam"]
+
+# Get apps
+if len(sys.argv) == 2 and sys.argv[1] == "demo":
+	steamApps = steamConfig["demos"]
+else:
+	steamApps = steamConfig["apps"]
 
 
 #-------------------------------------------------------------------------------
