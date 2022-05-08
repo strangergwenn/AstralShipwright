@@ -45,6 +45,7 @@ protected:
 	----------------------------------------------------*/
 
 	void OnLaunchGame(uint32 Index);
+	void OnOpenCredits();
 
 	/*----------------------------------------------------
 	    Data
@@ -52,5 +53,9 @@ protected:
 
 protected:
 	// Menu manager
-	TWeakObjectPtr<UNovaMenuManager> MenuManager;
+	TWeakObjectPtr<class UNovaMenuManager> MenuManager;
+
+	// Widgets
+	TSharedPtr<class SNovaModalPanel> ModalPanel;
+	TSharedPtr<class SBorder>         CreditsWidget;
 };

@@ -8,6 +8,7 @@
 #include "System/NovaMenuManager.h"
 
 #include "UI/Component/NovaLargeButton.h"
+#include "UI/Widget/NovaModalPanel.h"
 
 #include "Nova.h"
 
@@ -76,7 +77,7 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 
 					+ SHorizontalBox::Slot()
 					[
-						SNovaDefaultNew(SNovaLargeButton)
+						SNovaNew(SNovaLargeButton)
 						.Theme("MainMenuButton")
 						.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
 						.Text(LOCTEXT("Launch2", "Slot 2"))
@@ -86,7 +87,7 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 
 					+ SHorizontalBox::Slot()
 					[
-						SNovaDefaultNew(SNovaLargeButton)
+						SNovaNew(SNovaLargeButton)
 						.Theme("MainMenuButton")
 						.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
 						.Text(LOCTEXT("Launch3", "Slot 3"))
@@ -95,10 +96,74 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 					]
 
 					+ SHorizontalBox::Slot()
+					[
+						SNovaNew(SNovaLargeButton)
+						.Theme("MainMenuButton")
+						.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
+						.Text(LOCTEXT("Credits", "Credits"))
+						.HelpText(LOCTEXT("CreditsHelp", "Check out the credits"))
+						.OnClicked(this, &SNovaMainMenuHome::OnOpenCredits)
+					]
+
+					+ SHorizontalBox::Slot()
 				]
 			]
 		]
 	];
+
+	// Credits
+	ModalPanel = Menu->CreateModalPanel();
+	SAssignNew(CreditsWidget, SBorder)
+	.BorderImage(FNovaStyleSet::GetBrush("Common/SB_Black"))
+	.Padding(0)
+	[
+		SNew(SHorizontalBox)
+
+		+ SHorizontalBox::Slot()
+
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		[
+			SNew(SBox)
+			.WidthOverride(700)
+			[
+				SNew(SVerticalBox)
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(Theme.ContentPadding)
+				.HAlign(HAlign_Center)
+				[
+					SNew(SImage)
+					.Image(FNovaStyleSet::GetBrush("Common/SB_DeimosGames"))
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(Theme.ContentPadding)
+				.HAlign(HAlign_Center)
+				[
+					SNew(STextBlock)
+					.TextStyle(&Theme.HeadingFont)
+					.Text(INVTEXT("A game by Gwennaël 'Stranger' Arbona"))
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(Theme.ContentPadding)
+				[
+					SNew(STextBlock)
+					.TextStyle(&Theme.MainFont)
+					.AutoWrapText(true)
+					.Text(INVTEXT(
+						"Astral Shipwright uses Unreal® Engine. Unreal® is a trademark or registered trademark of Epic Games, Inc. in the United States of America and elsewhere. Unreal® Engine, Copyright 1998-2022, Epic Games, Inc. All rights reserved."))
+				]
+			]
+		]
+
+		+ SHorizontalBox::Slot()
+	];
+
 	// clang-format on
 }
 
@@ -127,6 +192,11 @@ void SNovaMainMenuHome::Hide()
 void SNovaMainMenuHome::OnLaunchGame(uint32 Index)
 {
 	MenuManager->GetPC()->StartGame(FString::FromInt(Index), true);
+}
+
+void SNovaMainMenuHome::OnOpenCredits()
+{
+	ModalPanel->Show(LOCTEXT("CreditsTitle", "CREDITS"), FText(), FSimpleDelegate(), FSimpleDelegate(), FSimpleDelegate(), CreditsWidget);
 }
 
 #undef LOCTEXT_NAMESPACE
