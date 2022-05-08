@@ -596,6 +596,11 @@ UCLASS(ClassGroup = (Nova))
 class UNovaHatchDescription : public UNovaEquipmentDescription
 {
 	GENERATED_BODY()
+
+public:
+	// Life support
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	bool IsHabitat = false;
 };
 
 /** Description of a propellant tank equipment */

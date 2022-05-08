@@ -408,6 +408,7 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 
 	// Prepare for detailed analysis
 	bool                          HasAnyThruster = false;
+	bool                          HasAnyHabitat  = false;
 	TArray<FNovaHatchModuleGroup> ModuleGroups;
 
 	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
@@ -483,9 +484,16 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 					}
 				}
 
-				if (Equipment && Equipment->IsA<UNovaThrusterDescription>())
+				if (Equipment)
 				{
-					HasAnyThruster = true;
+					if (Equipment->IsA<UNovaThrusterDescription>())
+					{
+						HasAnyThruster = true;
+					}
+					else if (Equipment->IsA<UNovaHatchDescription>())
+					{
+						HasAnyHabitat = Cast<UNovaHatchDescription>(Equipment)->IsHabitat;
+					}
 				}
 			}
 		}
@@ -512,6 +520,10 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 	if (!HasAnyThruster)
 	{
 		Issues.Add(LOCTEXT("NoThrusters", "This spacecraft has no maneuvering thrusters"));
+	}
+	if (!HasAnyHabitat)
+	{
+		Issues.Add(LOCTEXT("NoHabitat", "This spacecraft doesn't have any habitable space"));
 	}
 
 	// Report issues
