@@ -6,7 +6,6 @@
 #include "Nova.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
-#include "UObject/ConstructorHelpers.h"
 #include "DrawDebugHelpers.h"
 
 #define SHOW_TRACES 0
