@@ -51,6 +51,7 @@ public:
 		, LightColor(FLinearColor::White)
 		, DecalColor(FLinearColor::Black)
 		, DirtyIntensity(0.5f)
+		, Temperature(0.0f)
 	{}
 
 public:
@@ -105,4 +106,8 @@ public:
 	// Ring index
 	UPROPERTY(Category = Style, EditDefaultsOnly, BlueprintReadOnly)
 	float DirtyIntensity;
+
+	// Temperature
+	UPROPERTY(Category = Style, EditDefaultsOnly, BlueprintReadOnly)
+	float Temperature;
 };

@@ -56,6 +56,7 @@ void ANovaStationDock::BeginPlay()
 		DynamicMaterial->SetVectorParameterValue("DecalColor", Area->DecalColor);
 		DynamicMaterial->SetVectorParameterValue("LightColor", Area->LightColor);
 		DynamicMaterial->SetScalarParameterValue("DirtyIntensity", Area->DirtyIntensity);
+		DynamicMaterial->SetScalarParameterValue("Temperature", Area->Temperature);
 
 		// Spawn effects
 		FVector          ParticleSystemLocation = Component->GetComponentLocation() + SystemDistance * Component->GetUpVector();
