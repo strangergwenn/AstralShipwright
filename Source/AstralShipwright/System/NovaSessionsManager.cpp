@@ -145,7 +145,7 @@ bool UNovaSessionsManager::StartSession(FString URL, int32 MaxNumPlayers, bool P
 				SessionSettings->NumPublicConnections             = MaxNumPlayers;
 				SessionSettings->NumPrivateConnections            = 0;
 				SessionSettings->bIsLANMatch                      = false;
-				SessionSettings->bUsesPresence                    = true;
+				SessionSettings->bUsesPresence                    = false;
 				SessionSettings->bAllowInvites                    = true;
 				SessionSettings->bAllowJoinInProgress             = true;
 				SessionSettings->bShouldAdvertise                 = Public;
