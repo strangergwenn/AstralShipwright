@@ -28,7 +28,6 @@ public class AstralShipwright : ModuleRules
             "Json",
             "JsonUtilities",
 
-            "HTTP",
             "OnlineSubsystem",
             "OnlineSubsystemUtils",
             "NetCore"
