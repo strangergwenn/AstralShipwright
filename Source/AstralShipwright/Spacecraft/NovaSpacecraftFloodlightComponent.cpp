@@ -34,6 +34,8 @@ void UNovaSpacecraftFloodlightComponent::BeginPlay()
 	INovaMeshInterface*       ParentMesh = Cast<INovaMeshInterface>(GetAttachParent());
 	NCHECK(ParentMesh);
 
+	FLinearColor LightColor = FLinearColor(1.0f, 0.7f, 0.50f);
+
 	// Find all light sockets
 	do
 	{
@@ -57,7 +59,7 @@ void UNovaSpacecraftFloodlightComponent::BeginPlay()
 			Light->AttachToComponent(this, AttachRules);
 
 			// Configure
-			Light->SetLightColor(FLinearColor(1.0f, 0.95f, 0.95f));
+			Light->SetLightColor(LightColor);
 			Light->SetLightBrightness(1000000.0f);
 			Light->SetAttenuationRadius(5000.0f);
 			Light->SetOuterConeAngle(90.0f);
@@ -73,6 +75,10 @@ void UNovaSpacecraftFloodlightComponent::BeginPlay()
 		CurrentSocketIndex++;
 
 	} while (HasSocket);
+
+	// Configure the main light too
+	ParentMesh->RequestParameter("LightColor", LightColor);
+	ParentMesh->RequestParameter("LightIntensity", 20.0f);
 }
 
 void UNovaSpacecraftFloodlightComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
