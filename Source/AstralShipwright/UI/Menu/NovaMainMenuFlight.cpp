@@ -307,7 +307,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.Text(this, &SNovaMainMenuFlight::GetDockingText)
 			.HelpText(this, &SNovaMainMenuFlight::GetDockingHelp)
 			.OnClicked(this, &SNovaMainMenuFlight::OnDockUndock)
-			.Enabled(this, &SNovaMainMenuFlight::IsDockingEnabled)
+			.Enabled(this, &SNovaMainMenuFlight::IsDockUndockEnabled)
 		]
 		
 		+ SVerticalBox::Slot()
@@ -606,27 +606,91 @@ FText SNovaMainMenuFlight::GetDockingText() const
 	}
 }
 
-FText SNovaMainMenuFlight::GetDockingHelp() const
-{
-	if (IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Docked)
-	{
-		return LOCTEXT("UndockHelp", "Undock from the station");
-	}
-	else
-	{
-		return LOCTEXT("DockHelp", "Dock at the station");
-	}
-}
-
-bool SNovaMainMenuFlight::IsDockingEnabled() const
+bool SNovaMainMenuFlight::CanDock(FText* Help) const
 {
 	if (OrbitalSimulation && IsValid(PC) && IsValid(SpacecraftMovement) && IsValid(SpacecraftPawn))
 	{
 		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
-		return (PlayerTrajectory == nullptr && SpacecraftMovement->CanDock()) ||
-		       (!SpacecraftPawn->HasModifications() && SpacecraftPawn->IsSpacecraftValid() && SpacecraftMovement->CanUndock());
+
+		if (PlayerTrajectory != nullptr)
+		{
+			if (Help)
+			{
+				*Help = LOCTEXT("SpacecraftTrajectory", "Cannot dock while on a trajectory");
+			}
+			return false;
+		}
+		else if (!SpacecraftMovement->CanDock())
+		{
+			if (Help)
+			{
+				*Help = LOCTEXT("SpacecraftCannotDock", "Docking denied");
+			}
+			return false;
+		}
+
+		return true;
 	}
+
 	return false;
+}
+
+bool SNovaMainMenuFlight::CanUndock(FText* Help) const
+{
+	if (OrbitalSimulation && IsValid(PC) && IsValid(SpacecraftMovement) && IsValid(SpacecraftPawn))
+	{
+		if (SpacecraftPawn->HasModifications())
+		{
+			if (Help)
+			{
+				*Help = LOCTEXT("SpacecraftModifications", "Cannot undock with design changes");
+			}
+			return false;
+		}
+		else if (!SpacecraftPawn->IsSpacecraftValid())
+		{
+			if (Help)
+			{
+				*Help = LOCTEXT("SpacecraftNotValid", "Cannot undock with an invalid spacecraft design");
+			}
+			return false;
+		}
+		else if (!SpacecraftMovement->CanUndock())
+		{
+			if (Help)
+			{
+				*Help = LOCTEXT("SpacecraftCannotUndock", "UndockingDenied");
+			}
+			return false;
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+FText SNovaMainMenuFlight::GetDockingHelp() const
+{
+	FText Out;
+
+	if (IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Docked)
+	{
+		Out = LOCTEXT("UndockHelp", "Undock from the station");
+		CanUndock(&Out);
+	}
+	else
+	{
+		Out = LOCTEXT("DockHelp", "Dock at the station");
+		CanDock(&Out);
+	}
+
+	return Out;
+}
+
+bool SNovaMainMenuFlight::IsDockUndockEnabled() const
+{
+	return CanDock(nullptr) || CanUndock(nullptr);
 }
 
 bool SNovaMainMenuFlight::IsManeuveringEnabled() const
@@ -681,7 +745,7 @@ void SNovaMainMenuFlight::FastForward()
 
 void SNovaMainMenuFlight::OnDockUndock()
 {
-	if (IsDockingEnabled())
+	if (IsDockUndockEnabled())
 	{
 		if (IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Docked)
 		{

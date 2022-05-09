@@ -490,9 +490,9 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 					{
 						HasAnyThruster = true;
 					}
-					else if (Equipment->IsA<UNovaHatchDescription>())
+					else if (Equipment->IsA<UNovaHatchDescription>() && Cast<UNovaHatchDescription>(Equipment)->IsHabitat)
 					{
-						HasAnyHabitat = Cast<UNovaHatchDescription>(Equipment)->IsHabitat;
+						HasAnyHabitat = true;
 					}
 				}
 			}

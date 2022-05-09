@@ -86,10 +86,12 @@ protected:
 	bool  CanFastForward() const;
 	FText GetFastFowardHelp() const;
 
+	bool  CanDock(FText* Help) const;
+	bool  CanUndock(FText* Help) const;
 	FText GetDockingText() const;
 	FText GetDockingHelp() const;
 
-	bool IsDockingEnabled() const;
+	bool IsDockUndockEnabled() const;
 
 	bool IsManeuveringEnabled() const;
 
