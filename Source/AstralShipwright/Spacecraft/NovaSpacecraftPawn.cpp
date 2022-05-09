@@ -580,7 +580,7 @@ void ANovaSpacecraftPawn::UpdateAssembly()
 							NCHECK(PrimitiveComponent);
 
 							TArray<USceneComponent*> ChildComponents;
-							Cast<UPrimitiveComponent>(Element.Mesh)->GetChildrenComponents(false, ChildComponents);
+							Cast<UPrimitiveComponent>(Element.Mesh)->GetChildrenComponents(true, ChildComponents);
 							for (USceneComponent* ChildComponent : ChildComponents)
 							{
 								ChildComponent->DestroyComponent();
