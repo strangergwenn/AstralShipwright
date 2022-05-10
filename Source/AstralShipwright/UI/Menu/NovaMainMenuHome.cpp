@@ -13,6 +13,7 @@
 #include "Nova.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
+#include "Misc/EngineVersion.h"
 
 #define LOCTEXT_NAMESPACE "SNovaMainMenuHome"
 
@@ -25,6 +26,9 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 	// Data
 	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
 	MenuManager                 = InArgs._MenuManager;
+	FText ProjectName, ProjectVersion;
+	GConfig->GetText(TEXT("/Script/EngineSettings.GeneralProjectSettings"), TEXT("ProjectName"), ProjectName, GGameIni);
+	GConfig->GetText(TEXT("/Script/EngineSettings.GeneralProjectSettings"), TEXT("ProjectVersion"), ProjectVersion, GGameIni);
 
 	// Parent constructor
 	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
@@ -59,53 +63,103 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 			[
 				SNew(SBorder)
 				.BorderImage(&Theme.MainMenuBackground)
-				.Padding(Theme.ContentPadding)
 				[
-					SNew(SHorizontalBox)
+					SNew(SVerticalBox)
 
-					+ SHorizontalBox::Slot()
-
-					+ SHorizontalBox::Slot()
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					.Padding(Theme.ContentPadding)
 					[
-						SNovaDefaultNew(SNovaLargeButton)
-						.Theme("MainMenuButton")
-						.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
-						.Text(LOCTEXT("Launch1", "Slot 1"))
-						.HelpText(LOCTEXT("LaunchHelp1", "Load save data from the first save slot"))
-						.OnClicked(FSimpleDelegate::CreateLambda([this]() { OnLaunchGame(1); } ))
+						SNew(SHorizontalBox)
+
+						+ SHorizontalBox::Slot()
+
+						+ SHorizontalBox::Slot()
+						[
+							SNovaDefaultNew(SNovaLargeButton)
+							.Theme("MainMenuButton")
+							.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
+							.Text(LOCTEXT("Launch1", "Slot 1"))
+							.HelpText(LOCTEXT("LaunchHelp1", "Load save data from the first save slot"))
+							.OnClicked(FSimpleDelegate::CreateLambda([this]() { OnLaunchGame(1); } ))
+						]
+
+						+ SHorizontalBox::Slot()
+						[
+							SNovaNew(SNovaLargeButton)
+							.Theme("MainMenuButton")
+							.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
+							.Text(LOCTEXT("Launch2", "Slot 2"))
+							.HelpText(LOCTEXT("LaunchHelp2", "Load save data from the second save slot"))
+							.OnClicked(FSimpleDelegate::CreateLambda([this]() { OnLaunchGame(2); } ))
+						]
+
+						+ SHorizontalBox::Slot()
+						[
+							SNovaNew(SNovaLargeButton)
+							.Theme("MainMenuButton")
+							.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
+							.Text(LOCTEXT("Launch3", "Slot 3"))
+							.HelpText(LOCTEXT("LaunchHelp3", "Load save data from the third save slot"))
+							.OnClicked(FSimpleDelegate::CreateLambda([this]() { OnLaunchGame(3); } ))
+						]
+
+						+ SHorizontalBox::Slot()
 					]
 
-					+ SHorizontalBox::Slot()
+					// Bottom bar
+					+ SVerticalBox::Slot()
+					.AutoHeight()
 					[
-						SNovaNew(SNovaLargeButton)
-						.Theme("MainMenuButton")
-						.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
-						.Text(LOCTEXT("Launch2", "Slot 2"))
-						.HelpText(LOCTEXT("LaunchHelp2", "Load save data from the second save slot"))
-						.OnClicked(FSimpleDelegate::CreateLambda([this]() { OnLaunchGame(2); } ))
-					]
+						SNew(SBorder)
+						.BorderImage(&Theme.MainMenuGenericBorder)
+						[
+							SNew(SHorizontalBox)
 
-					+ SHorizontalBox::Slot()
-					[
-						SNovaNew(SNovaLargeButton)
-						.Theme("MainMenuButton")
-						.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
-						.Text(LOCTEXT("Launch3", "Slot 3"))
-						.HelpText(LOCTEXT("LaunchHelp3", "Load save data from the third save slot"))
-						.OnClicked(FSimpleDelegate::CreateLambda([this]() { OnLaunchGame(3); } ))
-					]
+							+ SHorizontalBox::Slot()
 
-					+ SHorizontalBox::Slot()
-					[
-						SNovaNew(SNovaLargeButton)
-						.Theme("MainMenuButton")
-						.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
-						.Text(LOCTEXT("Credits", "Credits"))
-						.HelpText(LOCTEXT("CreditsHelp", "Check out the credits"))
-						.OnClicked(this, &SNovaMainMenuHome::OnOpenCredits)
-					]
+							+ SHorizontalBox::Slot()
+							.VAlign(VAlign_Center)
+							.AutoWidth()
+							[
+								SNew(SRichTextBlock)
+								.Text(LOCTEXT("Alpha", "<img src=\"/Text/Warning\"/> Astral Shipwright is currently in early Alpha and may present bugs"))
+								.TextStyle(&Theme.MainFont)
+								.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
+								+ SRichTextBlock::ImageDecorator()
+							]
 
-					+ SHorizontalBox::Slot()
+							+ SHorizontalBox::Slot()
+
+							+ SHorizontalBox::Slot()
+							.VAlign(VAlign_Center)
+							.AutoWidth()
+							[
+								SNovaNew(SNovaButton)
+								.Action(FNovaPlayerInput::MenuPrimary)
+								.Text(LOCTEXT("Credits", "Credits"))
+								.HelpText(LOCTEXT("CreditsHelp", "Check out the credits"))
+								.OnClicked(this, &SNovaMainMenuHome::OnOpenCredits)
+							]
+
+							+ SHorizontalBox::Slot()
+
+							+ SHorizontalBox::Slot()
+							.VAlign(VAlign_Center)
+							.AutoWidth()
+							[
+								SNew(STextBlock)
+								.Text(FText::FormatNamed(INVTEXT("{GameName} {GameVersion} / Unreal® Engine {EngineVersion} / {GameDate} / © Deimos Games 2022"),
+									TEXT("GameName"), ProjectName,
+									TEXT("GameVersion"), ProjectVersion,
+									TEXT("EngineVersion"), FText::FromString(FEngineVersion::Current().ToString(EVersionComponent::Patch)),
+									TEXT("GameDate"), FText::FromString(FApp::GetBuildDate())))
+								.TextStyle(&Theme.MainFont)
+							]
+
+							+ SHorizontalBox::Slot()
+						]
+					]
 				]
 			]
 		]

@@ -60,7 +60,7 @@ void UNovaSpacecraftFloodlightComponent::BeginPlay()
 
 			// Configure
 			Light->SetLightColor(LightColor);
-			Light->SetLightBrightness(1000000.0f);
+			Light->SetIntensity(1000000.0f);
 			Light->SetAttenuationRadius(5000.0f);
 			Light->SetOuterConeAngle(90.0f);
 			Light->SetInnerConeAngle(10.0f);
