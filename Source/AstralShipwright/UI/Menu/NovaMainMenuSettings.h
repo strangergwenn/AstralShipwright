@@ -84,7 +84,7 @@ protected:
 	void OnEffectsVolumeChanged(float Value);
 
 	// Graphics settings callbacks
-	void OnViewDistanceChanged(float Value);
+	void OnGlobalIlluminationChanged(float Value);
 	void OnShadowChanged(float Value);
 	void OnEffectsChanged(float Value);
 	void OnPostProcessChanged(float Value);
@@ -158,7 +158,7 @@ protected:
 	// Graphics settings widgets
 	TSharedPtr<SVerticalBox>      ScalingContainer;
 	TSharedPtr<SVerticalBox>      GraphicsContainer;
-	TSharedPtr<class SNovaSlider> ViewDistanceSlider;
+	TSharedPtr<class SNovaSlider> GlobalIlluminationSlider;
 	TSharedPtr<class SNovaSlider> ShadowSlider;
 	TSharedPtr<class SNovaSlider> EffectsSlider;
 	TSharedPtr<class SNovaSlider> PostProcessSlider;

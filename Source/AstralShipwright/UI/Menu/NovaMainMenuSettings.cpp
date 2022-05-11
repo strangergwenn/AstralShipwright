@@ -348,9 +348,9 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		];
 
 		// Build quality settings
-		ViewDistanceSlider = AddSettingSlider(GraphicsContainer, LOCTEXT("ViewDistanceQuality", "View distance"),
-			LOCTEXT("ViewDistanceQualityHelp", "Set the distance over which game objects will be rendered"),
-			FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnViewDistanceChanged));
+		GlobalIlluminationSlider = AddSettingSlider(GraphicsContainer, LOCTEXT("GlobalIlluminationQuality", "Global illumination quality"),
+			LOCTEXT("GlobalIlluminationQualityHelp", "Set the quality of global illumination"),
+			FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnGlobalIlluminationChanged));
 		ShadowSlider = AddSettingSlider(GraphicsContainer, LOCTEXT("ShadowQuality", "Shadow quality"),
 			LOCTEXT("ShadowQualityHelp", "Set the quality of shadows"),
 			FOnFloatValueChanged::CreateSP(this, &SNovaMainMenuSettings::OnShadowChanged));
@@ -523,7 +523,7 @@ void SNovaMainMenuSettings::Show()
 	// Graphics settings
 	if (!MenuManager->IsOnConsole())
 	{
-		ViewDistanceSlider->SetCurrentValue(GameUserSettings->GetViewDistanceQuality());
+		GlobalIlluminationSlider->SetCurrentValue(GameUserSettings->GetGlobalIlluminationQuality());
 		ShadowSlider->SetCurrentValue(GameUserSettings->GetShadowQuality());
 		EffectsSlider->SetCurrentValue(GameUserSettings->GetVisualEffectQuality());
 		PostProcessSlider->SetCurrentValue(GameUserSettings->GetPostProcessingQuality());
@@ -900,9 +900,9 @@ void SNovaMainMenuSettings::OnEffectsVolumeChanged(float Value)
 	GameUserSettings->SaveSettings();
 }
 
-void SNovaMainMenuSettings::OnViewDistanceChanged(float Value)
+void SNovaMainMenuSettings::OnGlobalIlluminationChanged(float Value)
 {
-	GameUserSettings->SetViewDistanceQuality(Value);
+	GameUserSettings->SetGlobalIlluminationQuality(Value);
 	GameUserSettings->ApplySettings(false);
 	GameUserSettings->SaveSettings();
 }
