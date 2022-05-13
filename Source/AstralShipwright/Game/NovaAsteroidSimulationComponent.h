@@ -37,10 +37,20 @@ public:
 /** Asteroid data object */
 struct FNovaAsteroid
 {
-	FNovaAsteroid() : Identifier(FGuid::NewGuid()), Body(nullptr), Altitude(0), Phase(0), Mesh(), Scale(0)
+	FNovaAsteroid()
+		: Identifier(FGuid::NewGuid())
+		, Body(nullptr)
+		, Altitude(0)
+		, Phase(0)
+
+		, Mesh()
+		, Scale(0)
+		, Rotation()
+		, EffectsCount(0)
+		, MineralsSeed(0)
 	{}
 
-	FNovaAsteroid(FRandomStream& RandomStream, const class UNovaCelestialBody* B, double A, double P);
+	FNovaAsteroid(FRandomStream& RandomStream, const UNovaAsteroidConfiguration* AsteroidConfiguration, double A, double P);
 
 	// Identifier
 	FGuid Identifier;
@@ -56,6 +66,7 @@ struct FNovaAsteroid
 	float                                Scale;
 	FRotator                             Rotation;
 	int32                                EffectsCount;
+	int32                                MineralsSeed;
 };
 
 /** Asteroid spawning & update manager */

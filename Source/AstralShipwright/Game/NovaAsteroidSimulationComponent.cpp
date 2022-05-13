@@ -22,17 +22,20 @@ static constexpr int32 AsteroidDespawnDistanceKm  = 600;
     Asteroid
 ----------------------------------------------------*/
 
-FNovaAsteroid::FNovaAsteroid(FRandomStream& RandomStream, const class UNovaCelestialBody* B, double A, double P)
+FNovaAsteroid::FNovaAsteroid(FRandomStream& RandomStream, const UNovaAsteroidConfiguration* AsteroidConfiguration, double A, double P)
 	: Identifier(FGuid(RandomStream.RandHelper(MAX_int32), RandomStream.RandHelper(MAX_int32), RandomStream.RandHelper(MAX_int32),
 		  RandomStream.RandHelper(MAX_int32)))
-	, Body(B)
+	, Body(AsteroidConfiguration->Body)
 	, Altitude(A)
 	, Phase(P)
-	, Mesh()
 	, Scale(RandomStream.FRandRange(90, 130))
 	, Rotation(RandomStream.FRandRange(-90, 90), RandomStream.FRandRange(0, 360), 0)
 	, EffectsCount(RandomStream.FRandRange(10, 20))
-{}
+	, MineralsSeed(RandomStream.GetCurrentSeed())
+{
+	Mesh       = AsteroidConfiguration->Meshes[RandomStream.RandHelper(AsteroidConfiguration->Meshes.Num())];
+	DustEffect = AsteroidConfiguration->DustEffect;
+}
 
 /*----------------------------------------------------
     Constructor
@@ -73,6 +76,7 @@ void UNovaAsteroidSimulationComponent::TickComponent(float DeltaTime, ELevelTick
 			{
 				ANovaAsteroid* NewAsteroid = GetWorld()->SpawnActor<ANovaAsteroid>();
 				NCHECK(NewAsteroid);
+				NewAsteroid->SetOwner(GetOwner());
 				NewAsteroid->Initialize(AsteroidDatabase[Identifier]);
 
 				NLOG("UNovaAsteroidSimulationComponent::TickComponent : spawning '%s'", *Identifier.ToString(EGuidFormats::Short));
@@ -171,9 +175,7 @@ bool UNovaAsteroidSimulationComponent::CreateAsteroid(double& Altitude, double& 
 		Phase    = RandomStream.FRandRange(0.0, 360.0);
 
 		// Generate the asteroid itself
-		Asteroid            = FNovaAsteroid(RandomStream, AsteroidConfiguration->Body, Altitude, Phase);
-		Asteroid.Mesh       = AsteroidConfiguration->Meshes[RandomStream.RandHelper(AsteroidConfiguration->Meshes.Num())];
-		Asteroid.DustEffect = AsteroidConfiguration->DustEffect;
+		Asteroid = FNovaAsteroid(RandomStream, AsteroidConfiguration, Altitude, Phase);
 
 		SpawnedAsteroids++;
 		return true;

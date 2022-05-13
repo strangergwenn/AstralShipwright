@@ -32,6 +32,24 @@ ANovaAsteroid::ANovaAsteroid() : Super(), LoadingAssets(false)
     Interface
 ----------------------------------------------------*/
 
+void ANovaAsteroid::BeginPlay()
+{
+	Super::BeginPlay();
+
+#if WITH_EDITOR
+	if (!IsValid(GetOwner()))
+	{
+		NLOG("ANovaAsteroid::BeginPlay : spawning as fallback");
+
+		const UNovaAsteroidConfiguration* AsteroidConfiguration = UNovaAssetManager::Get()->GetDefaultAsset<UNovaAsteroidConfiguration>();
+		NCHECK(AsteroidConfiguration);
+		FRandomStream Random;
+
+		Initialize(FNovaAsteroid(Random, AsteroidConfiguration, 0, 0));
+	}
+#endif    // WITH_EDITOR
+}
+
 void ANovaAsteroid::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -48,13 +66,25 @@ void ANovaAsteroid::Initialize(const FNovaAsteroid& InAsteroid)
 	// Initialize to safe defaults
 	LoadingAssets = true;
 	Asteroid      = InAsteroid;
-	SetActorLocation(FVector(0, 0, -1000 * 1000 * 100));
 	SetActorRotation(InAsteroid.Rotation);
 	SetActorScale3D(Asteroid.Scale * FVector(1, 1, 1));
 
-	// Load assets and resume initializing later
-	UNovaAssetManager::Get()->LoadAssets({Asteroid.Mesh.ToSoftObjectPath(), Asteroid.DustEffect.ToSoftObjectPath()},
-		FStreamableDelegate::CreateUObject(this, &ANovaAsteroid::PostLoadInitialize));
+	// Default game path : load assets and resume initializing later
+	if (IsValid(GetOwner()))
+	{
+		SetActorLocation(FVector(0, 0, -1000 * 1000 * 100));
+
+		UNovaAssetManager::Get()->LoadAssets({Asteroid.Mesh.ToSoftObjectPath(), Asteroid.DustEffect.ToSoftObjectPath()},
+			FStreamableDelegate::CreateUObject(this, &ANovaAsteroid::PostLoadInitialize));
+	}
+#if WITH_EDITOR
+	else
+	{
+		Asteroid.Mesh.LoadSynchronous();
+		Asteroid.DustEffect.LoadSynchronous();
+		PostLoadInitialize();
+	}
+#endif    // WITH_EDITOR
 }
 
 /*----------------------------------------------------
@@ -68,6 +98,7 @@ void ANovaAsteroid::PostLoadInitialize()
 	NLOG("ANovaAsteroid::PostLoadInitialize : ready to show '%s'", *Asteroid.Identifier.ToString(EGuidFormats::Short));
 
 	// Setup asteroid mesh & material
+	NCHECK(Asteroid.Mesh.IsValid());
 	AsteroidMesh->SetStaticMesh(Asteroid.Mesh.Get());
 	MaterialInstance = AsteroidMesh->CreateAndSetMaterialInstanceDynamic(0);
 	MaterialInstance->SetScalarParameterValue("AsteroidScale", Asteroid.Scale);
@@ -88,24 +119,27 @@ void ANovaAsteroid::PostLoadInitialize()
 
 void ANovaAsteroid::ProcessMovement()
 {
-	// Get basic game state pointers
-	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
-	NCHECK(GameState);
-	const UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
-	NCHECK(OrbitalSimulation);
+	if (IsValid(GetOwner()))
+	{
+		// Get basic game state pointers
+		const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+		NCHECK(GameState);
+		const UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
+		NCHECK(OrbitalSimulation);
 
-	// Get locations
-	const FVector2D PlayerLocation       = OrbitalSimulation->GetPlayerCartesianLocation();
-	const FVector2D AsteroidLocation     = OrbitalSimulation->GetAsteroidLocation(Asteroid.Identifier).GetCartesianLocation();
-	FVector2D       LocationInKilometers = AsteroidLocation - PlayerLocation;
+		// Get locations
+		const FVector2D PlayerLocation       = OrbitalSimulation->GetPlayerCartesianLocation();
+		const FVector2D AsteroidLocation     = OrbitalSimulation->GetAsteroidLocation(Asteroid.Identifier).GetCartesianLocation();
+		FVector2D       LocationInKilometers = AsteroidLocation - PlayerLocation;
 
-	// Transform the location accounting for angle and scale
-	const FVector2D PlayerDirection       = PlayerLocation.GetSafeNormal();
-	double          PlayerAngle           = 180 + FMath::RadiansToDegrees(FMath::Atan2(PlayerDirection.X, PlayerDirection.Y));
-	LocationInKilometers                  = LocationInKilometers.GetRotated(PlayerAngle);
-	const FVector RelativeOrbitalLocation = FVector(0, -LocationInKilometers.X, LocationInKilometers.Y) * 1000 * 100;
+		// Transform the location accounting for angle and scale
+		const FVector2D PlayerDirection       = PlayerLocation.GetSafeNormal();
+		double          PlayerAngle           = 180 + FMath::RadiansToDegrees(FMath::Atan2(PlayerDirection.X, PlayerDirection.Y));
+		LocationInKilometers                  = LocationInKilometers.GetRotated(PlayerAngle);
+		const FVector RelativeOrbitalLocation = FVector(0, -LocationInKilometers.X, LocationInKilometers.Y) * 1000 * 100;
 
-	SetActorLocation(RelativeOrbitalLocation);
+		SetActorLocation(RelativeOrbitalLocation);
+	}
 }
 
 void ANovaAsteroid::ProcessDust()
