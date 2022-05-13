@@ -13,6 +13,14 @@
 #include "NiagaraComponent.h"
 
 /*----------------------------------------------------
+    Mineral source
+----------------------------------------------------*/
+
+FNovaAsteroidMineralSource::FNovaAsteroidMineralSource(FRandomStream& RandomStream)
+	: Direction(RandomStream.GetUnitVector()), TargetAngularDistance(RandomStream.FRandRange(20, 80))
+{}
+
+/*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
@@ -58,6 +66,23 @@ void ANovaAsteroid::Tick(float DeltaTime)
 	{
 		ProcessMovement();
 		ProcessDust();
+
+#if WITH_EDITOR
+		FVector Center, Extent;
+		GetActorBounds(false, Center, Extent);
+		for (int32 Pitch = -90; Pitch < 90; Pitch += 5)
+		{
+			for (int32 Yaw = 0; Yaw < 360; Yaw += 5)
+			{
+				FRotator CurrentRotation = FRotator(Pitch, Yaw, 0);
+
+				FLinearColor Color = FMath::Lerp(FLinearColor::Blue, FLinearColor::Red, GetMineralDensity(CurrentRotation.Vector()));
+
+				DrawDebugPoint(GetWorld(), GetActorLocation() + CurrentRotation.Vector() * (Extent.Size() / (2 * Asteroid.Scale)), 5,
+					Color.ToFColor(true));
+			}
+		}
+#endif    // WITH_EDITOR
 	}
 }
 
@@ -68,6 +93,13 @@ void ANovaAsteroid::Initialize(const FNovaAsteroid& InAsteroid)
 	Asteroid      = InAsteroid;
 	SetActorRotation(InAsteroid.Rotation);
 	SetActorScale3D(Asteroid.Scale * FVector(1, 1, 1));
+
+	// Initialize minerals
+	FRandomStream Random(Asteroid.MineralsSeed);
+	for (int32 Index = 0; Index < Random.RandRange(5, 10); Index++)
+	{
+		MineralSources.Add(FNovaAsteroidMineralSource(Random));
+	}
 
 	// Default game path : load assets and resume initializing later
 	if (IsValid(GetOwner()))
@@ -85,6 +117,21 @@ void ANovaAsteroid::Initialize(const FNovaAsteroid& InAsteroid)
 		PostLoadInitialize();
 	}
 #endif    // WITH_EDITOR
+}
+
+double ANovaAsteroid::GetMineralDensity(const FVector& Direction) const
+{
+	double Density = 0;
+
+	for (const FNovaAsteroidMineralSource& Source : MineralSources)
+	{
+		double AngularDistance =
+			FMath::RadiansToDegrees(Direction.ToOrientationQuat().AngularDistance(Source.Direction.ToOrientationQuat()));
+
+		Density += 1.0 - FMath::Clamp(AngularDistance / Source.TargetAngularDistance, 0.0, 1.0);
+	}
+
+	return FMath::Clamp(Density, 0.0, 1.0);
 }
 
 /*----------------------------------------------------

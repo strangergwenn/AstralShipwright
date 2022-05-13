@@ -9,6 +9,15 @@
 
 #include "NovaAsteroid.generated.h"
 
+/** Mineral spawning area */
+struct FNovaAsteroidMineralSource
+{
+	FNovaAsteroidMineralSource(FRandomStream& RandomStream);
+
+	FVector Direction;
+	double  TargetAngularDistance;
+};
+
 /** Physical asteroid representation */
 UCLASS(ClassGroup = (Nova))
 class ANovaAsteroid : public AActor
@@ -34,6 +43,9 @@ public:
 	{
 		return LoadingAssets;
 	}
+
+	/** Return the current mineral density in a particular direction */
+	double GetMineralDensity(const FVector& Direction) const;
 
 	/*----------------------------------------------------
 	    Internals
@@ -67,8 +79,9 @@ private:
 	class UMaterialInstanceDynamic* MaterialInstance;
 
 	// General state
-	bool          LoadingAssets;
-	FNovaAsteroid Asteroid;
+	bool                               LoadingAssets;
+	FNovaAsteroid                      Asteroid;
+	TArray<FNovaAsteroidMineralSource> MineralSources;
 
 	// Dust state
 	TArray<FVector>                  DustSources;
