@@ -298,7 +298,19 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 				return OrbitalSimulation && GameState && OrbitalSimulation->IsOnTrajectory(GameState->GetPlayerSpacecraftIdentifier());
 			})))
 		]
-			
+		
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNovaNew(SNovaButton)
+			.Action(FNovaPlayerInput::MenuSecondary) // TODO
+			.Text(LOCTEXT("ToggleOrbiting", "Toggle orbiting"))
+			.OnClicked(FSimpleDelegate::CreateLambda([=]
+				{
+					SpacecraftMovement->StartOrbiting();
+				}))
+		]
+		
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
@@ -314,14 +326,14 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		.AutoHeight()
 		[
 			SNovaNew(SNovaButton)
-			.Action(FNovaPlayerInput::MenuSecondary)
+			//.Action(FNovaPlayerInput::MenuSecondary)
 			.Text(LOCTEXT("TestSilentRunning", "Silent running"))
 			.OnClicked(FSimpleDelegate::CreateLambda([&]()
 			{
 				MenuManager->SetInterfaceColor(Theme.NegativeColor, FLinearColor(1.0f, 0.0f, 0.1f));
 			}))
 		]
-			
+		
 #if WITH_EDITOR && 1
 
 		+ SVerticalBox::Slot()
@@ -339,7 +351,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 				return GameState && GameState->CanDilateTime(ENovaTimeDilation::Normal);
 			})))
 		]
-			
+		
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
@@ -356,7 +368,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 				return GameState && GameState->CanDilateTime(ENovaTimeDilation::Level1);
 			})))
 		]
-			
+		
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[

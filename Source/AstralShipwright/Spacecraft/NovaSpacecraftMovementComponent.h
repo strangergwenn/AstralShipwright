@@ -13,11 +13,19 @@ UENUM()
 enum class ENovaMovementState : uint8
 {
 	Idle,
+	AlignToManeuver,
+	Stopping,
+
+	Docking,
 	Docked,
 	Undocking,
-	Docking,
-	AlignToManeuver,
-	Stopping
+	Orbiting,
+
+	ExitingOrbit,
+
+	Anchoring,
+	Anchored,
+	ExitingAnchor
 };
 
 /** Initialization parameters */
@@ -113,13 +121,34 @@ public:
 	bool CanDock() const;
 
 	/*** Can we undock */
-	bool CanUndock() const;
+	bool CanUndock() const
+	{
+		return IsInitialized() && GetState() == ENovaMovementState::Docked;
+	}
 
 	/** Check if the spacecraft is docked */
-	bool IsDocked() const;
+	bool IsDocked() const
+	{
+		return IsInitialized() && GetState() == ENovaMovementState::Docked;
+	}
 
 	/** Check if the spacecraft is docking or undocking */
-	bool IsDockingUndocking() const;
+	bool IsDockingUndocking() const
+	{
+		return IsInitialized() && (GetState() == ENovaMovementState::Docking || GetState() == ENovaMovementState::Undocking);
+	}
+
+	/** Check if the spacecraft is orbiting */
+	bool IsOrbiting() const
+	{
+		return IsInitialized() && GetState() == ENovaMovementState::Orbiting;
+	}
+
+	/** Check if the spacecraft is anchored */
+	bool IsAnchored() const
+	{
+		return IsInitialized() && GetState() == ENovaMovementState::Anchored;
+	}
 
 	/** Check if the ship is idle */
 	bool IsIdle() const
@@ -144,6 +173,18 @@ public:
 
 	/** Align to the next maneuver */
 	void AlignToManeuver(FSimpleDelegate Callback = FSimpleDelegate());
+
+	/** Start orbiting the nearest asteroid */
+	void StartOrbiting();
+
+	/** Stop orbiting and exit to the entry point */
+	void StopOrbiting(FSimpleDelegate Callback = FSimpleDelegate());
+
+	/** Anchor to the nearest asteroid */
+	void Anchor(FSimpleDelegate Callback = FSimpleDelegate());
+
+	/** Release the anchor and go back to orbit */
+	void ExitAnchor(FSimpleDelegate Callback = FSimpleDelegate());
 
 	/*----------------------------------------------------
 	    High level movement
@@ -216,8 +257,8 @@ protected:
 	float GetMaximumAcceleration() const
 	{
 		return (MovementCommand.State == ENovaMovementState::Docking || MovementCommand.State == ENovaMovementState::Undocking)
-				 ? MaxSlowLinearAcceleration
-				 : LinearAcceleration;
+		         ? MaxSlowLinearAcceleration
+		         : LinearAcceleration;
 	}
 
 	/*----------------------------------------------------

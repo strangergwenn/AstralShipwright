@@ -225,21 +225,6 @@ bool UNovaSpacecraftMovementComponent::CanDock() const
 	}
 }
 
-bool UNovaSpacecraftMovementComponent::CanUndock() const
-{
-	return IsInitialized() && GetState() == ENovaMovementState::Docked;
-}
-
-bool UNovaSpacecraftMovementComponent::IsDocked() const
-{
-	return IsInitialized() && GetState() == ENovaMovementState::Docked;
-}
-
-bool UNovaSpacecraftMovementComponent::IsDockingUndocking() const
-{
-	return IsInitialized() && (GetState() == ENovaMovementState::Docking || GetState() == ENovaMovementState::Undocking);
-}
-
 bool UNovaSpacecraftMovementComponent::IsAlignedToManeuver() const
 {
 	if (GetNextManeuver())
@@ -298,8 +283,40 @@ void UNovaSpacecraftMovementComponent::AlignToManeuver(FSimpleDelegate Callback)
 	}
 }
 
+void UNovaSpacecraftMovementComponent::StartOrbiting()
+{
+	NLOG("UNovaSpacecraftMovementComponent::StartOrbiting ('%s')", *GetRoleString(this));
+
+	CompletionCallback = FSimpleDelegate();
+	RequestMovement(FNovaMovementCommand(ENovaMovementState::Orbiting));
+}
+
+void UNovaSpacecraftMovementComponent::StopOrbiting(FSimpleDelegate Callback)
+{
+	NLOG("UNovaSpacecraftMovementComponent::StopOrbiting ('%s')", *GetRoleString(this));
+
+	CompletionCallback = Callback;
+	RequestMovement(FNovaMovementCommand(ENovaMovementState::ExitingOrbit));
+}
+
+void UNovaSpacecraftMovementComponent::Anchor(FSimpleDelegate Callback)
+{
+	NLOG("UNovaSpacecraftMovementComponent::Anchor ('%s')", *GetRoleString(this));
+
+	CompletionCallback = Callback;
+	RequestMovement(FNovaMovementCommand(ENovaMovementState::Anchoring));
+}
+
+void UNovaSpacecraftMovementComponent::ExitAnchor(FSimpleDelegate Callback)
+{
+	NLOG("UNovaSpacecraftMovementComponent::ExitAnchor ('%s')", *GetRoleString(this));
+
+	CompletionCallback = Callback;
+	RequestMovement(FNovaMovementCommand(ENovaMovementState::ExitingAnchor));
+}
+
 /*----------------------------------------------------
-    High level movement
+High level movement
 ----------------------------------------------------*/
 
 void UNovaSpacecraftMovementComponent::ProcessState()
@@ -307,8 +324,9 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 	switch (MovementCommand.State)
 	{
 		// Idle states
-		case ENovaMovementState::Docked:
 		case ENovaMovementState::Idle:
+		case ENovaMovementState::Docked:
+		case ENovaMovementState::Anchored:
 			break;
 
 		// Orientating state that serves as a sub-state for Idle without identifying as such
@@ -372,6 +390,22 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 			{
 				AttitudeCommand.Direction = FVector(1, 0, 0);
 			}
+			break;
+
+		// Orbiting asteroid
+		case ENovaMovementState::Orbiting:
+			break;
+
+		// Existing an asteroid orbit
+		case ENovaMovementState::ExitingOrbit:
+			break;
+
+		// Anchoring to asteroid
+		case ENovaMovementState::Anchoring:
+			break;
+
+		// Existing an asteroid anchor
+		case ENovaMovementState::ExitingAnchor:
 			break;
 
 		// Braking to zero
@@ -506,7 +540,7 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 	{
 		// Determine a quaternion that represents the desired difference in orientation
 		FQuat TargetRotation = DotProduct > -AngularColinearityThreshold ? FQuat::FindBetweenNormals(ActorAxis, AttitudeCommand.Direction)
-																		 : FRotator(0, 180, 0).Quaternion();
+		                                                                 : FRotator(0, 180, 0).Quaternion();
 
 		// While on the horizontal plane, follow desired roll too
 		if (FMath::IsNearlyZero(AttitudeCommand.Direction.Z))
