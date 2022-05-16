@@ -89,6 +89,7 @@ public:
 		SLATE_ATTRIBUTE(FText, HeaderHelp)
 		SLATE_ATTRIBUTE(bool, Visible)
 		SLATE_ATTRIBUTE(bool, Blur)
+		SLATE_ATTRIBUTE(const FSlateBrush*, Icon)
 		SLATE_ATTRIBUTE(const FSlateBrush*, Background)
 
 		SLATE_SLOT_END_ARGS()

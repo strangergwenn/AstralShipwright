@@ -259,6 +259,7 @@ void SNovaTabView::Construct(const FArguments& InArgs)
 		.AutoWidth()
 		[
 			SNew(SNovaButton) // No navigation
+			.Icon(Arg._Icon)
 			.Theme("TabButton")
 			.Size("TabButtonSize")
 			.Text(Arg._Header)

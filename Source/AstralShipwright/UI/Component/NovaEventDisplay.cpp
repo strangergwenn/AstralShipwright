@@ -42,7 +42,7 @@ void SNovaEventDisplay::Construct(const FArguments& InArgs)
 	ChildSlot
 	.HAlign(HAlign_Center)
 	.VAlign(VAlign_Top)
-	.Padding(FMargin(0, 90))
+	.Padding(FMargin(0, FNovaStyleSet::GetButtonSize("TabButtonSize").Height + 30))
 	[
 		SNew(SBorder)
 		.BorderImage(&Theme.MainMenuGenericBorder)
