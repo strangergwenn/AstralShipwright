@@ -659,6 +659,14 @@ bool SNovaMainMenuFlight::CanUndock(FText* Help) const
 			}
 			return false;
 		}
+		else if (PC->GetSpacecraft()->PropellantMassAtLaunch <= 0)
+		{
+			if (Help)
+			{
+				*Help = LOCTEXT("SpacecraftNoPropellant", "Cannot undock without propellant");
+			}
+			return false;
+		}
 		else if (!SpacecraftPawn->IsSpacecraftValid())
 		{
 			if (Help)
