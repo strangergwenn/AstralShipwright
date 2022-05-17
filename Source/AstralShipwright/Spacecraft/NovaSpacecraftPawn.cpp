@@ -756,7 +756,7 @@ void ANovaSpacecraftPawn::UpdateBounds()
 		FVector Unused;
 		GetActorBounds(true, Unused, CurrentExtent);
 
-		CurrentExtent /= 5.0f;
+		CurrentExtent = 1.5 * FMath::Min(FMath::Min(CurrentExtent.X, CurrentExtent.Y), CurrentExtent.Z) * FVector(1, 1, 1);
 	}
 
 	// In other cases, use a point cloud from component origins because we rotate, and the size doesn't change much
