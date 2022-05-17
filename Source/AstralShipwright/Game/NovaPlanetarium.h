@@ -66,7 +66,14 @@ protected:
 	UPROPERTY()
 	const class UNovaCelestialBody* SunBody;
 
+	// Planet body
+	UPROPERTY()
+	const class UNovaCelestialBody* PlanetBody;
+
 	// Celestial body map
 	UPROPERTY()
 	TMap<const class UNovaCelestialBody*, class UStaticMeshComponent*> CelestialToComponent;
+
+	// General state
+	double CurrentSunSkyAngle;
 };

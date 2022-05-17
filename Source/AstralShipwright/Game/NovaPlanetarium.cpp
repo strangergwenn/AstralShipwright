@@ -23,7 +23,7 @@
     Constructor
 ----------------------------------------------------*/
 
-ANovaPlanetarium::ANovaPlanetarium() : Super()
+ANovaPlanetarium::ANovaPlanetarium() : Super(), CurrentSunSkyAngle(0)
 {
 	RootComponent = CreateDefaultSubobject<USceneComponent>("Root");
 
@@ -87,6 +87,7 @@ void ANovaPlanetarium::BeginPlay()
 	TArray<const UNovaCelestialBody*> CelestialBodies = AssetManager->GetAssets<UNovaCelestialBody>();
 
 	// For each known celestial body, map it to a component
+	PlanetBody = AssetManager->GetDefaultAsset<UNovaCelestialBody>();
 	for (const UNovaCelestialBody* Body : CelestialBodies)
 	{
 		if (Body->Body == nullptr)
@@ -122,76 +123,98 @@ void ANovaPlanetarium::Tick(float DeltaSeconds)
 	NCHECK(Atmosphere);
 
 	// Get game state
+	const UNovaGameInstance* GameInstance = GetWorld()->GetGameInstance<UNovaGameInstance>();
+	NCHECK(GameInstance);
 	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 	NCHECK(GameState);
+	const UNovaAssetManager* AssetManager = GameInstance->GetAssetManager();
+	NCHECK(AssetManager);
 	const UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
 	NCHECK(OrbitalSimulation);
 	const FNovaOrbitalLocation* PlayerLocation = OrbitalSimulation->GetPlayerLocation();
 
 	if (PlayerLocation)
 	{
-		float CurrentSunSkyAngle    = 0;
-		float SunDistanceFromPlanet = 0;
+		// Process a planet or moon
+		auto ProcessGenericPlanetaryBody = [this, GameState, PlayerLocation](
+											   const UNovaCelestialBody* Body, UStaticMeshComponent* Component, bool IsMainPlanet)
+		{
+			// Spin angle
+			const double RelativeBodySpinTime =
+				FMath::Fmod(GameState->GetCurrentTime().AsMinutes(), static_cast<double>(Body->RotationPeriod));
+			const double RelativeBodySpinAngle = 360.0 * (RelativeBodySpinTime / Body->RotationPeriod);
+			const double AbsoluteBodySpinAngle = Body->Phase + RelativeBodySpinAngle;
 
-		// Process bodies
+			double  CurrentAngle    = -AbsoluteBodySpinAngle;
+			FVector CurrentPosition = FVector::ZeroVector;
+
+			// Planet
+			if (IsMainPlanet)
+			{
+				// Get position
+				const FVector2D PlayerCartesianLocation = PlayerLocation->GetCartesianLocation();
+				const double    OrbitRotationAngle =
+					FMath::RadiansToDegrees(FVector(PlayerCartesianLocation.X, PlayerCartesianLocation.Y, 0).HeadingAngle());
+				CurrentAngle -= -OrbitRotationAngle;
+				CurrentPosition = -FVector(0, 0, PlayerCartesianLocation.Size()) * 1000 * 100;
+
+				// Apply sun & atmosphere
+				SunRotator->SetWorldLocation(CurrentPosition);
+				Atmosphere->SetWorldLocation(CurrentPosition);
+				Atmosphere->BottomRadius = Body->Radius;
+				CurrentSunSkyAngle       = -OrbitRotationAngle;
+
+				// Feed light direction
+				const double LightOffsetRatio = (CurrentSunSkyAngle - CurrentPosition.Rotation().Yaw) / 360.0f;
+				Cast<UMaterialInstanceDynamic>(Component->GetMaterial(0))->SetScalarParameterValue("LightOffsetRatio", LightOffsetRatio);
+			}
+
+			// Moon
+			else
+			{
+				const FNovaOrbitGeometry   OrbitGeometry     = FNovaOrbitGeometry(Body, Body->Altitude.GetValue(), 0);
+				const FNovaOrbit           Orbit             = FNovaOrbit(OrbitGeometry, FNovaTime());
+				const double               CurrentPhase      = Orbit.Geometry.GetPhase<true>(GameState->GetCurrentTime());
+				const FNovaOrbitalLocation OrbitalLocation   = FNovaOrbitalLocation(OrbitGeometry, -CurrentPhase);
+				const FVector2D            CartesianLocation = OrbitalLocation.GetCartesianLocation();
+
+				CurrentPosition = FVector(0, CartesianLocation.X, CartesianLocation.Y) * 1000 * 100;
+			}
+
+			// Apply transforms
+			Component->SetWorldLocation(CurrentPosition);
+			Component->SetWorldRotation(FRotator(CurrentAngle, 90, 90));
+			Component->SetWorldScale3D(2.0 * Body->Radius * 1000 * FVector(1, 1, 1));
+		};
+
+		// Main planet
+		ProcessGenericPlanetaryBody(PlanetBody, CelestialToComponent[PlanetBody], true);
+
+		// Sun
+		if (IsValid(CelestialToComponent[SunBody]))
+		{
+			const double SunDistanceFromPlanet = PlanetBody->Altitude.GetValue() * 1000 * 100;
+
+			CelestialToComponent[SunBody]->SetRelativeLocation(FVector(-SunDistanceFromPlanet, 0, 0));
+			CelestialToComponent[SunBody]->SetWorldScale3D(2.0 * SunBody->Radius * 1000 * FVector(1, 1, 1));
+
+			SunRotator->SetWorldRotation(FRotator(CurrentSunSkyAngle, 90, 0));
+			Skybox->SetWorldRotation(FRotator(CurrentSunSkyAngle, 90, 90));
+		}
+
+		// Moons
 		for (const TPair<const UNovaCelestialBody*, UStaticMeshComponent*> BodyAndComponent : CelestialToComponent)
 		{
 			const UNovaCelestialBody* Body      = BodyAndComponent.Key;
 			UStaticMeshComponent*     Component = BodyAndComponent.Value;
 
-			if (IsValid(Component))
+			if (IsValid(Component) && Body != SunBody && Body != PlanetBody)
 			{
-				float   CurrentAngle    = 0;
-				FVector CurrentPosition = FVector::ZeroVector;
-
-				// Planet
-				if (Body != SunBody)
-				{
-					const double RelativeBodySpinTime =
-						FMath::Fmod(GameState->GetCurrentTime().AsMinutes(), static_cast<double>(Body->RotationPeriod));
-					const double RelativeBodySpinAngle = 360.0 * (RelativeBodySpinTime / Body->RotationPeriod);
-					const double AbsoluteBodySpinAngle = Body->Phase + RelativeBodySpinAngle;
-
-					const FVector2D PlayerCartesianLocation = PlayerLocation->GetCartesianLocation();
-					const double    OrbitRotationAngle =
-						FMath::RadiansToDegrees(FVector(PlayerCartesianLocation.X, PlayerCartesianLocation.Y, 0).HeadingAngle());
-
-					// Position
-					CurrentAngle    = -AbsoluteBodySpinAngle - OrbitRotationAngle;
-					CurrentPosition = -FVector(0, 0, PlayerCartesianLocation.Size()) * 1000 * 100;
-
-					// This is the only planetary body for now so we'll apply sun & atmosphere there
-					{
-						SunRotator->SetWorldLocation(CurrentPosition);
-						Atmosphere->SetWorldLocation(CurrentPosition);
-						Atmosphere->BottomRadius = Body->Radius;
-
-						SunDistanceFromPlanet = Body->Altitude.GetValue() * 1000 * 100;
-						CurrentSunSkyAngle    = -OrbitRotationAngle;
-					}
-
-					// Add light direction
-					float LightOffsetRatio = (CurrentSunSkyAngle - CurrentPosition.Rotation().Yaw) / 360.0f;
-					Cast<UMaterialInstanceDynamic>(Component->GetMaterial(0))
-						->SetScalarParameterValue("LightOffsetRatio", LightOffsetRatio);
-				}
-
-				// Apply transforms
-				Component->SetWorldRotation(FRotator(CurrentAngle, 90, 90));
-				Component->SetWorldLocation(CurrentPosition);
-				Component->SetWorldScale3D(2.0 * Body->Radius * 1000 * FVector(1, 1, 1));
+				ProcessGenericPlanetaryBody(Body, Component, false);
 			}
 		}
 
-		// Rotate sky box & sun
-		if (IsValid(CelestialToComponent[SunBody]))
-		{
-			CelestialToComponent[SunBody]->SetRelativeLocation(FVector(-SunDistanceFromPlanet, 0, 0));
-			SunRotator->SetWorldRotation(FRotator(CurrentSunSkyAngle, 90, 0));
-			Skybox->SetWorldRotation(FRotator(CurrentSunSkyAngle, 90, 90));
-		}
-
-		// Rotate billboards
+		// Rotate billboards around the sky, with the assumption that they're player facing
 		TArray<UStaticMeshComponent*> BillboardCandidates;
 		GetComponents<UStaticMeshComponent>(BillboardCandidates);
 		for (UStaticMeshComponent* BillboardCandidate : BillboardCandidates)
