@@ -21,7 +21,7 @@ struct FNovaBatchedSpline
 	bool operator==(const FNovaBatchedSpline& Other) const
 	{
 		return P0 == Other.P0 && P1 == Other.P1 && P2 == Other.P2 && P3 == Other.P3 && ColorInner == Other.ColorInner &&
-			   ColorOuter == Other.ColorOuter && WidthInner == Other.WidthInner && WidthOuter == Other.WidthOuter;
+		       ColorOuter == Other.ColorOuter && WidthInner == Other.WidthInner && WidthOuter == Other.WidthOuter;
 	}
 
 	FVector2D    P0;
@@ -122,7 +122,7 @@ struct FNovaOrbitalObject
 	bool operator==(const FNovaOrbitalObject& Other) const
 	{
 		return Area == Other.Area && AsteroidIdentifier == Other.AsteroidIdentifier && SpacecraftIdentifier == Other.SpacecraftIdentifier &&
-			   Maneuver == Other.Maneuver;
+		       Maneuver == Other.Maneuver;
 	}
 
 	bool operator!=(const FNovaOrbitalObject& Other) const
@@ -197,6 +197,12 @@ public:
 	/** Pass vertical input to the map */
 	void VerticalAnalogInput(float Value);
 
+	/** Zoom in */
+	void ZoomIn();
+
+	/** Zoom out */
+	void ZoomOut();
+
 	/** Reset the map */
 	void Reset();
 
@@ -251,6 +257,12 @@ protected:
 		return 0.25f * Body->Image.GetImageSize().X;
 	}
 
+	/** Consider an altitude value to include on the map */
+	void UpdateDesiredSize(double Altitude)
+	{
+		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Altitude);
+	}
+
 	/** Interpolate a spline, returning the point at Alpha (0-1) over the spline defined by P0..P3 */
 	static FVector2D DeCasteljauInterp(const FVector2D& P0, const FVector2D& P1, const FVector2D& P2, const FVector2D& P3, float Alpha)
 	{
@@ -301,6 +313,9 @@ protected:
 	float TrajectoryZoomAcceleration;
 	float TrajectoryZoomSnappinness;
 	float TrajectoryInflationRatio;
+	float MapScaleMin;
+	float MapScaleMax;
+	float MapScaleStep;
 
 	// Local state
 	FVector2D       CurrentOrigin;
@@ -310,6 +325,7 @@ protected:
 	FNovaTrajectory CurrentPreviewTrajectory;
 	float           CurrentPreviewProgress;
 	float           CurrentDesiredSize;
+	float           CurrentDesiredScale;
 	float           CurrentDrawScale;
 	float           CurrentZoomSpeed;
 

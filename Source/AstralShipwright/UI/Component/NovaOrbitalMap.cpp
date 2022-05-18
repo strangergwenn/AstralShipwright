@@ -87,10 +87,15 @@ void SNovaOrbitalMap::Construct(const FArguments& InArgs)
 	TrajectoryZoomSnappinness  = 10.0f;
 	TrajectoryInflationRatio   = 1.2f;
 
+	// Zoom
+	MapScaleMin         = 0.5f;
+	MapScaleMax         = 2.0f;
+	MapScaleStep        = 0.3f;
+	CurrentDesiredScale = MapScaleMax;
+
 	// Camera filter settings, based on the defaults
-	CameraFilter.Velocity *= 125;
-	CameraFilter.Acceleration *= 75;
-	CameraFilter.Resistance *= 10;
+	CameraFilter.Velocity *= 50;
+	CameraFilter.Acceleration *= 15;
 }
 
 /*----------------------------------------------------
@@ -112,7 +117,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	HoveredOrbitalObjects.Empty();
 
 	// Integrate analog input
-	const float     PositionFreedom = 1.0f;
+	const float     PositionFreedom = 0.5f;
 	const FVector2D HalfLocalSize   = GetTickSpaceGeometry().GetLocalSize() / 2;
 	CameraFilter.ApplyFilter(CurrentPosition, CurrentVelocity, TargetPosition, DeltaTime, MenuManager->IsUsingGamepad());
 	CurrentPosition.X = FMath::Clamp(CurrentPosition.X, PositionFreedom * -HalfLocalSize.X, PositionFreedom * HalfLocalSize.X);
@@ -209,9 +214,20 @@ void SNovaOrbitalMap::VerticalAnalogInput(float Value)
 	}
 }
 
+void SNovaOrbitalMap::ZoomIn()
+{
+	CurrentDesiredScale = FMath::Max(CurrentDesiredScale - MapScaleStep, MapScaleMin);
+}
+
+void SNovaOrbitalMap::ZoomOut()
+{
+	CurrentDesiredScale = FMath::Min(CurrentDesiredScale + MapScaleStep, MapScaleMax);
+}
+
 void SNovaOrbitalMap::Reset()
 {
-	CurrentPosition = FVector2D::ZeroVector;
+	CurrentPosition     = FVector2D::ZeroVector;
+	CurrentDesiredScale = MapScaleMax;
 }
 
 /*----------------------------------------------------
@@ -230,7 +246,7 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 			const FNovaOrbitalLocation& OrbitalLocation = AreaAndOrbitalLocation.Value;
 			const FNovaOrbitGeometry&   Geometry        = OrbitalLocation.Geometry;
 
-			CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Geometry.GetHighestAltitude());
+			UpdateDesiredSize(Geometry.GetHighestAltitude());
 
 			float              BaseAltitude = GetObjectBaseAltitude(Geometry.Body);
 			FNovaOrbitalObject Area = FNovaOrbitalObject(AreaAndOrbitalLocation.Key, OrbitalLocation.GetCartesianLocation(BaseAltitude));
@@ -253,7 +269,7 @@ void SNovaOrbitalMap::ProcessAsteroids(const FVector2D& Origin)
 			const FNovaOrbitalLocation& OrbitalLocation = AsteroidAndOrbitalLocation.Value;
 			const FNovaOrbitGeometry&   Geometry        = OrbitalLocation.Geometry;
 
-			CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Geometry.GetHighestAltitude());
+			UpdateDesiredSize(Geometry.GetHighestAltitude());
 
 			float              BaseAltitude = GetObjectBaseAltitude(Geometry.Body);
 			FNovaOrbitalObject AsteroidObject =
@@ -305,7 +321,7 @@ void SNovaOrbitalMap::ProcessPlayerOrbit(const FVector2D& Origin)
 				AddOrbitalObject(Object, FLinearColor::White);
 			}
 
-			CurrentDesiredSize = FMath::Max(CurrentDesiredSize, Location.Geometry.GetHighestAltitude());
+			UpdateDesiredSize(Location.Geometry.GetHighestAltitude());
 		}
 	}
 }
@@ -332,7 +348,8 @@ void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
 	{
 		AddTrajectory(Origin, *PlayerTrajectory, GameState->GetSpacecraft(GameState->GetPlayerSpacecraftIdentifier()), 1.0f, OrbitStyle,
 			ManeuverStyle);
-		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, PlayerTrajectory->GetHighestAltitude());
+
+		UpdateDesiredSize(PlayerTrajectory->GetHighestAltitude());
 	}
 }
 
@@ -352,17 +369,18 @@ void SNovaOrbitalMap::ProcessTrajectoryPreview(const FVector2D& Origin, float De
 	if (CurrentPreviewTrajectory.IsValid())
 	{
 		AddTrajectory(Origin, CurrentPreviewTrajectory, nullptr, CurrentPreviewProgress, OrbitStyle, ManeuverStyle);
-		CurrentDesiredSize = FMath::Max(CurrentDesiredSize, CurrentPreviewTrajectory.GetHighestAltitude());
+
+		UpdateDesiredSize(CurrentPreviewTrajectory.GetHighestAltitude());
 	};
 }
 
 void SNovaOrbitalMap::ProcessDrawScale(float DeltaTime)
 {
-	CurrentDesiredSize *= 2 * TrajectoryInflationRatio;
+	CurrentDesiredSize *= CurrentDesiredScale * TrajectoryInflationRatio;
 
-	const float CurrentDesiredScale =
+	const float TargetScale =
 		FMath::Min(GetTickSpaceGeometry().GetLocalSize().X, GetTickSpaceGeometry().GetLocalSize().Y) / CurrentDesiredSize;
-	float ScaleDelta        = (CurrentDesiredScale - CurrentDrawScale) * TrajectoryZoomSnappinness;
+	float ScaleDelta        = (TargetScale - CurrentDrawScale) * TrajectoryZoomSnappinness;
 	float ScaleAcceleration = CurrentZoomSpeed - ScaleDelta;
 	ScaleAcceleration       = FMath::Clamp(ScaleAcceleration, -TrajectoryZoomAcceleration, TrajectoryZoomAcceleration);
 

@@ -211,8 +211,8 @@ public:
 
 					FNovaTime TimeLeftBeforeManeuver = Object.Maneuver->Time - GameState->GetCurrentTime();
 					FText     ManeuverTextFormat     = TimeLeftBeforeManeuver > 0
-														 ? LOCTEXT("ManeuverFormatValid", "{duration} burn for a {deltav} m/s maneuver in {time}")
-														 : LOCTEXT("ManeuverFormatExpired", "{duration} burn for a {deltav} m/s maneuver");
+					                                     ? LOCTEXT("ManeuverFormatValid", "{duration} burn for a {deltav} m/s maneuver in {time}")
+					                                     : LOCTEXT("ManeuverFormatExpired", "{duration} burn for a {deltav} m/s maneuver");
 
 					return FText::FormatNamed(ManeuverTextFormat, TEXT("time"), GetDurationText(TimeLeftBeforeManeuver, 2),
 						TEXT("duration"), GetDurationText(Object.Maneuver->Duration), TEXT("deltav"),
@@ -790,6 +790,16 @@ void SNovaMainMenuNavigation::Next()
 void SNovaMainMenuNavigation::Previous()
 {
 	CurrentHoveredObjectIndex = FMath::Max(CurrentHoveredObjectIndex - 1, 0);
+}
+
+void SNovaMainMenuNavigation::ZoomIn()
+{
+	OrbitalMap->ZoomIn();
+}
+
+void SNovaMainMenuNavigation::ZoomOut()
+{
+	OrbitalMap->ZoomOut();
 }
 
 TSharedPtr<SNovaButton> SNovaMainMenuNavigation::GetDefaultFocusButton() const

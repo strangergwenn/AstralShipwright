@@ -3,6 +3,7 @@
 #pragma once
 
 #include "UI/NovaUI.h"
+#include "Actor/NovaActorTools.h"
 #include "Widgets/SCompoundWidget.h"
 
 class SNovaMenu : public SCompoundWidget
@@ -155,9 +156,9 @@ protected:
 	TSharedPtr<class SOverlay>             MainOverlay;
 
 	// Mouse input data
-	bool      MousePressed;
-	bool      MousePressedContinued;
-	FVector2D PreviousMousePosition;
+	bool                         MousePressed;
+	bool                         MouseWasPressed;
+	TNovaTimedAverage<FVector2D> SmoothedMouseLocation;
 
 	// Input data
 	TMultiMap<FName, FName> ActionBindings;

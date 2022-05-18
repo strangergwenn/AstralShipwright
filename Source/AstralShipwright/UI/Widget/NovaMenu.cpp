@@ -22,7 +22,7 @@ SNovaMenu::SNovaMenu()
 	, AnalogNavMinPeriod(0.20f)
 	, AnalogNavMaxPeriod(1.0f)
 	, MousePressed(false)
-	, MousePressedContinued(false)
+	, MouseWasPressed(false)
 	, CurrentNavigationPanel(nullptr)
 	, PreviousNavigationPanel(nullptr)
 	, CurrentAnalogNavigation(EUINavigation::Invalid)
@@ -47,6 +47,8 @@ void SNovaMenu::Construct(const FArguments& InArgs)
 		]
 	];
 	// clang-format on
+
+	SmoothedMouseLocation.SetPeriod(0.5f);
 }
 
 /*----------------------------------------------------
@@ -76,34 +78,30 @@ void SNovaMenu::Tick(const FGeometry& AllottedGeometry, const double CurrentTime
 
 		if (MousePressed)
 		{
-			auto&     App       = FSlateApplication::Get();
-			FVector2D CursorPos = App.GetCursorPos();
+			auto&     App           = FSlateApplication::Get();
+			FVector2D MouseLocation = App.GetCursorPos();
 
-			// Compute the current analog mouse input with axis snapping
-			if (MousePressedContinued && CursorPos != PreviousMousePosition)
+			// Reset mouse state
+			if (!MouseWasPressed)
 			{
-				FVector2D MouseDirection = (CursorPos - PreviousMousePosition).GetSafeNormal();
-
-				float AxisDominanceThreshold = 0.5f;
-				if (FMath::Abs(MouseDirection.X) - FMath::Abs(MouseDirection.Y) > AxisDominanceThreshold)
-				{
-					MouseDirection = FVector2D(FMath::Sign(MouseDirection.X), 0);
-				}
-				else if (FMath::Abs(MouseDirection.Y) - FMath::Abs(MouseDirection.X) > AxisDominanceThreshold)
-				{
-					MouseDirection = FVector2D(0, FMath::Sign(MouseDirection.Y));
-				}
-
-				CurrentAnalogInput.X = MouseDirection.X;
-				CurrentAnalogInput.Y = -MouseDirection.Y;
+				SmoothedMouseLocation.Clear();
 			}
 
-			PreviousMousePosition = CursorPos;
-			MousePressedContinued = true;
+			// Compute the current analog mouse input with axis snapping
+			else
+			{
+				SmoothedMouseLocation.Set(MouseLocation, DeltaTime);
+				const FVector2D MouseMovement = MouseLocation - SmoothedMouseLocation.Get();
+
+				CurrentAnalogInput.X = MouseMovement.GetSafeNormal().X;
+				CurrentAnalogInput.Y = -MouseMovement.GetSafeNormal().Y;
+			}
+
+			MouseWasPressed = true;
 		}
 		else
 		{
-			MousePressedContinued = false;
+			MouseWasPressed = false;
 		}
 
 		// Pass analog input when using gamepad

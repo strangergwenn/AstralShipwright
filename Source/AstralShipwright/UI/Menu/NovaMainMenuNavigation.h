@@ -55,6 +55,10 @@ public:
 
 	virtual void Next() override;
 
+	virtual void ZoomIn() override;
+
+	virtual void ZoomOut() override;
+
 	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
 
 	/*----------------------------------------------------
