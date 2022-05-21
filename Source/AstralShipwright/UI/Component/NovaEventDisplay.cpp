@@ -176,7 +176,7 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 							{
 								DetailsText = FText::FormatNamed(LOCTEXT("ImminentManeuverAuthorized",
 																	 "{spacecraft}|plural(one=This,other=All) spacecraft "
-																	 "{spacecraft}|plural(one=has,other=have) ready to maneuver"),
+																	 "{spacecraft}|plural(one=is,other=are) ready to maneuver"),
 									TEXT("spacecraft"), GameState->PlayerArray.Num());
 							}
 							else
