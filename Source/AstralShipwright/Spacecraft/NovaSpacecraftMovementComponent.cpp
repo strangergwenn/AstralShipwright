@@ -355,7 +355,6 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Docking : done");
 
 				MovementCommand.State = ENovaMovementState::Docked;
-
 				SignalCompletion();
 			}
 			break;
@@ -375,7 +374,6 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Undocking : done");
 
 				MovementCommand.State = ENovaMovementState::Idle;
-
 				SignalCompletion();
 			}
 			else if (LinearAttitudeDistance < 50)
@@ -413,7 +411,6 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 					NLOG("UNovaSpacecraftMovementComponent::ProcessState : ExitingOrbit : done");
 
 					MovementCommand.State = ENovaMovementState::Idle;
-
 					SignalCompletion();
 				}
 			}
@@ -447,7 +444,6 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 					NLOG("UNovaSpacecraftMovementComponent::ProcessState : ExitingOrbit : done");
 
 					MovementCommand.State = ENovaMovementState::Idle;
-
 					SignalCompletion();
 				}
 			}
@@ -456,6 +452,40 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 		// Anchoring to asteroid
 		case ENovaMovementState::Anchoring:
+			if (MovementCommand.Dirty)
+			{
+				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Anchoring : starting");
+
+				// Trace params
+				FHitResult            HitResult(ForceInit);
+				FCollisionQueryParams TraceParams(FName(TEXT("Anchor Trace")), false, NULL);
+				TraceParams.bTraceComplex           = true;
+				TraceParams.bReturnPhysicalMaterial = false;
+				TraceParams.AddIgnoredActor(GetOwner());
+				ECollisionChannel CollisionChannel = ECollisionChannel::ECC_WorldDynamic;
+
+				// Trace
+				bool FoundHit =
+					GetWorld()->LineTraceSingleByChannel(HitResult, CurrentLocation, AsteroidLocation, CollisionChannel, TraceParams);
+				if (FoundHit && HitResult.GetActor() == Asteroids[0])
+				{
+					AttitudeCommand.Location = HitResult.Location;
+				}
+				else
+				{
+					NLOG("UNovaSpacecraftMovementComponent::ProcessState : Anchoring : failed");
+
+					MovementCommand.State = ENovaMovementState::Orbiting;
+					SignalCompletion();
+				}
+			}
+			else if (LinearAttitudeIdle && AngularAttitudeIdle)
+			{
+				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Anchoring : done");
+
+				MovementCommand.State = ENovaMovementState::Anchored;
+				SignalCompletion();
+			}
 			break;
 
 		// Existing an asteroid anchor
@@ -470,6 +500,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Stopping : done");
 
 				MovementCommand.State = ENovaMovementState::Idle;
+				SignalCompletion();
 			}
 			break;
 

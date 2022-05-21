@@ -804,9 +804,11 @@ void SNovaMainMenuFlight::OnDockUndock()
 		{
 			if (IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Anchored)
 			{
+				SpacecraftMovement->ExitAnchor();
 			}
 			else
 			{
+				SpacecraftMovement->Anchor();
 			}
 		}
 		else
