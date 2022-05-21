@@ -13,7 +13,6 @@ UENUM()
 enum class ENovaMovementState : uint8
 {
 	Idle,
-	AlignToManeuver,
 	Stopping,
 
 	Docking,
@@ -170,9 +169,6 @@ public:
 
 	/** Stop right there with no particular target */
 	void Stop(FSimpleDelegate Callback = FSimpleDelegate());
-
-	/** Align to the next maneuver */
-	void AlignToManeuver(FSimpleDelegate Callback = FSimpleDelegate());
 
 	/** Start orbiting the nearest asteroid */
 	void StartOrbiting();

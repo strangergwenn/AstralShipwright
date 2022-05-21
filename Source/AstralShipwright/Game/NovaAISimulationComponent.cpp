@@ -467,15 +467,6 @@ void UNovaAISimulationComponent::ProcessNavigation()
 					SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Idle);
 				}
 			}
-
-			// Align to maneuvers
-			if (IsValid(SpacecraftMovement) && SpacecraftMovement->IsIdle() && !SpacecraftMovement->IsAlignedToManeuver())
-			{
-				NLOG("UNovaAISimulationComponent::ProcessNavigation : '%s' aligning for maneuver",
-					*Identifier.ToString(EGuidFormats::Short));
-
-				SpacecraftMovement->AlignToManeuver();
-			}
 		}
 
 		// Stay at the station for some time

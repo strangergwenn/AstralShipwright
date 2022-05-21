@@ -1063,7 +1063,7 @@ bool SNovaMainMenuNavigation::CanCommitTrajectoryInternal(FText* Details) const
 			{
 				*Details = FText::FormatNamed(
 					LOCTEXT("OneSpacecraftLacksPropellant",
-						"{spacecraft}|plural(one=The,other=A) spacecraft doesn't have enough propellant for this trajectory"),
+						"{spacecraft}|plural(one=This,other=A) spacecraft doesn't have enough propellant for this flight plan"),
 					TEXT("spacecraft"), GameState->GetPlayerSpacecraftIdentifiers().Num());
 			}
 

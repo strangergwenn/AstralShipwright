@@ -5,6 +5,7 @@
 #include "NovaMainMenu.h"
 
 #include "Game/NovaArea.h"
+#include "Game/NovaAsteroid.h"
 #include "Game/NovaGameMode.h"
 #include "Game/NovaGameState.h"
 #include "Game/NovaOrbitalSimulationComponent.h"
@@ -211,7 +212,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 
 	SAssignNew(AttitudeHUD.OverviewWidget, STextBlock)
 		.TextStyle(&Theme.MainFont)
-		.Text(LOCTEXT("Attitude", "Attitude"));
+		.Text(LOCTEXT("Propulsion", "Propulsion"));
 
 	SAssignNew(AttitudeHUD.DetailedWidget, SVerticalBox)
 
@@ -221,21 +222,44 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		[
 			SNew(STextBlock)
 			.TextStyle(&Theme.HeadingFont)
-			.Text(LOCTEXT("Attitude", "Attitude"))
+			.Text(LOCTEXT("Propulsion", "Propulsion"))
 		]
-	
+		
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SNovaAssignNew(AlignManeuverButton, SNovaButton)
+			SNovaNew(SNovaButton)
+			.Action(FNovaPlayerInput::MenuSecondary)
+			.Text(LOCTEXT("ToggleOrbiting", "Toggle orbiting"))
+			.OnClicked(FSimpleDelegate::CreateLambda([=]
+			{
+				if (!SpacecraftMovement->IsOrbiting())
+				{
+					SpacecraftMovement->StartOrbiting();
+				}
+				else
+				{
+					SpacecraftMovement->StopOrbiting();
+				}
+			}))
+		]
+		
+		// Dock, undock, anchor, leave anchor
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNovaAssignNew(DockButton, SNovaButton)
 			.Action(FNovaPlayerInput::MenuPrimary)
-			.Text(LOCTEXT("AlignManeuver", "Align to maneuver"))
-			.HelpText(LOCTEXT("AlignManeuverHelp", "Allow thrusters to fire to re-orient the spacecraft"))
-			.OnClicked(this, &SNovaMainMenuFlight::OnAlignToManeuver)
-			.Enabled(this, &SNovaMainMenuFlight::IsManeuveringEnabled)
+			.Text(this, &SNovaMainMenuFlight::GetDockUndockText)
+			.HelpText(this, &SNovaMainMenuFlight::GetDockUndockHelp)
+			.OnClicked(this, &SNovaMainMenuFlight::OnDockUndock)
+			.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+			{
+				return CanDockUndock();
+			})))
 		];
 
-	AttitudeHUD.DefaultFocus = AlignManeuverButton;
+	AttitudeHUD.DefaultFocus = DockButton;
 	
 	/*----------------------------------------------------
 	    Home
@@ -258,7 +282,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.Icon(FNovaStyleSet::GetBrush("Icon/SB_Time"))
 			.Text(LOCTEXT("FastForward", "Fast forward"))
 			.HelpText(this, &SNovaMainMenuFlight::GetFastFowardHelp)
-			.OnClicked(this, &SNovaMainMenuFlight::FastForward)
+			.OnClicked(this, &SNovaMainMenuFlight::OnFastForward)
 			.Enabled(this, &SNovaMainMenuFlight::CanFastForward)
 		];
 
@@ -286,7 +310,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SNovaNew(SNovaButton)
+			SNovaAssignNew(TerminateButton, SNovaButton)
 			.Text(LOCTEXT("AbortFlightPlan", "Terminate flight plan"))
 			.HelpText(LOCTEXT("AbortTrajectoryHelp", "Terminate the current flight plan and stay on the current orbit"))
 			.OnClicked(FSimpleDelegate::CreateLambda([this]()
@@ -303,37 +327,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		.AutoHeight()
 		[
 			SNovaNew(SNovaButton)
-			.Action(FNovaPlayerInput::MenuSecondary) // TODO
-			.Text(LOCTEXT("ToggleOrbiting", "Toggle orbiting"))
-			.OnClicked(FSimpleDelegate::CreateLambda([=]
-				{
-					if (!SpacecraftMovement->IsOrbiting())
-					{
-						SpacecraftMovement->StartOrbiting();
-					}
-					else
-					{
-						SpacecraftMovement->StopOrbiting();
-					}
-				}))
-		]
-		
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		[
-			SNovaAssignNew(DockButton, SNovaButton)
-			.Action(FNovaPlayerInput::MenuPrimary)
-			.Text(this, &SNovaMainMenuFlight::GetDockingText)
-			.HelpText(this, &SNovaMainMenuFlight::GetDockingHelp)
-			.OnClicked(this, &SNovaMainMenuFlight::OnDockUndock)
-			.Enabled(this, &SNovaMainMenuFlight::IsDockUndockEnabled)
-		]
-		
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		[
-			SNovaNew(SNovaButton)
-			//.Action(FNovaPlayerInput::MenuSecondary) // TODO
+			.Action(FNovaPlayerInput::MenuSecondary)
 			.Text(LOCTEXT("TestSilentRunning", "Silent running"))
 			.OnClicked(FSimpleDelegate::CreateLambda([&]()
 			{
@@ -406,7 +400,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 #endif // WITH_EDITOR
 		;
 
-	OperationsHUD.DefaultFocus = DockButton;
+	OperationsHUD.DefaultFocus = TerminateButton;
 
 	/*----------------------------------------------------
 	    Weapons
@@ -584,20 +578,163 @@ TSharedPtr<SNovaButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
     Content callbacks
 ----------------------------------------------------*/
 
-FKey SNovaMainMenuFlight::GetPreviousItemKey() const
+FText SNovaMainMenuFlight::GetDockUndockText() const
 {
-	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuPrevious);
+	if (IsInSpace())
+	{
+		if (IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Anchored)
+		{
+			return LOCTEXT("LeaveAnchor", "Leave anchor");
+		}
+		else
+		{
+			return LOCTEXT("Anchor", "Anchor");
+		}
+	}
+	else
+	{
+		if (IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Docked)
+		{
+			return LOCTEXT("Undock", "Undock");
+		}
+		else
+		{
+			return LOCTEXT("Dock", "Dock");
+		}
+	}
 }
 
-FKey SNovaMainMenuFlight::GetNextItemKey() const
+FText SNovaMainMenuFlight::GetDockUndockHelp() const
 {
-	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuNext);
+	FText Out;
+
+	if (IsInSpace())
+	{
+		if (IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Anchored)
+		{
+			Out = LOCTEXT("LeaveAnchorHelp", "Leave the current anchor and go back to orbiitng the object");
+			CanDockUndock(&Out);
+		}
+		else
+		{
+			Out = LOCTEXT("AnchorHelp", "Anchor to the currently orbited object");
+			CanDockUndock(&Out);
+		}
+	}
+	else
+	{
+		if (IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Docked)
+		{
+			Out = LOCTEXT("UndockHelp", "Undock from the station");
+			CanDockUndock(&Out);
+		}
+		else
+		{
+			Out = LOCTEXT("DockHelp", "Dock at the station");
+			CanDockUndock(&Out);
+		}
+	}
+
+	return Out;
 }
 
-bool SNovaMainMenuFlight::CanFastForward() const
+bool SNovaMainMenuFlight::CanDockUndock(FText* Help) const
 {
-	const ANovaGameMode* GameMode = MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>();
-	return IsValid(GameMode) && GameMode->CanFastForward();
+	if (OrbitalSimulation && IsValid(PC) && IsValid(SpacecraftMovement) && IsValid(SpacecraftPawn))
+	{
+		// Anchoring
+		if (IsInSpace())
+		{
+			// Leaving anchor
+			if (SpacecraftMovement->GetState() == ENovaMovementState::Anchored)
+			{
+				// TODO
+			}
+
+			// Anchoring
+			else
+			{
+				TArray<AActor*> Asteroids;
+				UGameplayStatics::GetAllActorsOfClass(GameState->GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
+
+				if (Asteroids.Num() == 0)
+				{
+					if (Help)
+					{
+						*Help = LOCTEXT("NoAsteroids", "No asteroid to anchor to");
+					}
+					return false;
+				}
+			}
+		}
+
+		// Docking
+		else
+		{
+			// Undocking
+			if (SpacecraftMovement->GetState() == ENovaMovementState::Docked)
+			{
+				if (SpacecraftPawn->HasModifications())
+				{
+					if (Help)
+					{
+						*Help = LOCTEXT("SpacecraftModifications", "Cannot undock with design changes");
+					}
+					return false;
+				}
+				else if (PC->GetSpacecraft()->PropellantMassAtLaunch <= 0)
+				{
+					if (Help)
+					{
+						*Help = LOCTEXT("SpacecraftNoPropellant", "Cannot undock without propellant");
+					}
+					return false;
+				}
+				else if (!SpacecraftPawn->IsSpacecraftValid())
+				{
+					if (Help)
+					{
+						*Help = LOCTEXT("SpacecraftNotValid", "Cannot undock with an invalid spacecraft design");
+					}
+					return false;
+				}
+				else if (!SpacecraftMovement->CanUndock())
+				{
+					if (Help)
+					{
+						*Help = LOCTEXT("SpacecraftCannotUndock", "UndockingDenied");
+					}
+					return false;
+				}
+			}
+
+			// Docking
+			else
+			{
+				const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
+				if (PlayerTrajectory != nullptr)
+				{
+					if (Help)
+					{
+						*Help = LOCTEXT("SpacecraftTrajectory", "Cannot dock while on a trajectory");
+					}
+					return false;
+				}
+				else if (!SpacecraftMovement->CanDock())
+				{
+					if (Help)
+					{
+						*Help = LOCTEXT("SpacecraftCannotDock", "Docking denied");
+					}
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	return false;
 }
 
 FText SNovaMainMenuFlight::GetFastFowardHelp() const
@@ -613,124 +750,10 @@ FText SNovaMainMenuFlight::GetFastFowardHelp() const
 	return HelpText;
 }
 
-FText SNovaMainMenuFlight::GetDockingText() const
+bool SNovaMainMenuFlight::CanFastForward() const
 {
-	if (IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Docked)
-	{
-		return LOCTEXT("Undock", "Undock");
-	}
-	else
-	{
-		return LOCTEXT("Dock", "Dock");
-	}
-}
-
-bool SNovaMainMenuFlight::CanDock(FText* Help) const
-{
-	if (OrbitalSimulation && IsValid(PC) && IsValid(SpacecraftMovement) && IsValid(SpacecraftPawn))
-	{
-		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
-
-		if (PlayerTrajectory != nullptr)
-		{
-			if (Help)
-			{
-				*Help = LOCTEXT("SpacecraftTrajectory", "Cannot dock while on a trajectory");
-			}
-			return false;
-		}
-		else if (!SpacecraftMovement->CanDock())
-		{
-			if (Help)
-			{
-				*Help = LOCTEXT("SpacecraftCannotDock", "Docking denied");
-			}
-			return false;
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
-bool SNovaMainMenuFlight::CanUndock(FText* Help) const
-{
-	if (OrbitalSimulation && IsValid(PC) && IsValid(SpacecraftMovement) && IsValid(SpacecraftPawn))
-	{
-		if (SpacecraftPawn->HasModifications())
-		{
-			if (Help)
-			{
-				*Help = LOCTEXT("SpacecraftModifications", "Cannot undock with design changes");
-			}
-			return false;
-		}
-		else if (PC->GetSpacecraft()->PropellantMassAtLaunch <= 0)
-		{
-			if (Help)
-			{
-				*Help = LOCTEXT("SpacecraftNoPropellant", "Cannot undock without propellant");
-			}
-			return false;
-		}
-		else if (!SpacecraftPawn->IsSpacecraftValid())
-		{
-			if (Help)
-			{
-				*Help = LOCTEXT("SpacecraftNotValid", "Cannot undock with an invalid spacecraft design");
-			}
-			return false;
-		}
-		else if (!SpacecraftMovement->CanUndock())
-		{
-			if (Help)
-			{
-				*Help = LOCTEXT("SpacecraftCannotUndock", "UndockingDenied");
-			}
-			return false;
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
-FText SNovaMainMenuFlight::GetDockingHelp() const
-{
-	FText Out;
-
-	if (IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Docked)
-	{
-		Out = LOCTEXT("UndockHelp", "Undock from the station");
-		CanUndock(&Out);
-	}
-	else
-	{
-		Out = LOCTEXT("DockHelp", "Dock at the station");
-		CanDock(&Out);
-	}
-
-	return Out;
-}
-
-bool SNovaMainMenuFlight::IsDockUndockEnabled() const
-{
-	return CanDock(nullptr) || CanUndock(nullptr);
-}
-
-bool SNovaMainMenuFlight::IsManeuveringEnabled() const
-{
-	if (OrbitalSimulation)
-	{
-		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
-
-		return PlayerTrajectory && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Idle &&
-		       !SpacecraftMovement->IsAlignedToManeuver();
-	}
-
-	return false;
+	const ANovaGameMode* GameMode = MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>();
+	return IsValid(GameMode) && GameMode->CanFastForward();
 }
 
 /*----------------------------------------------------
@@ -765,32 +788,55 @@ void SNovaMainMenuFlight::SetHUDIndexCallback(int32 Index)
 	ResetNavigation();
 }
 
-void SNovaMainMenuFlight::FastForward()
+void SNovaMainMenuFlight::OnFastForward()
 {
 	MenuManager->GetWorld()->GetAuthGameMode<ANovaGameMode>()->FastForward();
 }
 
 void SNovaMainMenuFlight::OnDockUndock()
 {
-	if (IsDockUndockEnabled())
+	if (CanDockUndock())
 	{
-		if (IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Docked)
+		if (IsInSpace())
 		{
-			PC->Undock();
+			if (IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Anchored)
+			{
+			}
+			else
+			{
+			}
 		}
 		else
 		{
-			PC->Dock();
+			if (IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Docked)
+			{
+				PC->Undock();
+			}
+			else
+			{
+				PC->Dock();
+			}
 		}
 	}
 }
 
-void SNovaMainMenuFlight::OnAlignToManeuver()
+/*----------------------------------------------------
+    Helpers
+----------------------------------------------------*/
+
+FKey SNovaMainMenuFlight::GetPreviousItemKey() const
 {
-	if (IsValid(SpacecraftMovement))
-	{
-		SpacecraftMovement->AlignToManeuver();
-	}
+	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuPrevious);
+}
+
+FKey SNovaMainMenuFlight::GetNextItemKey() const
+{
+	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuNext);
+}
+
+bool SNovaMainMenuFlight::IsInSpace() const
+{
+	return IsValid(GameState) && IsValid(GameState->GetCurrentArea()) && GameState->GetCurrentArea()->IsInSpace;
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -476,7 +476,7 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 						if (Compartment.Equipment[GroupedIndex] != Equipment)
 						{
 							Issues.Add(FText::FormatNamed(LOCTEXT("InvalidPairing",
-															  "The equipment in slot {slot} of compartment {compartment} is not "
+															  "Equipment in slot {slot} of compartment {compartment} is not "
 															  "correctly paired with symmetrical equipment"),
 								TEXT("slot"), Compartment.Description->GetEquipmentSlot(EquipmentIndex).DisplayName, TEXT("compartment"),
 								FText::AsNumber(CompartmentIndex + 1)));

@@ -80,20 +80,12 @@ public:
 	----------------------------------------------------*/
 
 protected:
-	FKey GetPreviousItemKey() const;
-	FKey GetNextItemKey() const;
+	FText GetDockUndockText() const;
+	FText GetDockUndockHelp() const;
+	bool  CanDockUndock(FText* Help = nullptr) const;
 
-	bool  CanFastForward() const;
 	FText GetFastFowardHelp() const;
-
-	bool  CanDock(FText* Help) const;
-	bool  CanUndock(FText* Help) const;
-	FText GetDockingText() const;
-	FText GetDockingHelp() const;
-
-	bool IsDockUndockEnabled() const;
-
-	bool IsManeuveringEnabled() const;
+	bool  CanFastForward() const;
 
 	/*----------------------------------------------------
 	    Callbacks
@@ -103,11 +95,18 @@ protected:
 	void SetHUDIndex(int32 Index);
 	void SetHUDIndexCallback(int32 Index);
 
-	void FastForward();
+	void OnFastForward();
 
 	void OnDockUndock();
 
-	void OnAlignToManeuver();
+	/*----------------------------------------------------
+	    Helpers
+	----------------------------------------------------*/
+
+protected:
+	FKey GetPreviousItemKey() const;
+	FKey GetNextItemKey() const;
+	bool IsInSpace() const;
 
 	/*----------------------------------------------------
 	    Data
@@ -126,8 +125,8 @@ protected:
 	TSharedPtr<class SHorizontalBox> HUDSwitcher;
 	TSharedPtr<class SNovaHUDPanel>  HUDPanel;
 	TSharedPtr<class SBox>           HUDBox;
-	TSharedPtr<class SNovaButton>    UndockButton;
 	TSharedPtr<class SNovaButton>    DockButton;
+	TSharedPtr<class SNovaButton>    TerminateButton;
 	TSharedPtr<class SNovaButton>    AlignManeuverButton;
 	TSharedPtr<class SNovaButton>    FastForwardButton;
 	TSharedPtr<class SBox>           InvisibleWidget;

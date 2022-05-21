@@ -273,17 +273,6 @@ void UNovaSpacecraftMovementComponent::Stop(FSimpleDelegate Callback)
 	RequestMovement(FNovaMovementCommand(ENovaMovementState::Stopping));
 }
 
-void UNovaSpacecraftMovementComponent::AlignToManeuver(FSimpleDelegate Callback)
-{
-	if (GetNextManeuver() && !IsAlignedToManeuver())
-	{
-		NLOG("UNovaSpacecraftMovementComponent::AlignToManeuver : orientating");
-
-		CompletionCallback = Callback;
-		RequestMovement(FNovaMovementCommand(ENovaMovementState::AlignToManeuver));
-	}
-}
-
 void UNovaSpacecraftMovementComponent::StartOrbiting()
 {
 	NLOG("UNovaSpacecraftMovementComponent::StartOrbiting ('%s')", *GetRoleString(this));
@@ -333,25 +322,14 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 	switch (MovementCommand.State)
 	{
-		// Idle states
+		// Default state
 		case ENovaMovementState::Idle:
-		case ENovaMovementState::Docked:
-		case ENovaMovementState::Anchored:
+			AttitudeCommand.Direction = GetManeuverDirection();
 			break;
 
-		// Orientating state that serves as a sub-state for Idle without identifying as such
-		case ENovaMovementState::AlignToManeuver:
-			AttitudeCommand.Velocity = FVector::ZeroVector;
-			if (MovementCommand.Dirty)
-			{
-				AttitudeCommand.Direction = GetManeuverDirection();
-			}
-			else if (AngularAttitudeIdle)
-			{
-				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Orientating : done");
-
-				MovementCommand.State = ENovaMovementState::Idle;
-			}
+		// Idle states
+		case ENovaMovementState::Docked:
+		case ENovaMovementState::Anchored:
 			break;
 
 		// Docking procedure
