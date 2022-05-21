@@ -217,17 +217,27 @@ void SNovaOrbitalMap::VerticalAnalogInput(float Value)
 void SNovaOrbitalMap::ZoomIn()
 {
 	CurrentDesiredScale = FMath::Max(CurrentDesiredScale - MapScaleStep, MapScaleMin);
+
+	NLOG("SNovaOrbitalMap::ZoomIn : scale %.02f, pos %.02f %.02f", CurrentDesiredScale, CurrentPosition.X, CurrentPosition.Y);
 }
 
 void SNovaOrbitalMap::ZoomOut()
 {
 	CurrentDesiredScale = FMath::Min(CurrentDesiredScale + MapScaleStep, MapScaleMax);
+
+	const FVector2D CursorPosition = GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos());
+
+	NLOG("SNovaOrbitalMap::ZoomOut : scale %.02f, pos %.02f %.02f", CurrentDesiredScale, CurrentPosition.X, CurrentPosition.Y);
 }
 
 void SNovaOrbitalMap::Reset()
 {
 	CurrentPosition     = FVector2D::ZeroVector;
 	CurrentDesiredScale = MapScaleMax;
+
+	const FVector2D CursorPosition = GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos());
+
+	NLOG("SNovaOrbitalMap::Reset : scale %.02f, pos %.02f %.02f", CurrentDesiredScale, CurrentPosition.X, CurrentPosition.Y);
 }
 
 /*----------------------------------------------------
