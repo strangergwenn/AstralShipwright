@@ -299,8 +299,17 @@ void SNovaTrajectoryCalculator::SimulateTrajectories(
 	SimulatedTrajectories.Reserve((Slider->GetMaxValue() - Slider->GetMinValue()) / AltitudeStep + 1);
 	for (float Altitude = Slider->GetMinValue(); Altitude <= Slider->GetMaxValue(); Altitude += AltitudeStep)
 	{
-		FNovaTrajectory Trajectory = OrbitalSimulation->ComputeTrajectory(Parameters, Altitude);
-		SimulatedTrajectories.Add(Altitude, Trajectory);
+		// Reject phasing at identical altitudes, for they produce null maneuvers
+		if (Altitude != Parameters.DestinationAltitude && Altitude != Parameters.Source.Geometry.StartAltitude &&
+			Altitude != Parameters.Source.Geometry.OppositeAltitude)
+		{
+			FNovaTrajectory Trajectory = OrbitalSimulation->ComputeTrajectory(Parameters, Altitude);
+			SimulatedTrajectories.Add(Altitude, Trajectory);
+		}
+		else
+		{
+			SimulatedTrajectories.Add(Altitude, FNovaTrajectory());
+		}
 	}
 
 	// Pre-process the trajectory data for absolute minimas and maximas
@@ -473,7 +482,7 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 						LOCTEXT("FlightPlanPropellantFormat", "{spacecraft}: {used} T of propellant required ({remaining} T remaining)"),
 						TEXT("spacecraft"), Spacecraft->GetName(), TEXT("used"), FText::AsNumber(PropellantUsed, &Options),
 						TEXT("remaining"), FText::AsNumber(PropellantRemaining, &Options))
-											 .ToString();
+					                         .ToString();
 				}
 
 				CurrentSpacecraftIndex++;

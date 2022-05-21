@@ -31,7 +31,7 @@ struct FNovaHohmannTransfer
 
 		// StartDeltaV = VTransfer1 - VSource
 		StartDeltaV = sqrt((2.0 * µ * DestinationRadius) / (ManeuverRadius * (ManeuverRadius + DestinationRadius))) -
-					  sqrt(µ * ((2.0 / ManeuverRadius) - (1.0 / SourceSemiMajorAxis)));
+		              sqrt(µ * ((2.0 / ManeuverRadius) - (1.0 / SourceSemiMajorAxis)));
 
 		// EndDeltaV = VDest - VTransfer2
 		EndDeltaV = sqrt(µ / DestinationRadius) * (1.0 - sqrt((2.0 * ManeuverRadius) / (ManeuverRadius + DestinationRadius)));
@@ -92,6 +92,8 @@ struct FNovaSpacecraftFleet
 
 	FNovaSpacecraftFleetManeuver AddManeuver(double DeltaV)
 	{
+		NCHECK(DeltaV != 0);
+
 		// Update the propellant use and compute individual maneuver durations for each ship
 		FNovaTime         MaxDuration;
 		TArray<FNovaTime> Durations;
@@ -270,7 +272,7 @@ FNovaTrajectory UNovaOrbitalSimulationComponent::ComputeTrajectory(const FNovaTr
 	// Departure burn on first transfer
 	FNovaSpacecraftFleetManeuver FleetManeuver        = Fleet.AddManeuver(TransferA.StartDeltaV);
 	bool                         FirstTransferIsValid = Trajectory.Add(
-        FNovaManeuver(TransferA.StartDeltaV, CurrentPhase, CurrentTime, FleetManeuver.Duration, FleetManeuver.ThrustFactors));
+								FNovaManeuver(TransferA.StartDeltaV, CurrentPhase, CurrentTime, FleetManeuver.Duration, FleetManeuver.ThrustFactors));
 
 	// First transfer
 	if (FirstTransferIsValid)
@@ -284,7 +286,7 @@ FNovaTrajectory UNovaOrbitalSimulationComponent::ComputeTrajectory(const FNovaTr
 	FleetManeuver                    = Fleet.AddManeuver(TransferA.EndDeltaV);
 	double        ManeuverPhaseDelta = ((FleetManeuver.Duration / 2.0) / PhasingOrbitPeriod) * 360.0;
 	FNovaManeuver Maneuver           = FNovaManeuver(TransferA.EndDeltaV, CurrentPhase - ManeuverPhaseDelta,
-        CurrentTime + TransferA.Duration - FleetManeuver.Duration / 2.0, FleetManeuver.Duration, FleetManeuver.ThrustFactors);
+				  CurrentTime + TransferA.Duration - FleetManeuver.Duration / 2.0, FleetManeuver.Duration, FleetManeuver.ThrustFactors);
 	Trajectory.Add(Maneuver);
 	CurrentTime += TransferA.Duration;
 
@@ -321,7 +323,7 @@ FNovaTrajectory UNovaOrbitalSimulationComponent::ComputeTrajectory(const FNovaTr
 	// Circularization burn after second transfer
 	ManeuverPhaseDelta = (FleetManeuver.Duration / PhasingOrbitPeriod) * 360.0;
 	Maneuver           = FNovaManeuver(TransferB.EndDeltaV, CurrentPhase - ManeuverPhaseDelta,
-        CurrentTime + TransferB.Duration - FleetManeuver.Duration, FleetManeuver.Duration, FleetManeuver.ThrustFactors);
+				  CurrentTime + TransferB.Duration - FleetManeuver.Duration, FleetManeuver.Duration, FleetManeuver.ThrustFactors);
 	Trajectory.Add(Maneuver);
 
 	// Metadata

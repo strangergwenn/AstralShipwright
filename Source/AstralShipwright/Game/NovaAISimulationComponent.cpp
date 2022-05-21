@@ -614,10 +614,14 @@ void UNovaAISimulationComponent::StartTrajectory(
 	FNovaTrajectoryParameters Parameters = OrbitalSimulation->PrepareTrajectory(SourceOrbit, DestinationOrbit, DeltaTime, Spacecraft);
 	for (float Altitude = 300; Altitude <= 1500; Altitude += 200)
 	{
-		FNovaTrajectory NewTrajectory = OrbitalSimulation->ComputeTrajectory(Parameters, Altitude);
-		if (NewTrajectory.IsValid() && NewTrajectory.TotalTravelDuration.AsDays() < 15)
+		if (Altitude != Parameters.DestinationAltitude && Altitude != Parameters.Source.Geometry.StartAltitude &&
+			Altitude != Parameters.Source.Geometry.OppositeAltitude)
 		{
-			Candidates.Add(NewTrajectory);
+			FNovaTrajectory NewTrajectory = OrbitalSimulation->ComputeTrajectory(Parameters, Altitude);
+			if (NewTrajectory.IsValid() && NewTrajectory.TotalTravelDuration.AsDays() < 20)
+			{
+				Candidates.Add(NewTrajectory);
+			}
 		}
 	}
 
