@@ -712,10 +712,8 @@ float UNovaOrbitalSimulationComponent::GetCurrentSpacecraftThrustFactor(const FG
 
 	if (Trajectory)
 	{
-		const FNovaManeuver* CurrentManeuver = Trajectory->GetManeuver(GetCurrentTime());
-		const FNovaManeuver* FutureManeuver  = Trajectory->GetManeuver(GetCurrentTime() + TimeMargin);
-
-		if (CurrentManeuver && FutureManeuver)
+		const FNovaManeuver* CurrentManeuver = Trajectory->GetManeuver(GetCurrentTime() + TimeMargin);
+		if (CurrentManeuver)
 		{
 			int32 SpacecraftIndex = GetSpacecraftTrajectoryIndex(Identifier);
 			NCHECK(SpacecraftIndex != INDEX_NONE && SpacecraftIndex >= 0 && SpacecraftIndex < CurrentManeuver->ThrustFactors.Num());
