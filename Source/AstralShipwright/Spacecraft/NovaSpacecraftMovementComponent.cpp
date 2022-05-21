@@ -6,6 +6,7 @@
 #include "Actor/NovaActorTools.h"
 #include "Actor/NovaPlayerStart.h"
 
+#include "Game/NovaAsteroid.h"
 #include "Game/NovaGameMode.h"
 #include "Game/NovaGameState.h"
 #include "Game/NovaOrbitalSimulationComponent.h"
@@ -321,6 +322,15 @@ High level movement
 
 void UNovaSpacecraftMovementComponent::ProcessState()
 {
+	// Get helpful data
+	TArray<AActor*> Asteroids;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
+	const FVector WaitingPointLocation     = IsValid(DockState.Actor) ? DockState.Actor->GetWaitingPointLocation() : FVector::ZeroVector;
+	const FVector AsteroidLocation         = Asteroids.Num() ? Asteroids[0]->GetActorLocation() : FVector::ZeroVector;
+	const FVector CurrentLocation          = UpdatedComponent->GetComponentLocation();
+	const FVector AsteroidRelativeLocation = CurrentLocation - AsteroidLocation;
+	const FVector AsteroidRelativeWaitingPointLocation = WaitingPointLocation - AsteroidLocation;
+
 	switch (MovementCommand.State)
 	{
 		// Idle states
@@ -331,6 +341,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 		// Orientating state that serves as a sub-state for Idle without identifying as such
 		case ENovaMovementState::AlignToManeuver:
+			AttitudeCommand.Velocity = FVector::ZeroVector;
 			if (MovementCommand.Dirty)
 			{
 				AttitudeCommand.Direction = GetManeuverDirection();
@@ -345,7 +356,8 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 		// Docking procedure
 		case ENovaMovementState::Docking:
-			DockState.IsDocked = true;
+			DockState.IsDocked       = true;
+			AttitudeCommand.Velocity = FVector::ZeroVector;
 			if (!IsValid(MovementCommand.Target))
 			{
 				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Docking : aborted");
@@ -358,6 +370,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 				AttitudeCommand.Location  = MovementCommand.Target->GetActorLocation() - CurrentOrbitalLocation;
 				AttitudeCommand.Direction = FVector(1, 0, 0);
+				AttitudeCommand.Velocity  = FVector::ZeroVector;
 			}
 			else if (LinearAttitudeIdle && AngularAttitudeIdle)
 			{
@@ -371,12 +384,13 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 		// Undocking procedure
 		case ENovaMovementState::Undocking:
-			DockState.IsDocked = false;
+			AttitudeCommand.Velocity = FVector::ZeroVector;
+			DockState.IsDocked       = false;
 			if (MovementCommand.Dirty)
 			{
 				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Undocking : starting");
 
-				AttitudeCommand.Location = DockState.Actor->GetWaitingPointLocation() - CurrentOrbitalLocation;
+				AttitudeCommand.Location = WaitingPointLocation - CurrentOrbitalLocation;
 			}
 			else if (LinearAttitudeIdle && AngularAttitudeIdle)
 			{
@@ -394,11 +408,73 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 		// Orbiting asteroid
 		case ENovaMovementState::Orbiting:
+			AttitudeCommand.Direction  = FVector::CrossProduct(AsteroidRelativeLocation.GetSafeNormal(), FVector(0, 0, 1));
+			AttitudeCommand.Velocity   = AttitudeCommand.Direction * 20;
+			AttitudeCommand.Location   = CurrentLocation + AttitudeCommand.Direction * 20;
+			AttitudeCommand.Location.Z = WaitingPointLocation.Z;
+			AttitudeCommand.Location -= CurrentOrbitalLocation;
 			break;
 
 		// Existing an asteroid orbit
-		case ENovaMovementState::ExitingOrbit:
-			break;
+		case ENovaMovementState::ExitingOrbit: {
+			AttitudeCommand.Velocity    = FVector::ZeroVector;
+			const FVector ExitDirection = AsteroidRelativeWaitingPointLocation.GetSafeNormal();
+			const FVector ShipDirection = AsteroidRelativeLocation.GetSafeNormal();
+
+			// Simple direct exit
+			if (FVector::DotProduct(ExitDirection, ShipDirection) > 0)
+			{
+				if (MovementCommand.Dirty)
+				{
+					NLOG("UNovaSpacecraftMovementComponent::ProcessState : ExitingOrbit : direct exit");
+
+					AttitudeCommand.Location = WaitingPointLocation;
+				}
+				else if (LinearAttitudeIdle && AngularAttitudeIdle)
+				{
+					NLOG("UNovaSpacecraftMovementComponent::ProcessState : ExitingOrbit : done");
+
+					MovementCommand.State = ENovaMovementState::Idle;
+
+					SignalCompletion();
+				}
+			}
+
+			// Asteroid-avoiding exit
+			else
+			{
+				// Compute avoidance point
+				const TArray<FVector> AsteroidAvoidancePoints = {
+					FQuat(FVector(0, 0, 1), PI / 2).RotateVector(AsteroidRelativeWaitingPointLocation),
+					FQuat(FVector(0, 0, 1), -PI / 2).RotateVector(AsteroidRelativeWaitingPointLocation)};
+				int32 AvoidanceIndex = (AsteroidAvoidancePoints[1] - AsteroidRelativeLocation).Size() >
+				                               (AsteroidAvoidancePoints[0] - AsteroidRelativeLocation).Size()
+				                         ? 0
+				                         : 1;
+
+				if (MovementCommand.Dirty)
+				{
+					NLOG("UNovaSpacecraftMovementComponent::ProcessState : ExitingOrbit : asteroid-avoiding exit");
+
+					AttitudeCommand.Location = AsteroidAvoidancePoints[AvoidanceIndex];
+				}
+				else if (LinearAttitudeDistance < 50 && AttitudeCommand.Location != WaitingPointLocation)
+				{
+					NLOG("UNovaSpacecraftMovementComponent::ProcessState : ExitingOrbit : asteroid avoided");
+
+					AttitudeCommand.Location = WaitingPointLocation;
+				}
+				else if (LinearAttitudeIdle && AngularAttitudeIdle)
+				{
+					NLOG("UNovaSpacecraftMovementComponent::ProcessState : ExitingOrbit : done");
+
+					MovementCommand.State = ENovaMovementState::Idle;
+
+					SignalCompletion();
+				}
+			}
+		}
+		break;
 
 		// Anchoring to asteroid
 		case ENovaMovementState::Anchoring:
@@ -543,27 +619,27 @@ void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 		                                                                 : FRotator(0, 180, 0).Quaternion();
 
 		// While on the horizontal plane, follow desired roll too
-		if (FMath::IsNearlyZero(AttitudeCommand.Direction.Z))
-		{
-			// Roll angle of the final resting rotation around the desired direction
-			auto GetRollAngle = [&](const FQuat& Rotation)
-			{
-				FQuat       Swing, Twist;
-				const FQuat ResultingOrientation = Rotation.GetNormalized() * UpdatedComponent->GetComponentQuat();
-				ResultingOrientation.ToSwingTwist(AttitudeCommand.Direction, Swing, Twist);
-				return Twist.GetAngle();
-			};
+		// if (FMath::IsNearlyZero(AttitudeCommand.Direction.Z))
+		//{
+		//	// Roll angle of the final resting rotation around the desired direction
+		//	auto GetRollAngle = [&](const FQuat& Rotation)
+		//	{
+		//		FQuat       Swing, Twist;
+		//		const FQuat ResultingOrientation = Rotation.GetNormalized() * UpdatedComponent->GetComponentQuat();
+		//		ResultingOrientation.ToSwingTwist(AttitudeCommand.Direction, Swing, Twist);
+		//		return Twist.GetAngle();
+		//	};
 
-			// Extract the roll angle, build a correction, test it and apply the one that works
-			const float DesiredRoll         = FMath::DegreesToRadians(AttitudeCommand.Roll);
-			const float ActorRollRadians    = GetRollAngle(TargetRotation);
-			FQuat       FixedTargetRotation = FQuat(AttitudeCommand.Direction, DesiredRoll + ActorRollRadians) * TargetRotation;
-			if (GetRollAngle(FixedTargetRotation) > ActorRollRadians)
-			{
-				FixedTargetRotation = FQuat(AttitudeCommand.Direction, DesiredRoll - ActorRollRadians) * TargetRotation;
-			}
-			TargetRotation = FixedTargetRotation;
-		}
+		//	// Extract the roll angle, build a correction, test it and apply the one that works
+		//	const float DesiredRoll         = FMath::DegreesToRadians(AttitudeCommand.Roll);
+		//	const float ActorRollRadians    = GetRollAngle(TargetRotation);
+		//	FQuat       FixedTargetRotation = FQuat(AttitudeCommand.Direction, DesiredRoll + ActorRollRadians) * TargetRotation;
+		//	if (GetRollAngle(FixedTargetRotation) > ActorRollRadians)
+		//	{
+		//		FixedTargetRotation = FQuat(AttitudeCommand.Direction, DesiredRoll - ActorRollRadians) * TargetRotation;
+		//	}
+		//	TargetRotation = FixedTargetRotation;
+		//}
 
 		// Extract the rotation axis and angle
 		FVector RotationDirection;

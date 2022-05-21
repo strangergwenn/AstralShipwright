@@ -307,7 +307,14 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.Text(LOCTEXT("ToggleOrbiting", "Toggle orbiting"))
 			.OnClicked(FSimpleDelegate::CreateLambda([=]
 				{
-					SpacecraftMovement->StartOrbiting();
+					if (!SpacecraftMovement->IsOrbiting())
+					{
+						SpacecraftMovement->StartOrbiting();
+					}
+					else
+					{
+						SpacecraftMovement->StopOrbiting();
+					}
 				}))
 		]
 		
@@ -326,7 +333,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		.AutoHeight()
 		[
 			SNovaNew(SNovaButton)
-			//.Action(FNovaPlayerInput::MenuSecondary)
+			//.Action(FNovaPlayerInput::MenuSecondary) // TODO
 			.Text(LOCTEXT("TestSilentRunning", "Silent running"))
 			.OnClicked(FSimpleDelegate::CreateLambda([&]()
 			{
