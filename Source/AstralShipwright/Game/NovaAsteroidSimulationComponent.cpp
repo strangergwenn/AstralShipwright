@@ -30,7 +30,7 @@ FNovaAsteroid::FNovaAsteroid(FRandomStream& RandomStream, const UNovaAsteroidCon
 	, Phase(P)
 	, Scale(RandomStream.FRandRange(90, 130))
 	, Rotation(RandomStream.FRandRange(-90, 90), RandomStream.FRandRange(0, 360), 0)
-	, EffectsCount(RandomStream.FRandRange(10, 20))
+	, EffectsCount(RandomStream.FRandRange(20, 40))
 	, MineralsSeed(RandomStream.GetCurrentSeed())
 {
 	Mesh       = AsteroidConfiguration->Meshes[RandomStream.RandHelper(AsteroidConfiguration->Meshes.Num())];
