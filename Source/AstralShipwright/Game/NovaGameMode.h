@@ -29,6 +29,7 @@ class ANovaGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
+
 	ANovaGameMode();
 
 	/*----------------------------------------------------
@@ -56,6 +57,7 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	/** Run the time-skipping process in a shared transition */
 	void FastForward();
 
@@ -88,6 +90,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Set up the game state machine */
 	void InitializeStateMachine();
 
@@ -113,6 +116,7 @@ protected:
 	----------------------------------------------------*/
 
 public:
+
 	/** Area to use for orbit */
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	const class UNovaArea* OrbitArea;
@@ -122,6 +126,7 @@ public:
 	----------------------------------------------------*/
 
 private:
+
 	// Game state
 	ENovaGameStateIdentifier                                             DesiredStateIdentifier;
 	ENovaGameStateIdentifier                                             CurrentStateIdentifier;

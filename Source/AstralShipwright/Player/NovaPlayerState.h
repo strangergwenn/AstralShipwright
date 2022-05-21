@@ -13,6 +13,7 @@ class ANovaPlayerState : public APlayerState
 	GENERATED_BODY()
 
 public:
+
 	ANovaPlayerState();
 
 	/*----------------------------------------------------

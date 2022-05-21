@@ -28,6 +28,7 @@ class ANovaCaptureActor : public AActor
 	GENERATED_BODY()
 
 public:
+
 	ANovaCaptureActor();
 
 	/*----------------------------------------------------
@@ -38,6 +39,7 @@ public:
 	void RenderAsset(class UNovaAssetDescription* Asset, struct FSlateBrush& AssetRender);
 
 protected:
+
 #if WITH_EDITOR
 
 	virtual void Tick(float DeltaTime) override;
@@ -74,6 +76,7 @@ protected:
 #if WITH_EDITORONLY_DATA
 
 public:
+
 	// Upscale factor to apply to rendering
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	int32 RenderUpscaleFactor;
@@ -87,6 +90,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	// Camera arm
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	class USceneComponent* CameraArmComponent;
@@ -96,6 +100,7 @@ protected:
 	class USceneCaptureComponent2D* CameraCapture;
 
 protected:
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/

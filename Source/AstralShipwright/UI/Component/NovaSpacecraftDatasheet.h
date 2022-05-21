@@ -20,6 +20,7 @@ class SNovaSpacecraftDatasheet : public SNovaTable
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs)
 	{
 		// Fetch the required data

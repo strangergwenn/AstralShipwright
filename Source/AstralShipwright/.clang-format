@@ -30,6 +30,7 @@ CompactNamespaces: true
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
+EmptyLineAfterAccessModifier: Always
 Cpp11BracedListStyle: true
 DerivePointerAlignment: false
 DisableFormat:   false

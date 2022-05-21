@@ -60,6 +60,7 @@ class ANovaPlayerViewpoint : public AActor
 	GENERATED_BODY()
 
 public:
+
 	ANovaPlayerViewpoint();
 
 	// Camera animation duration
@@ -88,6 +89,7 @@ class ANovaPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
+
 	ANovaPlayerController();
 
 	/*----------------------------------------------------
@@ -168,6 +170,7 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	/** Load the player controller before actors can be created on the server */
 	void ClientLoadPlayer();
 
@@ -187,6 +190,7 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	/** Start or restart the game */
 	void StartGame(FString SaveName, bool Online = true);
 
@@ -224,6 +228,7 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	/** Is the player on the main menu */
 	bool IsOnMainMenu() const;
 
@@ -250,6 +255,7 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	virtual void SetupInputComponent() override;
 
 	/** Any key pressed */
@@ -280,6 +286,7 @@ public:
 	----------------------------------------------------*/
 
 private:
+
 	// General state
 	ENovaNetworkError      LastNetworkError;
 	ENovaPlayerCameraState CurrentCameraState;
@@ -304,6 +311,7 @@ private:
 	----------------------------------------------------*/
 
 public:
+
 	/** Get the menu manager */
 	UFUNCTION(Category = Nova, BlueprintCallable)
 	class UNovaMenuManager* GetMenuManager() const

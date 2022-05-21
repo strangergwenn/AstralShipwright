@@ -15,6 +15,7 @@ class UNovaActorTools : public UObject
 	GENERATED_BODY()
 
 public:
+
 	/** Sort actors from closest to farthest from location */
 	static void SortActorsByClosestDistance(TArray<AActor*>& Actors, const FVector& BaseLocation);
 
@@ -54,6 +55,7 @@ struct FNovaCameraInputFilter
 	GENERATED_BODY()
 
 public:
+
 	FNovaCameraInputFilter()
 		: Velocity(200.0f)
 		, GamepadMultiplier(0.5f)
@@ -65,6 +67,7 @@ public:
 	{}
 
 public:
+
 	/** Apply the filter to a current position, speed, to match a target */
 	template <bool UnwindPosition = false, typename T>
 	void ApplyFilter(T& CurrentPosition, T& CurrentVelocity, T& TargetPosition, const float DeltaTime, const bool IsGamepad) const
@@ -78,7 +81,7 @@ public:
 		// Compute acceleration and resistance
 		T Acc = FMath::Pow(TargetPosition, static_cast<T>(InputPower)) * Acceleration;
 		T Res = FMath::Sign(CurrentVelocity) *
-				(Resistance * FMath::Square(CurrentVelocity) + (Acc == 0 ? Brake2 + Brake * FMath::Abs(CurrentVelocity) : 0));
+		        (Resistance * FMath::Square(CurrentVelocity) + (Acc == 0 ? Brake2 + Brake * FMath::Abs(CurrentVelocity) : 0));
 		T MaxResDeltaSpeed = CurrentVelocity;
 		T AccDeltaSpeed    = Acc * DeltaTime;
 		T ResDeltaSpeed    = -(FMath::Abs(Res * DeltaTime) > FMath::Abs(MaxResDeltaSpeed) ? MaxResDeltaSpeed : Res * DeltaTime);
@@ -112,6 +115,7 @@ public:
 	}
 
 public:
+
 	// Angular velocity of camera in °/s
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float Velocity;
@@ -149,6 +153,7 @@ template <class T>
 struct TNovaTimedAverage
 {
 public:
+
 	TNovaTimedAverage()
 	{
 		SetPeriod(1.0f);
@@ -227,6 +232,7 @@ public:
 	}
 
 private:
+
 	T                       Average;
 	TArray<TPair<float, T>> Values;
 	float                   Period;
@@ -249,6 +255,7 @@ struct FNovaMovementInterpolator
 	void Get(FVector& OutLocation, FVector& OutVelocity, float Time) const;
 
 protected:
+
 	FVector StartLocation;
 	FQuat   StartRotation;
 	FVector StartDerivative;

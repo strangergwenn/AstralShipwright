@@ -65,6 +65,7 @@ struct FNovaKeyBinding
 	}
 
 protected:
+
 	FKey                           UserKey;
 	FKey                           DefaultKey;
 	FText                          DisplayName;
@@ -76,6 +77,7 @@ protected:
 class SNovaKeyBinding : public SNovaButton
 {
 public:
+
 	SLATE_BEGIN_ARGS(SNovaKeyBinding) : _Theme("DefaultButton")
 	{}
 
@@ -88,6 +90,7 @@ public:
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
@@ -105,6 +108,7 @@ public:
 	void FinishWaiting();
 
 protected:
+
 	/*----------------------------------------------------
 	    Callbacks
 	----------------------------------------------------*/
@@ -118,6 +122,7 @@ protected:
 	virtual FReply OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
 private:
+
 	/*----------------------------------------------------
 	    Private data
 	----------------------------------------------------*/

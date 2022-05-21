@@ -16,6 +16,7 @@ class SNovaTable : public SCompoundWidget
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs)
 	{
 		Width = InArgs._Width;
@@ -97,7 +98,7 @@ public:
 		{
 			Color = CurrentValue > PreviousValue ? Theme.PositiveColor : Theme.NegativeColor;
 			Text  = FText::FromString(
-                Text.ToString() + " (" + FText::AsNumber(CurrentValue - PreviousValue, &DifferenceOptions).ToString() + ")");
+				 Text.ToString() + " (" + FText::AsNumber(CurrentValue - PreviousValue, &DifferenceOptions).ToString() + ")");
 		}
 
 		AddRow(Label, Text, Color);
@@ -120,6 +121,7 @@ public:
 	}
 
 protected:
+
 	/** Add a generic row to the table */
 	void AddRow(FText Label, FText Value, FLinearColor Color = FLinearColor::White)
 	{
@@ -159,6 +161,7 @@ protected:
 	}
 
 protected:
+
 	TSharedPtr<SVerticalBox> TableBox;
 	bool                     EvenRow;
 	FOptionalSize            Width;

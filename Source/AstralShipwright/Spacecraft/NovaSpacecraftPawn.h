@@ -70,6 +70,7 @@ struct FNovaSpacecraftPawnCompartmentIndex
 	}
 
 protected:
+
 	int32 DesiredIndex;
 	int32 CurrentIndex;
 	float CurrentAlpha;
@@ -88,6 +89,7 @@ class ANovaSpacecraftPawn : public ANovaTurntablePawn
 	GENERATED_BODY()
 
 public:
+
 	ANovaSpacecraftPawn();
 
 	/*----------------------------------------------------
@@ -334,6 +336,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Store a copy of a spacecraft and start editing it */
 	void SetSpacecraft(const FNovaSpacecraft* NewSpacecraft);
 
@@ -371,6 +374,7 @@ protected:
 	----------------------------------------------------*/
 
 public:
+
 	/** Empty compartment kit */
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	class UNovaCompartmentDescription* EmptyCompartmentDescription;
@@ -380,6 +384,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	// Camera pitch scene container
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	class UNovaSpacecraftMovementComponent* MovementComponent;
@@ -389,6 +394,7 @@ protected:
 	class UNovaSpacecraftPropellantSystem* PropellantSystem;
 
 protected:
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/

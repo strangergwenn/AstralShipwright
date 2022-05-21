@@ -38,6 +38,7 @@ class SNovaMainMenuFlight
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaMainMenuFlight();
 
 	void Construct(const FArguments& InArgs);
@@ -80,6 +81,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	FText GetDockUndockText() const;
 	FText GetDockUndockHelp() const;
 	bool  CanDockUndock(FText* Help = nullptr) const;
@@ -92,6 +94,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	void SetHUDIndex(int32 Index);
 	void SetHUDIndexCallback(int32 Index);
 
@@ -104,6 +107,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	FKey GetPreviousItemKey() const;
 	FKey GetNextItemKey() const;
 	bool IsInSpace() const;
@@ -113,6 +117,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Game objects
 	TWeakObjectPtr<UNovaMenuManager>        MenuManager;
 	class ANovaPlayerController*            PC;

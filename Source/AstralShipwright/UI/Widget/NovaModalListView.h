@@ -14,6 +14,7 @@ template <typename ItemType>
 class SNovaModalListView : public SNovaButton
 {
 public:
+
 	typedef TPair<int32, TArray<ItemType>> SelfRefreshType;
 
 	DECLARE_DELEGATE_RetVal(SelfRefreshType, FNovaOnSelfRefresh);
@@ -23,6 +24,7 @@ public:
 	DECLARE_DELEGATE_TwoParams(FNovaListSelectionChanged, ItemType, int32);
 
 private:
+
 	/*----------------------------------------------------
 	    Slate arguments
 	----------------------------------------------------*/
@@ -70,6 +72,7 @@ private:
 	----------------------------------------------------*/
 
 public:
+
 	void Construct(const FArguments& InArgs)
 	{
 		TitleText          = InArgs._TitleText;
@@ -113,6 +116,7 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	/** Refresh the list based on the items source */
 	void Refresh(int32 SelectedIndex = INDEX_NONE)
 	{
@@ -149,6 +153,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	FText GetButtonText() const
 	{
 		if (OnGenerateName.IsBound())
@@ -205,6 +210,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// State
 	TAttribute<FText>         TitleText;
 	TAttribute<FText>         HelpText;

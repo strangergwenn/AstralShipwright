@@ -19,6 +19,7 @@ class SNovaTradingPanel : public SNovaModalPanel
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaTradingPanel() : Spacecraft(nullptr), Area(nullptr), Resource(nullptr), CompartmentIndex(INDEX_NONE)
 	{}
 
@@ -29,6 +30,7 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	/** Show contents without trading */
 	void Inspect(class ANovaPlayerController* TargetPC, const class UNovaArea* TargetArea, const class UNovaResource* TargetResource,
 		int32 TargetCompartmentIndex)
@@ -44,6 +46,7 @@ public:
 	}
 
 protected:
+
 	/** Implementation of the modal panel */
 	void ShowPanelInternal(class ANovaPlayerController* TargetPC, const class UNovaArea* TargetArea,
 		const class UNovaResource* TargetResource, int32 TargetCompartmentIndex, bool AllowTrade);
@@ -53,6 +56,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	bool IsConfirmEnabled() const override;
 
 	FText GetResourceDetails() const;
@@ -73,6 +77,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Confirm the trade and proceed */
 	void OnConfirmTrade();
 
@@ -81,6 +86,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Slate widgets
 	TSharedPtr<class SNovaSlider>            AmountSlider;
 	TSharedPtr<class SNovaTradableAssetItem> ResourceItem;

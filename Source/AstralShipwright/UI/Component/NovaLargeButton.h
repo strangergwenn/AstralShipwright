@@ -21,6 +21,7 @@ class SNovaLargeButton : public SNovaButton
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(InArgs._Theme);

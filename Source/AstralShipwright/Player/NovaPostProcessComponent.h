@@ -27,6 +27,7 @@ class UNovaPostProcessComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
+
 	UNovaPostProcessComponent();
 
 	/*----------------------------------------------------
@@ -48,6 +49,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/

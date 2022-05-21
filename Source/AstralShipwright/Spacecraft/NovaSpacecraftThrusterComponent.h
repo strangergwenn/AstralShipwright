@@ -42,6 +42,7 @@ class UNovaSpacecraftThrusterComponent
 	GENERATED_BODY()
 
 public:
+
 	UNovaSpacecraftThrusterComponent();
 
 	/*----------------------------------------------------
@@ -55,6 +56,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/

@@ -41,6 +41,7 @@ class SNovaTrajectoryCalculator : public SCompoundWidget
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaTrajectoryCalculator();
 
 	void Construct(const FArguments& InArgs);
@@ -73,6 +74,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	TArray<FLinearColor> GetDeltaVGradient() const
 	{
 		return TrajectoryDeltaVGradientData;
@@ -96,6 +98,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Settings
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 	float                            TrajectoryFadeTime;

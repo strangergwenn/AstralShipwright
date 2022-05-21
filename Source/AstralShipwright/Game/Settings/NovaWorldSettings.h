@@ -13,6 +13,7 @@ class ANovaWorldSettings : public AWorldSettings
 	GENERATED_BODY()
 
 public:
+
 	ANovaWorldSettings();
 
 	/*----------------------------------------------------

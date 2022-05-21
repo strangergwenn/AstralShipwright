@@ -20,6 +20,7 @@ class SNovaMenu : public SCompoundWidget
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaMenu();
 
 	void Construct(const FArguments& InArgs);
@@ -108,6 +109,7 @@ public:
 	TSharedPtr<class SNovaButton> GetFocusedButton();
 
 protected:
+
 	/** Create a new button that can be triggered by actions */
 	template <typename WidgetType, typename RequiredArgsPayloadType>
 	TSlateDecl<WidgetType, RequiredArgsPayloadType> NewNovaButton(
@@ -145,6 +147,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Settings
 	float AnalogNavThreshold;
 	float AnalogNavMinPeriod;

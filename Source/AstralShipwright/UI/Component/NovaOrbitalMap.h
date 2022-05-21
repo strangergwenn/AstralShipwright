@@ -160,6 +160,7 @@ class SNovaOrbitalMap : public SCompoundWidget
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaOrbitalMap();
 
 	void Construct(const FArguments& InArgs);
@@ -207,6 +208,7 @@ public:
 	void Reset();
 
 protected:
+
 	/*----------------------------------------------------
 	    High-level internals
 	----------------------------------------------------*/
@@ -230,6 +232,7 @@ protected:
 	void ProcessDrawScale(float DeltaTime);
 
 protected:
+
 	/*----------------------------------------------------
 	    Map drawing implementation
 	----------------------------------------------------*/
@@ -302,6 +305,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Settings
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 	TAttribute<float>                CurrentAlpha;

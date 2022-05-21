@@ -36,6 +36,7 @@ class UNovaCelestialBody : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	/** Get the mass of the planet in kg */
 	double GetMass() const
 	{
@@ -56,6 +57,7 @@ public:
 	}
 
 public:
+
 	// Orbital map brush
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	FSlateBrush Image;
@@ -113,7 +115,7 @@ struct FNovaOrbitGeometry
 	bool operator==(const FNovaOrbitGeometry& Other) const
 	{
 		return StartAltitude == Other.StartAltitude && OppositeAltitude == Other.OppositeAltitude && StartPhase == Other.StartPhase &&
-			   EndPhase == Other.EndPhase;
+		       EndPhase == Other.EndPhase;
 	}
 
 	bool operator!=(const FNovaOrbitGeometry& Other) const
@@ -219,7 +221,7 @@ struct FNovaOrbitalLocation
 		const FVector2D CartesianLocation = GetCartesianLocation();
 
 		return FMath::Sqrt(µ * (2.0 / (CartesianLocation.Size() * 1000.0) - 1.0 / SemiMajorAxis)) *
-			   CartesianLocation.GetSafeNormal().GetRotated(90.0);
+		       CartesianLocation.GetSafeNormal().GetRotated(90.0);
 	}
 
 	/** Get the Cartesian coordinates for this location in km */
@@ -362,7 +364,7 @@ struct FNovaTrajectory
 	bool operator==(const FNovaTrajectory& Other) const
 	{
 		return Transfers.Num() == Other.Transfers.Num() && Maneuvers.Num() == Other.Maneuvers.Num() &&
-			   TotalTravelDuration == Other.TotalTravelDuration && TotalDeltaV == Other.TotalDeltaV;
+		       TotalTravelDuration == Other.TotalTravelDuration && TotalDeltaV == Other.TotalDeltaV;
 	}
 
 	bool operator!=(const FNovaTrajectory& Other) const
@@ -401,7 +403,7 @@ struct FNovaTrajectory
 	bool IsValidExtended() const
 	{
 		return IsValid() && FMath::IsFinite(TotalDeltaV) &&
-			   TotalTravelDuration < FNovaTime::FromDays(ENovaConstants::MaxTrajectoryDurationDays);
+		       TotalTravelDuration < FNovaTime::FromDays(ENovaConstants::MaxTrajectoryDurationDays);
 	}
 
 	/** Add a maneuver if it's not zero delta-v */

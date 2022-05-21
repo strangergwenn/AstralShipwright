@@ -13,6 +13,7 @@ class UNovaAsteroidConfiguration : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	// Body orbited
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	const class UNovaCelestialBody* Body;
@@ -76,6 +77,7 @@ class UNovaAsteroidSimulationComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
+
 	UNovaAsteroidSimulationComponent();
 
 	/*----------------------------------------------------
@@ -117,6 +119,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Check if a new asteroid can be created and get its details */
 	bool CreateAsteroid(double& Altitude, double& Phase, FNovaAsteroid& Asteroid);
 
@@ -125,6 +128,7 @@ protected:
 	----------------------------------------------------*/
 
 private:
+
 	// Asteroid setup
 	const UNovaAsteroidConfiguration* AsteroidConfiguration;
 

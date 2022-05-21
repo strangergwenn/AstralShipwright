@@ -43,6 +43,7 @@ class SNovaSlider : public SNovaButton
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
@@ -76,6 +77,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Color callback*/
 	FLinearColor GetColor() const;
 
@@ -104,6 +106,7 @@ protected:
 	void OnDecrement();
 
 protected:
+
 	/*----------------------------------------------------
 	    Private data
 	----------------------------------------------------*/

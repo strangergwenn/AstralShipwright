@@ -25,6 +25,7 @@ class ANovaAsteroid : public AActor
 	GENERATED_BODY()
 
 public:
+
 	ANovaAsteroid();
 
 	/*----------------------------------------------------
@@ -65,6 +66,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	// Main asteroid mesh
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	class UStaticMeshComponent* AsteroidMesh;
@@ -74,6 +76,7 @@ protected:
 	----------------------------------------------------*/
 
 private:
+
 	// Material
 	UPROPERTY()
 	class UMaterialInstanceDynamic* MaterialInstance;

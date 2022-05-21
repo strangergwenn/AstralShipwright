@@ -42,6 +42,7 @@
 class INovaGameMenu
 {
 public:
+
 	virtual void UpdateGameObjects(){};
 };
 
@@ -59,6 +60,7 @@ class SNovaButtonLayout : public SBox
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs)
 	{
 		// Build padding
@@ -118,6 +120,7 @@ class SNovaInfoText : public SCompoundWidget
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaInfoText() : DisplayedType(ENovaInfoBoxType::None), CurrentColor(0, 0, 0, 0), PreviousColor(0, 0, 0, 0), TimeSinceColorChange(0.0f)
 	{}
 
@@ -181,6 +184,7 @@ public:
 	}
 
 protected:
+
 	FSlateColor GetColor() const
 	{
 		return CurrentColor;
@@ -203,6 +207,7 @@ protected:
 	}
 
 protected:
+
 	// General state
 	TAttribute<ENovaInfoBoxType> Type;
 	ENovaInfoBoxType             DisplayedType;

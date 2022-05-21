@@ -20,6 +20,7 @@ class UNovaStaticMeshComponent
 	GENERATED_BODY()
 
 public:
+
 	UNovaStaticMeshComponent()
 	{
 		PrimaryComponentTick.bCanEverTick = true;

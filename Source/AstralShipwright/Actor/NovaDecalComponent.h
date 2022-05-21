@@ -19,6 +19,7 @@ class UNovaDecalComponent
 	GENERATED_BODY()
 
 public:
+
 	UNovaDecalComponent()
 	{
 		PrimaryComponentTick.bCanEverTick = true;

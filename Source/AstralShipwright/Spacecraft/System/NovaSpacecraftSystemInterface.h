@@ -23,6 +23,7 @@ class INovaSpacecraftSystemInterface
 	GENERATED_BODY()
 
 public:
+
 	/*----------------------------------------------------
 	    System interface
 	----------------------------------------------------*/

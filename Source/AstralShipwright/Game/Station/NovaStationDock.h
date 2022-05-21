@@ -14,6 +14,7 @@ class ANovaStationDock : public AActor
 	GENERATED_BODY()
 
 public:
+
 	ANovaStationDock();
 
 	/*----------------------------------------------------
@@ -27,6 +28,7 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	// Map of meshes that should be mapped to a Niagara particle system
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	TMap<const class UStaticMesh*, class UNiagaraSystem*> MeshToSystem;

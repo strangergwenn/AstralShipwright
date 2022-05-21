@@ -14,6 +14,7 @@ class UNovaStationRingComponent : public UStaticMeshComponent
 	GENERATED_BODY()
 
 public:
+
 	UNovaStationRingComponent();
 
 	/*----------------------------------------------------
@@ -53,6 +54,7 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	// Ring index
 	UPROPERTY(Category = Nova, EditAnywhere)
 	int32 RingIndex;
@@ -82,6 +84,7 @@ public:
 	float AngularAcceleration;
 
 protected:
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/

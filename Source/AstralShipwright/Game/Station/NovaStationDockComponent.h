@@ -14,6 +14,7 @@ class UNovaStationDockComponent : public UNovaStaticMeshComponent
 	GENERATED_BODY()
 
 public:
+
 	UNovaStationDockComponent();
 
 	/*----------------------------------------------------
@@ -29,6 +30,7 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	// Distance under which we consider stopped
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float LinearDeadDistance;
@@ -46,6 +48,7 @@ public:
 	float CameraBoxExtent;
 
 protected:
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/

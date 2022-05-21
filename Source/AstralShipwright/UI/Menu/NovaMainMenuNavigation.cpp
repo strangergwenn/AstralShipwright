@@ -37,6 +37,7 @@ static constexpr int32 StackPanelWidth = 500;
 class SNovaHoverStackEntry : public SNovaText
 {
 public:
+
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
@@ -107,6 +108,7 @@ public:
 	}
 
 protected:
+
 	const FSlateBrush* Brush;
 	FLinearColor       Color;
 	bool               IsSelected;
@@ -121,6 +123,7 @@ class SNovaHoverStack : public SCompoundWidget
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
@@ -180,6 +183,7 @@ public:
 	}
 
 public:
+
 	void Update(
 		const ANovaGameState* GameState, TSharedPtr<SNovaOrbitalMap> OrbitalMap, TArray<FNovaOrbitalObject> ObjectList, int32 SelectedIndex)
 	{
@@ -295,6 +299,7 @@ public:
 	}
 
 protected:
+
 	FKey GetPreviousItemKey() const
 	{
 		return UNovaMenuManager::Get()->GetFirstActionKey(FNovaPlayerInput::MenuPrevious);
@@ -306,6 +311,7 @@ protected:
 	}
 
 protected:
+
 	TSharedPtr<SVerticalBox>                 Container;
 	TArray<TSharedPtr<SNovaHoverStackEntry>> TextItemList;
 	TArray<FNovaOrbitalObject>               PreviousObjects;
@@ -326,6 +332,7 @@ class SNovaSidePanelContainer : public SNovaFadingWidget<false>
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs)
 	{
 		// clang-format off
@@ -345,6 +352,7 @@ public:
 	}
 
 protected:
+
 	virtual bool IsDirty() const override
 	{
 		return CurrentObject != DesiredObject;
@@ -358,6 +366,7 @@ protected:
 	}
 
 protected:
+
 	FSimpleDelegate    UpdateCallback;
 	FNovaOrbitalObject DesiredObject;
 	FNovaOrbitalObject CurrentObject;
@@ -378,6 +387,7 @@ class SNovaSidePanel : public SNovaFadingWidget<false>
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
@@ -438,6 +448,7 @@ public:
 	}
 
 protected:
+
 	virtual bool IsDirty() const override
 	{
 		return CurrentState != DesiredState;
@@ -449,6 +460,7 @@ protected:
 	}
 
 protected:
+
 	bool DesiredState;
 	bool CurrentState;
 };

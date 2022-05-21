@@ -13,6 +13,7 @@ class ANovaPlanetarium : public AActor
 	GENERATED_BODY()
 
 public:
+
 	ANovaPlanetarium();
 
 	/*----------------------------------------------------
@@ -37,6 +38,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	// Sun parent component
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	class USceneComponent* SunRotator;
@@ -62,6 +64,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Sun body
 	UPROPERTY()
 	const class UNovaCelestialBody* SunBody;

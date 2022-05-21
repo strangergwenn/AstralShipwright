@@ -306,12 +306,14 @@ class UNovaTradableAssetDescription : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	virtual bool operator<(const UNovaTradableAssetDescription& Other) const
 	{
 		return BasePrice < Other.BasePrice;
 	}
 
 public:
+
 	// Base price modulated by the economy
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float BasePrice = 10;
@@ -324,11 +326,13 @@ class UNovaPreviableTradableAssetDescription : public UNovaTradableAssetDescript
 	GENERATED_BODY()
 
 public:
+
 	virtual struct FNovaAssetPreviewSettings GetPreviewSettings() const override;
 
 	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
 
 public:
+
 #if WITH_EDITORONLY_DATA
 
 	// Mesh to use to render the asset
@@ -385,6 +389,7 @@ class UNovaResource : public UNovaPreviableTradableAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	/** Get a special empty resource */
 	static const UNovaResource* GetEmpty();
 
@@ -392,6 +397,7 @@ public:
 	static const UNovaResource* GetPropellant();
 
 public:
+
 	// Type of cargo hold that will be required for this resource
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	ENovaResourceType Type = ENovaResourceType::Bulk;

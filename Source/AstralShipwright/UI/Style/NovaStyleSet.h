@@ -12,6 +12,7 @@ class FNovaStyleSet
 {
 
 public:
+
 	/*----------------------------------------------------
 	    Public methods
 	----------------------------------------------------*/
@@ -95,6 +96,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Setup resources (internal) */
 	static TSharedRef<FSlateStyleSet> Create();
 
@@ -103,6 +105,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Resource pointer */
 	UPROPERTY()
 	static TSharedPtr<FSlateStyleSet> Instance;

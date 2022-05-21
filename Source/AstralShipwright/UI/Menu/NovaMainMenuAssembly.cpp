@@ -36,6 +36,7 @@
 class SNovaAssemblyModalPanel : public SNovaModalPanel
 {
 public:
+
 	void ReviewAndSaveSpacecraft(
 		ANovaPlayerController* PC, ANovaSpacecraftPawn* SpacecraftPawn, TSharedPtr<SNovaModalPanel> GenericModalPanel)
 	{
@@ -169,6 +170,7 @@ public:
 	}
 
 protected:
+
 	virtual bool IsConfirmEnabled() const
 	{
 		return HasValidSpacecraft;
@@ -185,6 +187,7 @@ protected:
 	}
 
 protected:
+
 	bool HasValidSpacecraft;
 };
 

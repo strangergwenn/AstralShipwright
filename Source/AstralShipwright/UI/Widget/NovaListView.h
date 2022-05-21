@@ -44,6 +44,7 @@ class SNovaListView : public SCompoundWidget
 	----------------------------------------------------*/
 
 public:
+
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
@@ -86,6 +87,7 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	/** Refresh the list based on the items source */
 	void Refresh(int32 SelectedIndex = INDEX_NONE)
 	{
@@ -210,6 +212,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** New list item was selected */
 	void OnElementSelected(ItemType Selected, int32 Index)
 	{
@@ -224,6 +227,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Settings
 	SNovaNavigationPanel*     Panel;
 	const TArray<ItemType>*   ItemsSource;

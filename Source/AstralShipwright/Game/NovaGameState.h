@@ -34,6 +34,7 @@ class ANovaGameState : public AGameStateBase
 	GENERATED_BODY()
 
 public:
+
 	ANovaGameState();
 
 	/*----------------------------------------------------
@@ -209,6 +210,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Run all game processes, returns true if simulation can continue */
 	bool ProcessGameSimulation(FNovaTime DeltaTime);
 
@@ -237,6 +239,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Threshold in seconds above which the client time starts compensating
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float MinimumTimeCorrectionThreshold;
@@ -274,6 +277,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Global orbital simulation component
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	class UNovaOrbitalSimulationComponent* OrbitalSimulationComponent;
@@ -291,6 +295,7 @@ protected:
 	----------------------------------------------------*/
 
 private:
+
 	// Current level-based area
 	UPROPERTY(ReplicatedUsing = OnCurrentAreaReplicated)
 	const class UNovaArea* CurrentArea;
@@ -326,6 +331,7 @@ private:
 	TArray<const class UNovaArea*> AreaChangeEvents;
 
 public:
+
 	/*----------------------------------------------------
 	    Getters
 	----------------------------------------------------*/

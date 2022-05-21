@@ -23,6 +23,7 @@ class SNovaKeyLabel : public SCompoundWidget
 	SLATE_END_ARGS()
 
 public:
+
 	/*----------------------------------------------------
 	    Constructor
 	----------------------------------------------------*/
@@ -37,6 +38,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	FText GetKeyText() const;
 
 	const FSlateBrush* GetKeyIcon() const;
@@ -50,6 +52,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Attributes
 	TAttribute<FKey>  KeyName;
 	TAttribute<float> CurrentAlpha;

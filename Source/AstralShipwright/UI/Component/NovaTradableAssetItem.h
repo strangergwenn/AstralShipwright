@@ -30,6 +30,7 @@ class SNovaTradableAssetItem : public SCompoundWidget
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaTradableAssetItem() : Area(nullptr), Asset(nullptr), DefaultAsset(nullptr), GameState(nullptr)
 	{}
 
@@ -183,6 +184,7 @@ public:
 	}
 
 protected:
+
 	const FSlateBrush* GetBrush() const
 	{
 		if (Asset.IsValid())
@@ -263,6 +265,7 @@ protected:
 	}
 
 protected:
+
 	// Settings
 	TWeakObjectPtr<const UNovaArea>                     Area;
 	TWeakObjectPtr<const UNovaTradableAssetDescription> Asset;

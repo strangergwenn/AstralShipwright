@@ -70,6 +70,7 @@ class SNovaButton : public SButton
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
@@ -164,6 +165,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Icon brush callback */
 	const FSlateBrush* GetIconBrush() const;
 
@@ -195,6 +197,7 @@ protected:
 	TOptional<FSlateRenderTransform> GetBorderRenderTransform() const;
 
 protected:
+
 	/*----------------------------------------------------
 	    Private data
 	----------------------------------------------------*/
@@ -230,6 +233,7 @@ protected:
 	TSharedPtr<class STextBlock> TextBlock;
 
 public:
+
 	/*----------------------------------------------------
 	    Get & Set
 	----------------------------------------------------*/

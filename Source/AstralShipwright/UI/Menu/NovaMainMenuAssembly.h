@@ -31,6 +31,7 @@ class SNovaMainMenuAssembly
 	, public INovaGameMenu
 {
 public:
+
 	typedef SNovaModalListView<const class UNovaCompartmentDescription*> SNovaCompartmentList;
 	typedef SNovaModalListView<const class UNovaModuleDescription*>      SNovaModuleList;
 	typedef SNovaModalListView<const class UNovaEquipmentDescription*>   SNovaEquipmentList;
@@ -52,6 +53,7 @@ public:
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaMainMenuAssembly();
 
 	void Construct(const FArguments& InArgs);
@@ -98,6 +100,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Get the index of the next compartment to build */
 	int32 GetNewBuildIndex(bool Forward = true) const;
 
@@ -171,6 +174,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Compartment template list
 	TSharedRef<SWidget> GenerateCompartmentItem(const class UNovaCompartmentDescription* Description) const;
 	FText               GenerateCompartmentTooltip(const class UNovaCompartmentDescription* Description) const;
@@ -252,6 +256,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Compartment edition
 	void OnEditCompartment();
 	void OnRemoveCompartment();
@@ -289,6 +294,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Game objects
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 	class ANovaPlayerController*     PC;

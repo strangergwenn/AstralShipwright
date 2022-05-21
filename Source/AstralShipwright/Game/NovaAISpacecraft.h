@@ -14,6 +14,7 @@ class UNovaAISpacecraftDescription : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	/** Load this asset to the running game */
 	UFUNCTION(Category = Nova, BlueprintCallable, CallInEditor)
 	void LoadInGame();
@@ -23,15 +24,18 @@ public:
 	void SaveFromGame();
 
 public:
+
 	FNovaAssetPreviewSettings GetPreviewSettings() const override;
 
 	void ConfigurePreviewActor(AActor* Actor) const override;
 
 private:
+
 	/** Fetch the player's spacecraft pawn */
 	class ANovaSpacecraftPawn* GetSpacecraftPawn() const;
 
 public:
+
 	UPROPERTY()
 	FNovaSpacecraft Spacecraft;
 };

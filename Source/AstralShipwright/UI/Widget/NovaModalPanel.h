@@ -23,6 +23,7 @@ class SNovaModalPanel : public SNovaNavigationPanel
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
@@ -57,6 +58,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	virtual EVisibility GetConfirmVisibility() const;
 
 	virtual bool IsConfirmEnabled() const;
@@ -72,6 +74,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	/** The panel has been asked by the user to close by confirming */
 	void OnConfirmPanel();
 
@@ -86,6 +89,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Parent menu reference
 	SNovaNavigationPanel* ParentPanel;
 

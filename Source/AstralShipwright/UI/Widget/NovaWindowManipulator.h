@@ -28,6 +28,7 @@ class SNovaMenuManipulator : public SImage
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaMenuManipulator() : Moving(false)
 	{
 		SetCanTick(true);
@@ -111,6 +112,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	bool      Moving;
 	FVector2D Origin;
 };

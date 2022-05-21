@@ -97,6 +97,7 @@ class UNovaButtonThemeContainer : public USlateWidgetStyleContainerBase
 	GENERATED_BODY()
 
 public:
+
 	virtual const struct FSlateWidgetStyle* const GetStyle() const override
 	{
 		return static_cast<const struct FSlateWidgetStyle*>(&Style);
@@ -112,6 +113,7 @@ class UNovaButtonSizeContainer : public USlateWidgetStyleContainerBase
 	GENERATED_BODY()
 
 public:
+
 	virtual const struct FSlateWidgetStyle* const GetStyle() const override
 	{
 		return static_cast<const struct FSlateWidgetStyle*>(&Style);

@@ -93,6 +93,7 @@ class UNovaSpacecraftMovementComponent : public UMovementComponent
 	GENERATED_BODY()
 
 public:
+
 	UNovaSpacecraftMovementComponent();
 
 	/*----------------------------------------------------
@@ -187,6 +188,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Run the high level state machine */
 	void ProcessState();
 
@@ -201,6 +203,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Signal the flight controller to use this command */
 	void RequestMovement(const FNovaMovementCommand& Command);
 
@@ -212,6 +215,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Start point replication event */
 	UFUNCTION()
 	void OnDockStateReplicated(const FNovaMovementDockState& PreviousDockState);
@@ -262,6 +266,7 @@ protected:
 	----------------------------------------------------*/
 
 public:
+
 	// Distance under which we consider stopped
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float LinearDeadDistance;
@@ -307,6 +312,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	// High-level state
 	UPROPERTY(Replicated)
 	FNovaMovementCommand MovementCommand;
@@ -347,6 +353,7 @@ protected:
 	----------------------------------------------------*/
 
 public:
+
 	/** Get the current state of the movement system */
 	UFUNCTION(BlueprintCallable)
 	ENovaMovementState GetState() const

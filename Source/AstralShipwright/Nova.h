@@ -47,6 +47,7 @@ class FNovaModule : public FDefaultGameModuleImpl
 {
 
 public:
+
 	void StartupModule() override;
 
 	void ShutdownModule() override;

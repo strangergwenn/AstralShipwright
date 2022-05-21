@@ -43,6 +43,7 @@ class SNovaHUDPanel : public SNovaFadingWidget<false>
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaHUDPanel() : DesiredIndex(-1), CurrentIndex(-1)
 	{}
 
@@ -65,6 +66,7 @@ public:
 	}
 
 protected:
+
 	virtual bool IsDirty() const override
 	{
 		if (CurrentIndex != DesiredIndex)
@@ -86,6 +88,7 @@ protected:
 	}
 
 protected:
+
 	FNovaHUDUpdate UpdateCallback;
 	int32          DesiredIndex;
 	int32          CurrentIndex;

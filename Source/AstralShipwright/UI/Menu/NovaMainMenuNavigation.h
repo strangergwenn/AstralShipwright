@@ -27,6 +27,7 @@ class SNovaMainMenuNavigation
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaMainMenuNavigation();
 
 	void Construct(const FArguments& InArgs);
@@ -66,6 +67,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Re-create the UI in the side panel */
 	void UpdateSidePanel();
 
@@ -86,6 +88,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	bool  CanCommitTrajectory() const;
 	FText GetCommitTrajectoryHelpText() const;
 
@@ -93,6 +96,7 @@ protected:
 	    Callbacks
 	----------------------------------------------------*/
 protected:
+
 	// Side panel
 	void OnShowSidePanel(const FNovaOrbitalObject& HoveredObjects);
 	void OnHideSidePanel();
@@ -106,6 +110,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Game objects
 	TWeakObjectPtr<UNovaMenuManager>        MenuManager;
 	class ANovaPlayerController*            PC;

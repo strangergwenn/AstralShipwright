@@ -21,6 +21,7 @@ class SNovaOverlay : public SCompoundWidget
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
@@ -41,6 +42,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	// Menu reference
 	TWeakObjectPtr<class UNovaMenuManager> MenuManager;
 

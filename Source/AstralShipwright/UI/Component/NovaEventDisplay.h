@@ -48,6 +48,7 @@ class SNovaEventDisplay : public SNovaFadingWidget<false>
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaEventDisplay();
 
 	void Construct(const FArguments& InArgs);
@@ -69,11 +70,13 @@ public:
 	}
 
 protected:
+
 	/*----------------------------------------------------
 	    Content callbacks
 	----------------------------------------------------*/
 
 protected:
+
 	EVisibility GetMainVisibility() const;
 	EVisibility GetDetailsVisibility() const;
 
@@ -89,6 +92,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Settings
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 

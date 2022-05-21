@@ -17,6 +17,7 @@ class UNovaLoadingScreenSetup : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	// Width of the loading screen in pixels
 	UPROPERTY(Category = LoadingScreensSetup, EditDefaultsOnly)
 	int32 Width;
@@ -45,6 +46,7 @@ class UNovaGameViewportClient : public UGameViewportClient
 	GENERATED_BODY()
 
 public:
+
 	UNovaGameViewportClient();
 
 	/*----------------------------------------------------
@@ -64,6 +66,7 @@ public:
 	void ShowLoadingScreen();
 
 protected:
+
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
@@ -72,6 +75,7 @@ protected:
 	void Initialize();
 
 protected:
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/

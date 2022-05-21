@@ -20,6 +20,7 @@ class SNovaNotification : public SNovaFadingWidget<>
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs);
 
 	void Notify(const FText& Text, const FText& Subtext, ENovaNotificationType Type);
@@ -55,6 +56,7 @@ public:
 	const FSlateBrush* GetNotifyIcon() const;
 
 private:
+
 	// Settings
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 

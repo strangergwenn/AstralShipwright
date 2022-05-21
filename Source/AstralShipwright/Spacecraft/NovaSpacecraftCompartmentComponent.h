@@ -36,6 +36,7 @@ class UNovaSpacecraftCompartmentComponent : public USceneComponent
 	GENERATED_BODY()
 
 public:
+
 	UNovaSpacecraftCompartmentComponent();
 
 	/*----------------------------------------------------
@@ -79,10 +80,12 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	/** Run a process on all compartment assembly elements */
 	virtual void ProcessCompartment(const struct FNovaCompartment& Assembly, FNovaAssemblyCallback Callback);
 
 protected:
+
 	/** Run the process system on a single compartment module */
 	void ProcessModule(FNovaModuleAssembly& Assembly, const struct FNovaCompartmentModule& Module, const FNovaCompartment& Compartment,
 		FNovaAssemblyCallback Callback);
@@ -96,6 +99,7 @@ protected:
 	----------------------------------------------------*/
 
 public:
+
 	/** Create assembly elements and set the relevant locations */
 	virtual void BuildCompartment(const struct FNovaCompartment& Compartment, int32 Index);
 
@@ -103,6 +107,7 @@ public:
 	void UpdateCustomization();
 
 protected:
+
 	/** Build a single module of a compartment assembly */
 	void BuildModule(FNovaModuleAssembly& Assembly, const FNovaModuleSlot& Slot, const FNovaCompartment& Compartment);
 
@@ -121,6 +126,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Attach an element to a socket on another element */
 	void AttachElementToSocket(FNovaAssemblyElement& Element, const FNovaAssemblyElement& AttachElement, FName SocketName,
 		const FVector& Offset = FVector::ZeroVector);
@@ -148,6 +154,7 @@ protected:
 	----------------------------------------------------*/
 
 public:
+
 	/** Menu mode */
 	UPROPERTY(EditDefaultsOnly, NoClear, BlueprintReadOnly, Category = Nova)
 	float AnimationDuration;
@@ -157,11 +164,13 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	// Shared data
 	UPROPERTY()
 	const UNovaCompartmentDescription* Description;
 
 protected:
+
 	// Internal data
 	FVector RequestedLocation;
 	FVector LastLocation;

@@ -303,6 +303,7 @@ struct FNovaSpacecraftDatabase : public FFastArraySerializer
 	}
 
 protected:
+
 	UPROPERTY()
 	TArray<FNovaSpacecraft> Array;
 

@@ -15,6 +15,7 @@ class ANovaTurntablePawn : public APawn
 	GENERATED_BODY()
 
 public:
+
 	ANovaTurntablePawn();
 
 	/*----------------------------------------------------
@@ -51,6 +52,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Apply the pan & tilt inputs to the camera */
 	virtual void ProcessCamera(float DeltaTime);
 
@@ -59,6 +61,7 @@ protected:
 	----------------------------------------------------*/
 
 public:
+
 	// Time in seconds for camera distance interpolation
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float AnimationDuration;
@@ -96,6 +99,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	// Camera pitch scene container
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	class USceneComponent* CameraPitchComponent;
@@ -113,6 +117,7 @@ protected:
 	class UCameraComponent* Camera;
 
 protected:
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/

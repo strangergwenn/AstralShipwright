@@ -14,12 +14,14 @@ class ANovaPlayerStart : public APlayerStart
 	GENERATED_BODY()
 
 public:
+
 	ANovaPlayerStart(const FObjectInitializer& ObjectInitializer);
 
 	/*----------------------------------------------------
 	    Public methods
 	----------------------------------------------------*/
 public:
+
 #if WITH_EDITOR
 
 	virtual void Tick(float DeltaTime) override;
@@ -54,6 +56,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	// Waiting point for spacecraft that just left dock or is waiting for docking
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	USceneComponent* WaitingPoint;

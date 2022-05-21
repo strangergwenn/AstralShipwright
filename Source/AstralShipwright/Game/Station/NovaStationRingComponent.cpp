@@ -159,7 +159,7 @@ void UNovaStationRingComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		CurrentLinearDistance = UNovaActorTools::SolveVelocity(CurrentLinearVelocity, 0.0, CurrentLocation.X, TargetLocation,
 			LinearAcceleration, MaxLinearVelocity, LinearDeadDistance, DeltaTime);
 		CurrentRollDistance   = UNovaActorTools::SolveVelocity(CurrentRollVelocity, 0.0, CurrentRotation.Roll, TargetRoll,
-            AngularAcceleration, MaxAngularVelocity, AngularDeadDistance, DeltaTime);
+			  AngularAcceleration, MaxAngularVelocity, AngularDeadDistance, DeltaTime);
 
 		// Integrate velocity to derive position
 		CurrentLocation.X += CurrentLinearVelocity * DeltaTime;
@@ -185,5 +185,5 @@ bool UNovaStationRingComponent::IsOperating() const
 bool UNovaStationRingComponent::IsDockEnabled() const
 {
 	return IsOperating() && IsValid(TargetComponent) && IsCurrentTargetHatch() && CurrentLinearDistance < LinearDeadDistance &&
-		   CurrentRollDistance < AngularDeadDistance;
+	       CurrentRollDistance < AngularDeadDistance;
 }

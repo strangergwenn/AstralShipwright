@@ -671,7 +671,7 @@ bool SNovaMainMenuGame::IsInviteFriendEnabled() const
 		TSharedRef<FOnlineFriend> SelectedFriend = FriendList[SelectedFriendIndex];
 
 		return SessionsManager->IsOnline() && SelectedFriend->GetInviteStatus() != EInviteStatus::Blocked &&
-			   SelectedFriend->GetInviteStatus() != EInviteStatus::PendingOutbound;
+		       SelectedFriend->GetInviteStatus() != EInviteStatus::PendingOutbound;
 	}
 
 	return false;

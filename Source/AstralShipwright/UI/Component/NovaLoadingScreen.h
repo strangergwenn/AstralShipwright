@@ -24,6 +24,7 @@ class SNovaLoadingScreen : public SCompoundWidget
 	SLATE_END_ARGS()
 
 public:
+
 	/*----------------------------------------------------
 	    Constructor
 	----------------------------------------------------*/
@@ -34,6 +35,7 @@ public:
 	virtual void Construct(const FArguments& InArgs);
 
 public:
+
 	/*----------------------------------------------------
 	    Public methods
 	----------------------------------------------------*/
@@ -59,6 +61,7 @@ public:
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
 protected:
+
 	/*----------------------------------------------------
 	    Private data
 	----------------------------------------------------*/

@@ -112,7 +112,7 @@ FText GetDurationText(FNovaTime Time, int32 MaxComponents)
 		}
 
 		Result += FText::FormatNamed(LOCTEXT("DaysFormat", "{days} {days}|plural(one=day,other=days)"), TEXT("days"), FText::AsNumber(Days))
-					  .ToString();
+		              .ToString();
 		ComponentCount++;
 	}
 	if (Hours && ComponentCount < MaxComponents)
@@ -128,7 +128,7 @@ FText GetDurationText(FNovaTime Time, int32 MaxComponents)
 
 		Result += FText::FormatNamed(
 			LOCTEXT("HoursFormat", "{hours} {hours}|plural(one=hour,other=hours)"), TEXT("hours"), FText::AsNumber(Hours))
-					  .ToString();
+		              .ToString();
 		ComponentCount++;
 	}
 	if (Minutes && ComponentCount < MaxComponents)
@@ -144,7 +144,7 @@ FText GetDurationText(FNovaTime Time, int32 MaxComponents)
 
 		Result += FText::FormatNamed(
 			LOCTEXT("MinutesFormat", "{minutes} {minutes}|plural(one=minute,other=minutes)"), TEXT("minutes"), FText::AsNumber(Minutes))
-					  .ToString();
+		              .ToString();
 		ComponentCount++;
 	}
 	if ((Seconds && ComponentCount < MaxComponents) || ComponentCount == 0)
@@ -160,7 +160,7 @@ FText GetDurationText(FNovaTime Time, int32 MaxComponents)
 
 		Result += FText::FormatNamed(
 			LOCTEXT("SecondsFormat", "{seconds} {seconds}|plural(one=second,other=seconds)"), TEXT("seconds"), FText::AsNumber(Seconds))
-					  .ToString();
+		              .ToString();
 		ComponentCount++;
 	}
 

@@ -122,6 +122,7 @@ class INovaAdditionalComponentInterface
 	GENERATED_BODY()
 
 public:
+
 	/** Configure the additional component */
 	virtual void SetAdditionalAsset(TSoftObjectPtr<class UObject> AdditionalAsset) = 0;
 };
@@ -140,6 +141,7 @@ struct FNovaModuleSlot
 	{}
 
 public:
+
 	// Slot name in menus
 	UPROPERTY(Category = Compartment, EditDefaultsOnly)
 	FText DisplayName;
@@ -168,6 +170,7 @@ struct FNovaEquipmentSlot
 	GENERATED_BODY()
 
 public:
+
 	// Slot name in menus
 	UPROPERTY(Category = Compartment, EditDefaultsOnly)
 	FText DisplayName;
@@ -188,6 +191,7 @@ struct FNovaEquipmentSlotGroup
 	GENERATED_BODY()
 
 public:
+
 	// Socket names
 	UPROPERTY(Category = Compartment, EditDefaultsOnly)
 	TArray<FName> SocketNames;
@@ -200,6 +204,7 @@ class UNovaCompartmentDescription : public UNovaTradableAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	/** Get a list of hull styles supported by this compartment */
 	TArray<const UNovaHullDescription*> GetSupportedHulls() const;
 
@@ -267,6 +272,7 @@ public:
 	TArray<FText> GetDescription() const override;
 
 public:
+
 	// Main structural element
 	UPROPERTY(Category = Structure, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> MainStructure = nullptr;
@@ -367,6 +373,7 @@ class UNovaHullDescription : public UNovaPreviableTradableAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	// Hull type
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	ENovaHullType Type;
@@ -379,6 +386,7 @@ class UNovaPaintDescription : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	UNovaPaintDescription() : PaintColor(FLinearColor::Black)
 	{}
 
@@ -388,6 +396,7 @@ public:
 	}
 
 public:
+
 	// Paint color
 	UPROPERTY(Category = Paint, EditDefaultsOnly)
 	FLinearColor PaintColor;
@@ -400,6 +409,7 @@ class UNovaEmblemDescription : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	UNovaEmblemDescription() : Image(nullptr)
 	{}
 
@@ -409,6 +419,7 @@ public:
 	}
 
 public:
+
 	// Emblem brush
 	UPROPERTY(Category = Paint, EditDefaultsOnly)
 	FSlateBrush Brush;
@@ -429,6 +440,7 @@ class UNovaModuleDescription : public UNovaTradableAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	/** Get the appropriate bulkhead mesh */
 	TSoftObjectPtr<class UStaticMesh> GetBulkhead(ENovaBulkheadType Style, bool Forward) const;
 
@@ -439,6 +451,7 @@ public:
 	TArray<FText> GetDescription() const override;
 
 public:
+
 	// Main module segment
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> Segment = nullptr;
@@ -475,9 +488,11 @@ class UNovaPropellantModuleDescription : public UNovaModuleDescription
 	GENERATED_BODY()
 
 public:
+
 	TArray<FText> GetDescription() const override;
 
 public:
+
 	// Module propellant mass in T
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float PropellantMass = 400;
@@ -490,9 +505,11 @@ class UNovaCargoModuleDescription : public UNovaModuleDescription
 	GENERATED_BODY()
 
 public:
+
 	TArray<FText> GetDescription() const override;
 
 public:
+
 	// Cargo type that describes which kind of stuff it can carry
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	ENovaResourceType CargoType = ENovaResourceType::Bulk;
@@ -513,6 +530,7 @@ class UNovaEquipmentDescription : public UNovaTradableAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	/** Get the mesh for this equipment */
 	TSoftObjectPtr<UObject> GetMesh() const;
 
@@ -530,6 +548,7 @@ public:
 	TArray<FText> GetDescription() const override;
 
 public:
+
 	// Animated equipment variant
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class USkeletalMesh> SkeletalEquipment;
@@ -565,11 +584,13 @@ class UNovaEngineDescription : public UNovaEquipmentDescription
 {
 	GENERATED_BODY()
 public:
+
 	virtual FNovaAssetPreviewSettings GetPreviewSettings() const override;
 
 	TArray<FText> GetDescription() const override;
 
 public:
+
 	// Engine thrust in kN
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Thrust = 15000;
@@ -586,6 +607,7 @@ class UNovaThrusterDescription : public UNovaEquipmentDescription
 	GENERATED_BODY()
 
 public:
+
 	// Thruster thrust in kN
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Thrust = 500;
@@ -598,6 +620,7 @@ class UNovaHatchDescription : public UNovaEquipmentDescription
 	GENERATED_BODY()
 
 public:
+
 	// Life support
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	bool IsHabitat = false;
@@ -610,6 +633,7 @@ class UNovaPropellantEquipmentDescription : public UNovaEquipmentDescription
 	GENERATED_BODY()
 
 public:
+
 	// Module propellant mass in T
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float PropellantMass = 50;

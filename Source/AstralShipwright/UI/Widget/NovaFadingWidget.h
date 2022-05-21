@@ -29,6 +29,7 @@ class SNovaFadingWidget : public SCompoundWidget
 	----------------------------------------------------*/
 
 public:
+
 	SNovaFadingWidget() : CurrentFadeTime(0), CurrentDisplayTime(0), CurrentAlpha(0)
 	{}
 
@@ -93,6 +94,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Return true to request a widget update */
 	virtual bool IsDirty() const
 	{
@@ -108,6 +110,7 @@ protected:
 	----------------------------------------------------*/
 
 public:
+
 	float GetCurrentAlpha() const
 	{
 		return CurrentAlpha;
@@ -160,6 +163,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	// Settings
 	float                    FadeDuration;
 	float                    DisplayDuration;
@@ -186,6 +190,7 @@ class SNovaImage : public SNovaFadingWidget<false>
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
@@ -235,6 +240,7 @@ public:
 	}
 
 private:
+
 	const FSlateBrush* DesiredImage;
 	const FSlateBrush* CurrentImage;
 	FNovaImageGetter   Getter;
@@ -258,6 +264,7 @@ class SNovaText : public SNovaFadingWidget<false>
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
@@ -323,6 +330,7 @@ public:
 	}
 
 protected:
+
 	FText                  DesiredText;
 	FText                  CurrentText;
 	FNovaTextGetter        Getter;
@@ -343,6 +351,7 @@ class SNovaRichText : public SNovaText
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs)
 	{
 		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();

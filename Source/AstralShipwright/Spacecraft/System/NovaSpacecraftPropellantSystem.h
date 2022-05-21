@@ -18,6 +18,7 @@ class UNovaSpacecraftPropellantSystem
 	GENERATED_BODY()
 
 public:
+
 	UNovaSpacecraftPropellantSystem();
 
 	/*----------------------------------------------------
@@ -87,6 +88,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	// Initial propellant amount
 	UPROPERTY(Replicated)
 	float InitialPropellantMass;

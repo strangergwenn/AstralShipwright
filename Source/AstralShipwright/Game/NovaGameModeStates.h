@@ -17,8 +17,7 @@
 ----------------------------------------------------*/
 
 // Cutscene timing values in seconds
-namespace ENovaGameModeStateTiming
-{
+namespace ENovaGameModeStateTiming {
 constexpr float CommonCutsceneDelay       = 2.0;
 constexpr float DepartureCutsceneDuration = 5.0;
 constexpr float AreaIntroductionDuration  = 5.0;
@@ -33,6 +32,7 @@ constexpr float ArrivalCutsceneDuration   = 5.0;
 class FNovaGameModeState
 {
 public:
+
 	FNovaGameModeState() : PC(nullptr), GameState(nullptr), OrbitalSimulationComponent(nullptr)
 	{}
 
@@ -95,6 +95,7 @@ public:
 	}
 
 protected:
+
 	/** Get the time spent in this state in minutes */
 	double GetMinutesInState() const
 	{
@@ -115,6 +116,7 @@ protected:
 	}
 
 protected:
+
 	// Local state
 	FString   StateName;
 	FNovaTime StateStartTime;
@@ -135,6 +137,7 @@ protected:
 class FNovaAreaState : public FNovaGameModeState
 {
 public:
+
 	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
 	{
 		FNovaGameModeState::EnterState(PreviousState);
@@ -169,6 +172,7 @@ public:
 class FNovaOrbitState : public FNovaGameModeState
 {
 public:
+
 	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
 	{
 		FNovaGameModeState::EnterState(PreviousState);
@@ -219,6 +223,7 @@ public:
 class FNovaFastForwardState : public FNovaGameModeState
 {
 public:
+
 	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
 	{
 		FNovaGameModeState::EnterState(PreviousState);
@@ -291,6 +296,7 @@ public:
 class FNovaDepartureProximityState : public FNovaGameModeState
 {
 public:
+
 	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
 	{
 		FNovaGameModeState::EnterState(PreviousState);
@@ -321,6 +327,7 @@ public:
 class FNovaArrivalIntroState : public FNovaGameModeState
 {
 public:
+
 	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
 	{
 		FNovaGameModeState::EnterState(PreviousState);
@@ -352,6 +359,7 @@ public:
 	}
 
 private:
+
 	bool IsStillInSpace;
 };
 
@@ -359,6 +367,7 @@ private:
 class FNovaArrivalProximityState : public FNovaGameModeState
 {
 public:
+
 	virtual void EnterState(ENovaGameStateIdentifier PreviousState) override
 	{
 		FNovaGameModeState::EnterState(PreviousState);

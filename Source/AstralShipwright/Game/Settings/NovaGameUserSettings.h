@@ -13,6 +13,7 @@ class UNovaGameUserSettings : public UGameUserSettings
 	GENERATED_BODY()
 
 public:
+
 	UNovaGameUserSettings();
 
 	/** Apply custom graphics settings that the engine doesn't know to apply */

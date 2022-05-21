@@ -25,6 +25,7 @@ class SNovaMainMenuGame
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
@@ -36,6 +37,7 @@ public:
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
 protected:
+
 	/** Check if we have a valid friend reference available */
 	bool HasSelectedFriend() const;
 
@@ -50,6 +52,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	EVisibility        GetContractsTextVisibility() const;
 	FText              GetContractTitle(uint32 Index) const;
 	FText              GetContractDescription(uint32 Index) const;
@@ -91,6 +94,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Menu manager
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 

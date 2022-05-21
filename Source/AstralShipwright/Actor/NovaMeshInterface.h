@@ -21,7 +21,7 @@ struct FNovaMaterialParameterRequest
 	bool operator==(const FNovaMaterialParameterRequest& Other) const
 	{
 		return Name == Other.Name && IsColor == Other.IsColor &&
-			   (IsColor ? ColorValue == Other.ColorValue : FloatValue == Other.FloatValue);
+		       (IsColor ? ColorValue == Other.ColorValue : FloatValue == Other.FloatValue);
 	}
 
 	bool operator!=(const FNovaMaterialParameterRequest& Other) const
@@ -43,6 +43,7 @@ struct FNovaMeshInterfaceBehavior
 	GENERATED_BODY()
 
 public:
+
 	FNovaMeshInterfaceBehavior();
 
 	/*----------------------------------------------------
@@ -50,6 +51,7 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	/** Setup this behavior */
 	void SetupMaterial(class UPrimitiveComponent* Mesh, class UMaterialInterface* Material);
 
@@ -85,6 +87,7 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	// Time in seconds for the materialization effect
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float MaterializationDuration;
@@ -98,6 +101,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	// Dynamic material
 	UPROPERTY()
 	class UMaterialInstanceDynamic* ComponentMaterial;
@@ -123,6 +127,7 @@ class INovaMeshInterface
 	GENERATED_BODY()
 
 public:
+
 	/*----------------------------------------------------
 	    Mesh interface
 	----------------------------------------------------*/

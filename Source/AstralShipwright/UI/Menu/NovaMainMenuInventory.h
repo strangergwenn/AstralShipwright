@@ -30,6 +30,7 @@ class SNovaMainMenuInventory
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaMainMenuInventory();
 
 	void Construct(const FArguments& InArgs);
@@ -75,11 +76,13 @@ public:
 	void OnBuyResource();
 
 protected:
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
 
 protected:
+
 	// Game objects
 	TWeakObjectPtr<UNovaMenuManager> MenuManager;
 	class ANovaPlayerController*     PC;

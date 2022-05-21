@@ -227,6 +227,7 @@ struct FNovaSpacecraftCompartmentMetrics : public INovaDescriptibleInterface
 	TArray<FText> GetDescription() const override;
 
 public:
+
 	int32 ModuleCount;
 	int32 EquipmentCount;
 	float DryMass;
@@ -343,6 +344,7 @@ struct FNovaSpacecraft : public FFastArraySerializerItem
 	friend struct FNovaSpacecraftCompartmentMetrics;
 
 public:
+
 	/*----------------------------------------------------
 	    Constructor & operators
 	----------------------------------------------------*/
@@ -491,6 +493,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Check whether this is the first (head) compartment */
 	bool IsFirstCompartment(int32 CompartmentIndex) const;
 
@@ -522,6 +525,7 @@ protected:
 	bool IsHatchModule(const UNovaModuleDescription* Module) const;
 
 public:
+
 	// Compartment data
 	UPROPERTY()
 	TArray<FNovaCompartment> Compartments;

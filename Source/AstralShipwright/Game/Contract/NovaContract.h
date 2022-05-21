@@ -20,6 +20,7 @@ enum class ENovaContractType : uint8
 class FNovaContract : public TSharedFromThis<FNovaContract>
 {
 public:
+
 	FNovaContract() : GameInstance(nullptr)
 	{}
 
@@ -54,6 +55,7 @@ public:
 	virtual void OnEvent(const FNovaContractEvent& Event) = 0;
 
 protected:
+
 	// Local state
 	ENovaContractType        Type;
 	FNovaContractDetails     Details;
@@ -68,6 +70,7 @@ protected:
 class FNovaTutorialContract : public FNovaContract
 {
 public:
+
 	FNovaTutorialContract();
 
 	virtual void Initialize(class UNovaGameInstance* CurrentGameInstance) override;

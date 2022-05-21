@@ -44,6 +44,7 @@ class UNovaAISimulationComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
+
 	UNovaAISimulationComponent();
 
 	/*----------------------------------------------------
@@ -81,6 +82,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Update the quotas map */
 	void ProcessQuotas();
 
@@ -95,6 +97,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Create new game data */
 	void CreateGame();
 
@@ -119,6 +122,7 @@ protected:
 	----------------------------------------------------*/
 
 private:
+
 	// Database
 	UPROPERTY()
 	TMap<FGuid, FNovaAISpacecraftState> SpacecraftDatabase;

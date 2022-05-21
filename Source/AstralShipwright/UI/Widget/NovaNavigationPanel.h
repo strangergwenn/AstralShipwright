@@ -29,6 +29,7 @@ class SNovaNavigationPanel : public SCompoundWidget
 	----------------------------------------------------*/
 
 public:
+
 	/** Create a new focusable button */
 	template <typename WidgetType, typename RequiredArgsPayloadType>
 	TSlateDecl<WidgetType, RequiredArgsPayloadType> NewNovaButton(
@@ -131,6 +132,7 @@ public:
 	}
 
 protected:
+
 	// Navigation state
 	class SNovaMenu*                Menu;
 	TSharedPtr<SNovaButton>         DefaultNavigationButton;

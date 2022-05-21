@@ -19,6 +19,7 @@ class UNovaSkeletalMeshComponent
 	GENERATED_BODY()
 
 public:
+
 	UNovaSkeletalMeshComponent()
 	{
 		PrimaryComponentTick.bCanEverTick = true;

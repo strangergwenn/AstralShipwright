@@ -15,6 +15,7 @@ class SNovaTabPanel : public SNovaNavigationPanel
 	friend class SNovaTabView;
 
 public:
+
 	SNovaTabPanel();
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
@@ -58,6 +59,7 @@ public:
 	}
 
 protected:
+
 	// Parameters
 	bool               Blurred;
 	int32              TabIndex;
@@ -76,6 +78,7 @@ protected:
 class SNovaTabView : public SCompoundWidget
 {
 public:
+
 	/*----------------------------------------------------
 	    Tab slot class
 	----------------------------------------------------*/
@@ -83,6 +86,7 @@ public:
 	class FSlot : public TSlotBase<FSlot>
 	{
 	public:
+
 		SLATE_SLOT_BEGIN_ARGS(FSlot, TSlotBase<FSlot>)
 
 		SLATE_ATTRIBUTE(FText, Header)
@@ -96,6 +100,7 @@ public:
 	};
 
 public:
+
 	/*----------------------------------------------------
 	    Slate arguments
 	----------------------------------------------------*/
@@ -118,6 +123,7 @@ public:
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaTabView();
 
 	void Construct(const FArguments& InArgs);
@@ -160,6 +166,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Check the visibility for a tab */
 	EVisibility GetTabVisibility(int32 Index) const;
 
@@ -197,6 +204,7 @@ protected:
 	float GetHeaderBlurStrength() const;
 
 protected:
+
 	/*----------------------------------------------------
 	    Protected data
 	----------------------------------------------------*/

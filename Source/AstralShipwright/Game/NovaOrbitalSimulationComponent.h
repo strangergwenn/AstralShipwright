@@ -41,12 +41,14 @@ class UNovaOrbitalSimulationComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
+
 	UNovaOrbitalSimulationComponent();
 
 	/*----------------------------------------------------
 	    General simulation
 	----------------------------------------------------*/
 public:
+
 	virtual void BeginPlay() override;
 
 	/** Update the simulation */
@@ -66,6 +68,7 @@ public:
 	----------------------------------------------------*/
 
 public:
+
 	/** Build trajectory parameters from an arbitrary orbit to another  */
 	FNovaTrajectoryParameters PrepareTrajectory(
 		const FNovaOrbit& Source, const FNovaOrbit& Destination, FNovaTime DeltaTime, const TArray<FGuid>& SpacecraftIdentifiers) const;
@@ -265,6 +268,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Clean up obsolete orbit data */
 	void ProcessOrbitCleanup();
 
@@ -291,6 +295,7 @@ protected:
 	----------------------------------------------------*/
 
 public:
+
 	// Delay after a trajectory has started before removing the orbit data
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float OrbitGarbageCollectionDelay;
@@ -300,6 +305,7 @@ public:
 	----------------------------------------------------*/
 
 private:
+
 	// Replicated orbit database
 	UPROPERTY(Replicated) FNovaOrbitDatabase SpacecraftOrbitDatabase;
 

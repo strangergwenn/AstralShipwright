@@ -16,6 +16,7 @@ class UNovaRichTextStyleContainer : public USlateWidgetStyleContainerBase
 	GENERATED_BODY()
 
 public:
+
 	virtual const struct FSlateWidgetStyle* const GetStyle() const override
 	{
 		return static_cast<const struct FSlateWidgetStyle*>(&Style);

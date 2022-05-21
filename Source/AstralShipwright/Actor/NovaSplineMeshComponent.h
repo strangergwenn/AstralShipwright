@@ -19,6 +19,7 @@ class UNovaSplineMeshComponent
 	GENERATED_BODY()
 
 public:
+
 	UNovaSplineMeshComponent()
 	{
 		PrimaryComponentTick.bCanEverTick = true;

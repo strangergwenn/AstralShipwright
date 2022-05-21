@@ -47,6 +47,7 @@ enum class ENovaLoadingScreen : uint8
 class FNovaPlayerInput
 {
 public:
+
 	// Game-specific menu actions
 	static const FName MenuPrimary;
 	static const FName MenuSecondary;
@@ -130,6 +131,7 @@ struct FNovaCarouselAnimation
 	}
 
 private:
+
 	// Animation data
 	float AnimationDuration;
 	float AnimationEase;

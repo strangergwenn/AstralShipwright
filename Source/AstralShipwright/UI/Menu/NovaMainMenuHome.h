@@ -25,6 +25,7 @@ class SNovaMainMenuHome
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
@@ -40,6 +41,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/*----------------------------------------------------
 	    Callbacks
 	----------------------------------------------------*/
@@ -52,6 +54,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Menu manager
 	TWeakObjectPtr<class UNovaMenuManager> MenuManager;
 

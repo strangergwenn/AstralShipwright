@@ -32,6 +32,7 @@ class SNovaMainMenu : public SNovaMenu
 	SLATE_END_ARGS()
 
 public:
+
 	SNovaMainMenu()
 	{}
 
@@ -63,6 +64,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Check if we can display the home menu */
 	bool IsHomeMenuVisible() const;
 
@@ -104,6 +106,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	/** Maximize or restore the window */
 	void OnMaximizeRestore();
 
@@ -115,6 +118,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// General state
 	SWidget* CurrentTooltipWidget;
 	FText    CurrentTooltipText;

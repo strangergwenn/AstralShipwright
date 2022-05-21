@@ -217,7 +217,7 @@ void FNovaMovementInterpolator::Get(
 		FMath::CubicInterpDerivative(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio) / VelocityToDerivative;
 	OutAngularVelocity = FMath::CubicInterpDerivative(
 							 StartRotation.Vector(), StartAngularDerivative, TargetRotation.Vector(), TargetAngularDerivative, LerpRatio) /
-						 AngularVelocityToDerivative;
+	                     AngularVelocityToDerivative;
 }
 
 void FNovaMovementInterpolator::Get(FVector& OutLocation, FVector& OutVelocity, float Time) const

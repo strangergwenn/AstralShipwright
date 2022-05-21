@@ -23,6 +23,7 @@ class SNovaMainMenuSettings
 	SLATE_END_ARGS()
 
 public:
+
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
@@ -63,6 +64,7 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	// Platfor msupport getters
 	EVisibility GetPCVisibility() const;
 	bool        IsScreenPercentageSupported() const;
@@ -122,6 +124,7 @@ protected:
 	----------------------------------------------------*/
 
 protected:
+
 	// Menu widgets
 	TWeakObjectPtr<UNovaMenuManager>  MenuManager;
 	TSharedPtr<class SVerticalBox>    BindingsContainer;

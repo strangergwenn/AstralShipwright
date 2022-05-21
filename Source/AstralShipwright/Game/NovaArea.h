@@ -21,6 +21,7 @@ struct FNovaResourceTrade
 	{}
 
 public:
+
 	// Resource this data applies to
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	const class UNovaResource* Resource;
@@ -41,6 +42,7 @@ class UNovaArea : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	UNovaArea()
 		: IsInSpace(false)
 		, AIQuota(3)
@@ -55,6 +57,7 @@ public:
 	{}
 
 public:
+
 	// Body orbited
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	const class UNovaCelestialBody* Body;
