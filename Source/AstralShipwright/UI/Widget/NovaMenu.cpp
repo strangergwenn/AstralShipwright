@@ -48,7 +48,7 @@ void SNovaMenu::Construct(const FArguments& InArgs)
 	];
 	// clang-format on
 
-	SmoothedMouseLocation.SetPeriod(0.5f);
+	SmoothedMouseLocation.SetPeriod(0.1f);
 }
 
 /*----------------------------------------------------

@@ -55,7 +55,7 @@ void UNovaSpacecraftThrusterComponent::BeginPlay()
 			// Create exhaust structure
 			FNovaThrusterExhaust Exhaust;
 			Exhaust.Name = FName(*SocketName);
-			Exhaust.Power.SetPeriod(0.2f);
+			Exhaust.Power.SetPeriod(0.4f);
 
 			// Create mesh
 			Exhaust.Mesh = NewObject<UStaticMeshComponent>(this, UStaticMeshComponent::StaticClass());
