@@ -70,7 +70,7 @@ struct FNovaAttitudeCommand
 {
 	GENERATED_BODY()
 
-	FNovaAttitudeCommand() : Location(FVector::ZeroVector), Velocity(FVector::ZeroVector), Direction(FVector::ZeroVector), Roll(0)
+	FNovaAttitudeCommand() : Location(FVector::ZeroVector), Velocity(FVector::ZeroVector), Orientation(FQuat::Identity), Roll(0)
 	{}
 
 	UPROPERTY()
@@ -80,7 +80,7 @@ struct FNovaAttitudeCommand
 	FVector_NetQuantize10 Velocity;
 
 	UPROPERTY()
-	FVector_NetQuantize10 Direction;
+	FQuat Orientation;
 
 	UPROPERTY()
 	float Roll;
@@ -254,7 +254,7 @@ protected:
 	FTransform GetInitialTransform() const;
 
 	/** Get the max velocity */
-	float GetMaximumAcceleration() const
+	double GetMaximumAcceleration() const
 	{
 		return (MovementCommand.State == ENovaMovementState::Docking || MovementCommand.State == ENovaMovementState::Undocking)
 		         ? MaxSlowLinearAcceleration
@@ -269,39 +269,35 @@ public:
 
 	// Distance under which we consider stopped
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float LinearDeadDistance;
+	double LinearDeadDistance;
 
 	// Maximum moving velocity in m/s
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float MaxLinearVelocity;
+	double MaxLinearVelocity;
 
 	// Maximum moving acceleration in m/s-2 while docking
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float MaxSlowLinearAcceleration;
+	double MaxSlowLinearAcceleration;
 
 	// Maximum delta-V in m/s for which thrusters shall be enabled
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float MaxDeltaVForThrusters;
+	double MaxDeltaVForThrusters;
 
 	// Distance under which we consider stopped
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float AngularDeadDistance;
+	double AngularDeadDistance;
 
 	// Maximum turn rate in °/s (pitch & roll)
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float MaxAngularVelocity;
+	double MaxAngularVelocity;
 
 	// How much to underestimate stopping distances
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float AngularOvershootRatio;
-
-	// Dot product value over which we consider vectors to be collinear
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float AngularColinearityThreshold;
+	double AngularOvershootRatio;
 
 	// Base restitution coefficient of hits
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	float RestitutionCoefficient;
+	double RestitutionCoefficient;
 
 	// Collision shake
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
@@ -331,8 +327,8 @@ protected:
 	FVector CurrentOrbitalLocation;
 
 	// Acceleration data
-	float LinearAcceleration;
-	float AngularAcceleration;
+	double LinearAcceleration;
+	double AngularAcceleration;
 
 	// Movement state
 	FVector CurrentLinearVelocity;
@@ -341,8 +337,8 @@ protected:
 	// Measured data
 	bool    LinearAttitudeIdle;
 	bool    AngularAttitudeIdle;
-	float   LinearAttitudeDistance;
-	float   AngularAttitudeDistance;
+	double  LinearAttitudeDistance;
+	double  AngularAttitudeDistance;
 	FVector PreviousVelocity;
 	FVector PreviousAngularVelocity;
 	FVector MeasuredAcceleration;

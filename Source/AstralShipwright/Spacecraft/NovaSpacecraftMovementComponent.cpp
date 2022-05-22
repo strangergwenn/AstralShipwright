@@ -44,14 +44,13 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	, MeasuredAngularAcceleration(FVector::ZeroVector)
 {
 	// Angular defaults
-	LinearDeadDistance          = 1;
-	MaxLinearVelocity           = 50;
-	MaxSlowLinearAcceleration   = 10;
-	MaxDeltaVForThrusters       = 5;
-	AngularDeadDistance         = 0.5f;
-	MaxAngularVelocity          = 60;
-	AngularOvershootRatio       = 1.1f;
-	AngularColinearityThreshold = 0.999999f;
+	LinearDeadDistance        = 1;
+	MaxLinearVelocity         = 50;
+	MaxSlowLinearAcceleration = 10;
+	MaxDeltaVForThrusters     = 5;
+	AngularDeadDistance       = 0.5f;
+	MaxAngularVelocity        = 60;
+	AngularOvershootRatio     = 1.1f;
 
 	// Physics defaults
 	RestitutionCoefficient = 0.5f;
@@ -82,8 +81,8 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 	// Initialize the movement component on server when it doesn't have a start actor
 	if (GetLocalRole() == ROLE_Authority && !IsInitialized())
 	{
-		ANovaPlayerController* PC    = SpacecraftPawn->GetController<ANovaPlayerController>();
-		ANovaPlayerStart*      Start = Cast<ANovaPlayerStart>(GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChoosePlayerStart(PC));
+		ANovaPlayerController*  PC    = SpacecraftPawn->GetController<ANovaPlayerController>();
+		const ANovaPlayerStart* Start = Cast<ANovaPlayerStart>(GetWorld()->GetAuthGameMode<ANovaGameMode>()->ChoosePlayerStart(PC));
 
 		if (IsValid(Start))
 		{
@@ -115,6 +114,7 @@ void UNovaSpacecraftMovementComponent::Initialize(const ANovaPlayerStart* Start)
 	NCHECK(IsValid(UpdatedComponent));
 	NCHECK(GetLocalRole() == ROLE_Authority);
 	const ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
+	NCHECK(SpacecraftPawn);
 
 	// Reset the state
 	DockState.Actor = Start;
@@ -125,10 +125,10 @@ void UNovaSpacecraftMovementComponent::Initialize(const ANovaPlayerStart* Start)
 	ResetState();
 
 	// Reset attitude
-	FTransform InitialTransform = GetInitialTransform();
+	const FTransform InitialTransform = GetInitialTransform();
 	UpdatedComponent->SetWorldTransform(InitialTransform);
-	AttitudeCommand.Location  = InitialTransform.GetLocation();
-	AttitudeCommand.Direction = InitialTransform.GetRotation().Vector();
+	AttitudeCommand.Location    = InitialTransform.GetLocation();
+	AttitudeCommand.Orientation = InitialTransform.GetRotation();
 
 	// Reset the attitude command
 	if (DockState.IsDocked)
@@ -189,7 +189,8 @@ bool UNovaSpacecraftMovementComponent::IsAlignedToManeuver() const
 	if (GetNextManeuver())
 	{
 		const FVector ManeuverDirection = GetManeuverDirection();
-		float CurrentAngle = FMath::RadiansToDegrees(acosf(FVector::DotProduct(UpdatedComponent->GetForwardVector(), ManeuverDirection)));
+		const double  CurrentAngle =
+			FMath::RadiansToDegrees(acosf(FVector::DotProduct(UpdatedComponent->GetForwardVector(), ManeuverDirection)));
 
 		return CurrentAngle < AngularDeadDistance;
 	}
@@ -282,7 +283,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 	{
 		// Default state
 		case ENovaMovementState::Idle:
-			AttitudeCommand.Direction = GetManeuverDirection();
+			AttitudeCommand.Orientation = GetManeuverDirection().ToOrientationQuat();
 			break;
 
 		// Idle states
@@ -304,9 +305,9 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 			{
 				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Docking : starting");
 
-				AttitudeCommand.Location  = MovementCommand.Target->GetActorLocation() - CurrentOrbitalLocation;
-				AttitudeCommand.Direction = FVector(1, 0, 0);
-				AttitudeCommand.Velocity  = FVector::ZeroVector;
+				AttitudeCommand.Location    = MovementCommand.Target->GetActorLocation() - CurrentOrbitalLocation;
+				AttitudeCommand.Orientation = FVector(1, 0, 0).ToOrientationQuat();
+				AttitudeCommand.Velocity    = FVector::ZeroVector;
 			}
 			else if (LinearAttitudeIdle && AngularAttitudeIdle)
 			{
@@ -336,18 +337,20 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 			}
 			else if (LinearAttitudeDistance < 50)
 			{
-				AttitudeCommand.Direction = FVector(1, 0, 0);
+				AttitudeCommand.Orientation = FVector(1, 0, 0).ToOrientationQuat();
 			}
 			break;
 
 		// Orbiting asteroid
-		case ENovaMovementState::Orbiting:
-			AttitudeCommand.Direction  = FVector::CrossProduct(AsteroidRelativeLocation.GetSafeNormal(), FVector(0, 0, 1));
-			AttitudeCommand.Velocity   = AttitudeCommand.Direction * 20;
-			AttitudeCommand.Location   = CurrentLocation + AttitudeCommand.Direction * 20;
-			AttitudeCommand.Location.Z = WaitingPointLocation.Z;
+		case ENovaMovementState::Orbiting: {
+			const FVector ForwardDirection = FVector::CrossProduct(AsteroidRelativeLocation.GetSafeNormal(), FVector::UpVector);
+			AttitudeCommand.Orientation    = FQuat(FVector::UpVector, AsteroidRelativeLocation.HeadingAngle()).GetNormalized();
+			AttitudeCommand.Velocity       = ForwardDirection * 20;
+			AttitudeCommand.Location       = CurrentLocation + ForwardDirection * 20;
+			AttitudeCommand.Location.Z     = WaitingPointLocation.Z;
 			AttitudeCommand.Location -= CurrentOrbitalLocation;
-			break;
+		}
+		break;
 
 		// Existing an asteroid orbit
 		case ENovaMovementState::ExitingOrbit: {
@@ -378,12 +381,12 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 			{
 				// Compute avoidance point
 				const TArray<FVector> AsteroidAvoidancePoints = {
-					FQuat(FVector(0, 0, 1), PI / 2).RotateVector(AsteroidRelativeWaitingPointLocation),
-					FQuat(FVector(0, 0, 1), -PI / 2).RotateVector(AsteroidRelativeWaitingPointLocation)};
-				int32 AvoidanceIndex = (AsteroidAvoidancePoints[1] - AsteroidRelativeLocation).Size() >
-				                               (AsteroidAvoidancePoints[0] - AsteroidRelativeLocation).Size()
-				                         ? 0
-				                         : 1;
+					FQuat(FVector::UpVector, PI / 2).RotateVector(AsteroidRelativeWaitingPointLocation),
+					FQuat(FVector::UpVector, -PI / 2).RotateVector(AsteroidRelativeWaitingPointLocation)};
+				const int32 AvoidanceIndex = (AsteroidAvoidancePoints[1] - AsteroidRelativeLocation).Size() >
+				                                     (AsteroidAvoidancePoints[0] - AsteroidRelativeLocation).Size()
+				                               ? 0
+				                               : 1;
 
 				if (MovementCommand.Dirty)
 				{
@@ -535,8 +538,7 @@ void UNovaSpacecraftMovementComponent::OnDockStateReplicated(const FNovaMovement
 	{
 		NCHECK(IsValid(UpdatedComponent));
 
-		FTransform DesiredTransform = GetInitialTransform();
-		UpdatedComponent->SetWorldTransform(DesiredTransform);
+		UpdatedComponent->SetWorldTransform(GetInitialTransform());
 
 		ResetState();
 	}
@@ -580,65 +582,49 @@ void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 
 void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
 {
-	FVector       NewAngularVelocity = FVector::ZeroVector;
-	const FVector ActorAxis          = GetOwner()->GetActorForwardVector();
-	const float   DotProduct         = FVector::DotProduct(ActorAxis, AttitudeCommand.Direction);
+	FVector      NewAngularVelocity = FVector::ZeroVector;
+	const double AngularDistance    = UpdatedComponent->GetComponentQuat().AngularDistance(AttitudeCommand.Orientation);
 
-	if (DotProduct < AngularColinearityThreshold)
+	if (AngularDistance > FMath::DegreesToRadians(AngularDeadDistance))
 	{
 		// Determine a quaternion that represents the desired difference in orientation
-		FQuat TargetRotation = DotProduct > -AngularColinearityThreshold ? FQuat::FindBetweenNormals(ActorAxis, AttitudeCommand.Direction)
-		                                                                 : FRotator(0, 180, 0).Quaternion();
-
-		// While on the horizontal plane, follow desired roll too
-		// if (FMath::IsNearlyZero(AttitudeCommand.Direction.Z))
-		//{
-		//	// Roll angle of the final resting rotation around the desired direction
-		//	auto GetRollAngle = [&](const FQuat& Rotation)
-		//	{
-		//		FQuat       Swing, Twist;
-		//		const FQuat ResultingOrientation = Rotation.GetNormalized() * UpdatedComponent->GetComponentQuat();
-		//		ResultingOrientation.ToSwingTwist(AttitudeCommand.Direction, Swing, Twist);
-		//		return Twist.GetAngle();
-		//	};
-
-		//	// Extract the roll angle, build a correction, test it and apply the one that works
-		//	const float DesiredRoll         = FMath::DegreesToRadians(AttitudeCommand.Roll);
-		//	const float ActorRollRadians    = GetRollAngle(TargetRotation);
-		//	FQuat       FixedTargetRotation = FQuat(AttitudeCommand.Direction, DesiredRoll + ActorRollRadians) * TargetRotation;
-		//	if (GetRollAngle(FixedTargetRotation) > ActorRollRadians)
-		//	{
-		//		FixedTargetRotation = FQuat(AttitudeCommand.Direction, DesiredRoll - ActorRollRadians) * TargetRotation;
-		//	}
-		//	TargetRotation = FixedTargetRotation;
-		//}
+		FQuat TargetRotation = AngularDistance < FMath::DegreesToRadians(180 - AngularDeadDistance)
+		                         ? AttitudeCommand.Orientation * UpdatedComponent->GetComponentQuat().Inverse()
+		                         : FRotator(0, 180, 0).Quaternion();
 
 		// Extract the rotation axis and angle
 		FVector RotationDirection;
-		float   RemainingAngleRadians;
+		double  RemainingAngleRadians;
 		TargetRotation.ToAxisAndAngle(RotationDirection, RemainingAngleRadians);
 		AngularAttitudeDistance = FMath::RadiansToDegrees(RemainingAngleRadians);
+
+		// Prevent against direction inversions
+		if (AngularAttitudeDistance > 180 && AngularAttitudeDistance > AngularDistance)
+		{
+			AngularAttitudeDistance -= 360;
+		}
 
 		// This cannot be explained, but likely fixes inconsistent output by FindBetweenNormals
 		RotationDirection *= FVector(-1, -1, 1);
 
 		// Determine the time left to reach the final (zero) velocity
-		float         TimeToFinalVelocity  = 0;
+		double        TimeToFinalVelocity  = 0;
 		const FVector AngularVelocityDelta = -CurrentAngularVelocity;
 		if (!FMath::IsNearlyZero(AngularVelocityDelta.SizeSquared()))
 		{
-			FVector Acceleration            = AngularVelocityDelta.GetSafeNormal() * AngularAcceleration;
-			float   AccelerationInAngleAxis = FMath::Abs(FVector::DotProduct(Acceleration, RotationDirection));
-			TimeToFinalVelocity             = (AngularVelocityDelta.Size() / AccelerationInAngleAxis);
+			const FVector Acceleration            = AngularVelocityDelta.GetSafeNormal() * AngularAcceleration;
+			const double  AccelerationInAngleAxis = FMath::Abs(FVector::DotProduct(Acceleration, RotationDirection));
+			TimeToFinalVelocity                   = (AngularVelocityDelta.Size() / AccelerationInAngleAxis);
 		}
 
 		// Determine the new angular velocity based on the remaining angle and velocity
-		float AngularStoppingDistance = (AngularVelocityDelta.Size() / 2) * (TimeToFinalVelocity + DeltaTime) / AngularOvershootRatio;
+		const double AngularStoppingDistance =
+			(AngularVelocityDelta.Size() / 2) * (TimeToFinalVelocity + DeltaTime) / AngularOvershootRatio;
 		if (!FMath::IsNearlyZero(AngularAttitudeDistance) && FMath::Abs(AngularAttitudeDistance) > AngularStoppingDistance)
 		{
-			float OvershotAngularAttitudeDistance = AngularOvershootRatio * (AngularAttitudeDistance - AngularStoppingDistance);
-			float MaxUsefulAngularVelocity        = FMath::Min(OvershotAngularAttitudeDistance / DeltaTime, MaxAngularVelocity);
-			NewAngularVelocity                    = RotationDirection * MaxUsefulAngularVelocity;
+			const double OvershotAngularAttitudeDistance = AngularOvershootRatio * (AngularAttitudeDistance - AngularStoppingDistance);
+			const double MaxUsefulAngularVelocity        = FMath::Min(OvershotAngularAttitudeDistance / DeltaTime, MaxAngularVelocity);
+			NewAngularVelocity                           = RotationDirection * MaxUsefulAngularVelocity;
 		}
 
 #if 0
@@ -781,7 +767,7 @@ FVector UNovaSpacecraftMovementComponent::GetManeuverDirection() const
 		return DockState.Actor->GetInterfacePointDirection(Maneuver->DeltaV);
 	}
 
-	return AttitudeCommand.Direction;
+	return AttitudeCommand.Orientation.Vector();
 }
 
 FTransform UNovaSpacecraftMovementComponent::GetInitialTransform() const
