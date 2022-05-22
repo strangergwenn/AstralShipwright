@@ -91,48 +91,6 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 		}
 	}
 
-#if 0
-	int32 TestStepDuration = 5;
-	int32 TestDuration = 4 * TestStepDuration;
-	CurrentDesiredAttitude.Velocity = FVector::ZeroVector;
-	if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < TestStepDuration)
-	{
-		CurrentDesiredAttitude.Location = FVector(0, 0, 1000);
-	}
-	else if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < 2 * TestStepDuration)
-	{
-		CurrentDesiredAttitude.Location = FVector(0, 1000, 0);
-		CurrentDesiredAttitude.Velocity = FVector(0, 1, 0);
-	}
-	else if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < 3 * TestStepDuration)
-	{
-		CurrentDesiredAttitude.Location = FVector(0, -1000, 0);
-	}
-	else
-	{
-		CurrentDesiredAttitude.Location = FVector(1000, 1000, 0);
-	}
-#elif 0
-	int32 TestStepDuration = 10;
-	int32 TestDuration     = 4 * TestStepDuration;
-	if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < TestStepDuration)
-	{
-		AttitudeCommand.Direction = FVector(0, 0, 1).GetSafeNormal();
-	}
-	else if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < 2 * TestStepDuration)
-	{
-		AttitudeCommand.Direction = FVector(0, 1, 0).GetSafeNormal();
-	}
-	else if (FMath::RoundToInt(GetWorld()->GetTimeSeconds()) % TestDuration < 3 * TestStepDuration)
-	{
-		AttitudeCommand.Direction = FVector(0, -1, 0).GetSafeNormal();
-	}
-	else
-	{
-		AttitudeCommand.Direction = FVector(1, 1, 1).GetSafeNormal();
-	}
-#endif
-
 	// Initialize state
 	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 
@@ -404,7 +362,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 				{
 					NLOG("UNovaSpacecraftMovementComponent::ProcessState : ExitingOrbit : direct exit");
 
-					AttitudeCommand.Location = WaitingPointLocation;
+					AttitudeCommand.Location = WaitingPointLocation - CurrentOrbitalLocation;
 				}
 				else if (LinearAttitudeIdle && AngularAttitudeIdle)
 				{
@@ -431,13 +389,13 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 				{
 					NLOG("UNovaSpacecraftMovementComponent::ProcessState : ExitingOrbit : asteroid-avoiding exit");
 
-					AttitudeCommand.Location = AsteroidAvoidancePoints[AvoidanceIndex];
+					AttitudeCommand.Location = AsteroidAvoidancePoints[AvoidanceIndex] - CurrentOrbitalLocation;
 				}
 				else if (LinearAttitudeDistance < 50 && AttitudeCommand.Location != WaitingPointLocation)
 				{
 					NLOG("UNovaSpacecraftMovementComponent::ProcessState : ExitingOrbit : asteroid avoided");
 
-					AttitudeCommand.Location = WaitingPointLocation;
+					AttitudeCommand.Location = WaitingPointLocation - CurrentOrbitalLocation;
 				}
 				else if (LinearAttitudeIdle && AngularAttitudeIdle)
 				{
@@ -452,6 +410,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 		// Anchoring to asteroid
 		case ENovaMovementState::Anchoring:
+			AttitudeCommand.Velocity = FVector::ZeroVector;
 			if (MovementCommand.Dirty)
 			{
 				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Anchoring : starting");
@@ -469,7 +428,10 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 					GetWorld()->LineTraceSingleByChannel(HitResult, CurrentLocation, AsteroidLocation, CollisionChannel, TraceParams);
 				if (FoundHit && HitResult.GetActor() == Asteroids[0])
 				{
-					AttitudeCommand.Location = HitResult.Location;
+					DrawDebugLine(GetWorld(), CurrentLocation, AsteroidLocation, FColor::Green, true);
+					DrawDebugSphere(GetWorld(), HitResult.Location, 512, 16, FColor::Green, true);
+
+					AttitudeCommand.Location = HitResult.Location - CurrentOrbitalLocation;
 				}
 				else
 				{
@@ -490,6 +452,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 		// Existing an asteroid anchor
 		case ENovaMovementState::ExitingAnchor:
+			AttitudeCommand.Velocity = FVector::ZeroVector;
 			break;
 
 		// Braking to zero
