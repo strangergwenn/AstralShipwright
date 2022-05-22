@@ -733,30 +733,19 @@ void ANovaSpacecraftPawn::UpdateBounds()
 	CurrentExtent = FVector::ZeroVector;
 
 	// While focusing a compartment, only account for it
-	if (DisplayFilterIndex != INDEX_NONE)
+	if (DisplayFilterIndex != INDEX_NONE || IsDocked())
 	{
-		NCHECK(DisplayFilterIndex >= 0 && DisplayFilterIndex < CompartmentComponents.Num());
-
 		FBox Bounds(ForceInit);
 		ForEachComponent<UPrimitiveComponent>(false,
 			[&](const UPrimitiveComponent* Prim)
 			{
-				if (Prim->IsRegistered() && Prim->IsAttachedTo(CompartmentComponents[DisplayFilterIndex]) &&
+				if (Prim->IsRegistered() && (IsDocked() || Prim->IsAttachedTo(CompartmentComponents[DisplayFilterIndex])) &&
 					Prim->Implements<UNovaMeshInterface>() && !Cast<INovaMeshInterface>(Prim)->IsDematerializing())
 				{
 					Bounds += Prim->Bounds.GetBox();
 				}
 			});
 		Bounds.GetCenterAndExtents(CurrentOrigin, CurrentExtent);
-	}
-
-	// While docked, actual actor bounds work best, with some modifier to account for the very narrow shape of ships
-	else if (IsDocked())
-	{
-		FVector Unused;
-		GetActorBounds(true, Unused, CurrentExtent);
-
-		CurrentExtent = 1.5 * FMath::Min(FMath::Min(CurrentExtent.X, CurrentExtent.Y), CurrentExtent.Z) * FVector(1, 1, 1);
 	}
 
 	// In other cases, use a point cloud from component origins because we rotate, and the size doesn't change much
