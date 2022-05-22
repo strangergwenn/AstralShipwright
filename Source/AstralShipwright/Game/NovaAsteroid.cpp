@@ -67,7 +67,7 @@ void ANovaAsteroid::Tick(float DeltaTime)
 		ProcessMovement();
 		ProcessDust();
 
-#if WITH_EDITOR
+#if WITH_EDITOR && 0
 		FVector Center, Extent;
 		GetActorBounds(false, Center, Extent);
 		for (int32 Pitch = -90; Pitch < 90; Pitch += 5)
