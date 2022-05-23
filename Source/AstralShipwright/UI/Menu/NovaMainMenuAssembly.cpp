@@ -1323,9 +1323,12 @@ void SNovaMainMenuAssembly::Tick(const FGeometry& AllottedGeometry, const double
 		if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly && !PC->IsInPhotoMode() && Menu->IsActiveNavigationPanel(this) &&
 			SpacecraftPawn->GetCompartmentCount() > 1)
 		{
-			FVector2D MousePosition = Menu->GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos());
-			HighlightedCompartment  = GetCompartmentIndexAtPosition(PC, SpacecraftPawn, MousePosition);
-			OutlinedCompartment     = SelectedCompartmentIndex;
+			if (!MenuManager->IsUsingGamepad())
+			{
+				FVector2D MousePosition = Menu->GetTickSpaceGeometry().AbsoluteToLocal(FSlateApplication::Get().GetCursorPos());
+				HighlightedCompartment  = GetCompartmentIndexAtPosition(PC, SpacecraftPawn, MousePosition);
+			}
+			OutlinedCompartment = SelectedCompartmentIndex;
 		}
 
 		SpacecraftPawn->SetHighlightedCompartment(HighlightedCompartment);

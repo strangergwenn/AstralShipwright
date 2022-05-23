@@ -516,7 +516,8 @@ FReply SNovaMenu::HandleKeyPress(FKey Key)
 			bool ActionPassedToWidget = false;
 			bool WasFocused           = Button->IsFocused();
 
-			if (CurrentNavigationPanel == nullptr || CurrentNavigationPanel->IsButtonActionAllowed(Button))
+			if (CurrentNavigationPanel == nullptr || CurrentNavigationPanel->IsButtonActionAllowed(Button) ||
+				AdditionalActionButtons.Contains(Button))
 			{
 				Button->OnButtonClicked();
 				ActionPassedToWidget = true;
