@@ -1,4 +1,4 @@
-﻿// Astral Shipwright - Gwennaël Arbona
+// Astral Shipwright - Gwennaël Arbona
 
 #pragma once
 
@@ -50,6 +50,7 @@ struct FNovaButtonTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = Button) bool Centered;
 	UPROPERTY(EditDefaultsOnly, Category = Button) int32 WrapMargin;
 	UPROPERTY(EditDefaultsOnly, Category = Button) float AnimationDuration;
+	UPROPERTY(EditDefaultsOnly, Category = Button) FSlateSound ClickSound;
 };
 
 /** Theme structure storing dimensional elements of a button */
