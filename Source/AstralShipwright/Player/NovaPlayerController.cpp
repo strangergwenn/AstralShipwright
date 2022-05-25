@@ -236,7 +236,19 @@ void ANovaPlayerController::BeginPlay()
 
 		// Setup systems
 		GetMenuManager()->BeginPlay(this);
-		GetSoundManager()->BeginPlay(this);
+		GetSoundManager()->BeginPlay(this,    //
+			FNovaMusicCallback::CreateWeakLambda(this,
+				[this]()
+				{
+					if (IsOnMainMenu())
+					{
+						return "Menu";
+					}
+					else
+					{
+						return "Ambient";
+					}
+				}));
 
 		// Setup sound
 		UNovaGameUserSettings* GameUserSettings = Cast<UNovaGameUserSettings>(GEngine->GetGameUserSettings());

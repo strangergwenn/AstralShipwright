@@ -11,13 +11,16 @@
     Music catalog
 ----------------------------------------------------*/
 
-// Sound track entry
+// Music getter
+DECLARE_DELEGATE_RetVal(FName, FNovaMusicCallback);
+
+// Soundtrack list entry
 USTRUCT()
 struct FNovaMusicCatalogEntry
 {
 	GENERATED_BODY()
 
-	FNovaMusicCatalogEntry() : Name(NAME_None), Track(nullptr)
+	FNovaMusicCatalogEntry() : Name(NAME_None)
 	{}
 
 	/** Track name */
@@ -26,7 +29,7 @@ struct FNovaMusicCatalogEntry
 
 	/** Sound asset */
 	UPROPERTY(Category = Sound, EditDefaultsOnly)
-	class USoundBase* Track;
+	TArray<class USoundBase*> Tracks;
 };
 
 // Music catalog
@@ -36,10 +39,12 @@ class UNovaSoundSetup : public UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	UNovaSoundSetup() : MasterSoundMix(nullptr), MasterSoundClass(nullptr), MusicSoundClass(nullptr), EffectsSoundClass(nullptr)
 	{}
 
 public:
+
 	// Musical tracks
 	UPROPERTY(Category = Sound, EditDefaultsOnly)
 	TArray<FNovaMusicCatalogEntry> Tracks;
@@ -75,6 +80,7 @@ struct FNovaSoundInstance
 	GENERATED_BODY()
 
 public:
+
 	FNovaSoundInstance() : SoundComponent(nullptr), StateCallback(), SoundPitchFade(false), SoundFadeSpeed(0.0f), CurrentVolume(0.0f)
 	{}
 
@@ -91,6 +97,7 @@ public:
 	bool IsIdle();
 
 public:
+
 	/** Sound component */
 	UPROPERTY()
 	class UAudioComponent* SoundComponent;
@@ -121,6 +128,7 @@ class UNovaSoundManager
 	GENERATED_BODY()
 
 public:
+
 	UNovaSoundManager();
 
 	/*----------------------------------------------------
@@ -128,10 +136,7 @@ public:
 	----------------------------------------------------*/
 
 	/** Start playing on a new level */
-	void BeginPlay(class ANovaPlayerController* PC);
-
-	/** Request a musical track */
-	void SetMusicTrack(FName Track);
+	void BeginPlay(class ANovaPlayerController* PC, FNovaMusicCallback Callback);
 
 	/** Register a new sound with its condition and settings */
 	void AddSound(class USoundBase* Sound, FNovaSoundInstanceCallback Callback, bool ChangePitchWithFade = false, float FadeSpeed = 1.0f);
@@ -172,15 +177,17 @@ public:
 	----------------------------------------------------*/
 
 private:
+
 	// Player owner
 	UPROPERTY()
 	class ANovaPlayerController* PlayerController;
 
 	// General state
-	FAudioDeviceHandle             AudioDevice;
-	TMap<FName, class USoundBase*> MusicTracks;
-	FName                          CurrentMusicTrack;
-	FName                          DesiredMusicTrack;
+	FAudioDeviceHandle                     AudioDevice;
+	TMap<FName, TArray<class USoundBase*>> MusicCatalog;
+	FNovaMusicCallback                     MusicCallback;
+	FName                                  CurrentMusicTrack;
+	FName                                  DesiredMusicTrack;
 
 	// Volume
 	float MasterVolume;

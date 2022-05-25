@@ -69,6 +69,10 @@ void FNovaSoundInstance::Update(float DeltaTime)
 		{
 			SoundComponent->Stop();
 		}
+		else if (!SoundComponent->IsPlaying())
+		{
+			SoundComponent->Play();
+		}
 	}
 }
 
@@ -105,12 +109,15 @@ UNovaSoundManager::UNovaSoundManager()
     Public methods
 ----------------------------------------------------*/
 
-void UNovaSoundManager::BeginPlay(ANovaPlayerController* PC)
+void UNovaSoundManager::BeginPlay(ANovaPlayerController* PC, FNovaMusicCallback Callback)
 {
 	NLOG("UNovaSoundManager::BeginPlay");
 
 	// Get references
-	PlayerController                      = PC;
+	PlayerController = PC;
+	MusicCallback    = Callback;
+
+	// Get basic game pointers
 	UNovaGameInstance*       GameInstance = PC->GetGameInstance<UNovaGameInstance>();
 	const UNovaAssetManager* AssetManager = GameInstance->GetAssetManager();
 	NCHECK(AssetManager);
@@ -123,12 +130,12 @@ void UNovaSoundManager::BeginPlay(ANovaPlayerController* PC)
 	EffectsSoundClass = SoundSetup->EffectsSoundClass;
 
 	// Fetch and map the musical tracks
-	MusicTracks.Empty();
+	MusicCatalog.Empty();
 	if (SoundSetup)
 	{
 		for (const FNovaMusicCatalogEntry& Entry : SoundSetup->Tracks)
 		{
-			MusicTracks.Add(Entry.Name, Entry.Track);
+			MusicCatalog.Add(Entry.Name, Entry.Tracks);
 		}
 	}
 
@@ -149,15 +156,6 @@ void UNovaSoundManager::BeginPlay(ANovaPlayerController* PC)
 				return CurrentMusicTrack == DesiredMusicTrack;
 			}),
 		nullptr, false, 0.2f);
-}
-
-void UNovaSoundManager::SetMusicTrack(FName Track)
-{
-	NLOG("UNovaSoundManager::SetMusicTrack : '%s'", *Track.ToString());
-
-	NCHECK(MusicTracks.Contains(Track));
-
-	DesiredMusicTrack = Track;
 }
 
 void UNovaSoundManager::AddSound(USoundBase* Sound, FNovaSoundInstanceCallback Callback, bool ChangePitchWithFade, float FadeSpeed)
@@ -203,12 +201,16 @@ void UNovaSoundManager::Tick(float DeltaSeconds)
 	// Control the music track
 	if (MusicInstance.IsValid())
 	{
-		if (CurrentMusicTrack != DesiredMusicTrack && MusicInstance.IsIdle())
-		{
-			NLOG("UNovaSoundManager::Tick : switching track from '%s' to '%s'", *CurrentMusicTrack.ToString(),
-				*DesiredMusicTrack.ToString());
+		DesiredMusicTrack = MusicCallback.IsBound() ? MusicCallback.Execute() : NAME_None;
 
-			MusicInstance.SoundComponent->SetSound(MusicTracks[DesiredMusicTrack]);
+		if (CurrentMusicTrack != DesiredMusicTrack || MusicInstance.IsIdle())
+		{
+			int32 TrackIndex = FMath::RandHelper(MusicCatalog[DesiredMusicTrack].Num());
+
+			NLOG("UNovaSoundManager::Tick : switching track from '%s' to '%s' %d", *CurrentMusicTrack.ToString(),
+				*DesiredMusicTrack.ToString(), TrackIndex);
+
+			MusicInstance.SoundComponent->SetSound(MusicCatalog[DesiredMusicTrack][TrackIndex]);
 			CurrentMusicTrack = DesiredMusicTrack;
 		}
 

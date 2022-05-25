@@ -205,6 +205,16 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				.Padding(Theme.ContentPadding)
+				.HAlign(HAlign_Center)
+				[
+					SNew(STextBlock)
+					.TextStyle(&Theme.MainFont)
+					.Text(INVTEXT("Music by Daisy Herbaut"))
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(Theme.ContentPadding)
 				[
 					SNew(STextBlock)
 					.TextStyle(&Theme.MainFont)
