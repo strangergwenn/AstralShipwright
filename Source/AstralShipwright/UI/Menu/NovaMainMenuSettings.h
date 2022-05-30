@@ -82,8 +82,9 @@ protected:
 
 	// Sound settings callbacks
 	void OnMasterVolumeChanged(float Value);
-	void OnMusicVolumeChanged(float Value);
+	void OnUIVolumeChanged(float Value);
 	void OnEffectsVolumeChanged(float Value);
+	void OnMusicVolumeChanged(float Value);
 
 	// Graphics settings callbacks
 	void OnGlobalIlluminationChanged(float Value);
@@ -149,8 +150,9 @@ protected:
 	// Sound settings widgets
 	TSharedPtr<SVerticalBox>      SoundContainer;
 	TSharedPtr<class SNovaSlider> MasterVolumeSlider;
-	TSharedPtr<class SNovaSlider> MusicVolumeSlider;
+	TSharedPtr<class SNovaSlider> UIVolumeSlider;
 	TSharedPtr<class SNovaSlider> EffectsVolumeSlider;
+	TSharedPtr<class SNovaSlider> MusicVolumeSlider;
 
 	// Display settings widgets
 	TSharedPtr<SNovaModalListView<TSharedPtr<struct FScreenResolutionRHI>>> ResolutionListView;

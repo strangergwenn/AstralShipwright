@@ -45,6 +45,20 @@ public:
 
 	UNovaSpacecraftThrusterComponent();
 
+	/** Check for thruster activity */
+	bool IsThrusterActive() const
+	{
+		for (const FNovaThrusterExhaust& Exhaust : ThrusterExhausts)
+		{
+			if (Exhaust.Power.Get() > 0.1f)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	/*----------------------------------------------------
 	    Inherited
 	----------------------------------------------------*/

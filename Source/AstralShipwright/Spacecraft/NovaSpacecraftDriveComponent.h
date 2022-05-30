@@ -21,6 +21,12 @@ public:
 
 	UNovaSpacecraftDriveComponent();
 
+	/** Check for drive activity */
+	bool IsDriveActive() const
+	{
+		return ExhaustPower.Get() > 0.1f;
+	}
+
 	/*----------------------------------------------------
 	    Inherited
 	----------------------------------------------------*/

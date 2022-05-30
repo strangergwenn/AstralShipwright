@@ -32,6 +32,28 @@ struct FNovaMusicCatalogEntry
 	TArray<class USoundBase*> Tracks;
 };
 
+// Environment sound entry
+USTRUCT()
+struct FNovaEnvironmentSoundEntry
+{
+	GENERATED_BODY()
+
+	FNovaEnvironmentSoundEntry() : Sound(nullptr), ChangePitchWithFade(true), SoundFadeSpeed(1.0f)
+	{}
+
+	/** Sound asset */
+	UPROPERTY(Category = Sound, EditDefaultsOnly)
+	class USoundBase* Sound;
+
+	/** Whether to fade the pitch */
+	UPROPERTY(Category = Sound, EditDefaultsOnly)
+	bool ChangePitchWithFade;
+
+	/** Sound asset */
+	UPROPERTY(Category = Sound, EditDefaultsOnly)
+	float SoundFadeSpeed;
+};
+
 // Music catalog
 UCLASS(ClassGroup = (Nova))
 class UNovaSoundSetup : public UNovaAssetDescription
@@ -40,30 +62,53 @@ class UNovaSoundSetup : public UNovaAssetDescription
 
 public:
 
-	UNovaSoundSetup() : MasterSoundMix(nullptr), MasterSoundClass(nullptr), MusicSoundClass(nullptr), EffectsSoundClass(nullptr)
+	UNovaSoundSetup()
+		: MusicFadeSpeed(2.0f)
+		, FadeEffectsInMenus(false)
+		, MasterSoundMix(nullptr)
+		, MasterSoundClass(nullptr)
+		, UISoundClass(nullptr)
+		, EffectsSoundClass(nullptr)
+		, MusicSoundClass(nullptr)
 	{}
 
 public:
 
 	// Musical tracks
-	UPROPERTY(Category = Sound, EditDefaultsOnly)
+	UPROPERTY(Category = Music, EditDefaultsOnly)
 	TArray<FNovaMusicCatalogEntry> Tracks;
 
+	// Music fade speed
+	UPROPERTY(Category = Music, EditDefaultsOnly)
+	float MusicFadeSpeed;
+
+	// Environment sounds
+	UPROPERTY(Category = Environment, EditDefaultsOnly)
+	TMap<FName, FNovaEnvironmentSoundEntry> Sounds;
+
+	// Fade out effect sounds in menus
+	UPROPERTY(Category = Environment, EditDefaultsOnly)
+	bool FadeEffectsInMenus;
+
 	// Master sound mixer
-	UPROPERTY(Category = Sound, EditDefaultsOnly)
+	UPROPERTY(Category = Mixing, EditDefaultsOnly)
 	class USoundMix* MasterSoundMix;
 
 	// Master sound class
-	UPROPERTY(Category = Sound, EditDefaultsOnly)
+	UPROPERTY(Category = Mixing, EditDefaultsOnly)
 	class USoundClass* MasterSoundClass;
 
-	// Music sound class
-	UPROPERTY(Category = Sound, EditDefaultsOnly)
-	class USoundClass* MusicSoundClass;
+	// UI sound class
+	UPROPERTY(Category = Mixing, EditDefaultsOnly)
+	class USoundClass* UISoundClass;
 
 	// Effects sound class
-	UPROPERTY(Category = Sound, EditDefaultsOnly)
+	UPROPERTY(Category = Mixing, EditDefaultsOnly)
 	class USoundClass* EffectsSoundClass;
+
+	// Music sound class
+	UPROPERTY(Category = Mixing, EditDefaultsOnly)
+	class USoundClass* MusicSoundClass;
 };
 
 /*----------------------------------------------------
@@ -139,16 +184,20 @@ public:
 	void BeginPlay(class ANovaPlayerController* PC, FNovaMusicCallback Callback);
 
 	/** Register a new sound with its condition and settings */
-	void AddSound(class USoundBase* Sound, FNovaSoundInstanceCallback Callback, bool ChangePitchWithFade = false, float FadeSpeed = 1.0f);
+	void AddEnvironmentSound(
+		FName SoundName, FNovaSoundInstanceCallback Callback, bool ChangePitchWithFade = false, float FadeSpeed = 1.0f);
 
 	/** Set the master volume from 0 to 10 */
 	void SetMasterVolume(int32 Volume);
 
-	/** Set the music volume from 0 to 10 */
-	void SetMusicVolume(int32 Volume);
+	/** Set the UI volume from 0 to 10 */
+	void SetUIVolume(int32 Volume);
 
 	/** Set the music volume from 0 to 10 */
 	void SetEffectsVolume(int32 Volume);
+
+	/** Set the music volume from 0 to 10 */
+	void SetMusicVolume(int32 Volume);
 
 	/*----------------------------------------------------
 	    Tick
@@ -182,6 +231,10 @@ private:
 	UPROPERTY()
 	class ANovaPlayerController* PlayerController;
 
+	// Sound setup
+	UPROPERTY()
+	const UNovaSoundSetup* SoundSetup;
+
 	// General state
 	FAudioDeviceHandle                     AudioDevice;
 	TMap<FName, TArray<class USoundBase*>> MusicCatalog;
@@ -191,31 +244,16 @@ private:
 
 	// Volume
 	float MasterVolume;
-	float MusicVolume;
+	float UIVolume;
 	float EffectsVolume;
 	float EffectsVolumeMultiplier;
-
-	// Master sound mixer
-	UPROPERTY()
-	class USoundMix* MasterSoundMix;
-
-	// Master sound class
-	UPROPERTY()
-	class USoundClass* MasterSoundClass;
-
-	// Music sound class
-	UPROPERTY()
-	class USoundClass* MusicSoundClass;
-
-	// Effects sound class
-	UPROPERTY()
-	class USoundClass* EffectsSoundClass;
+	float MusicVolume;
 
 	// Dedicated music player instance
 	UPROPERTY()
-	FNovaSoundInstance MusicInstance;
+	FNovaSoundInstance MusicSoundInstance;
 
-	// Sound player instances
+	// Environment player instances
 	UPROPERTY()
-	TArray<FNovaSoundInstance> SoundInstances;
+	TArray<FNovaSoundInstance> EnvironmentSoundInstances;
 };

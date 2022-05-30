@@ -65,13 +65,17 @@ public:
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	int32 MasterVolume;
 
-	/** Music volume */
+	/** Game volume */
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
-	int32 MusicVolume;
+	int32 UIVolume;
 
 	/** Music volume */
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
 	int32 EffectsVolume;
+
+	/** Music volume */
+	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)
+	int32 MusicVolume;
 
 	/** Vertical FOV in degrees */
 	UPROPERTY(Config, BlueprintReadOnly, VisibleAnywhere)

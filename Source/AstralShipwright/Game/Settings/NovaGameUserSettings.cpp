@@ -143,8 +143,9 @@ void UNovaGameUserSettings::SetToDefaults()
 
 	// Sound
 	MasterVolume  = 10;
-	MusicVolume   = 10;
+	UIVolume      = 10;
 	EffectsVolume = 10;
+	MusicVolume   = 10;
 
 	// Graphics
 	EnableTSR            = true;

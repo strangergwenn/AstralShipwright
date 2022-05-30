@@ -17,6 +17,8 @@
 #include "Game/Station/NovaStationDock.h"
 
 #include "Spacecraft/NovaSpacecraftPawn.h"
+#include "Spacecraft/NovaSpacecraftDriveComponent.h"
+#include "Spacecraft/NovaSpacecraftThrusterComponent.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
 
 #include "System/NovaAssetManager.h"
@@ -250,11 +252,49 @@ void ANovaPlayerController::BeginPlay()
 					}
 				}));
 
-		// Setup sound
-		UNovaGameUserSettings* GameUserSettings = Cast<UNovaGameUserSettings>(GEngine->GetGameUserSettings());
-		GetSoundManager()->SetMasterVolume(GameUserSettings->MasterVolume);
-		GetSoundManager()->SetMusicVolume(GameUserSettings->MusicVolume);
-		GetSoundManager()->SetEffectsVolume(GameUserSettings->EffectsVolume);
+		// Setup thruster sounds
+		GetSoundManager()->AddEnvironmentSound("Thrusters",    //
+			FNovaSoundInstanceCallback::CreateWeakLambda(this,
+				[=]()
+				{
+					ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+					if (IsValid(SpacecraftPawn))
+					{
+						TArray<const UNovaSpacecraftThrusterComponent*> Thrusters;
+						SpacecraftPawn->GetComponents(Thrusters);
+						for (const UNovaSpacecraftThrusterComponent* Thruster : Thrusters)
+						{
+							if (Thruster->IsThrusterActive())
+							{
+								return true;
+							}
+						}
+					}
+
+					return false;
+				}));
+
+		// Setup drive sounds
+		GetSoundManager()->AddEnvironmentSound("Drive",    //
+			FNovaSoundInstanceCallback::CreateWeakLambda(this,
+				[=]()
+				{
+					ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+					if (IsValid(SpacecraftPawn))
+					{
+						TArray<const UNovaSpacecraftDriveComponent*> Drives;
+						SpacecraftPawn->GetComponents(Drives);
+						for (const UNovaSpacecraftDriveComponent* Drive : Drives)
+						{
+							if (Drive->IsDriveActive())
+							{
+								return true;
+							}
+						}
+					}
+
+					return false;
+				}));
 	}
 
 	// Initialize persistent objects
