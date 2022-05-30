@@ -1879,7 +1879,7 @@ FText SNovaMainMenuAssembly::GetSelectedFilterText() const
 				return LOCTEXT("StructuresOnly", "Structure only");
 				break;
 			case ENovaAssemblyDisplayFilter::StructureModules:
-				return LOCTEXT("ModulesStructure", "Structure & module");
+				return LOCTEXT("ModulesStructure", "Structure & modules");
 				break;
 			case ENovaAssemblyDisplayFilter::StructureModulesEquipment:
 				return LOCTEXT("ModulesStructureEquipments", "Structure, modules & equipment");

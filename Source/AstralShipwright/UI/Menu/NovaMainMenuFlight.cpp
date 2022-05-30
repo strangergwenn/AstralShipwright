@@ -615,7 +615,7 @@ FText SNovaMainMenuFlight::GetDockUndockHelp() const
 	{
 		if (IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() == ENovaMovementState::Anchored)
 		{
-			Out = LOCTEXT("LeaveAnchorHelp", "Leave the current anchor and go back to orbiitng the object");
+			Out = LOCTEXT("LeaveAnchorHelp", "Leave the current anchor and go back to orbiting the object");
 			CanDockUndock(&Out);
 		}
 		else
