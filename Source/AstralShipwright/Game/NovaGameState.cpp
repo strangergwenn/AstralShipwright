@@ -547,22 +547,6 @@ FNovaTime ANovaGameState::GetCurrentTime() const
 	}
 }
 
-FNovaTime ANovaGameState::GetTimeLeftUntilEvent() const
-{
-	const ANovaGameMode* GameMode      = GetWorld()->GetAuthGameMode<ANovaGameMode>();
-	FNovaTime            RemainingTime = OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver(GameMode->GetManeuverWarnTime());
-
-	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
-	if (PlayerTrajectory)
-	{
-		const FNovaTime TimeBeforeArrival = PlayerTrajectory->GetArrivalTime() - GetCurrentTime() - GameMode->GetArrivalWarningTime();
-
-		RemainingTime = FMath::Min(RemainingTime, TimeBeforeArrival);
-	}
-
-	return RemainingTime;
-}
-
 void ANovaGameState::FastForward()
 {
 	NLOG("ANovaGameState::FastForward");
@@ -572,10 +556,11 @@ void ANovaGameState::FastForward()
 
 bool ANovaGameState::CanFastForward(FText* AbortReason) const
 {
-	if (GetLocalRole() == ROLE_Authority)
+	if (GetLocalRole() == ROLE_Authority && !IsFastForward)
 	{
 		// No event upcoming
-		if (GetTimeLeftUntilEvent() > FNovaTime::FromDays(ENovaConstants::MaxTrajectoryDurationDays))
+		if (GetAllowedFastFowardTime() > FNovaTime::FromDays(ENovaConstants::MaxTrajectoryDurationDays) ||
+			GetAllowedFastFowardTime() <= FNovaTime())
 		{
 			if (AbortReason)
 			{
@@ -602,6 +587,24 @@ bool ANovaGameState::CanFastForward(FText* AbortReason) const
 	{
 		return false;
 	}
+}
+
+FNovaTime ANovaGameState::GetAllowedFastFowardTime() const
+{
+	NCHECK(GetLocalRole() == ROLE_Authority);
+	const ANovaGameMode* GameMode = GetWorld()->GetAuthGameMode<ANovaGameMode>();
+	NCHECK(IsValid(GameMode));
+
+	FNovaTime MaxAllowedDeltaTime           = OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver(GameMode->GetManeuverWarnTime());
+	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
+	if (PlayerTrajectory)
+	{
+		const FNovaTime TimeBeforeArrival = PlayerTrajectory->GetArrivalTime() - GetCurrentTime() - GameMode->GetArrivalWarningTime();
+
+		MaxAllowedDeltaTime = FMath::Min(MaxAllowedDeltaTime, TimeBeforeArrival);
+	}
+
+	return MaxAllowedDeltaTime;
 }
 
 void ANovaGameState::SetTimeDilation(ENovaTimeDilation Dilation)
@@ -672,25 +675,21 @@ bool ANovaGameState::ProcessGameTime(FNovaTime DeltaTime)
 	// Under fast forward, stop on events
 	if (IsFastForward && GetLocalRole() == ROLE_Authority)
 	{
-		const ANovaGameMode* GameMode = GetWorld()->GetAuthGameMode<ANovaGameMode>();
-
 		// Check for upcoming events
-		FNovaTime MaxAllowedDeltaTime = OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver(GameMode->GetManeuverWarnTime());
-		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
-		if (PlayerTrajectory)
+		FNovaTime MaxAllowedDeltaTime = GetAllowedFastFowardTime();
+		NCHECK(TimeDilation == 1.0);
+		if (MaxAllowedDeltaTime <= FNovaTime())
 		{
-			const FNovaTime TimeBeforeArrival = PlayerTrajectory->GetArrivalTime() - GetCurrentTime() - GameMode->GetArrivalWarningTime();
+			NLOG("ANovaGameState::ProcessGameTime : no delta, stopping processing");
 
-			MaxAllowedDeltaTime = FMath::Min(MaxAllowedDeltaTime, TimeBeforeArrival);
+			DeltaTime          = FNovaTime();
+			ContinueProcessing = false;
 		}
 
-		NCHECK(TimeDilation == 1.0);
-		NCHECK(MaxAllowedDeltaTime > FNovaTime());
-
 		// Break simulation if we have an event soon
-		if (DeltaTime > MaxAllowedDeltaTime)
+		else if (DeltaTime > MaxAllowedDeltaTime)
 		{
-			NLOG("ANovaGameState::ProcessGameTime : stopping processing");
+			NLOG("ANovaGameState::ProcessGameTime : delta too large, stopping processing");
 
 			DeltaTime          = MaxAllowedDeltaTime;
 			ContinueProcessing = false;

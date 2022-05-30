@@ -159,9 +159,6 @@ public:
 	/** Get the current game time */
 	FNovaTime GetCurrentTime() const;
 
-	/** Get the time left until the next event */
-	FNovaTime GetTimeLeftUntilEvent() const;
-
 	/** Simulate the world at full speed until an event */
 	void FastForward();
 
@@ -173,6 +170,9 @@ public:
 	{
 		return IsFastForward;
 	}
+
+	/** Get the duration of a fast-forward **/
+	FNovaTime GetAllowedFastFowardTime() const;
 
 	/** Get the current time dilation factor */
 	void SetTimeDilation(ENovaTimeDilation Dilation);
