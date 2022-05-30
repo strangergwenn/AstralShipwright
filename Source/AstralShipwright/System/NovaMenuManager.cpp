@@ -135,13 +135,13 @@ void UNovaMenuManager::BeginPlay(ANovaPlayerController* PC)
 
 void UNovaMenuManager::Tick(float DeltaTime)
 {
-	if (IsValid(GameInstance) && IsValid(GameInstance->GetFirstLocalPlayerController()) && GetPC()->IsReady() && GetPC()->GetGameTimeSinceCreation() > 1.0f)
+	if (IsValid(GameInstance) && IsValid(GameInstance->GetFirstLocalPlayerController()) && GetPC()->IsReady() &&
+		GetPC()->GetGameTimeSinceCreation() > 2.0f)
 	{
 		switch (CurrentMenuState)
 		{
 			// Fade to black, call the provided callback, and move on
-			case ENovaFadeState::FadingToBlack:
-			{
+			case ENovaFadeState::FadingToBlack: {
 				FNovaAsyncCommand* Command = CommandStack.Peek();
 				if (Command)
 				{
@@ -160,8 +160,7 @@ void UNovaMenuManager::Tick(float DeltaTime)
 			}
 
 			// Process the queue of asynchronous actions + conditions
-			case ENovaFadeState::Black:
-			{
+			case ENovaFadeState::Black: {
 				// Processing action
 				if (CurrentCommand.Action.IsBound())
 				{
@@ -195,8 +194,7 @@ void UNovaMenuManager::Tick(float DeltaTime)
 			}
 
 			// Fading back
-			case ENovaFadeState::FadingFromBlack:
-			{
+			case ENovaFadeState::FadingFromBlack: {
 				CurrentFadingTime -= DeltaTime;
 				CurrentFadingTime = FMath::Clamp(CurrentFadingTime, 0.0f, FadeDuration);
 
