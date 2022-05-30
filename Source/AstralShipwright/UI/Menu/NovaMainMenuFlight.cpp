@@ -245,6 +245,12 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					SpacecraftMovement->StopOrbiting();
 				}
 			}))
+			.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+			{
+				TArray<AActor*> Asteroids;
+				UGameplayStatics::GetAllActorsOfClass(PC->GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
+				return Asteroids.Num() > 0;
+			})))
 		]
 		
 		// Dock, undock, anchor, leave anchor
