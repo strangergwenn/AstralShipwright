@@ -71,7 +71,12 @@ void SNovaMenu::Tick(const FGeometry& AllottedGeometry, const double CurrentTime
 	// Update analog input processing
 	if (CurrentNavigationPanel)
 	{
-		if (!MenuManager->IsUsingGamepad())
+		if (MenuManager->IsUsingGamepad())
+		{
+			MousePressed    = false;
+			MouseWasPressed = false;
+		}
+		else
 		{
 			CurrentAnalogInput = FVector2D::ZeroVector;
 		}
@@ -123,6 +128,14 @@ void SNovaMenu::Tick(const FGeometry& AllottedGeometry, const double CurrentTime
 bool SNovaMenu::SupportsKeyboardFocus() const
 {
 	return true;
+}
+
+void SNovaMenu::OnFocusLost(const FFocusEvent& InFocusEvent)
+{
+	SCompoundWidget::OnFocusLost(InFocusEvent);
+
+	MousePressed    = false;
+	MouseWasPressed = false;
 }
 
 FReply SNovaMenu::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
