@@ -18,10 +18,11 @@ enum class ENovaMovementState : uint8
 	Docking,
 	Docked,
 	Undocking,
-	Orbiting,
 
+	Orbiting,
 	ExitingOrbit,
 
+	AnchoringEntry,
 	Anchoring,
 	Anchored,
 	ExitingAnchor

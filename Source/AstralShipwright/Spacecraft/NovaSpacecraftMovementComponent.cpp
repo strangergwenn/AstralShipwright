@@ -57,7 +57,7 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	RestitutionCoefficient = 0.5f;
 
 	// High level defaults
-	OrbitingAngularVelocity = 5;
+	OrbitingAngularVelocity = 3;
 	OrbitingDistance        = 20000;
 
 	// Settings
@@ -258,7 +258,7 @@ void UNovaSpacecraftMovementComponent::Anchor(FSimpleDelegate Callback)
 	NLOG("UNovaSpacecraftMovementComponent::Anchor ('%s')", *GetRoleString(this));
 
 	CompletionCallback = Callback;
-	RequestMovement(FNovaMovementCommand(ENovaMovementState::Anchoring));
+	RequestMovement(FNovaMovementCommand(ENovaMovementState::AnchoringEntry));
 }
 
 void UNovaSpacecraftMovementComponent::ExitAnchor(FSimpleDelegate Callback)
@@ -429,12 +429,12 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 		}
 		break;
 
-		// Anchoring to asteroid
-		case ENovaMovementState::Anchoring:
+		// Preparing to anchor to asteroid
+		case ENovaMovementState::AnchoringEntry:
 			AttitudeCommand.Velocity = FVector::ZeroVector;
-			if (MovementCommand.Dirty)
+			if (LinearAttitudeIdle && AngularAttitudeIdle)
 			{
-				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Anchoring : starting");
+				NLOG("UNovaSpacecraftMovementComponent::ProcessState : AnchoringEntry : done");
 
 				// Trace params
 				FHitResult            HitResult(ForceInit);
@@ -467,16 +467,24 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 						SpacecraftPawn->GetTransform().InverseTransformPosition(AnchorComponent->GetSocketLocation("Dock"));
 					AttitudeCommand.Location =
 						HitResult.Location - AttitudeCommand.Orientation.RotateVector(RelativeDockLocation) - CurrentOrbitalLocation;
+
+					MovementCommand.State = ENovaMovementState::Anchoring;
 				}
 				else
 				{
 					NLOG("UNovaSpacecraftMovementComponent::ProcessState : Anchoring : failed");
 
 					MovementCommand.State = ENovaMovementState::Orbiting;
-					SignalCompletion();
 				}
+
+				SignalCompletion();
 			}
-			else if (LinearAttitudeIdle && AngularAttitudeIdle)
+			break;
+
+		// Anchoring to asteroid
+		case ENovaMovementState::Anchoring:
+			AttitudeCommand.Velocity = FVector::ZeroVector;
+			if (LinearAttitudeIdle && AngularAttitudeIdle)
 			{
 				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Anchoring : done");
 
@@ -491,23 +499,27 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 			if (MovementCommand.Dirty)
 			{
+				NLOG("UNovaSpacecraftMovementComponent::ProcessState : ExitingAnchor : starting");
+
 				InitialOrbitingHeading = AsteroidRelativeLocation.HeadingAngle();
 			}
-
-			// Define attitude
-			AttitudeCommand.Orientation = FQuat(FVector::UpVector, InitialOrbitingHeading + PI / 2).GetNormalized();
-			AttitudeCommand.Location    = AsteroidLocation + OrbitingDistance * AsteroidRelativeLocation.GetSafeNormal();
-			AttitudeCommand.Location.Z  = WaitingPointLocation.Z;
-			AttitudeCommand.Location -= CurrentOrbitalLocation;
-			AttitudeCommand.Velocity = FVector::ZeroVector;
-
-			if (LinearAttitudeIdle && AngularAttitudeIdle)
+			else if (LinearAttitudeIdle && AngularAttitudeIdle)
 			{
 				NLOG("UNovaSpacecraftMovementComponent::ProcessState : ExitingAnchor : done");
 
 				MovementCommand.State = ENovaMovementState::Idle;
 				SignalCompletion();
 			}
+			else if (LinearAttitudeDistance < 20)
+			{
+				AttitudeCommand.Orientation = FQuat(FVector::UpVector, InitialOrbitingHeading + PI / 2).GetNormalized();
+			}
+
+			// Define target
+			AttitudeCommand.Location   = AsteroidLocation + OrbitingDistance * AsteroidRelativeLocation.GetSafeNormal();
+			AttitudeCommand.Location.Z = WaitingPointLocation.Z;
+			AttitudeCommand.Location -= CurrentOrbitalLocation;
+			AttitudeCommand.Velocity = FVector::ZeroVector;
 
 			break;
 
