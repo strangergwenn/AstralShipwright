@@ -674,6 +674,14 @@ bool SNovaMainMenuFlight::CanDockUndock(FText* Help) const
 					}
 					return false;
 				}
+				else if (!IsValid(SpacecraftPawn->GetAnchorComponent()))
+				{
+					if (Help)
+					{
+						*Help = LOCTEXT("NoAnchorPoint", "This spacecraft cannot anchor to asteroids");
+					}
+					return false;
+				}
 			}
 		}
 

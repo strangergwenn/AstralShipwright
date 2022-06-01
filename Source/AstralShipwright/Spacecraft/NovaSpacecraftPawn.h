@@ -168,6 +168,9 @@ public:
 	/** Check if we are docking*/
 	bool IsDocking() const;
 
+	/** Get a physical mesh used for anchoring */
+	const class UPrimitiveComponent* GetAnchorComponent() const;
+
 	/** Load the persistent state of systems from the spacecraft */
 	void LoadSystems();
 

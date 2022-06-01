@@ -3,6 +3,7 @@
 #include "NovaSpacecraftPawn.h"
 #include "NovaSpacecraftMovementComponent.h"
 #include "NovaSpacecraftCompartmentComponent.h"
+#include "NovaSpacecraftHatchComponent.h"
 
 #include "System/NovaSpacecraftPropellantSystem.h"
 
@@ -235,6 +236,13 @@ bool ANovaSpacecraftPawn::IsDocked() const
 bool ANovaSpacecraftPawn::IsDocking() const
 {
 	return IsValid(MovementComponent) && MovementComponent->GetState() == ENovaMovementState::Docking;
+}
+
+const UPrimitiveComponent* ANovaSpacecraftPawn::GetAnchorComponent() const
+{
+	UPrimitiveComponent* AnchorComponent = FindComponentByClass<UNovaSpacecraftHatchComponent>();
+
+	return IsValid(AnchorComponent) ? Cast<UPrimitiveComponent>(AnchorComponent->GetAttachParent()) : nullptr;
 }
 
 void ANovaSpacecraftPawn::LoadSystems()

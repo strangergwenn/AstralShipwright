@@ -1,6 +1,7 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaSpacecraftMovementComponent.h"
+#include "NovaSpacecraftHatchComponent.h"
 #include "NovaSpacecraftPawn.h"
 
 #include "Actor/NovaActorTools.h"
@@ -431,10 +432,24 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 					GetWorld()->LineTraceSingleByChannel(HitResult, CurrentLocation, AsteroidLocation, CollisionChannel, TraceParams);
 				if (FoundHit && HitResult.GetActor() == Asteroids[0])
 				{
-					DrawDebugLine(GetWorld(), CurrentLocation, AsteroidLocation, FColor::Green, true);
-					DrawDebugSphere(GetWorld(), HitResult.Location, 512, 16, FColor::Green, true);
+					// Get spacecraft pointers
+					const ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
+					NCHECK(SpacecraftPawn);
+					const UPrimitiveComponent* AnchorComponent = SpacecraftPawn->GetAnchorComponent();
+					NCHECK(IsValid(AnchorComponent));
 
-					AttitudeCommand.Location = HitResult.Location - CurrentOrbitalLocation;
+					// Compute orientation
+					const FQuat   HitPointOrientation = (HitResult.Location - AsteroidLocation).GetSafeNormal().ToOrientationQuat();
+					const FVector DockComponentDirection =
+						GetOwner()->GetTransform().InverseTransformVector(AnchorComponent->GetUpVector());
+					const FQuat AnchorComponentOrientation = DockComponentDirection.ToOrientationQuat();
+					AttitudeCommand.Orientation            = HitPointOrientation * AnchorComponentOrientation;
+
+					// Compute location
+					const FVector RelativeDockLocation =
+						SpacecraftPawn->GetTransform().InverseTransformPosition(AnchorComponent->GetSocketLocation("Dock"));
+					AttitudeCommand.Location =
+						HitResult.Location - AttitudeCommand.Orientation.RotateVector(RelativeDockLocation) - CurrentOrbitalLocation;
 				}
 				else
 				{
