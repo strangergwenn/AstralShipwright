@@ -56,6 +56,10 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	// Physics defaults
 	RestitutionCoefficient = 0.5f;
 
+	// High level defaults
+	OrbitingAngularVelocity = 5;
+	OrbitingDistance        = 20000;
+
 	// Settings
 	PrimaryComponentTick.bCanEverTick = true;
 	SetIsReplicatedByDefault(true);
@@ -344,12 +348,25 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 		// Orbiting asteroid
 		case ENovaMovementState::Orbiting: {
-			const FVector ForwardDirection = FVector::CrossProduct(AsteroidRelativeLocation.GetSafeNormal(), FVector::UpVector);
-			AttitudeCommand.Orientation    = FQuat(FVector::UpVector, AsteroidRelativeLocation.HeadingAngle()).GetNormalized();
-			AttitudeCommand.Velocity       = ForwardDirection * 20;
-			AttitudeCommand.Location       = CurrentLocation + ForwardDirection * 20;
-			AttitudeCommand.Location.Z     = WaitingPointLocation.Z;
+
+			if (MovementCommand.Dirty)
+			{
+				InitialOrbitingTime    = GetWorld()->GetTimeSeconds();
+				InitialOrbitingHeading = AsteroidRelativeLocation.HeadingAngle();
+			}
+
+			// Define the current heading target
+			const double CurrentOrbitingHeading =
+				InitialOrbitingHeading +
+				FMath::DegreesToRadians(OrbitingAngularVelocity * (GetWorld()->GetTimeSeconds() - InitialOrbitingTime));
+
+			// Proceed with simple orbiting math
+			AttitudeCommand.Orientation = FQuat(FVector::UpVector, CurrentOrbitingHeading + PI / 2).GetNormalized();
+			AttitudeCommand.Location =
+				AsteroidLocation + FQuat(FVector::UpVector, CurrentOrbitingHeading).RotateVector(FVector(OrbitingDistance, 0, 0));
+			AttitudeCommand.Location.Z = WaitingPointLocation.Z;
 			AttitudeCommand.Location -= CurrentOrbitalLocation;
+			AttitudeCommand.Velocity = FVector::ZeroVector;
 		}
 		break;
 

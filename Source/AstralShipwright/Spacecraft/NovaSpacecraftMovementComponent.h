@@ -299,6 +299,14 @@ public:
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	double RestitutionCoefficient;
 
+	// Orbiting velocity in degrees/s
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	double OrbitingAngularVelocity;
+
+	// Orbiting distance in units
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	double OrbitingDistance;
+
 	// Collision shake
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	TSubclassOf<class UCameraShakeBase> HitShake;
@@ -313,6 +321,10 @@ protected:
 	UPROPERTY(Replicated)
 	FNovaMovementCommand MovementCommand;
 	FSimpleDelegate      CompletionCallback;
+
+	// Orbiting state
+	double InitialOrbitingTime;
+	double InitialOrbitingHeading;
 
 	// Authoritative attitude input, produced by the server in real-time
 	UPROPERTY(Replicated)
