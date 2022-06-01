@@ -332,7 +332,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			})))
 		]
 		
-		+ SVerticalBox::Slot()
+		/*+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
 			SNovaNew(SNovaButton)
@@ -342,7 +342,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			{
 				MenuManager->SetInterfaceColor(Theme.NegativeColor, FLinearColor(1.0f, 0.0f, 0.1f));
 			}))
-		]
+		]*/
 		
 #if WITH_EDITOR && 1
 
