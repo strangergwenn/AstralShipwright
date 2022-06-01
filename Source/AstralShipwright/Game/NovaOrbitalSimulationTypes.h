@@ -23,10 +23,10 @@ struct FNovaLargeNumber
 	}
 
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	float Value;
+	float Value = 0;
 
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	float Exponent;
+	float Exponent = 0;
 };
 
 /** Planet description */
