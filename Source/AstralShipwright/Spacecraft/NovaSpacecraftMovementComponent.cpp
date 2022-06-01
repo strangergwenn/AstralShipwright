@@ -483,11 +483,32 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 				MovementCommand.State = ENovaMovementState::Anchored;
 				SignalCompletion();
 			}
+
 			break;
 
 		// Existing an asteroid anchor
 		case ENovaMovementState::ExitingAnchor:
+
+			if (MovementCommand.Dirty)
+			{
+				InitialOrbitingHeading = AsteroidRelativeLocation.HeadingAngle();
+			}
+
+			// Define attitude
+			AttitudeCommand.Orientation = FQuat(FVector::UpVector, InitialOrbitingHeading + PI / 2).GetNormalized();
+			AttitudeCommand.Location    = AsteroidLocation + OrbitingDistance * AsteroidRelativeLocation.GetSafeNormal();
+			AttitudeCommand.Location.Z  = WaitingPointLocation.Z;
+			AttitudeCommand.Location -= CurrentOrbitalLocation;
 			AttitudeCommand.Velocity = FVector::ZeroVector;
+
+			if (LinearAttitudeIdle && AngularAttitudeIdle)
+			{
+				NLOG("UNovaSpacecraftMovementComponent::ProcessState : ExitingAnchor : done");
+
+				MovementCommand.State = ENovaMovementState::Idle;
+				SignalCompletion();
+			}
+
 			break;
 
 		// Braking to zero
