@@ -48,6 +48,12 @@ public:
 	/** Return the current mineral density in a particular direction */
 	double GetMineralDensity(const FVector& Direction) const;
 
+	/** Get asteroid data */
+	FNovaAsteroid GetAsteroidData() const
+	{
+		return Asteroid;
+	}
+
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/

@@ -33,8 +33,9 @@ FNovaAsteroid::FNovaAsteroid(FRandomStream& RandomStream, const UNovaAsteroidCon
 	, EffectsCount(RandomStream.FRandRange(20, 40))
 	, MineralsSeed(RandomStream.GetCurrentSeed())
 {
-	Mesh       = AsteroidConfiguration->Meshes[RandomStream.RandHelper(AsteroidConfiguration->Meshes.Num())];
-	DustEffect = AsteroidConfiguration->DustEffect;
+	MineralResource = AsteroidConfiguration->Minerals[RandomStream.RandHelper(AsteroidConfiguration->Minerals.Num())];
+	Mesh            = AsteroidConfiguration->Meshes[RandomStream.RandHelper(AsteroidConfiguration->Meshes.Num())];
+	DustEffect      = AsteroidConfiguration->DustEffect;
 }
 
 /*----------------------------------------------------

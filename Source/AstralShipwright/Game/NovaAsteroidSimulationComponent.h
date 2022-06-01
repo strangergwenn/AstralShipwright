@@ -26,6 +26,10 @@ public:
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	const class UCurveFloat* AltitudeDistribution;
 
+	// Possible minerals to mine
+	UPROPERTY(Category = Assets, EditDefaultsOnly)
+	TArray<class UNovaResource*> Minerals;
+
 	// Meshes to use on asteroids
 	UPROPERTY(Category = Assets, EditDefaultsOnly)
 	TArray<TSoftObjectPtr<class UStaticMesh>> Meshes;
@@ -48,7 +52,9 @@ struct FNovaAsteroid
 		, Scale(0)
 		, Rotation()
 		, EffectsCount(0)
+
 		, MineralsSeed(0)
+		, MineralResource(nullptr)
 	{}
 
 	FNovaAsteroid(FRandomStream& RandomStream, const UNovaAsteroidConfiguration* AsteroidConfiguration, double A, double P);
@@ -67,7 +73,10 @@ struct FNovaAsteroid
 	float                                Scale;
 	FRotator                             Rotation;
 	int32                                EffectsCount;
-	int32                                MineralsSeed;
+
+	// Mining characteristics
+	int32                      MineralsSeed;
+	const class UNovaResource* MineralResource;
 };
 
 /** Asteroid spawning & update manager */

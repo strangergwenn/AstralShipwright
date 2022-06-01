@@ -332,6 +332,35 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			})))
 		]
 		
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNovaNew(SNovaButton)
+			.Text(LOCTEXT("MineResource", "Mine resource"))
+			.HelpText(LOCTEXT("MineResourceHelp", "Mine the current asteroid for resources"))
+			.OnClicked(FSimpleDelegate::CreateLambda([this]()
+			{
+				TArray<AActor*> Asteroids;
+				UGameplayStatics::GetAllActorsOfClass(PC->GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
+				const FNovaAsteroid& Asteroid = Cast<ANovaAsteroid>(Asteroids[0])->GetAsteroidData();
+				
+				NCHECK(PC);
+
+				// Add cargo to the spacecraft
+				FNovaSpacecraft ModifiedSpacecraft = SpacecraftPawn->GetSpacecraftCopy();
+				float CargoMass =  ModifiedSpacecraft.GetAvailableCargoMass(Asteroid.MineralResource);
+				ModifiedSpacecraft.ModifyCargo(Asteroid.MineralResource, CargoMass);
+				PC->UpdateSpacecraft(ModifiedSpacecraft);
+				PC->Notify(LOCTEXT("ResourceMined", "Resource mined"), Asteroid.MineralResource->Name, ENovaNotificationType::Info);
+			}))
+			.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+			{
+				TArray<AActor*> Asteroids;
+				UGameplayStatics::GetAllActorsOfClass(PC->GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
+				return Asteroids.Num() > 0;
+			})))
+		]
+		
 		/*+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
