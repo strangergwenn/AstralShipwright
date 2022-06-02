@@ -2358,6 +2358,9 @@ void SNovaMainMenuAssembly::OnRemoveCompartmentConfirmed()
 		}
 
 		SetSelectedCompartment(SelectedCompartmentIndex);
+
+		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+		FSlateApplication::Get().PlaySound(Theme.DeleteSound);
 	}
 }
 

@@ -204,6 +204,9 @@ void SNovaKeyBinding::OnKeyPicked(FKey NewKey, bool bCanReset, bool Notify)
 		{
 			OnKeyBindingChanged.ExecuteIfBound(CurrentKey, NewKey);
 		}
+
+		const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
+		FSlateApplication::Get().PlaySound(Theme.ClickSound);
 	}
 }
 

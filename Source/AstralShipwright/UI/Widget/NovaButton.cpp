@@ -505,10 +505,10 @@ FReply SNovaButton::OnButtonClicked()
 		if (OnClicked.IsBound() == true)
 		{
 			OnClicked.Execute();
-
-			const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
-			FSlateApplication::Get().PlaySound(Theme.ClickSound);
 		}
+
+		const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
+		FSlateApplication::Get().PlaySound(Theme.ClickSound);
 	}
 
 	return FReply::Handled();

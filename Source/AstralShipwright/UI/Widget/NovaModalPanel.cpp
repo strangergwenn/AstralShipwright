@@ -279,6 +279,9 @@ void SNovaModalPanel::OnConfirmPanel()
 
 	Hide();
 
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	FSlateApplication::Get().PlaySound(Theme.ConfirmSound);
+
 	OnConfirmed.ExecuteIfBound();
 }
 
@@ -288,6 +291,9 @@ void SNovaModalPanel::OnDismissPanel()
 
 	Hide();
 
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	FSlateApplication::Get().PlaySound(Theme.CancelSound);
+
 	OnDismissed.ExecuteIfBound();
 }
 
@@ -296,6 +302,9 @@ void SNovaModalPanel::OnCancelPanel()
 	NLOG("SNovaModalPanel::OnCancelPanel");
 
 	Hide();
+
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	FSlateApplication::Get().PlaySound(Theme.CancelSound);
 
 	OnCancelled.ExecuteIfBound();
 }

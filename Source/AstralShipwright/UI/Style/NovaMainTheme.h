@@ -88,6 +88,12 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = Widgets) FSliderStyle SliderStyle;
 	UPROPERTY(EditDefaultsOnly, Category = Widgets) FScrollBoxStyle ScrollBoxStyle;
 	UPROPERTY(EditDefaultsOnly, Category = Widgets) FProgressBarStyle ProgressBarStyle;
+
+	// Sound
+	UPROPERTY(EditDefaultsOnly, Category = Sound) FSlateSound ConfirmSound;
+	UPROPERTY(EditDefaultsOnly, Category = Sound) FSlateSound CancelSound;
+	UPROPERTY(EditDefaultsOnly, Category = Sound) FSlateSound DeleteSound;
+	UPROPERTY(EditDefaultsOnly, Category = Sound) FSlateSound NotifySound;
 };
 
 /*----------------------------------------------------

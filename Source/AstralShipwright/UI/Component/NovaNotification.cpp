@@ -113,6 +113,9 @@ void SNovaNotification::Notify(const FText& Text, const FText& Subtext, ENovaNot
 	{
 		CurrentNotifyText = FText();
 	}
+
+	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	FSlateApplication::Get().PlaySound(Theme.NotifySound);
 }
 
 FLinearColor SNovaNotification::GetNotifyColor() const
