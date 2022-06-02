@@ -777,6 +777,8 @@ void ANovaPlayerController::StartGame(FString SaveName, bool Online)
 
 	if (GetMenuManager()->IsIdle())
 	{
+		GetSoundManager()->Mute();
+
 		GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,    //
 			FNovaAsyncAction::CreateLambda(
 				[=]()
@@ -792,6 +794,8 @@ void ANovaPlayerController::SetGameOnline(bool Online)
 
 	if (GetMenuManager()->IsIdle())
 	{
+		GetSoundManager()->Mute();
+
 		GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,    //
 			FNovaAsyncAction::CreateLambda(
 				[=]()
@@ -806,6 +810,8 @@ void ANovaPlayerController::GoToMainMenu(bool SaveGame)
 	if (GetMenuManager()->IsIdle())
 	{
 		NLOG("ANovaPlayerController::GoToMainMenu %d", SaveGame);
+
+		GetSoundManager()->Mute();
 
 		GetMenuManager()->RunAction(ENovaLoadingScreen::Black,    //
 			FNovaAsyncAction::CreateLambda(
@@ -827,6 +833,8 @@ void ANovaPlayerController::ExitGame()
 	if (GetMenuManager()->IsIdle())
 	{
 		NLOG("ANovaPlayerController::ExitGame");
+
+		GetSoundManager()->Mute();
 
 		GetMenuManager()->RunAction(ENovaLoadingScreen::Black,    //
 			FNovaAsyncAction::CreateLambda(

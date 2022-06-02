@@ -134,6 +134,13 @@ void UNovaSoundManager::BeginPlay(ANovaPlayerController* PC, FNovaMusicCallback 
 	SetEffectsVolume(GameUserSettings->EffectsVolume);
 	SetMusicVolume(GameUserSettings->MusicVolume);
 
+	// Be safe
+	NCHECK(SoundSetup->MasterSoundMix);
+	NCHECK(SoundSetup->MasterSoundClass);
+	NCHECK(SoundSetup->UISoundClass);
+	NCHECK(SoundSetup->EffectsSoundClass);
+	NCHECK(SoundSetup->MusicSoundClass);
+
 	// Fetch and map the musical tracks
 	MusicCatalog.Empty();
 	if (SoundSetup)
@@ -148,7 +155,6 @@ void UNovaSoundManager::BeginPlay(ANovaPlayerController* PC, FNovaMusicCallback 
 	AudioDevice = GameInstance->GetWorld()->GetAudioDevice();
 	if (AudioDevice)
 	{
-		NCHECK(SoundSetup->MasterSoundMix);
 		AudioDevice->SetBaseSoundMix(SoundSetup->MasterSoundMix);
 	}
 
@@ -161,6 +167,28 @@ void UNovaSoundManager::BeginPlay(ANovaPlayerController* PC, FNovaMusicCallback 
 				return CurrentMusicTrack == DesiredMusicTrack;
 			}),
 		nullptr, false, SoundSetup->MusicFadeSpeed);
+}
+
+void UNovaSoundManager::Mute()
+{
+	NLOG("UNovaSoundManager::Mute");
+
+	if (AudioDevice)
+	{
+		AudioDevice->SetSoundMixClassOverride(
+			SoundSetup->MasterSoundMix, SoundSetup->MasterSoundClass, 0.0f, 1.0f, ENovaUIConstants::FadeDurationShort, true);
+	}
+}
+
+void UNovaSoundManager::UnMute()
+{
+	NLOG("UNovaSoundManager::UnMute");
+
+	if (AudioDevice)
+	{
+		AudioDevice->SetSoundMixClassOverride(
+			SoundSetup->MasterSoundMix, SoundSetup->MasterSoundClass, MasterVolume, 1.0f, ENovaUIConstants::FadeDurationShort, true);
+	}
 }
 
 void UNovaSoundManager::AddEnvironmentSound(FName SoundName, FNovaSoundInstanceCallback Callback, bool ChangePitchWithFade, float FadeSpeed)
@@ -181,7 +209,7 @@ void UNovaSoundManager::SetMasterVolume(int32 Volume)
 
 	MasterVolume = FMath::Clamp(Volume / 10.0f, 0.0f, 1.0f);
 
-	if (AudioDevice && SoundSetup->MasterSoundMix && SoundSetup->MasterSoundClass)
+	if (AudioDevice)
 	{
 		AudioDevice->SetSoundMixClassOverride(
 			SoundSetup->MasterSoundMix, SoundSetup->MasterSoundClass, MasterVolume, 1.0f, ENovaUIConstants::FadeDurationLong, true);
@@ -193,6 +221,12 @@ void UNovaSoundManager::SetUIVolume(int32 Volume)
 	NLOG("UNovaSoundManager::SetUIVolume %d", Volume);
 
 	UIVolume = FMath::Clamp(Volume / 10.0f, 0.0f, 1.0f);
+
+	if (AudioDevice)
+	{
+		AudioDevice->SetSoundMixClassOverride(
+			SoundSetup->MasterSoundMix, SoundSetup->UISoundClass, UIVolume, 1.0f, ENovaUIConstants::FadeDurationLong, true);
+	}
 }
 
 void UNovaSoundManager::SetEffectsVolume(int32 Volume)
@@ -200,6 +234,8 @@ void UNovaSoundManager::SetEffectsVolume(int32 Volume)
 	NLOG("UNovaSoundManager::SetEffectsVolume %d", Volume);
 
 	EffectsVolume = FMath::Clamp(Volume / 10.0f, 0.0f, 1.0f);
+
+	// Do not set the volume since it's done on tick
 }
 
 void UNovaSoundManager::SetMusicVolume(int32 Volume)
@@ -208,7 +244,7 @@ void UNovaSoundManager::SetMusicVolume(int32 Volume)
 
 	MusicVolume = FMath::Clamp(Volume / 10.0f, 0.0f, 1.0f);
 
-	if (AudioDevice && SoundSetup->MasterSoundMix && SoundSetup->MusicSoundClass)
+	if (AudioDevice)
 	{
 		AudioDevice->SetSoundMixClassOverride(
 			SoundSetup->MasterSoundMix, SoundSetup->MusicSoundClass, MusicVolume, 1.0f, ENovaUIConstants::FadeDurationLong, true);
@@ -243,7 +279,7 @@ void UNovaSoundManager::Tick(float DeltaSeconds)
 	}
 
 	// Check if we should fade out audio effects
-	if (AudioDevice && SoundSetup->MasterSoundMix && SoundSetup->EffectsSoundClass)
+	if (AudioDevice)
 	{
 		UNovaMenuManager* MenuManager = UNovaMenuManager::Get();
 

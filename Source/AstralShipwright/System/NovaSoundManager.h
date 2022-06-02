@@ -183,6 +183,12 @@ public:
 	/** Start playing on a new level */
 	void BeginPlay(class ANovaPlayerController* PC, FNovaMusicCallback Callback);
 
+	/** Mute all sounds */
+	void Mute();
+
+	/** Restore all sounds */
+	void UnMute();
+
 	/** Register a new sound with its condition and settings */
 	void AddEnvironmentSound(
 		FName SoundName, FNovaSoundInstanceCallback Callback, bool ChangePitchWithFade = false, float FadeSpeed = 1.0f);
