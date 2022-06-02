@@ -197,7 +197,7 @@ bool UNovaSpacecraftMovementComponent::IsAlignedToManeuver() const
 		const double  CurrentAngle =
 			FMath::RadiansToDegrees(acosf(FVector::DotProduct(UpdatedComponent->GetForwardVector(), ManeuverDirection)));
 
-		return CurrentAngle < AngularDeadDistance;
+		return CurrentAngle < AngularDeadDistance && CurrentAngularVelocity.Size() < KINDA_SMALL_NUMBER;
 	}
 
 	return false;
