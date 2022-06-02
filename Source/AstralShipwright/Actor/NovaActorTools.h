@@ -57,13 +57,13 @@ struct FNovaCameraInputFilter
 public:
 
 	FNovaCameraInputFilter()
-		: Velocity(200.0f)
+		: Velocity(150.0f)
 		, GamepadMultiplier(0.5f)
-		, Acceleration(300.0f)
-		, Resistance(1 / 360.0f)
+		, Acceleration(250.0f)
+		, Resistance(1.0f / 360.0f)
 		, InputPower(3.0f)
-		, Brake(2.f)
-		, Brake2(04.f)
+		, Brake(2.0f)
+		, Brake2(4.0f)
 	{}
 
 public:
