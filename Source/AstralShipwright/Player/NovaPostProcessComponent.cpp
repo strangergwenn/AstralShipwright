@@ -1,7 +1,6 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaPostProcessComponent.h"
-#include "Game/Settings/NovaGameUserSettings.h"
 #include "UI/NovaUITypes.h"
 #include "Nova.h"
 

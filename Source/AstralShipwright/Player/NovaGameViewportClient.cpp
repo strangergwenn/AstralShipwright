@@ -2,8 +2,6 @@
 
 #include "NovaGameViewportClient.h"
 
-#include "Player/NovaPlayerController.h"
-
 #include "System/NovaAssetManager.h"
 #include "System/NovaMenuManager.h"
 

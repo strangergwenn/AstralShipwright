@@ -5,7 +5,6 @@
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova.h"
 
-#include "UObject/ConstructorHelpers.h"
 #include "Animation/AnimSingleNodeInstance.h"
 
 /*----------------------------------------------------

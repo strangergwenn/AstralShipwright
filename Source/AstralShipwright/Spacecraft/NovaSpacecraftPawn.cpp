@@ -16,7 +16,6 @@
 
 #include "Nova.h"
 
-#include "UObject/ConstructorHelpers.h"
 #include "Net/UnrealNetwork.h"
 
 #define LOCTEXT_NAMESPACE "ANovaAssembly"
@@ -48,11 +47,6 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 	PropellantSystem = CreateDefaultSubobject<UNovaSpacecraftPropellantSystem>("PropellantSystem");
 	PropellantSystem->SetupAttachment(RootComponent);
 
-	// Defaults
-	static ConstructorHelpers::FObjectFinder<UNovaCompartmentDescription> EmptyCompartmentObject(
-		TEXT("/Game/Gameplay/Compartments/Empty/Compartment_Empty.Compartment_Empty"));
-	EmptyCompartmentDescription = EmptyCompartmentObject.Object;
-
 	// Settings
 	bReplicates = true;
 	SetReplicatingMovement(false);
@@ -63,6 +57,14 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 /*----------------------------------------------------
     General gameplay
 ----------------------------------------------------*/
+
+void ANovaSpacecraftPawn::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Defaults
+	EmptyCompartmentDescription = UNovaAssetManager::Get()->GetDefaultAsset<UNovaCompartmentDescription>();
+}
 
 void ANovaSpacecraftPawn::Tick(float DeltaTime)
 {

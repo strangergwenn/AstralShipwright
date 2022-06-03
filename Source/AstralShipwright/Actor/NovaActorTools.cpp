@@ -1,9 +1,7 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaActorTools.h"
-
 #include "Player/NovaPlayerController.h"
-#include "System/NovaGameInstance.h"
 #include "Nova.h"
 
 #include "GameFramework/Actor.h"
@@ -168,7 +166,7 @@ FVector UNovaActorTools::GetVelocityCollisionResponse(
 void UNovaActorTools::PlayCameraShake(
 	TSubclassOf<UCameraShakeBase> Shake, AActor* Owner, float Scale, float AttenuationStartDistance, float AttenuationEndDistance)
 {
-	ANovaPlayerController* PC = Cast<ANovaPlayerController>(Owner->GetGameInstance<UNovaGameInstance>()->GetFirstLocalPlayerController());
+	APlayerController* PC = Owner->GetGameInstance()->GetFirstLocalPlayerController();
 
 	FVector  CameraLocation;
 	FRotator CameraRotation;

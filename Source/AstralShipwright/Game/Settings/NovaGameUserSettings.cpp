@@ -1,12 +1,10 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaGameUserSettings.h"
-
-#include "System/NovaGameInstance.h"
-#include "System/NovaSoundManager.h"
 #include "Nova.h"
 
 #include "Modules/ModuleManager.h"
+#include "RenderUtils.h"
 #include "RenderCore.h"
 
 #define HAS_DLSS PLATFORM_WINDOWS && 1

@@ -9,7 +9,6 @@
 #include "Nova.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
-#include "UObject/ConstructorHelpers.h"
 
 /*----------------------------------------------------
     Constructor
