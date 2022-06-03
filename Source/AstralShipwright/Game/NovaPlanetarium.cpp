@@ -110,7 +110,7 @@ void ANovaPlanetarium::BeginPlay()
 	Sunlight->SetAtmosphereSunLight(true);
 }
 
-void ANovaPlanetarium::Tick(float DeltaSeconds)
+void ANovaPlanetarium::Tick(float DeltaTime)
 {
 	// Check everything
 	NCHECK(SunRotator);

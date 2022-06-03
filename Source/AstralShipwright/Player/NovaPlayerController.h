@@ -111,7 +111,7 @@ public:
 
 	virtual void PawnLeavingGame() override;
 
-	virtual void PlayerTick(float DeltaSeconds) override;
+	virtual void PlayerTick(float DeltaTime) override;
 
 	virtual void GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const override;
 

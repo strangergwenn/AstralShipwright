@@ -22,7 +22,7 @@ public:
 
 	void BeginPlay() override;
 
-	virtual void Tick(float DeltaSeconds) override;
+	virtual void Tick(float DeltaTime) override;
 
 	/** Get the physical sun direction */
 	FVector GetSunDirection() const;

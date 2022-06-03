@@ -249,7 +249,11 @@ void UNovaSoundManager::SetMusicVolume(int32 Volume)
 	}
 }
 
-void UNovaSoundManager::Tick(float DeltaSeconds)
+/*----------------------------------------------------
+    Tick
+----------------------------------------------------*/
+
+void UNovaSoundManager::Tick(float DeltaTime)
 {
 	// Control the music track
 	if (MusicSoundInstance.IsValid())
@@ -267,13 +271,13 @@ void UNovaSoundManager::Tick(float DeltaSeconds)
 			CurrentMusicTrack = DesiredMusicTrack;
 		}
 
-		MusicSoundInstance.Update(DeltaSeconds);
+		MusicSoundInstance.Update(DeltaTime);
 	}
 
 	// Update all sound instances
 	for (FNovaSoundInstance& Sound : EnvironmentSoundInstances)
 	{
-		Sound.Update(DeltaSeconds);
+		Sound.Update(DeltaTime);
 	}
 
 	// Check if we should fade out audio effects
@@ -283,11 +287,11 @@ void UNovaSoundManager::Tick(float DeltaSeconds)
 
 		if (MenuManager->IsMenuOpening() && SoundSetup->FadeEffectsInMenus)
 		{
-			EffectsVolumeMultiplier -= DeltaSeconds / ENovaUIConstants::FadeDurationShort;
+			EffectsVolumeMultiplier -= DeltaTime / ENovaUIConstants::FadeDurationShort;
 		}
 		else
 		{
-			EffectsVolumeMultiplier += DeltaSeconds / ENovaUIConstants::FadeDurationShort;
+			EffectsVolumeMultiplier += DeltaTime / ENovaUIConstants::FadeDurationShort;
 		}
 		EffectsVolumeMultiplier = FMath::Clamp(EffectsVolumeMultiplier, 0.01f, 1.0f);
 

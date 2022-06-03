@@ -177,10 +177,10 @@ public:
 	UNovaSoundManager();
 
 	/*----------------------------------------------------
-	    Public methods
+	    System interface
 	----------------------------------------------------*/
 
-	/** Get the sound manager instance */
+	/** Get the singleton instance */
 	static UNovaSoundManager* Get()
 	{
 		return Singleton;
@@ -194,6 +194,10 @@ public:
 
 	/** Start playing on a new level */
 	void BeginPlay(class ANovaPlayerController* PC, FNovaMusicCallback Callback);
+
+	/*----------------------------------------------------
+	    Public methods
+	----------------------------------------------------*/
 
 	/** Mute all sounds */
 	void Mute();
