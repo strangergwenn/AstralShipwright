@@ -98,25 +98,29 @@ private:
 	UPROPERTY()
 	class UNovaAssetManager* AssetManager;
 
-	// Save manager object
+	// Contract manager object
 	UPROPERTY()
-	class UNovaSaveManager* SaveManager;
-
-	// Sessions manager object
-	UPROPERTY()
-	class UNovaSessionsManager* SessionsManager;
+	class UNovaContractManager* ContractManager;
 
 	// Menu manager object
 	UPROPERTY()
 	class UNovaMenuManager* MenuManager;
 
+	// Post-processing manager object
+	UPROPERTY()
+	class UNovaPostProcessManager* PostProcessManager;
+
+	// Sessions manager object
+	UPROPERTY()
+	class UNovaSessionsManager* SessionsManager;
+
+	// Save manager object
+	UPROPERTY()
+	class UNovaSaveManager* SaveManager;
+
 	// Sound manager object
 	UPROPERTY()
 	class UNovaSoundManager* SoundManager;
-
-	// Contract manager object
-	UPROPERTY()
-	class UNovaContractManager* ContractManager;
 
 	// Save data
 	TSharedPtr<struct FNovaGameSave> CurrentSaveData;

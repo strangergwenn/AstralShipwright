@@ -23,11 +23,12 @@
 
 #include "System/NovaAssetManager.h"
 #include "System/NovaContractManager.h"
-#include "System/NovaGameInstance.h"
 #include "System/NovaMenuManager.h"
-#include "System/NovaSoundManager.h"
+#include "System/NovaPostProcessManager.h"
+#include "System/NovaGameInstance.h"
 #include "System/NovaSaveManager.h"
 #include "System/NovaSessionsManager.h"
+#include "System/NovaSoundManager.h"
 
 #include "UI/Menu/NovaMainMenu.h"
 #include "UI/Menu/NovaOverlay.h"
@@ -74,62 +75,7 @@ ANovaPlayerController::ANovaPlayerController()
 	, CurrentTimeInCameraState(0)
 	, PhotoModeAction(NAME_None)
 	, SharedTransitionActive(false)
-{
-	// Create the post-processing manager
-	PostProcessComponent = CreateDefaultSubobject<UNovaPostProcessComponent>(TEXT("PostProcessComponent"));
-
-	// Default settings
-	TSharedPtr<FNovaPostProcessSetting> DefaultSettings = MakeShared<FNovaPostProcessSetting>();
-	PostProcessComponent->RegisterPreset(ENovaPostProcessPreset::Neutral, DefaultSettings);
-
-	// Initialize post-processing
-	PostProcessComponent->Initialize(
-
-		// Preset control
-		FNovaPostProcessControl::CreateLambda(
-			[=]()
-			{
-				ENovaPostProcessPreset TargetPreset = ENovaPostProcessPreset::Neutral;
-
-				return static_cast<int32>(TargetPreset);
-			}),
-
-		// Preset tick
-		FNovaPostProcessUpdate::CreateLambda(
-			[=](UPostProcessComponent* Volume, UMaterialInstanceDynamic* Material, const TSharedPtr<FNovaPostProcessSettingBase>& Current,
-				const TSharedPtr<FNovaPostProcessSettingBase>& Target, float Alpha)
-			{
-				UNovaGameUserSettings*         GameUserSettings = Cast<UNovaGameUserSettings>(GEngine->GetGameUserSettings());
-				const FNovaPostProcessSetting* MyCurrent        = static_cast<const FNovaPostProcessSetting*>(Current.Get());
-				const FNovaPostProcessSetting* MyTarget         = static_cast<const FNovaPostProcessSetting*>(Target.Get());
-
-				// Config-driven settings
-				Volume->Settings.bOverride_BloomMethod                     = true;
-				Volume->Settings.bOverride_DynamicGlobalIlluminationMethod = true;
-				Volume->Settings.bOverride_ReflectionMethod                = true;
-				Volume->Settings.BloomMethod                               = GameUserSettings->EnableCinematicBloom ? BM_FFT : BM_SOG;
-				Volume->Settings.DynamicGlobalIlluminationMethod =
-					GameUserSettings->EnableLumen ? EDynamicGlobalIlluminationMethod::Lumen : EDynamicGlobalIlluminationMethod::ScreenSpace;
-				Volume->Settings.ReflectionMethod =
-					GameUserSettings->EnableLumen ? EReflectionMethod::Lumen : EReflectionMethod::ScreenSpace;
-
-				// Custom settings
-				ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-				Material->SetScalarParameterValue("HighlightAlpha", IsValid(SpacecraftPawn) ? SpacecraftPawn->GetHighlightAlpha() : 0);
-				Material->SetScalarParameterValue("OutlineAlpha", IsValid(SpacecraftPawn) ? SpacecraftPawn->GetOutlineAlpha() : 0);
-				Material->SetVectorParameterValue("HighlightColor", UNovaMenuManager::Get()->GetHighlightColor());
-				// Material->SetScalarParameterValue("ChromaIntensity", FMath::Lerp(Current.ChromaIntensity, Target.ChromaIntensity,
-		        // Alpha));
-
-				// Built-in settings (overrides)
-				Volume->Settings.bOverride_FilmGrainIntensity = true;
-				Volume->Settings.bOverride_SceneColorTint     = true;
-
-				// Built in settings (values)
-				Volume->Settings.FilmGrainIntensity = FMath::Lerp(MyCurrent->GrainIntensity, MyTarget->GrainIntensity, Alpha);
-				Volume->Settings.SceneColorTint     = FMath::Lerp(MyCurrent->SceneColorTint, MyTarget->SceneColorTint, Alpha);
-			}));
-}
+{}
 
 /*----------------------------------------------------
     Loading & saving
@@ -239,6 +185,49 @@ void ANovaPlayerController::BeginPlay()
 
 		// Setup systems
 		UNovaMenuManager::Get()->BeginPlay<SNovaMainMenu, SNovaOverlay>(this);
+
+		// Setup post-processing
+		TSharedPtr<FNovaPostProcessSetting> DefaultSettings = MakeShared<FNovaPostProcessSetting>();
+		UNovaPostProcessManager::Get()->RegisterPreset(ENovaPostProcessPreset::Neutral, DefaultSettings);
+		UNovaPostProcessManager::Get()->BeginPlay(this,
+
+			// Preset control
+			FNovaPostProcessControl::CreateLambda(
+				[=]()
+				{
+					ENovaPostProcessPreset TargetPreset = ENovaPostProcessPreset::Neutral;
+
+					return static_cast<int32>(TargetPreset);
+				}),
+
+			// Preset tick
+			FNovaPostProcessUpdate::CreateLambda(
+				[=](UPostProcessComponent* Volume, UMaterialInstanceDynamic* Material,
+					const TSharedPtr<FNovaPostProcessSettingBase>& Current, const TSharedPtr<FNovaPostProcessSettingBase>& Target,
+					float Alpha)
+				{
+					UNovaGameUserSettings*         GameUserSettings = Cast<UNovaGameUserSettings>(GEngine->GetGameUserSettings());
+					const FNovaPostProcessSetting* MyCurrent        = static_cast<const FNovaPostProcessSetting*>(Current.Get());
+					const FNovaPostProcessSetting* MyTarget         = static_cast<const FNovaPostProcessSetting*>(Target.Get());
+
+					// Custom settings
+					ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+					Material->SetScalarParameterValue("HighlightAlpha", IsValid(SpacecraftPawn) ? SpacecraftPawn->GetHighlightAlpha() : 0);
+					Material->SetScalarParameterValue("OutlineAlpha", IsValid(SpacecraftPawn) ? SpacecraftPawn->GetOutlineAlpha() : 0);
+					Material->SetVectorParameterValue("HighlightColor", UNovaMenuManager::Get()->GetHighlightColor());
+					// Material->SetScalarParameterValue("ChromaIntensity", FMath::Lerp(Current.ChromaIntensity, Target.ChromaIntensity,
+			        // Alpha));
+
+					// Built-in settings (overrides)
+					Volume->Settings.bOverride_FilmGrainIntensity = true;
+					Volume->Settings.bOverride_SceneColorTint     = true;
+
+					// Built in settings (values)
+					Volume->Settings.FilmGrainIntensity = FMath::Lerp(MyCurrent->GrainIntensity, MyTarget->GrainIntensity, Alpha);
+					Volume->Settings.SceneColorTint     = FMath::Lerp(MyCurrent->SceneColorTint, MyTarget->SceneColorTint, Alpha);
+				}));
+
+		// Setup sound
 		UNovaSoundManager::Get()->BeginPlay(this,    //
 			FNovaMusicCallback::CreateWeakLambda(this,
 				[this]()
@@ -359,9 +348,6 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 				Notify(LOCTEXT("NetworkError", "Network error"), SessionsManager->GetNetworkErrorString(), ENovaNotificationType::Error);
 			}
 		}
-
-		// Update contracts
-		UNovaContractManager::Get()->OnEvent(FNovaContractEvent(ENovaContratEventType::Tick));
 
 		// Disable overlays in photo mode
 		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();

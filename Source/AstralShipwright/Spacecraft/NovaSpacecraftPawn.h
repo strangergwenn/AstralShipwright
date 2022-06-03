@@ -382,7 +382,7 @@ public:
 
 	/** Empty compartment kit */
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	class UNovaCompartmentDescription* EmptyCompartmentDescription;
+	const class UNovaCompartmentDescription* EmptyCompartmentDescription;
 
 	/*----------------------------------------------------
 	    Components

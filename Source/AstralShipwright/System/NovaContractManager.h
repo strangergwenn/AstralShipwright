@@ -3,8 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Tickable.h"
 #include "Dom/JsonObject.h"
+
 #include "Game/NovaGameTypes.h"
+
 #include "NovaContractManager.generated.h"
 
 /** Contracts presentation details */
@@ -32,7 +35,9 @@ struct FNovaContractEvent
 
 /** Contract manager to interact with contract objects */
 UCLASS(ClassGroup = (Nova))
-class UNovaContractManager : public UObject
+class UNovaContractManager
+	: public UObject
+	, public FTickableGameObject
 {
 	GENERATED_BODY()
 
@@ -106,6 +111,28 @@ public:
 
 	/** Get the tracked contract, or INDEX_NONE if none */
 	int32 GetTrackedContract();
+
+	/*----------------------------------------------------
+	    Tick
+	----------------------------------------------------*/
+
+	virtual void              Tick(float DeltaTime) override;
+	virtual ETickableTickType GetTickableTickType() const override
+	{
+		return ETickableTickType::Always;
+	}
+	virtual TStatId GetStatId() const override
+	{
+		RETURN_QUICK_DECLARE_CYCLE_STAT(UNovaSoundManager, STATGROUP_Tickables);
+	}
+	virtual bool IsTickableWhenPaused() const
+	{
+		return true;
+	}
+	virtual bool IsTickableInEditor() const
+	{
+		return false;
+	}
 
 	/*----------------------------------------------------
 	    Data

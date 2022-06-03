@@ -140,6 +140,21 @@ void UNovaGameInstance::Init()
 	NCHECK(AssetManager);
 	AssetManager->Initialize(this);
 
+	// Create the contract manager
+	ContractManager = NewObject<UNovaContractManager>(this, UNovaContractManager::StaticClass(), TEXT("ContractManager"));
+	NCHECK(ContractManager);
+	ContractManager->Initialize(this);
+
+	// Create the menu manager
+	MenuManager = NewObject<UNovaMenuManager>(this, UNovaMenuManager::StaticClass(), TEXT("MenuManager"));
+	NCHECK(MenuManager);
+	MenuManager->Initialize(this);
+
+	// Create the post-process manager
+	PostProcessManager = NewObject<UNovaPostProcessManager>(this, UNovaPostProcessManager::StaticClass(), TEXT("PostProcessManager"));
+	NCHECK(PostProcessManager);
+	PostProcessManager->Initialize(this);
+
 	// Create save manager
 	SaveManager = NewObject<UNovaSaveManager>(this, UNovaSaveManager::StaticClass(), TEXT("SaveManager"));
 	NCHECK(SaveManager);
@@ -150,20 +165,10 @@ void UNovaGameInstance::Init()
 	NCHECK(SessionsManager);
 	SessionsManager->Initialize(this);
 
-	// Create the menu manager
-	MenuManager = NewObject<UNovaMenuManager>(this, UNovaMenuManager::StaticClass(), TEXT("MenuManager"));
-	NCHECK(MenuManager);
-	MenuManager->Initialize(this);
-
 	// Create the sound manager
 	SoundManager = NewObject<UNovaSoundManager>(this, UNovaSoundManager::StaticClass(), TEXT("SoundManager"));
 	NCHECK(SoundManager);
 	SoundManager->Initialize(this);
-
-	// Create the contract manager
-	ContractManager = NewObject<UNovaContractManager>(this, UNovaContractManager::StaticClass(), TEXT("ContractManager"));
-	NCHECK(ContractManager);
-	ContractManager->Initialize(this);
 }
 
 void UNovaGameInstance::Shutdown()

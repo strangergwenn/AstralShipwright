@@ -252,4 +252,13 @@ int32 UNovaContractManager::GetTrackedContract()
 	return CurrentContracts.Num() > 0 ? CurrentTrackedContract : INDEX_NONE;
 }
 
+/*----------------------------------------------------
+    Tick
+----------------------------------------------------*/
+
+void UNovaContractManager::Tick(float DeltaTime)
+{
+	OnEvent(ENovaContratEventType::Tick);
+}
+
 #undef LOCTEXT_NAMESPACE

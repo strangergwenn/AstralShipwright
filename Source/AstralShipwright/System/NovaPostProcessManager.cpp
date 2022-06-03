@@ -1,6 +1,8 @@
 // Astral Shipwright - Gwennaël Arbona
 
-#include "NovaPostProcessComponent.h"
+#include "NovaPostProcessManager.h"
+#include "Game/Settings/NovaGameUserSettings.h"
+#include "Player/NovaPlayerController.h"
 #include "UI/NovaUITypes.h"
 #include "Nova.h"
 
@@ -12,42 +14,37 @@
 #include "EngineUtils.h"
 #include "Engine.h"
 
+// Statics
+UNovaPostProcessManager* UNovaPostProcessManager::Singleton = nullptr;
+
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
-UNovaPostProcessComponent::UNovaPostProcessComponent() : Super(), CurrentPreset(0), TargetPreset(0), CurrentPresetAlpha(0.0f)
-{
-	// Resources
-	static ConstructorHelpers::FClassFinder<AActor> PostProcessActorClassRef(TEXT("/Game/Environment/BP_PostProcess"));
-	PostProcessActorClass = PostProcessActorClassRef.Class;
-
-	// Settings
-	PrimaryComponentTick.bCanEverTick = true;
-	SetIsReplicatedByDefault(false);
-}
+UNovaPostProcessManager::UNovaPostProcessManager()
+	: Super(), PlayerController(nullptr), CurrentPreset(0), TargetPreset(0), CurrentPresetAlpha(0.0f)
+{}
 
 /*----------------------------------------------------
     Gameplay
 ----------------------------------------------------*/
 
-void UNovaPostProcessComponent::Initialize(FNovaPostProcessControl Control, FNovaPostProcessUpdate Update)
+void UNovaPostProcessManager::Initialize(UNovaGameInstance* GameInstance)
 {
-	ControlFunction = Control;
-	UpdateFunction  = Update;
+	Singleton = this;
 }
 
-void UNovaPostProcessComponent::BeginPlay()
+void UNovaPostProcessManager::BeginPlay(ANovaPlayerController* PC, FNovaPostProcessControl Control, FNovaPostProcessUpdate Update)
 {
-	Super::BeginPlay();
+	PlayerController = PC;
+	ControlFunction  = Control;
+	UpdateFunction   = Update;
 
-	APlayerController* PC = GetOwner<APlayerController>();
-	NCHECK(PC);
-
-	if (PC && PC->IsLocalController())
+	NCHECK(PlayerController);
+	if (PlayerController->IsLocalController())
 	{
 		TArray<AActor*> PostProcessActors;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), PostProcessActorClass, PostProcessActors);
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaPostProcessActor::StaticClass(), PostProcessActors);
 
 		// Set the post process
 		if (PostProcessActors.Num())
@@ -75,20 +72,19 @@ void UNovaPostProcessComponent::BeginPlay()
 					PostProcessVolume->Settings.AddBlendable(MaterialInstance, 1.0f);
 				}
 
-				NLOG("UNovaPostProcessComponent::BeginPlay : post-process setup complete");
+				NLOG("UNovaPostProcessManager::BeginPlay : post-process setup complete");
 			}
 		}
 	}
 }
 
-void UNovaPostProcessComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+/*----------------------------------------------------
+    Tick
+----------------------------------------------------*/
+
+void UNovaPostProcessManager::Tick(float DeltaTime)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	APlayerController* PC = GetOwner<APlayerController>();
-	NCHECK(PC);
-
-	if (PC->IsLocalController() && PostProcessVolume)
+	if (IsValid(PlayerController) && PlayerController->IsLocalController() && PostProcessVolume)
 	{
 		// Update desired settings
 		if (ControlFunction.IsBound() && CurrentPreset == TargetPreset)
@@ -119,5 +115,16 @@ void UNovaPostProcessComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		TSharedPtr<FNovaPostProcessSettingBase>& CurrentPostProcess = PostProcessSettings[0];
 		TSharedPtr<FNovaPostProcessSettingBase>& TargetPostProcess  = PostProcessSettings[CurrentPreset];
 		UpdateFunction.ExecuteIfBound(PostProcessVolume, PostProcessMaterial, CurrentPostProcess, TargetPostProcess, CurrentPresetAlpha);
+
+		// Apply config-driven settings
+		UNovaGameUserSettings* GameUserSettings                               = Cast<UNovaGameUserSettings>(GEngine->GetGameUserSettings());
+		PostProcessVolume->Settings.bOverride_BloomMethod                     = true;
+		PostProcessVolume->Settings.bOverride_DynamicGlobalIlluminationMethod = true;
+		PostProcessVolume->Settings.bOverride_ReflectionMethod                = true;
+		PostProcessVolume->Settings.BloomMethod                               = GameUserSettings->EnableCinematicBloom ? BM_FFT : BM_SOG;
+		PostProcessVolume->Settings.DynamicGlobalIlluminationMethod =
+			GameUserSettings->EnableLumen ? EDynamicGlobalIlluminationMethod::Lumen : EDynamicGlobalIlluminationMethod::ScreenSpace;
+		PostProcessVolume->Settings.ReflectionMethod =
+			GameUserSettings->EnableLumen ? EReflectionMethod::Lumen : EReflectionMethod::ScreenSpace;
 	}
 }

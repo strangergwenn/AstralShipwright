@@ -2,8 +2,7 @@
 
 #pragma once
 
-#include "NovaPostProcessComponent.h"
-#include "System/NovaGameInstance.h"
+#include "System/NovaPostProcessManager.h"
 #include "Spacecraft/NovaSpacecraft.h"
 #include "UI/NovaUITypes.h"
 
@@ -272,14 +271,6 @@ public:
 	void TestJoin();
 
 #endif
-
-	/*----------------------------------------------------
-	    Components
-	----------------------------------------------------*/
-
-	// Post-processing manager
-	UPROPERTY()
-	class UNovaPostProcessComponent* PostProcessComponent;
 
 	/*----------------------------------------------------
 	    Data
