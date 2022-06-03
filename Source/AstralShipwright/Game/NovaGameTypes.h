@@ -38,6 +38,16 @@ enum class ENovaSerialize : uint8
 	DataToJson
 };
 
+/** Notification type */
+enum class ENovaNotificationType : uint8
+{
+	Info,
+	Error,
+	Save,
+	World,
+	Time
+};
+
 /*----------------------------------------------------
     Currency type
 ----------------------------------------------------*/

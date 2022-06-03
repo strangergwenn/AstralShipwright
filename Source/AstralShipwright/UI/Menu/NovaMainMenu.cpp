@@ -15,7 +15,7 @@
 #include "UI/Widget/NovaKeyLabel.h"
 #include "UI/Widget/NovaTabView.h"
 #include "UI/Widget/NovaWindowManipulator.h"
-#include "UI/NovaUITypes.h"
+#include "UI/NovaUI.h"
 
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"

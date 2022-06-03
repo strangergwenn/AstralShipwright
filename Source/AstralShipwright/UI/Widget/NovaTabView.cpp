@@ -3,7 +3,7 @@
 #include "NovaTabView.h"
 #include "NovaMenu.h"
 
-#include "UI/NovaUITypes.h"
+#include "UI/NovaUI.h"
 #include "Nova.h"
 
 #include "Engine/Engine.h"

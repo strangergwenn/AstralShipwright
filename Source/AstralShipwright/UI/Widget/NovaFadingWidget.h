@@ -3,7 +3,7 @@
 #pragma once
 
 #include "UI/NovaUI.h"
-#include "UI/NovaUITypes.h"
+#include "UI/NovaUI.h"
 #include "Widgets/SCompoundWidget.h"
 
 /** Simple widget that can be displayed with fade-in and fade-out */

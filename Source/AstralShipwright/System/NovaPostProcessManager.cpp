@@ -3,7 +3,7 @@
 #include "NovaPostProcessManager.h"
 #include "Game/Settings/NovaGameUserSettings.h"
 #include "Player/NovaPlayerController.h"
-#include "UI/NovaUITypes.h"
+#include "UI/NovaUI.h"
 #include "Nova.h"
 
 #include "Materials/MaterialInstanceDynamic.h"

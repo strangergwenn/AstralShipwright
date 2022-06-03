@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Actor/NovaTurntablePawn.h"
-#include "UI/NovaUITypes.h"
+#include "UI/NovaUI.h"
 #include "NovaSpacecraft.h"
 #include "NovaSpacecraftPawn.generated.h"
 

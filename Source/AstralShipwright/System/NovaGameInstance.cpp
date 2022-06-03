@@ -190,13 +190,13 @@ void UNovaGameInstance::PreLoadMap(const FString& InMapName)
     Game save handling
 ----------------------------------------------------*/
 
-void UNovaGameInstance::StartGame(FString SaveName, bool Online)
+void UNovaGameInstance::StartGame(FString SaveName, FString URL, bool Online)
 {
 	NLOG("UNovaGameInstance::StartGame");
 
 	LoadGame(SaveName);
 
-	SetGameOnline(ENovaConstants::DefaultLevel, Online);
+	SetGameOnline(URL, Online);
 }
 
 void UNovaGameInstance::LoadGame(FString SaveName)

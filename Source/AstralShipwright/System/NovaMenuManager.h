@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "UI/NovaUITypes.h"
+#include "UI/NovaUI.h"
 
 #include "GameFramework/Actor.h"
 #include "Actor/NovaActorTools.h"

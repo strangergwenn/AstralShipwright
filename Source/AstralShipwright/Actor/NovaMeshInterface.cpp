@@ -1,7 +1,7 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaMeshInterface.h"
-#include "UI/NovaUITypes.h"
+#include "UI/NovaUI.h"
 
 #include "Components/PrimitiveComponent.h"
 #include "Components/DecalComponent.h"

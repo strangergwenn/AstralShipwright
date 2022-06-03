@@ -5,6 +5,15 @@
 #include "UI/NovaUI.h"
 #include "Widgets/SCompoundWidget.h"
 
+/** Info box color type */
+enum class ENovaInfoBoxType : uint8
+{
+	None,
+	Positive,
+	Negative,
+	Neutral
+};
+
 /** Info box class */
 class SNovaInfoText : public SCompoundWidget
 {

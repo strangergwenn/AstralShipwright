@@ -44,7 +44,7 @@ public:
 	----------------------------------------------------*/
 
 	/** Start the game from a save file */
-	void StartGame(FString SaveName, bool Online = true);
+	void StartGame(FString SaveName, FString URL, bool Online = true);
 
 	/** Try loading the game from the save slot if it exists, or create a new one */
 	void LoadGame(FString SaveName);

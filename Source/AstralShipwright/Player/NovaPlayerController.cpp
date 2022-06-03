@@ -791,7 +791,7 @@ void ANovaPlayerController::StartGame(FString SaveName, bool Online)
 			FNovaAsyncAction::CreateLambda(
 				[=]()
 				{
-					GetGameInstance<UNovaGameInstance>()->StartGame(SaveName, Online);
+					GetGameInstance<UNovaGameInstance>()->StartGame(SaveName, ENovaConstants::DefaultLevel, Online);
 				}));
 	}
 }

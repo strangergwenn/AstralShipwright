@@ -8,7 +8,7 @@
 #include "Actor/NovaSkeletalMeshComponent.h"
 #include "Actor/NovaDecalComponent.h"
 
-#include "UI/NovaUITypes.h"
+#include "UI/NovaUI.h"
 #include "Nova.h"
 
 #include "Components/PrimitiveComponent.h"

@@ -3,7 +3,7 @@
 #include "NovaTurntablePawn.h"
 
 #include "System/NovaMenuManager.h"
-#include "UI/NovaUITypes.h"
+#include "UI/NovaUI.h"
 #include "Nova.h"
 
 #include "Camera/CameraComponent.h"

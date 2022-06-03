@@ -4,7 +4,7 @@
 
 #include "System/NovaPostProcessManager.h"
 #include "Spacecraft/NovaSpacecraft.h"
-#include "UI/NovaUITypes.h"
+#include "UI/NovaUI.h"
 
 #include "CoreMinimal.h"
 #include "Online.h"

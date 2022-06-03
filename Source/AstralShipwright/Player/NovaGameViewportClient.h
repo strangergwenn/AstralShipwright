@@ -6,7 +6,7 @@
 #include "Engine/GameViewportClient.h"
 #include "SlateBasics.h"
 
-#include "UI/NovaUITypes.h"
+#include "UI/NovaUI.h"
 #include "Game/NovaGameTypes.h"
 #include "NovaGameViewportClient.generated.h"
 

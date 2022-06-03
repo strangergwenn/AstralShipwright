@@ -4,7 +4,7 @@
 #include "NovaMenu.h"
 #include "NovaButton.h"
 
-#include "UI/NovaUITypes.h"
+#include "UI/NovaUI.h"
 #include "UI/NovaUI.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
