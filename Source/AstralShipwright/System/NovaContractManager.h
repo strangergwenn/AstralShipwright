@@ -10,12 +10,22 @@
 
 #include "NovaContractManager.generated.h"
 
+/*----------------------------------------------------
+    Supporting types
+----------------------------------------------------*/
+
 /** Contracts presentation details */
 struct FNovaContractDetails
 {
 	FText Title;
 	FText Description;
 	float Progress;
+};
+
+/** Contract types */
+enum class ENovaContractType : uint8
+{
+	Tutorial
 };
 
 /** Contract event type */
@@ -32,6 +42,61 @@ struct FNovaContractEvent
 
 	ENovaContratEventType Type;
 };
+
+// Contract creation delegate
+DECLARE_DELEGATE_RetVal_TwoParams(
+	TSharedPtr<class FNovaContract>, FNovaContractCreationCallback, ENovaContractType Type, UNovaGameInstance* CurrentGameInstance);
+
+/*----------------------------------------------------
+    Base contract definitions
+----------------------------------------------------*/
+
+/** Contracts internal*/
+class FNovaContract : public TSharedFromThis<FNovaContract>
+{
+public:
+
+	FNovaContract() : GameInstance(nullptr)
+	{}
+
+	virtual ~FNovaContract()
+	{}
+
+	/** Create the contract */
+	virtual void Initialize(class UNovaGameInstance* CurrentGameInstance);
+
+	/** Save this object to save data */
+	virtual TSharedRef<FJsonObject> Save() const;
+
+	/** Load this object from save data */
+	virtual void Load(const TSharedPtr<FJsonObject>& Data);
+
+	/** Get a numerical type identifier for this contract */
+	virtual ENovaContractType GetType() const
+	{
+		return Type;
+	}
+
+	/** Get the display text, progress, etc for this contract */
+	FNovaContractDetails GetDisplayDetails() const
+	{
+		return Details;
+	}
+
+	/** Update this contract */
+	virtual void OnEvent(const FNovaContractEvent& Event) = 0;
+
+protected:
+
+	// Local state
+	ENovaContractType        Type;
+	FNovaContractDetails     Details;
+	class UNovaGameInstance* GameInstance;
+};
+
+/*----------------------------------------------------
+    Contract manager
+----------------------------------------------------*/
 
 /** Contract manager to interact with contract objects */
 UCLASS(ClassGroup = (Nova))
@@ -70,7 +135,7 @@ public:
 	void Initialize(class UNovaGameInstance* Instance);
 
 	/** Start playing on a new level */
-	void BeginPlay(class ANovaPlayerController* PC);
+	void BeginPlay(class ANovaPlayerController* PC, FNovaContractCreationCallback CreationCallback);
 
 	/** Update all contracts */
 	void OnEvent(FNovaContractEvent Event);
@@ -152,6 +217,7 @@ protected:
 	class UNovaGameInstance* GameInstance;
 
 	// State
+	FNovaContractCreationCallback           ContractGenerator;
 	TSharedPtr<class FNovaContract>         GeneratedContract;
 	TArray<TSharedPtr<class FNovaContract>> CurrentContracts;
 	int32                                   CurrentTrackedContract;

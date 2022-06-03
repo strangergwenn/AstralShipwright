@@ -11,44 +11,6 @@
 #define LOCTEXT_NAMESPACE "FNovaContract"
 
 /*----------------------------------------------------
-    Base class
-----------------------------------------------------*/
-
-TSharedPtr<FNovaContract> FNovaContract::New(ENovaContractType Type, UNovaGameInstance* CurrentGameInstance)
-{
-	// Create the contract
-	TSharedPtr<FNovaContract> Contract;
-	if (Type == ENovaContractType::Tutorial)
-	{
-		Contract = MakeShared<FNovaTutorialContract>();
-	}
-	else
-	{
-		NCHECK(false);
-	}
-
-	// Create the contract
-	Contract->Initialize(CurrentGameInstance);
-
-	return Contract;
-}
-
-void FNovaContract::Initialize(UNovaGameInstance* CurrentGameInstance)
-{
-	GameInstance = CurrentGameInstance;
-}
-
-TSharedRef<FJsonObject> FNovaContract::Save() const
-{
-	TSharedRef<FJsonObject> Data = MakeShared<FJsonObject>();
-
-	return Data;
-}
-
-void FNovaContract::Load(const TSharedPtr<FJsonObject>& Data)
-{}
-
-/*----------------------------------------------------
     Tutorial contract
 ----------------------------------------------------*/
 

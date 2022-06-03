@@ -12,6 +12,7 @@
 #include "Game/NovaGameMode.h"
 #include "Game/NovaGameState.h"
 #include "Game/NovaPlanetarium.h"
+#include "Game/Contract/NovaContract.h"
 #include "Game/Settings/NovaGameUserSettings.h"
 #include "Game/Settings/NovaWorldSettings.h"
 #include "Game/Station/NovaStationDock.h"
@@ -185,6 +186,28 @@ void ANovaPlayerController::BeginPlay()
 
 		// Setup systems
 		UNovaMenuManager::Get()->BeginPlay<SNovaMainMenu, SNovaOverlay>(this);
+
+		// Setup contracts
+		UNovaContractManager::Get()->BeginPlay(this,    //
+			FNovaContractCreationCallback::CreateWeakLambda(this,
+				[=](ENovaContractType Type, UNovaGameInstance* CurrentGameInstance)
+				{
+					// Create the contract
+					TSharedPtr<FNovaContract> Contract;
+					if (Type == ENovaContractType::Tutorial)
+					{
+						Contract = MakeShared<FNovaTutorialContract>();
+					}
+					else
+					{
+						NCHECK(false);
+					}
+
+					// Create the contract
+					Contract->Initialize(CurrentGameInstance);
+
+					return Contract;
+				}));
 
 		// Setup post-processing
 		TSharedPtr<FNovaPostProcessSetting> DefaultSettings = MakeShared<FNovaPostProcessSetting>();

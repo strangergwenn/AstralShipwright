@@ -3,7 +3,6 @@
 #include "NovaContractManager.h"
 #include "NovaGameInstance.h"
 
-#include "Game/Contract/NovaContract.h"
 #include "Player/NovaPlayerController.h"
 
 #include "Nova.h"
@@ -12,6 +11,25 @@
 
 // Statics
 UNovaContractManager* UNovaContractManager::Singleton = nullptr;
+
+/*----------------------------------------------------
+    Base contract class
+----------------------------------------------------*/
+
+void FNovaContract::Initialize(UNovaGameInstance* CurrentGameInstance)
+{
+	GameInstance = CurrentGameInstance;
+}
+
+TSharedRef<FJsonObject> FNovaContract::Save() const
+{
+	TSharedRef<FJsonObject> Data = MakeShared<FJsonObject>();
+
+	return Data;
+}
+
+void FNovaContract::Load(const TSharedPtr<FJsonObject>& Data)
+{}
 
 /*----------------------------------------------------
     Constructor
@@ -60,7 +78,7 @@ void UNovaContractManager::Load(TSharedPtr<FNovaContractManagerSave> SaveData)
 		{
 			ENovaContractType ContractType = ContractData.Key;
 
-			TSharedPtr<FNovaContract> Contract = FNovaContract::New(ContractType, GameInstance);
+			TSharedPtr<FNovaContract> Contract = ContractGenerator.Execute(ContractType, GameInstance);
 			Contract->Load(ContractData.Value);
 
 			CurrentContracts.Add(Contract);
@@ -130,15 +148,16 @@ void UNovaContractManager::SerializeJson(
     System interface
 ----------------------------------------------------*/
 
-void UNovaContractManager::Initialize(class UNovaGameInstance* Instance)
+void UNovaContractManager::Initialize(UNovaGameInstance* Instance)
 {
 	Singleton    = this;
 	GameInstance = Instance;
 }
 
-void UNovaContractManager::BeginPlay(class ANovaPlayerController* PC)
+void UNovaContractManager::BeginPlay(ANovaPlayerController* PC, FNovaContractCreationCallback CreationCallback)
 {
-	PlayerController = PC;
+	PlayerController  = PC;
+	ContractGenerator = CreationCallback;
 }
 
 void UNovaContractManager::OnEvent(FNovaContractEvent Event)
@@ -165,8 +184,8 @@ FNovaContractDetails UNovaContractManager::GenerateNewContract()
 
 	NCHECK(false);
 
-	// TODO : create contracts here
-	// GeneratedContract = FNovaContract::New(Type, GameInstance);
+	// TODO
+	// GeneratedContract = ContractGenerator.Execute(Type, GameInstance);
 
 	return GeneratedContract->GetDisplayDetails();
 }
