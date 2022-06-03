@@ -14,6 +14,7 @@ public class AstralShipwright : ModuleRules
             "Core",
             "CoreUObject",
             "Engine",
+            "EngineSettings",
             "InputCore",
             "AppFramework",
 

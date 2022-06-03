@@ -18,6 +18,7 @@
 #include "Nova.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "GameMapsSettings.h"
 #include "Engine/NetDriver.h"
 #include "Engine/World.h"
 #include "Engine.h"
@@ -113,8 +114,8 @@ void UNovaGameInstance::SerializeJson(TSharedPtr<FNovaGameSave>& SaveData, TShar
 		ANovaGameState::SerializeJson(SaveData->GameStateData, GameStateJsonData, ENovaSerialize::JsonToData);
 
 		TSharedPtr<FJsonObject> ContractManagerJsonData = JsonData->HasTypedField<EJson::Object>("ContractManager")
-															? JsonData->GetObjectField("ContractManager")
-															: MakeShared<FJsonObject>();
+		                                                    ? JsonData->GetObjectField("ContractManager")
+		                                                    : MakeShared<FJsonObject>();
 		UNovaContractManager::SerializeJson(SaveData->ContractManagerData, ContractManagerJsonData, ENovaSerialize::JsonToData);
 	}
 }
@@ -137,11 +138,12 @@ void UNovaGameInstance::Init()
 	// Create asset manager
 	AssetManager = NewObject<UNovaAssetManager>(this, UNovaAssetManager::StaticClass(), TEXT("AssetManager"));
 	NCHECK(AssetManager);
-	AssetManager->Initialize();
+	AssetManager->Initialize(this);
 
 	// Create save manager
 	SaveManager = NewObject<UNovaSaveManager>(this, UNovaSaveManager::StaticClass(), TEXT("SaveManager"));
 	NCHECK(SaveManager);
+	SaveManager->Initialize(this);
 
 	// Create the sessions  manager
 	SessionsManager = NewObject<UNovaSessionsManager>(this, UNovaSessionsManager::StaticClass(), TEXT("SessionsManager"));
@@ -156,6 +158,7 @@ void UNovaGameInstance::Init()
 	// Create the sound manager
 	SoundManager = NewObject<UNovaSoundManager>(this, UNovaSoundManager::StaticClass(), TEXT("SoundManager"));
 	NCHECK(SoundManager);
+	SoundManager->Initialize(this);
 
 	// Create the contract manager
 	ContractManager = NewObject<UNovaContractManager>(this, UNovaContractManager::StaticClass(), TEXT("ContractManager"));
@@ -295,7 +298,7 @@ void UNovaGameInstance::GoToMainMenu()
 
 	CurrentSaveData = nullptr;
 
-	UGameplayStatics::OpenLevel(GetWorld(), FName("MenuMap"), true);
+	UGameplayStatics::OpenLevel(GetWorld(), FName(*UGameMapsSettings::GetGameDefaultMap()), true);
 }
 
 void UNovaGameInstance::ServerTravel(FString URL)

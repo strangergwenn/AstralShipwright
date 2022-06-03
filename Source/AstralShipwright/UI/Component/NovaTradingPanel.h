@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "UI/Widget/NovaInfoText.h"
 #include "UI/Widget/NovaModalPanel.h"
 
 /** Trading panel */

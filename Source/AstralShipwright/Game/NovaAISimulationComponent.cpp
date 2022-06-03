@@ -11,7 +11,6 @@
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
 
 #include "System/NovaAssetManager.h"
-#include "System/NovaGameInstance.h"
 
 #include "Nova.h"
 
@@ -536,7 +535,7 @@ void UNovaAISimulationComponent::CreateGame()
 	if (GetOwner()->GetLocalRole() == ROLE_Authority)
 	{
 		// Get game state pointers
-		UNovaAssetManager* AssetManager = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager();
+		UNovaAssetManager* AssetManager = UNovaAssetManager::Get();
 		NCHECK(AssetManager);
 		ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
 		NCHECK(GameState);
@@ -634,7 +633,7 @@ const UNovaArea* UNovaAISimulationComponent::FindArea(const FNovaOrbitalLocation
 	NCHECK(SourceLocation != nullptr);
 
 	// Get game state pointers
-	UNovaAssetManager* AssetManager = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager();
+	UNovaAssetManager* AssetManager = UNovaAssetManager::Get();
 	NCHECK(AssetManager);
 	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
 	NCHECK(GameState);
@@ -661,7 +660,7 @@ const UNovaArea* UNovaAISimulationComponent::FindArea(const FNovaOrbitalLocation
 void UNovaAISimulationComponent::FindPatrolOrbit(FNovaOrbit& DestinationOrbit) const
 {
 	// Get game state pointers
-	UNovaAssetManager* AssetManager = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager();
+	UNovaAssetManager* AssetManager = UNovaAssetManager::Get();
 	NCHECK(AssetManager);
 	const UNovaCelestialBody* Body = AssetManager->GetDefaultAsset<UNovaCelestialBody>();
 

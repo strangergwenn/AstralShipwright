@@ -2,7 +2,6 @@
 
 #include "NovaTurntablePawn.h"
 
-#include "System/NovaGameInstance.h"
 #include "System/NovaMenuManager.h"
 #include "UI/NovaUITypes.h"
 #include "Nova.h"
@@ -181,7 +180,7 @@ void ANovaTurntablePawn::ResetZoom()
 void ANovaTurntablePawn::ProcessCamera(float DeltaTime)
 {
 	// Apply filter
-	bool IsGamepad = GetGameInstance<UNovaGameInstance>()->GetMenuManager()->IsUsingGamepad();
+	bool IsGamepad = UNovaMenuManager::Get()->IsUsingGamepad();
 	CameraFilter.ApplyFilter<true>(CurrentPanAngle, CurrentPanSpeed, CurrentPanTarget, DeltaTime, IsGamepad);
 	CameraFilter.ApplyFilter<true>(CurrentTiltAngle, CurrentTiltSpeed, CurrentTiltTarget, DeltaTime, IsGamepad);
 

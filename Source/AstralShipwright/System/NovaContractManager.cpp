@@ -136,6 +136,11 @@ void UNovaContractManager::Initialize(class UNovaGameInstance* Instance)
 	GameInstance = Instance;
 }
 
+void UNovaContractManager::BeginPlay(class ANovaPlayerController* PC)
+{
+	PlayerController = PC;
+}
+
 void UNovaContractManager::OnEvent(FNovaContractEvent Event)
 {
 	TArray<TSharedPtr<FNovaContract>> SafeCurrentContracts = CurrentContracts;
@@ -173,8 +178,7 @@ void UNovaContractManager::AcceptContract()
 	CurrentContracts.Add(GeneratedContract);
 	GeneratedContract.Reset();
 
-	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GameInstance->GetFirstLocalPlayerController());
-	PC->Notify(LOCTEXT("ContractAccepted", "Contract accepted"), FText(), ENovaNotificationType::Info);
+	PlayerController->Notify(LOCTEXT("ContractAccepted", "Contract accepted"), FText(), ENovaNotificationType::Info);
 }
 
 void UNovaContractManager::DeclineContract()
@@ -188,8 +192,7 @@ void UNovaContractManager::ProgressContract(TSharedPtr<class FNovaContract> Cont
 {
 	NLOG("UNovaContractManager::ProgressContract");
 
-	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GameInstance->GetFirstLocalPlayerController());
-	PC->Notify(LOCTEXT("ContractUpdated", "Contract updated"), FText(), ENovaNotificationType::Info);
+	PlayerController->Notify(LOCTEXT("ContractUpdated", "Contract updated"), FText(), ENovaNotificationType::Info);
 }
 
 void UNovaContractManager::CompleteContract(TSharedPtr<class FNovaContract> Contract)
@@ -198,8 +201,7 @@ void UNovaContractManager::CompleteContract(TSharedPtr<class FNovaContract> Cont
 
 	CurrentContracts.Remove(Contract);
 
-	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GameInstance->GetFirstLocalPlayerController());
-	PC->Notify(LOCTEXT("ContractComplete", "Contract complete"), FText(), ENovaNotificationType::Info);
+	PlayerController->Notify(LOCTEXT("ContractComplete", "Contract complete"), FText(), ENovaNotificationType::Info);
 }
 
 uint32 UNovaContractManager::GetContractCount() const
@@ -220,14 +222,13 @@ void UNovaContractManager::SetTrackedContract(int32 Index)
 
 	CurrentTrackedContract = Index;
 
-	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GameInstance->GetFirstLocalPlayerController());
 	if (Index >= 0)
 	{
-		PC->Notify(LOCTEXT("ContractTracked", "Contract tracked"), FText(), ENovaNotificationType::Info);
+		PlayerController->Notify(LOCTEXT("ContractTracked", "Contract tracked"), FText(), ENovaNotificationType::Info);
 	}
 	else
 	{
-		PC->Notify(LOCTEXT("ContractUntracked", "Contract untracked"), FText(), ENovaNotificationType::Info);
+		PlayerController->Notify(LOCTEXT("ContractUntracked", "Contract untracked"), FText(), ENovaNotificationType::Info);
 	}
 }
 
@@ -243,8 +244,7 @@ void UNovaContractManager::AbandonContract(int32 Index)
 		CurrentTrackedContract = INDEX_NONE;
 	}
 
-	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GameInstance->GetFirstLocalPlayerController());
-	PC->Notify(LOCTEXT("ContractAbandoned", "Contract abandoned"), FText(), ENovaNotificationType::Info);
+	PlayerController->Notify(LOCTEXT("ContractAbandoned", "Contract abandoned"), FText(), ENovaNotificationType::Info);
 }
 
 int32 UNovaContractManager::GetTrackedContract()

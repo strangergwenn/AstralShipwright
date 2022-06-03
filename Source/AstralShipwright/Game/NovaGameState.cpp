@@ -18,7 +18,6 @@
 #include "Spacecraft/System/NovaSpacecraftSystemInterface.h"
 
 #include "System/NovaAssetManager.h"
-#include "System/NovaGameInstance.h"
 #include "System/NovaSessionsManager.h"
 
 #include "Nova.h"
@@ -189,11 +188,8 @@ void ANovaGameState::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UNovaAssetManager* AssetManager = GetGameInstance<UNovaGameInstance>()->GetAssetManager();
-	NCHECK(AssetManager);
-
 	// Startup the simulation components
-	AsteroidSimulationComponent->Initialize(AssetManager->GetDefaultAsset<UNovaAsteroidConfiguration>());
+	AsteroidSimulationComponent->Initialize(UNovaAssetManager::Get()->GetDefaultAsset<UNovaAsteroidConfiguration>());
 }
 
 void ANovaGameState::Tick(float DeltaTime)
@@ -243,7 +239,7 @@ void ANovaGameState::Tick(float DeltaTime)
 	ProcessPlayerEvents(DeltaTime);
 
 	// Update sessions
-	UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
+	UNovaSessionsManager* SessionsManager = UNovaSessionsManager::Get();
 	SessionsManager->SetSessionAdvertised(IsJoinable());
 }
 

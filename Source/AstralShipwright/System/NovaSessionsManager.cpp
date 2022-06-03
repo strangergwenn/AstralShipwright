@@ -15,6 +15,9 @@
 
 #define LOCTEXT_NAMESPACE "UNovaSessionsManager"
 
+// Statics
+UNovaSessionsManager* UNovaSessionsManager::Singleton = nullptr;
+
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
@@ -43,6 +46,7 @@ UNovaSessionsManager::UNovaSessionsManager() : Super(), NetworkState(ENovaNetwor
 
 void UNovaSessionsManager::Initialize(UNovaGameInstance* Instance)
 {
+	Singleton    = this;
 	GameInstance = Instance;
 
 	// Setup network errors

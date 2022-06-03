@@ -29,6 +29,7 @@
 #include "System/NovaSaveManager.h"
 #include "System/NovaSessionsManager.h"
 
+#include "UI/Menu/NovaMainMenu.h"
 #include "UI/Menu/NovaOverlay.h"
 #include "UI/Widget/NovaMenu.h"
 #include "Nova.h"
@@ -116,7 +117,7 @@ ANovaPlayerController::ANovaPlayerController()
 				ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
 				Material->SetScalarParameterValue("HighlightAlpha", IsValid(SpacecraftPawn) ? SpacecraftPawn->GetHighlightAlpha() : 0);
 				Material->SetScalarParameterValue("OutlineAlpha", IsValid(SpacecraftPawn) ? SpacecraftPawn->GetOutlineAlpha() : 0);
-				Material->SetVectorParameterValue("HighlightColor", GetMenuManager()->GetHighlightColor());
+				Material->SetVectorParameterValue("HighlightColor", UNovaMenuManager::Get()->GetHighlightColor());
 				// Material->SetScalarParameterValue("ChromaIntensity", FMath::Lerp(Current.ChromaIntensity, Target.ChromaIntensity,
 		        // Alpha));
 
@@ -237,8 +238,8 @@ void ANovaPlayerController::BeginPlay()
 		}
 
 		// Setup systems
-		GetMenuManager()->BeginPlay(this);
-		GetSoundManager()->BeginPlay(this,    //
+		UNovaMenuManager::Get()->BeginPlay<SNovaMainMenu, SNovaOverlay>(this);
+		UNovaSoundManager::Get()->BeginPlay(this,    //
 			FNovaMusicCallback::CreateWeakLambda(this,
 				[this]()
 				{
@@ -253,7 +254,7 @@ void ANovaPlayerController::BeginPlay()
 				}));
 
 		// Setup thruster sounds
-		GetSoundManager()->AddEnvironmentSound("Thrusters",    //
+		UNovaSoundManager::Get()->AddEnvironmentSound("Thrusters",    //
 			FNovaSoundInstanceCallback::CreateWeakLambda(this,
 				[=]()
 				{
@@ -275,7 +276,7 @@ void ANovaPlayerController::BeginPlay()
 				}));
 
 		// Setup drive sounds
-		GetSoundManager()->AddEnvironmentSound("Drive",    //
+		UNovaSoundManager::Get()->AddEnvironmentSound("Drive",    //
 			FNovaSoundInstanceCallback::CreateWeakLambda(this,
 				[=]()
 				{
@@ -298,7 +299,7 @@ void ANovaPlayerController::BeginPlay()
 	}
 
 	// Initialize persistent objects
-	UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
+	UNovaSessionsManager* SessionsManager = UNovaSessionsManager::Get();
 	SessionsManager->SetAcceptedInvitationCallback(FOnFriendInviteAccepted::CreateUObject(this, &ANovaPlayerController::AcceptInvitation));
 
 #if WITH_EDITOR
@@ -347,10 +348,8 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 			PlayerCameraManager->SetFOV(GameUserSettings->FOV);
 		}
 
-		// Show network errors
-		UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
-		NCHECK(GameInstance);
-		UNovaSessionsManager* SessionsManager = GameInstance->GetSessionsManager();
+		// Show network error
+		UNovaSessionsManager* SessionsManager = UNovaSessionsManager::Get();
 		NCHECK(SessionsManager);
 		if (SessionsManager->GetNetworkError() != LastNetworkError)
 		{
@@ -502,7 +501,7 @@ void ANovaPlayerController::Dock()
 	FSimpleDelegate EndCutscene = FSimpleDelegate::CreateLambda(
 		[=]()
 		{
-			GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda(
+			UNovaMenuManager::Get()->OpenMenu(FNovaAsyncAction::CreateLambda(
 				[=]()
 				{
 					SetCameraState(ENovaPlayerCameraState::Default);
@@ -518,7 +517,7 @@ void ANovaPlayerController::Dock()
 			GetSpacecraftPawn()->Dock(EndCutscene);
 		});
 
-	GetMenuManager()->CloseMenu(StartCutscene);
+	UNovaMenuManager::Get()->CloseMenu(StartCutscene);
 }
 
 void ANovaPlayerController::Undock()
@@ -528,7 +527,7 @@ void ANovaPlayerController::Undock()
 	FSimpleDelegate EndCutscene = FSimpleDelegate::CreateLambda(
 		[=]()
 		{
-			GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda(
+			UNovaMenuManager::Get()->OpenMenu(FNovaAsyncAction::CreateLambda(
 				[=]()
 				{
 					SetCameraState(ENovaPlayerCameraState::Default);
@@ -544,7 +543,7 @@ void ANovaPlayerController::Undock()
 			GetSpacecraftPawn()->Undock(EndCutscene);
 		});
 
-	GetMenuManager()->CloseMenu(StartCutscene);
+	UNovaMenuManager::Get()->CloseMenu(StartCutscene);
 }
 
 void ANovaPlayerController::SharedTransition(
@@ -638,7 +637,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 	{
 		// UI enabled states
 		case ENovaPlayerCameraState::Default:
-			GetMenuManager()->OpenMenu(Action, Condition);
+			UNovaMenuManager::Get()->OpenMenu(Action, Condition);
 			break;
 
 		// UI disabled states
@@ -646,7 +645,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 		case ENovaPlayerCameraState::CinematicEnvironment:
 		case ENovaPlayerCameraState::CinematicBrake:
 		case ENovaPlayerCameraState::FastForward:
-			GetMenuManager()->CloseMenu(Action, Condition);
+			UNovaMenuManager::Get()->CloseMenu(Action, Condition);
 			break;
 	}
 }
@@ -674,11 +673,11 @@ void ANovaPlayerController::SetCameraState(ENovaPlayerCameraState State)
 	// Handle the fast-forward camera
 	if (State == ENovaPlayerCameraState::FastForward)
 	{
-		GetMenuManager()->GetOverlay()->StartFastForward();
+		UNovaMenuManager::Get()->GetOverlay<SNovaOverlay>()->StartFastForward();
 	}
 	else
 	{
-		GetMenuManager()->GetOverlay()->StopFastForward();
+		UNovaMenuManager::Get()->GetOverlay<SNovaOverlay>()->StopFastForward();
 	}
 }
 
@@ -775,11 +774,11 @@ void ANovaPlayerController::StartGame(FString SaveName, bool Online)
 {
 	NLOG("ANovaPlayerController::StartGame : loading from '%s', online = %d", *SaveName, Online);
 
-	if (GetMenuManager()->IsIdle())
+	if (UNovaMenuManager::Get()->IsIdle())
 	{
-		GetSoundManager()->Mute();
+		UNovaSoundManager::Get()->Mute();
 
-		GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,    //
+		UNovaMenuManager::Get()->RunAction(ENovaLoadingScreen::Launch,    //
 			FNovaAsyncAction::CreateLambda(
 				[=]()
 				{
@@ -792,11 +791,11 @@ void ANovaPlayerController::SetGameOnline(bool Online)
 {
 	NLOG("ANovaPlayerController::SetGameOnline : online = %d", Online);
 
-	if (GetMenuManager()->IsIdle())
+	if (UNovaMenuManager::Get()->IsIdle())
 	{
-		GetSoundManager()->Mute();
+		UNovaSoundManager::Get()->Mute();
 
-		GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,    //
+		UNovaMenuManager::Get()->RunAction(ENovaLoadingScreen::Launch,    //
 			FNovaAsyncAction::CreateLambda(
 				[=]()
 				{
@@ -807,13 +806,13 @@ void ANovaPlayerController::SetGameOnline(bool Online)
 
 void ANovaPlayerController::GoToMainMenu(bool SaveGame)
 {
-	if (GetMenuManager()->IsIdle())
+	if (UNovaMenuManager::Get()->IsIdle())
 	{
 		NLOG("ANovaPlayerController::GoToMainMenu %d", SaveGame);
 
-		GetSoundManager()->Mute();
+		UNovaSoundManager::Get()->Mute();
 
-		GetMenuManager()->RunAction(ENovaLoadingScreen::Black,    //
+		UNovaMenuManager::Get()->RunAction(ENovaLoadingScreen::Black,    //
 			FNovaAsyncAction::CreateLambda(
 				[=]()
 				{
@@ -830,13 +829,13 @@ void ANovaPlayerController::GoToMainMenu(bool SaveGame)
 
 void ANovaPlayerController::ExitGame()
 {
-	if (GetMenuManager()->IsIdle())
+	if (UNovaMenuManager::Get()->IsIdle())
 	{
 		NLOG("ANovaPlayerController::ExitGame");
 
-		GetSoundManager()->Mute();
+		UNovaSoundManager::Get()->Mute();
 
-		GetMenuManager()->RunAction(ENovaLoadingScreen::Black,    //
+		UNovaMenuManager::Get()->RunAction(ENovaLoadingScreen::Black,    //
 			FNovaAsyncAction::CreateLambda(
 				[=]()
 				{
@@ -849,26 +848,23 @@ void ANovaPlayerController::InviteFriend(TSharedRef<FOnlineFriend> Friend)
 {
 	NLOG("ANovaPlayerController::InviteFriend");
 
-	UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
-
 	Notify(LOCTEXT("InviteFriend", "Invited friend"), FText::FromString(Friend->GetDisplayName()), ENovaNotificationType::Info);
 
-	SessionsManager->InviteFriend(Friend->GetUserId());
+	UNovaSessionsManager::Get()->InviteFriend(Friend->GetUserId());
 }
 
 void ANovaPlayerController::JoinFriend(TSharedRef<FOnlineFriend> Friend)
 {
 	NLOG("ANovaPlayerController::JoinFriend");
 
-	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch,
+	UNovaMenuManager::Get()->RunAction(ENovaLoadingScreen::Launch,    //
 		FNovaAsyncAction::CreateLambda(
 			[=]()
 			{
 				Notify(
 					LOCTEXT("JoiningFriend", "Joining friend"), FText::FromString(Friend->GetDisplayName()), ENovaNotificationType::Info);
 
-				UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
-				SessionsManager->JoinFriend(Friend->GetUserId());
+				UNovaSessionsManager::Get()->JoinFriend(Friend->GetUserId());
 			}));
 }
 
@@ -876,13 +872,12 @@ void ANovaPlayerController::AcceptInvitation(const FOnlineSessionSearchResult& I
 {
 	NLOG("ANovaPlayerController::AcceptInvitation");
 
-	GetMenuManager()->RunAction(ENovaLoadingScreen::Launch, FNovaAsyncAction::CreateLambda(
-																[=]()
-																{
-																	UNovaSessionsManager* SessionsManager =
-																		GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
-																	SessionsManager->JoinSearchResult(InviteResult);
-																}));
+	UNovaMenuManager::Get()->RunAction(ENovaLoadingScreen::Launch,    //
+		FNovaAsyncAction::CreateLambda(
+			[=]()
+			{
+				UNovaSessionsManager::Get()->JoinSearchResult(InviteResult);
+			}));
 }
 
 bool ANovaPlayerController::IsReady() const
@@ -921,14 +916,14 @@ bool ANovaPlayerController::IsMenuOnly() const
 
 void ANovaPlayerController::Notify(const FText& Text, const FText& Subtext, ENovaNotificationType Type)
 {
-	GetMenuManager()->GetOverlay()->Notify(Text, Subtext, Type);
+	UNovaMenuManager::Get()->GetOverlay<SNovaOverlay>()->Notify(Text, Subtext, Type);
 }
 
 void ANovaPlayerController::EnterPhotoMode(FName ActionName)
 {
 	NLOG("ANovaPlayerController::EnterPhotoMode");
 
-	GetMenuManager()->CloseMenu(FNovaAsyncAction::CreateLambda(
+	UNovaMenuManager::Get()->CloseMenu(FNovaAsyncAction::CreateLambda(
 		[=]()
 		{
 			PhotoModeAction = ActionName;
@@ -940,7 +935,7 @@ void ANovaPlayerController::ExitPhotoMode()
 {
 	NLOG("ANovaPlayerController::ExitPhotoMode");
 
-	GetMenuManager()->OpenMenu(FNovaAsyncAction::CreateLambda(
+	UNovaMenuManager::Get()->OpenMenu(FNovaAsyncAction::CreateLambda(
 		[=]()
 		{
 			PhotoModeAction = NAME_None;
@@ -977,7 +972,7 @@ void ANovaPlayerController::ToggleMenuOrQuit()
 		}
 		else
 		{
-			UNovaMenuManager* MenuManager = GetMenuManager();
+			UNovaMenuManager* MenuManager = UNovaMenuManager::Get();
 
 			if (!MenuManager->IsMenuOpen())
 			{
@@ -993,13 +988,13 @@ void ANovaPlayerController::ToggleMenuOrQuit()
 
 void ANovaPlayerController::AnyKey(FKey Key)
 {
-	GetMenuManager()->SetUsingGamepad(Key.IsGamepadKey());
+	UNovaMenuManager::Get()->SetUsingGamepad(Key.IsGamepadKey());
 
 	// Exit photo mode
 	if (IsInPhotoMode())
 	{
-		if (GetMenuManager()->GetMenu()->IsActionKey(PhotoModeAction, Key) ||
-			GetMenuManager()->GetMenu()->IsActionKey(FNovaPlayerInput::MenuCancel, Key))
+		if (UNovaMenuManager::Get()->GetMenu()->IsActionKey(PhotoModeAction, Key) ||
+			UNovaMenuManager::Get()->GetMenu()->IsActionKey(FNovaPlayerInput::MenuCancel, Key))
 		{
 			ExitPhotoMode();
 		}
@@ -1050,18 +1045,18 @@ void ANovaPlayerController::OnJoinRandomSession(TArray<FOnlineSessionSearchResul
 	{
 		if (Result.Session.OwningUserId != GetLocalPlayer()->GetPreferredUniqueNetId())
 		{
-			UNovaMenuManager* MenuManager = GetMenuManager();
+			UNovaMenuManager* MenuManager = UNovaMenuManager::Get();
 
-			MenuManager->RunAction(ENovaLoadingScreen::Launch,
+			MenuManager->RunAction(ENovaLoadingScreen::Launch,    //
 				FNovaAsyncAction::CreateLambda(
 					[=]()
 					{
-						MenuManager->GetOverlay()->Notify(FText::FormatNamed(LOCTEXT("JoinFriend", "Joining {session}"), TEXT("session"),
-															  FText::FromString(*Result.Session.GetSessionIdStr())),
+						MenuManager->GetOverlay<SNovaOverlay>()->Notify(
+							FText::FormatNamed(LOCTEXT("JoinFriend", "Joining {session}"), TEXT("session"),
+								FText::FromString(*Result.Session.GetSessionIdStr())),
 							FText(), ENovaNotificationType::Info);
 
-						UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
-						SessionsManager->JoinSearchResult(Result);
+						UNovaSessionsManager::Get()->JoinSearchResult(Result);
 					}));
 		}
 	}
@@ -1069,7 +1064,7 @@ void ANovaPlayerController::OnJoinRandomSession(TArray<FOnlineSessionSearchResul
 
 void ANovaPlayerController::TestJoin()
 {
-	UNovaSessionsManager* SessionsManager = GetGameInstance<UNovaGameInstance>()->GetSessionsManager();
+	UNovaSessionsManager* SessionsManager = UNovaSessionsManager::Get();
 
 	if (SessionsManager->GetOnlineSubsystemName() != TEXT("Null"))
 	{

@@ -15,6 +15,7 @@ class UNovaGameInstance : public UGameInstance
 	GENERATED_BODY()
 
 public:
+
 	UNovaGameInstance();
 
 	/*----------------------------------------------------
@@ -78,36 +79,6 @@ public:
 	    Game flow
 	----------------------------------------------------*/
 
-	/** Get the catalog */
-	class UNovaAssetManager* GetAssetManager() const
-	{
-		return AssetManager;
-	}
-
-	/** Get the contract manager */
-	class UNovaContractManager* GetContractManager() const
-	{
-		return ContractManager;
-	}
-
-	/** Get the sessions manager */
-	class UNovaSessionsManager* GetSessionsManager() const
-	{
-		return SessionsManager;
-	}
-
-	/** Get the menu manager */
-	class UNovaMenuManager* GetMenuManager() const
-	{
-		return MenuManager;
-	}
-
-	/** Get the sound manager */
-	class UNovaSoundManager* GetSoundManager() const
-	{
-		return SoundManager;
-	}
-
 	/** Restart the game from the level in save data */
 	void SetGameOnline(FString URL, bool Online = true);
 
@@ -118,6 +89,7 @@ public:
 	void ServerTravel(FString URL);
 
 private:
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/

@@ -312,20 +312,6 @@ private:
 
 public:
 
-	/** Get the menu manager */
-	UFUNCTION(Category = Nova, BlueprintCallable)
-	class UNovaMenuManager* GetMenuManager() const
-	{
-		return GetGameInstance<UNovaGameInstance>()->GetMenuManager();
-	}
-
-	/** Get the sound manager */
-	UFUNCTION(Category = Nova, BlueprintCallable)
-	class UNovaSoundManager* GetSoundManager() const
-	{
-		return GetGameInstance<UNovaGameInstance>()->GetSoundManager();
-	}
-
 	/** Get a turntable actor */
 	UFUNCTION(Category = Nova, BlueprintCallable)
 	class ANovaSpacecraftPawn* GetSpacecraftPawn() const;

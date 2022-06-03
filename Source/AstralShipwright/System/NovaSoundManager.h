@@ -180,6 +180,18 @@ public:
 	    Public methods
 	----------------------------------------------------*/
 
+	/** Get the sound manager instance */
+	static UNovaSoundManager* Get()
+	{
+		return Singleton;
+	}
+
+	/** Initialize this class */
+	void Initialize(class UNovaGameInstance* GameInstance)
+	{
+		Singleton = this;
+	}
+
 	/** Start playing on a new level */
 	void BeginPlay(class ANovaPlayerController* PC, FNovaMusicCallback Callback);
 
@@ -232,6 +244,9 @@ public:
 	----------------------------------------------------*/
 
 private:
+
+	// Singleton pointer
+	static UNovaSoundManager* Singleton;
 
 	// Player owner
 	UPROPERTY()

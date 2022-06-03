@@ -91,13 +91,20 @@ class UNovaSessionsManager : public UObject
 	GENERATED_BODY()
 
 public:
+
 	UNovaSessionsManager();
 
 	/*----------------------------------------------------
 	    Inherited & callbacks
 	----------------------------------------------------*/
 
-	/** Initialize the sessions manager */
+	/** Get the singleton instance */
+	static UNovaSessionsManager* Get()
+	{
+		return Singleton;
+	}
+
+	/** Initialize this class */
 	void Initialize(class UNovaGameInstance* Instance);
 
 	/** Finalize the sessions manager */
@@ -151,6 +158,7 @@ public:
 	bool JoinFriend(FUniqueNetIdRepl FriendUserId);
 
 protected:
+
 	/*----------------------------------------------------
 	    Session internals
 	----------------------------------------------------*/
@@ -198,9 +206,13 @@ protected:
 	void ProcessAction(FNovaSessionAction Action);
 
 private:
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
+
+	// Singleton pointer
+	static UNovaSessionsManager* Singleton;
 
 	// Data
 	TSharedPtr<class FOnlineSessionSettings> SessionSettings;
@@ -256,6 +268,7 @@ private:
 	FDelegateHandle                      OnFindFriendSessionCompleteDelegateHandle;
 
 public:
+
 	/*----------------------------------------------------
 	    Getters
 	----------------------------------------------------*/

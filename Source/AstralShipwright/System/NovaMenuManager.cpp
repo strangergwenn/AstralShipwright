@@ -62,81 +62,14 @@ void UNovaMenuManager::Initialize(UNovaGameInstance* NewGameInstance)
 {
 	NLOG("UNovaMenuManager::Initialize");
 
-	Singleton    = this;
-	GameInstance = NewGameInstance;
+	Singleton = this;
 	FSlateApplication::Get().SetNavigationConfig(MakeShared<FNovaNavigationConfig>());
 	FWorldDelegates::OnWorldCleanup.AddUObject(this, &UNovaMenuManager::OnWorldCleanup);
 }
 
-void UNovaMenuManager::BeginPlay(ANovaPlayerController* PC)
-{
-	NLOG("UNovaMenuManager::BeginPlay");
-
-	// Create menus
-	if (!Menu.IsValid() || !Overlay.IsValid())
-	{
-		SAssignNew(Menu, SNovaMainMenu).MenuManager(this);
-		SAssignNew(Overlay, SNovaOverlay).MenuManager(this);
-
-		UNovaGameViewportClient* GameViewportClient = Cast<UNovaGameViewportClient>(GetWorld()->GetGameViewport());
-		GameViewportClient->AddViewportWidgetContent(SNew(SWeakWidget).PossiblyNullContent(Menu.ToSharedRef()), 50);
-		GameViewportClient->AddViewportWidgetContent(SNew(SWeakWidget).PossiblyNullContent(Overlay.ToSharedRef()), 100);
-	}
-
-	// Check for maximized state at boot
-	TSharedPtr<SWindow> Window = FSlateApplication::Get().GetTopLevelWindows()[0];
-	NCHECK(Window);
-	FVector2D ViewportResolution = Window->GetViewportSize();
-	FIntPoint DesktopResolution  = GEngine->GetGameUserSettings()->GetDesktopResolution();
-	if (!Window->IsWindowMaximized() && ViewportResolution.X == DesktopResolution.X && ViewportResolution.Y != DesktopResolution.Y)
-	{
-		Window->Maximize();
-	}
-
-	// Initialize
-	CurrentMenuState    = ENovaFadeState::FadingFromBlack;
-	CurrentFadingTime   = FadeDuration;
-	LoadingScreenFrozen = false;
-	Menu->UpdateKeyBindings();
-
-	// Initialize the desired color
-	CurrentInterfaceColor.SetPeriod(ColorChangeDuration);
-	CurrentHighlightColor.SetPeriod(ColorChangeDuration);
-	CurrentInterfaceColor.Set(DesiredInterfaceColor);
-	CurrentHighlightColor.Set(DesiredHighlightColor);
-
-	// Open the menu if desired
-	RunWaitAction(ENovaLoadingScreen::Black,
-		FNovaAsyncAction::CreateLambda(
-			[=]()
-			{
-				NLOG("UNovaMenuManager::BeginPlay : setting up menu");
-
-				if (Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMenuMap())
-				{
-					Menu->Show();
-					SetFocusToMenu();
-				}
-				else
-				{
-					Menu->Hide();
-					SetFocusToGame();
-				}
-
-				NLOG("UNovaMenuManager::BeginPlay : waiting for a bit");
-			}),
-		FNovaAsyncCondition::CreateLambda(
-			[=]()
-			{
-				NLOG("UNovaMenuManager::BeginPlay : done");
-				return true;
-			}));
-}
-
 void UNovaMenuManager::Tick(float DeltaTime)
 {
-	if (IsValid(GameInstance) && IsValid(GameInstance->GetFirstLocalPlayerController()) && GetPC()->IsReady() &&
-		GetPC()->GetGameTimeSinceCreation() > 2.0f)
+	if (IsValid(PlayerController) && PlayerController->IsReady() && PlayerController->GetGameTimeSinceCreation() > 2.0f)
 	{
 		switch (CurrentMenuState)
 		{
@@ -166,7 +99,6 @@ void UNovaMenuManager::Tick(float DeltaTime)
 				{
 					CurrentCommand.Action.Execute();
 					CurrentCommand.Action.Unbind();
-					// NLOG("UNovaMenuManager::Tick : action finished, waiting condition");
 				}
 
 				// Waiting condition
@@ -177,15 +109,11 @@ void UNovaMenuManager::Tick(float DeltaTime)
 						CurrentCommand.Condition.Unbind();
 
 						CompleteAsyncAction();
-
-						// NLOG("UNovaMenuManager::Tick : action and condition finished");
 					}
 				}
 				else
 				{
 					CompleteAsyncAction();
-
-					// NLOG("UNovaMenuManager::Tick : action finished with no condition");
 				}
 
 				GEngine->ForceGarbageCollection(true);
@@ -319,14 +247,7 @@ bool UNovaMenuManager::IsMenuOpening() const
 
 float UNovaMenuManager::GetLoadingScreenAlpha() const
 {
-	if (LoadingScreenFrozen)
-	{
-		return 1.0f;
-	}
-	else
-	{
-		return FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadingTime / FadeDuration, ENovaUIConstants::EaseStrong);
-	}
+	return FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadingTime / FadeDuration, ENovaUIConstants::EaseStrong);
 }
 
 void UNovaMenuManager::ShowTooltip(SWidget* TargetWidget, const FText& Content)
@@ -365,30 +286,8 @@ void UNovaMenuManager::SetInterfaceColor(const FLinearColor& Color, const FLinea
     Menu tools
 ----------------------------------------------------*/
 
-UNovaMenuManager* UNovaMenuManager::Get()
-{
-	return Singleton;
-}
-
-ANovaPlayerController* UNovaMenuManager::GetPC() const
-{
-	return Cast<ANovaPlayerController>(GameInstance->GetFirstLocalPlayerController());
-}
-
-TSharedPtr<SNovaMenu> UNovaMenuManager::GetMenu()
-{
-	return Menu;
-}
-
-TSharedPtr<SNovaOverlay> UNovaMenuManager::GetOverlay() const
-{
-	return Overlay;
-}
-
 void UNovaMenuManager::SetFocusToMenu()
 {
-	// NLOG("UNovaMenuManager::SetFocusToMenu");
-
 	if (!IsUsingGamepad())
 	{
 		GetPC()->SetInputMode(FInputModeUIOnly());
@@ -399,8 +298,6 @@ void UNovaMenuManager::SetFocusToMenu()
 
 void UNovaMenuManager::SetFocusToOverlay()
 {
-	// NLOG("UNovaMenuManager::SetFocusToOverlay");
-
 	if (!IsUsingGamepad())
 	{
 		GetPC()->SetInputMode(FInputModeUIOnly());
@@ -411,8 +308,6 @@ void UNovaMenuManager::SetFocusToOverlay()
 
 void UNovaMenuManager::SetFocusToGame()
 {
-	// NLOG("UNovaMenuManager::SetFocusToGame");
-
 	GetPC()->SetInputMode(FInputModeGameOnly());
 
 	DesiredFocusWidget = FSlateApplication::Get().GetGameViewport();
@@ -486,6 +381,69 @@ void UNovaMenuManager::MaximizeOrRestore()
 /*----------------------------------------------------
     Internal
 ----------------------------------------------------*/
+
+void UNovaMenuManager::BeginPlayInternal(ANovaPlayerController* PC, bool AddMenusToScreen)
+{
+	NLOG("UNovaMenuManager::BeginPlayInternal");
+
+	PlayerController = PC;
+
+	// Assign menus
+	if (AddMenusToScreen)
+	{
+		UGameViewportClient* GameViewportClient = GetWorld()->GetGameViewport();
+		GameViewportClient->AddViewportWidgetContent(SNew(SWeakWidget).PossiblyNullContent(Menu.ToSharedRef()), 50);
+		GameViewportClient->AddViewportWidgetContent(SNew(SWeakWidget).PossiblyNullContent(Overlay.ToSharedRef()), 100);
+	}
+
+	// Check for maximized state at boot
+	TSharedPtr<SWindow> Window = FSlateApplication::Get().GetTopLevelWindows()[0];
+	NCHECK(Window);
+	FVector2D ViewportResolution = Window->GetViewportSize();
+	FIntPoint DesktopResolution  = GEngine->GetGameUserSettings()->GetDesktopResolution();
+	if (!Window->IsWindowMaximized() && ViewportResolution.X == DesktopResolution.X && ViewportResolution.Y != DesktopResolution.Y)
+	{
+		Window->Maximize();
+	}
+
+	// Initialize
+	CurrentMenuState  = ENovaFadeState::FadingFromBlack;
+	CurrentFadingTime = FadeDuration;
+	Menu->UpdateKeyBindings();
+
+	// Initialize the desired color
+	CurrentInterfaceColor.SetPeriod(ColorChangeDuration);
+	CurrentHighlightColor.SetPeriod(ColorChangeDuration);
+	CurrentInterfaceColor.Set(DesiredInterfaceColor);
+	CurrentHighlightColor.Set(DesiredHighlightColor);
+
+	// Open the menu if desired
+	RunWaitAction(ENovaLoadingScreen::Black,
+		FNovaAsyncAction::CreateLambda(
+			[=]()
+			{
+				NLOG("UNovaMenuManager::BeginPlayInternal : setting up menu");
+
+				if (Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMenuMap())
+				{
+					Menu->Show();
+					SetFocusToMenu();
+				}
+				else
+				{
+					Menu->Hide();
+					SetFocusToGame();
+				}
+
+				NLOG("UNovaMenuManager::BeginPlayInternal : waiting for a bit");
+			}),
+		FNovaAsyncCondition::CreateLambda(
+			[=]()
+			{
+				NLOG("UNovaMenuManager::BeginPlayInternal : done");
+				return true;
+			}));
+}
 
 void UNovaMenuManager::OnWorldCleanup(UWorld* World, bool bSessionEnded, bool bCleanupResources)
 {

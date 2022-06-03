@@ -15,6 +15,7 @@
 class INovaDescriptibleInterface
 {
 public:
+
 	/** Return the full description of this asset as inline text */
 	FText GetInlineDescription() const
 	{
@@ -46,6 +47,7 @@ class UNovaAssetDescription
 	GENERATED_BODY()
 
 public:
+
 	/** Procedurally generate a screenshot of this asset */
 	UFUNCTION(Category = Nova, BlueprintCallable, CallInEditor)
 	void UpdateAssetRender();
@@ -88,6 +90,7 @@ public:
 	{}
 
 public:
+
 	// Identifier
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	FGuid Identifier;
@@ -120,20 +123,21 @@ class UNovaAssetManager : public UObject
 	GENERATED_BODY()
 
 public:
+
 	UNovaAssetManager();
 
 	/*----------------------------------------------------
 	    Public methods
 	----------------------------------------------------*/
 
-	/** Search all searched assets */
-	void Initialize();
-
-	/** Get a static instance of the catalog */
+	/** Get the singleton instance */
 	static UNovaAssetManager* Get()
 	{
 		return Singleton;
 	}
+
+	/** Initialize this class */
+	void Initialize(class UNovaGameInstance* GameInstance);
 
 	/** Find the component with the GUID that matches Identifier */
 	const UNovaAssetDescription* GetAsset(FGuid Identifier) const

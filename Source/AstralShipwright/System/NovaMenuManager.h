@@ -11,6 +11,10 @@
 #include "Tickable.h"
 #include "NovaMenuManager.generated.h"
 
+/*----------------------------------------------------
+    Supporting types
+----------------------------------------------------*/
+
 /** Menu states */
 enum class ENovaFadeState : uint8
 {
@@ -34,6 +38,10 @@ struct FNovaAsyncCommand
 	float               FadeDuration;
 };
 
+/*----------------------------------------------------
+    Menu manager class
+----------------------------------------------------*/
+
 /** Menu manager class */
 UCLASS(ClassGroup = (Nova))
 class UNovaMenuManager
@@ -44,28 +52,37 @@ class UNovaMenuManager
 	GENERATED_BODY()
 
 public:
+
 	UNovaMenuManager();
 
 	/*----------------------------------------------------
 	    Player interface
 	----------------------------------------------------*/
 
-	/** Initialize the menu */
+	/** Get the singleton instance */
+	static UNovaMenuManager* Get()
+	{
+		return Singleton;
+	}
+
+	/** Initialize this class */
 	void Initialize(class UNovaGameInstance* NewGameInstance);
 
 	/** Start playing on a new level */
-	void BeginPlay(class ANovaPlayerController* PC);
-
-	/** Get the game instance */
-	class UNovaGameInstance* GetGameInstance() const
+	template <typename MenuClass, typename OverlayClass>
+	void BeginPlay(class ANovaPlayerController* PC)
 	{
-		return GameInstance;
-	}
+		NLOG("UNovaMenuManager::BeginPlay");
 
-	/** Stop updating the loading screen */
-	void FreezeLoadingScreen()
-	{
-		LoadingScreenFrozen = true;
+		bool AddMenusToScreen = false;
+		if (!Menu.IsValid() || !Overlay.IsValid())
+		{
+			SAssignNew(Menu, MenuClass).MenuManager(this);
+			SAssignNew(Overlay, OverlayClass).MenuManager(this);
+			AddMenusToScreen = true;
+		}
+
+		BeginPlayInternal(PC, AddMenusToScreen);
 	}
 
 	/*----------------------------------------------------
@@ -150,17 +167,26 @@ public:
 		GameMenus.Add(GameMenu.Get());
 	}
 
-	/** Get the menu manager instance */
-	static UNovaMenuManager* Get();
-
 	/** Get the local player controller owning the menus */
-	class ANovaPlayerController* GetPC() const;
+	template <typename T = ANovaPlayerController>
+	T* GetPC() const
+	{
+		return Cast<T>(PlayerController);
+	}
 
 	/** Get the main menu */
-	TSharedPtr<class SNovaMenu> GetMenu();
+	template <typename T = SNovaMenu>
+	TSharedPtr<T> GetMenu()
+	{
+		return StaticCastSharedPtr<T>(Menu);
+	}
 
 	/** Get the game overlay */
-	TSharedPtr<class SNovaOverlay> GetOverlay() const;
+	template <typename T = SWidget>
+	TSharedPtr<T> GetOverlay() const
+	{
+		return StaticCastSharedPtr<T>(Overlay);
+	}
 
 	/** Set the focus to the main menu */
 	void SetFocusToMenu();
@@ -193,6 +219,10 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
+	/** Signal the player is ready */
+	void BeginPlayInternal(class ANovaPlayerController* PC, bool AddMenusToScreen);
+
 	/** World was cleaned up, warn menus */
 	void OnWorldCleanup(UWorld* World, bool bSessionEnded, bool bCleanupResources);
 
@@ -201,6 +231,7 @@ protected:
 	----------------------------------------------------*/
 
 public:
+
 	// Time it takes to fade in or out in seconds
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	float FadeDuration;
@@ -210,6 +241,7 @@ public:
 	float ColorChangeDuration;
 
 protected:
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
@@ -217,17 +249,16 @@ protected:
 	// Singleton pointer
 	static UNovaMenuManager* Singleton;
 
-	// Game instance pointer
+	// Player owner
 	UPROPERTY()
-	class UNovaGameInstance* GameInstance;
+	class ANovaPlayerController* PlayerController;
 
 	// Menu pointers
-	TSharedPtr<class SNovaMainMenu> Menu;
-	TSharedPtr<class SNovaOverlay>  Overlay;
-	TSharedPtr<class SWidget>       DesiredFocusWidget;
+	TSharedPtr<class SNovaMenu> Menu;
+	TSharedPtr<class SWidget>   Overlay;
+	TSharedPtr<class SWidget>   DesiredFocusWidget;
 
 	// Current menu state
-	bool                         LoadingScreenFrozen;
 	bool                         UsingGamepad;
 	FNovaAsyncCommand            CurrentCommand;
 	TQueue<FNovaAsyncCommand>    CommandStack;

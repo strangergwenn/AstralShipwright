@@ -12,11 +12,24 @@ class UNovaSaveManager : public UObject
 	GENERATED_BODY()
 
 public:
+
 	UNovaSaveManager();
 
 	/*----------------------------------------------------
 	    Interface
 	----------------------------------------------------*/
+
+	/** Get the singleton instance */
+	static UNovaSaveManager* Get()
+	{
+		return Singleton;
+	}
+
+	/** Initialize this class */
+	void Initialize(class UNovaGameInstance* GameInstance)
+	{
+		Singleton = this;
+	}
 
 	/** Confirm if a save slot does exist */
 	bool DoesSaveExist(const FString SaveName);
@@ -34,6 +47,7 @@ public:
 	bool DeleteGame(const FString SaveName);
 
 public:
+
 	/*----------------------------------------------------
 	    Helpers
 	----------------------------------------------------*/
@@ -55,6 +69,10 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
+	// Singleton pointer
+	static UNovaSaveManager* Singleton;
+
 	// Prepared game save data
 	TArray<TSharedPtr<struct FNovaGameSave>> SaveList;
 

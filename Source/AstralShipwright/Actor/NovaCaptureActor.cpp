@@ -6,6 +6,7 @@
 
 #include "Game/NovaGameTypes.h"
 #include "System/NovaAssetManager.h"
+#include "System/NovaGameInstance.h"
 #include "UI/NovaUI.h"
 #include "Nova.h"
 
@@ -209,7 +210,7 @@ void ANovaCaptureActor::CreateAssetManager()
 		NCHECK(AssetManager);
 	}
 
-	AssetManager->Initialize();
+	AssetManager->Initialize(GetWorld()->GetGameInstance<UNovaGameInstance>());
 }
 
 void ANovaCaptureActor::CreateRenderTarget()

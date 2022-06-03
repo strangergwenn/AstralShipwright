@@ -107,9 +107,8 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	SCompoundWidget::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
 	// Debug data
-	FVector2D                       Origin = FVector2D::ZeroVector;
-	const class UNovaCelestialBody* DefaultPlanet =
-		MenuManager->GetGameInstance()->GetAssetManager()->GetDefaultAsset<UNovaCelestialBody>();
+	FVector2D                       Origin        = FVector2D::ZeroVector;
+	const class UNovaCelestialBody* DefaultPlanet = UNovaAssetManager::Get()->GetDefaultAsset<UNovaCelestialBody>();
 
 	// Reset state
 	ClearBatches();

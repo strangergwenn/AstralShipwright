@@ -5,7 +5,6 @@
 #include "Player/NovaPlayerController.h"
 
 #include "System/NovaAssetManager.h"
-#include "System/NovaGameInstance.h"
 #include "System/NovaMenuManager.h"
 
 #include "UI/Component/NovaLoadingScreen.h"
@@ -51,7 +50,7 @@ void UNovaGameViewportClient::Tick(float DeltaTime)
 
 	// Get the current loading screen alpha from the menu manager if valid
 	float             Alpha       = 1;
-	UNovaMenuManager* MenuManager = Cast<UNovaGameInstance>(GetGameInstance())->GetMenuManager();
+	UNovaMenuManager* MenuManager = UNovaMenuManager::Get();
 	if (MenuManager)
 	{
 		Alpha = MenuManager->GetLoadingScreenAlpha();
@@ -127,8 +126,7 @@ void UNovaGameViewportClient::Initialize()
 		NLOG("UNovaGameViewportClient::Initialize");
 
 		// Find the loading screen setup
-		TArray<const UNovaLoadingScreenSetup*> LoadingScreenSetupList =
-			Cast<UNovaGameInstance>(GetGameInstance())->GetAssetManager()->GetAssets<UNovaLoadingScreenSetup>();
+		TArray<const UNovaLoadingScreenSetup*> LoadingScreenSetupList = UNovaAssetManager::Get()->GetAssets<UNovaLoadingScreenSetup>();
 		if (LoadingScreenSetupList.Num())
 		{
 			LoadingScreenSetup = LoadingScreenSetupList.Last();

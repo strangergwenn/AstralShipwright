@@ -877,9 +877,7 @@ void SNovaMainMenuSettings::OnMasterVolumeChanged(float Value)
 {
 	GameUserSettings->MasterVolume = Value;
 
-	UNovaSoundManager* SoundManager = MenuManager->GetGameInstance()->GetSoundManager();
-	NCHECK(SoundManager);
-	SoundManager->SetMasterVolume(Value);
+	UNovaSoundManager::Get()->SetMasterVolume(Value);
 
 	GameUserSettings->SaveSettings();
 }
@@ -888,9 +886,7 @@ void SNovaMainMenuSettings::OnUIVolumeChanged(float Value)
 {
 	GameUserSettings->UIVolume = Value;
 
-	UNovaSoundManager* SoundManager = MenuManager->GetGameInstance()->GetSoundManager();
-	NCHECK(SoundManager);
-	SoundManager->SetUIVolume(Value);
+	UNovaSoundManager::Get()->SetUIVolume(Value);
 
 	GameUserSettings->SaveSettings();
 }
@@ -899,9 +895,7 @@ void SNovaMainMenuSettings::OnEffectsVolumeChanged(float Value)
 {
 	GameUserSettings->EffectsVolume = Value;
 
-	UNovaSoundManager* SoundManager = MenuManager->GetGameInstance()->GetSoundManager();
-	NCHECK(SoundManager);
-	SoundManager->SetEffectsVolume(Value);
+	UNovaSoundManager::Get()->SetEffectsVolume(Value);
 
 	GameUserSettings->SaveSettings();
 }
@@ -910,9 +904,7 @@ void SNovaMainMenuSettings::OnMusicVolumeChanged(float Value)
 {
 	GameUserSettings->MusicVolume = Value;
 
-	UNovaSoundManager* SoundManager = MenuManager->GetGameInstance()->GetSoundManager();
-	NCHECK(SoundManager);
-	SoundManager->SetMusicVolume(Value);
+	UNovaSoundManager::Get()->SetMusicVolume(Value);
 
 	GameUserSettings->SaveSettings();
 }

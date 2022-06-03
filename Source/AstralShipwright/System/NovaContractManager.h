@@ -37,6 +37,7 @@ class UNovaContractManager : public UObject
 	GENERATED_BODY()
 
 public:
+
 	UNovaContractManager();
 
 	/*----------------------------------------------------
@@ -62,6 +63,9 @@ public:
 
 	/** Initialize this class */
 	void Initialize(class UNovaGameInstance* Instance);
+
+	/** Start playing on a new level */
+	void BeginPlay(class ANovaPlayerController* PC);
 
 	/** Update all contracts */
 	void OnEvent(FNovaContractEvent Event);
@@ -108,8 +112,13 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
 	// Singleton pointer
 	static UNovaContractManager* Singleton;
+
+	// Player owner
+	UPROPERTY()
+	class ANovaPlayerController* PlayerController;
 
 	// Game instance pointer
 	UPROPERTY()

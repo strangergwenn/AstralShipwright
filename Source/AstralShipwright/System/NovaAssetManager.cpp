@@ -103,7 +103,7 @@ UNovaAssetManager::UNovaAssetManager() : Super()
     Public methods
 ----------------------------------------------------*/
 
-void UNovaAssetManager::Initialize()
+void UNovaAssetManager::Initialize(class UNovaGameInstance* GameInstance)
 {
 	Singleton = this;
 	Catalog.Empty();

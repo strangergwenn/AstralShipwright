@@ -8,7 +8,6 @@
 #include "Spacecraft/NovaSpacecraft.h"
 #include "Spacecraft/System/NovaSpacecraftPropellantSystem.h"
 #include "System/NovaAssetManager.h"
-#include "System/NovaGameInstance.h"
 #include "Nova.h"
 
 #include "EngineUtils.h"
@@ -143,7 +142,7 @@ void UNovaOrbitalSimulationComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Areas = GetOwner()->GetGameInstance<UNovaGameInstance>()->GetAssetManager()->GetAssets<UNovaArea>();
+	Areas = UNovaAssetManager::Get()->GetAssets<UNovaArea>();
 }
 
 void UNovaOrbitalSimulationComponent::UpdateSimulation()

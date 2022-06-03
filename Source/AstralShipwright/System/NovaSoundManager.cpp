@@ -4,7 +4,6 @@
 
 #include "NovaAssetManager.h"
 #include "NovaMenuManager.h"
-#include "NovaGameInstance.h"
 
 #include "Game/Settings/NovaGameUserSettings.h"
 #include "Player/NovaPlayerController.h"
@@ -13,6 +12,9 @@
 
 #include "Components/AudioComponent.h"
 #include "AudioDevice.h"
+
+// Statics
+UNovaSoundManager* UNovaSoundManager::Singleton = nullptr;
 
 /*----------------------------------------------------
     Audio player instance
@@ -120,15 +122,11 @@ void UNovaSoundManager::BeginPlay(ANovaPlayerController* PC, FNovaMusicCallback 
 	MusicCallback    = Callback;
 
 	// Get basic game pointers
-	UNovaGameInstance* GameInstance = PC->GetGameInstance<UNovaGameInstance>();
-	NCHECK(GameInstance);
-	const UNovaAssetManager* AssetManager = GameInstance->GetAssetManager();
-	NCHECK(AssetManager);
 	const UNovaGameUserSettings* GameUserSettings = Cast<UNovaGameUserSettings>(GEngine->GetGameUserSettings());
 	NCHECK(GameUserSettings);
 
 	// Setup sound settings
-	SoundSetup = AssetManager->GetDefaultAsset<UNovaSoundSetup>();
+	SoundSetup = UNovaAssetManager::Get()->GetDefaultAsset<UNovaSoundSetup>();
 	SetMasterVolume(GameUserSettings->MasterVolume);
 	SetUIVolume(GameUserSettings->UIVolume);
 	SetEffectsVolume(GameUserSettings->EffectsVolume);
@@ -152,7 +150,7 @@ void UNovaSoundManager::BeginPlay(ANovaPlayerController* PC, FNovaMusicCallback 
 	}
 
 	// Initialize the sound device and master mix
-	AudioDevice = GameInstance->GetWorld()->GetAudioDevice();
+	AudioDevice = PC->GetWorld()->GetAudioDevice();
 	if (AudioDevice)
 	{
 		AudioDevice->SetBaseSoundMix(SoundSetup->MasterSoundMix);

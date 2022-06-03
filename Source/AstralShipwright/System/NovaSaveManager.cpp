@@ -16,6 +16,9 @@
 #include "Serialization/JsonSerializer.h"
 #include "Policies/CondensedJsonPrintPolicy.h"
 
+// Statics
+UNovaSaveManager* UNovaSaveManager::Singleton = nullptr;
+
 /*----------------------------------------------------
     Asynchronous task
 ----------------------------------------------------*/
@@ -25,12 +28,14 @@ class FNovaAsyncSave : public FNonAbandonableTask
 	friend class FAutoDeleteAsyncTask<FNovaAsyncSave>;
 
 public:
+
 	FNovaAsyncSave(
 		UNovaSaveManager* SaveSystemParam, const FString SaveNameParam, TSharedPtr<FNovaGameSave> SaveDataParam, bool CompressParam)
 		: SaveName(SaveNameParam), SaveData(SaveDataParam), SaveSystem(SaveSystemParam), Compress(CompressParam)
 	{}
 
 protected:
+
 	void DoWork()
 	{
 		NLOG("FNovaAsyncSave::DoWork : started");
@@ -46,6 +51,7 @@ protected:
 	}
 
 protected:
+
 	FString                   SaveName;
 	TSharedPtr<FNovaGameSave> SaveData;
 	UNovaSaveManager*         SaveSystem;
@@ -66,7 +72,7 @@ UNovaSaveManager::UNovaSaveManager() : Super()
 bool UNovaSaveManager::DoesSaveExist(const FString SaveName)
 {
 	return IFileManager::Get().FileSize(*GetSaveGamePath(SaveName, true)) >= 0 ||
-		   IFileManager::Get().FileSize(*GetSaveGamePath(SaveName, false)) >= 0;
+	       IFileManager::Get().FileSize(*GetSaveGamePath(SaveName, false)) >= 0;
 }
 
 void UNovaSaveManager::SaveGameAsync(const FString SaveName, TSharedPtr<FNovaGameSave> SaveData, bool Compress)
@@ -127,7 +133,7 @@ bool UNovaSaveManager::SaveGame(const FString SaveName, TSharedPtr<FNovaGameSave
 		{
 			int32 EffectiveCompressedSize = ContentsCompressedSize + 4;
 			Result                        = FFileHelper::SaveArrayToFile(
-                TArrayView<const uint8>(CompressedData, EffectiveCompressedSize), *GetSaveGamePath(SaveName, true));
+									   TArrayView<const uint8>(CompressedData, EffectiveCompressedSize), *GetSaveGamePath(SaveName, true));
 		}
 		else
 		{
@@ -228,7 +234,7 @@ TSharedPtr<FNovaGameSave> UNovaSaveManager::LoadGame(const FString SaveName)
 bool UNovaSaveManager::DeleteGame(const FString SaveName)
 {
 	bool Result = IFileManager::Get().Delete(*GetSaveGamePath(SaveName, false), true) |
-				  IFileManager::Get().Delete(*GetSaveGamePath(SaveName, true), true);
+	              IFileManager::Get().Delete(*GetSaveGamePath(SaveName, true), true);
 	return Result;
 }
 
