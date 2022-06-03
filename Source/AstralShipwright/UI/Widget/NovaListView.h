@@ -188,10 +188,12 @@ public:
 	/** Get the selection icon */
 	const FSlateBrush* GetSelectionIcon(const ItemType& Item) const
 	{
+		const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ButtonTheme);
+
 		bool IsInitialItem = InitiallySelectedIndex >= 0 && ItemsSource && InitiallySelectedIndex < ItemsSource->Num() &&
 		                     Item == (*ItemsSource)[InitiallySelectedIndex];
 
-		return FNovaStyleSet::GetBrush(IsInitialItem ? "Icon/SB_ListOn" : "Icon/SB_ListOff");
+		return IsInitialItem ? &Theme.ListOn : &Theme.ListOff;
 	}
 
 	/** Get the currently selected index */

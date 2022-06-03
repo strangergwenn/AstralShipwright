@@ -494,6 +494,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 						SNovaNew(SNovaKeyBinding)
 						.Binding(Binding)
 						.OnKeyBindingChanged(this, &SNovaMainMenuSettings::OnKeyBindingChanged, Binding)
+						.Icon(FNovaStyleSet::GetBrush("Icon/SB_Edit"))
 					]
 				
 					+ SHorizontalBox::Slot()

@@ -17,6 +17,7 @@
 #include "UI/Component/NovaSpacecraftDatasheet.h"
 #include "UI/Component/NovaTradableAssetItem.h"
 #include "UI/Widget/NovaFadingWidget.h"
+#include "UI/Widget/NovaInfoText.h"
 #include "UI/Widget/NovaModalPanel.h"
 #include "UI/Widget/NovaKeyLabel.h"
 #include "UI/Widget/NovaSlider.h"

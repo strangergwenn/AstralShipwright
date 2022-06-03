@@ -42,17 +42,13 @@ public:
 	    Interaction
 	----------------------------------------------------*/
 
-	/** Show this menu */
-	void Show();
+	virtual void Show() override;
 
-	/** Start hiding this menu */
-	void Hide();
+	virtual void Hide() override;
 
-	/** Start displaying the tooltip */
-	void ShowTooltip(SWidget* TargetWidget, FText Content);
+	virtual void ShowTooltip(SWidget* TargetWidget, FText Content) override;
 
-	/** Stop displaying the tooltip */
-	void HideTooltip(SWidget* TargetWidget);
+	virtual void HideTooltip(SWidget* TargetWidget) override;
 
 	/** Are we on the assembly menu */
 	bool IsOnAssemblyMenu() const;

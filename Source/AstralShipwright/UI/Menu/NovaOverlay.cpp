@@ -36,7 +36,7 @@ void SNovaOverlay::Construct(const FArguments& InArgs)
 		+ SOverlay::Slot()
 		[
 			SAssignNew(FastForward, SBorder)
-			.BorderImage(FNovaStyleSet::GetBrush("Common/SB_Black"))
+			.BorderImage(&Theme.Black)
 		]
 
 		+ SOverlay::Slot()

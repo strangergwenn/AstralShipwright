@@ -355,13 +355,15 @@ FKey SNovaButton::GetActionKey() const
 
 const FSlateBrush* SNovaButton::GetIconBrush() const
 {
+	const FNovaButtonTheme& Theme = FNovaStyleSet::GetButtonTheme(ThemeName);
+
 	if (Icon.IsSet())
 	{
 		return Icon.Get();
 	}
 	else if (IsToggle)
 	{
-		return (Active ? FNovaStyleSet::GetBrush("Icon/SB_On") : FNovaStyleSet::GetBrush("Icon/SB_Off"));
+		return Active ? &Theme.ListOn : &Theme.ListOff;
 	}
 	else
 	{

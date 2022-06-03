@@ -50,6 +50,26 @@ public:
 	virtual FReply OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent) override;
 
 	/*----------------------------------------------------
+	    Main interface
+	----------------------------------------------------*/
+
+	/** Show this menu */
+	virtual void Show()
+	{}
+
+	/** Start hiding this menu */
+	virtual void Hide()
+	{}
+
+	/** Start displaying the tooltip */
+	virtual void ShowTooltip(SWidget* TargetWidget, FText Content)
+	{}
+
+	/** Stop displaying the tooltip */
+	virtual void HideTooltip(SWidget* TargetWidget)
+	{}
+
+	/*----------------------------------------------------
 	    Input handling
 	----------------------------------------------------*/
 

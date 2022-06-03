@@ -78,12 +78,14 @@ class SNovaKeyBinding : public SNovaButton
 {
 public:
 
-	SLATE_BEGIN_ARGS(SNovaKeyBinding) : _Theme("DefaultButton")
+	SLATE_BEGIN_ARGS(SNovaKeyBinding) : _Theme("DefaultButton"), _Icon(nullptr)
 	{}
 
 	SLATE_ARGUMENT(TSharedPtr<FNovaKeyBinding>, Binding)
 
 	SLATE_ARGUMENT(FName, Theme)
+
+	SLATE_ARGUMENT(const FSlateBrush*, Icon)
 
 	SLATE_EVENT(FNovaOnKeyBindingChanged, OnKeyBindingChanged)
 
@@ -128,6 +130,7 @@ private:
 	----------------------------------------------------*/
 
 	// Data
+	const FSlateBrush*          EditIcon;
 	TSharedPtr<FNovaKeyBinding> Binding;
 	FNovaOnKeyBindingChanged    OnKeyBindingChanged;
 	FVector2D                   WaitingMousePos;

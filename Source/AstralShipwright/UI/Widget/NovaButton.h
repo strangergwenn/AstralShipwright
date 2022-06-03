@@ -6,6 +6,10 @@
 
 #include "Widgets/Input/SButton.h"
 
+/*----------------------------------------------------
+    Supporting types
+----------------------------------------------------*/
+
 /** User callback type to alter the button size */
 DECLARE_DELEGATE_RetVal(float, FNovaButtonUserSizeCallback);
 
@@ -27,6 +31,62 @@ struct FNovaButtonState
 
 	float CurrentTimeSinceClicked;
 };
+
+/** Button layout imposter class */
+class SNovaButtonLayout : public SBox
+{
+	SLATE_BEGIN_ARGS(SNovaButtonLayout) : _Theme("DefaultButton"), _Size(NAME_None), _WidthOnly(true)
+	{}
+
+	SLATE_ARGUMENT(FName, Theme)
+	SLATE_ARGUMENT(FName, Size)
+	SLATE_ARGUMENT(bool, WidthOnly)
+	SLATE_DEFAULT_SLOT(FArguments, Content)
+
+	SLATE_END_ARGS()
+
+public:
+
+	void Construct(const FArguments& InArgs)
+	{
+		// Build padding
+		const FNovaButtonTheme& Theme   = FNovaStyleSet::GetButtonTheme(InArgs._Theme);
+		FMargin                 Padding = Theme.HoverAnimationPadding + 1;
+		if (InArgs._WidthOnly)
+		{
+			Padding.Top    = 0;
+			Padding.Bottom = 0;
+		}
+
+		// clang-format off
+		if (InArgs._Size != NAME_None)
+		{
+			const FNovaButtonSize&  Size  = FNovaStyleSet::GetButtonSize(InArgs._Size);
+
+			SBox::Construct(SBox::FArguments()
+				.WidthOverride(Size.Width)
+				.Padding(Padding)
+				[
+					InArgs._Content.Widget
+				]
+			);
+		}
+		else
+		{
+			SBox::Construct(SBox::FArguments()
+				.Padding(Padding)
+				[
+					InArgs._Content.Widget
+				]
+			);
+		}
+		// clang-format on
+	}
+};
+
+/*----------------------------------------------------
+    Button class
+----------------------------------------------------*/
 
 /** Base button class */
 class SNovaButton : public SButton

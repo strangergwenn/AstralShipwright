@@ -45,9 +45,13 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 		OutBrushes.Add(&MainMenuDarkBackground);
 		OutBrushes.Add(&MainMenuGenericBorder);
 		OutBrushes.Add(&MainMenuManipulator);
+
 		OutBrushes.Add(&TableHeaderBackground);
 		OutBrushes.Add(&TableOddBackground);
 		OutBrushes.Add(&TableEvenBackground);
+
+		OutBrushes.Add(&Black);
+		OutBrushes.Add(&White);
 	}
 
 	/*----------------------------------------------------
@@ -80,9 +84,15 @@ struct FNovaMainTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuDarkBackground;
 	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuGenericBorder;
 	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush MainMenuManipulator;
-	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush TableHeaderBackground;
-	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush TableOddBackground;
-	UPROPERTY(EditDefaultsOnly, Category = Brushes) FSlateBrush TableEvenBackground;
+
+	// Tables
+	UPROPERTY(EditDefaultsOnly, Category = Tables) FSlateBrush TableHeaderBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Tables) FSlateBrush TableOddBackground;
+	UPROPERTY(EditDefaultsOnly, Category = Tables) FSlateBrush TableEvenBackground;
+
+	// Basic
+	UPROPERTY(EditDefaultsOnly, Category = Basic) FSlateBrush Black;
+	UPROPERTY(EditDefaultsOnly, Category = Basic) FSlateBrush White;
 
 	// Widget styles
 	UPROPERTY(EditDefaultsOnly, Category = Widgets) FSliderStyle SliderStyle;

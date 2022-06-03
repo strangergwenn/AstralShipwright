@@ -168,7 +168,7 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 	// Credits
 	ModalPanel = Menu->CreateModalPanel();
 	SAssignNew(CreditsWidget, SBorder)
-	.BorderImage(FNovaStyleSet::GetBrush("Common/SB_Black"))
+	.BorderImage(&Theme.Black)
 	.Padding(0)
 	[
 		SNew(SHorizontalBox)

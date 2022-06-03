@@ -35,6 +35,8 @@ struct FNovaButtonTheme : public FSlateWidgetStyle
 	{
 		OutBrushes.Add(&Border);
 		OutBrushes.Add(&Background);
+		OutBrushes.Add(&ListOn);
+		OutBrushes.Add(&ListOff);
 	}
 
 	/*----------------------------------------------------
@@ -46,6 +48,8 @@ struct FNovaButtonTheme : public FSlateWidgetStyle
 	UPROPERTY(EditDefaultsOnly, Category = Button) FMargin HoverAnimationPadding;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FSlateBrush Border;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FSlateBrush Background;
+	UPROPERTY(EditDefaultsOnly, Category = Button) FSlateBrush ListOn;
+	UPROPERTY(EditDefaultsOnly, Category = Button) FSlateBrush ListOff;
 	UPROPERTY(EditDefaultsOnly, Category = Button) FLinearColor DisabledColor;
 	UPROPERTY(EditDefaultsOnly, Category = Button) bool Centered;
 	UPROPERTY(EditDefaultsOnly, Category = Button) int32 WrapMargin;

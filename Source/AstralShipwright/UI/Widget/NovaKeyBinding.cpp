@@ -134,12 +134,13 @@ void SNovaKeyBinding::Construct(const FArguments& InArgs)
 	// Arguments
 	Binding             = InArgs._Binding;
 	ThemeName           = InArgs._Theme;
+	EditIcon            = InArgs._Icon;
 	OnKeyBindingChanged = InArgs._OnKeyBindingChanged;
 
 	// Parent constructor
 	SNovaButton::Construct(SNovaButton::FArguments()
 							   .Theme(InArgs._Theme)
-							   .Icon(FNovaStyleSet::GetBrush("Icon/SB_Edit"))
+							   .Icon(EditIcon)
 							   .Text(this, &SNovaKeyBinding::GetKeyName)
 							   .HelpText(LOCTEXT("EditBinding", "Change this key binding")));
 
