@@ -69,12 +69,7 @@ ANovaPlayerViewpoint::ANovaPlayerViewpoint() : Super()
 	CameraTravelingAmount   = 250.0f;
 }
 
-ANovaPlayerController::ANovaPlayerController()
-	: Super()
-	, CurrentCameraState(ENovaPlayerCameraState::Default)
-	, CurrentTimeInCameraState(0)
-	, PhotoModeAction(NAME_None)
-	, SharedTransitionActive(false)
+ANovaPlayerController::ANovaPlayerController() : Super(), PhotoModeAction(NAME_None)
 {}
 
 /*----------------------------------------------------
@@ -362,8 +357,6 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 			SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
 			SpacecraftPawn->SetHighlightedCompartment(INDEX_NONE);
 		}
-
-		CurrentTimeInCameraState += DeltaTime;
 	}
 }
 
@@ -371,10 +364,12 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 {
 	Super::GetPlayerViewPoint(Location, Rotation);
 
+	ENovaPlayerCameraState CameraState = GetCameraState<ENovaPlayerCameraState>();
+
 	// During cutscenes, use the closest camera viewpoint and focus the player ship
-	if (IsReady() && (CurrentCameraState == ENovaPlayerCameraState::CinematicSpacecraft ||
-						 CurrentCameraState == ENovaPlayerCameraState::CinematicEnvironment ||
-						 CurrentCameraState == ENovaPlayerCameraState::CinematicBrake))
+	if (IsReady() &&
+		(CameraState == ENovaPlayerCameraState::CinematicSpacecraft || CameraState == ENovaPlayerCameraState::CinematicEnvironment ||
+			CameraState == ENovaPlayerCameraState::CinematicBrake))
 	{
 		// Get points of interest nearby
 		TArray<AActor*> Viewpoints;
@@ -406,15 +401,15 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 			Location = PlayerViewpoint->GetActorLocation();
 
 			// Spacecraft focus
-			if (CurrentCameraState == ENovaPlayerCameraState::CinematicSpacecraft)
+			if (CameraState == ENovaPlayerCameraState::CinematicSpacecraft)
 			{
 				Rotation = (PlayerLocation - Location).Rotation();
 			}
 
 			// Environment panning shot
-			else if (CurrentCameraState == ENovaPlayerCameraState::CinematicEnvironment)
+			else if (CameraState == ENovaPlayerCameraState::CinematicEnvironment)
 			{
-				float AnimationAlpha = FMath::Clamp(CurrentTimeInCameraState / AnimationDuration, 0.0f, 1.0f);
+				float AnimationAlpha = FMath::Clamp(GetCurrentTimeInCameraState() / AnimationDuration, 0.0f, 1.0f);
 				AnimationAlpha       = FMath::InterpEaseOut(-0.5f, 0.5f, AnimationAlpha, ENeutronUIConstants::EaseStandard);
 
 				Rotation = PlayerViewpoint->GetActorRotation();
@@ -425,7 +420,7 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 		}
 
 		// Braking spacecraft entry
-		if (CurrentCameraState == ENovaPlayerCameraState::CinematicBrake &&
+		if (CameraState == ENovaPlayerCameraState::CinematicBrake &&
 			((StationDocks.Num() > 0 && IsValid(PlayerStart)) || Asteroids.Num() > 0))
 		{
 			NCHECK(Planetariums.Num() > 0);
@@ -563,98 +558,26 @@ void ANovaPlayerController::Undock()
 	UNeutronMenuManager::Get()->CloseMenu(StartCutscene);
 }
 
-void ANovaPlayerController::SharedTransition(ENovaPlayerCameraState NewCameraState, FNeutronAsyncAction StartAction,
-	FNeutronAsyncCondition Condition, FNeutronAsyncAction FinishAction)
+void ANovaPlayerController::OnCameraStateChanged()
 {
-	NCHECK(GetLocalRole() == ROLE_Authority);
-	NLOG("ANovaPlayerController::ServerSharedTransition");
-
-	for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
+	if (GetCameraState<ENovaPlayerCameraState>() == ENovaPlayerCameraState::FastForward)
 	{
-		OtherPlayer->ClientStartSharedTransition(NewCameraState);
+		UNeutronMenuManager::Get()->GetOverlay<SNovaOverlay>()->StartFastForward();
 	}
-
-	SharedTransitionStartAction  = StartAction;
-	SharedTransitionFinishAction = FinishAction;
-	SharedTransitionCondition    = Condition;
+	else
+	{
+		UNeutronMenuManager::Get()->GetOverlay<SNovaOverlay>()->StopFastForward();
+	}
 }
 
-void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlayerCameraState NewCameraState)
+bool ANovaPlayerController::GetSharedTransitionMenuState(uint8 NewCameraState)
 {
-	NLOG("ANovaPlayerController::ClientStartSharedTransition_Implementation");
-
-	// Shared transitions work like this :
-	// - Server signals all players to fade to black through this very method
-	// - Once faded, Action is called and all players call ServerSharedTransitionReady() to signal they're dark
-	// - Server fires SharedTransitionStartAction when all clients have called ServerSharedTransitionReady()
-	// - Server fires SharedTransitionFinishAction once SharedTransitionCondition returns true on the server
-	// - Server then calls ClientStopSharedTransition() on all players so that they know to resume
-	// - All players then fade back to the game
-
-	SharedTransitionActive = true;
-
-	// Action : mark as in shared transition locally and remotely
-	FNeutronAsyncAction Action = FNeutronAsyncAction::CreateLambda(
-		[=]()
-		{
-			SetCameraState(NewCameraState);
-			ServerSharedTransitionReady();
-			NLOG("ANovaPlayerController::ClientStartSharedTransition_Implementation : done, waiting for server");
-		});
-
-	// Condition : on server, when all clients have reported as ready
-	// On client, when the server has signaled to stop
-	FNeutronAsyncCondition Condition = FNeutronAsyncCondition::CreateLambda(
-		[=]()
-		{
-			if (GetLocalRole() == ROLE_Authority)
-			{
-				// Check if all players are in transition
-				bool AllPlayersInTransition = true;
-				for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
-				{
-					if (!OtherPlayer->SharedTransitionActive)
-					{
-						AllPlayersInTransition = false;
-						break;
-					}
-				}
-
-				// Once all players are in the transition, fire the start event, wait for the condition, fire the end event, and stop
-				if (AllPlayersInTransition)
-				{
-					SharedTransitionStartAction.ExecuteIfBound();
-					SharedTransitionStartAction.Unbind();
-
-					if (!SharedTransitionCondition.IsBound() || SharedTransitionCondition.Execute())
-					{
-						SharedTransitionFinishAction.ExecuteIfBound();
-						SharedTransitionFinishAction.Unbind();
-						SharedTransitionCondition.Unbind();
-
-						for (ANovaPlayerController* OtherPlayer : TActorRange<ANovaPlayerController>(GetWorld()))
-						{
-							OtherPlayer->ClientStopSharedTransition();
-						}
-
-						return true;
-					}
-				}
-
-				return false;
-			}
-			else
-			{
-				return !SharedTransitionActive;
-			}
-		});
-
-	// Run the process
-	switch (NewCameraState)
+	switch ((ENovaPlayerCameraState) NewCameraState)
 	{
 		// UI enabled states
+		default:
 		case ENovaPlayerCameraState::Default:
-			UNeutronMenuManager::Get()->OpenMenu(Action, Condition);
+			return true;
 			break;
 
 		// UI disabled states
@@ -662,39 +585,8 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 		case ENovaPlayerCameraState::CinematicEnvironment:
 		case ENovaPlayerCameraState::CinematicBrake:
 		case ENovaPlayerCameraState::FastForward:
-			UNeutronMenuManager::Get()->CloseMenu(Action, Condition);
+			return false;
 			break;
-	}
-}
-
-void ANovaPlayerController::ClientStopSharedTransition_Implementation()
-{
-	NLOG("ANovaPlayerController::ClientStopSharedTransition_Implementation");
-
-	SharedTransitionActive = false;
-}
-
-void ANovaPlayerController::ServerSharedTransitionReady_Implementation()
-{
-	NCHECK(GetLocalRole() == ROLE_Authority);
-	NLOG("ANovaPlayerController::ServerSharedTransitionReady_Implementation");
-
-	SharedTransitionActive = true;
-}
-
-void ANovaPlayerController::SetCameraState(ENovaPlayerCameraState State)
-{
-	CurrentCameraState       = State;
-	CurrentTimeInCameraState = 0;
-
-	// Handle the fast-forward camera
-	if (State == ENovaPlayerCameraState::FastForward)
-	{
-		UNeutronMenuManager::Get()->GetOverlay<SNovaOverlay>()->StartFastForward();
-	}
-	else
-	{
-		UNeutronMenuManager::Get()->GetOverlay<SNovaOverlay>()->StopFastForward();
 	}
 }
 

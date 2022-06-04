@@ -131,7 +131,7 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 		auto OrbitalSimulation  = IsValid(GameState) ? GameState->GetOrbitalSimulation() : nullptr;
 
 		if (IsValid(PC) && IsValid(SpacecraftPawn) && IsValid(GameState) && IsValid(OrbitalSimulation) &&
-			PC->GetCameraState() == ENovaPlayerCameraState::Default)
+			PC->GetCameraState<ENovaPlayerCameraState>() == ENovaPlayerCameraState::Default)
 		{
 			if (SpacecraftPawn->IsDocked())
 			{

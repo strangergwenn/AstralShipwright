@@ -161,37 +161,9 @@ public:
 	/** Undock the player from the current dock with a cutscene */
 	void Undock();
 
-	/** Run a shared transition with a fade to black on all clients */
-	void SharedTransition(ENovaPlayerCameraState NewCameraState, FNeutronAsyncAction StartAction = FNeutronAsyncAction(),
-		FNeutronAsyncCondition Condition = FNeutronAsyncCondition(), FNeutronAsyncAction FinishAction = FNeutronAsyncAction());
+	virtual void OnCameraStateChanged() override;
 
-	/** Signal a client that a shared transition is starting */
-	UFUNCTION(Client, Reliable)
-	void ClientStartSharedTransition(ENovaPlayerCameraState NewCameraState);
-
-	/** Signal a client that the transition is complete */
-	UFUNCTION(Client, Reliable)
-	void ClientStopSharedTransition();
-
-	/** Signal the server that the transition is ready */
-	UFUNCTION(Server, Reliable)
-	void ServerSharedTransitionReady();
-
-	/** Check if the player is currently in a shared transition */
-	UFUNCTION(Category = Nova, BlueprintCallable)
-	bool IsInSharedTransition() const
-	{
-		return SharedTransitionActive;
-	}
-
-	/** Set the current camera state */
-	void SetCameraState(ENovaPlayerCameraState State);
-
-	/** Get the camera state */
-	ENovaPlayerCameraState GetCameraState() const
-	{
-		return CurrentCameraState;
-	}
+	virtual bool GetSharedTransitionMenuState(uint8 NewCameraState) override;
 
 	/*----------------------------------------------------
 	    Server-side save
@@ -241,19 +213,11 @@ public:
 private:
 
 	// General state
-	ENovaPlayerCameraState CurrentCameraState;
-	float                  CurrentTimeInCameraState;
-	FName                  PhotoModeAction;
+	FName PhotoModeAction;
 
 	// Replicated credits value
 	UPROPERTY(Replicated)
 	FNovaCredits Credits;
-
-	// Transitions
-	bool                   SharedTransitionActive;
-	FNeutronAsyncAction    SharedTransitionStartAction;
-	FNeutronAsyncAction    SharedTransitionFinishAction;
-	FNeutronAsyncCondition SharedTransitionCondition;
 
 	// Gameplay state
 	TMap<ENovaPostProcessPreset, TSharedPtr<FNeutronPostProcessSetting>> PostProcessSettings;
