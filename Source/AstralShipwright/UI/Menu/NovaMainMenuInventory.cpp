@@ -456,7 +456,7 @@ void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type
 			};
 
 			//	Fill the resource list
-			ResourceList = GameState->GetResourcesSold();
+			ResourceList = GameState->GetResourcesSold(Type);
 			ResourceListView->Refresh(0);
 
 			// Proceed with the modal panel

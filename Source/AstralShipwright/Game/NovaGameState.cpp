@@ -269,7 +269,7 @@ bool ANovaGameState::IsResourceSold(const UNovaResource* Asset, const class UNov
 	return false;
 }
 
-TArray<const UNovaResource*> ANovaGameState::GetResourcesSold() const
+TArray<const UNovaResource*> ANovaGameState::GetResourcesSold(ENovaResourceType Type) const
 {
 	TArray<const UNovaResource*> Result;
 
@@ -277,7 +277,7 @@ TArray<const UNovaResource*> ANovaGameState::GetResourcesSold() const
 	{
 		for (const FNovaResourceTrade& Trade : CurrentArea->ResourceTradeMetadata)
 		{
-			if (Trade.ForSale)
+			if (Trade.ForSale && Trade.Resource->Type == Type)
 			{
 				Result.Add(Trade.Resource);
 			}
