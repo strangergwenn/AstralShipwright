@@ -5,15 +5,61 @@
 #include "EngineMinimal.h"
 #include "NovaGameTypes.h"
 #include "NovaAISpacecraft.h"
+#include "NovaOrbitalSimulationTypes.h"
 #include "NovaAISimulationComponent.generated.h"
 
 /** AI states */
+UENUM()
 enum class ENovaAISpacecraftState : uint8
 {
 	Idle,
 	Trajectory,
 	Station,
 	Undocking
+};
+
+/** AI spacecraft save */
+USTRUCT()
+struct FNovaAISpacecraftStateSave
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FGuid SpacecraftIdentifier;
+
+	UPROPERTY()
+	const class UNovaAISpacecraftDescription* SpacecraftClass;
+
+	UPROPERTY()
+	FString SpacecraftName;
+
+	UPROPERTY()
+	const class UNovaArea* TargetArea;
+
+	UPROPERTY()
+	ENovaAISpacecraftState CurrentState;
+
+	UPROPERTY()
+	FNovaTime CurrentStateStartTime;
+
+	UPROPERTY()
+	FNovaOrbit Orbit;
+
+	UPROPERTY()
+	FNovaTrajectory Trajectory;
+};
+
+/** AI save */
+USTRUCT()
+struct FNovaAIStateSave
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<FNovaAISpacecraftStateSave> SpacecraftStates;
+
+	UPROPERTY()
+	int32 PatrolRandomStreamSeed;
 };
 
 /** AI spacecraft data */
@@ -51,12 +97,9 @@ public:
 	    Loading & saving
 	----------------------------------------------------*/
 
-	TSharedPtr<struct FNovaAIStateSave> Save() const;
+	FNovaAIStateSave Save() const;
 
-	void Load(TSharedPtr<struct FNovaAIStateSave> SaveData);
-
-	static void SerializeJson(
-		TSharedPtr<struct FNovaAIStateSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
+	void Load(const FNovaAIStateSave& SaveData);
 
 	/*----------------------------------------------------
 	    Interface

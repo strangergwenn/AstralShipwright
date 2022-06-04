@@ -64,32 +64,11 @@ UNovaAISimulationComponent::UNovaAISimulationComponent() : Super(), PatrolRandom
     Loading & saving
 ----------------------------------------------------*/
 
-struct FNovaAISpacecraftStateSave
-{
-	FGuid                               SpacecraftIdentifier;
-	const UNovaAISpacecraftDescription* SpacecraftClass;
-	FString                             SpacecraftName;
-
-	const UNovaArea*       TargetArea;
-	ENovaAISpacecraftState CurrentState;
-	FNovaTime              CurrentStateStartTime;
-
-	FNovaOrbit      Orbit;
-	FNovaTrajectory Trajectory;
-};
-
-struct FNovaAIStateSave
-{
-	TArray<FNovaAISpacecraftStateSave> SpacecraftStates;
-
-	int32 PatrolRandomStreamSeed;
-};
-
-TSharedPtr<FNovaAIStateSave> UNovaAISimulationComponent::Save() const
+FNovaAIStateSave UNovaAISimulationComponent::Save() const
 {
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 
-	TSharedPtr<FNovaAIStateSave> SaveData = MakeShared<FNovaAIStateSave>();
+	FNovaAIStateSave SaveData;
 
 	// Get game state pointers
 	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
@@ -134,23 +113,20 @@ TSharedPtr<FNovaAIStateSave> UNovaAISimulationComponent::Save() const
 		NCHECK(SpacecraftSaveData.SpacecraftClass != nullptr);
 		NCHECK(SpacecraftSaveData.SpacecraftName.Len() > 0);
 
-		SaveData->SpacecraftStates.Add(SpacecraftSaveData);
+		SaveData.SpacecraftStates.Add(SpacecraftSaveData);
 	}
 
 	// Save patrol state
-	SaveData->PatrolRandomStreamSeed = PatrolRandomStream.GetCurrentSeed();
+	SaveData.PatrolRandomStreamSeed = PatrolRandomStream.GetCurrentSeed();
 
 	return SaveData;
 }
 
-void UNovaAISimulationComponent::Load(TSharedPtr<FNovaAIStateSave> SaveData)
+void UNovaAISimulationComponent::Load(const FNovaAIStateSave& SaveData)
 {
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 
 	NLOG("UNovaAISimulationComponent::Load");
-
-	// Ensure consistency
-	NCHECK(SaveData != nullptr);
 
 	// Get game state pointers
 	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
@@ -159,10 +135,10 @@ void UNovaAISimulationComponent::Load(TSharedPtr<FNovaAIStateSave> SaveData)
 	NCHECK(OrbitalSimulation);
 
 	// Load actual data
-	if (SaveData->SpacecraftStates.Num() > 0)
+	if (SaveData.SpacecraftStates.Num() > 0)
 	{
 		// Iterate over the save data
-		for (const FNovaAISpacecraftStateSave& SpacecraftSaveData : SaveData->SpacecraftStates)
+		for (const FNovaAISpacecraftStateSave& SpacecraftSaveData : SaveData.SpacecraftStates)
 		{
 			FNovaAISpacecraftState SpacecraftState;
 
@@ -192,88 +168,13 @@ void UNovaAISimulationComponent::Load(TSharedPtr<FNovaAIStateSave> SaveData)
 		}
 
 		// Load patrol state
-		PatrolRandomStream = FRandomStream(SaveData->PatrolRandomStreamSeed);
+		PatrolRandomStream = FRandomStream(SaveData.PatrolRandomStreamSeed);
 	}
 
 	// New game
 	else
 	{
 		CreateGame();
-	}
-}
-
-void UNovaAISimulationComponent::SerializeJson(
-	TSharedPtr<FNovaAIStateSave>& SaveData, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
-{
-	// Writing to save
-	if (Direction == ENovaSerialize::DataToJson)
-	{
-		JsonData = MakeShared<FJsonObject>();
-		TArray<TSharedPtr<FJsonValue>> SpacecraftJsonDataArray;
-
-		for (const FNovaAISpacecraftStateSave& SpacecraftSaveData : SaveData->SpacecraftStates)
-		{
-			TSharedPtr<FJsonObject> SpacecraftJsonData = MakeShared<FJsonObject>();
-
-			// Spacecraft
-			SpacecraftJsonData->SetStringField("SI", SpacecraftSaveData.SpacecraftIdentifier.ToString());
-			UNovaAssetDescription::SaveAsset(SpacecraftJsonData, "SC", SpacecraftSaveData.SpacecraftClass);
-			SpacecraftJsonData->SetStringField("SN", SpacecraftSaveData.SpacecraftName);
-
-			// Common
-			UNovaAssetDescription::SaveAsset(SpacecraftJsonData, "TA", SpacecraftSaveData.TargetArea);
-			SpacecraftJsonData->SetNumberField("CS", static_cast<uint8>(SpacecraftSaveData.CurrentState));
-			SpacecraftJsonData->SetNumberField("CSST", SpacecraftSaveData.CurrentStateStartTime.AsMinutes());
-
-			// Trajectory & orbit
-			SpacecraftJsonData->SetObjectField("O", FJsonObjectConverter::UStructToJsonObject<FNovaOrbit>(SpacecraftSaveData.Orbit));
-			SpacecraftJsonData->SetObjectField(
-				"T", FJsonObjectConverter::UStructToJsonObject<FNovaTrajectory>(SpacecraftSaveData.Trajectory));
-
-			SpacecraftJsonDataArray.Add(MakeShared<FJsonValueObject>(SpacecraftJsonData));
-		}
-
-		JsonData->SetArrayField("States", SpacecraftJsonDataArray);
-		JsonData->SetNumberField("PRSS", SaveData->PatrolRandomStreamSeed);
-	}
-
-	// Reading from save
-	else
-	{
-		SaveData = MakeShared<FNovaAIStateSave>();
-
-		const TArray<TSharedPtr<FJsonValue>>* SpacecraftJsonDataArray;
-		if (JsonData->TryGetArrayField("States", SpacecraftJsonDataArray))
-		{
-			for (TSharedPtr<FJsonValue> SpacecraftJsonValue : *SpacecraftJsonDataArray)
-			{
-				TSharedPtr<FJsonObject> SpacecraftJsonData = SpacecraftJsonValue->AsObject();
-
-				FNovaAISpacecraftStateSave SpacecraftSaveData;
-
-				// Spacecraft
-				NCHECK(FGuid::Parse(SpacecraftJsonData->GetStringField("SI"), SpacecraftSaveData.SpacecraftIdentifier));
-				SpacecraftSaveData.SpacecraftClass =
-					UNovaAssetDescription::LoadAsset<UNovaAISpacecraftDescription>(SpacecraftJsonData, "SC");
-				SpacecraftSaveData.SpacecraftName = SpacecraftJsonData->GetStringField("SN");
-
-				// Common
-				SpacecraftSaveData.TargetArea            = UNovaAssetDescription::LoadAsset<UNovaArea>(SpacecraftJsonData, "TA");
-				SpacecraftSaveData.CurrentState          = static_cast<ENovaAISpacecraftState>(SpacecraftJsonData->GetNumberField("CS"));
-				SpacecraftSaveData.CurrentStateStartTime = FNovaTime::FromMinutes(SpacecraftJsonData->GetNumberField("CSST"));
-
-				// Trajectory & orbit
-				SpacecraftSaveData.CurrentStateStartTime = FNovaTime::FromMinutes(SpacecraftJsonData->GetNumberField("CSST"));
-				FJsonObjectConverter::JsonObjectToUStruct<FNovaOrbit>(
-					SpacecraftJsonData->GetObjectField("O").ToSharedRef(), &SpacecraftSaveData.Orbit);
-				FJsonObjectConverter::JsonObjectToUStruct<FNovaTrajectory>(
-					SpacecraftJsonData->GetObjectField("T").ToSharedRef(), &SpacecraftSaveData.Trajectory);
-
-				SaveData->SpacecraftStates.Add(SpacecraftSaveData);
-			}
-		}
-
-		SaveData->PatrolRandomStreamSeed = JsonData->GetNumberField("PRSS");
 	}
 }
 

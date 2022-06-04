@@ -89,7 +89,7 @@ public:
 					PC->ProcessTransaction(-Cost.TotalChangeCost);
 					SpacecraftPawn->ApplyAssembly();
 					SpacecraftPawn->SetEditing(true);
-					PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC);
+					PC->SaveGame();
 				});
 
 			RevertChanges = FSimpleDelegate::CreateLambda(

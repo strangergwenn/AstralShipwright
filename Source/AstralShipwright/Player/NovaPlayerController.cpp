@@ -12,6 +12,7 @@
 #include "Game/NovaGameMode.h"
 #include "Game/NovaGameState.h"
 #include "Game/NovaPlanetarium.h"
+#include "Game/NovaSaveData.h"
 #include "Game/Contract/NovaContract.h"
 #include "Game/Settings/NovaGameUserSettings.h"
 #include "Game/Settings/NovaWorldSettings.h"
@@ -82,15 +83,9 @@ ANovaPlayerController::ANovaPlayerController()
     Loading & saving
 ----------------------------------------------------*/
 
-struct FNovaPlayerSave
+FNovaPlayerSave ANovaPlayerController::Save() const
 {
-	TSharedPtr<struct FNovaSpacecraft> Spacecraft;
-	FNovaCredits                       Credits;
-};
-
-TSharedPtr<FNovaPlayerSave> ANovaPlayerController::Save() const
-{
-	TSharedPtr<FNovaPlayerSave> SaveData = MakeShared<FNovaPlayerSave>();
+	FNovaPlayerSave SaveData;
 
 	// Save the spacecraft
 	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
@@ -98,71 +93,83 @@ TSharedPtr<FNovaPlayerSave> ANovaPlayerController::Save() const
 	const FNovaSpacecraft* Spacecraft = GetSpacecraft();
 	if (Spacecraft)
 	{
-		SaveData->Spacecraft = Spacecraft->GetSharedCopy();
+		SaveData.Spacecraft = *Spacecraft;
 	}
 
 	// Save credits
-	SaveData->Credits = Credits;
+	SaveData.Credits = Credits;
 
 	return SaveData;
 }
 
-void ANovaPlayerController::Load(TSharedPtr<FNovaPlayerSave> SaveData)
+void ANovaPlayerController::Load(const FNovaPlayerSave& SaveData)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 	NLOG("ANovaPlayerController::Load");
 
 	// Store the save data so that the spacecraft pawn can fetch it later when it spawns
-	UpdateSpacecraft(*SaveData->Spacecraft.Get());
+	FNovaSpacecraft NewSpacecraft = SaveData.Spacecraft;
+	NewSpacecraft.UpdatePropulsionMetrics();
+	if (!NewSpacecraft.IsValid())
+	{
+		NewSpacecraft.Create(LOCTEXT("UnnamedSpacecraft", "Unnamed Spacecraft").ToString());
+	}
+	UpdateSpacecraft(NewSpacecraft);
 
-	Credits = SaveData->Credits;
+	// Load credits
+	Credits = SaveData.Credits;
+	if (Credits == 0)
+	{
+#if WITH_EDITOR
+		Credits = 20000;
+#else
+		Credits = 2000;
+#endif    // WITH_EDITOR
+	}
 }
 
-void ANovaPlayerController::SerializeJson(
-	TSharedPtr<FNovaPlayerSave>& SaveData, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
+void ANovaPlayerController::SaveGame()
 {
-	// Writing to save
-	if (Direction == ENovaSerialize::DataToJson)
+	NLOG("ANovaPlayerController::SaveGame");
+
+	TSharedPtr<FNovaGameSave> SaveData = MakeShared<FNovaGameSave>();
+
+	// Save ourselves
+	SaveData->PlayerData = Save();
+
+	// Save the world
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		JsonData = MakeShared<FJsonObject>();
-
-		// Spacecraft
-		TSharedPtr<FJsonObject> SpacecraftJsonData;
-		if (SaveData)
+		ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
+		if (IsValid(GameState))
 		{
-			FNovaSpacecraft::SerializeJson(SaveData->Spacecraft, SpacecraftJsonData, ENovaSerialize::DataToJson);
+			SaveData->GameStateData = GameState->Save();
 		}
-		JsonData->SetObjectField("Spacecraft", SpacecraftJsonData);
-
-		// Credits
-		JsonData->SetNumberField("Credits", SaveData->Credits.GetValue());
 	}
 
-	// Reading from save
-	else
-	{
-		SaveData = MakeShared<FNovaPlayerSave>();
+	// Save contracts
+	SaveData->ContractManagerData = UNovaContractManager::Get()->Save();
 
-		// Spacecraft
-		TSharedPtr<FJsonObject> SpacecraftJsonData =
-			JsonData->HasTypedField<EJson::Object>("Spacecraft") ? JsonData->GetObjectField("Spacecraft") : MakeShared<FJsonObject>();
-		FNovaSpacecraft::SerializeJson(SaveData->Spacecraft, SpacecraftJsonData, ENovaSerialize::JsonToData);
+	// Write the save data to the already open slot
+	UNovaSaveManager::Get()->SetCurrentSaveData<FNovaGameSave>(SaveData);
+	UNovaSaveManager::Get()->WriteCurrentSaveData<FNovaGameSave>();
+	Notify(LOCTEXT("SavedGame", "Game saved"), FText(), ENovaNotificationType::Save);
+}
 
-		// Credits
-		int64 Credits = 0;
-		if (JsonData->TryGetNumberField("Credits", Credits))
-		{
-			SaveData->Credits = Credits;
-		}
-		else
-		{
-#if WITH_EDITOR
-			SaveData->Credits = 20000;
-#else
-			SaveData->Credits = 2000;
-#endif    // WITH_EDITOR
-		}
-	}
+void ANovaPlayerController::LoadGame(const FString SaveName)
+{
+	NLOG("ANovaPlayerController::LoadGame");
+
+	UNovaSaveManager* SaveManager = UNovaSaveManager::Get();
+	NCHECK(SaveManager);
+
+	// Load the save data from slot
+	SaveManager->LoadGame<FNovaGameSave>(SaveName);
+	NCHECK(SaveManager->HasLoadedSaveData());
+	TSharedPtr<FNovaGameSave> SaveData = SaveManager->GetCurrentSaveData<FNovaGameSave>();
+
+	// Load contracts
+	UNovaContractManager::Get()->Load(SaveData->ContractManagerData);
 }
 
 /*----------------------------------------------------
@@ -178,36 +185,8 @@ void ANovaPlayerController::BeginPlay()
 	// Process client-side player initialization
 	if (IsLocalPlayerController())
 	{
-		// Load save data, process local game startup
-		if (!IsOnMainMenu())
-		{
-			ClientLoadPlayer();
-		}
-
-		// Setup systems
+		// Setup menus
 		UNovaMenuManager::Get()->BeginPlay<SNovaMainMenu, SNovaOverlay>(this);
-
-		// Setup contracts
-		UNovaContractManager::Get()->BeginPlay(this,    //
-			FNovaContractCreationCallback::CreateWeakLambda(this,
-				[=](ENovaContractType Type, UNovaGameInstance* CurrentGameInstance)
-				{
-					// Create the contract
-					TSharedPtr<FNovaContract> Contract;
-					if (Type == ENovaContractType::Tutorial)
-					{
-						Contract = MakeShared<FNovaTutorialContract>();
-					}
-					else
-					{
-						NCHECK(false);
-					}
-
-					// Create the contract
-					Contract->Initialize(CurrentGameInstance);
-
-					return Contract;
-				}));
 
 		// Setup post-processing
 		TSharedPtr<FNovaPostProcessSetting> DefaultSettings = MakeShared<FNovaPostProcessSetting>();
@@ -215,7 +194,7 @@ void ANovaPlayerController::BeginPlay()
 		UNovaPostProcessManager::Get()->BeginPlay(this,
 
 			// Preset control
-			FNovaPostProcessControl::CreateLambda(
+			FNovaPostProcessControl::CreateWeakLambda(this,
 				[=]()
 				{
 					ENovaPostProcessPreset TargetPreset = ENovaPostProcessPreset::Neutral;
@@ -224,7 +203,7 @@ void ANovaPlayerController::BeginPlay()
 				}),
 
 			// Preset tick
-			FNovaPostProcessUpdate::CreateLambda(
+			FNovaPostProcessUpdate::CreateWeakLambda(this,
 				[=](UPostProcessComponent* Volume, UMaterialInstanceDynamic* Material,
 					const TSharedPtr<FNovaPostProcessSettingBase>& Current, const TSharedPtr<FNovaPostProcessSettingBase>& Target,
 					float Alpha)
@@ -308,6 +287,34 @@ void ANovaPlayerController::BeginPlay()
 
 					return false;
 				}));
+
+		// Setup contracts
+		UNovaContractManager::Get()->BeginPlay(this,    //
+			FNovaContractCreationCallback::CreateWeakLambda(this,
+				[=](ENovaContractType Type, UNovaGameInstance* CurrentGameInstance)
+				{
+					// Create the contract
+					TSharedPtr<FNovaContract> Contract;
+					if (Type == ENovaContractType::Tutorial)
+					{
+						Contract = MakeShared<FNovaTutorialContract>();
+					}
+					else
+					{
+						NCHECK(false);
+					}
+
+					// Create the contract
+					Contract->Initialize(CurrentGameInstance);
+
+					return Contract;
+				}));
+
+		// Load save data, process local game startup
+		if (!IsOnMainMenu())
+		{
+			ClientLoadPlayer();
+		}
 	}
 
 	// Initialize persistent objects
@@ -515,7 +522,7 @@ void ANovaPlayerController::Dock()
 				{
 					SetCameraState(ENovaPlayerCameraState::Default);
 					GetSpacecraftPawn()->ResetView();
-					GetGameInstance<UNovaGameInstance>()->SaveGame(this);
+					SaveGame();
 				}));
 		});
 
@@ -547,7 +554,7 @@ void ANovaPlayerController::Undock()
 	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda(
 		[=]()
 		{
-			GetGameInstance<UNovaGameInstance>()->SaveGame(this);
+			SaveGame();
 			SetCameraState(ENovaPlayerCameraState::CinematicSpacecraft);
 			GetSpacecraftPawn()->Undock(EndCutscene);
 		});
@@ -699,40 +706,34 @@ void ANovaPlayerController::ClientLoadPlayer()
 	NLOG("ANovaPlayerController::ClientLoadPlayer");
 
 	// Check for save data
-	UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
-	NCHECK(GameInstance);
+	UNovaSaveManager* SaveManager = UNovaSaveManager::Get();
+	NCHECK(SaveManager);
 
 #if WITH_EDITOR
 
 	// Ensure valid save data exists even if the game was loaded directly on a map (PIE client)
-	if (GetLocalRole() != ROLE_Authority && !GameInstance->HasSave())
+	if (GetLocalRole() != ROLE_Authority && !SaveManager->HasLoadedSaveData())
 	{
-		GameInstance->LoadGame("PIE");
+		LoadGame("PIE");
 	}
 
 #endif    // WITH_EDITOR
 
-	NCHECK(GameInstance->HasSave());
+	NCHECK(UNovaSaveManager::Get()->HasLoadedSaveData());
 
 	// Serialize the save data and spawn the player actors on the server
-	TSharedPtr<FJsonObject>     JsonData;
-	TSharedPtr<FNovaPlayerSave> PlayerSaveData = GameInstance->GetPlayerSave();
-	SerializeJson(PlayerSaveData, JsonData, ENovaSerialize::DataToJson);
-	ServerLoadPlayer(UNovaSaveManager::JsonToString(JsonData));
+	TSharedPtr<FJsonObject>   JsonData;
+	TSharedPtr<FNovaGameSave> GameSaveData = SaveManager->GetCurrentSaveData<FNovaGameSave>();
+	ServerLoadPlayer(GameSaveData->PlayerData);
 }
 
-void ANovaPlayerController::ServerLoadPlayer_Implementation(const FString& SerializedSaveData)
+void ANovaPlayerController::ServerLoadPlayer_Implementation(const FNovaPlayerSave& PlayerSaveData)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 	NLOG("ANovaPlayerController::ServerLoadPlayer_Implementation");
 
-	// Deserialize save data
-	TSharedPtr<FNovaPlayerSave> SaveData;
-	TSharedPtr<FJsonObject>     JsonData = UNovaSaveManager::StringToJson(SerializedSaveData);
-	SerializeJson(SaveData, JsonData, ENovaSerialize::JsonToData);
-
 	// Load
-	Load(SaveData);
+	Load(PlayerSaveData);
 }
 
 void ANovaPlayerController::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft)
@@ -791,7 +792,11 @@ void ANovaPlayerController::StartGame(FString SaveName, bool Online)
 			FNovaAsyncAction::CreateLambda(
 				[=]()
 				{
-					GetGameInstance<UNovaGameInstance>()->StartGame(SaveName, ENovaConstants::DefaultLevel, Online);
+					NLOG("UNovaGameInstance::StartGame");
+
+					LoadGame(SaveName);
+
+					GetGameInstance<UNovaGameInstance>()->SetGameOnline(ENovaConstants::DefaultLevel, Online);
 				}));
 	}
 }
@@ -813,11 +818,11 @@ void ANovaPlayerController::SetGameOnline(bool Online)
 	}
 }
 
-void ANovaPlayerController::GoToMainMenu(bool SaveGame)
+void ANovaPlayerController::GoToMainMenu(bool ShouldSaveGame)
 {
 	if (UNovaMenuManager::Get()->IsIdle())
 	{
-		NLOG("ANovaPlayerController::GoToMainMenu %d", SaveGame);
+		NLOG("ANovaPlayerController::GoToMainMenu %d", ShouldSaveGame);
 
 		UNovaSoundManager::Get()->Mute();
 
@@ -825,10 +830,10 @@ void ANovaPlayerController::GoToMainMenu(bool SaveGame)
 			FNovaAsyncAction::CreateLambda(
 				[=]()
 				{
-					if (SaveGame)
+					if (ShouldSaveGame)
 					{
 						NLOG("ANovaPlayerController::GoToMainMenu : saving game");
-						GetGameInstance<UNovaGameInstance>()->SaveGame(this, true);
+						SaveGame();
 					}
 
 					GetGameInstance<UNovaGameInstance>()->GoToMainMenu();
@@ -1016,7 +1021,6 @@ void ANovaPlayerController::AnyKey(FKey Key)
 
 const FNovaSpacecraft* ANovaPlayerController::GetSpacecraft() const
 {
-
 	ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
 	ANovaGameState*      GameState      = GetWorld()->GetGameState<ANovaGameState>();
 

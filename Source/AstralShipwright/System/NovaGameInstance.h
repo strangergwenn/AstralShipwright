@@ -19,17 +19,6 @@ public:
 	UNovaGameInstance();
 
 	/*----------------------------------------------------
-	    Loading & saving
-	----------------------------------------------------*/
-
-	TSharedPtr<struct FNovaGameSave> Save(const class ANovaPlayerController* PC);
-
-	void Load(TSharedPtr<struct FNovaGameSave> SaveData);
-
-	static void SerializeJson(
-		TSharedPtr<struct FNovaGameSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
-
-	/*----------------------------------------------------
 	    Inherited & callbacks
 	----------------------------------------------------*/
 
@@ -38,42 +27,6 @@ public:
 	virtual void Shutdown() override;
 
 	void PreLoadMap(const FString& InMapName);
-
-	/*----------------------------------------------------
-	    Game save handling
-	----------------------------------------------------*/
-
-	/** Start the game from a save file */
-	void StartGame(FString SaveName, FString URL, bool Online = true);
-
-	/** Try loading the game from the save slot if it exists, or create a new one */
-	void LoadGame(FString SaveName);
-
-	/** Save the game to the currently loaded slot */
-	void SaveGame(class ANovaPlayerController* PC, bool Synchronous = false);
-
-	/** Save the current save data to the currently loaded slot */
-	void SaveGameToFile(bool Synchronous = false);
-
-	/** Check that the current save data is valid */
-	bool HasSave() const;
-
-	/** Get the time in minutes since the last loading or saving */
-	double GetMinutesSinceLastSave() const
-	{
-		double CurrentTime = FPlatformTime::ToMilliseconds64(FPlatformTime::Cycles64());
-
-		return (CurrentTime - TimeOfLastSave) / (1000.0 * 60.0);
-	}
-
-	/** Get the save data for the player */
-	TSharedPtr<struct FNovaPlayerSave> GetPlayerSave();
-
-	/** Get the save data for the world */
-	TSharedPtr<struct FNovaGameStateSave> GetWorldSave();
-
-	/** Get the save data for the contract system*/
-	TSharedPtr<struct FNovaContractManagerSave> GetContractManagerSave();
 
 	/*----------------------------------------------------
 	    Game flow
@@ -121,9 +74,4 @@ private:
 	// Sound manager object
 	UPROPERTY()
 	class UNovaSoundManager* SoundManager;
-
-	// Save data
-	TSharedPtr<struct FNovaGameSave> CurrentSaveData;
-	FString                          CurrentSaveFileName;
-	double                           TimeOfLastSave;
 };

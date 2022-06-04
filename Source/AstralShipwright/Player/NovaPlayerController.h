@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "System/NovaGameInstance.h"
 #include "System/NovaPostProcessManager.h"
 #include "Spacecraft/NovaSpacecraft.h"
 #include "UI/NovaUI.h"
@@ -52,6 +53,19 @@ struct FNovaPostProcessSetting : public FNovaPostProcessSettingBase
 	FLinearColor SceneColorTint;
 };
 
+/** Player save */
+USTRUCT()
+struct FNovaPlayerSave
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FNovaSpacecraft Spacecraft;
+
+	UPROPERTY()
+	FNovaCredits Credits;
+};
+
 /** Camera viewpoint component */
 UCLASS(ClassGroup = (Nova))
 class ANovaPlayerViewpoint : public AActor
@@ -81,6 +95,10 @@ public:
 
 enum class ENovaNetworkError : uint8;
 
+/*----------------------------------------------------
+    Player class
+----------------------------------------------------*/
+
 /** Default player controller class */
 UCLASS(ClassGroup = (Nova))
 class ANovaPlayerController : public APlayerController
@@ -95,12 +113,15 @@ public:
 	    Loading & saving
 	----------------------------------------------------*/
 
-	TSharedPtr<struct FNovaPlayerSave> Save() const;
+	FNovaPlayerSave Save() const;
 
-	void Load(TSharedPtr<struct FNovaPlayerSave> SaveData);
+	void Load(const FNovaPlayerSave& SaveData);
 
-	static void SerializeJson(
-		TSharedPtr<struct FNovaPlayerSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
+	/** Save the current game */
+	void SaveGame();
+
+	/** Load the current game */
+	void LoadGame(const FString SaveName);
 
 	/*----------------------------------------------------
 	    Inherited
@@ -175,7 +196,7 @@ public:
 
 	/** Create the main player actors on the server */
 	UFUNCTION(Server, Reliable)
-	void ServerLoadPlayer(const FString& SerializedSaveData);
+	void ServerLoadPlayer(const FNovaPlayerSave& PlayerSaveData);
 
 	/** Update the player spacecraft */
 	void UpdateSpacecraft(const FNovaSpacecraft& Spacecraft);
@@ -197,7 +218,7 @@ public:
 	void SetGameOnline(bool Online = true);
 
 	/** Exit the session and go to the main menu */
-	void GoToMainMenu(bool SaveGame);
+	void GoToMainMenu(bool ShouldSaveGame);
 
 	/** Exit the game */
 	void ExitGame();

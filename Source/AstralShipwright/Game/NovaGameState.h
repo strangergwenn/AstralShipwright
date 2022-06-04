@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
 
+#include "NovaAISimulationComponent.h"
 #include "NovaOrbitalSimulationDatabases.h"
 
 #include "NovaGameState.generated.h"
@@ -27,6 +28,25 @@ enum class ENovaTrajectoryAction : uint8
 	AbortImmediately
 };
 
+/** Game save */
+USTRUCT()
+struct FNovaGameStateSave
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	const class UNovaArea* CurrentArea;
+
+	UPROPERTY()
+	FNovaTime Time;
+
+	UPROPERTY()
+	int32 CurrentPriceRotation;
+
+	UPROPERTY()
+	FNovaAIStateSave AIData;
+};
+
 /** Replicated game state class */
 UCLASS(ClassGroup = (Nova))
 class ANovaGameState : public AGameStateBase
@@ -41,12 +61,9 @@ public:
 	    Loading & saving
 	----------------------------------------------------*/
 
-	TSharedPtr<struct FNovaGameStateSave> Save() const;
+	FNovaGameStateSave Save() const;
 
-	void Load(TSharedPtr<struct FNovaGameStateSave> SaveData);
-
-	static void SerializeJson(
-		TSharedPtr<struct FNovaGameStateSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
+	void Load(const FNovaGameStateSave& SaveData);
 
 	/*----------------------------------------------------
 	    General game state

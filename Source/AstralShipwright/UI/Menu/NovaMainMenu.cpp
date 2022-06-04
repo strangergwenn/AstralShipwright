@@ -23,6 +23,7 @@
 #include "Game/NovaGameState.h"
 #include "Player/NovaPlayerController.h"
 #include "System/NovaMenuManager.h"
+#include "System/NovaSaveManager.h"
 
 #include "Nova.h"
 
@@ -465,9 +466,7 @@ void SNovaMainMenu::OnClose()
 		// Ship is not docked, some progress will be lost
 		else
 		{
-			const UNovaGameInstance* GameInstance = MenuManager->GetWorld()->GetGameInstance<UNovaGameInstance>();
-			NCHECK(GameInstance);
-			double MinutesSinceLastSave = GameInstance->GetMinutesSinceLastSave();
+			double MinutesSinceLastSave = UNovaSaveManager::Get()->GetMinutesSinceLastSave();
 
 			ModalPanel->Show(LOCTEXT("ConfirmQuitWithoutSaving", "Quit without saving ?"),
 				FText::FormatNamed(LOCTEXT("ConfirmQuitWithoutSavingHelp",

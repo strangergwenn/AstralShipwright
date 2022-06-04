@@ -5,6 +5,7 @@
 #include "NovaArea.h"
 #include "NovaGameMode.h"
 #include "NovaGameTypes.h"
+#include "NovaSaveData.h"
 #include "NovaAISimulationComponent.h"
 #include "NovaAsteroidSimulationComponent.h"
 #include "NovaOrbitalSimulationComponent.h"
@@ -79,105 +80,52 @@ ANovaGameState::ANovaGameState()
     Loading & saving
 ----------------------------------------------------*/
 
-struct FNovaGameStateSave
-{
-	const UNovaArea* CurrentArea;
-	double           TimeAsMinutes;
-	int32            CurrentPriceRotation;
-
-	TSharedPtr<struct FNovaAIStateSave> AIData;
-};
-
-TSharedPtr<FNovaGameStateSave> ANovaGameState::Save() const
+FNovaGameStateSave ANovaGameState::Save() const
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 
-	TSharedPtr<FNovaGameStateSave> SaveData = MakeShared<FNovaGameStateSave>();
+	FNovaGameStateSave SaveData;
 
 	// Save general state
-	SaveData->CurrentArea          = GetCurrentArea();
-	SaveData->TimeAsMinutes        = GetCurrentTime().AsMinutes();
-	SaveData->CurrentPriceRotation = CurrentPriceRotation;
+	SaveData.CurrentArea          = GetCurrentArea();
+	SaveData.Time                 = GetCurrentTime();
+	SaveData.CurrentPriceRotation = CurrentPriceRotation;
 
 	// Save AI
-	SaveData->AIData = AISimulationComponent->Save();
+	SaveData.AIData = AISimulationComponent->Save();
 
 	// Ensure consistency
-	NCHECK(SaveData->TimeAsMinutes > 0);
-	NCHECK(IsValid(SaveData->CurrentArea));
+	NCHECK(SaveData.Time > 0);
+	NCHECK(IsValid(SaveData.CurrentArea));
 
 	return SaveData;
 }
 
-void ANovaGameState::Load(TSharedPtr<FNovaGameStateSave> SaveData)
+void ANovaGameState::Load(const FNovaGameStateSave& SaveData)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 
 	NLOG("ANovaGameState::Load");
 
 	// Ensure consistency
-	NCHECK(SaveData != nullptr);
-	NCHECK(SaveData->TimeAsMinutes >= 0);
-	NCHECK(IsValid(SaveData->CurrentArea));
+	NCHECK(SaveData.Time >= 0);
 
-	// Save general state
-	SetCurrentArea(SaveData->CurrentArea);
-	ServerTime           = SaveData->TimeAsMinutes;
-	CurrentPriceRotation = SaveData->CurrentPriceRotation;
-
-	// Load AI
-	AISimulationComponent->Load(SaveData->AIData);
-}
-
-void ANovaGameState::SerializeJson(TSharedPtr<FNovaGameStateSave>& SaveData, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
-{
-	// Writing to save
-	if (Direction == ENovaSerialize::DataToJson)
+	// Default area
+	if (IsValid(SaveData.CurrentArea))
 	{
-		JsonData = MakeShared<FJsonObject>();
-
-		// General state
-		UNovaAssetDescription::SaveAsset(JsonData, "CurrentArea", SaveData->CurrentArea);
-		JsonData->SetNumberField("TimeAsMinutes", SaveData->TimeAsMinutes);
-		JsonData->SetNumberField("CurrentPriceRotation", SaveData->CurrentPriceRotation);
-
-		// AI
-		TSharedPtr<FJsonObject> AIJsonData = MakeShared<FJsonObject>();
-		UNovaAISimulationComponent::SerializeJson(SaveData->AIData, AIJsonData, ENovaSerialize::DataToJson);
-		JsonData->SetObjectField("AI", AIJsonData);
+		SetCurrentArea(SaveData.CurrentArea);
 	}
-
-	// Reading from save
 	else
 	{
-		SaveData = MakeShared<FNovaGameStateSave>();
-
-		// Area
-		SaveData->CurrentArea = UNovaAssetDescription::LoadAsset<UNovaArea>(JsonData, "CurrentArea");
-		if (!IsValid(SaveData->CurrentArea))
-		{
-			SaveData->CurrentArea = UNovaAssetManager::Get()->GetDefaultAsset<UNovaArea>();
-		}
-
-		// Time
-		double Time;
-		if (JsonData->TryGetNumberField("TimeAsMinutes", Time))
-		{
-			SaveData->TimeAsMinutes = Time;
-		}
-
-		// Price rotation
-		int32 PriceRotation;
-		if (JsonData->TryGetNumberField("CurrentPriceRotation", PriceRotation))
-		{
-			SaveData->CurrentPriceRotation = PriceRotation;
-		}
-
-		// AI
-		TSharedPtr<FJsonObject> AIJsonData =
-			JsonData->HasTypedField<EJson::Object>("AI") ? JsonData->GetObjectField("AI") : MakeShared<FJsonObject>();
-		UNovaAISimulationComponent::SerializeJson(SaveData->AIData, AIJsonData, ENovaSerialize::JsonToData);
+		SetCurrentArea(UNovaAssetManager::Get()->GetDefaultAsset<UNovaArea>());
 	}
+
+	// Save general state
+	ServerTime           = SaveData.Time.AsMinutes();
+	CurrentPriceRotation = SaveData.CurrentPriceRotation;
+
+	// Load AI
+	AISimulationComponent->Load(SaveData.AIData);
 }
 
 /*----------------------------------------------------

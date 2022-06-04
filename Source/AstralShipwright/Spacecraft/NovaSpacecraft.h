@@ -418,9 +418,6 @@ public:
 		return Customization;
 	}
 
-	/** Serialize the spacecraft */
-	static void SerializeJson(TSharedPtr<FNovaSpacecraft>& This, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
-
 	/*----------------------------------------------------
 	    Propulsion metrics & cargo hold
 	----------------------------------------------------*/

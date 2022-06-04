@@ -5,6 +5,7 @@
 #include "NovaArea.h"
 #include "NovaGameModeStates.h"
 #include "NovaGameState.h"
+#include "NovaSaveData.h"
 #include "NovaOrbitalSimulationComponent.h"
 
 #include "Game/Settings/NovaWorldSettings.h"
@@ -16,7 +17,7 @@
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
 
 #include "System/NovaAssetManager.h"
-#include "System/NovaGameInstance.h"
+#include "System/NovaSaveManager.h"
 
 #include "Nova.h"
 
@@ -73,24 +74,25 @@ void ANovaGameMode::StartPlay()
 	{
 		ANovaGameState* NovaGameState = GetGameState<ANovaGameState>();
 		NCHECK(IsValid(NovaGameState));
-		UNovaGameInstance* GameInstance = GetGameInstance<UNovaGameInstance>();
-		NCHECK(GameInstance);
+		UNovaSaveManager* SaveManager = UNovaSaveManager::Get();
+		NCHECK(SaveManager);
 
 #if WITH_EDITOR
 
 		// Ensure valid save data exists even if the game was loaded directly on a map (PIE server)
-		if (GetLocalRole() == ROLE_Authority && !GameInstance->HasSave())
+		if (GetLocalRole() == ROLE_Authority && !SaveManager->HasLoadedSaveData())
 		{
-			GameInstance->LoadGame("1");
+			SaveManager->LoadGame<FNovaGameSave>("1");
+			UNovaContractManager::Get()->Load(SaveManager->GetCurrentSaveData<FNovaGameSave>()->ContractManagerData);
 		}
 
 #endif    // WITH_EDITOR
 
 		// Load the game world
+		NCHECK(SaveManager->HasLoadedSaveData());
 		if (!IsValid(NovaGameState->GetCurrentArea()))
 		{
-			NCHECK(GameInstance->HasSave())
-			NovaGameState->Load(GameInstance->GetWorldSave());
+			NovaGameState->Load(SaveManager->GetCurrentSaveData<FNovaGameSave>()->GameStateData);
 		}
 
 		// Start players

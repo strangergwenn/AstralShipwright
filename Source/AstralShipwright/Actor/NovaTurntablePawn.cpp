@@ -63,7 +63,7 @@ ANovaTurntablePawn::ANovaTurntablePawn()
 
 	// General presentation defaults
 	AnimationDuration           = 0.5f;
-	DefaultDistance             = 5000.0f;
+	DefaultDistance             = 2500.0f;
 	DefaultDistanceFactor       = 2.0f;
 	DistanceFactorIncrement     = 0.75f;
 	NumDistanceFactorIncrements = 1;

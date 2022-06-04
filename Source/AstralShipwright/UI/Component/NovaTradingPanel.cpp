@@ -6,7 +6,6 @@
 
 #include "Game/NovaGameTypes.h"
 #include "Game/NovaGameState.h"
-#include "System/NovaGameInstance.h"
 #include "Player/NovaPlayerController.h"
 
 #include "Spacecraft/NovaSpacecraft.h"
@@ -412,7 +411,7 @@ void SNovaTradingPanel::OnConfirmTrade()
 	NCHECK(PC.IsValid());
 	PC->UpdateSpacecraft(ModifiedSpacecraft);
 	PC->ProcessTransaction(GetTransactionValue());
-	PC->GetGameInstance<UNovaGameInstance>()->SaveGame(PC.Get());
+	PC->SaveGame();
 }
 
 #undef LOCTEXT_NAMESPACE

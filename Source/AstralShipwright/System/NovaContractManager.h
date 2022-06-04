@@ -43,6 +43,19 @@ struct FNovaContractEvent
 	ENovaContratEventType Type;
 };
 
+/** Save data */
+USTRUCT()
+struct FNovaContractManagerSave
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<FString> ContractSaveData;
+
+	UPROPERTY()
+	int32 CurrentTrackedContract;
+};
+
 // Contract creation delegate
 DECLARE_DELEGATE_RetVal_TwoParams(
 	TSharedPtr<class FNovaContract>, FNovaContractCreationCallback, ENovaContractType Type, UNovaGameInstance* CurrentGameInstance);
@@ -114,12 +127,9 @@ public:
 	    Loading & saving
 	----------------------------------------------------*/
 
-	TSharedPtr<struct FNovaContractManagerSave> Save() const;
+	FNovaContractManagerSave Save() const;
 
-	void Load(TSharedPtr<struct FNovaContractManagerSave> SaveData);
-
-	static void SerializeJson(
-		TSharedPtr<struct FNovaContractManagerSave>& SaveData, TSharedPtr<class FJsonObject>& JsonData, ENovaSerialize Direction);
+	void Load(const FNovaContractManagerSave& SaveData);
 
 	/*----------------------------------------------------
 	    System interface

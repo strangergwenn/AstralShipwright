@@ -42,50 +42,46 @@ UNovaContractManager::UNovaContractManager()
     Loading & saving
 ----------------------------------------------------*/
 
-struct FNovaContractManagerSave
+FNovaContractManagerSave UNovaContractManager::Save() const
 {
-	TMap<ENovaContractType, TSharedPtr<FJsonObject>> CurrentContracts;
-
-	int32 CurrentTrackedContract;
-};
-
-TSharedPtr<FNovaContractManagerSave> UNovaContractManager::Save() const
-{
-	TSharedPtr<FNovaContractManagerSave> SaveData = MakeShared<FNovaContractManagerSave>();
+	FNovaContractManagerSave SaveData;
 
 	// Save contracts
 	for (TSharedPtr<FNovaContract> Contract : CurrentContracts)
 	{
-		SaveData->CurrentContracts.Add(TPair<ENovaContractType, TSharedPtr<FJsonObject>>(Contract->GetType(), Contract->Save()));
+		// TODO
+		// SaveData.ContractSaveData.Add(TPair<ENovaContractType, TSharedPtr<FJsonObject>>(Contract->GetType(), Contract->Save()));
 	}
 
 	// Save the tracked contract
-	SaveData->CurrentTrackedContract = CurrentTrackedContract;
+	SaveData.CurrentTrackedContract = CurrentTrackedContract;
 
 	return SaveData;
 }
 
-void UNovaContractManager::Load(TSharedPtr<FNovaContractManagerSave> SaveData)
+void UNovaContractManager::Load(const FNovaContractManagerSave& SaveData)
 {
 	// Reset the state from a potential previous session
 	CurrentContracts.Empty();
 	GeneratedContract.Reset();
 
 	// Load contracts
-	if (SaveData)
+	if (SaveData.ContractSaveData.Num())
 	{
-		for (TPair<ENovaContractType, TSharedPtr<FJsonObject>> ContractData : SaveData->CurrentContracts)
+		// TODO
+
+		/*for (TPair<ENovaContractType, TSharedPtr<FJsonObject>> ContractData : SaveData.ContractSaveData)
 		{
-			ENovaContractType ContractType = ContractData.Key;
+		    ENovaContractType ContractType = ContractData.Key;
 
-			TSharedPtr<FNovaContract> Contract = ContractGenerator.Execute(ContractType, GameInstance);
-			Contract->Load(ContractData.Value);
+		    TSharedPtr<FNovaContract> Contract = ContractGenerator.Execute(ContractType, GameInstance);
+		    Contract->Load(ContractData.Value);
 
-			CurrentContracts.Add(Contract);
-		}
+		    CurrentContracts.Add(Contract);
+		}*/
 
 		// Get the tracked contract
-		CurrentTrackedContract = SaveData->CurrentTrackedContract;
+		CurrentTrackedContract = SaveData.CurrentTrackedContract;
 	}
 
 	// No contract structure was found, so it's a new game
@@ -93,54 +89,11 @@ void UNovaContractManager::Load(TSharedPtr<FNovaContractManagerSave> SaveData)
 	{
 		NLOG("UNovaContractManager::Load : adding tutorial contract");
 
-		// TODO : tutorial contract and track it
-		// TSharedPtr<FNovaContract> Tutorial = FNovaContract::New(ENovaContractType::Tutorial, GameInstance);
-		// CurrentContracts.Add(Tutorial);
+		// Add a tutorial contract and track it
+		TSharedPtr<FNovaContract> Tutorial = ContractGenerator.Execute(ENovaContractType::Tutorial, GameInstance);
+		CurrentContracts.Add(Tutorial);
 
 		CurrentTrackedContract = INDEX_NONE;
-	}
-}
-
-void UNovaContractManager::SerializeJson(
-	TSharedPtr<FNovaContractManagerSave>& SaveData, TSharedPtr<FJsonObject>& JsonData, ENovaSerialize Direction)
-{
-	if (Direction == ENovaSerialize::DataToJson)
-	{
-		JsonData = MakeShared<FJsonObject>();
-
-		TArray<TSharedPtr<FJsonValue>> SavedContracts;
-		for (TPair<ENovaContractType, TSharedPtr<FJsonObject>> ContractData : SaveData->CurrentContracts)
-		{
-			TSharedPtr<FJsonObject> ContractJsonData = MakeShared<FJsonObject>();
-
-			ContractJsonData->SetNumberField("Type", static_cast<uint8>(ContractData.Key));
-			ContractJsonData->SetObjectField("Object", ContractJsonData);
-
-			SavedContracts.Add(MakeShared<FJsonValueObject>(ContractJsonData));
-		}
-
-		JsonData->SetArrayField("Contracts", SavedContracts);
-		JsonData->SetNumberField("TrackedContract", SaveData->CurrentTrackedContract);
-	}
-	else
-	{
-		SaveData = MakeShared<FNovaContractManagerSave>();
-
-		const TArray<TSharedPtr<FJsonValue>>* SavedContracts;
-		if (JsonData->TryGetArrayField("Contracts", SavedContracts))
-		{
-			for (TSharedPtr<FJsonValue> ContractValue : *SavedContracts)
-			{
-				TSharedPtr<FJsonObject> ContractEntry = ContractValue->AsObject();
-
-				SaveData->CurrentContracts.Add(TPair<ENovaContractType, TSharedPtr<FJsonObject>>(
-					static_cast<ENovaContractType>((uint8) ContractEntry->GetNumberField("Type")),
-					ContractEntry->GetObjectField("Object")));
-			}
-		}
-
-		SaveData->CurrentTrackedContract = 0;
-		JsonData->TryGetNumberField("TrackedContract", SaveData->CurrentTrackedContract);
 	}
 }
 

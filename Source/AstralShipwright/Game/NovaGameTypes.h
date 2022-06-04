@@ -31,13 +31,6 @@ constexpr double TrajectoryDistanceError = 0.5;
 
 };    // namespace ENovaConstants
 
-/** Serialization way */
-enum class ENovaSerialize : uint8
-{
-	JsonToData,
-	DataToJson
-};
-
 /** Notification type */
 enum class ENovaNotificationType : uint8
 {
