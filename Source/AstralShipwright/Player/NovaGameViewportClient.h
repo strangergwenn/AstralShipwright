@@ -7,7 +7,7 @@
 #include "SlateBasics.h"
 
 #include "UI/NovaUI.h"
-#include "Game/NovaGameTypes.h"
+#include "System/NovaAssetManager.h"
 #include "NovaGameViewportClient.generated.h"
 
 /** Loading screen list */

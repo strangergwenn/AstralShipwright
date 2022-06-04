@@ -1,11 +1,12 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaActorTools.h"
-#include "Player/NovaPlayerController.h"
 #include "Nova.h"
 
 #include "GameFramework/Actor.h"
 #include "GameFramework/PlayerState.h"
+#include "GameFramework/PlayerController.h"
+
 #include "Components/SceneComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "AssetRegistryModule.h"

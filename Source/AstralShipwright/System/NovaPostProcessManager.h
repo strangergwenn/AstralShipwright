@@ -107,10 +107,6 @@ protected:
 	// Singleton pointer
 	static UNovaPostProcessManager* Singleton;
 
-	// Player owner
-	UPROPERTY()
-	class ANovaPlayerController* PlayerController;
-
 	// Post-process material that's dynamically controlled
 	UPROPERTY()
 	class UMaterialInstanceDynamic* PostProcessMaterial;

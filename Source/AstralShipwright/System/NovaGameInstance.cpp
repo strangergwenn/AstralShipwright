@@ -5,13 +5,14 @@
 #include "NovaAssetManager.h"
 #include "NovaContractManager.h"
 #include "NovaMenuManager.h"
+#include "NovaPostProcessManager.h"
 #include "NovaSoundManager.h"
 #include "NovaSaveManager.h"
 #include "NovaSessionsManager.h"
 
 #include "Game/NovaGameState.h"
 #include "Game/Settings/NovaGameUserSettings.h"
-#include "Player/NovaPlayerController.h"
+#include "Game/Settings/NovaWorldSettings.h"
 #include "Player/NovaGameViewportClient.h"
 
 #include "UI/NovaUI.h"
@@ -107,7 +108,6 @@ void UNovaGameInstance::SetGameOnline(FString URL, bool Online)
 	NLOG("UNovaGameInstance::SetGameOnline : '%s', online = %d", *URL, Online);
 
 	SessionsManager->ClearErrors();
-	ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetFirstLocalPlayerController());
 
 	// We want to be online and presumably aren't, start a new online session and then travel to the level
 	if (Online)
@@ -116,9 +116,9 @@ void UNovaGameInstance::SetGameOnline(FString URL, bool Online)
 	}
 
 	// We are on the main menu and are staying offline, simply travel there
-	else if (PC->IsOnMainMenu())
+	else if (Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMainMenuMap())
 	{
-		PC->ClientTravel(URL, ETravelType::TRAVEL_Absolute, false);
+		GetFirstLocalPlayerController()->ClientTravel(URL, ETravelType::TRAVEL_Absolute, false);
 	}
 
 	// We want to be offline and presumably aren't, kill the session and then travel to the level

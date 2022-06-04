@@ -2,9 +2,7 @@
 
 #include "NovaGameViewportClient.h"
 
-#include "System/NovaAssetManager.h"
 #include "System/NovaMenuManager.h"
-
 #include "UI/Component/NovaLoadingScreen.h"
 #include "Nova.h"
 

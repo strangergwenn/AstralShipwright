@@ -2,7 +2,6 @@
 
 #include "NovaPostProcessManager.h"
 #include "Game/Settings/NovaGameUserSettings.h"
-#include "Player/NovaPlayerController.h"
 #include "UI/NovaUI.h"
 #include "Nova.h"
 
@@ -21,8 +20,7 @@ UNovaPostProcessManager* UNovaPostProcessManager::Singleton = nullptr;
     Constructor
 ----------------------------------------------------*/
 
-UNovaPostProcessManager::UNovaPostProcessManager()
-	: Super(), PlayerController(nullptr), CurrentPreset(0), TargetPreset(0), CurrentPresetAlpha(0.0f)
+UNovaPostProcessManager::UNovaPostProcessManager() : Super(), CurrentPreset(0), TargetPreset(0), CurrentPresetAlpha(0.0f)
 {}
 
 /*----------------------------------------------------
@@ -36,44 +34,38 @@ void UNovaPostProcessManager::Initialize(UNovaGameInstance* GameInstance)
 
 void UNovaPostProcessManager::BeginPlay(ANovaPlayerController* PC, FNovaPostProcessControl Control, FNovaPostProcessUpdate Update)
 {
-	PlayerController = PC;
-	ControlFunction  = Control;
-	UpdateFunction   = Update;
+	ControlFunction = Control;
+	UpdateFunction  = Update;
 
-	NCHECK(PlayerController);
-	if (PlayerController->IsLocalController())
+	TArray<AActor*> PostProcessActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaPostProcessActor::StaticClass(), PostProcessActors);
+
+	// Set the post process
+	if (PostProcessActors.Num())
 	{
-		TArray<AActor*> PostProcessActors;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaPostProcessActor::StaticClass(), PostProcessActors);
+		PostProcessVolume = Cast<UPostProcessComponent>(PostProcessActors[0]->GetComponentByClass(UPostProcessComponent::StaticClass()));
 
-		// Set the post process
-		if (PostProcessActors.Num())
+		// Replace the material by a dynamic variant
+		if (PostProcessVolume)
 		{
-			PostProcessVolume =
-				Cast<UPostProcessComponent>(PostProcessActors[0]->GetComponentByClass(UPostProcessComponent::StaticClass()));
+			TArray<FWeightedBlendable> Blendables = PostProcessVolume->Settings.WeightedBlendables.Array;
+			PostProcessVolume->Settings.WeightedBlendables.Array.Empty();
 
-			// Replace the material by a dynamic variant
-			if (PostProcessVolume)
+			for (FWeightedBlendable Blendable : Blendables)
 			{
-				TArray<FWeightedBlendable> Blendables = PostProcessVolume->Settings.WeightedBlendables.Array;
-				PostProcessVolume->Settings.WeightedBlendables.Array.Empty();
+				UMaterialInterface* BaseMaterial = Cast<UMaterialInterface>(Blendable.Object);
+				NCHECK(BaseMaterial);
 
-				for (FWeightedBlendable Blendable : Blendables)
+				UMaterialInstanceDynamic* MaterialInstance = UMaterialInstanceDynamic::Create(BaseMaterial, GetWorld());
+				if (!IsValid(PostProcessMaterial))
 				{
-					UMaterialInterface* BaseMaterial = Cast<UMaterialInterface>(Blendable.Object);
-					NCHECK(BaseMaterial);
-
-					UMaterialInstanceDynamic* MaterialInstance = UMaterialInstanceDynamic::Create(BaseMaterial, GetWorld());
-					if (!IsValid(PostProcessMaterial))
-					{
-						PostProcessMaterial = MaterialInstance;
-					}
-
-					PostProcessVolume->Settings.AddBlendable(MaterialInstance, 1.0f);
+					PostProcessMaterial = MaterialInstance;
 				}
 
-				NLOG("UNovaPostProcessManager::BeginPlay : post-process setup complete");
+				PostProcessVolume->Settings.AddBlendable(MaterialInstance, 1.0f);
 			}
+
+			NLOG("UNovaPostProcessManager::BeginPlay : post-process setup complete");
 		}
 	}
 }
@@ -84,7 +76,7 @@ void UNovaPostProcessManager::BeginPlay(ANovaPlayerController* PC, FNovaPostProc
 
 void UNovaPostProcessManager::Tick(float DeltaTime)
 {
-	if (IsValid(PlayerController) && PlayerController->IsLocalController() && PostProcessVolume)
+	if (IsValid(PostProcessVolume))
 	{
 		// Update desired settings
 		if (ControlFunction.IsBound() && CurrentPreset == TargetPreset)

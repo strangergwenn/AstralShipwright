@@ -4,7 +4,6 @@
 #include "NovaStaticMeshComponent.h"
 #include "NovaSkeletalMeshComponent.h"
 
-#include "Game/NovaGameTypes.h"
 #include "System/NovaAssetManager.h"
 #include "System/NovaGameInstance.h"
 #include "UI/NovaUI.h"
