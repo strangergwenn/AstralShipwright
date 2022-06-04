@@ -82,7 +82,7 @@ void ANovaGameMode::StartPlay()
 		if (GetLocalRole() == ROLE_Authority && !SaveManager->HasLoadedSaveData())
 		{
 			SaveManager->LoadGame<FNovaGameSave>("1");
-			UNeutronContractManager::Get()->Load(SaveManager->GetCurrentSaveData<FNovaGameSave>()->ContractManagerData);
+			// UNeutronContractManager::Get()->Load(SaveManager->GetCurrentSaveData<FNovaGameSave>()->ContractManagerData);
 		}
 
 #endif    // WITH_EDITOR

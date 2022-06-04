@@ -162,7 +162,7 @@ void ANovaPlayerController::LoadGame(const FString SaveName)
 	TSharedPtr<FNovaGameSave> SaveData = SaveManager->GetCurrentSaveData<FNovaGameSave>();
 
 	// Load contracts
-	UNeutronContractManager::Get()->Load(SaveData->ContractManagerData);
+	// UNeutronContractManager::Get()->Load(SaveData->ContractManagerData);
 }
 
 /*----------------------------------------------------
@@ -282,26 +282,26 @@ void ANovaPlayerController::BeginPlay()
 				}));
 
 		// Setup contracts
-		UNeutronContractManager::Get()->BeginPlay(this,    //
-			FNeutronContractCreationCallback::CreateWeakLambda(this,
-				[=](ENeutronContractType Type, UNeutronGameInstance* CurrentGameInstance)
-				{
-					// Create the contract
-					TSharedPtr<FNeutronContract> Contract;
-					if (Type == ENeutronContractType::Tutorial)
-					{
-						Contract = MakeShared<FNovaTutorialContract>();
-					}
-					else
-					{
-						NCHECK(false);
-					}
+		// UNeutronContractManager::Get()->BeginPlay(this,    //
+		//	FNeutronContractCreationCallback::CreateWeakLambda(this,
+		//		[=](ENeutronContractType Type, UNeutronGameInstance* CurrentGameInstance)
+		//		{
+		//			// Create the contract
+		//			TSharedPtr<FNeutronContract> Contract;
+		//			if (Type == ENeutronContractType::Tutorial)
+		//			{
+		//				Contract = MakeShared<FNovaTutorialContract>();
+		//			}
+		//			else
+		//			{
+		//				NCHECK(false);
+		//			}
 
-					// Create the contract
-					Contract->Initialize(CurrentGameInstance);
+		//			// Create the contract
+		//			Contract->Initialize(CurrentGameInstance);
 
-					return Contract;
-				}));
+		//			return Contract;
+		//		}));
 
 		// Load save data, process local game startup
 		if (!IsOnMainMenu())
