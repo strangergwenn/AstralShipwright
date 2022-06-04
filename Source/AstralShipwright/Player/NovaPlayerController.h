@@ -165,6 +165,8 @@ public:
 
 	virtual bool GetSharedTransitionMenuState(uint8 NewCameraState) override;
 
+	virtual void AnyKey(FKey Key) override;
+
 	/*----------------------------------------------------
 	    Server-side save
 	----------------------------------------------------*/

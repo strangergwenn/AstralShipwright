@@ -590,6 +590,21 @@ bool ANovaPlayerController::GetSharedTransitionMenuState(uint8 NewCameraState)
 	}
 }
 
+void ANovaPlayerController::AnyKey(FKey Key)
+{
+	Super::AnyKey(Key);
+
+	// Exit photo mode
+	if (IsInPhotoMode())
+	{
+		if (UNeutronMenuManager::Get()->GetMenu()->IsActionKey(PhotoModeAction, Key) ||
+			UNeutronMenuManager::Get()->GetMenu()->IsActionKey(FNeutronPlayerInput::MenuCancel, Key))
+		{
+			ExitPhotoMode();
+		}
+	}
+}
+
 /*----------------------------------------------------
     Server-side save
 ----------------------------------------------------*/
