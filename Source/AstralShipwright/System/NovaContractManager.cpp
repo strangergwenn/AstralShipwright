@@ -2,6 +2,7 @@
 
 #include "NovaContractManager.h"
 #include "NovaGameInstance.h"
+#include "NovaSaveManager.h"
 
 #include "Player/NovaPlayerController.h"
 
@@ -25,17 +26,23 @@ TSharedRef<FJsonObject> FNovaContract::Save() const
 {
 	TSharedRef<FJsonObject> Data = MakeShared<FJsonObject>();
 
+	Data->SetNumberField("Type", static_cast<int>(Type));
+
 	return Data;
 }
 
 void FNovaContract::Load(const TSharedPtr<FJsonObject>& Data)
-{}
+{
+	NCHECK(Data.IsValid());
+
+	Type = static_cast<ENovaContractType>(Data->GetNumberField("Data"));
+}
 
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
-UNovaContractManager::UNovaContractManager()
+UNovaContractManager::UNovaContractManager() : ShouldStartTutorial(false)
 {}
 
 /*----------------------------------------------------
@@ -49,8 +56,7 @@ FNovaContractManagerSave UNovaContractManager::Save() const
 	// Save contracts
 	for (TSharedPtr<FNovaContract> Contract : CurrentContracts)
 	{
-		// TODO
-		// SaveData.ContractSaveData.Add(TPair<ENovaContractType, TSharedPtr<FJsonObject>>(Contract->GetType(), Contract->Save()));
+		SaveData.ContractSaveData.Add(UNovaSaveManager::JsonToString(Contract->Save()));
 	}
 
 	// Save the tracked contract
@@ -68,17 +74,18 @@ void UNovaContractManager::Load(const FNovaContractManagerSave& SaveData)
 	// Load contracts
 	if (SaveData.ContractSaveData.Num())
 	{
-		// TODO
-
-		/*for (TPair<ENovaContractType, TSharedPtr<FJsonObject>> ContractData : SaveData.ContractSaveData)
+		for (const FString& SerializedContract : SaveData.ContractSaveData)
 		{
-		    ENovaContractType ContractType = ContractData.Key;
+			TSharedPtr<FJsonObject> ContractData = UNovaSaveManager::StringToJson(SerializedContract);
 
-		    TSharedPtr<FNovaContract> Contract = ContractGenerator.Execute(ContractType, GameInstance);
-		    Contract->Load(ContractData.Value);
+			FNovaContract TestContract;
+			TestContract.Load(ContractData);
 
-		    CurrentContracts.Add(Contract);
-		}*/
+			TSharedPtr<FNovaContract> Contract = ContractGenerator.Execute(TestContract.GetType(), GameInstance);
+			Contract->Load(ContractData);
+
+			CurrentContracts.Add(Contract);
+		}
 
 		// Get the tracked contract
 		CurrentTrackedContract = SaveData.CurrentTrackedContract;
@@ -87,11 +94,7 @@ void UNovaContractManager::Load(const FNovaContractManagerSave& SaveData)
 	// No contract structure was found, so it's a new game
 	else
 	{
-		NLOG("UNovaContractManager::Load : adding tutorial contract");
-
-		// Add a tutorial contract and track it
-		TSharedPtr<FNovaContract> Tutorial = ContractGenerator.Execute(ENovaContractType::Tutorial, GameInstance);
-		CurrentContracts.Add(Tutorial);
+		ShouldStartTutorial = true;
 
 		CurrentTrackedContract = INDEX_NONE;
 	}
@@ -111,6 +114,17 @@ void UNovaContractManager::BeginPlay(ANovaPlayerController* PC, FNovaContractCre
 {
 	PlayerController  = PC;
 	ContractGenerator = CreationCallback;
+
+	if (ShouldStartTutorial)
+	{
+		NLOG("UNovaContractManager::Load : adding tutorial contract");
+
+		// Add a tutorial contract and track it
+		TSharedPtr<FNovaContract> Tutorial = ContractGenerator.Execute(ENovaContractType::Tutorial, GameInstance);
+		CurrentContracts.Add(Tutorial);
+
+		ShouldStartTutorial = false;
+	}
 }
 
 void UNovaContractManager::OnEvent(FNovaContractEvent Event)

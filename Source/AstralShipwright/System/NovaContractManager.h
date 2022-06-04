@@ -97,7 +97,7 @@ public:
 	}
 
 	/** Update this contract */
-	virtual void OnEvent(const FNovaContractEvent& Event) = 0;
+	virtual void OnEvent(const FNovaContractEvent& Event){};
 
 protected:
 
@@ -227,6 +227,7 @@ protected:
 	class UNovaGameInstance* GameInstance;
 
 	// State
+	bool                                    ShouldStartTutorial;
 	FNovaContractCreationCallback           ContractGenerator;
 	TSharedPtr<class FNovaContract>         GeneratedContract;
 	TArray<TSharedPtr<class FNovaContract>> CurrentContracts;
