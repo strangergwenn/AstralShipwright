@@ -8,7 +8,7 @@
 
 /** Asteroid catalog & metadata */
 UCLASS(ClassGroup = (Nova))
-class UNovaAsteroidConfiguration : public UNovaAssetDescription
+class UNovaAsteroidConfiguration : public UNeutronAssetDescription
 {
 	GENERATED_BODY()
 

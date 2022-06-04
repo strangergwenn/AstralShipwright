@@ -2,12 +2,13 @@
 
 #include "NovaOverlay.h"
 
-#include "UI/Component/NovaEventDisplay.h"
-#include "UI/Component/NovaNotification.h"
-#include "UI/Widget/NovaFadingWidget.h"
+#include "UI/Widgets/NovaEventDisplay.h"
+#include "UI/Widgets/NovaNotification.h"
 
-#include "System/NovaMenuManager.h"
 #include "Nova.h"
+
+#include "Neutron/System/NeutronMenuManager.h"
+#include "Neutron/UI/Widgets/NeutronFadingWidget.h"
 
 #define LOCTEXT_NAMESPACE "SNovaOverlay"
 
@@ -18,8 +19,8 @@
 void SNovaOverlay::Construct(const FArguments& InArgs)
 {
 	// Data
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	MenuManager                 = InArgs._MenuManager;
+	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
+	MenuManager                    = InArgs._MenuManager;
 
 	// clang-format off
 	ChildSlot
@@ -52,7 +53,7 @@ void SNovaOverlay::Construct(const FArguments& InArgs)
 	FastForward->SetVisibility(EVisibility::Collapsed);
 }
 
-void SNovaOverlay::Notify(const FText& Text, const FText& Subtext, ENovaNotificationType Type)
+void SNovaOverlay::Notify(const FText& Text, const FText& Subtext, ENeutronNotificationType Type)
 {
 	Notification->Notify(Text, Subtext, Type);
 }

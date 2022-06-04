@@ -4,16 +4,16 @@
 #include "NovaSpacecraftHatchComponent.h"
 #include "NovaSpacecraftPawn.h"
 
-#include "Actor/NovaActorTools.h"
-#include "Actor/NovaPlayerStart.h"
-
 #include "Game/NovaAsteroid.h"
 #include "Game/NovaGameMode.h"
 #include "Game/NovaGameState.h"
+#include "Game/NovaPlayerStart.h"
 #include "Game/NovaOrbitalSimulationComponent.h"
 
 #include "Player/NovaPlayerController.h"
 #include "Nova.h"
+
+#include "Neutron/Actor/NeutronActorTools.h"
 
 #include "GameFramework/PlayerStart.h"
 #include "Engine/PlayerStartPIE.h"
@@ -640,7 +640,7 @@ void UNovaSpacecraftMovementComponent::ProcessMeasurementsAfterAttitude(float De
 
 void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 {
-	LinearAttitudeDistance = UNovaActorTools::SolveVelocity(CurrentLinearVelocity, AttitudeCommand.Velocity,
+	LinearAttitudeDistance = UNeutronActorTools::SolveVelocity(CurrentLinearVelocity, AttitudeCommand.Velocity,
 		(UpdatedComponent->GetComponentLocation() - CurrentOrbitalLocation) / 100.0, AttitudeCommand.Location / 100.0,
 		GetMaximumAcceleration(), MaxLinearVelocity, LinearDeadDistance, DeltaTime);
 }

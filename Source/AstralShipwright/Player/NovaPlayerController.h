@@ -2,14 +2,12 @@
 
 #pragma once
 
-#include "System/NovaGameInstance.h"
-#include "System/NovaPostProcessManager.h"
 #include "Spacecraft/NovaSpacecraft.h"
-#include "UI/NovaUI.h"
 
-#include "CoreMinimal.h"
-#include "Online.h"
-#include "GameFramework/PlayerController.h"
+#include "Neutron/Player/NeutronPlayerController.h"
+#include "Neutron/System/NeutronGameInstance.h"
+#include "Neutron/System/NeutronPostProcessManager.h"
+#include "Neutron/UI/NeutronUI.h"
 
 #include "NovaPlayerController.generated.h"
 
@@ -32,10 +30,10 @@ enum class ENovaPostProcessPreset : uint8
 };
 
 /** Post-process settings */
-struct FNovaPostProcessSetting : public FNovaPostProcessSettingBase
+struct FNeutronPostProcessSetting : public FNeutronPostProcessSettingBase
 {
-	FNovaPostProcessSetting()
-		: FNovaPostProcessSettingBase()
+	FNeutronPostProcessSetting()
+		: FNeutronPostProcessSettingBase()
 
 		// Custom
 	    //, ChromaIntensity(1)
@@ -93,15 +91,13 @@ public:
 	float CameraTravelingAmount;
 };
 
-enum class ENovaNetworkError : uint8;
-
 /*----------------------------------------------------
     Player class
 ----------------------------------------------------*/
 
 /** Default player controller class */
 UCLASS(ClassGroup = (Nova))
-class ANovaPlayerController : public APlayerController
+class ANovaPlayerController : public ANeutronPlayerController
 {
 	GENERATED_BODY()
 
@@ -135,6 +131,11 @@ public:
 
 	virtual void GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const override;
 
+	virtual bool IsReady() const override;
+
+	virtual void Notify(
+		const FText& Text, const FText& Subtext = FText(), ENeutronNotificationType Type = ENeutronNotificationType::Info) override;
+
 	/*----------------------------------------------------
 	    Gameplay
 	----------------------------------------------------*/
@@ -161,8 +162,8 @@ public:
 	void Undock();
 
 	/** Run a shared transition with a fade to black on all clients */
-	void SharedTransition(ENovaPlayerCameraState NewCameraState, FNovaAsyncAction StartAction = FNovaAsyncAction(),
-		FNovaAsyncCondition Condition = FNovaAsyncCondition(), FNovaAsyncAction FinishAction = FNovaAsyncAction());
+	void SharedTransition(ENovaPlayerCameraState NewCameraState, FNeutronAsyncAction StartAction = FNeutronAsyncAction(),
+		FNeutronAsyncCondition Condition = FNeutronAsyncCondition(), FNeutronAsyncAction FinishAction = FNeutronAsyncAction());
 
 	/** Signal a client that a shared transition is starting */
 	UFUNCTION(Client, Reliable)
@@ -175,6 +176,13 @@ public:
 	/** Signal the server that the transition is ready */
 	UFUNCTION(Server, Reliable)
 	void ServerSharedTransitionReady();
+
+	/** Check if the player is currently in a shared transition */
+	UFUNCTION(Category = Nova, BlueprintCallable)
+	bool IsInSharedTransition() const
+	{
+		return SharedTransitionActive;
+	}
 
 	/** Set the current camera state */
 	void SetCameraState(ENovaPlayerCameraState State);
@@ -191,6 +199,9 @@ public:
 
 public:
 
+	/** Start or restart the game */
+	void StartGame(FString SaveName, bool Online = true);
+
 	/** Load the player controller before actors can be created on the server */
 	void ClientLoadPlayer();
 
@@ -206,57 +217,10 @@ public:
 	void ServerUpdateSpacecraft(const FNovaSpacecraft& Spacecraft);
 
 	/*----------------------------------------------------
-	    Game flow
-	----------------------------------------------------*/
-
-public:
-
-	/** Start or restart the game */
-	void StartGame(FString SaveName, bool Online = true);
-
-	/** Re-start the current level, keeping the save data */
-	void SetGameOnline(bool Online = true);
-
-	/** Exit the session and go to the main menu */
-	void GoToMainMenu(bool ShouldSaveGame);
-
-	/** Exit the game */
-	void ExitGame();
-
-	/** Invite a friend to join the game */
-	void InviteFriend(TSharedRef<FOnlineFriend> Friend);
-
-	/** Join a friend's game from the menu */
-	void JoinFriend(TSharedRef<FOnlineFriend> Friend);
-
-	/** Join a friend's game from an invitation */
-	void AcceptInvitation(const FOnlineSessionSearchResult& InviteResult);
-
-	/** Check if the player has a valid pawn */
-	UFUNCTION(Category = Nova, BlueprintCallable)
-	bool IsReady() const;
-
-	/** Check if the player is currently in a shared transition */
-	UFUNCTION(Category = Nova, BlueprintCallable)
-	bool IsInSharedTransition() const
-	{
-		return SharedTransitionActive;
-	}
-
-	/*----------------------------------------------------
 	    Menus
 	----------------------------------------------------*/
 
 public:
-
-	/** Is the player on the main menu */
-	bool IsOnMainMenu() const;
-
-	/** Is the player restricted to menus */
-	bool IsMenuOnly() const;
-
-	/** Show a text notification on the screen */
-	void Notify(const FText& Text, const FText& Subtext = FText(), ENovaNotificationType Type = ENovaNotificationType::Info);
 
 	/** Start the photo mode with a transition and wait for ActionName */
 	void EnterPhotoMode(FName ActionName);
@@ -271,36 +235,12 @@ public:
 	}
 
 	/*----------------------------------------------------
-	    Input
-	----------------------------------------------------*/
-
-public:
-
-	virtual void SetupInputComponent() override;
-
-	/** Any key pressed */
-	void AnyKey(FKey Key);
-
-	/** Toggle the main menu */
-	void ToggleMenuOrQuit();
-
-#if WITH_EDITOR
-
-	// Test
-	void OnJoinRandomFriend(TArray<TSharedRef<FOnlineFriend>> FriendList);
-	void OnJoinRandomSession(TArray<FOnlineSessionSearchResult> SessionList);
-	void TestJoin();
-
-#endif
-
-	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
 
 private:
 
 	// General state
-	ENovaNetworkError      LastNetworkError;
 	ENovaPlayerCameraState CurrentCameraState;
 	float                  CurrentTimeInCameraState;
 	FName                  PhotoModeAction;
@@ -310,13 +250,13 @@ private:
 	FNovaCredits Credits;
 
 	// Transitions
-	bool                SharedTransitionActive;
-	FNovaAsyncAction    SharedTransitionStartAction;
-	FNovaAsyncAction    SharedTransitionFinishAction;
-	FNovaAsyncCondition SharedTransitionCondition;
+	bool                   SharedTransitionActive;
+	FNeutronAsyncAction    SharedTransitionStartAction;
+	FNeutronAsyncAction    SharedTransitionFinishAction;
+	FNeutronAsyncCondition SharedTransitionCondition;
 
 	// Gameplay state
-	TMap<ENovaPostProcessPreset, TSharedPtr<FNovaPostProcessSetting>> PostProcessSettings;
+	TMap<ENovaPostProcessPreset, TSharedPtr<FNeutronPostProcessSetting>> PostProcessSettings;
 
 	/*----------------------------------------------------
 	    Getters

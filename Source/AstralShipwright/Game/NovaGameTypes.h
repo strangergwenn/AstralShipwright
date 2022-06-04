@@ -3,7 +3,7 @@
 #pragma once
 
 #include "EngineMinimal.h"
-#include "System/NovaAssetManager.h"
+#include "Neutron/System/NeutronAssetManager.h"
 #include <cmath>
 #include "NovaGameTypes.generated.h"
 
@@ -30,16 +30,6 @@ constexpr float  StandardGravity         = 9.807f;
 constexpr double TrajectoryDistanceError = 0.5;
 
 };    // namespace ENovaConstants
-
-/** Notification type */
-enum class ENovaNotificationType : uint8
-{
-	Info,
-	Error,
-	Save,
-	World,
-	Time
-};
 
 /*----------------------------------------------------
     Currency type
@@ -304,7 +294,7 @@ static FNovaTime operator/(const double Value, const FNovaTime Time)
 
 /** Description of a tradable asset */
 UCLASS(ClassGroup = (Nova))
-class UNovaTradableAssetDescription : public UNovaAssetDescription
+class UNovaTradableAssetDescription : public UNeutronAssetDescription
 {
 	GENERATED_BODY()
 
@@ -330,7 +320,7 @@ class UNovaPreviableTradableAssetDescription : public UNovaTradableAssetDescript
 
 public:
 
-	virtual struct FNovaAssetPreviewSettings GetPreviewSettings() const override;
+	virtual struct FNeutronAssetPreviewSettings GetPreviewSettings() const override;
 
 	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
 

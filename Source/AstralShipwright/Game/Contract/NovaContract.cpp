@@ -1,12 +1,11 @@
 ﻿// Astral Shipwright - Gwennaël Arbona
 
 #include "NovaContract.h"
-
 #include "Player/NovaPlayerController.h"
-#include "System/NovaGameInstance.h"
-#include "System/NovaAssetManager.h"
-
 #include "Nova.h"
+
+#include "Neutron/System/NeutronAssetManager.h"
+#include "Neutron/System/NeutronGameInstance.h"
 
 #define LOCTEXT_NAMESPACE "FNovaContract"
 
@@ -16,12 +15,12 @@
 
 FNovaTutorialContract::FNovaTutorialContract()
 {
-	Type = ENovaContractType::Tutorial;
+	Type = ENeutronContractType::Tutorial;
 }
 
-void FNovaTutorialContract::Initialize(UNovaGameInstance* CurrentGameInstance)
+void FNovaTutorialContract::Initialize(UNeutronGameInstance* CurrentGameInstance)
 {
-	FNovaContract::Initialize(CurrentGameInstance);
+	FNeutronContract::Initialize(CurrentGameInstance);
 
 	// TODO : actually implement contracts
 
@@ -33,19 +32,19 @@ void FNovaTutorialContract::Initialize(UNovaGameInstance* CurrentGameInstance)
 
 TSharedRef<FJsonObject> FNovaTutorialContract::Save() const
 {
-	TSharedRef<FJsonObject> Data = FNovaContract::Save();
+	TSharedRef<FJsonObject> Data = FNeutronContract::Save();
 
 	return Data;
 }
 
 void FNovaTutorialContract::Load(const TSharedPtr<FJsonObject>& Data)
 {
-	FNovaContract::Load(Data);
+	FNeutronContract::Load(Data);
 
 	Details.Progress = 0.23f;
 }
 
-void FNovaTutorialContract::OnEvent(const FNovaContractEvent& Event)
+void FNovaTutorialContract::OnEvent(const FNeutronContractEvent& Event)
 {
 	if (Event.Type == Tick)
 	{

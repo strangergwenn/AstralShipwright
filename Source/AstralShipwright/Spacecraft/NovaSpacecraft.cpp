@@ -5,8 +5,9 @@
 
 #include "Game/NovaGameState.h"
 #include "Game/NovaOrbitalSimulationTypes.h"
-#include "System/NovaAssetManager.h"
 #include "Nova.h"
+
+#include "Neutron/System/NeutronAssetManager.h"
 
 #include "Dom/JsonObject.h"
 #include "EngineUtils.h"
@@ -205,10 +206,10 @@ void FNovaCompartment::ModifyCargo(const class UNovaResource* Resource, float& M
 
 void FNovaSpacecraftCustomization::Create()
 {
-	StructuralPaint = UNovaAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
-	HullPaint       = UNovaAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
-	DetailPaint     = UNovaAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
-	Emblem          = UNovaAssetManager::Get()->GetDefaultAsset<UNovaEmblemDescription>();
+	StructuralPaint = UNeutronAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
+	HullPaint       = UNeutronAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
+	DetailPaint     = UNeutronAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
+	Emblem          = UNeutronAssetManager::Get()->GetDefaultAsset<UNovaEmblemDescription>();
 	EnableHullPaint = false;
 }
 
@@ -302,7 +303,7 @@ FNovaSpacecraftCompartmentMetrics::FNovaSpacecraftCompartmentMetrics(const FNova
 
 TArray<FText> FNovaSpacecraftCompartmentMetrics::GetDescription() const
 {
-	TArray<FText> Result = INovaDescriptibleInterface::GetDescription();
+	TArray<FText> Result = INeutronDescriptibleInterface::GetDescription();
 
 	Result.Add(FText::FormatNamed(
 		LOCTEXT("CompartmentMassFormat", "<img src=\"/Text/Mass\"/> {mass} T"), TEXT("mass"), FText::AsNumber(FMath::RoundToInt(DryMass))));
@@ -896,7 +897,7 @@ TArray<const UNovaCompartmentDescription*> FNovaSpacecraft::GetCompatibleCompart
 {
 	TArray<const UNovaCompartmentDescription*> CompartmentDescriptions;
 
-	for (const UNovaCompartmentDescription* Description : UNovaAssetManager::Get()->GetSortedAssets<UNovaCompartmentDescription>())
+	for (const UNovaCompartmentDescription* Description : UNeutronAssetManager::Get()->GetSortedAssets<UNovaCompartmentDescription>())
 	{
 		if (Description->IsForwardCompartment && (!IsFirstCompartment(CompartmentIndex) || Compartments.Num() == 0))
 		{
@@ -914,7 +915,7 @@ TArray<const UNovaCompartmentDescription*> FNovaSpacecraft::GetCompatibleCompart
 TArray<const UNovaModuleDescription*> FNovaSpacecraft::GetCompatibleModules(int32 CompartmentIndex, int32 SlotIndex) const
 {
 	TArray<const UNovaModuleDescription*> ModuleDescriptions;
-	TArray<const UNovaModuleDescription*> AllModuleDescriptions = UNovaAssetManager::Get()->GetSortedAssets<UNovaModuleDescription>();
+	TArray<const UNovaModuleDescription*> AllModuleDescriptions = UNeutronAssetManager::Get()->GetSortedAssets<UNovaModuleDescription>();
 	const FNovaCompartment&               Compartment           = Compartments[CompartmentIndex];
 
 	ModuleDescriptions.Add(nullptr);
@@ -933,7 +934,7 @@ TArray<const UNovaEquipmentDescription*> FNovaSpacecraft::GetCompatibleEquipment
 {
 	TArray<const UNovaEquipmentDescription*> EquipmentDescriptions;
 	TArray<const UNovaEquipmentDescription*> AllEquipmentDescriptions =
-		UNovaAssetManager::Get()->GetSortedAssets<UNovaEquipmentDescription>();
+		UNeutronAssetManager::Get()->GetSortedAssets<UNovaEquipmentDescription>();
 	const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
 
 	EquipmentDescriptions.Add(nullptr);

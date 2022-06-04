@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "UI/NovaUI.h"
-#include "UI/Widget/NovaTabView.h"
+#include "Neutron/UI/NeutronUI.h"
+#include "Neutron/UI/Widgets/NeutronTabView.h"
 
 #include "Online.h"
 
@@ -14,16 +14,16 @@ constexpr int32 DefaultHUDIndex = 2;
 /** HUD data structure */
 struct FNovaHUDData
 {
-	FText                         HelpText;
-	TSharedPtr<SWidget>           OverviewWidget;
-	TSharedPtr<SWidget>           DetailedWidget;
-	TSharedPtr<class SNovaButton> DefaultFocus;
+	FText                            HelpText;
+	TSharedPtr<SWidget>              OverviewWidget;
+	TSharedPtr<SWidget>              DetailedWidget;
+	TSharedPtr<class SNeutronButton> DefaultFocus;
 };
 
 /** Flight menu */
 class SNovaMainMenuFlight
-	: public SNovaTabPanel
-	, public INovaGameMenu
+	: public SNeutronTabPanel
+	, public INeutronGameMenu
 {
 	/*----------------------------------------------------
 	    Slate arguments
@@ -32,8 +32,8 @@ class SNovaMainMenuFlight
 	SLATE_BEGIN_ARGS(SNovaMainMenuFlight)
 	{}
 
-	SLATE_ARGUMENT(class SNovaMenu*, Menu)
-	SLATE_ARGUMENT(TWeakObjectPtr<class UNovaMenuManager>, MenuManager)
+	SLATE_ARGUMENT(class SNeutronMenu*, Menu)
+	SLATE_ARGUMENT(TWeakObjectPtr<class UNeutronMenuManager>, MenuManager)
 
 	SLATE_END_ARGS()
 
@@ -69,7 +69,7 @@ public:
 
 	virtual void OnClicked(const FVector2D& Position) override;
 
-	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
+	virtual TSharedPtr<SNeutronButton> GetDefaultFocusButton() const override;
 
 	virtual bool IsClickInsideMenuAllowed() const override
 	{
@@ -119,7 +119,7 @@ protected:
 protected:
 
 	// Game objects
-	TWeakObjectPtr<UNovaMenuManager>        MenuManager;
+	TWeakObjectPtr<UNeutronMenuManager>     MenuManager;
 	class ANovaPlayerController*            PC;
 	class ANovaSpacecraftPawn*              SpacecraftPawn;
 	class UNovaSpacecraftMovementComponent* SpacecraftMovement;
@@ -130,14 +130,14 @@ protected:
 	TSharedPtr<class SHorizontalBox> HUDSwitcher;
 	TSharedPtr<class SNovaHUDPanel>  HUDPanel;
 	TSharedPtr<class SBox>           HUDBox;
-	TSharedPtr<class SNovaButton>    DockButton;
-	TSharedPtr<class SNovaButton>    TerminateButton;
-	TSharedPtr<class SNovaButton>    AlignManeuverButton;
-	TSharedPtr<class SNovaButton>    FastForwardButton;
+	TSharedPtr<class SNeutronButton> DockButton;
+	TSharedPtr<class SNeutronButton> TerminateButton;
+	TSharedPtr<class SNeutronButton> AlignManeuverButton;
+	TSharedPtr<class SNeutronButton> FastForwardButton;
 	TSharedPtr<class SBox>           InvisibleWidget;
 
 	// HUD state
-	FNovaCarouselAnimation<HUDCount> HUDAnimation;
-	FNovaHUDData                     HUDData[HUDCount];
-	int32                            CurrentHUDIndex;
+	FNeutronCarouselAnimation<HUDCount> HUDAnimation;
+	FNovaHUDData                        HUDData[HUDCount];
+	int32                               CurrentHUDIndex;
 };

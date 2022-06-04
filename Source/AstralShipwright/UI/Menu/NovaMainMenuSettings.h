@@ -2,13 +2,13 @@
 
 #pragma once
 
-#include "UI/NovaUI.h"
-#include "UI/Widget/NovaTabView.h"
-#include "UI/Widget/NovaModalListView.h"
+#include "Neutron/UI/NeutronUI.h"
+#include "Neutron/UI/Widgets/NeutronTabView.h"
+#include "Neutron/UI/Widgets/NeutronModalListView.h"
 
 class SNovaMainMenuSettings
-	: public SNovaTabPanel
-	, public INovaGameMenu
+	: public SNeutronTabPanel
+	, public INeutronGameMenu
 {
 	/*----------------------------------------------------
 	    Slate arguments
@@ -17,8 +17,8 @@ class SNovaMainMenuSettings
 	SLATE_BEGIN_ARGS(SNovaMainMenuSettings)
 	{}
 
-	SLATE_ARGUMENT(class SNovaMenu*, Menu)
-	SLATE_ARGUMENT(TWeakObjectPtr<class UNovaMenuManager>, MenuManager)
+	SLATE_ARGUMENT(class SNeutronMenu*, Menu)
+	SLATE_ARGUMENT(TWeakObjectPtr<class UNeutronMenuManager>, MenuManager)
 
 	SLATE_END_ARGS()
 
@@ -32,24 +32,25 @@ public:
 
 	virtual void Show() override;
 
-	TSharedPtr<class SNovaButton> GetDefaultFocusButton() const override;
+	TSharedPtr<class SNeutronButton> GetDefaultFocusButton() const override;
 
 	/*----------------------------------------------------
 	    Input management
 	----------------------------------------------------*/
 
-	void OnKeyBindingChanged(FKey PreviousKey, FKey NewKey, TSharedPtr<struct FNovaKeyBinding> Binding);
-	void OnKeyBindingReset(TSharedPtr<struct FNovaKeyBinding> Binding);
+	void OnKeyBindingChanged(FKey PreviousKey, FKey NewKey, TSharedPtr<struct FNeutronKeyBinding> Binding);
+	void OnKeyBindingReset(TSharedPtr<struct FNeutronKeyBinding> Binding);
 
-	void ApplyNewBinding(TSharedPtr<struct FNovaKeyBinding> BindingThatChanged, bool Replace);
-	void CancelNewBinding(TSharedPtr<struct FNovaKeyBinding> BindingThatChanged, FKey PreviousKey);
-	bool IsAlreadyUsed(TArray<TSharedPtr<struct FNovaKeyBinding>>& BindConflicts, FKey Key, TSharedPtr<FNovaKeyBinding> ExcludeBinding);
+	void ApplyNewBinding(TSharedPtr<struct FNeutronKeyBinding> BindingThatChanged, bool Replace);
+	void CancelNewBinding(TSharedPtr<struct FNeutronKeyBinding> BindingThatChanged, FKey PreviousKey);
+	bool IsAlreadyUsed(
+		TArray<TSharedPtr<struct FNeutronKeyBinding>>& BindConflicts, FKey Key, TSharedPtr<FNeutronKeyBinding> ExcludeBinding);
 
 	/*----------------------------------------------------
 	    Video management
 	----------------------------------------------------*/
 
-	TSharedPtr<class SNovaSlider> AddSettingSlider(TSharedPtr<class SVerticalBox> Container, FText Text, FText HelpText,
+	TSharedPtr<class SNeutronSlider> AddSettingSlider(TSharedPtr<class SVerticalBox> Container, FText Text, FText HelpText,
 		FOnFloatValueChanged Callback, float MinValue = 0, float MaxValue = 4, float ValueStep = 1, TAttribute<bool> Enabled = true);
 
 	void UpdateResolutionList();
@@ -127,53 +128,53 @@ protected:
 protected:
 
 	// Menu widgets
-	TWeakObjectPtr<UNovaMenuManager>  MenuManager;
-	TSharedPtr<class SVerticalBox>    BindingsContainer;
-	TSharedPtr<class SNovaModalPanel> ModalPanel;
+	TWeakObjectPtr<UNeutronMenuManager>  MenuManager;
+	TSharedPtr<class SVerticalBox>       BindingsContainer;
+	TSharedPtr<class SNeutronModalPanel> ModalPanel;
 
 	// Data
-	class UNovaGameUserSettings*                    GameUserSettings;
+	class UNeutronGameUserSettings*                 GameUserSettings;
 	TArray<TSharedPtr<FString>>                     CultureList;
 	TSharedPtr<FString>                             SelectedCulture;
 	TArray<TSharedPtr<struct FScreenResolutionRHI>> ResolutionList;
 	TSharedPtr<struct FScreenResolutionRHI>         SelectedResolution;
-	TArray<TSharedPtr<struct FNovaKeyBinding>>      Bindings;
+	TArray<TSharedPtr<struct FNeutronKeyBinding>>   Bindings;
 	FIntPoint                                       LastConfirmedVideoResolution;
 	EWindowMode::Type                               LastConfirmedFullscreenMode;
 
 	// Game settings widgets
-	TSharedPtr<SVerticalBox>                            GameplayContainer;
-	TSharedPtr<SNovaModalListView<TSharedPtr<FString>>> CultureListView;
-	TSharedPtr<class SNovaSlider>                       FOVSlider;
-	TSharedPtr<class SNovaButton>                       CrashReportButton;
+	TSharedPtr<SVerticalBox>                               GameplayContainer;
+	TSharedPtr<SNeutronModalListView<TSharedPtr<FString>>> CultureListView;
+	TSharedPtr<class SNeutronSlider>                       FOVSlider;
+	TSharedPtr<class SNeutronButton>                       CrashReportButton;
 
 	// Sound settings widgets
-	TSharedPtr<SVerticalBox>      SoundContainer;
-	TSharedPtr<class SNovaSlider> MasterVolumeSlider;
-	TSharedPtr<class SNovaSlider> UIVolumeSlider;
-	TSharedPtr<class SNovaSlider> EffectsVolumeSlider;
-	TSharedPtr<class SNovaSlider> MusicVolumeSlider;
+	TSharedPtr<SVerticalBox>         SoundContainer;
+	TSharedPtr<class SNeutronSlider> MasterVolumeSlider;
+	TSharedPtr<class SNeutronSlider> UIVolumeSlider;
+	TSharedPtr<class SNeutronSlider> EffectsVolumeSlider;
+	TSharedPtr<class SNeutronSlider> MusicVolumeSlider;
 
 	// Display settings widgets
-	TSharedPtr<SNovaModalListView<TSharedPtr<struct FScreenResolutionRHI>>> ResolutionListView;
-	TSharedPtr<class SNovaButton>                                           FullscreenButton;
-	TSharedPtr<class SNovaButton>                                           VSyncButton;
-	TSharedPtr<class SNovaButton>                                           HDRButton;
+	TSharedPtr<SNeutronModalListView<TSharedPtr<struct FScreenResolutionRHI>>> ResolutionListView;
+	TSharedPtr<class SNeutronButton>                                           FullscreenButton;
+	TSharedPtr<class SNeutronButton>                                           VSyncButton;
+	TSharedPtr<class SNeutronButton>                                           HDRButton;
 
 	// Graphics settings widgets
-	TSharedPtr<SVerticalBox>      ScalingContainer;
-	TSharedPtr<SVerticalBox>      GraphicsContainer;
-	TSharedPtr<class SNovaSlider> GlobalIlluminationSlider;
-	TSharedPtr<class SNovaSlider> ShadowSlider;
-	TSharedPtr<class SNovaSlider> EffectsSlider;
-	TSharedPtr<class SNovaSlider> PostProcessSlider;
-	TSharedPtr<class SNovaSlider> AntiAliasingSlider;
-	TSharedPtr<class SNovaSlider> ScreenPercentageSlider;
-	TSharedPtr<class SNovaButton> DLSSButton;
-	TSharedPtr<class SNovaButton> TSRButton;
-	TSharedPtr<class SNovaButton> NaniteButton;
-	TSharedPtr<class SNovaButton> LumenButton;
-	TSharedPtr<class SNovaButton> LumenHWRTButton;
-	TSharedPtr<class SNovaButton> VirtualShadowsButton;
-	TSharedPtr<class SNovaButton> CinematicBloomButton;
+	TSharedPtr<SVerticalBox>         ScalingContainer;
+	TSharedPtr<SVerticalBox>         GraphicsContainer;
+	TSharedPtr<class SNeutronSlider> GlobalIlluminationSlider;
+	TSharedPtr<class SNeutronSlider> ShadowSlider;
+	TSharedPtr<class SNeutronSlider> EffectsSlider;
+	TSharedPtr<class SNeutronSlider> PostProcessSlider;
+	TSharedPtr<class SNeutronSlider> AntiAliasingSlider;
+	TSharedPtr<class SNeutronSlider> ScreenPercentageSlider;
+	TSharedPtr<class SNeutronButton> DLSSButton;
+	TSharedPtr<class SNeutronButton> TSRButton;
+	TSharedPtr<class SNeutronButton> NaniteButton;
+	TSharedPtr<class SNeutronButton> LumenButton;
+	TSharedPtr<class SNeutronButton> LumenHWRTButton;
+	TSharedPtr<class SNeutronButton> VirtualShadowsButton;
+	TSharedPtr<class SNeutronButton> CinematicBloomButton;
 };

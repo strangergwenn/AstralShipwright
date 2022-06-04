@@ -31,7 +31,7 @@ struct FNovaLargeNumber
 
 /** Planet description */
 UCLASS(ClassGroup = (Nova))
-class UNovaCelestialBody : public UNovaAssetDescription
+class UNovaCelestialBody : public UNeutronAssetDescription
 {
 	GENERATED_BODY()
 

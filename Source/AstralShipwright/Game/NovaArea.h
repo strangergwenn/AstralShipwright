@@ -37,7 +37,7 @@ public:
 
 /** World area description */
 UCLASS(ClassGroup = (Nova), BlueprintType)
-class UNovaArea : public UNovaAssetDescription
+class UNovaArea : public UNeutronAssetDescription
 {
 	GENERATED_BODY()
 

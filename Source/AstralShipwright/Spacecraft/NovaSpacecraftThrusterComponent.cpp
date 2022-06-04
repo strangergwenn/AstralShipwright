@@ -2,8 +2,9 @@
 
 #include "NovaSpacecraftThrusterComponent.h"
 #include "NovaSpacecraftMovementComponent.h"
-#include "Actor/NovaMeshInterface.h"
 #include "Nova.h"
+
+#include "Neutron/Actor/NeutronMeshInterface.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
 #include "DrawDebugHelpers.h"
@@ -37,7 +38,7 @@ void UNovaSpacecraftThrusterComponent::BeginPlay()
 	bool                      HasSocket;
 	int32                     CurrentSocketIndex = 0;
 	FAttachmentTransformRules AttachRules(EAttachmentRule::KeepWorld, false);
-	INovaMeshInterface*       ParentMesh = Cast<INovaMeshInterface>(GetAttachParent());
+	INeutronMeshInterface*    ParentMesh = Cast<INeutronMeshInterface>(GetAttachParent());
 	NCHECK(ParentMesh);
 
 	ThrusterTraceParams.bTraceComplex = true;
@@ -97,7 +98,7 @@ void UNovaSpacecraftThrusterComponent::TickComponent(float DeltaTime, ELevelTick
 
 	if (MovementComponent && IsValid(GetAttachParent()))
 	{
-		INovaMeshInterface* ParentMesh = Cast<INovaMeshInterface>(GetAttachParent());
+		INeutronMeshInterface* ParentMesh = Cast<INeutronMeshInterface>(GetAttachParent());
 		NCHECK(ParentMesh);
 
 		// Initialize thrust data

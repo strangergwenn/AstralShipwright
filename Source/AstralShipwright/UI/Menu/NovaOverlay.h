@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "UI/NovaUI.h"
+#include "Neutron/UI/NeutronUI.h"
 #include "Game/NovaGameTypes.h"
 #include "Widgets/SCompoundWidget.h"
 
@@ -16,7 +16,7 @@ class SNovaOverlay : public SCompoundWidget
 	SLATE_BEGIN_ARGS(SNovaOverlay)
 	{}
 
-	SLATE_ARGUMENT(TWeakObjectPtr<class UNovaMenuManager>, MenuManager)
+	SLATE_ARGUMENT(TWeakObjectPtr<class UNeutronMenuManager>, MenuManager)
 
 	SLATE_END_ARGS()
 
@@ -29,7 +29,7 @@ public:
 	----------------------------------------------------*/
 
 	/** Show a text notification on the screen */
-	void Notify(const FText& Text, const FText& Subtext, ENovaNotificationType Type);
+	void Notify(const FText& Text, const FText& Subtext, ENeutronNotificationType Type);
 
 	/** Start the fast-forward overlay */
 	void StartFastForward();
@@ -44,7 +44,7 @@ public:
 protected:
 
 	// Menu reference
-	TWeakObjectPtr<class UNovaMenuManager> MenuManager;
+	TWeakObjectPtr<class UNeutronMenuManager> MenuManager;
 
 	// Widgets
 	TSharedPtr<class SNovaNotification> Notification;

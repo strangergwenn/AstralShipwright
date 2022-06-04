@@ -10,7 +10,6 @@
 #include "NovaAsteroidSimulationComponent.h"
 #include "NovaOrbitalSimulationComponent.h"
 
-#include "Actor/NovaActorTools.h"
 #include "Player/NovaPlayerState.h"
 #include "Player/NovaPlayerController.h"
 
@@ -18,8 +17,9 @@
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
 #include "Spacecraft/System/NovaSpacecraftSystemInterface.h"
 
-#include "System/NovaAssetManager.h"
-#include "System/NovaSessionsManager.h"
+#include "Neutron/Actor/NeutronActorTools.h"
+#include "Neutron/System/NeutronAssetManager.h"
+#include "Neutron/System/NeutronSessionsManager.h"
 
 #include "Nova.h"
 
@@ -117,7 +117,7 @@ void ANovaGameState::Load(const FNovaGameStateSave& SaveData)
 	}
 	else
 	{
-		SetCurrentArea(UNovaAssetManager::Get()->GetDefaultAsset<UNovaArea>());
+		SetCurrentArea(UNeutronAssetManager::Get()->GetDefaultAsset<UNovaArea>());
 	}
 
 	// Save general state
@@ -137,7 +137,7 @@ void ANovaGameState::BeginPlay()
 	Super::BeginPlay();
 
 	// Startup the simulation components
-	AsteroidSimulationComponent->Initialize(UNovaAssetManager::Get()->GetDefaultAsset<UNovaAsteroidConfiguration>());
+	AsteroidSimulationComponent->Initialize(UNeutronAssetManager::Get()->GetDefaultAsset<UNovaAsteroidConfiguration>());
 }
 
 void ANovaGameState::Tick(float DeltaTime)
@@ -187,7 +187,7 @@ void ANovaGameState::Tick(float DeltaTime)
 	ProcessPlayerEvents(DeltaTime);
 
 	// Update sessions
-	UNovaSessionsManager* SessionsManager = UNovaSessionsManager::Get();
+	UNeutronSessionsManager* SessionsManager = UNeutronSessionsManager::Get();
 	SessionsManager->SetSessionAdvertised(IsJoinable());
 }
 
@@ -662,13 +662,13 @@ void ANovaGameState::ProcessPlayerEvents(float DeltaTime)
 
 	if (TimeSinceEvent > EventNotificationDelay)
 	{
-		ENovaNotificationType NotificationType = ENovaNotificationType::Info;
+		ENeutronNotificationType NotificationType = ENeutronNotificationType::Info;
 
 		// Handle area changes as the primary information
 		if (AreaChangeEvents.Num())
 		{
 			PrimaryText      = AreaChangeEvents[AreaChangeEvents.Num() - 1]->Name;
-			NotificationType = ENovaNotificationType::World;
+			NotificationType = ENeutronNotificationType::World;
 		}
 
 		// Handle time skips as the secondary information
@@ -678,7 +678,7 @@ void ANovaGameState::ProcessPlayerEvents(float DeltaTime)
 
 			if (PrimaryText.IsEmpty())
 			{
-				NotificationType = ENovaNotificationType::Time;
+				NotificationType = ENeutronNotificationType::Time;
 			}
 
 			Text = FText::FormatNamed(LOCTEXT("SharedTransitionTimeFormat", "{duration} have passed"), TEXT("duration"),
@@ -721,7 +721,7 @@ void ANovaGameState::ProcessTrajectoryAbort()
 
 			OrbitalSimulationComponent->AbortTrajectory(GetPlayerSpacecraftIdentifiers());
 			ANovaPlayerController* PC = Cast<ANovaPlayerController>(GetGameInstance()->GetFirstLocalPlayerController());
-			PC->Notify(LOCTEXT("TrajectoryAborted", "Trajectory aborted"), AbortReason, ENovaNotificationType::Error);
+			PC->Notify(LOCTEXT("TrajectoryAborted", "Trajectory aborted"), AbortReason, ENeutronNotificationType::Error);
 
 			return;
 		}
@@ -772,7 +772,7 @@ void ANovaGameState::OnServerTimeReplicated()
 	NCHECK(IsValid(PC) && PC->IsLocalController());
 
 	// Evaluate the current server time
-	const double PingSeconds      = UNovaActorTools::GetPlayerLatency(PC);
+	const double PingSeconds      = UNeutronActorTools::GetPlayerLatency(PC);
 	const double RealServerTime   = ServerTime + PingSeconds / 60.0;
 	const double TimeDeltaSeconds = (RealServerTime - ClientTime) * 60.0 / GetCurrentTimeDilationValue();
 

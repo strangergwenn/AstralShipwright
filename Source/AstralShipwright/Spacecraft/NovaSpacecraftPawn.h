@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actor/NovaTurntablePawn.h"
-#include "UI/NovaUI.h"
+#include "Neutron/Actor/NeutronTurntablePawn.h"
+#include "Neutron/UI/NeutronUI.h"
 #include "NovaSpacecraft.h"
 #include "NovaSpacecraftPawn.generated.h"
 
@@ -66,7 +66,7 @@ struct FNovaSpacecraftPawnCompartmentIndex
 
 	float GetAlpha() const
 	{
-		return FMath::InterpEaseInOut(0.0f, 1.0f, CurrentAlpha, ENovaUIConstants::EaseStandard);
+		return FMath::InterpEaseInOut(0.0f, 1.0f, CurrentAlpha, ENeutronUIConstants::EaseStandard);
 	}
 
 protected:
@@ -79,7 +79,7 @@ protected:
 
 /** Main assembly actor that allows building boats */
 UCLASS(ClassGroup = (Nova))
-class ANovaSpacecraftPawn : public ANovaTurntablePawn
+class ANovaSpacecraftPawn : public ANeutronTurntablePawn
 {
 	friend class UNovaCompartmentDescription;
 	friend class UNovaModuleDescription;

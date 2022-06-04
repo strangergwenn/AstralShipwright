@@ -5,12 +5,13 @@
 #include "NovaMainMenu.h"
 
 #include "Player/NovaPlayerController.h"
-#include "System/NovaMenuManager.h"
-
-#include "UI/Component/NovaLargeButton.h"
-#include "UI/Widget/NovaModalPanel.h"
+#include "UI/Widgets/NovaLargeButton.h"
 
 #include "Nova.h"
+
+#include "Neutron/Player/NeutronPlayerController.h"
+#include "Neutron/System/NeutronMenuManager.h"
+#include "Neutron/UI/Widgets/NeutronModalPanel.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
 #include "Misc/EngineVersion.h"
@@ -24,14 +25,14 @@
 void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 {
 	// Data
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	MenuManager                 = InArgs._MenuManager;
+	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
+	MenuManager                    = InArgs._MenuManager;
 	FText ProjectName, ProjectVersion;
 	GConfig->GetText(TEXT("/Script/EngineSettings.GeneralProjectSettings"), TEXT("ProjectName"), ProjectName, GGameIni);
 	GConfig->GetText(TEXT("/Script/EngineSettings.GeneralProjectSettings"), TEXT("ProjectVersion"), ProjectVersion, GGameIni);
 
 	// Parent constructor
-	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
+	SNeutronNavigationPanel::Construct(SNeutronNavigationPanel::FArguments().Menu(InArgs._Menu));
 
 	// clang-format off
 	ChildSlot
@@ -46,7 +47,7 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 		.HAlign(HAlign_Center)
 		[
 			SNew(SImage)
-			.Image(FNovaStyleSet::GetBrush("Common/SB_AstralShipwright"))
+			.Image(FNeutronStyleSet::GetBrush("Common/SB_AstralShipwright"))
 		]
 
 		+ SVerticalBox::Slot()
@@ -76,9 +77,9 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 
 						+ SHorizontalBox::Slot()
 						[
-							SNovaDefaultNew(SNovaLargeButton)
+							SNeutronDefaultNew(SNovaLargeButton)
 							.Theme("MainMenuButton")
-							.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
+							.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Menu"))
 							.Text(LOCTEXT("Launch1", "Slot 1"))
 							.HelpText(LOCTEXT("LaunchHelp1", "Load save data from the first save slot"))
 							.OnClicked(FSimpleDelegate::CreateLambda([this]() { OnLaunchGame(1); } ))
@@ -86,9 +87,9 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 
 						+ SHorizontalBox::Slot()
 						[
-							SNovaNew(SNovaLargeButton)
+							SNeutronNew(SNovaLargeButton)
 							.Theme("MainMenuButton")
-							.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
+							.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Menu"))
 							.Text(LOCTEXT("Launch2", "Slot 2"))
 							.HelpText(LOCTEXT("LaunchHelp2", "Load save data from the second save slot"))
 							.OnClicked(FSimpleDelegate::CreateLambda([this]() { OnLaunchGame(2); } ))
@@ -96,9 +97,9 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 
 						+ SHorizontalBox::Slot()
 						[
-							SNovaNew(SNovaLargeButton)
+							SNeutronNew(SNovaLargeButton)
 							.Theme("MainMenuButton")
-							.Icon(FNovaStyleSet::GetBrush("Icon/SB_Menu"))
+							.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Menu"))
 							.Text(LOCTEXT("Launch3", "Slot 3"))
 							.HelpText(LOCTEXT("LaunchHelp3", "Load save data from the third save slot"))
 							.OnClicked(FSimpleDelegate::CreateLambda([this]() { OnLaunchGame(3); } ))
@@ -125,7 +126,7 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 								SNew(SRichTextBlock)
 								.Text(LOCTEXT("Alpha", "<img src=\"/Text/Warning\"/> Astral Shipwright is currently in early Alpha and may present bugs"))
 								.TextStyle(&Theme.MainFont)
-								.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
+								.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
 								+ SRichTextBlock::ImageDecorator()
 							]
 
@@ -135,8 +136,8 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 							.VAlign(VAlign_Center)
 							.AutoWidth()
 							[
-								SNovaNew(SNovaButton)
-								.Action(FNovaPlayerInput::MenuPrimary)
+								SNeutronNew(SNeutronButton)
+								.Action(FNeutronPlayerInput::MenuPrimary)
 								.Text(LOCTEXT("Credits", "Credits"))
 								.HelpText(LOCTEXT("CreditsHelp", "Check out the credits"))
 								.OnClicked(this, &SNovaMainMenuHome::OnOpenCredits)
@@ -189,7 +190,7 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 				.HAlign(HAlign_Center)
 				[
 					SNew(SImage)
-					.Image(FNovaStyleSet::GetBrush("Common/SB_DeimosGames"))
+					.Image(FNeutronStyleSet::GetBrush("Common/SB_DeimosGames"))
 				]
 
 				+ SVerticalBox::Slot()
@@ -237,12 +238,12 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 
 void SNovaMainMenuHome::Show()
 {
-	SNovaTabPanel::Show();
+	SNeutronTabPanel::Show();
 }
 
 void SNovaMainMenuHome::Hide()
 {
-	SNovaTabPanel::Hide();
+	SNeutronTabPanel::Hide();
 }
 
 /*----------------------------------------------------
@@ -255,7 +256,7 @@ void SNovaMainMenuHome::Hide()
 
 void SNovaMainMenuHome::OnLaunchGame(uint32 Index)
 {
-	MenuManager->GetPC()->StartGame(FString::FromInt(Index), true);
+	MenuManager->GetPC<ANovaPlayerController>()->StartGame(FString::FromInt(Index), true);
 }
 
 void SNovaMainMenuHome::OnOpenCredits()

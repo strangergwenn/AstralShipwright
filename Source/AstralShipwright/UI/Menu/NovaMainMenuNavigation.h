@@ -2,17 +2,18 @@
 
 #pragma once
 
-#include "UI/NovaUI.h"
-#include "UI/Widget/NovaTabView.h"
-#include "UI/Widget/NovaModalListView.h"
-#include "UI/Component/NovaOrbitalMap.h"
+#include "UI/Widgets/NovaOrbitalMap.h"
+
+#include "Neutron/UI/NeutronUI.h"
+#include "Neutron/UI/Widgets/NeutronTabView.h"
+#include "Neutron/UI/Widgets/NeutronModalListView.h"
 
 #include "Online.h"
 
 /** Navigation menu */
 class SNovaMainMenuNavigation
-	: public SNovaTabPanel
-	, public INovaGameMenu
+	: public SNeutronTabPanel
+	, public INeutronGameMenu
 {
 	/*----------------------------------------------------
 	    Slate arguments
@@ -21,8 +22,8 @@ class SNovaMainMenuNavigation
 	SLATE_BEGIN_ARGS(SNovaMainMenuNavigation)
 	{}
 
-	SLATE_ARGUMENT(class SNovaMenu*, Menu)
-	SLATE_ARGUMENT(TWeakObjectPtr<class UNovaMenuManager>, MenuManager)
+	SLATE_ARGUMENT(class SNeutronMenu*, Menu)
+	SLATE_ARGUMENT(TWeakObjectPtr<class UNeutronMenuManager>, MenuManager)
 
 	SLATE_END_ARGS()
 
@@ -60,7 +61,7 @@ public:
 
 	virtual void ZoomOut() override;
 
-	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
+	virtual TSharedPtr<SNeutronButton> GetDefaultFocusButton() const override;
 
 	/*----------------------------------------------------
 	    Internals
@@ -112,7 +113,7 @@ protected:
 protected:
 
 	// Game objects
-	TWeakObjectPtr<UNovaMenuManager>        MenuManager;
+	TWeakObjectPtr<UNeutronMenuManager>     MenuManager;
 	class ANovaPlayerController*            PC;
 	const struct FNovaSpacecraft*           Spacecraft;
 	class ANovaGameState*                   GameState;
@@ -129,7 +130,7 @@ protected:
 	TSharedPtr<class STextBlock>                DestinationTitle;
 	TSharedPtr<class SRichTextBlock>            DestinationDescription;
 	TSharedPtr<class SNovaTrajectoryCalculator> TrajectoryCalculator;
-	TSharedPtr<class SNovaButton>               CommitButton;
+	TSharedPtr<class SNeutronButton>            CommitButton;
 	TSharedPtr<class SVerticalBox>              StationTrades;
 
 	// Local state

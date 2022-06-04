@@ -3,26 +3,26 @@
 #include "NovaMainMenuAssembly.h"
 #include "NovaMainMenu.h"
 
-#include "Actor/NovaTurntablePawn.h"
 #include "Player/NovaPlayerController.h"
 #include "Game/NovaGameTypes.h"
 #include "Game/NovaGameState.h"
 
-#include "System/NovaGameInstance.h"
-#include "System/NovaMenuManager.h"
-#include "System/NovaAssetManager.h"
-
 #include "Spacecraft/NovaSpacecraftPawn.h"
 
-#include "UI/Component/NovaSpacecraftDatasheet.h"
-#include "UI/Component/NovaTradableAssetItem.h"
-#include "UI/Widget/NovaFadingWidget.h"
-#include "UI/Widget/NovaInfoText.h"
-#include "UI/Widget/NovaModalPanel.h"
-#include "UI/Widget/NovaKeyLabel.h"
-#include "UI/Widget/NovaSlider.h"
+#include "UI/Widgets/NovaSpacecraftDatasheet.h"
+#include "UI/Widgets/NovaTradableAssetItem.h"
 
 #include "Nova.h"
+
+#include "Neutron/Actor/NeutronTurntablePawn.h"
+#include "Neutron/System/NeutronGameInstance.h"
+#include "Neutron/System/NeutronMenuManager.h"
+#include "Neutron/System/NeutronAssetManager.h"
+#include "Neutron/UI/Widgets/NeutronFadingWidget.h"
+#include "Neutron/UI/Widgets/NeutronInfoText.h"
+#include "Neutron/UI/Widgets/NeutronModalPanel.h"
+#include "Neutron/UI/Widgets/NeutronKeyLabel.h"
+#include "Neutron/UI/Widgets/NeutronSlider.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
 #include "Widgets/Layout/SScaleBox.h"
@@ -34,12 +34,12 @@
     Diff widget
 ----------------------------------------------------*/
 
-class SNovaAssemblyModalPanel : public SNovaModalPanel
+class SNovaAssemblyModalPanel : public SNeutronModalPanel
 {
 public:
 
 	void ReviewAndSaveSpacecraft(
-		ANovaPlayerController* PC, ANovaSpacecraftPawn* SpacecraftPawn, TSharedPtr<SNovaModalPanel> GenericModalPanel)
+		ANovaPlayerController* PC, ANovaSpacecraftPawn* SpacecraftPawn, TSharedPtr<SNeutronModalPanel> GenericModalPanel)
 	{
 		const FNovaSpacecraft* CurrentSpacecraft = PC->GetSpacecraft();
 		NCHECK(CurrentSpacecraft);
@@ -57,7 +57,7 @@ public:
 		// Build the cost table
 		FNovaSpacecraftUpgradeCost Cost =
 			ModifiedSpacecraft.GetUpgradeCost(PC->GetWorld()->GetGameState<ANovaGameState>(), CurrentSpacecraft);
-		TSharedRef<SNovaTable> CostTable = SNew(SNovaTable).Title(LOCTEXT("CostAnalysis", "Cost analysis"));
+		TSharedRef<SNeutronTable> CostTable = SNew(SNeutronTable).Title(LOCTEXT("CostAnalysis", "Cost analysis"));
 		CostTable->AddEntry(LOCTEXT("UpgradeCostValue", "Estimated total value"), GetPriceText(Cost.TotalCost));
 		CostTable->AddEntry(LOCTEXT("UpgradeCostUpgrades", "New parts bought"), GetPriceText(Cost.UpgradeCost));
 		CostTable->AddEntry(LOCTEXT("UpgradeCostResale", "Parts resold"), GetPriceText(Cost.ResaleGain));
@@ -101,7 +101,7 @@ public:
 		}
 
 		// Prepare Slate data
-		const FNovaMainTheme&      Theme = FNovaStyleSet::GetMainTheme();
+		const FNeutronMainTheme&   Theme = FNeutronStyleSet::GetMainTheme();
 		TSharedPtr<SHorizontalBox> SpacecraftDiffBox;
 
 		// clang-format off
@@ -118,9 +118,9 @@ public:
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNew(SNovaInfoText)
+					SNew(SNeutronInfoText)
 					.Text(DetailsText)
-					.Type(HasValidSpacecraft ? ENovaInfoBoxType::Positive : ENovaInfoBoxType::Negative)
+					.Type(HasValidSpacecraft ? ENeutronInfoBoxType::Positive : ENeutronInfoBoxType::Negative)
 				]
 
 				// Diff box
@@ -202,8 +202,8 @@ SNovaMainMenuAssembly::SNovaMainMenuAssembly()
 	, GameState(nullptr)
 	, DesiredPanelState(ENovaMainMenuAssemblyState::Assembly)
 	, CurrentPanelState(ENovaMainMenuAssemblyState::Assembly)
-	, FadeDuration(ENovaUIConstants::FadeDurationShort)
-	, CurrentFadeTime(ENovaUIConstants::FadeDurationShort)
+	, FadeDuration(ENeutronUIConstants::FadeDurationShort)
+	, CurrentFadeTime(ENeutronUIConstants::FadeDurationShort)
 	, SelectedCompartmentIndex(INDEX_NONE)
 	, EditedCompartmentIndex(INDEX_NONE)
 	, SelectedModuleOrEquipmentIndex(INDEX_NONE)
@@ -212,23 +212,23 @@ SNovaMainMenuAssembly::SNovaMainMenuAssembly()
 void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 {
 	// Data
-	const FNovaMainTheme&  Theme                           = FNovaStyleSet::GetMainTheme();
-	const FNovaButtonSize& CompartmentButtonSize           = FNovaStyleSet::GetButtonSize("CompartmentButtonSize");
+	const FNeutronMainTheme&  Theme                        = FNeutronStyleSet::GetMainTheme();
+	const FNeutronButtonSize& CompartmentButtonSize        = FNeutronStyleSet::GetButtonSize("CompartmentButtonSize");
 	MenuManager                                            = InArgs._MenuManager;
 	const TSharedRef<FSlateFontMeasure> FontMeasureService = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
 
-	int32 PanelHeight = 3 * FNovaStyleSet::GetButtonSize().Height + FontMeasureService->Measure("Z", Theme.MainFont.Font).Y;
+	int32 PanelHeight = 3 * FNeutronStyleSet::GetButtonSize().Height + FontMeasureService->Measure("Z", Theme.MainFont.Font).Y;
 
 	// Parent constructor
-	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
+	SNeutronNavigationPanel::Construct(SNeutronNavigationPanel::FArguments().Menu(InArgs._Menu));
 
 	// clang-format off
 	ChildSlot
 	.VAlign(VAlign_Bottom)
 	[
 		SNew(SBackgroundBlur)
-		.BlurRadius(this, &SNovaTabPanel::GetBlurRadius)
-		.BlurStrength(this, &SNovaTabPanel::GetBlurStrength)
+		.BlurRadius(this, &SNeutronTabPanel::GetBlurRadius)
+		.BlurStrength(this, &SNeutronTabPanel::GetBlurStrength)
 		.bApplyAlphaToBlur(true)
 		.Padding(0)
 		[
@@ -260,7 +260,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SHorizontalBox::Slot()
 							.AutoWidth()
 							[
-								SNew(SNovaKeyLabel)
+								SNew(SNeutronKeyLabel)
 								.Key(this, &SNovaMainMenuAssembly::GetPreviousItemKey)
 							]
 
@@ -289,8 +289,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								.AutoHeight()
 								.VAlign(VAlign_Center)
 								[
-									SNew(SNovaRichText)
-									.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuAssembly::GetCompartmentText))
+									SNew(SNeutronRichText)
+									.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuAssembly::GetCompartmentText))
 									.TextStyle(&Theme.InfoFont)
 								]
 							]
@@ -298,7 +298,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SHorizontalBox::Slot()
 							.AutoWidth()
 							[
-								SNew(SNovaKeyLabel)
+								SNew(SNeutronKeyLabel)
 								.Key(this, &SNovaMainMenuAssembly::GetNextItemKey)
 							]
 						]
@@ -323,9 +323,9 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SNovaAssignNew(SaveButton, SNovaButton)
+								SNeutronAssignNew(SaveButton, SNeutronButton)
 								.Size("DoubleButtonSize")
-								.Icon(FNovaStyleSet::GetBrush("Icon/SB_Review"))
+								.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Review"))
 								.Text(LOCTEXT("ReviewSpacecraft", "Review & save spacecraft"))
 								.HelpText(LOCTEXT("ReviewSpacecraftHelp", "Review the spacecraft design and changes made to it before saving"))
 								.OnClicked(this, &SNovaMainMenuAssembly::OnReviewSpacecraft)
@@ -339,12 +339,12 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								+ SHorizontalBox::Slot()
 								.AutoWidth()
 								[
-									SNovaAssignNew(CompartmentList, SNovaCompartmentList)
+									SNeutronAssignNew(CompartmentList, SNovaCompartmentList)
 									.Panel(this)
-									.Action(FNovaPlayerInput::MenuSecondary)
+									.Action(FNeutronPlayerInput::MenuSecondary)
 									.TitleText(LOCTEXT("BuildCompartment", "Insert compartment"))
 									.HelpText(LOCTEXT("BuildCompartmentHelp", "Insert a new compartment forward of the selected one"))
-									.OnSelfRefresh(SNovaCompartmentList::FNovaOnSelfRefresh::CreateLambda([this]()
+									.OnSelfRefresh(SNovaCompartmentList::FNeutronOnSelfRefresh::CreateLambda([this]()
 										{
 											IsCurrentCompartmentForward = IsNextCompartmentForward;
 											IsNextCompartmentForward = true;
@@ -364,8 +364,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								+ SHorizontalBox::Slot()
 								.AutoWidth()
 								[
-									SNovaAssignNew(EditButton, SNovaButton)
-									.Action(FNovaPlayerInput::MenuPrimary)
+									SNeutronAssignNew(EditButton, SNeutronButton)
+									.Action(FNeutronPlayerInput::MenuPrimary)
 									.Text(LOCTEXT("EditCompartment", "Edit compartment"))
 									.HelpText(LOCTEXT("EditCompartmentHelp", "Add modules and equipment to the selected compartment"))
 									.Enabled(this, &SNovaMainMenuAssembly::IsEditCompartmentEnabled)
@@ -381,7 +381,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								+ SHorizontalBox::Slot()
 								.AutoWidth()
 								[
-									SNovaNew(SNovaButton)
+									SNeutronNew(SNeutronButton)
 									.Text(LOCTEXT("ScrapCompartment", "Scrap compartment"))
 									.HelpText(LOCTEXT("ScrapCompartmentHelp", "Scrap the currently selected compartment"))
 									.Enabled(this, &SNovaMainMenuAssembly::IsEditCompartmentEnabled)
@@ -391,7 +391,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								+ SHorizontalBox::Slot()
 								.AutoWidth()
 								[
-									SNovaNew(SNovaButton)
+									SNeutronNew(SNeutronButton)
 									.Text(LOCTEXT("CustomizeSpacecraft", "Customize spacecraft"))
 									.HelpText(LOCTEXT("CustomizeSpacecraftHelp", "Customize the spacecraft's paint scheme"))
 									.OnClicked(this, &SNovaMainMenuAssembly::OnOpenCustomization)
@@ -425,7 +425,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SHorizontalBox::Slot()
 							.AutoWidth()
 							[
-								SNew(SNovaKeyLabel)
+								SNew(SNeutronKeyLabel)
 								.Key(this, &SNovaMainMenuAssembly::GetPreviousItemKey)
 							]
 				
@@ -488,8 +488,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								+ SVerticalBox::Slot()
 								.AutoHeight()
 								[
-									SNew(SNovaRichText)
-									.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuAssembly::GetModuleOrEquipmentText))
+									SNew(SNeutronRichText)
+									.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuAssembly::GetModuleOrEquipmentText))
 									.TextStyle(&Theme.InfoFont)
 								]
 							]
@@ -497,7 +497,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SHorizontalBox::Slot()
 							.AutoWidth()
 							[
-								SNew(SNovaKeyLabel)
+								SNew(SNeutronKeyLabel)
 								.Key(this, &SNovaMainMenuAssembly::GetNextItemKey)
 							]
 						]
@@ -522,8 +522,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SNovaAssignNew(BackButton, SNovaButton)
-								.Action(FNovaPlayerInput::MenuCancel)
+								SNeutronAssignNew(BackButton, SNeutronButton)
+								.Action(FNeutronPlayerInput::MenuCancel)
 								.Text(LOCTEXT("CompartmentBack", "Back to assembly"))
 								.HelpText(LOCTEXT("CompartmentBackHelp", "Go back to the main assembly"))
 								.OnClicked(this, &SNovaMainMenuAssembly::OnBackToAssembly)
@@ -533,9 +533,9 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SNovaAssignNew(ModuleListView, SNovaModuleList)
+								SNeutronAssignNew(ModuleListView, SNovaModuleList)
 								.Panel(this)
-								.Action(FNovaPlayerInput::MenuPrimary)
+								.Action(FNeutronPlayerInput::MenuPrimary)
 								.ItemsSource(&ModuleList)
 								.ListButtonSize("LargeListButtonSize")
 								.TitleText(LOCTEXT("ModuleListTitle", "Module"))
@@ -551,9 +551,9 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SNovaAssignNew(EquipmentListView, SNovaEquipmentList)
+								SNeutronAssignNew(EquipmentListView, SNovaEquipmentList)
 								.Panel(this)
-								.Action(FNovaPlayerInput::MenuPrimary)
+								.Action(FNeutronPlayerInput::MenuPrimary)
 								.ItemsSource(&EquipmentList)
 								.ListButtonSize("LargeListButtonSize")
 								.TitleText(LOCTEXT("EquipmentListTitle", "Equipment"))
@@ -569,9 +569,9 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SNovaAssignNew(HullTypeListView, SNovaHullTypeList)
+								SNeutronAssignNew(HullTypeListView, SNovaHullTypeList)
 								.Panel(this)
-								.Action(FNovaPlayerInput::MenuSecondary)
+								.Action(FNeutronPlayerInput::MenuSecondary)
 								.ItemsSource(&HullTypeList)
 								.ListButtonSize("LargeListButtonSize")
 								.TitleText(LOCTEXT("HullListTitle", "Hull type"))
@@ -643,7 +643,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 										+ SHorizontalBox::Slot()
 										.AutoWidth()
 										[
-											SNovaAssignNew(StructuralPaintListView, SNovaPaintList)
+											SNeutronAssignNew(StructuralPaintListView, SNovaPaintList)
 											.Panel(this)
 											.ItemsSource(&PaintList)
 											.TitleText(LOCTEXT("StructuralPaint", "Structural paint"))
@@ -676,7 +676,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 										+ SHorizontalBox::Slot()
 										.AutoWidth()
 										[
-											SNovaAssignNew(HullPaintListView, SNovaPaintList)
+											SNeutronAssignNew(HullPaintListView, SNovaPaintList)
 											.Panel(this)
 											.ItemsSource(&PaintList)
 											.TitleText(LOCTEXT("HullPaint", "Hull paint"))
@@ -709,7 +709,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 										+ SHorizontalBox::Slot()
 										.AutoWidth()
 										[
-											SNovaAssignNew(DetailPaintListView, SNovaPaintList)
+											SNeutronAssignNew(DetailPaintListView, SNovaPaintList)
 											.Panel(this)
 											.ItemsSource(&PaintList)
 											.TitleText(LOCTEXT("DetailPaint", "Accent paint"))
@@ -747,7 +747,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SNovaAssignNew(EmblemListView, SNovaEmblemList)
+								SNeutronAssignNew(EmblemListView, SNovaEmblemList)
 								.Panel(this)
 								.ItemsSource(&EmblemList)
 								.TitleText(LOCTEXT("Emblem", "Emblem"))
@@ -785,8 +785,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SNovaAssignNew(EnableHullPaintButton, SNovaButton)
-								.Action(FNovaPlayerInput::MenuPrimary)
+								SNeutronAssignNew(EnableHullPaintButton, SNeutronButton)
+								.Action(FNeutronPlayerInput::MenuPrimary)
 								.Text(LOCTEXT("EnableHullPaint", "Isolating paint"))
 								.HelpText(LOCTEXT("EnableHullPaintHelp", "Paint the spacecraft with a smooth surface finish"))
 								.OnClicked(this, &SNovaMainMenuAssembly::OnEnableHullPaintToggled)
@@ -806,7 +806,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SNovaAssignNew(DirtyIntensity, SNovaSlider)
+								SNeutronAssignNew(DirtyIntensity, SNeutronSlider)
 								.ValueStep(0.1f)
 								.OnValueChanged(this, &SNovaMainMenuAssembly::OnDirtyIntensityChanged)
 							]
@@ -833,8 +833,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SNovaAssignNew(BackButton2, SNovaButton)
-								.Action(FNovaPlayerInput::MenuCancel)
+								SNeutronAssignNew(BackButton2, SNeutronButton)
+								.Action(FNeutronPlayerInput::MenuCancel)
 								.Text(LOCTEXT("CompartmentBack", "Back to assembly"))
 								.HelpText(LOCTEXT("CompartmentBackHelp", "Go back to the main assembly"))
 								.OnClicked(this, &SNovaMainMenuAssembly::OnBackToAssembly)
@@ -854,12 +854,12 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								SNew(SNovaButton) // No navigation
+								SNew(SNeutronButton) // No navigation
 								.Focusable(false)
 								.Content()
 								[
 									SNew(SBox)
-									.Padding(FNovaStyleSet::GetButtonTheme().IconPadding)
+									.Padding(FNeutronStyleSet::GetButtonTheme().IconPadding)
 									.VAlign(VAlign_Center)
 									[
 										SAssignNew(SpacecraftNameText, SEditableText)
@@ -889,11 +889,11 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						[
-							SNovaAssignNew(PhotoModeButton, SNovaButton)
-							.Action(FNovaPlayerInput::MenuAltPrimary)
+							SNeutronAssignNew(PhotoModeButton, SNeutronButton)
+							.Action(FNeutronPlayerInput::MenuAltPrimary)
 							.Text(LOCTEXT("PhotoMode", "Toggle photo mode"))
 							.HelpText(LOCTEXT("PhotoModeHelp", "Hide the interface to show off your spacecraft"))
-							.OnClicked(this, &SNovaMainMenuAssembly::OnEnterPhotoMode, FNovaPlayerInput::MenuAltPrimary)
+							.OnClicked(this, &SNovaMainMenuAssembly::OnEnterPhotoMode, FNeutronPlayerInput::MenuAltPrimary)
 						]
 
 						+ SHorizontalBox::Slot()
@@ -911,8 +911,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						.AutoWidth()
 						.Padding(FMargin(5, 0))
 						[
-							SNovaAssignNew(DisplayFilter, SNovaSlider)
-							.Action(FNovaPlayerInput::MenuAltSecondary)
+							SNeutronAssignNew(DisplayFilter, SNeutronSlider)
+							.Action(FNeutronPlayerInput::MenuAltSecondary)
 							.Value(static_cast<int32>(ENovaAssemblyDisplayFilter::All))
 							.MaxValue(static_cast<int32>(ENovaAssemblyDisplayFilter::All))
 							.HelpText(LOCTEXT("DisplayFilterHelp", "Change which parts of the assembly to display"))
@@ -926,8 +926,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							SNew(SBox)
 							.WidthOverride(250)
 							[
-								SNew(SNovaText)
-								.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuAssembly::GetSelectedFilterText))
+								SNew(SNeutronText)
+								.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuAssembly::GetSelectedFilterText))
 								.TextStyle(&Theme.MainFont)
 								.WrapTextAt(250)
 							]
@@ -950,7 +950,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 		CompartmentBox->AddSlot()
 		.AutoWidth()
 		[
-			SNew(SNovaButton) // No navigation
+			SNew(SNeutronButton) // No navigation
 			.Focusable(false)
 			.Size("CompartmentButtonSize")
 			.HelpText(LOCTEXT("SelectCompartmentHelp", "Select this compartment for editing"))
@@ -976,7 +976,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 					OnEditCompartment();
 				}
 			}))
-			.UserSizeCallback(FNovaButtonUserSizeCallback::CreateLambda([=]
+			.UserSizeCallback(FNeutronButtonUserSizeCallback::CreateLambda([=]
 			{
 				return CompartmentAnimation.GetAlpha(Index);
 			}))
@@ -990,8 +990,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 					SNew(SScaleBox)
 					.Stretch(EStretch::ScaleToFill)
 					[
-						SNew(SNovaImage)
-						.Image(FNovaImageGetter::CreateLambda([=]() -> const FSlateBrush*
+						SNew(SNeutronImage)
+						.Image(FNeutronImageGetter::CreateLambda([=]() -> const FSlateBrush*
 						{
 							if (IsValid(SpacecraftPawn) && Index >= 0 && Index < SpacecraftPawn->GetCompartmentCount())
 							{
@@ -1002,7 +1002,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								}
 							}
 							
-							return &UNovaAssetManager::Get()->GetDefaultAsset<UNovaCompartmentDescription>()->AssetRender;
+							return &UNeutronAssetManager::Get()->GetDefaultAsset<UNovaCompartmentDescription>()->AssetRender;
 						}))
 					]
 				]
@@ -1043,7 +1043,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 		ModuleBox->AddSlot()
 		.AutoWidth()
 		[
-			SNew(SNovaButton) // No navigation
+			SNew(SNeutronButton) // No navigation
 			.Focusable(false)
 			.Size("CompartmentButtonSize")
 			.HelpText(this, &SNovaMainMenuAssembly::GetModuleHelpText, ModuleIndex)
@@ -1054,7 +1054,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 				SetSelectedModuleOrEquipment(GetCommonIndexFromModule(ModuleIndex));
 				ModuleListView->Show();
 			}))
-			.UserSizeCallback(FNovaButtonUserSizeCallback::CreateLambda([=]
+			.UserSizeCallback(FNeutronButtonUserSizeCallback::CreateLambda([=]
 			{
 				return ModuleEquipmentAnimation.GetAlpha(GetCommonIndexFromModule(ModuleIndex));
 			}))
@@ -1068,8 +1068,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 					SNew(SScaleBox)
 					.Stretch(EStretch::ScaleToFill)
 					[
-						SNew(SNovaImage)
-						.Image(FNovaImageGetter::CreateLambda([=]() -> const FSlateBrush*
+						SNew(SNeutronImage)
+						.Image(FNeutronImageGetter::CreateLambda([=]() -> const FSlateBrush*
 						{
 							const FNovaCompartment* Compartment = GetEditedCompartment();
 							if (Compartment)
@@ -1081,7 +1081,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								}
 							}
 
-							return &UNovaAssetManager::Get()->GetDefaultAsset<UNovaModuleDescription>()->AssetRender;
+							return &UNeutronAssetManager::Get()->GetDefaultAsset<UNovaModuleDescription>()->AssetRender;
 						}))
 					]
 				]
@@ -1094,8 +1094,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 					.BorderImage(&Theme.MainMenuGenericBackground)
 					.Padding(Theme.ContentPadding)
 					[
-						SNew(SNovaText)
-						.Text(FNovaTextGetter::CreateLambda([=]() -> FText
+						SNew(SNeutronText)
+						.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
 						{
 							const FNovaCompartment* Compartment = GetEditedCompartment();
 							if (Compartment && IsValid(Compartment->Description) && ModuleIndex < Compartment->Description->ModuleSlots.Num())
@@ -1120,7 +1120,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 		EquipmentBox->AddSlot()
 		.AutoWidth()
 		[
-			SNew(SNovaButton) // No navigation
+			SNew(SNeutronButton) // No navigation
 			.Focusable(false)
 			.Size("CompartmentButtonSize")
 			.HelpText(this, &SNovaMainMenuAssembly::GetEquipmentHelpText, EquipmentIndex)
@@ -1131,7 +1131,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 				SetSelectedModuleOrEquipment(GetCommonIndexFromEquipment(EquipmentIndex));
 				EquipmentListView->Show();
 			}))
-			.UserSizeCallback(FNovaButtonUserSizeCallback::CreateLambda([=]
+			.UserSizeCallback(FNeutronButtonUserSizeCallback::CreateLambda([=]
 			{
 				return ModuleEquipmentAnimation.GetAlpha(GetCommonIndexFromEquipment(EquipmentIndex));
 			}))
@@ -1145,8 +1145,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 					SNew(SScaleBox)
 					.Stretch(EStretch::ScaleToFill)
 					[
-						SNew(SNovaImage)
-						.Image(FNovaImageGetter::CreateLambda([=]() -> const FSlateBrush*
+						SNew(SNeutronImage)
+						.Image(FNeutronImageGetter::CreateLambda([=]() -> const FSlateBrush*
 						{
 							const FNovaCompartment* Compartment = GetEditedCompartment();
 							if (Compartment)
@@ -1158,7 +1158,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								}
 							}
 							
-							return &UNovaAssetManager::Get()->GetDefaultAsset<UNovaEquipmentDescription>()->AssetRender;
+							return &UNeutronAssetManager::Get()->GetDefaultAsset<UNovaEquipmentDescription>()->AssetRender;
 						}))
 					]
 				]
@@ -1176,8 +1176,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						.BorderImage(&Theme.MainMenuGenericBackground)
 						.Padding(Theme.ContentPadding)
 						[
-							SNew(SNovaText)
-							.Text(FNovaTextGetter::CreateLambda([=]() -> FText
+							SNew(SNeutronText)
+							.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
 							{
 								const FNovaCompartment* Compartment = GetEditedCompartment();
 								if (Compartment && IsValid(Compartment->Description) && EquipmentIndex < Compartment->Description->EquipmentSlots.Num())
@@ -1217,8 +1217,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							return EVisibility::Collapsed;
 						})))
 						[
-							SNew(SNovaRichText)
-							.Text(FNovaTextGetter::CreateLambda([=]() -> FText
+							SNew(SNeutronRichText)
+							.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
 							{
 								const FNovaCompartment* Compartment = GetEditedCompartment();
 								if (Compartment && IsValid(Compartment->Description) && EquipmentIndex < Compartment->Description->EquipmentSlots.Num())
@@ -1243,7 +1243,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								return FText();
 							}))
 							.TextStyle(&Theme.MainFont)
-							.WrapTextAt(1.9f * FNovaStyleSet::GetButtonSize("CompartmentButtonSize").Width)
+							.WrapTextAt(1.9f * FNeutronStyleSet::GetButtonSize("CompartmentButtonSize").Width)
 							.AutoWrapText(false)
 						]
 					]
@@ -1255,8 +1255,8 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 	// clang-format on
 
 	// Default settings
-	CompartmentAnimation.Initialize(FNovaStyleSet::GetButtonTheme().AnimationDuration);
-	ModuleEquipmentAnimation.Initialize(FNovaStyleSet::GetButtonTheme().AnimationDuration);
+	CompartmentAnimation.Initialize(FNeutronStyleSet::GetButtonTheme().AnimationDuration);
+	ModuleEquipmentAnimation.Initialize(FNeutronStyleSet::GetButtonTheme().AnimationDuration);
 	SetPanelState(ENovaMainMenuAssemblyState::Assembly);
 }
 
@@ -1294,7 +1294,7 @@ int32 GetCompartmentIndexAtPosition(ANovaPlayerController* PC, ANovaSpacecraftPa
 
 void SNovaMainMenuAssembly::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
 {
-	SNovaTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
+	SNeutronTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
 	// Update fade time
 	if (CurrentPanelState != DesiredPanelState)
@@ -1342,7 +1342,7 @@ void SNovaMainMenuAssembly::Tick(const FGeometry& AllottedGeometry, const double
 
 void SNovaMainMenuAssembly::Show()
 {
-	SNovaTabPanel::Show();
+	SNeutronTabPanel::Show();
 
 	DesiredPanelState        = ENovaMainMenuAssemblyState::Assembly;
 	IsNextCompartmentForward = true;
@@ -1369,7 +1369,7 @@ void SNovaMainMenuAssembly::Show()
 
 void SNovaMainMenuAssembly::Hide()
 {
-	SNovaTabPanel::Hide();
+	SNeutronTabPanel::Hide();
 
 	// Reset the pawn
 	if (IsValid(SpacecraftPawn))
@@ -1384,7 +1384,7 @@ void SNovaMainMenuAssembly::Hide()
 
 void SNovaMainMenuAssembly::UpdateGameObjects()
 {
-	PC             = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
+	PC             = MenuManager.IsValid() ? MenuManager->GetPC<ANovaPlayerController>() : nullptr;
 	SpacecraftPawn = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
 	GameState      = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
 }
@@ -1476,7 +1476,7 @@ void SNovaMainMenuAssembly::VerticalAnalogInput(float Value)
 	}
 }
 
-TSharedPtr<SNovaButton> SNovaMainMenuAssembly::GetDefaultFocusButton() const
+TSharedPtr<SNeutronButton> SNovaMainMenuAssembly::GetDefaultFocusButton() const
 {
 	if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly && SaveButton->IsButtonEnabled())
 	{
@@ -1496,9 +1496,9 @@ TSharedPtr<SNovaButton> SNovaMainMenuAssembly::GetDefaultFocusButton() const
 	}
 }
 
-bool SNovaMainMenuAssembly::IsButtonActionAllowed(TSharedPtr<SNovaButton> Button) const
+bool SNovaMainMenuAssembly::IsButtonActionAllowed(TSharedPtr<SNeutronButton> Button) const
 {
-	TArray<TSharedPtr<SNovaButton>> AllowedButtons;
+	TArray<TSharedPtr<SNeutronButton>> AllowedButtons;
 
 	AllowedButtons.Add(PhotoModeButton);
 	AllowedButtons.Add(DisplayFilter);
@@ -1617,8 +1617,8 @@ void SNovaMainMenuAssembly::SetPanelState(ENovaMainMenuAssemblyState State)
 	{
 		const FNovaSpacecraftCustomization& Customization = SpacecraftPawn->GetCustomization();
 
-		PaintList  = UNovaAssetManager::Get()->GetSortedAssets<UNovaPaintDescription>();
-		EmblemList = UNovaAssetManager::Get()->GetSortedAssets<UNovaEmblemDescription>();
+		PaintList  = UNeutronAssetManager::Get()->GetSortedAssets<UNovaPaintDescription>();
+		EmblemList = UNeutronAssetManager::Get()->GetSortedAssets<UNovaEmblemDescription>();
 
 		StructuralPaintListView->Refresh(PaintList.Find(Customization.StructuralPaint));
 		HullPaintListView->Refresh(PaintList.Find(Customization.HullPaint));
@@ -1717,7 +1717,7 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateModuleItem(const UNovaModuleD
 {
 	return SNew(SNovaTradableAssetItem)
 	    .Asset(Module)
-	    .DefaultAsset(UNovaAssetManager::Get()->GetDefaultAsset<UNovaModuleDescription>())
+	    .DefaultAsset(UNeutronAssetManager::Get()->GetDefaultAsset<UNovaModuleDescription>())
 	    .GameState(GameState)
 	    .NoPriceHint(true)
 	    .SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
@@ -1774,7 +1774,7 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEquipmentItem(const UNovaEqui
 {
 	return SNew(SNovaTradableAssetItem)
 	    .Asset(Equipment)
-	    .DefaultAsset(UNovaAssetManager::Get()->GetDefaultAsset<UNovaEquipmentDescription>())
+	    .DefaultAsset(UNeutronAssetManager::Get()->GetDefaultAsset<UNovaEquipmentDescription>())
 	    .GameState(GameState)
 	    .NoPriceHint(true)
 	    .SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
@@ -1810,7 +1810,7 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateHullTypeItem(const UNovaHullD
 {
 	return SNew(SNovaTradableAssetItem)
 	    .Asset(Hull)
-	    .DefaultAsset(UNovaAssetManager::Get()->GetDefaultAsset<UNovaHullDescription>())
+	    .DefaultAsset(UNeutronAssetManager::Get()->GetDefaultAsset<UNovaHullDescription>())
 	    .GameState(GameState)
 	    .NoPriceHint(true)
 	    .SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
@@ -1849,7 +1849,7 @@ FText SNovaMainMenuAssembly::GetAssetName(const UNovaTradableAssetDescription* A
 FLinearColor SNovaMainMenuAssembly::GetMainColor() const
 {
 	float Alpha = CurrentPanelState == ENovaMainMenuAssemblyState::Assembly
-	                ? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard)
+	                ? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENeutronUIConstants::EaseStandard)
 	                : 0.0f;
 	return FLinearColor(1, 1, 1, Alpha);
 }
@@ -1857,7 +1857,7 @@ FLinearColor SNovaMainMenuAssembly::GetMainColor() const
 FLinearColor SNovaMainMenuAssembly::GetCompartmentColor() const
 {
 	float Alpha = CurrentPanelState == ENovaMainMenuAssemblyState::Compartment
-	                ? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard)
+	                ? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENeutronUIConstants::EaseStandard)
 	                : 0.0f;
 	return FLinearColor(1, 1, 1, Alpha);
 }
@@ -1865,7 +1865,7 @@ FLinearColor SNovaMainMenuAssembly::GetCompartmentColor() const
 FLinearColor SNovaMainMenuAssembly::GetCustomizationColor() const
 {
 	float Alpha = CurrentPanelState == ENovaMainMenuAssemblyState::Customization
-	                ? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENovaUIConstants::EaseStandard)
+	                ? FMath::InterpEaseInOut(0.0f, 1.0f, CurrentFadeTime / FadeDuration, ENeutronUIConstants::EaseStandard)
 	                : 0.0f;
 	return FLinearColor(1, 1, 1, Alpha);
 }
@@ -2108,12 +2108,12 @@ FText SNovaMainMenuAssembly::GetModuleOrEquipmentText()
 
 FKey SNovaMainMenuAssembly::GetPreviousItemKey() const
 {
-	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuPrevious);
+	return MenuManager->GetFirstActionKey(FNeutronPlayerInput::MenuPrevious);
 }
 
 FKey SNovaMainMenuAssembly::GetNextItemKey() const
 {
-	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuNext);
+	return MenuManager->GetFirstActionKey(FNeutronPlayerInput::MenuNext);
 }
 
 /*----------------------------------------------------
@@ -2122,8 +2122,8 @@ FKey SNovaMainMenuAssembly::GetNextItemKey() const
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GeneratePaintListButton(ENovaMainMenuAssemblyPaintType Type) const
 {
-	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
-	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
+	const FNeutronMainTheme&   Theme       = FNeutronStyleSet::GetMainTheme();
+	const FNeutronButtonTheme& ButtonTheme = FNeutronStyleSet::GetButtonTheme();
 
 	// Get the current paint style
 	auto GetSelectedPaintItem = [this, Type]() -> const UNovaPaintDescription*
@@ -2179,7 +2179,7 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GeneratePaintListButton(ENovaMainMenu
 
 TSharedRef<SWidget> GeneratePaintItem(const UNovaPaintDescription* Paint, const TSharedPtr<SNovaMainMenuAssembly::SNovaPaintList>& List)
 {
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
 
 	// clang-format off
 	return SNew(SHorizontalBox)
@@ -2240,8 +2240,8 @@ FText SNovaMainMenuAssembly::GeneratePaintTooltip(const UNovaPaintDescription* P
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEmblemListButton() const
 {
-	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
-	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
+	const FNeutronMainTheme&   Theme       = FNeutronStyleSet::GetMainTheme();
+	const FNeutronButtonTheme& ButtonTheme = FNeutronStyleSet::GetButtonTheme();
 
 	// clang-format off
 	return SNew(SScaleBox)
@@ -2258,7 +2258,7 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEmblemListButton() const
 
 TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEmblemItem(const UNovaEmblemDescription* Emblem) const
 {
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
 
 	// clang-format off
 	return SNew(SHorizontalBox)
@@ -2360,7 +2360,7 @@ void SNovaMainMenuAssembly::OnRemoveCompartmentConfirmed()
 
 		SetSelectedCompartment(SelectedCompartmentIndex);
 
-		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+		const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
 		FSlateApplication::Get().PlaySound(Theme.DeleteSound);
 	}
 }

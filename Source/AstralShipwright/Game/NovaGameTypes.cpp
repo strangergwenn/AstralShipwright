@@ -1,8 +1,9 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaGameTypes.h"
-#include "Actor/NovaCaptureActor.h"
 #include "Nova.h"
+
+#include "Neutron/Actor/NeutronCaptureActor.h"
 
 #include "Engine/Engine.h"
 #include "Engine/StaticMeshActor.h"
@@ -11,9 +12,9 @@
     Asset description
 ----------------------------------------------------*/
 
-FNovaAssetPreviewSettings UNovaPreviableTradableAssetDescription::GetPreviewSettings() const
+FNeutronAssetPreviewSettings UNovaPreviableTradableAssetDescription::GetPreviewSettings() const
 {
-	FNovaAssetPreviewSettings Settings;
+	FNeutronAssetPreviewSettings Settings;
 
 #if WITH_EDITORONLY_DATA
 
@@ -54,10 +55,10 @@ void UNovaPreviableTradableAssetDescription::ConfigurePreviewActor(class AActor*
 
 const UNovaResource* UNovaResource::GetEmpty()
 {
-	return UNovaAssetManager::Get()->GetDefaultAsset<UNovaResource>();
+	return UNeutronAssetManager::Get()->GetDefaultAsset<UNovaResource>();
 }
 
 const UNovaResource* UNovaResource::GetPropellant()
 {
-	return UNovaAssetManager::Get()->GetAsset<UNovaResource>(FGuid("{78816A80-4E59-9D15-DC6D-DFB769D0B188}"));
+	return UNeutronAssetManager::Get()->GetAsset<UNovaResource>(FGuid("{78816A80-4E59-9D15-DC6D-DFB769D0B188}"));
 }

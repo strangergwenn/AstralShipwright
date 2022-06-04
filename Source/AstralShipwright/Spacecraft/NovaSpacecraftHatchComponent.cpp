@@ -1,9 +1,10 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaSpacecraftHatchComponent.h"
-#include "Actor/NovaMeshInterface.h"
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova.h"
+
+#include "Neutron/Actor/NeutronMeshInterface.h"
 
 #include "Animation/AnimSingleNodeInstance.h"
 
@@ -28,7 +29,7 @@ void UNovaSpacecraftHatchComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	HatchMesh = Cast<UNovaSkeletalMeshComponent>(GetAttachParent());
+	HatchMesh = Cast<UNeutronSkeletalMeshComponent>(GetAttachParent());
 	NCHECK(HatchMesh);
 }
 

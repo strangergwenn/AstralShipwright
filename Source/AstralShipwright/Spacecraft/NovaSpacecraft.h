@@ -210,7 +210,7 @@ struct FNovaSpacecraftCustomization
 };
 
 /** Metrics for a spacecraft compartment */
-struct FNovaSpacecraftCompartmentMetrics : public INovaDescriptibleInterface
+struct FNovaSpacecraftCompartmentMetrics : public INeutronDescriptibleInterface
 {
 	FNovaSpacecraftCompartmentMetrics()
 		: ModuleCount(0)

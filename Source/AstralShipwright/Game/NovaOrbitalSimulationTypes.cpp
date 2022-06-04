@@ -2,7 +2,7 @@
 
 #include "NovaOrbitalSimulationTypes.h"
 #include "Spacecraft/NovaSpacecraft.h"
-#include "UI/NovaUI.h"
+#include "Neutron/UI/NeutronUI.h"
 
 /*----------------------------------------------------
     Simulation structures
@@ -117,7 +117,7 @@ FVector2D FNovaTrajectory::GetCartesianLocation(FNovaTime CurrentTime) const
 			}
 
 			const double Alpha = (CurrentTime - CurrentManeuver->Time) / CurrentManeuver->Duration;
-			return FMath::InterpEaseOut(StartLocation, EndLocation, Alpha, ENovaUIConstants::EaseStandard);
+			return FMath::InterpEaseOut(StartLocation, EndLocation, Alpha, ENeutronUIConstants::EaseStandard);
 		}
 		else
 		{

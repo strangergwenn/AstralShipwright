@@ -2,20 +2,14 @@
 
 #include "NovaPlayerController.h"
 #include "NovaPlayerState.h"
-#include "NovaGameViewportClient.h"
-
-#include "Actor/NovaActorTools.h"
-#include "Actor/NovaPlayerStart.h"
-#include "Actor/NovaTurntablePawn.h"
 
 #include "Game/NovaAsteroid.h"
 #include "Game/NovaGameMode.h"
 #include "Game/NovaGameState.h"
 #include "Game/NovaPlanetarium.h"
+#include "Game/NovaPlayerStart.h"
 #include "Game/NovaSaveData.h"
 #include "Game/Contract/NovaContract.h"
-#include "Game/Settings/NovaGameUserSettings.h"
-#include "Game/Settings/NovaWorldSettings.h"
 #include "Game/Station/NovaStationDock.h"
 
 #include "Spacecraft/NovaSpacecraftPawn.h"
@@ -23,19 +17,24 @@
 #include "Spacecraft/NovaSpacecraftThrusterComponent.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
 
-#include "System/NovaAssetManager.h"
-#include "System/NovaContractManager.h"
-#include "System/NovaMenuManager.h"
-#include "System/NovaPostProcessManager.h"
-#include "System/NovaGameInstance.h"
-#include "System/NovaSaveManager.h"
-#include "System/NovaSessionsManager.h"
-#include "System/NovaSoundManager.h"
-
 #include "UI/Menu/NovaMainMenu.h"
 #include "UI/Menu/NovaOverlay.h"
-#include "UI/Widget/NovaMenu.h"
 #include "Nova.h"
+
+#include "Neutron/Actor/NeutronActorTools.h"
+#include "Neutron/Actor/NeutronTurntablePawn.h"
+#include "Neutron/Player/NeutronGameViewportClient.h"
+#include "Neutron/Settings/NeutronGameUserSettings.h"
+#include "Neutron/Settings/NeutronWorldSettings.h"
+#include "Neutron/System/NeutronAssetManager.h"
+#include "Neutron/System/NeutronContractManager.h"
+#include "Neutron/System/NeutronMenuManager.h"
+#include "Neutron/System/NeutronPostProcessManager.h"
+#include "Neutron/System/NeutronGameInstance.h"
+#include "Neutron/System/NeutronSaveManager.h"
+#include "Neutron/System/NeutronSessionsManager.h"
+#include "Neutron/System/NeutronSoundManager.h"
+#include "Neutron/UI/Widgets/NeutronMenu.h"
 
 #include "Framework/Application/SlateApplication.h"
 #include "Misc/CommandLine.h"
@@ -72,7 +71,6 @@ ANovaPlayerViewpoint::ANovaPlayerViewpoint() : Super()
 
 ANovaPlayerController::ANovaPlayerController()
 	: Super()
-	, LastNetworkError(ENovaNetworkError::Success)
 	, CurrentCameraState(ENovaPlayerCameraState::Default)
 	, CurrentTimeInCameraState(0)
 	, PhotoModeAction(NAME_None)
@@ -148,19 +146,19 @@ void ANovaPlayerController::SaveGame()
 	}
 
 	// Save contracts
-	SaveData->ContractManagerData = UNovaContractManager::Get()->Save();
+	SaveData->ContractManagerData = UNeutronContractManager::Get()->Save();
 
 	// Write the save data to the already open slot
-	UNovaSaveManager::Get()->SetCurrentSaveData<FNovaGameSave>(SaveData);
-	UNovaSaveManager::Get()->WriteCurrentSaveData<FNovaGameSave>();
-	Notify(LOCTEXT("SavedGame", "Game saved"), FText(), ENovaNotificationType::Save);
+	UNeutronSaveManager::Get()->SetCurrentSaveData<FNovaGameSave>(SaveData);
+	UNeutronSaveManager::Get()->WriteCurrentSaveData<FNovaGameSave>();
+	Notify(LOCTEXT("SavedGame", "Game saved"), FText(), ENeutronNotificationType::Save);
 }
 
 void ANovaPlayerController::LoadGame(const FString SaveName)
 {
 	NLOG("ANovaPlayerController::LoadGame");
 
-	UNovaSaveManager* SaveManager = UNovaSaveManager::Get();
+	UNeutronSaveManager* SaveManager = UNeutronSaveManager::Get();
 	NCHECK(SaveManager);
 
 	// Load the save data from slot
@@ -169,7 +167,7 @@ void ANovaPlayerController::LoadGame(const FString SaveName)
 	TSharedPtr<FNovaGameSave> SaveData = SaveManager->GetCurrentSaveData<FNovaGameSave>();
 
 	// Load contracts
-	UNovaContractManager::Get()->Load(SaveData->ContractManagerData);
+	UNeutronContractManager::Get()->Load(SaveData->ContractManagerData);
 }
 
 /*----------------------------------------------------
@@ -186,15 +184,15 @@ void ANovaPlayerController::BeginPlay()
 	if (IsLocalPlayerController())
 	{
 		// Setup menus
-		UNovaMenuManager::Get()->BeginPlay<SNovaMainMenu, SNovaOverlay>(this);
+		UNeutronMenuManager::Get()->BeginPlay<SNovaMainMenu, SNovaOverlay>(this);
 
 		// Setup post-processing
-		TSharedPtr<FNovaPostProcessSetting> DefaultSettings = MakeShared<FNovaPostProcessSetting>();
-		UNovaPostProcessManager::Get()->RegisterPreset(ENovaPostProcessPreset::Neutral, DefaultSettings);
-		UNovaPostProcessManager::Get()->BeginPlay(this,
+		TSharedPtr<FNeutronPostProcessSetting> DefaultSettings = MakeShared<FNeutronPostProcessSetting>();
+		UNeutronPostProcessManager::Get()->RegisterPreset(ENovaPostProcessPreset::Neutral, DefaultSettings);
+		UNeutronPostProcessManager::Get()->BeginPlay(this,
 
 			// Preset control
-			FNovaPostProcessControl::CreateWeakLambda(this,
+			FNeutronPostProcessControl::CreateWeakLambda(this,
 				[=]()
 				{
 					ENovaPostProcessPreset TargetPreset = ENovaPostProcessPreset::Neutral;
@@ -203,20 +201,20 @@ void ANovaPlayerController::BeginPlay()
 				}),
 
 			// Preset tick
-			FNovaPostProcessUpdate::CreateWeakLambda(this,
+			FNeutronPostProcessUpdate::CreateWeakLambda(this,
 				[=](UPostProcessComponent* Volume, UMaterialInstanceDynamic* Material,
-					const TSharedPtr<FNovaPostProcessSettingBase>& Current, const TSharedPtr<FNovaPostProcessSettingBase>& Target,
+					const TSharedPtr<FNeutronPostProcessSettingBase>& Current, const TSharedPtr<FNeutronPostProcessSettingBase>& Target,
 					float Alpha)
 				{
-					UNovaGameUserSettings*         GameUserSettings = Cast<UNovaGameUserSettings>(GEngine->GetGameUserSettings());
-					const FNovaPostProcessSetting* MyCurrent        = static_cast<const FNovaPostProcessSetting*>(Current.Get());
-					const FNovaPostProcessSetting* MyTarget         = static_cast<const FNovaPostProcessSetting*>(Target.Get());
+					UNeutronGameUserSettings*         GameUserSettings = Cast<UNeutronGameUserSettings>(GEngine->GetGameUserSettings());
+					const FNeutronPostProcessSetting* MyCurrent        = static_cast<const FNeutronPostProcessSetting*>(Current.Get());
+					const FNeutronPostProcessSetting* MyTarget         = static_cast<const FNeutronPostProcessSetting*>(Target.Get());
 
 					// Custom settings
 					ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
 					Material->SetScalarParameterValue("HighlightAlpha", IsValid(SpacecraftPawn) ? SpacecraftPawn->GetHighlightAlpha() : 0);
 					Material->SetScalarParameterValue("OutlineAlpha", IsValid(SpacecraftPawn) ? SpacecraftPawn->GetOutlineAlpha() : 0);
-					Material->SetVectorParameterValue("HighlightColor", UNovaMenuManager::Get()->GetHighlightColor());
+					Material->SetVectorParameterValue("HighlightColor", UNeutronMenuManager::Get()->GetHighlightColor());
 					// Material->SetScalarParameterValue("ChromaIntensity", FMath::Lerp(Current.ChromaIntensity, Target.ChromaIntensity,
 			        // Alpha));
 
@@ -230,8 +228,8 @@ void ANovaPlayerController::BeginPlay()
 				}));
 
 		// Setup sound
-		UNovaSoundManager::Get()->BeginPlay(this,    //
-			FNovaMusicCallback::CreateWeakLambda(this,
+		UNeutronSoundManager::Get()->BeginPlay(this,    //
+			FNeutronMusicCallback::CreateWeakLambda(this,
 				[this]()
 				{
 					if (IsOnMainMenu())
@@ -245,8 +243,8 @@ void ANovaPlayerController::BeginPlay()
 				}));
 
 		// Setup thruster sounds
-		UNovaSoundManager::Get()->AddEnvironmentSound("Thrusters",    //
-			FNovaSoundInstanceCallback::CreateWeakLambda(this,
+		UNeutronSoundManager::Get()->AddEnvironmentSound("Thrusters",    //
+			FNeutronSoundInstanceCallback::CreateWeakLambda(this,
 				[=]()
 				{
 					ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
@@ -267,8 +265,8 @@ void ANovaPlayerController::BeginPlay()
 				}));
 
 		// Setup drive sounds
-		UNovaSoundManager::Get()->AddEnvironmentSound("Drive",    //
-			FNovaSoundInstanceCallback::CreateWeakLambda(this,
+		UNeutronSoundManager::Get()->AddEnvironmentSound("Drive",    //
+			FNeutronSoundInstanceCallback::CreateWeakLambda(this,
 				[=]()
 				{
 					ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
@@ -289,13 +287,13 @@ void ANovaPlayerController::BeginPlay()
 				}));
 
 		// Setup contracts
-		UNovaContractManager::Get()->BeginPlay(this,    //
-			FNovaContractCreationCallback::CreateWeakLambda(this,
-				[=](ENovaContractType Type, UNovaGameInstance* CurrentGameInstance)
+		UNeutronContractManager::Get()->BeginPlay(this,    //
+			FNeutronContractCreationCallback::CreateWeakLambda(this,
+				[=](ENeutronContractType Type, UNeutronGameInstance* CurrentGameInstance)
 				{
 					// Create the contract
-					TSharedPtr<FNovaContract> Contract;
-					if (Type == ENovaContractType::Tutorial)
+					TSharedPtr<FNeutronContract> Contract;
+					if (Type == ENeutronContractType::Tutorial)
 					{
 						Contract = MakeShared<FNovaTutorialContract>();
 					}
@@ -318,8 +316,9 @@ void ANovaPlayerController::BeginPlay()
 	}
 
 	// Initialize persistent objects
-	UNovaSessionsManager* SessionsManager = UNovaSessionsManager::Get();
-	SessionsManager->SetAcceptedInvitationCallback(FOnFriendInviteAccepted::CreateUObject(this, &ANovaPlayerController::AcceptInvitation));
+	UNeutronSessionsManager* SessionsManager = UNeutronSessionsManager::Get();
+	SessionsManager->SetAcceptedInvitationCallback(
+		FNeutronOnFriendInviteAccepted::CreateUObject(this, &ANovaPlayerController::AcceptInvitation));
 
 #if WITH_EDITOR
 
@@ -356,29 +355,6 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 
 	if (IsLocalPlayerController())
 	{
-		UNovaGameUserSettings* GameUserSettings = Cast<UNovaGameUserSettings>(GEngine->GetGameUserSettings());
-
-		// Process FOV
-		NCHECK(PlayerCameraManager);
-		float FOV = PlayerCameraManager->GetFOVAngle();
-		if (FOV != GameUserSettings->FOV)
-		{
-			NLOG("ANovaPlayerController::PlayerTick : new FOV %d", static_cast<int>(GameUserSettings->FOV));
-			PlayerCameraManager->SetFOV(GameUserSettings->FOV);
-		}
-
-		// Show network error
-		UNovaSessionsManager* SessionsManager = UNovaSessionsManager::Get();
-		NCHECK(SessionsManager);
-		if (SessionsManager->GetNetworkError() != LastNetworkError)
-		{
-			LastNetworkError = SessionsManager->GetNetworkError();
-			if (LastNetworkError != ENovaNetworkError::Success)
-			{
-				Notify(LOCTEXT("NetworkError", "Network error"), SessionsManager->GetNetworkErrorString(), ENovaNotificationType::Error);
-			}
-		}
-
 		// Disable overlays in photo mode
 		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
 		if (IsValid(SpacecraftPawn) && IsInPhotoMode())
@@ -418,7 +394,7 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 		const ANovaPlayerViewpoint* PlayerViewpoint = nullptr;
 		if (Viewpoints.Num())
 		{
-			UNovaActorTools::SortActorsByClosestDistance(Viewpoints, GetPawn()->GetActorLocation());
+			UNeutronActorTools::SortActorsByClosestDistance(Viewpoints, GetPawn()->GetActorLocation());
 			PlayerViewpoint = Cast<ANovaPlayerViewpoint>(Viewpoints[0]);
 		}
 		float AnimationDuration =
@@ -439,7 +415,7 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 			else if (CurrentCameraState == ENovaPlayerCameraState::CinematicEnvironment)
 			{
 				float AnimationAlpha = FMath::Clamp(CurrentTimeInCameraState / AnimationDuration, 0.0f, 1.0f);
-				AnimationAlpha       = FMath::InterpEaseOut(-0.5f, 0.5f, AnimationAlpha, ENovaUIConstants::EaseStandard);
+				AnimationAlpha       = FMath::InterpEaseOut(-0.5f, 0.5f, AnimationAlpha, ENeutronUIConstants::EaseStandard);
 
 				Rotation = PlayerViewpoint->GetActorRotation();
 				Rotation +=
@@ -471,6 +447,31 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 			Rotation = ViewpointDirection.Rotation();
 		}
 	}
+}
+
+bool ANovaPlayerController::IsReady() const
+{
+	if (IsOnMainMenu())
+	{
+		return Super::IsReady();
+	}
+	else
+	{
+		// Check spacecraft pawn
+		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
+		bool IsSpacecraftReady = IsValid(SpacecraftPawn) && GetSpacecraft() && SpacecraftPawn->GetSpacecraftMovement()->IsInitialized();
+
+		// Check game state
+		ANovaGameState* GameState        = GetWorld()->GetGameState<ANovaGameState>();
+		bool            IsGameStateReady = IsValid(GameState) && GameState->IsReady();
+
+		return IsSpacecraftReady && IsGameStateReady;
+	}
+}
+
+void ANovaPlayerController::Notify(const FText& Text, const FText& Subtext, ENeutronNotificationType Type)
+{
+	UNeutronMenuManager::Get()->GetOverlay<SNovaOverlay>()->Notify(Text, Subtext, Type);
 }
 
 /*----------------------------------------------------
@@ -517,7 +518,7 @@ void ANovaPlayerController::Dock()
 	FSimpleDelegate EndCutscene = FSimpleDelegate::CreateLambda(
 		[=]()
 		{
-			UNovaMenuManager::Get()->OpenMenu(FNovaAsyncAction::CreateLambda(
+			UNeutronMenuManager::Get()->OpenMenu(FNeutronAsyncAction::CreateLambda(
 				[=]()
 				{
 					SetCameraState(ENovaPlayerCameraState::Default);
@@ -526,14 +527,14 @@ void ANovaPlayerController::Dock()
 				}));
 		});
 
-	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda(
+	FNeutronAsyncAction StartCutscene = FNeutronAsyncAction::CreateLambda(
 		[=]()
 		{
 			SetCameraState(ENovaPlayerCameraState::CinematicSpacecraft);
 			GetSpacecraftPawn()->Dock(EndCutscene);
 		});
 
-	UNovaMenuManager::Get()->CloseMenu(StartCutscene);
+	UNeutronMenuManager::Get()->CloseMenu(StartCutscene);
 }
 
 void ANovaPlayerController::Undock()
@@ -543,7 +544,7 @@ void ANovaPlayerController::Undock()
 	FSimpleDelegate EndCutscene = FSimpleDelegate::CreateLambda(
 		[=]()
 		{
-			UNovaMenuManager::Get()->OpenMenu(FNovaAsyncAction::CreateLambda(
+			UNeutronMenuManager::Get()->OpenMenu(FNeutronAsyncAction::CreateLambda(
 				[=]()
 				{
 					SetCameraState(ENovaPlayerCameraState::Default);
@@ -551,7 +552,7 @@ void ANovaPlayerController::Undock()
 				}));
 		});
 
-	FNovaAsyncAction StartCutscene = FNovaAsyncAction::CreateLambda(
+	FNeutronAsyncAction StartCutscene = FNeutronAsyncAction::CreateLambda(
 		[=]()
 		{
 			SaveGame();
@@ -559,11 +560,11 @@ void ANovaPlayerController::Undock()
 			GetSpacecraftPawn()->Undock(EndCutscene);
 		});
 
-	UNovaMenuManager::Get()->CloseMenu(StartCutscene);
+	UNeutronMenuManager::Get()->CloseMenu(StartCutscene);
 }
 
-void ANovaPlayerController::SharedTransition(
-	ENovaPlayerCameraState NewCameraState, FNovaAsyncAction StartAction, FNovaAsyncCondition Condition, FNovaAsyncAction FinishAction)
+void ANovaPlayerController::SharedTransition(ENovaPlayerCameraState NewCameraState, FNeutronAsyncAction StartAction,
+	FNeutronAsyncCondition Condition, FNeutronAsyncAction FinishAction)
 {
 	NCHECK(GetLocalRole() == ROLE_Authority);
 	NLOG("ANovaPlayerController::ServerSharedTransition");
@@ -593,7 +594,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 	SharedTransitionActive = true;
 
 	// Action : mark as in shared transition locally and remotely
-	FNovaAsyncAction Action = FNovaAsyncAction::CreateLambda(
+	FNeutronAsyncAction Action = FNeutronAsyncAction::CreateLambda(
 		[=]()
 		{
 			SetCameraState(NewCameraState);
@@ -603,7 +604,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 
 	// Condition : on server, when all clients have reported as ready
 	// On client, when the server has signaled to stop
-	FNovaAsyncCondition Condition = FNovaAsyncCondition::CreateLambda(
+	FNeutronAsyncCondition Condition = FNeutronAsyncCondition::CreateLambda(
 		[=]()
 		{
 			if (GetLocalRole() == ROLE_Authority)
@@ -653,7 +654,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 	{
 		// UI enabled states
 		case ENovaPlayerCameraState::Default:
-			UNovaMenuManager::Get()->OpenMenu(Action, Condition);
+			UNeutronMenuManager::Get()->OpenMenu(Action, Condition);
 			break;
 
 		// UI disabled states
@@ -661,7 +662,7 @@ void ANovaPlayerController::ClientStartSharedTransition_Implementation(ENovaPlay
 		case ENovaPlayerCameraState::CinematicEnvironment:
 		case ENovaPlayerCameraState::CinematicBrake:
 		case ENovaPlayerCameraState::FastForward:
-			UNovaMenuManager::Get()->CloseMenu(Action, Condition);
+			UNeutronMenuManager::Get()->CloseMenu(Action, Condition);
 			break;
 	}
 }
@@ -689,11 +690,11 @@ void ANovaPlayerController::SetCameraState(ENovaPlayerCameraState State)
 	// Handle the fast-forward camera
 	if (State == ENovaPlayerCameraState::FastForward)
 	{
-		UNovaMenuManager::Get()->GetOverlay<SNovaOverlay>()->StartFastForward();
+		UNeutronMenuManager::Get()->GetOverlay<SNovaOverlay>()->StartFastForward();
 	}
 	else
 	{
-		UNovaMenuManager::Get()->GetOverlay<SNovaOverlay>()->StopFastForward();
+		UNeutronMenuManager::Get()->GetOverlay<SNovaOverlay>()->StopFastForward();
 	}
 }
 
@@ -701,12 +702,33 @@ void ANovaPlayerController::SetCameraState(ENovaPlayerCameraState State)
     Server-side save
 ----------------------------------------------------*/
 
+void ANovaPlayerController::StartGame(FString SaveName, bool Online)
+{
+	NLOG("ANovaPlayerController::StartGame : loading from '%s', online = %d", *SaveName, Online);
+
+	if (UNeutronMenuManager::Get()->IsIdle())
+	{
+		UNeutronSoundManager::Get()->Mute();
+
+		UNeutronMenuManager::Get()->RunAction(ENeutronLoadingScreen::Launch,    //
+			FNeutronAsyncAction::CreateLambda(
+				[=]()
+				{
+					NLOG("UNovaGameInstance::StartGame");
+
+					LoadGame(SaveName);
+
+					GetGameInstance<UNeutronGameInstance>()->SetGameOnline(ENovaConstants::DefaultLevel, Online);
+				}));
+	}
+}
+
 void ANovaPlayerController::ClientLoadPlayer()
 {
 	NLOG("ANovaPlayerController::ClientLoadPlayer");
 
 	// Check for save data
-	UNovaSaveManager* SaveManager = UNovaSaveManager::Get();
+	UNeutronSaveManager* SaveManager = UNeutronSaveManager::Get();
 	NCHECK(SaveManager);
 
 #if WITH_EDITOR
@@ -719,7 +741,7 @@ void ANovaPlayerController::ClientLoadPlayer()
 
 #endif    // WITH_EDITOR
 
-	NCHECK(UNovaSaveManager::Get()->HasLoadedSaveData());
+	NCHECK(UNeutronSaveManager::Get()->HasLoadedSaveData());
 
 	// Serialize the save data and spawn the player actors on the server
 	TSharedPtr<FJsonObject>   JsonData;
@@ -777,167 +799,14 @@ void ANovaPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 }
 
 /*----------------------------------------------------
-    Game flow
-----------------------------------------------------*/
-
-void ANovaPlayerController::StartGame(FString SaveName, bool Online)
-{
-	NLOG("ANovaPlayerController::StartGame : loading from '%s', online = %d", *SaveName, Online);
-
-	if (UNovaMenuManager::Get()->IsIdle())
-	{
-		UNovaSoundManager::Get()->Mute();
-
-		UNovaMenuManager::Get()->RunAction(ENovaLoadingScreen::Launch,    //
-			FNovaAsyncAction::CreateLambda(
-				[=]()
-				{
-					NLOG("UNovaGameInstance::StartGame");
-
-					LoadGame(SaveName);
-
-					GetGameInstance<UNovaGameInstance>()->SetGameOnline(ENovaConstants::DefaultLevel, Online);
-				}));
-	}
-}
-
-void ANovaPlayerController::SetGameOnline(bool Online)
-{
-	NLOG("ANovaPlayerController::SetGameOnline : online = %d", Online);
-
-	if (UNovaMenuManager::Get()->IsIdle())
-	{
-		UNovaSoundManager::Get()->Mute();
-
-		UNovaMenuManager::Get()->RunAction(ENovaLoadingScreen::Launch,    //
-			FNovaAsyncAction::CreateLambda(
-				[=]()
-				{
-					GetGameInstance<UNovaGameInstance>()->SetGameOnline(GetWorld()->GetName(), Online);
-				}));
-	}
-}
-
-void ANovaPlayerController::GoToMainMenu(bool ShouldSaveGame)
-{
-	if (UNovaMenuManager::Get()->IsIdle())
-	{
-		NLOG("ANovaPlayerController::GoToMainMenu %d", ShouldSaveGame);
-
-		UNovaSoundManager::Get()->Mute();
-
-		UNovaMenuManager::Get()->RunAction(ENovaLoadingScreen::Black,    //
-			FNovaAsyncAction::CreateLambda(
-				[=]()
-				{
-					if (ShouldSaveGame)
-					{
-						NLOG("ANovaPlayerController::GoToMainMenu : saving game");
-						SaveGame();
-					}
-
-					GetGameInstance<UNovaGameInstance>()->GoToMainMenu();
-				}));
-	}
-}
-
-void ANovaPlayerController::ExitGame()
-{
-	if (UNovaMenuManager::Get()->IsIdle())
-	{
-		NLOG("ANovaPlayerController::ExitGame");
-
-		UNovaSoundManager::Get()->Mute();
-
-		UNovaMenuManager::Get()->RunAction(ENovaLoadingScreen::Black,    //
-			FNovaAsyncAction::CreateLambda(
-				[=]()
-				{
-					FGenericPlatformMisc::RequestExit(false);
-				}));
-	}
-}
-
-void ANovaPlayerController::InviteFriend(TSharedRef<FOnlineFriend> Friend)
-{
-	NLOG("ANovaPlayerController::InviteFriend");
-
-	Notify(LOCTEXT("InviteFriend", "Invited friend"), FText::FromString(Friend->GetDisplayName()), ENovaNotificationType::Info);
-
-	UNovaSessionsManager::Get()->InviteFriend(Friend->GetUserId());
-}
-
-void ANovaPlayerController::JoinFriend(TSharedRef<FOnlineFriend> Friend)
-{
-	NLOG("ANovaPlayerController::JoinFriend");
-
-	UNovaMenuManager::Get()->RunAction(ENovaLoadingScreen::Launch,    //
-		FNovaAsyncAction::CreateLambda(
-			[=]()
-			{
-				Notify(
-					LOCTEXT("JoiningFriend", "Joining friend"), FText::FromString(Friend->GetDisplayName()), ENovaNotificationType::Info);
-
-				UNovaSessionsManager::Get()->JoinFriend(Friend->GetUserId());
-			}));
-}
-
-void ANovaPlayerController::AcceptInvitation(const FOnlineSessionSearchResult& InviteResult)
-{
-	NLOG("ANovaPlayerController::AcceptInvitation");
-
-	UNovaMenuManager::Get()->RunAction(ENovaLoadingScreen::Launch,    //
-		FNovaAsyncAction::CreateLambda(
-			[=]()
-			{
-				UNovaSessionsManager::Get()->JoinSearchResult(InviteResult);
-			}));
-}
-
-bool ANovaPlayerController::IsReady() const
-{
-	if (IsOnMainMenu())
-	{
-		return true;
-	}
-	else
-	{
-		// Check spacecraft pawn
-		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-		bool IsSpacecraftReady = IsValid(SpacecraftPawn) && GetSpacecraft() && SpacecraftPawn->GetSpacecraftMovement()->IsInitialized();
-
-		// Check game state
-		ANovaGameState* GameState        = GetWorld()->GetGameState<ANovaGameState>();
-		bool            IsGameStateReady = IsValid(GameState) && GameState->IsReady();
-
-		return IsSpacecraftReady && IsGameStateReady;
-	}
-}
-
-/*----------------------------------------------------
     Menus
 ----------------------------------------------------*/
-
-bool ANovaPlayerController::IsOnMainMenu() const
-{
-	return Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMainMenuMap();
-}
-
-bool ANovaPlayerController::IsMenuOnly() const
-{
-	return Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMenuMap();
-}
-
-void ANovaPlayerController::Notify(const FText& Text, const FText& Subtext, ENovaNotificationType Type)
-{
-	UNovaMenuManager::Get()->GetOverlay<SNovaOverlay>()->Notify(Text, Subtext, Type);
-}
 
 void ANovaPlayerController::EnterPhotoMode(FName ActionName)
 {
 	NLOG("ANovaPlayerController::EnterPhotoMode");
 
-	UNovaMenuManager::Get()->CloseMenu(FNovaAsyncAction::CreateLambda(
+	UNeutronMenuManager::Get()->CloseMenu(FNeutronAsyncAction::CreateLambda(
 		[=]()
 		{
 			PhotoModeAction = ActionName;
@@ -949,70 +818,12 @@ void ANovaPlayerController::ExitPhotoMode()
 {
 	NLOG("ANovaPlayerController::ExitPhotoMode");
 
-	UNovaMenuManager::Get()->OpenMenu(FNovaAsyncAction::CreateLambda(
+	UNeutronMenuManager::Get()->OpenMenu(FNeutronAsyncAction::CreateLambda(
 		[=]()
 		{
 			PhotoModeAction = NAME_None;
 			SetCameraState(ENovaPlayerCameraState::Default);
 		}));
-}
-
-/*----------------------------------------------------
-    Input
-----------------------------------------------------*/
-
-void ANovaPlayerController::SetupInputComponent()
-{
-	Super::SetupInputComponent();
-
-	// Core bindings
-	FInputActionBinding& AnyKeyBinding =
-		InputComponent->BindAction("AnyKey", EInputEvent::IE_Pressed, this, &ANovaPlayerController::AnyKey);
-	AnyKeyBinding.bConsumeInput = false;
-	InputComponent->BindAction(FNovaPlayerInput::MenuToggle, EInputEvent::IE_Released, this, &ANovaPlayerController::ToggleMenuOrQuit);
-	if (GetWorld()->WorldType == EWorldType::PIE)
-	{
-		InputComponent->BindKey(EKeys::Enter, EInputEvent::IE_Released, this, &ANovaPlayerController::ToggleMenuOrQuit);
-	}
-}
-
-void ANovaPlayerController::ToggleMenuOrQuit()
-{
-	if (!Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMenuMap())
-	{
-		if (IsOnMainMenu())
-		{
-			ExitGame();
-		}
-		else
-		{
-			UNovaMenuManager* MenuManager = UNovaMenuManager::Get();
-
-			if (!MenuManager->IsMenuOpen())
-			{
-				MenuManager->OpenMenu();
-			}
-			else
-			{
-				MenuManager->CloseMenu();
-			}
-		}
-	}
-}
-
-void ANovaPlayerController::AnyKey(FKey Key)
-{
-	UNovaMenuManager::Get()->SetUsingGamepad(Key.IsGamepadKey());
-
-	// Exit photo mode
-	if (IsInPhotoMode())
-	{
-		if (UNovaMenuManager::Get()->GetMenu()->IsActionKey(PhotoModeAction, Key) ||
-			UNovaMenuManager::Get()->GetMenu()->IsActionKey(FNovaPlayerInput::MenuCancel, Key))
-		{
-			ExitPhotoMode();
-		}
-	}
 }
 
 /*----------------------------------------------------
@@ -1034,62 +845,6 @@ const FNovaSpacecraft* ANovaPlayerController::GetSpacecraft() const
 		return nullptr;
 	}
 }
-
-/*----------------------------------------------------
-    Test code
-----------------------------------------------------*/
-
-#if WITH_EDITOR
-
-void ANovaPlayerController::OnJoinRandomFriend(TArray<TSharedRef<FOnlineFriend>> FriendList)
-{
-	for (auto Friend : FriendList)
-	{
-		if (Friend.Get().GetDisplayName() == "Deimos Games" || Friend.Get().GetDisplayName() == "Stranger")
-		{
-			JoinFriend(Friend);
-		}
-	}
-}
-
-void ANovaPlayerController::OnJoinRandomSession(TArray<FOnlineSessionSearchResult> SearchResults)
-{
-	for (auto Result : SearchResults)
-	{
-		if (Result.Session.OwningUserId != GetLocalPlayer()->GetPreferredUniqueNetId())
-		{
-			UNovaMenuManager* MenuManager = UNovaMenuManager::Get();
-
-			MenuManager->RunAction(ENovaLoadingScreen::Launch,    //
-				FNovaAsyncAction::CreateLambda(
-					[=]()
-					{
-						MenuManager->GetOverlay<SNovaOverlay>()->Notify(
-							FText::FormatNamed(LOCTEXT("JoinFriend", "Joining {session}"), TEXT("session"),
-								FText::FromString(*Result.Session.GetSessionIdStr())),
-							FText(), ENovaNotificationType::Info);
-
-						UNovaSessionsManager::Get()->JoinSearchResult(Result);
-					}));
-		}
-	}
-}
-
-void ANovaPlayerController::TestJoin()
-{
-	UNovaSessionsManager* SessionsManager = UNovaSessionsManager::Get();
-
-	if (SessionsManager->GetOnlineSubsystemName() != TEXT("Null"))
-	{
-		SessionsManager->SearchFriends(FOnFriendSearchComplete::CreateUObject(this, &ANovaPlayerController::OnJoinRandomFriend));
-	}
-	else
-	{
-		SessionsManager->SearchSessions(true, FOnSessionSearchComplete::CreateUObject(this, &ANovaPlayerController::OnJoinRandomSession));
-	}
-}
-
-#endif
 
 class ANovaSpacecraftPawn* ANovaPlayerController::GetSpacecraftPawn() const
 {

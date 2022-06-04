@@ -2,8 +2,7 @@
 
 #include "NovaStationRingComponent.h"
 
-#include "Actor/NovaActorTools.h"
-#include "Actor/NovaPlayerStart.h"
+#include "Game/NovaPlayerStart.h"
 
 #include "Spacecraft/NovaSpacecraftCompartmentComponent.h"
 #include "Spacecraft/NovaSpacecraftHatchComponent.h"
@@ -11,6 +10,8 @@
 #include "Spacecraft/NovaSpacecraftPawn.h"
 
 #include "Nova.h"
+
+#include "Neutron/Actor/NeutronActorTools.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -156,9 +157,9 @@ void UNovaStationRingComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		}
 
 		// Solve for velocities
-		CurrentLinearDistance = UNovaActorTools::SolveVelocity(CurrentLinearVelocity, 0.0, CurrentLocation.X, TargetLocation,
+		CurrentLinearDistance = UNeutronActorTools::SolveVelocity(CurrentLinearVelocity, 0.0, CurrentLocation.X, TargetLocation,
 			LinearAcceleration, MaxLinearVelocity, LinearDeadDistance, DeltaTime);
-		CurrentRollDistance   = UNovaActorTools::SolveVelocity(CurrentRollVelocity, 0.0, CurrentRotation.Roll, TargetRoll,
+		CurrentRollDistance   = UNeutronActorTools::SolveVelocity(CurrentRollVelocity, 0.0, CurrentRotation.Roll, TargetRoll,
 			  AngularAcceleration, MaxAngularVelocity, AngularDeadDistance, DeltaTime);
 
 		// Integrate velocity to derive position

@@ -6,10 +6,10 @@
 
 #include "NovaGameTypes.h"
 #include "NovaGameState.h"
-
 #include "Player/NovaPlayerController.h"
-#include "System/NovaContractManager.h"
-#include "System/NovaSaveManager.h"
+
+#include "Neutron/System/NeutronContractManager.h"
+#include "Neutron/System/NeutronSaveManager.h"
 
 #include "NovaSaveData.generated.h"
 
@@ -19,7 +19,7 @@
 
 /** Save data */
 USTRUCT()
-struct FNovaGameSave : public FNovaSaveDataBase
+struct FNovaGameSave : public FNeutronSaveDataBase
 {
 	GENERATED_BODY()
 
@@ -30,5 +30,5 @@ struct FNovaGameSave : public FNovaSaveDataBase
 	FNovaGameStateSave GameStateData;
 
 	UPROPERTY()
-	FNovaContractManagerSave ContractManagerData;
+	FNeutronContractManagerSave ContractManagerData;
 };

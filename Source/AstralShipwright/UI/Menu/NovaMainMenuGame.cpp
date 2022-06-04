@@ -8,13 +8,13 @@
 #include "Game/NovaGameTypes.h"
 #include "Game/NovaGameState.h"
 
-#include "System/NovaContractManager.h"
-#include "System/NovaMenuManager.h"
-#include "System/NovaSessionsManager.h"
-
-#include "UI/Component/NovaLargeButton.h"
+#include "UI/Widgets/NovaLargeButton.h"
 
 #include "Nova.h"
+
+#include "Neutron/System/NeutronContractManager.h"
+#include "Neutron/System/NeutronMenuManager.h"
+#include "Neutron/System/NeutronSessionsManager.h"
 
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
@@ -30,11 +30,11 @@
 void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 {
 	// Data
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	MenuManager                 = InArgs._MenuManager;
+	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
+	MenuManager                    = InArgs._MenuManager;
 
 	// Parent constructor
-	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
+	SNeutronNavigationPanel::Construct(SNeutronNavigationPanel::FArguments().Menu(InArgs._Menu));
 
 	// clang-format off
 	ChildSlot
@@ -80,10 +80,10 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					SNovaNew(SNovaButton)
+					SNeutronNew(SNeutronButton)
 					.Text(this, &SNovaMainMenuGame::GetInviteText)
 					.HelpText(LOCTEXT("InviteHelp", "Invite the selected player"))
-					.Action(FNovaPlayerInput::MenuPrimary)
+					.Action(FNeutronPlayerInput::MenuPrimary)
 					.ActionFocusable(false)
 					.OnClicked(this, &SNovaMainMenuGame::OnInviteSelectedFriend)
 					.Enabled(this, &SNovaMainMenuGame::IsInviteFriendEnabled)
@@ -92,10 +92,10 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					SNovaNew(SNovaButton)
+					SNeutronNew(SNeutronButton)
 					.Text(this, &SNovaMainMenuGame::GetJoinText)
 					.HelpText(LOCTEXT("JoinHelp", "Join the selected player"))
-					.Action(FNovaPlayerInput::MenuSecondary)
+					.Action(FNeutronPlayerInput::MenuSecondary)
 					.ActionFocusable(false)
 					.OnClicked(this, &SNovaMainMenuGame::OnJoinSelectedFriend)
 					.Enabled(this, &SNovaMainMenuGame::IsJoinFriendEnabled)
@@ -106,7 +106,7 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 			+ SVerticalBox::Slot()
 			.HAlign(HAlign_Right)
 			[
-				SAssignNew(FriendListView, SNovaListView<TSharedRef<FOnlineFriend>>)
+				SAssignNew(FriendListView, SNeutronListView<TSharedRef<FOnlineFriend>>)
 				.Panel(this)
 				.ItemsSource(&FriendList)
 				.OnGenerateItem(this, &SNovaMainMenuGame::GenerateFriendItem)
@@ -156,7 +156,7 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNovaDefaultNew(SNovaButton) // Default navigation
+					SNeutronDefaultNew(SNeutronButton) // Default navigation
 					.Size("DoubleButtonSize")
 					.Text(this, &SNovaMainMenuGame::GetOnlineButtonText)
 					.HelpText(this, &SNovaMainMenuGame::GetOnlineButtonHelpText)
@@ -214,7 +214,7 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNovaNew(SNovaButton)
+					SNeutronNew(SNeutronButton)
 					.Icon(this, &SNovaMainMenuGame::GetContractTrackIcon, Index)
 					.OnClicked(this, &SNovaMainMenuGame::OnTrackContract, Index)
 					.Text(this, &SNovaMainMenuGame::GetContractTrackText, Index)
@@ -224,7 +224,7 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNovaNew(SNovaButton)
+					SNeutronNew(SNeutronButton)
 					.OnClicked(this, &SNovaMainMenuGame::OnAbandonContract, Index)
 					.Text(LOCTEXT("ContractAbandon", "Abandon"))
 					.HelpText(LOCTEXT("ContractAbandonHelp", "Discard this contract"))
@@ -278,21 +278,22 @@ void SNovaMainMenuGame::Construct(const FArguments& InArgs)
 
 void SNovaMainMenuGame::Show()
 {
-	SNovaTabPanel::Show();
+	SNeutronTabPanel::Show();
 
 	TimeSinceFriendListUpdate = FriendListUpdatePeriod;
 }
 
 void SNovaMainMenuGame::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
 {
-	SNovaTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
+	SNeutronTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
 	// Refresh the friend list
 	if (!IsHidden())
 	{
-		if (TimeSinceFriendListUpdate > FriendListUpdatePeriod && !UNovaSessionsManager::Get()->IsBusy())
+		if (TimeSinceFriendListUpdate > FriendListUpdatePeriod && !UNeutronSessionsManager::Get()->IsBusy())
 		{
-			UNovaSessionsManager::Get()->SearchFriends(FOnFriendSearchComplete::CreateRaw(this, &SNovaMainMenuGame::OnFriendListReady));
+			UNeutronSessionsManager::Get()->SearchFriends(
+				FNeutronOnFriendSearchComplete::CreateRaw(this, &SNovaMainMenuGame::OnFriendListReady));
 
 			TimeSinceFriendListUpdate = 0;
 		}
@@ -336,7 +337,7 @@ FText SNovaMainMenuGame::GetFriendName(TSharedRef<FOnlineFriend> Friend) const
 
 EVisibility SNovaMainMenuGame::GetContractsTextVisibility() const
 {
-	UNovaContractManager* ContractManager = UNovaContractManager::Get();
+	UNeutronContractManager* ContractManager = UNeutronContractManager::Get();
 	NCHECK(ContractManager);
 
 	return ContractManager->GetContractCount() == 0 ? EVisibility::Visible : EVisibility::Collapsed;
@@ -344,7 +345,7 @@ EVisibility SNovaMainMenuGame::GetContractsTextVisibility() const
 
 FText SNovaMainMenuGame::GetContractTitle(uint32 Index) const
 {
-	UNovaContractManager* ContractManager = UNovaContractManager::Get();
+	UNeutronContractManager* ContractManager = UNeutronContractManager::Get();
 	NCHECK(ContractManager);
 
 	if (Index < ContractManager->GetContractCount())
@@ -359,7 +360,7 @@ FText SNovaMainMenuGame::GetContractTitle(uint32 Index) const
 
 FText SNovaMainMenuGame::GetContractDescription(uint32 Index) const
 {
-	UNovaContractManager* ContractManager = UNovaContractManager::Get();
+	UNeutronContractManager* ContractManager = UNeutronContractManager::Get();
 	NCHECK(ContractManager);
 
 	if (Index < ContractManager->GetContractCount())
@@ -374,7 +375,7 @@ FText SNovaMainMenuGame::GetContractDescription(uint32 Index) const
 
 TOptional<float> SNovaMainMenuGame::GetContractProgress(uint32 Index) const
 {
-	UNovaContractManager* ContractManager = UNovaContractManager::Get();
+	UNeutronContractManager* ContractManager = UNeutronContractManager::Get();
 	NCHECK(ContractManager);
 
 	if (Index < ContractManager->GetContractCount())
@@ -389,7 +390,7 @@ TOptional<float> SNovaMainMenuGame::GetContractProgress(uint32 Index) const
 
 EVisibility SNovaMainMenuGame::GetContractVisibility(uint32 Index) const
 {
-	UNovaContractManager* ContractManager = UNovaContractManager::Get();
+	UNeutronContractManager* ContractManager = UNeutronContractManager::Get();
 	NCHECK(ContractManager);
 
 	return Index < ContractManager->GetContractCount() ? EVisibility::Visible : EVisibility::Collapsed;
@@ -397,7 +398,7 @@ EVisibility SNovaMainMenuGame::GetContractVisibility(uint32 Index) const
 
 FText SNovaMainMenuGame::GetContractTrackText(uint32 Index) const
 {
-	UNovaContractManager* ContractManager = UNovaContractManager::Get();
+	UNeutronContractManager* ContractManager = UNeutronContractManager::Get();
 	NCHECK(ContractManager);
 
 	if (Index != ContractManager->GetTrackedContract())
@@ -412,12 +413,12 @@ FText SNovaMainMenuGame::GetContractTrackText(uint32 Index) const
 
 const FSlateBrush* SNovaMainMenuGame::GetContractTrackIcon(uint32 Index) const
 {
-	UNovaContractManager* ContractManager = UNovaContractManager::Get();
+	UNeutronContractManager* ContractManager = UNeutronContractManager::Get();
 	NCHECK(ContractManager);
 
 	if (Index == ContractManager->GetTrackedContract())
 	{
-		return FNovaStyleSet::GetBrush("Icon/SB_On");
+		return FNeutronStyleSet::GetBrush("Icon/SB_On");
 	}
 	else
 	{
@@ -427,29 +428,29 @@ const FSlateBrush* SNovaMainMenuGame::GetContractTrackIcon(uint32 Index) const
 
 FText SNovaMainMenuGame::GetOnlineText() const
 {
-	ANovaPlayerController* PC = MenuManager->GetPC();
+	ANovaPlayerController* PC = MenuManager->GetPC<ANovaPlayerController>();
 	if (PC == nullptr)
 	{
 		return FText();
 	}
 
-	const UNovaSessionsManager* SessionsManager = UNovaSessionsManager::Get();
-	APlayerState*               PlayerState     = PC->PlayerState;
+	const UNeutronSessionsManager* SessionsManager = UNeutronSessionsManager::Get();
+	APlayerState*                  PlayerState     = PC->PlayerState;
 
 	if (SessionsManager && PlayerState)
 	{
 		FText StatusMessage;
 
 		// Get the status message
-		if (SessionsManager->GetNetworkState() == ENovaNetworkState::Offline)
+		if (SessionsManager->GetNetworkState() == ENeutronNetworkState::Offline)
 		{
 			StatusMessage = LOCTEXT("PlayingOffline", "You are playing offline");
 		}
-		else if (SessionsManager->GetNetworkState() == ENovaNetworkState::OnlineHost)
+		else if (SessionsManager->GetNetworkState() == ENeutronNetworkState::OnlineHost)
 		{
 			StatusMessage = LOCTEXT("OnlineHost", "You are playing online as the host");
 		}
-		else if (SessionsManager->GetNetworkState() == ENovaNetworkState::OnlineClient)
+		else if (SessionsManager->GetNetworkState() == ENeutronNetworkState::OnlineClient)
 		{
 			StatusMessage = FText::FormatNamed(LOCTEXT("OnlineClient", "You are playing online as a guest ({ping} ms ping)"), TEXT("ping"),
 				FText::AsNumber(PlayerState->ExactPing));
@@ -467,7 +468,7 @@ FText SNovaMainMenuGame::GetOnlineText() const
 
 FText SNovaMainMenuGame::GetOnlineButtonText() const
 {
-	const UNovaSessionsManager* SessionsManager = UNovaSessionsManager::Get();
+	const UNeutronSessionsManager* SessionsManager = UNeutronSessionsManager::Get();
 	if (SessionsManager->IsOnline())
 	{
 		return LOCTEXT("GoOffline", "Go offline");
@@ -480,7 +481,7 @@ FText SNovaMainMenuGame::GetOnlineButtonText() const
 
 FText SNovaMainMenuGame::GetOnlineButtonHelpText() const
 {
-	const UNovaSessionsManager* SessionsManager = UNovaSessionsManager::Get();
+	const UNeutronSessionsManager* SessionsManager = UNeutronSessionsManager::Get();
 	if (SessionsManager->IsOnline())
 	{
 		return LOCTEXT("GoOfflineHelp", "Terminate the network session and play alone");
@@ -498,8 +499,8 @@ EVisibility SNovaMainMenuGame::GetQuitGameVisibility() const
 
 TSharedRef<SWidget> SNovaMainMenuGame::GenerateFriendItem(TSharedRef<FOnlineFriend> Friend)
 {
-	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
-	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
+	const FNeutronMainTheme&   Theme       = FNeutronStyleSet::GetMainTheme();
+	const FNeutronButtonTheme& ButtonTheme = FNeutronStyleSet::GetButtonTheme();
 
 	// Get the friend status
 	FText FriendStatus;
@@ -573,7 +574,7 @@ FText SNovaMainMenuGame::GenerateFriendTooltip(TSharedRef<FOnlineFriend> Friend)
 
 FText SNovaMainMenuGame::GetOnlineFriendsText() const
 {
-	const UNovaSessionsManager* SessionsManager = UNovaSessionsManager::Get();
+	const UNeutronSessionsManager* SessionsManager = UNeutronSessionsManager::Get();
 
 	// Get useful pointers
 	FText InviteText;
@@ -660,8 +661,8 @@ FText SNovaMainMenuGame::GetJoinText() const
 
 bool SNovaMainMenuGame::IsInviteFriendEnabled() const
 {
-	const UNovaSessionsManager* SessionsManager = UNovaSessionsManager::Get();
-	const ANovaGameState*       GameState       = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+	const UNeutronSessionsManager* SessionsManager = UNeutronSessionsManager::Get();
+	const ANovaGameState*          GameState       = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 
 	if (GameState && GameState->IsJoinable() && HasSelectedFriend())
 	{
@@ -693,7 +694,7 @@ bool SNovaMainMenuGame::IsJoinFriendEnabled() const
 
 void SNovaMainMenuGame::OnTrackContract(uint32 Index)
 {
-	UNovaContractManager* ContractManager = UNovaContractManager::Get();
+	UNeutronContractManager* ContractManager = UNeutronContractManager::Get();
 	NCHECK(ContractManager);
 
 	ContractManager->SetTrackedContract(ContractManager->GetTrackedContract() != Index ? Index : INDEX_NONE);
@@ -701,7 +702,7 @@ void SNovaMainMenuGame::OnTrackContract(uint32 Index)
 
 void SNovaMainMenuGame::OnAbandonContract(uint32 Index)
 {
-	UNovaContractManager* ContractManager = UNovaContractManager::Get();
+	UNeutronContractManager* ContractManager = UNeutronContractManager::Get();
 	NCHECK(ContractManager);
 
 	ContractManager->AbandonContract(Index);
@@ -709,7 +710,7 @@ void SNovaMainMenuGame::OnAbandonContract(uint32 Index)
 
 void SNovaMainMenuGame::OnToggleOnlineGame()
 {
-	const UNovaSessionsManager* SessionsManager = UNovaSessionsManager::Get();
+	const UNeutronSessionsManager* SessionsManager = UNeutronSessionsManager::Get();
 	MenuManager->GetPC()->SetGameOnline(!SessionsManager->IsOnline());
 }
 

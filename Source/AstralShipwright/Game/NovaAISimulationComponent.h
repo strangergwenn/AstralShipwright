@@ -28,13 +28,13 @@ struct FNovaAISpacecraftStateSave
 	FGuid SpacecraftIdentifier;
 
 	UPROPERTY()
-	const class UNovaAISpacecraftDescription* SpacecraftClass;
+	const class UNovaAISpacecraftDescription* SpacecraftClass = nullptr;
 
 	UPROPERTY()
 	FString SpacecraftName;
 
 	UPROPERTY()
-	const class UNovaArea* TargetArea;
+	const class UNovaArea* TargetArea = nullptr;
 
 	UPROPERTY()
 	ENovaAISpacecraftState CurrentState;

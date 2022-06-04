@@ -13,14 +13,14 @@
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
 
-#include "System/NovaMenuManager.h"
 #include "Player/NovaPlayerController.h"
 
-#include "UI/Widget/NovaButton.h"
-#include "UI/Widget/NovaFadingWidget.h"
-#include "UI/Widget/NovaKeyLabel.h"
-
 #include "Nova.h"
+
+#include "Neutron/System/NeutronMenuManager.h"
+#include "Neutron/UI/Widgets/NeutronButton.h"
+#include "Neutron/UI/Widgets/NeutronFadingWidget.h"
+#include "Neutron/UI/Widgets/NeutronKeyLabel.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
 
@@ -32,7 +32,7 @@
 
 DECLARE_DELEGATE_OneParam(FNovaHUDUpdate, int32);
 
-class SNovaHUDPanel : public SNovaFadingWidget<false>
+class SNovaHUDPanel : public SNeutronFadingWidget<false>
 {
 	SLATE_BEGIN_ARGS(SNovaHUDPanel)
 	{}
@@ -50,14 +50,14 @@ public:
 	void Construct(const FArguments& InArgs)
 	{
 		// clang-format off
-		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments().Content()
+		SNeutronFadingWidget::Construct(SNeutronFadingWidget::FArguments().Content()
 		[
 			InArgs._Content.Widget
 		]);
 		// clang-format on
 
 		UpdateCallback = InArgs._OnUpdate;
-		SetColorAndOpacity(TAttribute<FLinearColor>(this, &SNovaFadingWidget::GetLinearColor));
+		SetColorAndOpacity(TAttribute<FLinearColor>(this, &SNeutronFadingWidget::GetLinearColor));
 	}
 
 	void SetHUDIndex(int32 Index)
@@ -105,11 +105,11 @@ SNovaMainMenuFlight::SNovaMainMenuFlight()
 void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 {
 	// Data
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	MenuManager                 = InArgs._MenuManager;
+	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
+	MenuManager                    = InArgs._MenuManager;
 
 	// Parent constructor
-	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
+	SNeutronNavigationPanel::Construct(SNeutronNavigationPanel::FArguments().Menu(InArgs._Menu));
 
 	// Invisible widget
 	SAssignNew(InvisibleWidget, SBox);
@@ -161,8 +161,8 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		.AutoHeight()
 		[
 			SNew(SBackgroundBlur)
-			.BlurRadius(this, &SNovaTabPanel::GetBlurRadius)
-			.BlurStrength(this, &SNovaTabPanel::GetBlurStrength)
+			.BlurRadius(this, &SNeutronTabPanel::GetBlurRadius)
+			.BlurStrength(this, &SNeutronTabPanel::GetBlurStrength)
 			.bApplyAlphaToBlur(true)
 			.Padding(0)
 			[
@@ -231,8 +231,8 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SNovaNew(SNovaButton)
-			.Action(FNovaPlayerInput::MenuSecondary)
+			SNeutronNew(SNeutronButton)
+			.Action(FNeutronPlayerInput::MenuSecondary)
 			.Text(LOCTEXT("ToggleOrbiting", "Toggle orbiting"))
 			.OnClicked(FSimpleDelegate::CreateLambda([=]
 			{
@@ -257,8 +257,8 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SNovaAssignNew(DockButton, SNovaButton)
-			.Action(FNovaPlayerInput::MenuPrimary)
+			SNeutronAssignNew(DockButton, SNeutronButton)
+			.Action(FNeutronPlayerInput::MenuPrimary)
 			.Text(this, &SNovaMainMenuFlight::GetDockUndockText)
 			.HelpText(this, &SNovaMainMenuFlight::GetDockUndockHelp)
 			.OnClicked(this, &SNovaMainMenuFlight::OnDockUndock)
@@ -286,9 +286,9 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SNovaAssignNew(FastForwardButton, SNovaButton)
-			.Action(FNovaPlayerInput::MenuPrimary)
-			.Icon(FNovaStyleSet::GetBrush("Icon/SB_Time"))
+			SNeutronAssignNew(FastForwardButton, SNeutronButton)
+			.Action(FNeutronPlayerInput::MenuPrimary)
+			.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Time"))
 			.Text(LOCTEXT("FastForward", "Fast forward"))
 			.HelpText(this, &SNovaMainMenuFlight::GetFastFowardHelp)
 			.OnClicked(this, &SNovaMainMenuFlight::OnFastForward)
@@ -319,7 +319,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SNovaAssignNew(TerminateButton, SNovaButton)
+			SNeutronAssignNew(TerminateButton, SNeutronButton)
 			.Text(LOCTEXT("AbortFlightPlan", "Terminate flight plan"))
 			.HelpText(LOCTEXT("AbortTrajectoryHelp", "Terminate the current flight plan and stay on the current orbit"))
 			.OnClicked(FSimpleDelegate::CreateLambda([this]()
@@ -335,7 +335,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SNovaNew(SNovaButton)
+			SNeutronNew(SNeutronButton)
 			.Text(LOCTEXT("MineResource", "Mine resource"))
 			.HelpText(LOCTEXT("MineResourceHelp", "Mine the current asteroid for resources"))
 			.OnClicked(FSimpleDelegate::CreateLambda([this]()
@@ -353,7 +353,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					ModifiedSpacecraft.ModifyCargo(Asteroid.MineralResource, CargoMass);
 
 					PC->UpdateSpacecraft(ModifiedSpacecraft);
-					PC->Notify(LOCTEXT("ResourceMined", "Resource mined"), Asteroid.MineralResource->Name, ENovaNotificationType::Info);
+					PC->Notify(LOCTEXT("ResourceMined", "Resource mined"), Asteroid.MineralResource->Name, ENeutronNotificationType::Info);
 				}
 			}))
 			.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
@@ -367,7 +367,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		/*+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SNovaNew(SNovaButton)
+			SNeutronNew(SNeutronButton)
 			.Action(FNovaPlayerInput::MenuSecondary)
 			.Text(LOCTEXT("TestSilentRunning", "Silent running"))
 			.OnClicked(FSimpleDelegate::CreateLambda([&]()
@@ -381,7 +381,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SNovaNew(SNovaButton)
+			SNeutronNew(SNeutronButton)
 			.Text(LOCTEXT("TimeDilation", "Disable time dilation"))
 			.HelpText(LOCTEXT("TimeDilationHelp", "Set time dilation to zero"))
 			.OnClicked(FSimpleDelegate::CreateLambda([this]()
@@ -397,7 +397,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SNovaNew(SNovaButton)
+			SNeutronNew(SNeutronButton)
 			.Text(LOCTEXT("TimeDilation1", "Time dilation 1"))
 			.HelpText(LOCTEXT("TimeDilation1Help", "Set time dilation to 1 (1s = 1m)"))
 			.OnClicked(FSimpleDelegate::CreateLambda([this]()
@@ -414,7 +414,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SNovaNew(SNovaButton)
+			SNeutronNew(SNeutronButton)
 			.Text(LOCTEXT("TimeDilation2", "Time dilation 2"))
 			.HelpText(LOCTEXT("TimeDilation2Help", "Set time dilation to 2 (1s = 20m)"))
 			.OnClicked(FSimpleDelegate::CreateLambda([this]()
@@ -430,7 +430,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SNovaNew(SNovaButton)
+			SNeutronNew(SNeutronButton)
 			.Text(LOCTEXT("TestJoin", "Join random session"))
 			.HelpText(LOCTEXT("TestJoinHelp", "Join random session"))
 			.OnClicked(FSimpleDelegate::CreateLambda([&]()
@@ -472,7 +472,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 	HUDSwitcher->AddSlot()
 	.AutoWidth()
 	[
-		SNew(SNovaKeyLabel)
+		SNew(SNeutronKeyLabel)
 		.Key(this, &SNovaMainMenuFlight::GetPreviousItemKey)
 	];
 
@@ -482,13 +482,13 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		HUDSwitcher->AddSlot()
 		.AutoWidth()
 		[
-			SNew(SNovaButton) // No navigation
+			SNew(SNeutronButton) // No navigation
 			.Focusable(false)
 			.Theme("TabButton")
 			.Size("HUDButtonSize")
 			.HelpText(HUDData[HUDIndex].HelpText)
 			.OnClicked(this, &SNovaMainMenuFlight::SetHUDIndex, HUDIndex)
-			.UserSizeCallback(FNovaButtonUserSizeCallback::CreateLambda([=]
+			.UserSizeCallback(FNeutronButtonUserSizeCallback::CreateLambda([=]
 			{
 				return HUDAnimation.GetAlpha(HUDIndex);
 			}))
@@ -512,14 +512,14 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 	HUDSwitcher->AddSlot()
 	.AutoWidth()
 	[
-		SNew(SNovaKeyLabel)
+		SNew(SNeutronKeyLabel)
 		.Key(this, &SNovaMainMenuFlight::GetNextItemKey)
 	];
 
 	// clang-format on
 
 	// Initialize
-	HUDAnimation.Initialize(FNovaStyleSet::GetButtonTheme().AnimationDuration);
+	HUDAnimation.Initialize(FNeutronStyleSet::GetButtonTheme().AnimationDuration);
 }
 
 /*----------------------------------------------------
@@ -528,7 +528,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 
 void SNovaMainMenuFlight::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
 {
-	SNovaTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
+	SNeutronTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
 	// Reset the HUD at center
 	if (MenuManager.IsValid() && !MenuManager->IsIdle() && CurrentHUDIndex != DefaultHUDIndex)
@@ -541,22 +541,22 @@ void SNovaMainMenuFlight::Tick(const FGeometry& AllottedGeometry, const double C
 
 void SNovaMainMenuFlight::Show()
 {
-	SNovaTabPanel::Show();
+	SNeutronTabPanel::Show();
 
 	// Start the HUD at center
 	SetHUDIndex(DefaultHUDIndex);
 	HUDPanel->Reset();
-	HUDAnimation.Update(CurrentHUDIndex, FNovaStyleSet::GetButtonTheme().AnimationDuration);
+	HUDAnimation.Update(CurrentHUDIndex, FNeutronStyleSet::GetButtonTheme().AnimationDuration);
 }
 
 void SNovaMainMenuFlight::Hide()
 {
-	SNovaTabPanel::Hide();
+	SNeutronTabPanel::Hide();
 }
 
 void SNovaMainMenuFlight::UpdateGameObjects()
 {
-	PC                 = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
+	PC                 = MenuManager.IsValid() ? MenuManager->GetPC<ANovaPlayerController>() : nullptr;
 	SpacecraftPawn     = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
 	SpacecraftMovement = IsValid(SpacecraftPawn) ? SpacecraftPawn->GetSpacecraftMovement() : nullptr;
 	GameState          = IsValid(PC) ? PC->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
@@ -610,7 +610,7 @@ void SNovaMainMenuFlight::OnClicked(const FVector2D& Position)
 	SetHUDIndex(DefaultHUDIndex);
 }
 
-TSharedPtr<SNovaButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
+TSharedPtr<SNeutronButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 {
 	return HUDData[CurrentHUDIndex].DefaultFocus;
 }
@@ -818,7 +818,7 @@ void SNovaMainMenuFlight::SetHUDIndex(int32 Index)
 
 void SNovaMainMenuFlight::SetHUDIndexCallback(int32 Index)
 {
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
 
 	// Apply the new widget
 	TSharedPtr<SWidget>& NewWidget = HUDData[Index].DetailedWidget;
@@ -877,12 +877,12 @@ void SNovaMainMenuFlight::OnDockUndock()
 
 FKey SNovaMainMenuFlight::GetPreviousItemKey() const
 {
-	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuPrevious);
+	return MenuManager->GetFirstActionKey(FNeutronPlayerInput::MenuPrevious);
 }
 
 FKey SNovaMainMenuFlight::GetNextItemKey() const
 {
-	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuNext);
+	return MenuManager->GetFirstActionKey(FNeutronPlayerInput::MenuNext);
 }
 
 bool SNovaMainMenuFlight::IsInSpace() const

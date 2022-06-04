@@ -35,7 +35,7 @@ struct FNovaGameStateSave
 	GENERATED_BODY()
 
 	UPROPERTY()
-	const class UNovaArea* CurrentArea;
+	const class UNovaArea* CurrentArea = nullptr;
 
 	UPROPERTY()
 	FNovaTime Time;

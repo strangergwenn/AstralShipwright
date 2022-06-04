@@ -7,14 +7,14 @@
 
 #include "System/NovaSpacecraftPropellantSystem.h"
 
-#include "Actor/NovaMeshInterface.h"
-
 #include "Game/NovaGameState.h"
 #include "Player/NovaPlayerController.h"
-#include "System/NovaGameInstance.h"
-#include "System/NovaAssetManager.h"
 
 #include "Nova.h"
+
+#include "Neutron/Actor/NeutronActorTools.h"
+#include "Neutron/System/NeutronGameInstance.h"
+#include "Neutron/System/NeutronAssetManager.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -32,8 +32,8 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 
 	, WaitingAssetLoading(false)
 
-	, HighlightedCompartment(ENovaUIConstants::FadeDurationMinimal)
-	, OutlinedCompartment(ENovaUIConstants::FadeDurationMinimal)
+	, HighlightedCompartment(ENeutronUIConstants::FadeDurationMinimal)
+	, OutlinedCompartment(ENeutronUIConstants::FadeDurationMinimal)
 
 	, DisplayFilterType(ENovaAssemblyDisplayFilter::All)
 	, DisplayFilterIndex(INDEX_NONE)
@@ -63,7 +63,7 @@ void ANovaSpacecraftPawn::BeginPlay()
 	Super::BeginPlay();
 
 	// Defaults
-	EmptyCompartmentDescription = UNovaAssetManager::Get()->GetDefaultAsset<UNovaCompartmentDescription>();
+	EmptyCompartmentDescription = UNeutronAssetManager::Get()->GetDefaultAsset<UNovaCompartmentDescription>();
 }
 
 void ANovaSpacecraftPawn::Tick(float DeltaTime)
@@ -541,7 +541,7 @@ void ANovaSpacecraftPawn::StartAssemblyUpdate()
 	{
 		if (ImmediateMode)
 		{
-			UNovaAssetManager::Get()->LoadAssets(RequestedAssets);
+			UNeutronAssetManager::Get()->LoadAssets(RequestedAssets);
 
 			MoveCompartments();
 			BuildCompartments();
@@ -553,11 +553,11 @@ void ANovaSpacecraftPawn::StartAssemblyUpdate()
 			AssemblyState       = ENovaAssemblyState::LoadingDematerializing;
 			WaitingAssetLoading = true;
 
-			UNovaAssetManager::Get()->LoadAssets(RequestedAssets, FStreamableDelegate::CreateLambda(
-																	  [&]()
-																	  {
-																		  WaitingAssetLoading = false;
-																	  }));
+			UNeutronAssetManager::Get()->LoadAssets(RequestedAssets, FStreamableDelegate::CreateLambda(
+																		 [&]()
+																		 {
+																			 WaitingAssetLoading = false;
+																		 }));
 		}
 	}
 	else
@@ -750,7 +750,7 @@ void ANovaSpacecraftPawn::UpdateBounds()
 			[&](const UPrimitiveComponent* Prim)
 			{
 				if (Prim->IsRegistered() && (IsDocked() || Prim->IsAttachedTo(CompartmentComponents[DisplayFilterIndex])) &&
-					Prim->Implements<UNovaMeshInterface>() && !Cast<INovaMeshInterface>(Prim)->IsDematerializing())
+					Prim->Implements<UNeutronMeshInterface>() && !Cast<INeutronMeshInterface>(Prim)->IsDematerializing())
 				{
 					Bounds += Prim->Bounds.GetBox();
 				}
@@ -767,7 +767,8 @@ void ANovaSpacecraftPawn::UpdateBounds()
 		ForEachComponent<UPrimitiveComponent>(false,
 			[&](const UPrimitiveComponent* Prim)
 			{
-				if (Prim->IsRegistered() && Prim->Implements<UNovaMeshInterface>() && !Cast<INovaMeshInterface>(Prim)->IsDematerializing())
+				if (Prim->IsRegistered() && Prim->Implements<UNeutronMeshInterface>() &&
+					!Cast<INeutronMeshInterface>(Prim)->IsDematerializing())
 				{
 					Origins.Add(Prim->Bounds.Origin);
 				}
@@ -820,7 +821,7 @@ void ANovaSpacecraftPawn::BuildCompartments()
 	{
 		if (RequestedAssets.Find(Asset) == INDEX_NONE)
 		{
-			UNovaAssetManager::Get()->UnloadAsset(Asset);
+			UNeutronAssetManager::Get()->UnloadAsset(Asset);
 		}
 	}
 	CurrentAssets = RequestedAssets;

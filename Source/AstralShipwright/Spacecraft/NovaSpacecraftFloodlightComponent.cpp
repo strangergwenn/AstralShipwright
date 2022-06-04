@@ -1,8 +1,9 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaSpacecraftFloodlightComponent.h"
-#include "Actor/NovaMeshInterface.h"
 #include "Nova.h"
+
+#include "Neutron/Actor/NeutronMeshInterface.h"
 
 #include "DrawDebugHelpers.h"
 #include "Components/SpotLightComponent.h"
@@ -31,7 +32,7 @@ void UNovaSpacecraftFloodlightComponent::BeginPlay()
 	bool                      HasSocket;
 	int32                     CurrentSocketIndex = 0;
 	FAttachmentTransformRules AttachRules(EAttachmentRule::KeepWorld, false);
-	INovaMeshInterface*       ParentMesh = Cast<INovaMeshInterface>(GetAttachParent());
+	INeutronMeshInterface*    ParentMesh = Cast<INeutronMeshInterface>(GetAttachParent());
 	NCHECK(ParentMesh);
 
 	FLinearColor LightColor = FLinearColor(1.0f, 0.7f, 0.50f);

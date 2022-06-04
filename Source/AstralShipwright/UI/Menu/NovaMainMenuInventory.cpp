@@ -5,20 +5,20 @@
 #include "NovaMainMenu.h"
 
 #include "Game/NovaGameState.h"
+#include "Player/NovaPlayerController.h"
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/System/NovaSpacecraftPropellantSystem.h"
 
-#include "System/NovaAssetManager.h"
-#include "System/NovaGameInstance.h"
-#include "System/NovaMenuManager.h"
-#include "Player/NovaPlayerController.h"
-
-#include "UI/Component/NovaTradingPanel.h"
-#include "UI/Component/NovaTradableAssetItem.h"
-#include "UI/Widget/NovaFadingWidget.h"
-#include "UI/Widget/NovaModalPanel.h"
+#include "UI/Widgets/NovaTradingPanel.h"
+#include "UI/Widgets/NovaTradableAssetItem.h"
 
 #include "Nova.h"
+
+#include "Neutron/System/NeutronAssetManager.h"
+#include "Neutron/System/NeutronGameInstance.h"
+#include "Neutron/System/NeutronMenuManager.h"
+#include "Neutron/UI/Widgets/NeutronFadingWidget.h"
+#include "Neutron/UI/Widgets/NeutronModalPanel.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
 #include "Widgets/Layout/SScaleBox.h"
@@ -36,11 +36,11 @@ SNovaMainMenuInventory::SNovaMainMenuInventory()
 void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 {
 	// Data
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	MenuManager                 = InArgs._MenuManager;
+	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
+	MenuManager                    = InArgs._MenuManager;
 
 	// Parent constructor
-	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
+	SNeutronNavigationPanel::Construct(SNeutronNavigationPanel::FArguments().Menu(InArgs._Menu));
 
 	// Local data
 	TSharedPtr<SVerticalBox> MainLayoutBox;
@@ -61,7 +61,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 			// Propellant data
 			+ SHorizontalBox::Slot()
 			[
-				SNew(SNovaButtonLayout)
+				SNew(SNeutronButtonLayout)
 				.Size("HighButtonSize")
 				[
 					SNew(SVerticalBox)
@@ -80,9 +80,9 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 					.Padding(Theme.VerticalContentPadding)
 					.HAlign(HAlign_Left)
 					[
-						SNew(SNovaRichText)
+						SNew(SNeutronRichText)
 						.TextStyle(&Theme.MainFont)
-						.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenuInventory::GetPropellantText))
+						.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuInventory::GetPropellantText))
 					]
 
 					+ SVerticalBox::Slot()
@@ -101,9 +101,9 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 			+ SHorizontalBox::Slot()
 			.AutoWidth()
 			[
-				SNovaNew(SNovaButton)
+				SNeutronNew(SNeutronButton)
 				.HelpText(LOCTEXT("TradePropellantHelp", "Trade propellant with this station"))
-				.Action(FNovaPlayerInput::MenuPrimary)
+				.Action(FNeutronPlayerInput::MenuPrimary)
 				.ActionFocusable(false)
 				.Size("HighButtonSize")
 				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
@@ -186,7 +186,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 			CargoLineBox->AddSlot()
 			.AutoWidth()
 			[
-				SNovaNew(SNovaButton)
+				SNeutronNew(SNeutronButton)
 				.Size("InventoryButtonSize")
 				.HelpText(this, &SNovaMainMenuInventory::GetSlotHelpText)
 				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
@@ -210,8 +210,8 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 						SNew(SScaleBox)
 						.Stretch(EStretch::ScaleToFill)
 						[
-							SNew(SNovaImage)
-							.Image(FNovaImageGetter::CreateLambda([=]() -> const FSlateBrush*
+							SNew(SNeutronImage)
+							.Image(FNeutronImageGetter::CreateLambda([=]() -> const FSlateBrush*
 							{
 								if (IsValidCompartment())
 								{
@@ -241,8 +241,8 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 							.BorderImage(&Theme.MainMenuDarkBackground)
 							.Padding(Theme.ContentPadding)
 							[
-								SNew(SNovaText)
-								.Text(FNovaTextGetter::CreateLambda([=]() -> FText
+								SNew(SNeutronText)
+								.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
 								{
 									if (IsValidCompartment())
 									{
@@ -275,8 +275,8 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 							.BorderImage(&Theme.MainMenuDarkBackground)
 							.Padding(Theme.ContentPadding)
 							[
-								SNew(SNovaRichText)
-								.Text(FNovaTextGetter::CreateLambda([=]() -> FText
+								SNew(SNeutronRichText)
+								.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
 								{
 									if (IsValidCompartment())
 									{
@@ -308,7 +308,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 
 	// Build the resource list panel
 	// clang-format off
-	SAssignNew(ResourceListView, SNovaListView<const UNovaResource*>)
+	SAssignNew(ResourceListView, SNeutronListView<const UNovaResource*>)
 	.Panel(GenericModalPanel.Get())
 	.ItemsSource(&ResourceList)
 	.OnGenerateItem(this, &SNovaMainMenuInventory::GenerateResourceItem)
@@ -332,7 +332,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 
 void SNovaMainMenuInventory::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
 {
-	SNovaTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
+	SNeutronTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
 	if (Spacecraft && GameState)
 	{
@@ -344,17 +344,17 @@ void SNovaMainMenuInventory::Tick(const FGeometry& AllottedGeometry, const doubl
 
 void SNovaMainMenuInventory::Show()
 {
-	SNovaTabPanel::Show();
+	SNeutronTabPanel::Show();
 }
 
 void SNovaMainMenuInventory::Hide()
 {
-	SNovaTabPanel::Hide();
+	SNeutronTabPanel::Hide();
 }
 
 void SNovaMainMenuInventory::UpdateGameObjects()
 {
-	PC             = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
+	PC             = MenuManager.IsValid() ? MenuManager->GetPC<ANovaPlayerController>() : nullptr;
 	GameState      = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
 	Spacecraft     = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
 	SpacecraftPawn = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;

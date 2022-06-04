@@ -10,11 +10,13 @@ public class AstralShipwright : ModuleRules
         PublicIncludePaths.Add("AstralShipwright");
         PrivatePCHHeaderFile = "Nova.h";
 
-        PrivateDependencyModuleNames.AddRange(new string[] {
+        PublicDependencyModuleNames.AddRange(new string[] {
+
+            "Neutron",
+
             "Core",
             "CoreUObject",
             "Engine",
-            "EngineSettings",
             "InputCore",
             "AppFramework",
 

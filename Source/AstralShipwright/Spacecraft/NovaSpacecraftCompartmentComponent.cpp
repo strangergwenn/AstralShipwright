@@ -3,13 +3,13 @@
 #include "NovaSpacecraftCompartmentComponent.h"
 #include "NovaSpacecraftPawn.h"
 
-#include "Actor/NovaMeshInterface.h"
-#include "Actor/NovaStaticMeshComponent.h"
-#include "Actor/NovaSkeletalMeshComponent.h"
-#include "Actor/NovaDecalComponent.h"
-
-#include "UI/NovaUI.h"
 #include "Nova.h"
+
+#include "Neutron/Actor/NeutronMeshInterface.h"
+#include "Neutron/Actor/NeutronStaticMeshComponent.h"
+#include "Neutron/Actor/NeutronSkeletalMeshComponent.h"
+#include "Neutron/Actor/NeutronDecalComponent.h"
+#include "Neutron/UI/NeutronUI.h"
 
 #include "Components/PrimitiveComponent.h"
 #include "Components/DecalComponent.h"
@@ -49,7 +49,7 @@ void UNovaSpacecraftCompartmentComponent::TickComponent(float DeltaTime, ELevelT
 	{
 		CurrentAnimationTime += DeltaTime;
 		float   AnimationAlpha = FMath::Clamp(CurrentAnimationTime / AnimationDuration, 0.0f, 1.0f);
-		FVector Location       = FMath::InterpEaseInOut(LastLocation, RequestedLocation, AnimationAlpha, ENovaUIConstants::EaseStandard);
+		FVector Location       = FMath::InterpEaseInOut(LastLocation, RequestedLocation, AnimationAlpha, ENeutronUIConstants::EaseStandard);
 		SetRelativeLocation(Location);
 	}
 }
@@ -271,15 +271,15 @@ void UNovaSpacecraftCompartmentComponent::BuildElement(
 	{
 		if (Asset->IsA(USkeletalMesh::StaticClass()))
 		{
-			ComponentClass = UNovaSkeletalMeshComponent::StaticClass();
+			ComponentClass = UNeutronSkeletalMeshComponent::StaticClass();
 		}
 		else if (Asset->IsA(UStaticMesh::StaticClass()))
 		{
-			ComponentClass = UNovaStaticMeshComponent::StaticClass();
+			ComponentClass = UNeutronStaticMeshComponent::StaticClass();
 		}
 		else if (Asset->IsA(UMaterialInterface::StaticClass()))
 		{
-			ComponentClass = UNovaDecalComponent::StaticClass();
+			ComponentClass = UNeutronDecalComponent::StaticClass();
 		}
 	}
 
@@ -330,7 +330,7 @@ void UNovaSpacecraftCompartmentComponent::BuildElement(
 		// Create the element mesh
 		if (NeedConstructing)
 		{
-			Element.Mesh = Cast<INovaMeshInterface>(NewObject<UPrimitiveComponent>(GetOwner(), ComponentClass));
+			Element.Mesh = Cast<INeutronMeshInterface>(NewObject<UPrimitiveComponent>(GetOwner(), ComponentClass));
 			NCHECK(Element.Mesh);
 
 			if (AdditionalComponent.ComponentClass.Get())
@@ -346,15 +346,15 @@ void UNovaSpacecraftCompartmentComponent::BuildElement(
 			NCHECK(Element.Mesh);
 			if (Asset->IsA(USkeletalMesh::StaticClass()))
 			{
-				Cast<UNovaSkeletalMeshComponent>(Element.Mesh)->SetSkeletalMesh(Cast<USkeletalMesh>(Asset.Get()));
+				Cast<UNeutronSkeletalMeshComponent>(Element.Mesh)->SetSkeletalMesh(Cast<USkeletalMesh>(Asset.Get()));
 			}
 			else if (Asset->IsA(UStaticMesh::StaticClass()))
 			{
-				Cast<UNovaStaticMeshComponent>(Element.Mesh)->SetStaticMesh(Cast<UStaticMesh>(Asset.Get()));
+				Cast<UNeutronStaticMeshComponent>(Element.Mesh)->SetStaticMesh(Cast<UStaticMesh>(Asset.Get()));
 			}
 			else if (Asset->IsA(UMaterialInterface::StaticClass()))
 			{
-				Cast<UNovaDecalComponent>(Element.Mesh)->SetMaterial(0, Cast<UMaterialInterface>(Asset.Get()));
+				Cast<UNeutronDecalComponent>(Element.Mesh)->SetMaterial(0, Cast<UMaterialInterface>(Asset.Get()));
 			}
 		}
 
@@ -436,7 +436,7 @@ void UNovaSpacecraftCompartmentComponent::AttachElementToSocket(
 {
 	if (Element.Mesh && AttachElement.Mesh)
 	{
-		UNovaStaticMeshComponent* StaticAttachMesh = Cast<UNovaStaticMeshComponent>(AttachElement.Mesh);
+		UNeutronStaticMeshComponent* StaticAttachMesh = Cast<UNeutronStaticMeshComponent>(AttachElement.Mesh);
 		if (StaticAttachMesh)
 		{
 			Cast<UPrimitiveComponent>(Element.Mesh)->SetWorldLocation(StaticAttachMesh->GetSocketLocation(SocketName));
@@ -447,7 +447,7 @@ void UNovaSpacecraftCompartmentComponent::AttachElementToSocket(
 
 void UNovaSpacecraftCompartmentComponent::SetElementAnimation(FNovaAssemblyElement& Element, TSoftObjectPtr<UAnimationAsset> Animation)
 {
-	UNovaSkeletalMeshComponent* SkeletalComponent = Cast<UNovaSkeletalMeshComponent>(Element.Mesh);
+	UNeutronSkeletalMeshComponent* SkeletalComponent = Cast<UNeutronSkeletalMeshComponent>(Element.Mesh);
 	if (IsValid(SkeletalComponent))
 	{
 		UAnimSingleNodeInstance* AnimInstance = SkeletalComponent->GetSingleNodeInstance();
@@ -491,7 +491,7 @@ void UNovaSpacecraftCompartmentComponent::RequestParameter(FNovaAssemblyElement&
 
 FVector UNovaSpacecraftCompartmentComponent::GetElementLength(const FNovaAssemblyElement& Element) const
 {
-	UNovaStaticMeshComponent* StaticMeshComponent = Cast<UNovaStaticMeshComponent>(Element.Mesh);
+	UNeutronStaticMeshComponent* StaticMeshComponent = Cast<UNeutronStaticMeshComponent>(Element.Mesh);
 	if (StaticMeshComponent)
 	{
 		FVector Min, Max;

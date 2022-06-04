@@ -7,8 +7,9 @@
 
 #include "Spacecraft/NovaSpacecraft.h"
 #include "Spacecraft/System/NovaSpacecraftPropellantSystem.h"
-#include "System/NovaAssetManager.h"
 #include "Nova.h"
+
+#include "Neutron/System/NeutronAssetManager.h"
 
 #include "EngineUtils.h"
 #include "Net/UnrealNetwork.h"
@@ -142,7 +143,7 @@ void UNovaOrbitalSimulationComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Areas = UNovaAssetManager::Get()->GetAssets<UNovaArea>();
+	Areas = UNeutronAssetManager::Get()->GetAssets<UNovaArea>();
 }
 
 void UNovaOrbitalSimulationComponent::UpdateSimulation()

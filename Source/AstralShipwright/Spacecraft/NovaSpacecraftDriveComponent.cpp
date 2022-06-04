@@ -3,10 +3,11 @@
 #include "NovaSpacecraftDriveComponent.h"
 #include "NovaSpacecraftMovementComponent.h"
 
-#include "Actor/NovaMeshInterface.h"
 #include "Game/NovaOrbitalSimulationComponent.h"
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Nova.h"
+
+#include "Neutron/Actor/NeutronMeshInterface.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
 
@@ -64,7 +65,7 @@ void UNovaSpacecraftDriveComponent::TickComponent(float DeltaTime, ELevelTick Ti
 	{
 		const UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(this);
 		const ANovaSpacecraftPawn*             SpacecraftPawn    = GetOwner<ANovaSpacecraftPawn>();
-		INovaMeshInterface*                    ParentMesh        = Cast<INovaMeshInterface>(GetAttachParent());
+		INeutronMeshInterface*                 ParentMesh        = Cast<INeutronMeshInterface>(GetAttachParent());
 		NCHECK(ParentMesh);
 
 		// Get the intensity

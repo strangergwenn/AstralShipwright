@@ -10,22 +10,22 @@
 #include "NovaMainMenuAssembly.h"
 #include "NovaMainMenuSettings.h"
 
-#include "UI/Widget/NovaButton.h"
-#include "UI/Widget/NovaFadingWidget.h"
-#include "UI/Widget/NovaKeyLabel.h"
-#include "UI/Widget/NovaTabView.h"
-#include "UI/Widget/NovaWindowManipulator.h"
-#include "UI/NovaUI.h"
+#include "Game/NovaGameState.h"
+#include "Player/NovaPlayerController.h"
 
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
 
-#include "Game/NovaGameState.h"
-#include "Player/NovaPlayerController.h"
-#include "System/NovaMenuManager.h"
-#include "System/NovaSaveManager.h"
-
 #include "Nova.h"
+
+#include "Neutron/System/NeutronMenuManager.h"
+#include "Neutron/System/NeutronSaveManager.h"
+#include "Neutron/UI/Widgets/NeutronButton.h"
+#include "Neutron/UI/Widgets/NeutronFadingWidget.h"
+#include "Neutron/UI/Widgets/NeutronKeyLabel.h"
+#include "Neutron/UI/Widgets/NeutronTabView.h"
+#include "Neutron/UI/Widgets/NeutronWindowManipulator.h"
+#include "Neutron/UI/NeutronUI.h"
 
 #define LOCTEXT_NAMESPACE "SNovaMainMenu"
 
@@ -36,27 +36,27 @@
 void SNovaMainMenu::Construct(const FArguments& InArgs)
 {
 	// Data
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
 	InArgs._MenuManager->SetInterfaceColor(FLinearColor::White, Theme.PositiveColor);
 
 	// Parent constructor
-	SNovaMenu::Construct(SNovaMenu::FArguments().MenuManager(InArgs._MenuManager));
+	SNeutronMenu::Construct(SNeutronMenu::FArguments().MenuManager(InArgs._MenuManager));
 
 	// clang-format off
 	MainContainer->SetContent(
-		SAssignNew(TabView, SNovaTabView)
+		SAssignNew(TabView, SNeutronTabView)
 
 		// Navigate left
 		.LeftNavigation()
 		[
-			SNew(SNovaKeyLabel)
+			SNew(SNeutronKeyLabel)
 			.Key(this, &SNovaMainMenu::GetPreviousTabKey)
 		]
 
 		// Navigate right
 		.RightNavigation()
 		[
-			SNew(SNovaKeyLabel)
+			SNew(SNeutronKeyLabel)
 			.Key(this, &SNovaMainMenu::GetNextTabKey)
 		]
 
@@ -68,10 +68,10 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 			+ SHorizontalBox::Slot()
 			.AutoWidth()
 			[
-				SNovaNew(SNovaButton)
+				SNeutronNew(SNeutronButton)
 				.Theme("TabButton")
 				.Size("SmallButtonSize")
-				.Icon(FNovaStyleSet::GetBrush("Icon/SB_Maximize"))
+				.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Maximize"))
 				.HelpText(LOCTEXT("MaximizeRestore", "Maximize or restore the window"))
 				.OnClicked(this, &SNovaMainMenu::OnMaximizeRestore)
 				.Visibility(this, &SNovaMainMenu::GetMaximizeVisibility)
@@ -80,10 +80,10 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 			+ SHorizontalBox::Slot()
 			.AutoWidth()
 			[
-				SNovaNew(SNovaButton)
+				SNeutronNew(SNeutronButton)
 				.Theme("TabButton")
 				.Size("TabButtonSize")
-				.Action(FNovaPlayerInput::MenuToggle)
+				.Action(FNeutronPlayerInput::MenuToggle)
 				.Text(this, &SNovaMainMenu::GetCloseText)
 				.HelpText(this, &SNovaMainMenu::GetCloseHelpText)
 				.OnClicked(this, &SNovaMainMenu::OnClose)
@@ -102,9 +102,9 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 				+ SHorizontalBox::Slot()
 				.HAlign(HAlign_Left)
 				[
-					SAssignNew(Tooltip, SNovaRichText)
+					SAssignNew(Tooltip, SNeutronRichText)
 					.TextStyle(&Theme.MainFont)
-					.Text(FNovaTextGetter::CreateSP(this, &SNovaMainMenu::GetTooltipText))
+					.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenu::GetTooltipText))
 				]
 		
 				+ SHorizontalBox::Slot()
@@ -121,16 +121,16 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		// Manipulator
 		.BackgroundWidget()
 		[
-			SNew(SNovaMenuManipulator)
+			SNew(SNeutronMenuManipulator)
 			.Image(&Theme.MainMenuManipulator)
 			.ColorAndOpacity(this, &SNovaMainMenu::GetManipulatorColor)
 		]
 
 		// Home menu
-		+ SNovaTabView::Slot()
+		+ SNeutronTabView::Slot()
 		.Header(LOCTEXT("HomeMenuTitle", "Home"))
 		.HeaderHelp(LOCTEXT("MainMenuTitleHelp", "Start playing"))
-		.Icon(FNovaStyleSet::GetBrush("Icon/SB_Home"))
+		.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Home"))
 		.Visible(this, &SNovaMainMenu::IsHomeMenuVisible)
 		[
 			SAssignNew(HomeMenu, SNovaMainMenuHome)
@@ -139,10 +139,10 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		]
 
 		// Game menu
-		+ SNovaTabView::Slot()
+		+ SNeutronTabView::Slot()
 		.Header(LOCTEXT("GameMenuTitle", "Game"))
 		.HeaderHelp(LOCTEXT("GameMenuTitleHelp", "Play with your friends"))
-		.Icon(FNovaStyleSet::GetBrush("Icon/SB_Game"))
+		.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Game"))
 		//.Visible(this, &SNovaMainMenu::AreGameMenusVisible)
 		.Visible(false)
 		.Blur(true)
@@ -153,10 +153,10 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		]
 
 		// Flight menu
-		+ SNovaTabView::Slot()
+		+ SNeutronTabView::Slot()
 		.Header(LOCTEXT("FlightMenuTitle", "Flight"))
 		.HeaderHelp(LOCTEXT("FlightMenuTitleHelp", "Control your ship"))
-		.Icon(FNovaStyleSet::GetBrush("Icon/SB_Flight"))
+		.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Flight"))
 		.Visible(this, &SNovaMainMenu::AreGameMenusVisible)
 		.Blur(false)
 		[
@@ -166,12 +166,12 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		]
 
 		// Navigation menu
-		+ SNovaTabView::Slot()
+		+ SNeutronTabView::Slot()
 		.Header(LOCTEXT("NavigationMenuTitle", "Navigation"))
 		.HeaderHelp(LOCTEXT("NavigationMenuTitleHelp", "Plot trajectories"))
-		.Icon(FNovaStyleSet::GetBrush("Icon/SB_Navigation"))
+		.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Navigation"))
 		.Visible(this, &SNovaMainMenu::AreGameMenusVisible)
-		.Background(FNovaStyleSet::GetBrush("Map/SB_Background"))
+		.Background(FNeutronStyleSet::GetBrush("Map/SB_Background"))
 		.Blur(true)
 		[
 			SAssignNew(NavigationMenu, SNovaMainMenuNavigation)
@@ -180,10 +180,10 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		]
 
 		// Inventory menu
-		+ SNovaTabView::Slot()
+		+ SNeutronTabView::Slot()
 		.Header(LOCTEXT("InventoryMenuTitle", "Inventory"))
 		.HeaderHelp(LOCTEXT("InventoryMenuTitleHelp", "Manage your spacecraft's propellant and cargo"))
-		.Icon(FNovaStyleSet::GetBrush("Icon/SB_Inventory"))
+		.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Inventory"))
 		.Blur(true)
 		.Visible(this, &SNovaMainMenu::AreGameMenusVisible)
 		[
@@ -193,10 +193,10 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		]
 
 		// Assembly menu
-		+ SNovaTabView::Slot()
+		+ SNeutronTabView::Slot()
 		.Header(LOCTEXT("AssemblyMenuTitle", "Assembly"))
 		.HeaderHelp(LOCTEXT("AssemblyMenuTitleHelp", "Edit spacecraft assembly"))
-		.Icon(FNovaStyleSet::GetBrush("Icon/SB_Assembly"))
+		.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Assembly"))
 		.Visible(this, &SNovaMainMenu::IsAssemblyMenuVisible)
 		.Blur(false)
 		[
@@ -206,10 +206,10 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		]
 
 		// Settings
-		+ SNovaTabView::Slot()
+		+ SNeutronTabView::Slot()
 		.Header(LOCTEXT("SettingsMenuTitle", "Settings"))
 		.HeaderHelp(LOCTEXT("SettingsMenuTitleHelp", "Setup the game"))
-		.Icon(FNovaStyleSet::GetBrush("Icon/SB_Settings"))
+		.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Settings"))
 		.Blur(true)
 		[
 			SAssignNew(SettingsMenu, SNovaMainMenuSettings)
@@ -248,7 +248,7 @@ void SNovaMainMenu::Show()
 	{
 		ENovaMainMenuType DesiredMenu = IsOnMenu ? ENovaMainMenuType::Home : ENovaMainMenuType::Flight;
 
-		const ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
+		const ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC<ANovaPlayerController>()->GetSpacecraftPawn();
 		if (IsValid(SpacecraftPawn) && SpacecraftPawn->GetCompartmentCount() == 0)
 		{
 			DesiredMenu = ENovaMainMenuType::Assembly;
@@ -284,7 +284,7 @@ void SNovaMainMenu::HideTooltip(SWidget* TargetWidget)
 	}
 
 	// If the current focus is valid, and different, show it again
-	TSharedPtr<SNovaButton> FocusButton = GetFocusedButton();
+	TSharedPtr<SNeutronButton> FocusButton = GetFocusedButton();
 	if (FocusButton.IsValid() && FocusButton.Get() != TargetWidget)
 	{
 		ShowTooltip(FocusButton.Get(), FocusButton->GetHelpText());
@@ -298,7 +298,7 @@ bool SNovaMainMenu::IsOnAssemblyMenu() const
 
 FReply SNovaMainMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent)
 {
-	FReply Result = SNovaMenu::OnKeyDown(MyGeometry, KeyEvent);
+	FReply Result = SNeutronMenu::OnKeyDown(MyGeometry, KeyEvent);
 
 	if (!Result.IsEventHandled())
 	{
@@ -307,12 +307,12 @@ FReply SNovaMainMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& Ke
 		// Move between tabs
 		if (CurrentNavigationPanel && !CurrentNavigationPanel->IsModal())
 		{
-			if (IsActionKey(FNovaPlayerInput::MenuPreviousTab, Key))
+			if (IsActionKey(FNeutronPlayerInput::MenuPreviousTab, Key))
 			{
 				TabView->ShowPreviousTab();
 				Result = FReply::Handled();
 			}
-			else if (IsActionKey(FNovaPlayerInput::MenuNextTab, Key))
+			else if (IsActionKey(FNeutronPlayerInput::MenuNextTab, Key))
 			{
 				TabView->ShowNextTab();
 				Result = FReply::Handled();
@@ -336,7 +336,7 @@ bool SNovaMainMenu::IsAssemblyMenuVisible() const
 {
 	if (AreGameMenusVisible() && IsValid(MenuManager->GetPC()))
 	{
-		const ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
+		const ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC<ANovaPlayerController>()->GetSpacecraftPawn();
 		if (IsValid(SpacecraftPawn))
 		{
 			return SpacecraftPawn->IsDocked();
@@ -363,7 +363,7 @@ EVisibility SNovaMainMenu::GetMaximizeVisibility() const
 
 FText SNovaMainMenu::GetCloseText() const
 {
-	ANovaPlayerController* PC = MenuManager->GetPC();
+	ANovaPlayerController* PC = MenuManager->GetPC<ANovaPlayerController>();
 
 	if (PC && PC->IsOnMainMenu())
 	{
@@ -381,7 +381,7 @@ FText SNovaMainMenu::GetCloseText() const
 
 FText SNovaMainMenu::GetCloseHelpText() const
 {
-	ANovaPlayerController* PC = MenuManager->GetPC();
+	ANovaPlayerController* PC = MenuManager->GetPC<ANovaPlayerController>();
 
 	if (PC && PC->IsOnMainMenu())
 	{
@@ -409,7 +409,7 @@ FText SNovaMainMenu::GetInfoText() const
 
 	if (IsValid(GameState) && IsValid(MenuManager->GetPC()))
 	{
-		FNovaCredits PlayerCredits = MenuManager->GetPC()->GetAccountBalance();
+		FNovaCredits PlayerCredits = MenuManager->GetPC<ANovaPlayerController>()->GetAccountBalance();
 
 		return FText::FormatNamed(LOCTEXT("InfoText", "{date} - {credits} in account"), TEXT("date"),
 			::GetDateText(GameState->GetCurrentTime()), TEXT("credits"), GetPriceText(PlayerCredits));
@@ -425,12 +425,12 @@ FSlateColor SNovaMainMenu::GetManipulatorColor() const
 
 FKey SNovaMainMenu::GetPreviousTabKey() const
 {
-	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuPreviousTab);
+	return MenuManager->GetFirstActionKey(FNeutronPlayerInput::MenuPreviousTab);
 }
 
 FKey SNovaMainMenu::GetNextTabKey() const
 {
-	return MenuManager->GetFirstActionKey(FNovaPlayerInput::MenuNextTab);
+	return MenuManager->GetFirstActionKey(FNeutronPlayerInput::MenuNextTab);
 }
 
 /*----------------------------------------------------
@@ -450,7 +450,7 @@ void SNovaMainMenu::OnClose()
 	}
 	else if (MenuManager->GetPC()->IsMenuOnly())
 	{
-		const ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC()->GetSpacecraftPawn();
+		const ANovaSpacecraftPawn* SpacecraftPawn = MenuManager->GetPC<ANovaPlayerController>()->GetSpacecraftPawn();
 
 		// Ship is docked, we will save and quit
 		if (IsValid(SpacecraftPawn) && SpacecraftPawn->IsDocked())
@@ -466,7 +466,7 @@ void SNovaMainMenu::OnClose()
 		// Ship is not docked, some progress will be lost
 		else
 		{
-			double MinutesSinceLastSave = UNovaSaveManager::Get()->GetMinutesSinceLastSave();
+			double MinutesSinceLastSave = UNeutronSaveManager::Get()->GetMinutesSinceLastSave();
 
 			ModalPanel->Show(LOCTEXT("ConfirmQuitWithoutSaving", "Quit without saving ?"),
 				FText::FormatNamed(LOCTEXT("ConfirmQuitWithoutSavingHelp",

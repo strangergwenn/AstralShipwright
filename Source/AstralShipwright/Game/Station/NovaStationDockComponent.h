@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actor/NovaStaticMeshComponent.h"
+#include "Neutron/Actor/NeutronStaticMeshComponent.h"
 
 #include "NovaStationDockComponent.generated.h"
 
 /** Station dock component that tracks spacecraft hatches as part of a station ring */
 UCLASS(ClassGroup = (Nova), meta = (BlueprintSpawnableComponent))
-class UNovaStationDockComponent : public UNovaStaticMeshComponent
+class UNovaStationDockComponent : public UNeutronStaticMeshComponent
 {
 	GENERATED_BODY()
 

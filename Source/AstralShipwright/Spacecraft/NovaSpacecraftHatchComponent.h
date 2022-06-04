@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "NovaSpacecraftTypes.h"
-#include "Actor/NovaActorTools.h"
-#include "Actor/NovaSkeletalMeshComponent.h"
+
+#include "Neutron/Actor/NeutronActorTools.h"
+#include "Neutron/Actor/NeutronSkeletalMeshComponent.h"
 
 #include "NovaSpacecraftHatchComponent.generated.h"
 
@@ -38,7 +39,7 @@ protected:
 	----------------------------------------------------*/
 
 	UPROPERTY()
-	class UNovaSkeletalMeshComponent* HatchMesh;
+	class UNeutronSkeletalMeshComponent* HatchMesh;
 
 	bool CurrentDockingState;
 };

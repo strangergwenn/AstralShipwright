@@ -3,20 +3,17 @@
 #include "NovaMainMenuSettings.h"
 #include "NovaMainMenu.h"
 
-#include "Game/Settings/NovaGameUserSettings.h"
-
-#include "Player/NovaGameViewportClient.h"
 #include "Player/NovaPlayerController.h"
-
-#include "UI/Widget/NovaButton.h"
-#include "UI/Widget/NovaSlider.h"
-#include "UI/Widget/NovaKeyBinding.h"
-#include "UI/Widget/NovaModalPanel.h"
-
-#include "System/NovaMenuManager.h"
-#include "System/NovaSoundManager.h"
-
 #include "Nova.h"
+
+#include "Neutron/Player/NeutronGameViewportClient.h"
+#include "Neutron/Settings/NeutronGameUserSettings.h"
+#include "Neutron/System/NeutronMenuManager.h"
+#include "Neutron/System/NeutronSoundManager.h"
+#include "Neutron/UI/Widgets/NeutronButton.h"
+#include "Neutron/UI/Widgets/NeutronSlider.h"
+#include "Neutron/UI/Widgets/NeutronKeyBinding.h"
+#include "Neutron/UI/Widgets/NeutronModalPanel.h"
 
 #include "GameFramework/InputSettings.h"
 #include "Engine/Engine.h"
@@ -30,11 +27,11 @@
 void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 {
 	// Data
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	MenuManager                 = InArgs._MenuManager;
+	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
+	MenuManager                    = InArgs._MenuManager;
 
 	// Parent constructor
-	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
+	SNeutronNavigationPanel::Construct(SNeutronNavigationPanel::FArguments().Menu(InArgs._Menu));
 
 	// clang-format off
 	ChildSlot
@@ -76,7 +73,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNovaAssignNew(CultureListView, SNovaModalListView<TSharedPtr<FString>>)
+					SNeutronAssignNew(CultureListView, SNeutronModalListView<TSharedPtr<FString>>)
 					.Panel(this)
 					.TitleText(LOCTEXT("GameLanguageTitle", "Game language"))
 					.HelpText(LOCTEXT("GameLanguageHelp", "Choose a new language to use in the game"))
@@ -97,7 +94,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNovaAssignNew(CrashReportButton, SNovaButton)
+					SNeutronAssignNew(CrashReportButton, SNeutronButton)
 					.Toggle(true)
 					.Text(LOCTEXT("EnableCrashReport", "Enable crash reports"))
 					.HelpText(LOCTEXT("EnableCrashReportHelp", "Send anonymous debugging information to Deimos Games when the game crashes"))
@@ -142,10 +139,10 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNovaNew(SNovaButton)
+					SNeutronNew(SNeutronButton)
 					.Text(LOCTEXT("ApplyResolution", "Apply video settings"))
 					.HelpText(LOCTEXT("ApplyResolutionHelp", "Apply the currently selected resolution & screen mode"))
-					.Action(FNovaPlayerInput::MenuPrimary)
+					.Action(FNeutronPlayerInput::MenuPrimary)
 					.ActionFocusable(false)
 					.OnClicked(this, &SNovaMainMenuSettings::OnApplyVideoSettings)
 					.Enabled(this, &SNovaMainMenuSettings::IsApplyVideoSettingsEnabled)
@@ -163,7 +160,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNovaAssignNew(ResolutionListView, SNovaModalListView<TSharedPtr<FScreenResolutionRHI>>)
+					SNeutronAssignNew(ResolutionListView, SNeutronModalListView<TSharedPtr<FScreenResolutionRHI>>)
 					.TitleText(LOCTEXT("ChooseResolutionTitle", "Video resolution"))
 					.HelpText(LOCTEXT("ChooseResolution", "Choose a new video resolution"))
 					.Panel(this)
@@ -179,7 +176,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNovaAssignNew(FullscreenButton, SNovaButton)
+					SNeutronAssignNew(FullscreenButton, SNeutronButton)
 					.Toggle(true)
 					.Text(LOCTEXT("Fullscreen", "Fullscreen"))
 					.HelpText(LOCTEXT("FullscreenHelp", "Set the game to fullscreen or windowed"))
@@ -189,7 +186,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNovaAssignNew(VSyncButton, SNovaButton)
+					SNeutronAssignNew(VSyncButton, SNeutronButton)
 					.Toggle(true)
 					.Text(LOCTEXT("VerticalSync", "V-Sync"))
 					.HelpText(LOCTEXT("VerticalSyncHelp", "Enable V-Sync to prevent tearing artifacts"))
@@ -199,7 +196,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 				/*+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					SNovaAssignNew(HDRButton, SNovaButton)
+					SNeutronAssignNew(HDRButton, SNeutronButton)
 					.Toggle(true)
 					.Text(LOCTEXT("HDR", "HDR"))
 					.HelpText(LOCTEXT("HDRHelp", "Enable HDR output if your system is compatible, requires fullscreen"))
@@ -250,48 +247,48 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		->Axis(FNovaPlayerInput::MoveY, 1.0f)
 		->Default(EKeys::D)
 	));*/
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuPrimary", "Primary action")))
-		->Action(FNovaPlayerInput::MenuPrimary)
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("MenuPrimary", "Primary action")))
+		->Action(FNeutronPlayerInput::MenuPrimary)
 		->Default(EKeys::E)
 	));
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuSecondary", "Secondary action")))
-		->Action(FNovaPlayerInput::MenuSecondary)
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("MenuSecondary", "Secondary action")))
+		->Action(FNeutronPlayerInput::MenuSecondary)
 		->Default(EKeys::Q)
 	));
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuAltPrimary", "Primary option")))
-		->Action(FNovaPlayerInput::MenuAltPrimary)
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("MenuAltPrimary", "Primary option")))
+		->Action(FNeutronPlayerInput::MenuAltPrimary)
 		->Default(EKeys::RightMouseButton)
 	));
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuAltSecondary", "Secondary option")))
-		->Action(FNovaPlayerInput::MenuAltSecondary)
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("MenuAltSecondary", "Secondary option")))
+		->Action(FNeutronPlayerInput::MenuAltSecondary)
 		->Default(EKeys::W)
 	));
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuToggle", "Exit menu / Exit game")))
-		->Action(FNovaPlayerInput::MenuToggle)
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("MenuToggle", "Exit menu / Exit game")))
+		->Action(FNeutronPlayerInput::MenuToggle)
 		->Default(EKeys::Escape)
 	));
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuNextTab", "Next tab")))
-		->Action(FNovaPlayerInput::MenuNextTab)
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("MenuNextTab", "Next tab")))
+		->Action(FNeutronPlayerInput::MenuNextTab)
 		->Default(EKeys::PageDown)
 	));
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuPreviousTab", "Previous tab")))
-		->Action(FNovaPlayerInput::MenuPreviousTab)
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("MenuPreviousTab", "Previous tab")))
+		->Action(FNeutronPlayerInput::MenuPreviousTab)
 		->Default(EKeys::PageUp)
 	));
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuNext", "Next item")))
-		->Action(FNovaPlayerInput::MenuNext)
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("MenuNext", "Next item")))
+		->Action(FNeutronPlayerInput::MenuNext)
 		->Default(EKeys::D)
 	));
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuPrevious", "Previous item")))
-		->Action(FNovaPlayerInput::MenuPrevious)
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("MenuPrevious", "Previous item")))
+		->Action(FNeutronPlayerInput::MenuPrevious)
 		->Default(EKeys::A)
 	));
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuZoomIn", "Zoom in")))
-		->Action(FNovaPlayerInput::MenuZoomIn)
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("MenuZoomIn", "Zoom in")))
+		->Action(FNeutronPlayerInput::MenuZoomIn)
 		->Default(EKeys::MouseScrollUp)
 	));
-	Bindings.Add(MakeShareable((new FNovaKeyBinding(LOCTEXT("MenuZoomOut", "Zoom out")))
-		->Action(FNovaPlayerInput::MenuZoomOut)
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("MenuZoomOut", "Zoom out")))
+		->Action(FNeutronPlayerInput::MenuZoomOut)
 		->Default(EKeys::MouseScrollDown)
 	));
 
@@ -376,7 +373,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		GraphicsContainer->AddSlot()
 		.AutoHeight()
 		[
-			SNovaAssignNew(NaniteButton, SNovaButton)
+			SNeutronAssignNew(NaniteButton, SNeutronButton)
 			.Toggle(true)
 			.Text(LOCTEXT("Nanite", "Enable Nanite"))
 			.HelpText(LOCTEXT("NaniteHelp", "Enable high-density Nanite geometry"))
@@ -388,7 +385,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		GraphicsContainer->AddSlot()
 		.AutoHeight()
 		[
-			SNovaAssignNew(LumenButton, SNovaButton)
+			SNeutronAssignNew(LumenButton, SNeutronButton)
 			.Toggle(true)
 			.Text(LOCTEXT("Lumen", "Enable Lumen"))
 			.HelpText(LOCTEXT("LumenHelp", "Enable the high-quality Lumen lighting"))
@@ -400,7 +397,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		GraphicsContainer->AddSlot()
 		.AutoHeight()
 		[
-			SNovaAssignNew(LumenHWRTButton, SNovaButton)
+			SNeutronAssignNew(LumenHWRTButton, SNeutronButton)
 			.Toggle(true)
 			.Text(LOCTEXT("LumenRayTracing", "Enable Lumen raytracing support"))
 			.HelpText(LOCTEXT("LumenRayTracingHelp", "Enable hardware raytracing support for Lumen, improving quality on DXR hardware"))
@@ -412,7 +409,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		GraphicsContainer->AddSlot()
 		.AutoHeight()
 		[
-			SNovaAssignNew(VirtualShadowsButton, SNovaButton)
+			SNeutronAssignNew(VirtualShadowsButton, SNeutronButton)
 			.Toggle(true)
 			.Text(LOCTEXT("VirtualShadows", "Enable virtual shadows"))
 			.HelpText(LOCTEXT("VirtualShadowsHelp", "Enable virtual shadow maps for enhanced shadows"))
@@ -424,7 +421,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		ScalingContainer->AddSlot()
 		.AutoHeight()
 		[
-			SNovaAssignNew(TSRButton, SNovaButton)
+			SNeutronAssignNew(TSRButton, SNeutronButton)
 			.Toggle(true)
 			.Text(LOCTEXT("TSR", "Enable TSR"))
 			.HelpText(LOCTEXT("TSRHelp", "Enable temporal super resolution for improved screen percentage quality"))
@@ -436,7 +433,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		ScalingContainer->AddSlot()
 		.AutoHeight()
 		[
-			SNovaAssignNew(DLSSButton, SNovaButton)
+			SNeutronAssignNew(DLSSButton, SNeutronButton)
 			.Toggle(true)
 			.Text(LOCTEXT("DLSS", "Enable DLSS"))
 			.HelpText(LOCTEXT("DLSSHelp", "Enable DLSS support to improve performance on NVIDIA RTX hardware"))
@@ -448,7 +445,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		GraphicsContainer->AddSlot()
 		.AutoHeight()
 		[
-			SNovaAssignNew(CinematicBloomButton, SNovaButton)
+			SNeutronAssignNew(CinematicBloomButton, SNeutronButton)
 			.Toggle(true)
 			.Text(LOCTEXT("EnableCinematicBloom", "Cinematic bloom"))
 			.HelpText(LOCTEXT("EnableCinematicBloomHelp", "Enable convolution bloom for improved bloom quality"))
@@ -469,7 +466,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		];
 
 		// Build key bindings panel
-		for (TSharedPtr<FNovaKeyBinding> Binding : Bindings)
+		for (TSharedPtr<FNeutronKeyBinding> Binding : Bindings)
 		{
 			BindingsContainer->AddSlot()
 			.AutoHeight()
@@ -491,19 +488,19 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 					+ SHorizontalBox::Slot()
 					.AutoWidth()
 					[
-						SNovaNew(SNovaKeyBinding)
+						SNeutronNew(SNeutronKeyBinding)
 						.Binding(Binding)
 						.OnKeyBindingChanged(this, &SNovaMainMenuSettings::OnKeyBindingChanged, Binding)
-						.Icon(FNovaStyleSet::GetBrush("Icon/SB_Edit"))
+						.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Edit"))
 					]
 				
 					+ SHorizontalBox::Slot()
 					.AutoWidth()
 					[
-						SNovaNew(SNovaButton)
+						SNeutronNew(SNeutronButton)
 						.Size("SmallButtonSize")
 						.HelpText(LOCTEXT("ResetBinding", "Reset this key binding to its default value"))
-						.Icon(FNovaStyleSet::GetBrush("Icon/SB_Remove"))
+						.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Remove"))
 						.OnClicked(this, &SNovaMainMenuSettings::OnKeyBindingReset, Binding)
 					]
 				]
@@ -521,9 +518,9 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 
 void SNovaMainMenuSettings::Show()
 {
-	SNovaTabPanel::Show();
+	SNeutronTabPanel::Show();
 
-	GameUserSettings = Cast<UNovaGameUserSettings>(GEngine->GetGameUserSettings());
+	GameUserSettings = Cast<UNeutronGameUserSettings>(GEngine->GetGameUserSettings());
 
 	// Graphics settings
 	if (!MenuManager->IsOnConsole())
@@ -567,7 +564,7 @@ void SNovaMainMenuSettings::Show()
 	MusicVolumeSlider->SetCurrentValue(GameUserSettings->MusicVolume);
 }
 
-TSharedPtr<SNovaButton> SNovaMainMenuSettings::GetDefaultFocusButton() const
+TSharedPtr<SNeutronButton> SNovaMainMenuSettings::GetDefaultFocusButton() const
 {
 	if (MenuManager->IsOnConsole())
 	{
@@ -583,9 +580,9 @@ TSharedPtr<SNovaButton> SNovaMainMenuSettings::GetDefaultFocusButton() const
     Input management
 ----------------------------------------------------*/
 
-void SNovaMainMenuSettings::OnKeyBindingChanged(FKey PreviousKey, FKey NewKey, TSharedPtr<FNovaKeyBinding> Binding)
+void SNovaMainMenuSettings::OnKeyBindingChanged(FKey PreviousKey, FKey NewKey, TSharedPtr<FNeutronKeyBinding> Binding)
 {
-	TArray<TSharedPtr<FNovaKeyBinding>> BindConflicts;
+	TArray<TSharedPtr<FNeutronKeyBinding>> BindConflicts;
 
 	// Remove a key
 	if (!NewKey.IsValid())
@@ -601,7 +598,7 @@ void SNovaMainMenuSettings::OnKeyBindingChanged(FKey PreviousKey, FKey NewKey, T
 	{
 		FText ConflictKeys;
 
-		for (TSharedPtr<FNovaKeyBinding> Bind : BindConflicts)
+		for (TSharedPtr<FNeutronKeyBinding> Bind : BindConflicts)
 		{
 			if (ConflictKeys.IsEmpty())
 			{
@@ -629,18 +626,18 @@ void SNovaMainMenuSettings::OnKeyBindingChanged(FKey PreviousKey, FKey NewKey, T
 	}
 }
 
-void SNovaMainMenuSettings::OnKeyBindingReset(TSharedPtr<FNovaKeyBinding> Binding)
+void SNovaMainMenuSettings::OnKeyBindingReset(TSharedPtr<FNeutronKeyBinding> Binding)
 {
 	NCHECK(Binding.IsValid());
 	Binding->ResetKey();
 }
 
-void SNovaMainMenuSettings::ApplyNewBinding(TSharedPtr<FNovaKeyBinding> BindingThatChanged, bool Replace)
+void SNovaMainMenuSettings::ApplyNewBinding(TSharedPtr<FNeutronKeyBinding> BindingThatChanged, bool Replace)
 {
 	if (Replace)
 	{
 		FKey KeyToErase = BindingThatChanged->GetKey();
-		for (TSharedPtr<FNovaKeyBinding> Bind : Bindings)
+		for (TSharedPtr<FNeutronKeyBinding> Bind : Bindings)
 		{
 			if (BindingThatChanged != Bind)
 			{
@@ -666,15 +663,15 @@ void SNovaMainMenuSettings::ApplyNewBinding(TSharedPtr<FNovaKeyBinding> BindingT
 	Menu->UpdateKeyBindings();
 }
 
-void SNovaMainMenuSettings::CancelNewBinding(TSharedPtr<struct FNovaKeyBinding> BindingThatChanged, FKey PreviousKey)
+void SNovaMainMenuSettings::CancelNewBinding(TSharedPtr<struct FNeutronKeyBinding> BindingThatChanged, FKey PreviousKey)
 {
 	BindingThatChanged->SetKey(PreviousKey);
 }
 
 bool SNovaMainMenuSettings::IsAlreadyUsed(
-	TArray<TSharedPtr<FNovaKeyBinding>>& BindConflicts, FKey Key, TSharedPtr<FNovaKeyBinding> ExcludeBinding)
+	TArray<TSharedPtr<FNeutronKeyBinding>>& BindConflicts, FKey Key, TSharedPtr<FNeutronKeyBinding> ExcludeBinding)
 {
-	for (TSharedPtr<FNovaKeyBinding> Bind : Bindings)
+	for (TSharedPtr<FNeutronKeyBinding> Bind : Bindings)
 	{
 		if (Bind->GetKey() == Key && ExcludeBinding != Bind)
 		{
@@ -689,13 +686,13 @@ bool SNovaMainMenuSettings::IsAlreadyUsed(
     Video management
 ----------------------------------------------------*/
 
-TSharedPtr<SNovaSlider> SNovaMainMenuSettings::AddSettingSlider(TSharedPtr<SVerticalBox> Container, FText Text, FText HelpText,
+TSharedPtr<SNeutronSlider> SNovaMainMenuSettings::AddSettingSlider(TSharedPtr<SVerticalBox> Container, FText Text, FText HelpText,
 	FOnFloatValueChanged Callback, float MinValue, float MaxValue, float ValueStep, TAttribute<bool> Enabled)
 {
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
 
 	// clang-format off
-	TSharedPtr<SNovaSlider> Slider = SNovaNew(SNovaSlider)
+	TSharedPtr<SNeutronSlider> Slider = SNeutronNew(SNeutronSlider)
 		.MinValue(MinValue)
 		.MaxValue(MaxValue)
 		.ValueStep(ValueStep)
@@ -877,7 +874,7 @@ void SNovaMainMenuSettings::OnMasterVolumeChanged(float Value)
 {
 	GameUserSettings->MasterVolume = Value;
 
-	UNovaSoundManager::Get()->SetMasterVolume(Value);
+	UNeutronSoundManager::Get()->SetMasterVolume(Value);
 
 	GameUserSettings->SaveSettings();
 }
@@ -886,7 +883,7 @@ void SNovaMainMenuSettings::OnUIVolumeChanged(float Value)
 {
 	GameUserSettings->UIVolume = Value;
 
-	UNovaSoundManager::Get()->SetUIVolume(Value);
+	UNeutronSoundManager::Get()->SetUIVolume(Value);
 
 	GameUserSettings->SaveSettings();
 }
@@ -895,7 +892,7 @@ void SNovaMainMenuSettings::OnEffectsVolumeChanged(float Value)
 {
 	GameUserSettings->EffectsVolume = Value;
 
-	UNovaSoundManager::Get()->SetEffectsVolume(Value);
+	UNeutronSoundManager::Get()->SetEffectsVolume(Value);
 
 	GameUserSettings->SaveSettings();
 }
@@ -904,7 +901,7 @@ void SNovaMainMenuSettings::OnMusicVolumeChanged(float Value)
 {
 	GameUserSettings->MusicVolume = Value;
 
-	UNovaSoundManager::Get()->SetMusicVolume(Value);
+	UNeutronSoundManager::Get()->SetMusicVolume(Value);
 
 	GameUserSettings->SaveSettings();
 }
@@ -1005,8 +1002,8 @@ void SNovaMainMenuSettings::OnCinematicBloomToggled()
 
 TSharedRef<SWidget> SNovaMainMenuSettings::GenerateCultureItem(TSharedPtr<FString> Culture)
 {
-	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
-	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
+	const FNeutronMainTheme&   Theme       = FNeutronStyleSet::GetMainTheme();
+	const FNeutronButtonTheme& ButtonTheme = FNeutronStyleSet::GetButtonTheme();
 
 	// clang-format off
 	return SNew(SHorizontalBox)
@@ -1081,8 +1078,8 @@ void SNovaMainMenuSettings::OnApplyCultureSettings()
 
 TSharedRef<SWidget> SNovaMainMenuSettings::GenerateResolutionItem(TSharedPtr<FScreenResolutionRHI> Resolution)
 {
-	const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
-	const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
+	const FNeutronMainTheme&   Theme       = FNeutronStyleSet::GetMainTheme();
+	const FNeutronButtonTheme& ButtonTheme = FNeutronStyleSet::GetButtonTheme();
 
 	// clang-format off
 	return SNew(SHorizontalBox)

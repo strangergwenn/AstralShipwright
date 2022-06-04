@@ -2,9 +2,10 @@
 
 #include "NovaSpacecraftTypes.h"
 #include "NovaSpacecraftPawn.h"
-#include "Actor/NovaCaptureActor.h"
 #include "Game/NovaGameMode.h"
-#include "System/NovaAssetManager.h"
+
+#include "Neutron/Actor/NeutronCaptureActor.h"
+#include "Neutron/System/NeutronAssetManager.h"
 
 #define LOCTEXT_NAMESPACE "NovaSpacecraftTypes"
 
@@ -18,7 +19,7 @@ TArray<const UNovaHullDescription*> UNovaCompartmentDescription::GetSupportedHul
 
 	Result.Add(nullptr);
 
-	Result.Append(UNovaAssetManager::Get()->GetAssets<UNovaHullDescription>());
+	Result.Append(UNeutronAssetManager::Get()->GetAssets<UNovaHullDescription>());
 
 	return Result;
 }
@@ -163,9 +164,9 @@ TSoftObjectPtr<UStaticMesh> UNovaCompartmentDescription::GetBulkhead(
 	}
 }
 
-FNovaAssetPreviewSettings UNovaCompartmentDescription::GetPreviewSettings() const
+FNeutronAssetPreviewSettings UNovaCompartmentDescription::GetPreviewSettings() const
 {
-	FNovaAssetPreviewSettings Settings;
+	FNeutronAssetPreviewSettings Settings;
 
 	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
 	Settings.RequireCustomPrimitives = true;
@@ -224,9 +225,9 @@ TSoftObjectPtr<class UStaticMesh> UNovaModuleDescription::GetBulkhead(ENovaBulkh
 	}
 }
 
-FNovaAssetPreviewSettings UNovaModuleDescription::GetPreviewSettings() const
+FNeutronAssetPreviewSettings UNovaModuleDescription::GetPreviewSettings() const
 {
-	FNovaAssetPreviewSettings Settings;
+	FNeutronAssetPreviewSettings Settings;
 
 	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
 	Settings.RequireCustomPrimitives = true;
@@ -302,9 +303,9 @@ TSoftObjectPtr<UObject> UNovaEquipmentDescription::GetMesh() const
 	}
 }
 
-FNovaAssetPreviewSettings UNovaEquipmentDescription::GetPreviewSettings() const
+FNeutronAssetPreviewSettings UNovaEquipmentDescription::GetPreviewSettings() const
 {
-	FNovaAssetPreviewSettings Settings;
+	FNeutronAssetPreviewSettings Settings;
 
 	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
 	Settings.RequireCustomPrimitives = true;
@@ -345,9 +346,9 @@ TArray<FText> UNovaEquipmentDescription::GetDescription() const
     Equipment subclasses
 ----------------------------------------------------*/
 
-FNovaAssetPreviewSettings UNovaEngineDescription::GetPreviewSettings() const
+FNeutronAssetPreviewSettings UNovaEngineDescription::GetPreviewSettings() const
 {
-	FNovaAssetPreviewSettings Settings = Super::GetPreviewSettings();
+	FNeutronAssetPreviewSettings Settings = Super::GetPreviewSettings();
 
 	Settings.Scale *= 1.25f;
 

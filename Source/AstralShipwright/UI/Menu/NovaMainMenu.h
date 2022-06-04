@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "UI/NovaUI.h"
-#include "UI/Widget/NovaMenu.h"
+#include "Neutron/UI/NeutronUI.h"
+#include "Neutron/UI/Widgets/NeutronMenu.h"
 
 // Sub-menu types
 enum class ENovaMainMenuType : uint8
@@ -18,7 +18,7 @@ enum class ENovaMainMenuType : uint8
 };
 
 // Main menu class
-class SNovaMainMenu : public SNovaMenu
+class SNovaMainMenu : public SNeutronMenu
 {
 	/*----------------------------------------------------
 	    Slate arguments
@@ -27,7 +27,7 @@ class SNovaMainMenu : public SNovaMenu
 	SLATE_BEGIN_ARGS(SNovaMainMenu)
 	{}
 
-	SLATE_ARGUMENT(TWeakObjectPtr<class UNovaMenuManager>, MenuManager)
+	SLATE_ARGUMENT(TWeakObjectPtr<class UNeutronMenuManager>, MenuManager)
 
 	SLATE_END_ARGS()
 
@@ -121,9 +121,9 @@ protected:
 	bool     WasOnMainMenu;
 
 	// Widgets
-	TSharedPtr<class SNovaModalPanel> ModalPanel;
-	TSharedPtr<class SNovaTabView>    TabView;
-	TSharedPtr<class SNovaText>       Tooltip;
+	TSharedPtr<class SNeutronModalPanel> ModalPanel;
+	TSharedPtr<class SNeutronTabView>    TabView;
+	TSharedPtr<class SNeutronText>       Tooltip;
 
 	// Menus
 	TSharedPtr<class SNovaMainMenuHome>       HomeMenu;

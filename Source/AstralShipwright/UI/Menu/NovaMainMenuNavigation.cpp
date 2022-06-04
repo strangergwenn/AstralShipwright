@@ -10,17 +10,17 @@
 #include "Game/NovaGameState.h"
 #include "Game/NovaOrbitalSimulationComponent.h"
 
-#include "System/NovaAssetManager.h"
-#include "System/NovaGameInstance.h"
-#include "System/NovaMenuManager.h"
-
 #include "Player/NovaPlayerController.h"
-#include "UI/Component/NovaTrajectoryCalculator.h"
-#include "UI/Component/NovaTradableAssetItem.h"
-#include "UI/Widget/NovaFadingWidget.h"
-#include "UI/Widget/NovaKeyLabel.h"
-#include "UI/Widget/NovaSlider.h"
+#include "UI/Widgets/NovaTrajectoryCalculator.h"
+#include "UI/Widgets/NovaTradableAssetItem.h"
 #include "Nova.h"
+
+#include "Neutron/System/NeutronAssetManager.h"
+#include "Neutron/System/NeutronGameInstance.h"
+#include "Neutron/System/NeutronMenuManager.h"
+#include "Neutron/UI/Widgets/NeutronFadingWidget.h"
+#include "Neutron/UI/Widgets/NeutronKeyLabel.h"
+#include "Neutron/UI/Widgets/NeutronSlider.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
 
@@ -34,17 +34,17 @@ static constexpr int32 StackPanelWidth = 500;
 ----------------------------------------------------*/
 
 /** Fading text widget with a background, inheriting SNovaFadingWidget for simplicity */
-class SNovaHoverStackEntry : public SNovaText
+class SNovaHoverStackEntry : public SNeutronText
 {
 public:
 
 	void Construct(const FArguments& InArgs)
 	{
-		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+		const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
 
-		SNovaText::Construct(SNovaText::FArguments()
-								 .TextStyle(&Theme.MainFont)
-								 .WrapTextAt(StackPanelWidth - Theme.ContentPadding.Left - Theme.ContentPadding.Right - 24));
+		SNeutronText::Construct(SNeutronText::FArguments()
+									.TextStyle(&Theme.MainFont)
+									.WrapTextAt(StackPanelWidth - Theme.ContentPadding.Left - Theme.ContentPadding.Right - 24));
 
 		// clang-format off
 		ChildSlot
@@ -52,7 +52,7 @@ public:
 			SNew(SBorder)
 			.BorderImage(&Theme.MainMenuGenericBackground)
 			.Padding(Theme.ContentPadding)
-			.BorderBackgroundColor(this, &SNovaFadingWidget::GetSlateColor)
+			.BorderBackgroundColor(this, &SNeutronFadingWidget::GetSlateColor)
 			[
 				SNew(SHorizontalBox)
 
@@ -63,7 +63,7 @@ public:
 					SNew(SImage)
 					.Image_Lambda([=]()
 					{
-						return FNovaStyleSet::GetBrush("Icon/SB_ListOn");
+						return FNeutronStyleSet::GetBrush("Icon/SB_ListOn");
 					})
 					.ColorAndOpacity_Lambda([=]()
 					{
@@ -126,7 +126,7 @@ public:
 
 	void Construct(const FArguments& InArgs)
 	{
-		const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+		const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
 
 		// clang-format off
 		ChildSlot
@@ -148,7 +148,7 @@ public:
 						.AutoWidth()
 						.Padding(Theme.ContentPadding)
 						[
-							SNew(SNovaKeyLabel)
+							SNew(SNeutronKeyLabel)
 							.Key(this, &SNovaHoverStack::GetPreviousItemKey)
 						]
 
@@ -166,7 +166,7 @@ public:
 						.AutoWidth()
 						.Padding(Theme.ContentPadding)
 						[
-							SNew(SNovaKeyLabel)
+							SNew(SNeutronKeyLabel)
 							.Key(this, &SNovaHoverStack::GetNextItemKey)
 						]
 					]
@@ -189,7 +189,7 @@ public:
 	{
 		if (IsValid(GameState))
 		{
-			const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
+			const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
 
 			// Text builder
 			auto GetText = [GameState](const FNovaOrbitalObject& Object)
@@ -302,12 +302,12 @@ protected:
 
 	FKey GetPreviousItemKey() const
 	{
-		return UNovaMenuManager::Get()->GetFirstActionKey(FNovaPlayerInput::MenuPrevious);
+		return UNeutronMenuManager::Get()->GetFirstActionKey(FNeutronPlayerInput::MenuPrevious);
 	}
 
 	FKey GetNextItemKey() const
 	{
-		return UNovaMenuManager::Get()->GetFirstActionKey(FNovaPlayerInput::MenuNext);
+		return UNeutronMenuManager::Get()->GetFirstActionKey(FNeutronPlayerInput::MenuNext);
 	}
 
 protected:
@@ -321,7 +321,7 @@ protected:
     Side panel container widget (fading)
 ----------------------------------------------------*/
 
-class SNovaSidePanelContainer : public SNovaFadingWidget<false>
+class SNovaSidePanelContainer : public SNeutronFadingWidget<false>
 {
 	SLATE_BEGIN_ARGS(SNovaSidePanelContainer)
 	{}
@@ -336,14 +336,14 @@ public:
 	void Construct(const FArguments& InArgs)
 	{
 		// clang-format off
-		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments().Content()
+		SNeutronFadingWidget::Construct(SNeutronFadingWidget::FArguments().Content()
 		[
 			InArgs._Content.Widget
 		]);
 		// clang-format on
 
 		UpdateCallback = InArgs._OnUpdate;
-		SetColorAndOpacity(TAttribute<FLinearColor>(this, &SNovaFadingWidget::GetLinearColor));
+		SetColorAndOpacity(TAttribute<FLinearColor>(this, &SNeutronFadingWidget::GetLinearColor));
 	}
 
 	void SetObject(FNovaOrbitalObject NewObject)
@@ -376,12 +376,12 @@ protected:
     Side panel widget (structure and animation)
 ----------------------------------------------------*/
 
-class SNovaSidePanel : public SNovaFadingWidget<false>
+class SNovaSidePanel : public SNeutronFadingWidget<false>
 {
 	SLATE_BEGIN_ARGS(SNovaSidePanel)
 	{}
 
-	SLATE_ARGUMENT(const SNovaTabPanel*, Panel)
+	SLATE_ARGUMENT(const SNeutronTabPanel*, Panel)
 	SLATE_DEFAULT_SLOT(FArguments, Content)
 
 	SLATE_END_ARGS()
@@ -390,19 +390,19 @@ public:
 
 	void Construct(const FArguments& InArgs)
 	{
-		const FNovaMainTheme&   Theme       = FNovaStyleSet::GetMainTheme();
-		const FNovaButtonTheme& ButtonTheme = FNovaStyleSet::GetButtonTheme();
+		const FNeutronMainTheme&   Theme       = FNeutronStyleSet::GetMainTheme();
+		const FNeutronButtonTheme& ButtonTheme = FNeutronStyleSet::GetButtonTheme();
 
 		// clang-format off
-		SNovaFadingWidget::Construct(SNovaFadingWidget::FArguments().Content()
+		SNeutronFadingWidget::Construct(SNeutronFadingWidget::FArguments().Content()
 		[
 			SNew(SBorder)
 			.BorderImage(&ButtonTheme.Border)
 			.Padding(FMargin(0, 0, 1, 0))
 			[
 				SNew(SBackgroundBlur)
-				.BlurRadius(InArgs._Panel, &SNovaTabPanel::GetBlurRadius)
-				.BlurStrength(InArgs._Panel, &SNovaTabPanel::GetBlurStrength)
+				.BlurRadius(InArgs._Panel, &SNeutronTabPanel::GetBlurRadius)
+				.BlurStrength(InArgs._Panel, &SNeutronTabPanel::GetBlurStrength)
 				.bApplyAlphaToBlur(true)
 				.Padding(0)
 				[
@@ -484,11 +484,11 @@ SNovaMainMenuNavigation::SNovaMainMenuNavigation()
 void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 {
 	// Data
-	const FNovaMainTheme& Theme = FNovaStyleSet::GetMainTheme();
-	MenuManager                 = InArgs._MenuManager;
+	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
+	MenuManager                    = InArgs._MenuManager;
 
 	// Parent constructor
-	SNovaNavigationPanel::Construct(SNovaNavigationPanel::FArguments().Menu(InArgs._Menu));
+	SNeutronNavigationPanel::Construct(SNeutronNavigationPanel::FArguments().Menu(InArgs._Menu));
 
 	// clang-format off
 	ChildSlot
@@ -548,9 +548,9 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						[
-							SNovaNew(SNovaButton)
+							SNeutronNew(SNeutronButton)
 							.Size("SmallButtonSize")
-							.Icon(FNovaStyleSet::GetBrush("Icon/SB_Remove"))
+							.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Remove"))
 							.HelpText(LOCTEXT("CloseSidePanelHelp", "Close the side panel"))
 							.OnClicked(this, &SNovaMainMenuNavigation::OnHideSidePanel)
 						]
@@ -569,7 +569,7 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 						[
 							SAssignNew(DestinationDescription, SRichTextBlock)
 							.TextStyle(&Theme.MainFont)
-							.DecoratorStyleSet(&FNovaStyleSet::GetStyle())
+							.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
 							+ SRichTextBlock::ImageDecorator()
 						]
 					]
@@ -585,8 +585,8 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 						{
 							return SidePanelContainer->GetCurrentAlpha();
 						})))
-						.DeltaVActionName(FNovaPlayerInput::MenuPrimary)
-						.DurationActionName(FNovaPlayerInput::MenuSecondary)
+						.DeltaVActionName(FNeutronPlayerInput::MenuPrimary)
+						.DurationActionName(FNeutronPlayerInput::MenuSecondary)
 						.OnTrajectoryChanged(this, &SNovaMainMenuNavigation::OnTrajectoryChanged)
 					]
 			
@@ -594,9 +594,9 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 					+ SScrollBox::Slot()
 					.HAlign(HAlign_Center)
 					[
-						SNovaAssignNew(CommitButton, SNovaButton)
+						SNeutronAssignNew(CommitButton, SNeutronButton)
 						.Size("DoubleButtonSize")
-						.Icon(FNovaStyleSet::GetBrush("Icon/SB_StartTrajectory"))
+						.Icon(FNeutronStyleSet::GetBrush("Icon/SB_StartTrajectory"))
 						.Text(LOCTEXT("StartFlightPlan", "Start flight plan"))
 						.HelpText(this, &SNovaMainMenuNavigation::GetCommitTrajectoryHelpText)
 						.OnClicked(this, &SNovaMainMenuNavigation::OnCommitTrajectory)
@@ -629,7 +629,7 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 
 void SNovaMainMenuNavigation::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
 {
-	SNovaTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
+	SNeutronTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
 	// Fetch currently hovered objects
 	if (IsValid(GameState))
@@ -667,7 +667,7 @@ void SNovaMainMenuNavigation::Tick(const FGeometry& AllottedGeometry, const doub
 
 void SNovaMainMenuNavigation::Show()
 {
-	SNovaTabPanel::Show();
+	SNeutronTabPanel::Show();
 
 	ResetTrajectory();
 	SidePanel->Reset();
@@ -676,7 +676,7 @@ void SNovaMainMenuNavigation::Show()
 
 void SNovaMainMenuNavigation::Hide()
 {
-	SNovaTabPanel::Hide();
+	SNeutronTabPanel::Hide();
 
 	ResetTrajectory();
 	SidePanel->Reset();
@@ -685,7 +685,7 @@ void SNovaMainMenuNavigation::Hide()
 
 void SNovaMainMenuNavigation::UpdateGameObjects()
 {
-	PC                 = MenuManager.IsValid() ? MenuManager->GetPC() : nullptr;
+	PC                 = MenuManager.IsValid() ? MenuManager->GetPC<ANovaPlayerController>() : nullptr;
 	Spacecraft         = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
 	GameState          = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
 	AsteroidSimulation = IsValid(GameState) ? GameState->GetAsteroidSimulation() : nullptr;
@@ -694,7 +694,7 @@ void SNovaMainMenuNavigation::UpdateGameObjects()
 
 void SNovaMainMenuNavigation::OnClicked(const FVector2D& Position)
 {
-	SNovaTabPanel::OnClicked(Position);
+	SNeutronTabPanel::OnClicked(Position);
 
 	if (IsValid(GameState) && !SidePanel->IsHovered())
 	{
@@ -742,9 +742,9 @@ void SNovaMainMenuNavigation::OnClicked(const FVector2D& Position)
 
 FReply SNovaMainMenuNavigation::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)
 {
-	FReply Result = SNovaTabPanel::OnKeyDown(MyGeometry, InKeyEvent);
+	FReply Result = SNeutronTabPanel::OnKeyDown(MyGeometry, InKeyEvent);
 
-	if (MenuManager->IsUsingGamepad() && MenuManager->GetMenu()->IsActionKey(FNovaPlayerInput::MenuConfirm, InKeyEvent.GetKey()))
+	if (MenuManager->IsUsingGamepad() && MenuManager->GetMenu()->IsActionKey(FNeutronPlayerInput::MenuConfirm, InKeyEvent.GetKey()))
 	{
 		if (IsValid(GameState))
 		{
@@ -774,7 +774,7 @@ FReply SNovaMainMenuNavigation::OnKeyDown(const FGeometry& MyGeometry, const FKe
 			}
 		}
 	}
-	else if (MenuManager->IsUsingGamepad() && MenuManager->GetMenu()->IsActionKey(FNovaPlayerInput::MenuCancel, InKeyEvent.GetKey()))
+	else if (MenuManager->IsUsingGamepad() && MenuManager->GetMenu()->IsActionKey(FNeutronPlayerInput::MenuCancel, InKeyEvent.GetKey()))
 	{
 		OnHideSidePanel();
 
@@ -814,7 +814,7 @@ void SNovaMainMenuNavigation::ZoomOut()
 	OrbitalMap->ZoomOut();
 }
 
-TSharedPtr<SNovaButton> SNovaMainMenuNavigation::GetDefaultFocusButton() const
+TSharedPtr<SNeutronButton> SNovaMainMenuNavigation::GetDefaultFocusButton() const
 {
 	return CommitButton;
 }
@@ -827,11 +827,11 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 {
 	StationTrades->ClearChildren();
 
-	const FNovaMainTheme&  Theme               = FNovaStyleSet::GetMainTheme();
-	const UNovaArea*       Area                = SelectedObject.Area.Get();
-	const FNovaAsteroid*   Asteroid            = AsteroidSimulation->GetAsteroid(SelectedObject.AsteroidIdentifier);
-	const FNovaSpacecraft* TargetSpacecraft    = GameState->GetSpacecraft(SelectedObject.SpacecraftIdentifier);
-	bool                   HasValidDestination = false;
+	const FNeutronMainTheme& Theme               = FNeutronStyleSet::GetMainTheme();
+	const UNovaArea*         Area                = SelectedObject.Area.Get();
+	const FNovaAsteroid*     Asteroid            = AsteroidSimulation->GetAsteroid(SelectedObject.AsteroidIdentifier);
+	const FNovaSpacecraft*   TargetSpacecraft    = GameState->GetSpacecraft(SelectedObject.SpacecraftIdentifier);
+	bool                     HasValidDestination = false;
 
 	// Valid area found
 	if (Area && ComputeTrajectoryTo(OrbitalSimulation->GetAreaOrbit(Area)))

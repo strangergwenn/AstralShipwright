@@ -3,12 +3,13 @@
 #include "NovaStationDockComponent.h"
 #include "NovaStationRingComponent.h"
 
-#include "Actor/NovaActorTools.h"
 #include "Spacecraft/NovaSpacecraftPawn.h"
-#include "System/NovaMenuManager.h"
 #include "UI/Menu/NovaMainMenu.h"
 
 #include "Nova.h"
+
+#include "Neutron/Actor/NeutronActorTools.h"
+#include "Neutron/System/NeutronMenuManager.h"
 
 #include "DrawDebugHelpers.h"
 #include "Engine/LocalPlayer.h"
@@ -48,7 +49,7 @@ void UNovaStationDockComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	const UNovaStationRingComponent* RingComponent = Cast<UNovaStationRingComponent>(GetAttachParent());
-	UNovaMenuManager*                MenuManager   = UNovaMenuManager::Get();
+	UNeutronMenuManager*             MenuManager   = UNeutronMenuManager::Get();
 
 	// Process the dock logic
 	if (IsValid(RingComponent) && IsValid(MenuManager))
@@ -95,8 +96,8 @@ void UNovaStationDockComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		}
 
 		// Solve for velocities
-		UNovaActorTools::SolveVelocity(CurrentLinearVelocity, 0.0, CurrentLocation.Z, TargetLocation, LinearAcceleration, MaxLinearVelocity,
-			LinearDeadDistance, DeltaTime);
+		UNeutronActorTools::SolveVelocity(CurrentLinearVelocity, 0.0, CurrentLocation.Z, TargetLocation, LinearAcceleration,
+			MaxLinearVelocity, LinearDeadDistance, DeltaTime);
 
 		// Integrate velocity to derive position
 		CurrentLocation.Z += CurrentLinearVelocity * DeltaTime;

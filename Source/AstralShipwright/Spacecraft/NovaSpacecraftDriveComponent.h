@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "NovaSpacecraftTypes.h"
-#include "Actor/NovaActorTools.h"
 #include "Components/StaticMeshComponent.h"
+
+#include "Neutron/Actor/NeutronActorTools.h"
 
 #include "NovaSpacecraftDriveComponent.generated.h"
 
@@ -64,7 +65,7 @@ protected:
 	class UMaterialInstanceDynamic* ExhaustMaterial;
 
 	// Current power
-	TNovaTimedAverage<float> ExhaustPower;
+	TNeutronTimedAverage<float> ExhaustPower;
 
 	// Temperature
 	float CurrentTemperature;

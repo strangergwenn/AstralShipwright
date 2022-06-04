@@ -67,9 +67,9 @@ struct FNovaAssemblyElement
 	FNovaAssemblyElement(ENovaAssemblyElementType T) : Type(T)
 	{}
 
-	FSoftObjectPath           Asset;
-	ENovaAssemblyElementType  Type;
-	class INovaMeshInterface* Mesh = nullptr;
+	FSoftObjectPath              Asset;
+	ENovaAssemblyElementType     Type;
+	class INeutronMeshInterface* Mesh = nullptr;
 };
 
 /** Compartment processing delegate */
@@ -265,7 +265,7 @@ public:
 	TSoftObjectPtr<class UStaticMesh> GetBulkhead(
 		const UNovaModuleDescription* ModuleDescription, ENovaBulkheadType Style, bool Forward) const;
 
-	virtual struct FNovaAssetPreviewSettings GetPreviewSettings() const override;
+	virtual struct FNeutronAssetPreviewSettings GetPreviewSettings() const override;
 
 	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
 
@@ -381,7 +381,7 @@ public:
 
 /** Description of a generic paint asset */
 UCLASS(ClassGroup = (Nova))
-class UNovaPaintDescription : public UNovaAssetDescription
+class UNovaPaintDescription : public UNeutronAssetDescription
 {
 	GENERATED_BODY()
 
@@ -404,7 +404,7 @@ public:
 
 /** Description of an emblem */
 UCLASS(ClassGroup = (Nova))
-class UNovaEmblemDescription : public UNovaAssetDescription
+class UNovaEmblemDescription : public UNeutronAssetDescription
 {
 	GENERATED_BODY()
 
@@ -444,7 +444,7 @@ public:
 	/** Get the appropriate bulkhead mesh */
 	TSoftObjectPtr<class UStaticMesh> GetBulkhead(ENovaBulkheadType Style, bool Forward) const;
 
-	virtual FNovaAssetPreviewSettings GetPreviewSettings() const override;
+	virtual FNeutronAssetPreviewSettings GetPreviewSettings() const override;
 
 	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
 
@@ -541,7 +541,7 @@ public:
 		return Result;
 	}
 
-	virtual FNovaAssetPreviewSettings GetPreviewSettings() const override;
+	virtual FNeutronAssetPreviewSettings GetPreviewSettings() const override;
 
 	virtual void ConfigurePreviewActor(class AActor* Actor) const override;
 
@@ -585,7 +585,7 @@ class UNovaEngineDescription : public UNovaEquipmentDescription
 	GENERATED_BODY()
 public:
 
-	virtual FNovaAssetPreviewSettings GetPreviewSettings() const override;
+	virtual FNeutronAssetPreviewSettings GetPreviewSettings() const override;
 
 	TArray<FText> GetDescription() const override;
 

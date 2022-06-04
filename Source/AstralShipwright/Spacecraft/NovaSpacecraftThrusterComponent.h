@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "NovaSpacecraftTypes.h"
-#include "Actor/NovaActorTools.h"
 #include "Components/SceneComponent.h"
+
+#include "Neutron/Actor/NeutronActorTools.h"
 
 #include "NovaSpacecraftThrusterComponent.generated.h"
 
@@ -30,7 +31,7 @@ struct FNovaThrusterExhaust
 	class UMaterialInstanceDynamic* Material;
 
 	// Current power
-	TNovaTimedAverage<float> Power;
+	TNeutronTimedAverage<float> Power;
 };
 
 /** Thruster component class that attaches to a mesh to add thrusters effects */

@@ -8,16 +8,15 @@
 #include "NovaSaveData.h"
 #include "NovaOrbitalSimulationComponent.h"
 
-#include "Game/Settings/NovaWorldSettings.h"
-
-#include "Actor/NovaPlayerStart.h"
+#include "Game/NovaPlayerStart.h"
 #include "Player/NovaPlayerController.h"
 #include "Player/NovaPlayerState.h"
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
 
-#include "System/NovaAssetManager.h"
-#include "System/NovaSaveManager.h"
+#include "Neutron/Settings/NeutronWorldSettings.h"
+#include "Neutron/System/NeutronAssetManager.h"
+#include "Neutron/System/NeutronSaveManager.h"
 
 #include "Nova.h"
 
@@ -64,7 +63,7 @@ void ANovaGameMode::StartPlay()
 	NLOG("ANovaGameMode::StartPlay");
 
 	// Menu level
-	if (Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMainMenuMap())
+	if (Cast<ANeutronWorldSettings>(GetWorld()->GetWorldSettings())->IsMainMenuMap())
 	{
 		Super::StartPlay();
 	}
@@ -74,7 +73,7 @@ void ANovaGameMode::StartPlay()
 	{
 		ANovaGameState* NovaGameState = GetGameState<ANovaGameState>();
 		NCHECK(IsValid(NovaGameState));
-		UNovaSaveManager* SaveManager = UNovaSaveManager::Get();
+		UNeutronSaveManager* SaveManager = UNeutronSaveManager::Get();
 		NCHECK(SaveManager);
 
 #if WITH_EDITOR
@@ -83,7 +82,7 @@ void ANovaGameMode::StartPlay()
 		if (GetLocalRole() == ROLE_Authority && !SaveManager->HasLoadedSaveData())
 		{
 			SaveManager->LoadGame<FNovaGameSave>("1");
-			UNovaContractManager::Get()->Load(SaveManager->GetCurrentSaveData<FNovaGameSave>()->ContractManagerData);
+			UNeutronContractManager::Get()->Load(SaveManager->GetCurrentSaveData<FNovaGameSave>()->ContractManagerData);
 		}
 
 #endif    // WITH_EDITOR
@@ -136,7 +135,7 @@ void ANovaGameMode::Logout(AController* Player)
 
 UClass* ANovaGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
 {
-	if (Cast<ANovaWorldSettings>(GetWorld()->GetWorldSettings())->IsMainMenuMap())
+	if (Cast<ANeutronWorldSettings>(GetWorld()->GetWorldSettings())->IsMainMenuMap())
 	{
 		return ASpectatorPawn::StaticClass();
 	}

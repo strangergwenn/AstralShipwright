@@ -2,11 +2,12 @@
 
 #include "NovaAISpacecraft.h"
 
-#include "Actor/NovaCaptureActor.h"
 #include "Player/NovaPlayerController.h"
 #include "Spacecraft/NovaSpacecraftPawn.h"
 
 #include "Nova.h"
+
+#include "Neutron/Actor/NeutronCaptureActor.h"
 
 /*----------------------------------------------------
     AI spacecraft description
@@ -79,9 +80,9 @@ ANovaSpacecraftPawn* UNovaAISpacecraftDescription::GetSpacecraftPawn() const
 	return nullptr;
 }
 
-FNovaAssetPreviewSettings UNovaAISpacecraftDescription::GetPreviewSettings() const
+FNeutronAssetPreviewSettings UNovaAISpacecraftDescription::GetPreviewSettings() const
 {
-	FNovaAssetPreviewSettings Settings;
+	FNeutronAssetPreviewSettings Settings;
 
 	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
 	Settings.RequireCustomPrimitives = true;

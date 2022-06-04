@@ -178,7 +178,7 @@ public:
 		FNovaGameModeState::EnterState(PreviousState);
 
 		PC->SharedTransition(ENovaPlayerCameraState::Default,    //
-			FNovaAsyncAction::CreateLambda(
+			FNeutronAsyncAction::CreateLambda(
 				[this]()
 				{
 					GameMode->ChangeAreaToOrbit();
@@ -229,7 +229,7 @@ public:
 		FNovaGameModeState::EnterState(PreviousState);
 
 		PC->SharedTransition(ENovaPlayerCameraState::FastForward,    //
-			FNovaAsyncAction::CreateLambda(
+			FNeutronAsyncAction::CreateLambda(
 				[this]()
 				{
 					GameState->FastForward();
@@ -335,7 +335,7 @@ public:
 		const UNovaArea* NearestArea = OrbitalSimulationComponent->GetPlayerNearestAreaAndDistanceAtArrival().Key;
 
 		PC->SharedTransition(ENovaPlayerCameraState::CinematicEnvironment,    //
-			FNovaAsyncAction::CreateLambda(
+			FNeutronAsyncAction::CreateLambda(
 				[this, NearestArea]()
 				{
 					GameMode->ChangeArea(NearestArea);
@@ -372,7 +372,7 @@ public:
 	{
 		FNovaGameModeState::EnterState(PreviousState);
 
-		PC->SharedTransition(ENovaPlayerCameraState::CinematicBrake, FNovaAsyncAction::CreateLambda(
+		PC->SharedTransition(ENovaPlayerCameraState::CinematicBrake, FNeutronAsyncAction::CreateLambda(
 																		 [this]()
 																		 {
 																			 GameMode->SetCurrentAreaVisible(true);

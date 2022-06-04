@@ -2,10 +2,11 @@
 
 #pragma once
 
-#include "UI/NovaUI.h"
-#include "UI/Widget/NovaTabView.h"
-#include "UI/Widget/NovaModalListView.h"
 #include "Game/NovaGameTypes.h"
+
+#include "Neutron/UI/NeutronUI.h"
+#include "Neutron/UI/Widgets/NeutronTabView.h"
+#include "Neutron/UI/Widgets/NeutronModalListView.h"
 
 #include "Online.h"
 
@@ -27,18 +28,18 @@ enum class ENovaMainMenuAssemblyPaintType : uint8
 };
 
 class SNovaMainMenuAssembly
-	: public SNovaTabPanel
-	, public INovaGameMenu
+	: public SNeutronTabPanel
+	, public INeutronGameMenu
 {
 public:
 
-	typedef SNovaModalListView<const class UNovaCompartmentDescription*> SNovaCompartmentList;
-	typedef SNovaModalListView<const class UNovaModuleDescription*>      SNovaModuleList;
-	typedef SNovaModalListView<const class UNovaEquipmentDescription*>   SNovaEquipmentList;
-	typedef SNovaModalListView<ENovaAssemblyDisplayFilter>               SNovaDisplayFilterList;
-	typedef SNovaModalListView<const class UNovaHullDescription*>        SNovaHullTypeList;
-	typedef SNovaModalListView<const class UNovaPaintDescription*>       SNovaPaintList;
-	typedef SNovaModalListView<const class UNovaEmblemDescription*>      SNovaEmblemList;
+	typedef SNeutronModalListView<const class UNovaCompartmentDescription*> SNovaCompartmentList;
+	typedef SNeutronModalListView<const class UNovaModuleDescription*>      SNovaModuleList;
+	typedef SNeutronModalListView<const class UNovaEquipmentDescription*>   SNovaEquipmentList;
+	typedef SNeutronModalListView<ENovaAssemblyDisplayFilter>               SNovaDisplayFilterList;
+	typedef SNeutronModalListView<const class UNovaHullDescription*>        SNovaHullTypeList;
+	typedef SNeutronModalListView<const class UNovaPaintDescription*>       SNovaPaintList;
+	typedef SNeutronModalListView<const class UNovaEmblemDescription*>      SNovaEmblemList;
 
 	/*----------------------------------------------------
 	    Slate arguments
@@ -47,8 +48,8 @@ public:
 	SLATE_BEGIN_ARGS(SNovaMainMenuAssembly)
 	{}
 
-	SLATE_ARGUMENT(class SNovaMenu*, Menu)
-	SLATE_ARGUMENT(TWeakObjectPtr<class UNovaMenuManager>, MenuManager)
+	SLATE_ARGUMENT(class SNeutronMenu*, Menu)
+	SLATE_ARGUMENT(TWeakObjectPtr<class UNeutronMenuManager>, MenuManager)
 
 	SLATE_END_ARGS()
 
@@ -86,9 +87,9 @@ public:
 
 	virtual void VerticalAnalogInput(float Value) override;
 
-	virtual TSharedPtr<SNovaButton> GetDefaultFocusButton() const override;
+	virtual TSharedPtr<SNeutronButton> GetDefaultFocusButton() const override;
 
-	virtual bool IsButtonActionAllowed(TSharedPtr<SNovaButton> Button) const override;
+	virtual bool IsButtonActionAllowed(TSharedPtr<SNeutronButton> Button) const override;
 
 	virtual bool IsClickInsideMenuAllowed() const override
 	{
@@ -296,27 +297,27 @@ protected:
 protected:
 
 	// Game objects
-	TWeakObjectPtr<UNovaMenuManager> MenuManager;
-	class ANovaPlayerController*     PC;
-	class ANovaSpacecraftPawn*       SpacecraftPawn;
-	class ANovaGameState*            GameState;
+	TWeakObjectPtr<UNeutronMenuManager> MenuManager;
+	class ANovaPlayerController*        PC;
+	class ANovaSpacecraftPawn*          SpacecraftPawn;
+	class ANovaGameState*               GameState;
 
 	// Widgets
 	TSharedPtr<SHorizontalBox>                CompartmentBox;
 	TSharedPtr<SHorizontalBox>                ModuleBox;
 	TSharedPtr<SHorizontalBox>                EquipmentBox;
 	TSharedPtr<SEditableText>                 SpacecraftNameText;
-	TSharedPtr<class SNovaSlider>             DisplayFilter;
-	TSharedPtr<class SNovaButton>             SaveButton;
-	TSharedPtr<class SNovaButton>             BackButton;
-	TSharedPtr<class SNovaButton>             BackButton2;
-	TSharedPtr<class SNovaButton>             EditButton;
-	TSharedPtr<class SNovaButton>             PhotoModeButton;
-	TSharedPtr<class SNovaModalPanel>         GenericModalPanel;
+	TSharedPtr<class SNeutronSlider>          DisplayFilter;
+	TSharedPtr<class SNeutronButton>          SaveButton;
+	TSharedPtr<class SNeutronButton>          BackButton;
+	TSharedPtr<class SNeutronButton>          BackButton2;
+	TSharedPtr<class SNeutronButton>          EditButton;
+	TSharedPtr<class SNeutronButton>          PhotoModeButton;
+	TSharedPtr<class SNeutronModalPanel>      GenericModalPanel;
 	TSharedPtr<class SNovaAssemblyModalPanel> AssemblyModalPanel;
 	TSharedPtr<SVerticalBox>                  MenuBox;
-	TSharedPtr<class SNovaSlider>             DirtyIntensity;
-	TSharedPtr<class SNovaButton>             EnableHullPaintButton;
+	TSharedPtr<class SNeutronSlider>          DirtyIntensity;
+	TSharedPtr<class SNeutronButton>          EnableHullPaintButton;
 
 	// Panel fading system
 	ENovaMainMenuAssemblyState DesiredPanelState;
@@ -331,8 +332,8 @@ protected:
 	float TimeSinceLeftIndexChange;
 
 	// Carousel animations
-	FNovaCarouselAnimation<ENovaConstants::MaxCompartmentCount>                                CompartmentAnimation;
-	FNovaCarouselAnimation<ENovaConstants::MaxModuleCount + ENovaConstants::MaxEquipmentCount> ModuleEquipmentAnimation;
+	FNeutronCarouselAnimation<ENovaConstants::MaxCompartmentCount>                                CompartmentAnimation;
+	FNeutronCarouselAnimation<ENovaConstants::MaxModuleCount + ENovaConstants::MaxEquipmentCount> ModuleEquipmentAnimation;
 
 	// Compartment list
 	TSharedPtr<SNovaCompartmentList> CompartmentList;

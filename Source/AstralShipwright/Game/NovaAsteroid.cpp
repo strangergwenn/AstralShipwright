@@ -6,7 +6,7 @@
 #include "NovaGameState.h"
 #include "NovaOrbitalSimulationComponent.h"
 
-#include "System/NovaAssetManager.h"
+#include "Neutron/System/NeutronAssetManager.h"
 
 #include "Components/StaticMeshComponent.h"
 #include "NiagaraFunctionLibrary.h"
@@ -49,7 +49,8 @@ void ANovaAsteroid::BeginPlay()
 	{
 		NLOG("ANovaAsteroid::BeginPlay : spawning as fallback");
 
-		const UNovaAsteroidConfiguration* AsteroidConfiguration = UNovaAssetManager::Get()->GetDefaultAsset<UNovaAsteroidConfiguration>();
+		const UNovaAsteroidConfiguration* AsteroidConfiguration =
+			UNeutronAssetManager::Get()->GetDefaultAsset<UNovaAsteroidConfiguration>();
 		NCHECK(AsteroidConfiguration);
 		FRandomStream Random;
 
@@ -106,7 +107,7 @@ void ANovaAsteroid::Initialize(const FNovaAsteroid& InAsteroid)
 	{
 		SetActorLocation(FVector(0, 0, -1000 * 1000 * 100));
 
-		UNovaAssetManager::Get()->LoadAssets({Asteroid.Mesh.ToSoftObjectPath(), Asteroid.DustEffect.ToSoftObjectPath()},
+		UNeutronAssetManager::Get()->LoadAssets({Asteroid.Mesh.ToSoftObjectPath(), Asteroid.DustEffect.ToSoftObjectPath()},
 			FStreamableDelegate::CreateUObject(this, &ANovaAsteroid::PostLoadInitialize));
 	}
 #if WITH_EDITOR

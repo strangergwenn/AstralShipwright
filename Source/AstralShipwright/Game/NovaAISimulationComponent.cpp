@@ -10,9 +10,9 @@
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
 
-#include "System/NovaAssetManager.h"
-
 #include "Nova.h"
+
+#include "Neutron/System/NeutronAssetManager.h"
 
 #include "Dom/JsonObject.h"
 #include "JsonObjectConverter.h"
@@ -436,7 +436,7 @@ void UNovaAISimulationComponent::CreateGame()
 	if (GetOwner()->GetLocalRole() == ROLE_Authority)
 	{
 		// Get game state pointers
-		UNovaAssetManager* AssetManager = UNovaAssetManager::Get();
+		UNeutronAssetManager* AssetManager = UNeutronAssetManager::Get();
 		NCHECK(AssetManager);
 		ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
 		NCHECK(GameState);
@@ -534,7 +534,7 @@ const UNovaArea* UNovaAISimulationComponent::FindArea(const FNovaOrbitalLocation
 	NCHECK(SourceLocation != nullptr);
 
 	// Get game state pointers
-	UNovaAssetManager* AssetManager = UNovaAssetManager::Get();
+	UNeutronAssetManager* AssetManager = UNeutronAssetManager::Get();
 	NCHECK(AssetManager);
 	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
 	NCHECK(GameState);
@@ -561,7 +561,7 @@ const UNovaArea* UNovaAISimulationComponent::FindArea(const FNovaOrbitalLocation
 void UNovaAISimulationComponent::FindPatrolOrbit(FNovaOrbit& DestinationOrbit) const
 {
 	// Get game state pointers
-	UNovaAssetManager* AssetManager = UNovaAssetManager::Get();
+	UNeutronAssetManager* AssetManager = UNeutronAssetManager::Get();
 	NCHECK(AssetManager);
 	const UNovaCelestialBody* Body = AssetManager->GetDefaultAsset<UNovaCelestialBody>();
 

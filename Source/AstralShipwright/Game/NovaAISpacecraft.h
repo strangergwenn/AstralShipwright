@@ -9,7 +9,7 @@
 
 /** Description of an AI spacecraft class */
 UCLASS(ClassGroup = (Nova))
-class UNovaAISpacecraftDescription : public UNovaAssetDescription
+class UNovaAISpacecraftDescription : public UNeutronAssetDescription
 {
 	GENERATED_BODY()
 
@@ -25,7 +25,7 @@ public:
 
 public:
 
-	FNovaAssetPreviewSettings GetPreviewSettings() const override;
+	FNeutronAssetPreviewSettings GetPreviewSettings() const override;
 
 	void ConfigurePreviewActor(AActor* Actor) const override;
 

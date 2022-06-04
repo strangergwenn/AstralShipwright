@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "NovaSpacecraftTypes.h"
-#include "Actor/NovaActorTools.h"
 #include "Components/SceneComponent.h"
+
+#include "Neutron/Actor/NeutronActorTools.h"
 
 #include "NovaSpacecraftFloodlightComponent.generated.h"
 

@@ -2,11 +2,10 @@
 
 #pragma once
 
-#include "UI/NovaUI.h"
-#include "UI/Widget/NovaTabView.h"
-#include "UI/Widget/NovaListView.h"
-
-#include "Actor/NovaActorTools.h"
+#include "Neutron/Actor/NeutronActorTools.h"
+#include "Neutron/UI/NeutronUI.h"
+#include "Neutron/UI/Widgets/NeutronTabView.h"
+#include "Neutron/UI/Widgets/NeutronListView.h"
 
 #include "Online.h"
 
@@ -14,8 +13,8 @@ enum class ENovaResourceType : uint8;
 
 /** Inventory menu */
 class SNovaMainMenuInventory
-	: public SNovaTabPanel
-	, public INovaGameMenu
+	: public SNeutronTabPanel
+	, public INeutronGameMenu
 {
 	/*----------------------------------------------------
 	    Slate arguments
@@ -24,8 +23,8 @@ class SNovaMainMenuInventory
 	SLATE_BEGIN_ARGS(SNovaMainMenuInventory)
 	{}
 
-	SLATE_ARGUMENT(class SNovaMenu*, Menu)
-	SLATE_ARGUMENT(TWeakObjectPtr<class UNovaMenuManager>, MenuManager)
+	SLATE_ARGUMENT(class SNeutronMenu*, Menu)
+	SLATE_ARGUMENT(TWeakObjectPtr<class UNeutronMenuManager>, MenuManager)
 
 	SLATE_END_ARGS()
 
@@ -84,19 +83,19 @@ protected:
 protected:
 
 	// Game objects
-	TWeakObjectPtr<UNovaMenuManager> MenuManager;
-	class ANovaPlayerController*     PC;
-	class ANovaGameState*            GameState;
-	const struct FNovaSpacecraft*    Spacecraft;
-	const class ANovaSpacecraftPawn* SpacecraftPawn;
-	int32                            CurrentCompartmentIndex;
-	TNovaTimedAverage<float>         AveragedPropellantRatio;
+	TWeakObjectPtr<UNeutronMenuManager> MenuManager;
+	class ANovaPlayerController*        PC;
+	class ANovaGameState*               GameState;
+	const struct FNovaSpacecraft*       Spacecraft;
+	const class ANovaSpacecraftPawn*    SpacecraftPawn;
+	int32                               CurrentCompartmentIndex;
+	TNeutronTimedAverage<float>         AveragedPropellantRatio;
 
 	// Resource list
-	TArray<const class UNovaResource*>                    ResourceList;
-	TSharedPtr<SNovaListView<const class UNovaResource*>> ResourceListView;
+	TArray<const class UNovaResource*>                       ResourceList;
+	TSharedPtr<SNeutronListView<const class UNovaResource*>> ResourceListView;
 
 	// Slate widgets
-	TSharedPtr<class SNovaModalPanel>   GenericModalPanel;
-	TSharedPtr<class SNovaTradingPanel> TradingModalPanel;
+	TSharedPtr<class SNeutronModalPanel> GenericModalPanel;
+	TSharedPtr<class SNovaTradingPanel>  TradingModalPanel;
 };

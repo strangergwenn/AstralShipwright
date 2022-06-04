@@ -6,9 +6,10 @@
 #include "NovaOrbitalSimulationComponent.h"
 
 #include "Player/NovaPlayerController.h"
-#include "System/NovaAssetManager.h"
 
 #include "Nova.h"
+
+#include "Neutron/System/NeutronAssetManager.h"
 
 #include "Materials/MaterialInstanceConstant.h"
 #include "EngineUtils.h"
@@ -75,7 +76,7 @@ void ANovaPlanetarium::BeginPlay()
 	NCHECK(Atmosphere);
 
 	// Get game state
-	const UNovaAssetManager* AssetManager = UNovaAssetManager::Get();
+	const UNeutronAssetManager* AssetManager = UNeutronAssetManager::Get();
 	NCHECK(AssetManager);
 
 	// Find all owned mesh components & all celestial bodies
@@ -122,7 +123,7 @@ void ANovaPlanetarium::Tick(float DeltaTime)
 	// Get game state
 	const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 	NCHECK(GameState);
-	const UNovaAssetManager* AssetManager = UNovaAssetManager::Get();
+	const UNeutronAssetManager* AssetManager = UNeutronAssetManager::Get();
 	NCHECK(AssetManager);
 	const UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
 	NCHECK(OrbitalSimulation);

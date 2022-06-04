@@ -2,15 +2,15 @@
 
 #pragma once
 
-#include "UI/NovaUI.h"
-#include "UI/Widget/NovaTabView.h"
-#include "UI/Widget/NovaListView.h"
+#include "Neutron/UI/NeutronUI.h"
+#include "Neutron/UI/Widgets/NeutronTabView.h"
+#include "Neutron/UI/Widgets/NeutronListView.h"
 
 #include "Online.h"
 
 class SNovaMainMenuGame
-	: public SNovaTabPanel
-	, public INovaGameMenu
+	: public SNeutronTabPanel
+	, public INeutronGameMenu
 {
 	/*----------------------------------------------------
 	    Slate arguments
@@ -19,8 +19,8 @@ class SNovaMainMenuGame
 	SLATE_BEGIN_ARGS(SNovaMainMenuGame)
 	{}
 
-	SLATE_ARGUMENT(class SNovaMenu*, Menu)
-	SLATE_ARGUMENT(TWeakObjectPtr<class UNovaMenuManager>, MenuManager)
+	SLATE_ARGUMENT(class SNeutronMenu*, Menu)
+	SLATE_ARGUMENT(TWeakObjectPtr<class UNeutronMenuManager>, MenuManager)
 
 	SLATE_END_ARGS()
 
@@ -96,11 +96,11 @@ protected:
 protected:
 
 	// Menu manager
-	TWeakObjectPtr<UNovaMenuManager> MenuManager;
+	TWeakObjectPtr<UNeutronMenuManager> MenuManager;
 
 	// Widgets
-	TSharedPtr<SNovaListView<TSharedRef<FOnlineFriend>>> FriendListView;
-	TSharedPtr<SVerticalBox>                             ContractBox;
+	TSharedPtr<SNeutronListView<TSharedRef<FOnlineFriend>>> FriendListView;
+	TSharedPtr<SVerticalBox>                                ContractBox;
 
 	// Data
 	TArray<TSharedRef<FOnlineFriend>> FriendList;
