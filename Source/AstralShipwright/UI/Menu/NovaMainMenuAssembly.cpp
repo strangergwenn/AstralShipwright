@@ -1945,7 +1945,7 @@ bool SNovaMainMenuAssembly::IsAddCompartmentEnabled() const
 
 bool SNovaMainMenuAssembly::IsEditCompartmentEnabled() const
 {
-	return SelectedCompartmentIndex >= 0;
+	return IsValid(SpacecraftPawn) && SelectedCompartmentIndex >= 0 && SelectedCompartmentIndex < SpacecraftPawn->GetCompartmentCount();
 }
 
 FText SNovaMainMenuAssembly::GetCompartmentText()
