@@ -35,7 +35,7 @@ void SNovaNotification::Construct(const FArguments& InArgs)
 	.Padding(FMargin(0, 200))
 	[
 		SNew(SBox)
-		.WidthOverride(Theme.NotificationDisplayWidth)
+		.WidthOverride(Theme.GenericMenuWidth)
 		.Padding(0)
 		[
 			SNew(SBorder)

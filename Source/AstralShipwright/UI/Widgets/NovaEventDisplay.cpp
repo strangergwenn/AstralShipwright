@@ -58,7 +58,7 @@ void SNovaEventDisplay::Construct(const FArguments& InArgs)
 			.Padding(0)
 			[
 				SNew(SBox)
-				.WidthOverride(Theme.EventDisplayWidth)
+				.WidthOverride(Theme.GenericMenuWidth)
 				[
 					SNew(SBorder)
 					.HAlign(HAlign_Center)
@@ -74,7 +74,7 @@ void SNovaEventDisplay::Construct(const FArguments& InArgs)
 							SNew(STextBlock)
 							.TextStyle(&Theme.HeadingFont)
 							.Text(this, &SNovaEventDisplay::GetMainText)
-							.WrapTextAt(Theme.EventDisplayWidth)
+							.WrapTextAt(Theme.GenericMenuWidth)
 						]
 
 						+ SVerticalBox::Slot()
@@ -99,7 +99,7 @@ void SNovaEventDisplay::Construct(const FArguments& InArgs)
 								SNew(SNeutronText)
 								.TextStyle(&Theme.MainFont)
 								.Text(FNeutronTextGetter::CreateSP(this, &SNovaEventDisplay::GetDetailsText))
-								.WrapTextAt(Theme.EventDisplayWidth)
+								.WrapTextAt(Theme.GenericMenuWidth)
 								.Visibility(this, &SNovaEventDisplay::GetDetailsVisibility)
 							]
 						]
