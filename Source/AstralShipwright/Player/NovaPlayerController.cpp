@@ -426,7 +426,7 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 			NCHECK(Planetariums.Num() > 0);
 
 			// Define scene parameters
-			double        ViewDistance = StationDocks.Num() > 0 ? 20000.0 : 50000.0;
+			double        ViewDistance = StationDocks.Num() > 0 ? 10000.0 : 25000.0;
 			const FVector TargetLocation =
 				StationDocks.Num() > 0 ? PlayerStart->GetWaitingPointLocation() : Asteroids[0]->GetActorLocation();
 			const FVector BackdropLocation =

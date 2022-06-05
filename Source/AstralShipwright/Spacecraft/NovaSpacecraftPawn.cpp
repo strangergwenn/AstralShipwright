@@ -52,6 +52,9 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 	SetReplicatingMovement(false);
 	bAlwaysRelevant               = true;
 	PrimaryActorTick.bCanEverTick = true;
+
+	// Defaults
+	DefaultDistanceFactor = 2.5f;
 }
 
 /*----------------------------------------------------
