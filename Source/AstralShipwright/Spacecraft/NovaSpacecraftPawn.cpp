@@ -86,7 +86,7 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 		}
 
 		// While not updating the spacecraft, always update to the game state
-		else if (!EditingSpacecraft)
+		else if (!IsEditing())
 		{
 			const ANovaGameState* GameState = GetWorld()->GetGameState<ANovaGameState>();
 

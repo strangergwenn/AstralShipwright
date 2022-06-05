@@ -76,6 +76,7 @@ public:
 			[=]()
 			{
 				SpacecraftPawn->RevertModifications();
+				SpacecraftPawn->SetEditing(true);
 			});
 
 		// Reversal confirmation callback
