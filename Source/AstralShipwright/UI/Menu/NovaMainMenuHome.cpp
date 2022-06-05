@@ -123,14 +123,32 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 							.VAlign(VAlign_Center)
 							.AutoWidth()
 							[
-								SNew(SRichTextBlock)
-								.Text(LOCTEXT("Alpha", "<img src=\"/Text/Warning\"/> Astral Shipwright is currently in early Alpha and may present bugs"))
-								.TextStyle(&Theme.MainFont)
-								.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
-								+ SRichTextBlock::ImageDecorator()
+								SNew(SBox)
+								.WidthOverride(700)
+								[
+									SNew(SRichTextBlock)
+									.Text(LOCTEXT("Alpha", "<img src=\"/Text/Warning\"/> Astral Shipwright is currently in early Alpha and may present bugs"))
+									.TextStyle(&Theme.MainFont)
+									.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
+									+ SRichTextBlock::ImageDecorator()
+								]
 							]
 
 							+ SHorizontalBox::Slot()
+
+							+ SHorizontalBox::Slot()
+							.VAlign(VAlign_Center)
+							.AutoWidth()
+							[
+								SNeutronNew(SNeutronButton)
+								.Action(FNeutronPlayerInput::MenuSecondary)
+								.Text(LOCTEXT("ReportBug", "Report a bug"))
+								.HelpText(LOCTEXT("ReportBugHelp", "Report a bug on the project's tracker"))
+								.OnClicked(FSimpleDelegate::CreateLambda([this]()
+								{
+									FPlatformProcess::LaunchURL(TEXT("https://github.com/arbonagw/AstralShipwright/issues"), NULL, NULL);
+								}))
+							]
 
 							+ SHorizontalBox::Slot()
 							.VAlign(VAlign_Center)
@@ -149,13 +167,17 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 							.VAlign(VAlign_Center)
 							.AutoWidth()
 							[
-								SNew(STextBlock)
-								.Text(FText::FormatNamed(INVTEXT("{GameName} {GameVersion} / Unreal® Engine {EngineVersion} / {GameDate} / © Deimos Games 2022"),
-									TEXT("GameName"), ProjectName,
-									TEXT("GameVersion"), ProjectVersion,
-									TEXT("EngineVersion"), FText::FromString(FEngineVersion::Current().ToString(EVersionComponent::Patch)),
-									TEXT("GameDate"), FText::FromString(FApp::GetBuildDate())))
-								.TextStyle(&Theme.MainFont)
+								SNew(SBox)
+								.WidthOverride(700)
+								[
+									SNew(STextBlock)
+									.Text(FText::FormatNamed(INVTEXT("{GameName} {GameVersion} / Unreal® Engine {EngineVersion} / {GameDate} / © Deimos Games 2022"),
+										TEXT("GameName"), ProjectName,
+										TEXT("GameVersion"), ProjectVersion,
+										TEXT("EngineVersion"), FText::FromString(FEngineVersion::Current().ToString(EVersionComponent::Patch)),
+										TEXT("GameDate"), FText::FromString(__DATE__)))
+									.TextStyle(&Theme.MainFont)
+								]
 							]
 
 							+ SHorizontalBox::Slot()
