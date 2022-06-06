@@ -15,7 +15,7 @@
     Constructor
 ----------------------------------------------------*/
 
-UNovaSpacecraftDriveComponent::UNovaSpacecraftDriveComponent() : Super()
+UNovaSpacecraftDriveComponent::UNovaSpacecraftDriveComponent() : Super(), CurrentTemperature(0.0f), EngineIntensity(0.0f)
 {
 	// Settings
 	SetAbsolute(false, false, true);
@@ -45,7 +45,6 @@ void UNovaSpacecraftDriveComponent::BeginPlay()
 
 	// Create exhaust metadata
 	ExhaustPower.SetPeriod(0.25f);
-	CurrentTemperature = 0;
 
 	// Create exhaust material
 	ExhaustMaterial = UMaterialInstanceDynamic::Create(GetMaterial(0), GetWorld());
@@ -68,12 +67,18 @@ void UNovaSpacecraftDriveComponent::TickComponent(float DeltaTime, ELevelTick Ti
 		INeutronMeshInterface*                 ParentMesh        = Cast<INeutronMeshInterface>(GetAttachParent());
 		NCHECK(ParentMesh);
 
-		// Get the intensity
-		float EngineIntensity = 0.0f;
-		if (IsValid(OrbitalSimulation) && IsValid(SpacecraftPawn) && !ParentMesh->IsDematerializing())
+		// Update the state when the intensity is 0 or 1
+		if (ExhaustPower.Get() <= KINDA_SMALL_NUMBER || ExhaustPower.Get() >= 1 - KINDA_SMALL_NUMBER)
 		{
-			EngineIntensity =
-				OrbitalSimulation->GetCurrentSpacecraftThrustFactor(SpacecraftPawn->GetSpacecraftIdentifier(), FNovaTime::FromSeconds(0.5));
+			if (IsValid(OrbitalSimulation) && IsValid(SpacecraftPawn) && !ParentMesh->IsDematerializing())
+			{
+				EngineIntensity = OrbitalSimulation->GetCurrentSpacecraftThrustFactor(
+					SpacecraftPawn->GetSpacecraftIdentifier(), FNovaTime::FromSeconds(0.5));
+			}
+			else
+			{
+				EngineIntensity = 0.0f;
+			}
 		}
 
 		// Apply power

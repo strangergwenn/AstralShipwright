@@ -69,4 +69,5 @@ protected:
 
 	// Temperature
 	float CurrentTemperature;
+	float EngineIntensity;
 };
