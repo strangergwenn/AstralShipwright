@@ -240,7 +240,7 @@ bool ANovaSpacecraftPawn::IsDocked() const
 
 bool ANovaSpacecraftPawn::IsDocking() const
 {
-	return IsValid(MovementComponent) && MovementComponent->GetState() == ENovaMovementState::Docking;
+	return IsValid(MovementComponent) && MovementComponent->GetState() == ENovaMovementState::DockingPhase1;
 }
 
 const UPrimitiveComponent* ANovaSpacecraftPawn::GetAnchorComponent() const

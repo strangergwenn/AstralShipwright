@@ -735,8 +735,7 @@ ENovaTrajectoryAction ANovaGameState::CheckTrajectoryAbort(FText* AbortReason) c
 		if (Pawn->GetPlayerState())
 		{
 			// Docking or undocking
-			if (Pawn->GetSpacecraftMovement()->GetState() == ENovaMovementState::Docking ||
-				Pawn->GetSpacecraftMovement()->GetState() == ENovaMovementState::Docked)
+			if (Pawn->GetSpacecraftMovement()->IsDockingUndocking() || Pawn->GetSpacecraftMovement()->IsDocked())
 			{
 				if (AbortReason)
 				{

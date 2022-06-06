@@ -15,9 +15,11 @@ enum class ENovaMovementState : uint8
 	Idle,
 	Stopping,
 
-	Docking,
+	DockingPhase1,
+	DockingPhase2,
 	Docked,
-	Undocking,
+	UndockingPhase1,
+	UndockingPhase2,
 
 	Orbiting,
 	ExitingOrbit,
@@ -136,7 +138,9 @@ public:
 	/** Check if the spacecraft is docking or undocking */
 	bool IsDockingUndocking() const
 	{
-		return IsInitialized() && (GetState() == ENovaMovementState::Docking || GetState() == ENovaMovementState::Undocking);
+		return IsInitialized() &&
+		       (GetState() == ENovaMovementState::DockingPhase1 || GetState() == ENovaMovementState::DockingPhase2 ||
+				   GetState() == ENovaMovementState::UndockingPhase1 || GetState() == ENovaMovementState::UndockingPhase2);
 	}
 
 	/** Check if the spacecraft is orbiting */
@@ -257,7 +261,7 @@ protected:
 	/** Get the max velocity */
 	double GetMaximumAcceleration() const
 	{
-		return (MovementCommand.State == ENovaMovementState::Docking || MovementCommand.State == ENovaMovementState::Undocking)
+		return (MovementCommand.State == ENovaMovementState::DockingPhase1 || MovementCommand.State == ENovaMovementState::UndockingPhase2)
 		         ? MaxSlowLinearAcceleration
 		         : LinearAcceleration;
 	}

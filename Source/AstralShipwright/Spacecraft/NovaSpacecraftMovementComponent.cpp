@@ -218,7 +218,7 @@ void UNovaSpacecraftMovementComponent::Dock(FSimpleDelegate Callback)
 	NLOG("UNovaSpacecraftMovementComponent::Dock ('%s')", *GetRoleString(this));
 
 	CompletionCallback = Callback;
-	RequestMovement(FNovaMovementCommand(ENovaMovementState::Docking, DockState.Actor));
+	RequestMovement(FNovaMovementCommand(ENovaMovementState::DockingPhase1, DockState.Actor));
 }
 
 void UNovaSpacecraftMovementComponent::Undock(FSimpleDelegate Callback)
@@ -226,7 +226,7 @@ void UNovaSpacecraftMovementComponent::Undock(FSimpleDelegate Callback)
 	NLOG("UNovaSpacecraftMovementComponent::Undock ('%s')", *GetRoleString(this));
 
 	CompletionCallback = Callback;
-	RequestMovement(FNovaMovementCommand(ENovaMovementState::Undocking));
+	RequestMovement(FNovaMovementCommand(ENovaMovementState::UndockingPhase1));
 }
 
 void UNovaSpacecraftMovementComponent::Stop(FSimpleDelegate Callback)
@@ -279,6 +279,8 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 	TArray<AActor*> Asteroids;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
 	const FVector WaitingPointLocation     = IsValid(DockState.Actor) ? DockState.Actor->GetWaitingPointLocation() : FVector::ZeroVector;
+	const FVector StartPoint               = IsValid(DockState.Actor) ? DockState.Actor->GetActorLocation() : FVector::ZeroVector;
+	const FVector DockingMidpoint          = FVector((WaitingPointLocation - StartPoint).X / 2.0, StartPoint.Y, StartPoint.Z);
 	const FVector AsteroidLocation         = Asteroids.Num() ? Asteroids[0]->GetActorLocation() : FVector::ZeroVector;
 	const FVector CurrentLocation          = UpdatedComponent->GetComponentLocation();
 	const FVector AsteroidRelativeLocation = CurrentLocation - AsteroidLocation;
@@ -296,53 +298,81 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 		case ENovaMovementState::Anchored:
 			break;
 
-		// Docking procedure
-		case ENovaMovementState::Docking:
-			DockState.IsDocked       = true;
-			AttitudeCommand.Velocity = FVector::ZeroVector;
+		// Docking procedure 1
+		case ENovaMovementState::DockingPhase1:
+			DockState.IsDocked = true;
 			if (!IsValid(MovementCommand.Target))
 			{
-				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Docking : aborted");
+				NLOG("UNovaSpacecraftMovementComponent::ProcessState : DockingPhase1 : aborted");
 
-				MovementCommand.State = ENovaMovementState::Idle;
+				MovementCommand.State    = ENovaMovementState::Idle;
+				AttitudeCommand.Velocity = FVector::ZeroVector;
 			}
 			else if (MovementCommand.Dirty)
 			{
-				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Docking : starting");
+				NLOG("UNovaSpacecraftMovementComponent::ProcessState : DockingPhase1 : starting");
 
-				AttitudeCommand.Location    = MovementCommand.Target->GetActorLocation() - CurrentOrbitalLocation;
+				AttitudeCommand.Location    = DockingMidpoint - CurrentOrbitalLocation;
 				AttitudeCommand.Orientation = FVector(1, 0, 0).ToOrientationQuat();
-				AttitudeCommand.Velocity    = FVector::ZeroVector;
+				AttitudeCommand.Velocity    = FVector(-0.1 * MaxLinearVelocity, 0, 0);
 			}
-			else if (LinearAttitudeIdle && AngularAttitudeIdle)
+			else if (LinearAttitudeDistance < 10)
 			{
-				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Docking : done");
+				NLOG("UNovaSpacecraftMovementComponent::ProcessState : DockingPhase1 : done");
+
+				AttitudeCommand.Location = StartPoint - CurrentOrbitalLocation;
+				AttitudeCommand.Velocity = FVector::ZeroVector;
+
+				MovementCommand.State = ENovaMovementState::DockingPhase2;
+			}
+			break;
+
+		// Docking procedure 2
+		case ENovaMovementState::DockingPhase2:
+			DockState.IsDocked       = true;
+			AttitudeCommand.Velocity = FVector::ZeroVector;
+			if (LinearAttitudeIdle && AngularAttitudeIdle)
+			{
+				NLOG("UNovaSpacecraftMovementComponent::ProcessState : DockingPhase2 : done");
 
 				MovementCommand.State = ENovaMovementState::Docked;
 				SignalCompletion();
 			}
 			break;
 
-		// Undocking procedure
-		case ENovaMovementState::Undocking:
+		// Undocking procedure 1
+		case ENovaMovementState::UndockingPhase1:
 			AttitudeCommand.Velocity = FVector::ZeroVector;
 			DockState.IsDocked       = false;
 			if (MovementCommand.Dirty)
 			{
-				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Undocking : starting");
+				NLOG("UNovaSpacecraftMovementComponent::ProcessState : UndockingPhase1 : starting");
 
-				AttitudeCommand.Location = WaitingPointLocation - CurrentOrbitalLocation;
+				AttitudeCommand.Location = DockingMidpoint - CurrentOrbitalLocation;
+				AttitudeCommand.Velocity = FVector(0.1 * MaxLinearVelocity, 0, 0);
 			}
-			else if (LinearAttitudeIdle && AngularAttitudeIdle)
+			else if (LinearAttitudeDistance < 10)
 			{
-				NLOG("UNovaSpacecraftMovementComponent::ProcessState : Undocking : done");
+				NLOG("UNovaSpacecraftMovementComponent::ProcessState : UndockingPhase1 : done");
+
+				AttitudeCommand.Location    = WaitingPointLocation - CurrentOrbitalLocation;
+				AttitudeCommand.Orientation = FVector(1, 0, 0).ToOrientationQuat();
+				AttitudeCommand.Velocity    = FVector::ZeroVector;
+
+				MovementCommand.State = ENovaMovementState::UndockingPhase2;
+			}
+			break;
+
+		// Undocking procedure 2
+		case ENovaMovementState::UndockingPhase2:
+			AttitudeCommand.Velocity = FVector::ZeroVector;
+			DockState.IsDocked       = false;
+			if (LinearAttitudeIdle && AngularAttitudeIdle)
+			{
+				NLOG("UNovaSpacecraftMovementComponent::ProcessState : UndockingPhase2 : done");
 
 				MovementCommand.State = ENovaMovementState::Idle;
 				SignalCompletion();
-			}
-			else if (LinearAttitudeDistance < 50)
-			{
-				AttitudeCommand.Orientation = FVector(1, 0, 0).ToOrientationQuat();
 			}
 			break;
 
