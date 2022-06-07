@@ -391,7 +391,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 				FMath::DegreesToRadians(OrbitingAngularVelocity * (GetWorld()->GetTimeSeconds() - InitialOrbitingTime));
 
 			// Proceed with simple orbiting math
-			AttitudeCommand.Orientation = FQuat(FVector::UpVector, CurrentOrbitingHeading + PI / 2).GetNormalized();
+			AttitudeCommand.Orientation = FQuat(FVector::UpVector, CurrentOrbitingHeading + DOUBLE_PI / 2).GetNormalized();
 			AttitudeCommand.Location =
 				AsteroidLocation + FQuat(FVector::UpVector, CurrentOrbitingHeading).RotateVector(FVector(OrbitingDistance, 0, 0));
 			AttitudeCommand.Location.Z = WaitingPointLocation.Z;
@@ -429,8 +429,8 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 			{
 				// Compute avoidance point
 				const TArray<FVector> AsteroidAvoidancePoints = {
-					FQuat(FVector::UpVector, PI / 2).RotateVector(AsteroidRelativeWaitingPointLocation),
-					FQuat(FVector::UpVector, -PI / 2).RotateVector(AsteroidRelativeWaitingPointLocation)};
+					FQuat(FVector::UpVector, DOUBLE_PI / 2).RotateVector(AsteroidRelativeWaitingPointLocation),
+					FQuat(FVector::UpVector, -DOUBLE_PI / 2).RotateVector(AsteroidRelativeWaitingPointLocation)};
 				const int32 AvoidanceIndex = (AsteroidAvoidancePoints[1] - AsteroidRelativeLocation).Size() >
 				                                     (AsteroidAvoidancePoints[0] - AsteroidRelativeLocation).Size()
 				                               ? 0
@@ -542,7 +542,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 			}
 			else if (LinearAttitudeDistance < 20)
 			{
-				AttitudeCommand.Orientation = FQuat(FVector::UpVector, InitialOrbitingHeading + PI / 2).GetNormalized();
+				AttitudeCommand.Orientation = FQuat(FVector::UpVector, InitialOrbitingHeading + DOUBLE_PI / 2).GetNormalized();
 			}
 
 			// Define target

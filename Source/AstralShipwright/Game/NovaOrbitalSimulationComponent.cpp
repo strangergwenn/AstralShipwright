@@ -195,7 +195,7 @@ FNovaTrajectoryParameters UNovaOrbitalSimulationComponent::PrepareTrajectory(
 	return Parameters;
 }
 
-FNovaTrajectory UNovaOrbitalSimulationComponent::ComputeTrajectory(const FNovaTrajectoryParameters& Parameters, float PhasingAltitude)
+FNovaTrajectory UNovaOrbitalSimulationComponent::ComputeTrajectory(const FNovaTrajectoryParameters& Parameters, double PhasingAltitude)
 {
 	// Get phase and altitude
 	const FNovaTime& StartTime           = Parameters.StartTime;
@@ -673,7 +673,7 @@ TPair<const UNovaArea*, double> UNovaOrbitalSimulationComponent::GetNearestAreaA
 		}
 	}
 
-	return TPair<const UNovaArea*, float>(ClosestArea, ClosestDistance);
+	return TPair<const UNovaArea*, double>(ClosestArea, ClosestDistance);
 }
 
 TPair<const UNovaArea*, double> UNovaOrbitalSimulationComponent::GetPlayerNearestAreaAndDistanceAtArrival() const

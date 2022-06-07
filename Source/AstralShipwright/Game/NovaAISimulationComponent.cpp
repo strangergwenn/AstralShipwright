@@ -503,7 +503,7 @@ void UNovaAISimulationComponent::StartTrajectory(
 	// Compute trajectory candidates
 	TArray<FNovaTrajectory>   Candidates;
 	FNovaTrajectoryParameters Parameters = OrbitalSimulation->PrepareTrajectory(SourceOrbit, DestinationOrbit, DeltaTime, Spacecraft);
-	for (float Altitude = 300; Altitude <= 1500; Altitude += 200)
+	for (double Altitude = 300; Altitude <= 1500; Altitude += 200)
 	{
 		if (Altitude != Parameters.DestinationAltitude && Altitude != Parameters.Source.Geometry.StartAltitude &&
 			Altitude != Parameters.Source.Geometry.OppositeAltitude)

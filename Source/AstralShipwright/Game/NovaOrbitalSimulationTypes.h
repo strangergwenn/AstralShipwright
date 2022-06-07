@@ -150,7 +150,7 @@ struct FNovaOrbitGeometry
 		const double µ       = Body->GetGravitationalParameter();
 
 		const double SemiMajorAxis = 0.5f * (RadiusA + RadiusB);
-		return FNovaTime::FromMinutes(2.0 * PI * sqrt(pow(SemiMajorAxis, 3.0) / µ) / 60.0);
+		return FNovaTime::FromMinutes(2.0 * DOUBLE_PI * FMath::Sqrt(FMath::Pow(SemiMajorAxis, 3.0) / µ) / 60.0);
 	}
 
 	/** Get the current phase on this orbit */

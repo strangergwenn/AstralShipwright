@@ -74,7 +74,7 @@ public:
 		const FNovaOrbit& Source, const FNovaOrbit& Destination, FNovaTime DeltaTime, const TArray<FGuid>& SpacecraftIdentifiers) const;
 
 	/** Compute a trajectory */
-	FNovaTrajectory ComputeTrajectory(const FNovaTrajectoryParameters& Parameters, float PhasingAltitude);
+	FNovaTrajectory ComputeTrajectory(const FNovaTrajectoryParameters& Parameters, double PhasingAltitude);
 
 	/** Check if this spacecraft is on a trajectory */
 	bool IsOnTrajectory(const FGuid& SpacecraftIdentifier) const;
@@ -287,7 +287,7 @@ protected:
 	/** Compute the period of a stable circular orbit */
 	static FNovaTime GetOrbitalPeriod(const double GravitationalParameter, const double SemiMajorAxis)
 	{
-		return FNovaTime::FromMinutes(2.0 * PI * sqrt(pow(SemiMajorAxis, 3.0) / GravitationalParameter) / 60.0);
+		return FNovaTime::FromMinutes(2.0 * DOUBLE_PI * sqrt(pow(SemiMajorAxis, 3.0) / GravitationalParameter) / 60.0);
 	}
 
 	/*----------------------------------------------------

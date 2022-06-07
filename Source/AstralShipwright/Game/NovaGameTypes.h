@@ -4,7 +4,6 @@
 
 #include "EngineMinimal.h"
 #include "Neutron/System/NeutronAssetManager.h"
-#include <cmath>
 #include "NovaGameTypes.generated.h"
 
 /*----------------------------------------------------
