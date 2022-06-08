@@ -27,18 +27,18 @@ struct FNovaHohmannTransfer
 	 * raising OriginalRadius to DestinationRadius, while maneuvering at ManeuverRadius (technically not a Hohmann transfer) */
 	FNovaHohmannTransfer(const double µ, const double ManeuverRadius, const double OriginalRadius, const double DestinationRadius)
 	{
-		const double SourceSemiMajorAxis = 0.5f * (ManeuverRadius + OriginalRadius);
+		const double SourceSemiMajorAxis = 0.5 * (ManeuverRadius + OriginalRadius);
 
 		// StartDeltaV = VTransfer1 - VSource
-		StartDeltaV = sqrt((2.0 * µ * DestinationRadius) / (ManeuverRadius * (ManeuverRadius + DestinationRadius))) -
-		              sqrt(µ * ((2.0 / ManeuverRadius) - (1.0 / SourceSemiMajorAxis)));
+		StartDeltaV = FMath::Sqrt((2.0 * µ * DestinationRadius) / (ManeuverRadius * (ManeuverRadius + DestinationRadius))) -
+		              FMath::Sqrt(µ * ((2.0 / ManeuverRadius) - (1.0 / SourceSemiMajorAxis)));
 
 		// EndDeltaV = VDest - VTransfer2
-		EndDeltaV = sqrt(µ / DestinationRadius) * (1.0 - sqrt((2.0 * ManeuverRadius) / (ManeuverRadius + DestinationRadius)));
+		EndDeltaV = FMath::Sqrt(µ / DestinationRadius) * (1.0 - FMath::Sqrt((2.0 * ManeuverRadius) / (ManeuverRadius + DestinationRadius)));
 
-		TotalDeltaV = abs(StartDeltaV) + abs(EndDeltaV);
+		TotalDeltaV = FMath::Abs(StartDeltaV) + FMath::Abs(EndDeltaV);
 
-		Duration = FNovaTime::FromMinutes(PI * sqrt(pow(ManeuverRadius + DestinationRadius, 3.0) / (8.0 * µ)) / 60);
+		Duration = FNovaTime::FromMinutes(DOUBLE_PI * FMath::Sqrt(FMath::Pow(0.5 * (ManeuverRadius + DestinationRadius), 3.0) / µ) / 60);
 	}
 
 	double    StartDeltaV;

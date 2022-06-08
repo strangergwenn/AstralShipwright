@@ -149,7 +149,7 @@ struct FNovaOrbitGeometry
 		const double RadiusB = Body->GetRadius(OppositeAltitude);
 		const double µ       = Body->GetGravitationalParameter();
 
-		const double SemiMajorAxis = 0.5f * (RadiusA + RadiusB);
+		const double SemiMajorAxis = 0.5 * (RadiusA + RadiusB);
 		return FNovaTime::FromMinutes(2.0 * DOUBLE_PI * FMath::Sqrt(FMath::Pow(SemiMajorAxis, 3.0) / µ) / 60.0);
 	}
 
@@ -159,11 +159,11 @@ struct FNovaOrbitGeometry
 	{
 		NCHECK(Body);
 		const double PhaseDelta = (DeltaTime / GetOrbitalPeriod()) * 360;
-		double       Result     = StartPhase + (Unwind ? FMath::Fmod(PhaseDelta, 360.0) : PhaseDelta);
+		double       Result     = (Unwind ? FMath::Fmod(StartPhase + PhaseDelta, 360.0) : StartPhase + PhaseDelta);
 
 		if (Unwind)
 		{
-			NCHECK(Result < StartPhase + 360);
+			NCHECK(Result < 360);
 		}
 
 		return Result;
@@ -216,7 +216,7 @@ struct FNovaOrbitalLocation
 		const double RadiusA       = Geometry.Body->GetRadius(Geometry.StartAltitude);
 		const double RadiusB       = Geometry.Body->GetRadius(Geometry.OppositeAltitude);
 		const double µ             = Geometry.Body->GetGravitationalParameter();
-		const double SemiMajorAxis = 0.5f * (RadiusA + RadiusB);
+		const double SemiMajorAxis = 0.5 * (RadiusA + RadiusB);
 
 		const FVector2D CartesianLocation = GetCartesianLocation();
 
@@ -244,7 +244,7 @@ struct FNovaOrbitalLocation
 		const bool StartFast     = Geometry.StartAltitude < Geometry.OppositeAltitude;
 		if (StartFast)
 		{
-			RelativePhase = -RelativePhase - PI;
+			RelativePhase = -RelativePhase - DOUBLE_PI;
 		}
 
 		// Build the Cartesian coordinates
@@ -312,7 +312,7 @@ struct FNovaOrbit
 	/** Get the full location on this orbit */
 	FNovaOrbitalLocation GetLocation(FNovaTime CurrentTime) const
 	{
-		double CurrentPhase = GetPhase<true>(CurrentTime);
+		double CurrentPhase = GetPhase<false>(CurrentTime);
 		return FNovaOrbitalLocation(Geometry, CurrentPhase);
 	}
 
