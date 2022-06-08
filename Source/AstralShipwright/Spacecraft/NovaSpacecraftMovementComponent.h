@@ -304,9 +304,13 @@ public:
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	double RestitutionCoefficient;
 
-	// Orbiting velocity in degrees/s
+	// Orbiting acceleration time in seconds
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	double OrbitingAngularVelocity;
+	double OrbitingAccelerationTime;
+
+	// Maximum allowed orbiting velocity in degrees/s
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	double OrbitingMaxAngularVelocity;
 
 	// Orbiting distance in units
 	UPROPERTY(Category = Nova, EditDefaultsOnly)

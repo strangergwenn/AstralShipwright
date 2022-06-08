@@ -57,8 +57,9 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	RestitutionCoefficient = 0.5f;
 
 	// High level defaults
-	OrbitingAngularVelocity = 3;
-	OrbitingDistance        = 20000;
+	OrbitingAccelerationTime   = 2.0;
+	OrbitingMaxAngularVelocity = 3;
+	OrbitingDistance           = 20000;
 
 	// Settings
 	PrimaryComponentTick.bCanEverTick = true;
@@ -385,10 +386,14 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 				InitialOrbitingHeading = AsteroidRelativeLocation.HeadingAngle();
 			}
 
+			// Define the maximum allowed angular velocity to ensure reasonable acceleration
+			const double MaxReasonableVelocityDelta = LinearAcceleration * OrbitingAccelerationTime;
+			const double DesiredAngularVelocity =
+				FMath::Min(MaxReasonableVelocityDelta / (OrbitingDistance / 100), FMath::DegreesToRadians(OrbitingMaxAngularVelocity));
+
 			// Define the current heading target
 			const double CurrentOrbitingHeading =
-				InitialOrbitingHeading +
-				FMath::DegreesToRadians(OrbitingAngularVelocity * (GetWorld()->GetTimeSeconds() - InitialOrbitingTime));
+				InitialOrbitingHeading + DesiredAngularVelocity * (GetWorld()->GetTimeSeconds() - InitialOrbitingTime);
 
 			// Proceed with simple orbiting math
 			AttitudeCommand.Orientation = FQuat(FVector::UpVector, CurrentOrbitingHeading + DOUBLE_PI / 2).GetNormalized();
