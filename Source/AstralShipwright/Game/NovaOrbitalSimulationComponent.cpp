@@ -277,8 +277,21 @@ FNovaTrajectory UNovaOrbitalSimulationComponent::ComputeTrajectory(const FNovaTr
 	// First transfer
 	if (FirstTransferIsValid)
 	{
-		Trajectory.Add(FNovaOrbit(
-			FNovaOrbitGeometry(Parameters.Body, SourceAltitudeA, PhasingAltitude, CurrentPhase, CurrentPhase + 180), CurrentTime));
+		const FNovaOrbit TransferOrbit = FNovaOrbit(
+			FNovaOrbitGeometry(Parameters.Body, SourceAltitudeA, PhasingAltitude, CurrentPhase, CurrentPhase + 180), CurrentTime);
+
+#if WITH_EDITOR
+		const double DistanceErrorDegrees = FMath::UnwindDegrees(
+			FMath::Abs(TransferOrbit.GetPhase<true>(CurrentTime) - Trajectory.InitialOrbit.GetPhase<true>(CurrentTime)));
+		NCHECK(DistanceErrorDegrees < SMALL_NUMBER);
+
+		const double DistanceErrorMeters = 1000 * (TransferOrbit.GetLocation(CurrentTime).GetCartesianLocation() -
+													  Trajectory.InitialOrbit.GetLocation(CurrentTime).GetCartesianLocation())
+		                                              .Size();
+		NCHECK(DistanceErrorMeters < KINDA_SMALL_NUMBER);
+#endif    // WITH_EDITOR
+
+		Trajectory.Add(TransferOrbit);
 	}
 	CurrentPhase += 180;
 
@@ -293,8 +306,21 @@ FNovaTrajectory UNovaOrbitalSimulationComponent::ComputeTrajectory(const FNovaTr
 	// Phasing orbit
 	if (FirstTransferIsValid)
 	{
-		Trajectory.Add(FNovaOrbit(
-			FNovaOrbitGeometry(Parameters.Body, PhasingAltitude, PhasingAltitude, CurrentPhase, CurrentPhase + PhasingAngle), CurrentTime));
+		const FNovaOrbit PhasingOrbit = FNovaOrbit(
+			FNovaOrbitGeometry(Parameters.Body, PhasingAltitude, PhasingAltitude, CurrentPhase, CurrentPhase + PhasingAngle), CurrentTime);
+
+#if WITH_EDITOR
+		const double DistanceErrorDegrees = FMath::UnwindDegrees(
+			FMath::Abs(PhasingOrbit.GetPhase<true>(CurrentTime) - Trajectory.Transfers.Last().GetPhase<true>(CurrentTime)));
+		NCHECK(DistanceErrorDegrees < SMALL_NUMBER);
+
+		const double DistanceErrorMeters = 1000 * (PhasingOrbit.GetLocation(CurrentTime).GetCartesianLocation() -
+													  Trajectory.Transfers.Last().GetLocation(CurrentTime).GetCartesianLocation())
+		                                              .Size();
+		NCHECK(DistanceErrorMeters < KINDA_SMALL_NUMBER);
+#endif    // WITH_EDITOR
+
+		Trajectory.Add(PhasingOrbit);
 	}
 	CurrentTime += PhasingDuration;
 	CurrentPhase += PhasingAngle;
@@ -315,8 +341,23 @@ FNovaTrajectory UNovaOrbitalSimulationComponent::ComputeTrajectory(const FNovaTr
 	}
 
 	// Second transfer
-	Trajectory.Add(FNovaOrbit(
-		FNovaOrbitGeometry(Parameters.Body, PhasingAltitude, DestinationAltitude, CurrentPhase, CurrentPhase + 180), CurrentTime));
+	{
+		const FNovaOrbit TransferOrbit = FNovaOrbit(
+			FNovaOrbitGeometry(Parameters.Body, PhasingAltitude, DestinationAltitude, CurrentPhase, CurrentPhase + 180), CurrentTime);
+
+#if WITH_EDITOR
+		const double DistanceErrorDegrees = FMath::UnwindDegrees(
+			FMath::Abs(TransferOrbit.GetPhase<true>(CurrentTime) - Trajectory.Transfers.Last().GetPhase<true>(CurrentTime)));
+		NCHECK(DistanceErrorDegrees < SMALL_NUMBER);
+
+		double DistanceErrorMeters = 1000 * (TransferOrbit.GetLocation(CurrentTime).GetCartesianLocation() -
+												Trajectory.Transfers.Last().GetLocation(CurrentTime).GetCartesianLocation())
+		                                        .Size();
+		NCHECK(DistanceErrorMeters < 0.1);
+#endif    // WITH_EDITOR
+
+		Trajectory.Add(TransferOrbit);
+	}
 	FleetManeuver = Fleet.AddManeuver(TransferB.EndDeltaV);
 	CurrentPhase += 180;
 
