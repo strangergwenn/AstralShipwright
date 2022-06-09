@@ -681,6 +681,7 @@ void ANovaPlayerController::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft)
 		NCHECK(SpacecraftPawn);
 
 		SpacecraftPawn->SetSpacecraftIdentifier(Spacecraft.Identifier);
+		SpacecraftPawn->RevertModifications();
 	}
 
 	// Tell the server

@@ -137,7 +137,7 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 			{
 				if (SpacecraftPawn->HasModifications())
 				{
-					DesiredState.Text = LOCTEXT("ModifiedSpacecraft", "Spacecraft has pending changes");
+					DesiredState.Text = LOCTEXT("ModifiedSpacecraft", "Spacecraft has pending changes and cannot trade or undock");
 				}
 			}
 			else

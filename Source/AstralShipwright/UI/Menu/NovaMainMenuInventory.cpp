@@ -108,7 +108,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 				.Size("HighButtonSize")
 				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
 				{
-					return SpacecraftPawn && SpacecraftPawn->IsDocked();
+					return SpacecraftPawn && SpacecraftPawn->IsDocked() && !SpacecraftPawn->HasModifications();
 				})))
 				.OnClicked(this, &SNovaMainMenuInventory::OnRefillPropellant)
 				.Content()
@@ -195,7 +195,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 					{
 						const FNovaCompartment& Compartment = Spacecraft->Compartments[Index];
 						const FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(Type);
-						return (SpacecraftPawn->IsDocked() || IsValid(Cargo.Resource));
+						return (SpacecraftPawn->IsDocked() || IsValid(Cargo.Resource)) && !SpacecraftPawn->HasModifications();
 					}
 					return false;
 				})))
