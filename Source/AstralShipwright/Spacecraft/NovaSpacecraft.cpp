@@ -64,6 +64,21 @@ bool FNovaCompartment::operator==(const FNovaCompartment& Other) const
 	}
 }
 
+const FNovaCompartmentModule* FNovaCompartment::GetModuleDataBySocket(FName SocketName) const
+{
+	if (Description)
+	{
+		for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+		{
+			if (Description->GetModuleSlot(ModuleIndex).SocketName == SocketName)
+			{
+				return &Modules[ModuleIndex];
+			}
+		}
+	}
+	return nullptr;
+}
+
 const UNovaModuleDescription* FNovaCompartment::GetModuleBySocket(FName SocketName) const
 {
 	if (Description)
@@ -403,7 +418,7 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 		FNovaHatchModuleGroup() : HasHatch(false)
 		{}
 
-		TArray<const UNovaModuleDescription*> Modules;
+		TArray<const FNovaCompartmentModule*> ModuleDataEntries;
 		bool                                  HasHatch;
 	};
 
@@ -423,30 +438,31 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 				const FNovaModuleSlot&        ModuleSlot        = Compartment.Description->GetModuleSlot(ModuleIndex);
 				const FNovaCompartmentModule& CompartmentModule = Compartment.Modules[ModuleIndex];
 				const UNovaModuleDescription* Module            = CompartmentModule.Description;
-				const UNovaModuleDescription* OtherModule       = nullptr;
+				const FNovaCompartmentModule* OtherModuleData   = nullptr;
 				FNovaHatchModuleGroup*        ModuleGroup       = nullptr;
 
 				if (Module && IsHatchModule(Module))
 				{
 					// We already have a previous entry
-					if (IsHatchModuleInPreviousCompartment(CompartmentIndex, ModuleIndex, OtherModule))
+					if (IsHatchModuleInPreviousCompartment(CompartmentIndex, ModuleIndex, OtherModuleData))
 					{
 						for (FNovaHatchModuleGroup& Group : ModuleGroups)
 						{
-							if (Group.Modules.Last() == OtherModule)
+							if (Group.ModuleDataEntries.Last() == OtherModuleData)
 							{
 								ModuleGroup = &Group;
-								Group.Modules.Add(Module);
+								Group.ModuleDataEntries.Add(&CompartmentModule);
 								break;
 							}
 						}
+						NCHECK(ModuleGroup);
 					}
 
 					// New group
 					else
 					{
 						FNovaHatchModuleGroup Group;
-						Group.Modules.Add(Module);
+						Group.ModuleDataEntries.Add(&CompartmentModule);
 						ModuleGroups.Add(Group);
 						ModuleGroup = &ModuleGroups.Last();
 					}
@@ -454,13 +470,16 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 					NCHECK(ModuleGroup);
 
 					// Check for hatches
-					for (FName EquipmentSlot : ModuleSlot.LinkedEquipments)
+					if (!ModuleGroup->HasHatch)
 					{
-						const UNovaEquipmentDescription* Equipment = Compartment.GetEquipmentySocket(EquipmentSlot);
-						if (Equipment && Equipment->IsA<UNovaHatchDescription>())
+						for (const FName EquipmentSlot : ModuleSlot.LinkedEquipments)
 						{
-							ModuleGroup->HasHatch = true;
-							break;
+							const UNovaEquipmentDescription* Equipment = Compartment.GetEquipmentySocket(EquipmentSlot);
+							if (Equipment && Equipment->IsA<UNovaHatchDescription>())
+							{
+								ModuleGroup->HasHatch = true;
+								break;
+							}
 						}
 					}
 				}
@@ -984,7 +1003,8 @@ bool FNovaSpacecraft::IsLastCompartment(int32 CompartmentIndex) const
 	return true;
 }
 
-bool FNovaSpacecraft::IsAnyModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType) const
+const UNovaModuleDescription* FNovaSpacecraft::GetModuleInPreviousCompartment(
+	int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType) const
 {
 	const FNovaCompartment&       Compartment             = Compartments[CompartmentIndex];
 	const FNovaCompartmentModule& Module                  = Compartment.Modules[ModuleIndex];
@@ -996,14 +1016,18 @@ bool FNovaSpacecraft::IsAnyModuleInPreviousCompartment(int32 CompartmentIndex, i
 		if (PreviousCompartment.IsValid())
 		{
 			const UNovaModuleDescription* PreviousModule = PreviousCompartment.GetModuleBySocket(CurrentModuleSocketName);
-			return ((RequireSameType && PreviousModule == Module.Description) || (!RequireSameType && PreviousModule));
+			if ((RequireSameType && PreviousModule == Module.Description) || (!RequireSameType && PreviousModule))
+			{
+				return PreviousModule;
+			}
 		}
 	}
 
-	return false;
+	return nullptr;
 };
 
-bool FNovaSpacecraft::IsAnyModuleInNextCompartment(int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType) const
+const UNovaModuleDescription* FNovaSpacecraft::GetModuleInNextCompartment(
+	int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType) const
 {
 	const FNovaCompartment&       Compartment             = Compartments[CompartmentIndex];
 	const FNovaCompartmentModule& Module                  = Compartment.Modules[ModuleIndex];
@@ -1015,15 +1039,18 @@ bool FNovaSpacecraft::IsAnyModuleInNextCompartment(int32 CompartmentIndex, int32
 		if (NextCompartment.IsValid())
 		{
 			const UNovaModuleDescription* NextModule = NextCompartment.GetModuleBySocket(CurrentModuleSocketName);
-			return ((RequireSameType && NextModule == Module.Description) || (!RequireSameType && NextModule));
+			if ((RequireSameType && NextModule == Module.Description) || (!RequireSameType && NextModule))
+			{
+				return NextModule;
+			}
 		}
 	}
 
-	return false;
+	return nullptr;
 };
 
 bool FNovaSpacecraft::IsHatchModuleInPreviousCompartment(
-	int32 CompartmentIndex, int32 ModuleIndex, const UNovaModuleDescription*& FoundModule) const
+	int32 CompartmentIndex, int32 ModuleIndex, const FNovaCompartmentModule*& FoundModuleData) const
 {
 	const FNovaCompartment&       Compartment             = Compartments[CompartmentIndex];
 	const FNovaCompartmentModule& Module                  = Compartment.Modules[ModuleIndex];
@@ -1034,9 +1061,10 @@ bool FNovaSpacecraft::IsHatchModuleInPreviousCompartment(
 		const FNovaCompartment& PreviousCompartment = Compartments[Index];
 		if (PreviousCompartment.IsValid())
 		{
-			FoundModule = PreviousCompartment.GetModuleBySocket(CurrentModuleSocketName);
-			if (FoundModule && IsHatchModule(FoundModule))
+			const FNovaCompartmentModule* ModuleData = PreviousCompartment.GetModuleDataBySocket(CurrentModuleSocketName);
+			if (ModuleData && ModuleData->Description && IsHatchModule(ModuleData->Description))
 			{
+				FoundModuleData = ModuleData;
 				return true;
 			}
 		}

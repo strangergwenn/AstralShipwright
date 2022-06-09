@@ -83,6 +83,9 @@ struct FNovaCompartment
 		return Description != nullptr;
 	}
 
+	/** Get the module data for the module residing at a particular socket name */
+	const FNovaCompartmentModule* GetModuleDataBySocket(FName SocketName) const;
+
 	/** Get the description of the module residing at a particular socket name */
 	const UNovaModuleDescription* GetModuleBySocket(FName SocketName) const;
 
@@ -510,13 +513,26 @@ protected:
 	}
 
 	/** Check whether the module at CompartmentIndex.ModuleIndex has any other module in front of it */
-	bool IsAnyModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType = false) const;
+	bool IsAnyModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType = false) const
+	{
+		return GetModuleInPreviousCompartment(CompartmentIndex, ModuleIndex, RequireSameType) != nullptr;
+	}
 
 	/** Check whether the module at CompartmentIndex.ModuleIndex has any other module behind it */
-	bool IsAnyModuleInNextCompartment(int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType = false) const;
+	bool IsAnyModuleInNextCompartment(int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType = false) const
+	{
+		return GetModuleInNextCompartment(CompartmentIndex, ModuleIndex, RequireSameType) != nullptr;
+	}
+
+	/** Fetch the module in front of the one at CompartmentIndex.ModuleIndex if any */
+	const UNovaModuleDescription* GetModuleInPreviousCompartment(
+		int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType = false) const;
+
+	/** Fetch the module behind the one at CompartmentIndex.ModuleIndex if any */
+	const UNovaModuleDescription* GetModuleInNextCompartment(int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType = false) const;
 
 	/** Check whether the module at CompartmentIndex.ModuleIndex has another hatch-needing module behind it */
-	bool IsHatchModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex, const UNovaModuleDescription*& FoundModule) const;
+	bool IsHatchModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex, const FNovaCompartmentModule*& FoundModule) const;
 
 	/** Check if this is a hatch module */
 	bool IsHatchModule(const UNovaModuleDescription* Module) const;
