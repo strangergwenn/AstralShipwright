@@ -753,7 +753,7 @@ void ANovaSpacecraftPawn::UpdateBounds()
 			[&](const UPrimitiveComponent* Prim)
 			{
 				if (Prim->IsRegistered() && (IsDocked() || Prim->IsAttachedTo(CompartmentComponents[DisplayFilterIndex])) &&
-					Prim->Implements<UNeutronMeshInterface>())
+					Prim->Implements<UNeutronMeshInterface>() && Cast<INeutronMeshInterface>(Prim)->IsMaterialized())
 				{
 					Bounds += Prim->Bounds.GetBox();
 				}
@@ -771,7 +771,7 @@ void ANovaSpacecraftPawn::UpdateBounds()
 			[&](const UPrimitiveComponent* Prim)
 			{
 				if (Prim->IsRegistered() && Prim->Implements<UNeutronMeshInterface>() &&
-					!Cast<INeutronMeshInterface>(Prim)->IsDematerializing())
+					Cast<INeutronMeshInterface>(Prim)->IsMaterialized())
 				{
 					Origins.Add(Prim->Bounds.Origin);
 				}
