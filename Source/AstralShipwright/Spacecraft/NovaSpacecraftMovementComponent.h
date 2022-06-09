@@ -149,6 +149,13 @@ public:
 		return IsInitialized() && GetState() == ENovaMovementState::Orbiting;
 	}
 
+	/** Check if the spacecraft is anchoring */
+	bool IsAnchoring() const
+	{
+		return IsInitialized() && (GetState() == ENovaMovementState::AnchoringEntry || GetState() == ENovaMovementState::Anchoring ||
+									  GetState() == ENovaMovementState::ExitingAnchor);
+	}
+
 	/** Check if the spacecraft is anchored */
 	bool IsAnchored() const
 	{
@@ -258,12 +265,10 @@ protected:
 	/** Get the transform to use when a new dock actor is ready */
 	FTransform GetInitialTransform() const;
 
-	/** Get the max velocity */
+	/** Get the max acceleration allowed in the current state */
 	double GetMaximumAcceleration() const
 	{
-		return (MovementCommand.State == ENovaMovementState::DockingPhase1 || MovementCommand.State == ENovaMovementState::UndockingPhase2)
-		         ? MaxSlowLinearAcceleration
-		         : LinearAcceleration;
+		return (IsDockingUndocking() || IsAnchoring()) ? MaxSlowLinearAcceleration : LinearAcceleration;
 	}
 
 	/*----------------------------------------------------
@@ -279,10 +284,6 @@ public:
 	// Maximum moving velocity in m/s
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	double MaxLinearVelocity;
-
-	// Maximum moving acceleration in m/s-2 while docking
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	double MaxSlowLinearAcceleration;
 
 	// Maximum delta-V in m/s for which thrusters shall be enabled
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
@@ -349,6 +350,7 @@ protected:
 
 	// Acceleration data
 	double LinearAcceleration;
+	double MaxSlowLinearAcceleration;
 	double AngularAcceleration;
 
 	// Movement state

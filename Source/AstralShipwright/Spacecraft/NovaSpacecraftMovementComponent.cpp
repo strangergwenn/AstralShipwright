@@ -45,13 +45,12 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	, MeasuredAngularAcceleration(FVector::ZeroVector)
 {
 	// Angular defaults
-	LinearDeadDistance        = 1;
-	MaxLinearVelocity         = 50;
-	MaxSlowLinearAcceleration = 10;
-	MaxDeltaVForThrusters     = 5;
-	AngularDeadDistance       = 0.5f;
-	MaxAngularVelocity        = 60;
-	AngularOvershootRatio     = 1.1f;
+	LinearDeadDistance    = 1;
+	MaxLinearVelocity     = 50;
+	MaxDeltaVForThrusters = 5;
+	AngularDeadDistance   = 0.5f;
+	MaxAngularVelocity    = 60;
+	AngularOvershootRatio = 1.1f;
 
 	// Physics defaults
 	RestitutionCoefficient = 0.5f;
@@ -79,8 +78,9 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 	NCHECK(SpacecraftPawn);
 	if (SpacecraftPawn->IsSpacecraftValid())
 	{
-		LinearAcceleration  = SpacecraftPawn->GetPropulsionMetrics().ThrusterThrust / SpacecraftPawn->GetCurrentMass();
-		AngularAcceleration = 4 * LinearAcceleration;
+		LinearAcceleration        = SpacecraftPawn->GetPropulsionMetrics().ThrusterThrust / SpacecraftPawn->GetCurrentMass();
+		AngularAcceleration       = 4 * LinearAcceleration;
+		MaxSlowLinearAcceleration = 0.5 * LinearAcceleration;
 		NCHECK(FMath::IsFinite(LinearAcceleration));
 	}
 
