@@ -206,7 +206,7 @@ public:
 				{
 					const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(Object.SpacecraftIdentifier);
 					NCHECK(Spacecraft);
-					return Spacecraft->GetName();
+					return Spacecraft ? Spacecraft->GetName() : FText();
 				}
 				else if (Object.Maneuver.IsValid())
 				{
