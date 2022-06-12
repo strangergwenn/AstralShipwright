@@ -450,7 +450,7 @@ void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type
 		{
 			CurrentCompartmentIndex = Index;
 
-			auto BuyResource = [=]()
+			auto BuyResource = [this, Index]()
 			{
 				TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), Index);
 			};
