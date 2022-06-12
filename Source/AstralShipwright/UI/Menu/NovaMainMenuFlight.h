@@ -86,6 +86,8 @@ protected:
 	FText GetDockUndockHelp() const;
 	bool  CanDockUndock(FText* Help = nullptr) const;
 
+	bool CanOrbit() const;
+
 	FText GetFastFowardHelp() const;
 	bool  CanFastForward() const;
 

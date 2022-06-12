@@ -245,12 +245,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					SpacecraftMovement->StopOrbiting();
 				}
 			}))
-			.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
-			{
-				TArray<AActor*> Asteroids;
-				UGameplayStatics::GetAllActorsOfClass(PC->GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
-				return Asteroids.Num() > 0;
-			})))
+			.Enabled(this, &SNovaMainMenuFlight::CanOrbit)
 		]
 		
 		// Dock, undock, anchor, leave anchor
@@ -784,6 +779,13 @@ bool SNovaMainMenuFlight::CanDockUndock(FText* Help) const
 	}
 
 	return false;
+}
+
+bool SNovaMainMenuFlight::CanOrbit() const
+{
+	TArray<AActor*> Asteroids;
+	UGameplayStatics::GetAllActorsOfClass(PC->GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
+	return IsInSpace() && Asteroids.Num() > 0;
 }
 
 FText SNovaMainMenuFlight::GetFastFowardHelp() const
