@@ -4,6 +4,7 @@
 #include "NovaMainMenu.h"
 
 #include "Player/NovaPlayerController.h"
+#include "Game/NovaGameUserSettings.h"
 #include "Nova.h"
 
 #include "Neutron/Player/NeutronGameViewportClient.h"
@@ -373,6 +374,16 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		GraphicsContainer->AddSlot()
 		.AutoHeight()
 		[
+			SNeutronAssignNew(CameraDegradationButton, SNeutronButton)
+			.Toggle(true)
+			.Text(LOCTEXT("EnableCameraDegradation", "Enable camera noise"))
+			.HelpText(LOCTEXT("EnableCameraDegradationHelp", "Enable the post-processing layer simulating camera bombardment"))
+			.OnClicked(this, &SNovaMainMenuSettings::OnSpaceFeelToggled)
+		];
+
+		GraphicsContainer->AddSlot()
+		.AutoHeight()
+		[
 			SNeutronAssignNew(NaniteButton, SNeutronButton)
 			.Toggle(true)
 			.Text(LOCTEXT("Nanite", "Enable Nanite"))
@@ -534,6 +545,7 @@ void SNovaMainMenuSettings::Show()
 
 		TSRButton->SetActive(GameUserSettings->EnableTSR);
 		DLSSButton->SetActive(GameUserSettings->EnableDLSS && GameUserSettings->IsDLSSSupported());
+		CameraDegradationButton->SetActive(Cast<UNovaGameUserSettings>(GameUserSettings)->EnableCameraDegradation);
 		NaniteButton->SetActive(GameUserSettings->EnableNanite && GameUserSettings->IsNaniteSupported());
 		LumenButton->SetActive(GameUserSettings->EnableLumen && GameUserSettings->IsLumenSupported());
 		LumenHWRTButton->SetActive(GameUserSettings->EnableLumenHWRT && GameUserSettings->IsLumenHWRTSupported());
@@ -958,6 +970,13 @@ void SNovaMainMenuSettings::OnTSRToggled()
 void SNovaMainMenuSettings::OnDLSSToggled()
 {
 	GameUserSettings->EnableDLSS = DLSSButton->IsActive();
+	GameUserSettings->ApplySettings(false);
+	GameUserSettings->SaveSettings();
+}
+
+void SNovaMainMenuSettings::OnSpaceFeelToggled()
+{
+	Cast<UNovaGameUserSettings>(GameUserSettings)->EnableCameraDegradation = CameraDegradationButton->IsActive();
 	GameUserSettings->ApplySettings(false);
 	GameUserSettings->SaveSettings();
 }

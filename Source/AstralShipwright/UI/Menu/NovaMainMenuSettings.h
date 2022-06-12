@@ -66,7 +66,7 @@ public:
 
 protected:
 
-	// Platfor msupport getters
+	// Platform support getters
 	EVisibility GetPCVisibility() const;
 	bool        IsScreenPercentageSupported() const;
 	bool        IsTSRSupported() const;
@@ -94,8 +94,11 @@ protected:
 	void OnPostProcessChanged(float Value);
 	void OnAntiAliasingChanged(float Value);
 	void OnScreenPercentageChanged(float Value);
+
+	// Graphics settings callbacks
 	void OnTSRToggled();
 	void OnDLSSToggled();
+	void OnSpaceFeelToggled();
 	void OnNaniteToggled();
 	void OnLumenToggled();
 	void OnLumenHWRTToggled();
@@ -170,6 +173,9 @@ protected:
 	TSharedPtr<class SNeutronSlider> PostProcessSlider;
 	TSharedPtr<class SNeutronSlider> AntiAliasingSlider;
 	TSharedPtr<class SNeutronSlider> ScreenPercentageSlider;
+
+	// Graphics settings widgets
+	TSharedPtr<class SNeutronButton> CameraDegradationButton;
 	TSharedPtr<class SNeutronButton> DLSSButton;
 	TSharedPtr<class SNeutronButton> TSRButton;
 	TSharedPtr<class SNeutronButton> NaniteButton;
