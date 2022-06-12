@@ -41,7 +41,7 @@ struct FNovaGameStateSave
 	FNovaTime Time;
 
 	UPROPERTY()
-	int32 CurrentPriceRotation;
+	int32 CurrentPriceRotation = 0;
 
 	UPROPERTY()
 	FNovaAIStateSave AIData;

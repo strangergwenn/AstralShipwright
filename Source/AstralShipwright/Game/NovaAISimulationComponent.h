@@ -37,7 +37,7 @@ struct FNovaAISpacecraftStateSave
 	const class UNovaArea* TargetArea = nullptr;
 
 	UPROPERTY()
-	ENovaAISpacecraftState CurrentState;
+	ENovaAISpacecraftState CurrentState = ENovaAISpacecraftState::Idle;
 
 	UPROPERTY()
 	FNovaTime CurrentStateStartTime;
@@ -59,7 +59,7 @@ struct FNovaAIStateSave
 	TArray<FNovaAISpacecraftStateSave> SpacecraftStates;
 
 	UPROPERTY()
-	int32 PatrolRandomStreamSeed;
+	int32 PatrolRandomStreamSeed = 0;
 };
 
 /** AI spacecraft data */
