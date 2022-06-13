@@ -92,8 +92,8 @@ struct FNovaCompartment
 	/** Get the description of the equipment residing at a particular socket name */
 	const UNovaEquipmentDescription* GetEquipmentySocket(FName SocketName) const;
 
-	/** Check if this module has equipment aft */
-	bool HasAftEquipment() const;
+	/** Check if this module has equipment on the a forward/aft slot */
+	bool HasForwardOrAftEquipment() const;
 
 	/** Get the cargo for a particular type */
 	const FNovaSpacecraftCargo& GetCargo(ENovaResourceType Type) const

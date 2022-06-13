@@ -1911,7 +1911,7 @@ bool SNovaMainMenuAssembly::IsSelectCompartmentEnabled(int32 Index) const
 		}
 		else if (Index == SpacecraftPawn->GetCompartmentCount())
 		{
-			return Index == 0 || !SpacecraftPawn->GetCompartment(Index - 1).HasAftEquipment();
+			return Index == 0 || !SpacecraftPawn->GetCompartment(Index - 1).HasForwardOrAftEquipment();
 		}
 	}
 
@@ -1934,6 +1934,11 @@ bool SNovaMainMenuAssembly::IsAddCompartmentEnabled() const
 	}
 	else if (IsValid(SpacecraftPawn->GetCompartment(SelectedCompartmentIndex).Description) &&
 			 SpacecraftPawn->GetCompartment(SelectedCompartmentIndex).Description->IsForwardCompartment)
+	{
+		return false;
+	}
+	else if (SelectedCompartmentIndex == 0 && SpacecraftPawn->GetCompartmentCount() > 1 &&
+			 SpacecraftPawn->GetCompartment(SelectedCompartmentIndex).HasForwardOrAftEquipment())
 	{
 		return false;
 	}

@@ -248,8 +248,10 @@ void UNovaSpacecraftCompartmentComponent::BuildEquipment(FNovaEquipmentAssembly&
 	NCHECK(MainStructure.Mesh != nullptr);
 
 	// Get offsets
-	FTransform BaseTransform   = MainStructure.Mesh->GetRelativeSocketTransform(Slot.SocketName);
-	FVector    StructureOffset = -0.5f * GetElementLength(MainStructure);
+	bool       IsForwardEquipment = EquipmentDescription && EquipmentDescription->EquipmentType == ENovaEquipmentType::Forward;
+	FTransform BaseTransform =
+		MainStructure.Mesh->GetRelativeSocketTransform(IsForwardEquipment ? Slot.ForwardSocketName : Slot.SocketName);
+	FVector StructureOffset = -0.5f * GetElementLength(MainStructure);
 
 	// Offset the equipment and set the animation if any
 	SetElementOffset(Assembly.Equipment, BaseTransform.GetLocation() + StructureOffset, BaseTransform.GetRotation().Rotator());

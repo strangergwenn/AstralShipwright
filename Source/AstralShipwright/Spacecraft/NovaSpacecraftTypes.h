@@ -16,7 +16,8 @@ enum class ENovaEquipmentType : uint8
 {
 	Standard,       // Equipment that may transit cargo, humans, propellant
 	Unconnected,    // Simplified equipment that only needs a few wires
-	Aft             // Engine equipment
+	Forward,        // Large equipment forward of and coaxial to the compartment
+	Aft             // Large equipment aft of the compartment
 };
 
 /** Type of bulkhead to use */
@@ -178,6 +179,10 @@ public:
 	// Socket to attach to on the structure mesh
 	UPROPERTY(Category = Compartment, EditDefaultsOnly)
 	FName SocketName;
+
+	// Socket to attach to on the structure mesh, specifically for the forward node
+	UPROPERTY(Category = Compartment, EditDefaultsOnly)
+	FName ForwardSocketName;
 
 	// List of equipment types that can be mounted on this slot
 	UPROPERTY(Category = Compartment, EditDefaultsOnly)

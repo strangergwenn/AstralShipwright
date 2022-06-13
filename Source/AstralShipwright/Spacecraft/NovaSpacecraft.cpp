@@ -109,13 +109,15 @@ const UNovaEquipmentDescription* FNovaCompartment::GetEquipmentySocket(FName Soc
 	return nullptr;
 }
 
-bool FNovaCompartment::HasAftEquipment() const
+bool FNovaCompartment::HasForwardOrAftEquipment() const
 {
 	if (Description)
 	{
 		for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
 		{
-			if (Equipment[EquipmentIndex] && Description->GetEquipmentSlot(EquipmentIndex).SupportedTypes.Contains(ENovaEquipmentType::Aft))
+			const FNovaEquipmentSlot& EquipmentSlot = Description->GetEquipmentSlot(EquipmentIndex);
+			if (Equipment[EquipmentIndex] && (EquipmentSlot.SupportedTypes.Contains(ENovaEquipmentType::Forward) ||
+												 EquipmentSlot.SupportedTypes.Contains(ENovaEquipmentType::Aft)))
 			{
 				return true;
 			}
@@ -990,7 +992,11 @@ TArray<const UNovaEquipmentDescription*> FNovaSpacecraft::GetCompatibleEquipment
 			const TArray<ENovaEquipmentType>& SupportedTypes = Compartment.Description->EquipmentSlots[SlotIndex].SupportedTypes;
 			if (SupportedTypes.Num() == 0 || SupportedTypes.Contains(EquipmentDescription->EquipmentType))
 			{
-				if (EquipmentDescription->EquipmentType == ENovaEquipmentType::Aft && !IsLastCompartment(CompartmentIndex))
+				if (EquipmentDescription->EquipmentType == ENovaEquipmentType::Forward && !IsFirstCompartment(CompartmentIndex))
+				{
+					continue;
+				}
+				else if (EquipmentDescription->EquipmentType == ENovaEquipmentType::Aft && !IsLastCompartment(CompartmentIndex))
 				{
 					continue;
 				}
