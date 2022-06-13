@@ -271,21 +271,22 @@ void UNovaSpacecraftMovementComponent::ExitAnchor(FSimpleDelegate Callback)
 }
 
 /*----------------------------------------------------
-High level movement
+    High level movement
 ----------------------------------------------------*/
 
 void UNovaSpacecraftMovementComponent::ProcessState()
 {
 	// Get helpful data
-	TArray<AActor*> Asteroids;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
-	const FVector WaitingPointLocation     = IsValid(DockState.Actor) ? DockState.Actor->GetWaitingPointLocation() : FVector::ZeroVector;
-	const FVector StartPoint               = IsValid(DockState.Actor) ? DockState.Actor->GetActorLocation() : FVector::ZeroVector;
-	const FVector DockingMidpoint          = FVector((WaitingPointLocation - StartPoint).X / 2.0, StartPoint.Y, StartPoint.Z);
-	const FVector AsteroidLocation         = Asteroids.Num() ? Asteroids[0]->GetActorLocation() : FVector::ZeroVector;
-	const FVector CurrentLocation          = UpdatedComponent->GetComponentLocation();
-	const FVector AsteroidRelativeLocation = CurrentLocation - AsteroidLocation;
-	const FVector AsteroidRelativeWaitingPointLocation = WaitingPointLocation - AsteroidLocation;
+	const FVector WaitingPointLocation = IsValid(DockState.Actor) ? DockState.Actor->GetWaitingPointLocation() : FVector::ZeroVector;
+	const FVector StartPoint           = IsValid(DockState.Actor) ? DockState.Actor->GetActorLocation() : FVector::ZeroVector;
+	const FVector DockingMidpoint      = FVector((WaitingPointLocation - StartPoint).X / 2.0, StartPoint.Y, StartPoint.Z);
+	const FVector CurrentLocation      = UpdatedComponent->GetComponentLocation();
+
+	// Get asteroid data
+	const ANovaAsteroid* Asteroid                             = UNeutronActorTools::GetClosestActor<ANovaAsteroid>(this, CurrentLocation);
+	const FVector        AsteroidLocation                     = IsValid(Asteroid) ? Asteroid->GetActorLocation() : FVector::ZeroVector;
+	const FVector        AsteroidRelativeLocation             = CurrentLocation - AsteroidLocation;
+	const FVector        AsteroidRelativeWaitingPointLocation = WaitingPointLocation - AsteroidLocation;
 
 	switch (MovementCommand.State)
 	{
@@ -482,7 +483,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 				// Trace
 				bool FoundHit =
 					GetWorld()->LineTraceSingleByChannel(HitResult, CurrentLocation, AsteroidLocation, CollisionChannel, TraceParams);
-				if (FoundHit && HitResult.GetActor() == Asteroids[0])
+				if (FoundHit && HitResult.GetActor() == Asteroid)
 				{
 					// Get spacecraft pointers
 					const ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();

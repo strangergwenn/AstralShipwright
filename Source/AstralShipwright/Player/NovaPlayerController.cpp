@@ -378,8 +378,6 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 		// Get points of interest nearby
 		TArray<AActor*> Viewpoints;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaPlayerViewpoint::StaticClass(), Viewpoints);
-		TArray<AActor*> Asteroids;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
 		TArray<AActor*> StationDocks;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaStationDock::StaticClass(), StationDocks);
 		TArray<AActor*> Planetariums;
@@ -399,7 +397,10 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 		float AnimationDuration =
 			PlayerViewpoint ? PlayerViewpoint->CameraAnimationDuration : GetDefault<ANovaPlayerViewpoint>()->CameraAnimationDuration;
 
-		FVector PlayerLocation = GetPawn()->GetActorLocation();
+		// Get viewpoint, asteroid
+		FVector              PlayerLocation = GetPawn()->GetActorLocation();
+		const ANovaAsteroid* Asteroid       = UNeutronActorTools::GetClosestActor<ANovaAsteroid>(this, PlayerLocation);
+
 		if (PlayerViewpoint)
 		{
 			Location = PlayerViewpoint->GetActorLocation();
@@ -425,14 +426,13 @@ void ANovaPlayerController::GetPlayerViewPoint(FVector& Location, FRotator& Rota
 
 		// Braking spacecraft entry
 		if (CameraState == ENovaPlayerCameraState::CinematicBrake &&
-			((StationDocks.Num() > 0 && IsValid(PlayerStart)) || Asteroids.Num() > 0))
+			((StationDocks.Num() > 0 && IsValid(PlayerStart)) || IsValid(Asteroid)))
 		{
 			NCHECK(Planetariums.Num() > 0);
 
 			// Define scene parameters
-			double        ViewDistance = StationDocks.Num() > 0 ? 10000.0 : 25000.0;
-			const FVector TargetLocation =
-				StationDocks.Num() > 0 ? PlayerStart->GetWaitingPointLocation() : Asteroids[0]->GetActorLocation();
+			double        ViewDistance   = StationDocks.Num() > 0 ? 10000.0 : 25000.0;
+			const FVector TargetLocation = StationDocks.Num() > 0 ? PlayerStart->GetWaitingPointLocation() : Asteroid->GetActorLocation();
 			const FVector BackdropLocation =
 				StationDocks.Num() > 0 ? PlayerStart->GetActorLocation() : Cast<ANovaPlanetarium>(Planetariums[0])->GetPlanetLocation();
 

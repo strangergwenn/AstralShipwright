@@ -17,6 +17,7 @@
 
 #include "Nova.h"
 
+#include "Neutron/Actor/NeutronActorTools.h"
 #include "Neutron/System/NeutronMenuManager.h"
 #include "Neutron/UI/Widgets/NeutronButton.h"
 #include "Neutron/UI/Widgets/NeutronFadingWidget.h"
@@ -335,27 +336,34 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.HelpText(LOCTEXT("MineResourceHelp", "Mine the current asteroid for resources"))
 			.OnClicked(FSimpleDelegate::CreateLambda([this]()
 			{
-				TArray<AActor*> Asteroids;
-				UGameplayStatics::GetAllActorsOfClass(PC->GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
-
-				if (Asteroids.Num() && IsValid(SpacecraftPawn) && IsValid(PC))
+				if (IsValid(SpacecraftPawn) && IsValid(PC))
 				{
-					const FNovaAsteroid& Asteroid = Cast<ANovaAsteroid>(Asteroids[0])->GetAsteroidData();
+					const ANovaAsteroid* AsteroidActor = UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
+					if (IsValid(AsteroidActor))
+					{
+						const FNovaAsteroid& Asteroid = Cast<ANovaAsteroid>(AsteroidActor)->GetAsteroidData();
 
-					// Add cargo to the spacecraft
-					FNovaSpacecraft ModifiedSpacecraft = SpacecraftPawn->GetSpacecraftCopy();
-					float CargoMass =  ModifiedSpacecraft.GetAvailableCargoMass(Asteroid.MineralResource);
-					ModifiedSpacecraft.ModifyCargo(Asteroid.MineralResource, CargoMass);
+						// Add cargo to the spacecraft
+						FNovaSpacecraft ModifiedSpacecraft = SpacecraftPawn->GetSpacecraftCopy();
+						float CargoMass =  ModifiedSpacecraft.GetAvailableCargoMass(Asteroid.MineralResource);
+						ModifiedSpacecraft.ModifyCargo(Asteroid.MineralResource, CargoMass);
 
-					PC->UpdateSpacecraft(ModifiedSpacecraft);
-					PC->Notify(LOCTEXT("ResourceMined", "Resource mined"), Asteroid.MineralResource->Name, ENeutronNotificationType::Info);
+						PC->UpdateSpacecraft(ModifiedSpacecraft);
+						PC->Notify(LOCTEXT("ResourceMined", "Resource mined"), Asteroid.MineralResource->Name, ENeutronNotificationType::Info);
+					}
 				}
 			}))
 			.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
 			{
-				TArray<AActor*> Asteroids;
-				UGameplayStatics::GetAllActorsOfClass(PC->GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
-				return Asteroids.Num() > 0 && IsValid(SpacecraftMovement) && SpacecraftMovement->IsAnchored();
+				if (IsValid(SpacecraftPawn))
+				{
+					const ANovaAsteroid* AsteroidActor = UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
+					return IsValid(AsteroidActor) && IsValid(SpacecraftMovement) && SpacecraftMovement->IsAnchored();
+				}
+				else
+				{
+					return false;
+				}
 			})))
 		]
 		
@@ -690,10 +698,10 @@ bool SNovaMainMenuFlight::CanDockUndock(FText* Help) const
 			// Anchoring
 			else
 			{
-				TArray<AActor*> Asteroids;
-				UGameplayStatics::GetAllActorsOfClass(GameState->GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
+				const ANovaAsteroid* AsteroidActor =
+					UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
 
-				if (Asteroids.Num() == 0)
+				if (!IsValid(AsteroidActor))
 				{
 					if (Help)
 					{
@@ -783,9 +791,16 @@ bool SNovaMainMenuFlight::CanDockUndock(FText* Help) const
 
 bool SNovaMainMenuFlight::CanOrbit() const
 {
-	TArray<AActor*> Asteroids;
-	UGameplayStatics::GetAllActorsOfClass(PC->GetWorld(), ANovaAsteroid::StaticClass(), Asteroids);
-	return IsInSpace() && Asteroids.Num() > 0;
+	if (IsValid(SpacecraftPawn))
+	{
+		const ANovaAsteroid* AsteroidActor =
+			UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
+		return IsInSpace() && IsValid(AsteroidActor);
+	}
+	else
+	{
+		return false;
+	}
 }
 
 FText SNovaMainMenuFlight::GetFastFowardHelp() const
