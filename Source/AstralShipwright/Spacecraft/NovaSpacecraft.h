@@ -144,6 +144,9 @@ struct FNovaCompartment
 		return GeneralCargo.Amount + BulkCargo.Amount + LiquidCargo.Amount;
 	}
 
+	/** Check whether it's possible to apply a delta to this spacecraft - only checks MassDelta for sign, not value */
+	bool CanModifyCargo(const class UNovaResource* Resource, float MassDelta) const;
+
 	/** Add a (possibly negative) amount of resources to the spacecraft */
 	void ModifyCargo(const class UNovaResource* Resource, float& MassDelta);
 
@@ -473,7 +476,7 @@ public:
 	float GetAvailableCargoMass(const class UNovaResource* Resource, int32 CompartmentIndex = INDEX_NONE) const;
 
 	/** Add a (possibly negative) amount of resources to the spacecraft, across the ship or in a specific compartment */
-	void ModifyCargo(const class UNovaResource* Resource, float MassDelta, int32 CompartmentIndex = INDEX_NONE);
+	bool ModifyCargo(const class UNovaResource* Resource, float MassDelta, int32 CompartmentIndex = INDEX_NONE);
 
 	/*----------------------------------------------------
 	    UI helpers

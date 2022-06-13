@@ -345,11 +345,12 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 
 						// Add cargo to the spacecraft
 						FNovaSpacecraft ModifiedSpacecraft = SpacecraftPawn->GetSpacecraftCopy();
-						float CargoMass =  ModifiedSpacecraft.GetAvailableCargoMass(Asteroid.MineralResource);
-						ModifiedSpacecraft.ModifyCargo(Asteroid.MineralResource, CargoMass);
-
-						PC->UpdateSpacecraft(ModifiedSpacecraft);
-						PC->Notify(LOCTEXT("ResourceMined", "Resource mined"), Asteroid.MineralResource->Name, ENeutronNotificationType::Info);
+						const float CargoMassToMine =  ModifiedSpacecraft.GetAvailableCargoMass(Asteroid.MineralResource);
+						if (CargoMassToMine > 0 && ModifiedSpacecraft.ModifyCargo(Asteroid.MineralResource, CargoMassToMine))
+						{
+							PC->UpdateSpacecraft(ModifiedSpacecraft);
+							PC->Notify(LOCTEXT("ResourceMined", "Resource mined"), Asteroid.MineralResource->Name, ENeutronNotificationType::Info);
+						}
 					}
 				}
 			}))

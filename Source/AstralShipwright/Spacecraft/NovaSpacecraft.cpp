@@ -192,6 +192,29 @@ float FNovaCompartment::GetAvailableCargoMass(const UNovaResource* Resource) con
 	}
 };
 
+bool FNovaCompartment::CanModifyCargo(const class UNovaResource* Resource, float MassDelta) const
+{
+	NCHECK(::IsValid(Resource));
+	const FNovaSpacecraftCargo& Cargo = GetCargo(Resource->Type);
+
+	if (MassDelta == 0)
+	{
+		return false;
+	}
+	else if (MassDelta <= 0 && !::IsValid(Cargo.Resource))
+	{
+		return false;
+	}
+	else if (MassDelta > 0 && ::IsValid(Cargo.Resource) && Cargo.Resource != Resource)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
 void FNovaCompartment::ModifyCargo(const class UNovaResource* Resource, float& MassDelta)
 {
 	NCHECK(::IsValid(Resource));
@@ -886,7 +909,7 @@ float FNovaSpacecraft::GetAvailableCargoMass(const UNovaResource* Resource, int3
 	}
 }
 
-void FNovaSpacecraft::ModifyCargo(const class UNovaResource* Resource, float MassDelta, int32 CompartmentIndex)
+bool FNovaSpacecraft::ModifyCargo(const class UNovaResource* Resource, float MassDelta, int32 CompartmentIndex)
 {
 	if (CompartmentIndex != INDEX_NONE)
 	{
@@ -897,15 +920,18 @@ void FNovaSpacecraft::ModifyCargo(const class UNovaResource* Resource, float Mas
 	{
 		for (FNovaCompartment& Compartment : Compartments)
 		{
-			Compartment.ModifyCargo(Resource, MassDelta);
-			if (MassDelta == 0)
+			if (Compartment.CanModifyCargo(Resource, MassDelta))
 			{
-				break;
+				Compartment.ModifyCargo(Resource, MassDelta);
+				if (MassDelta == 0)
+				{
+					break;
+				}
 			}
 		}
-
-		NCHECK(MassDelta == 0);
 	}
+
+	return MassDelta == 0;
 }
 
 /*----------------------------------------------------
