@@ -117,7 +117,7 @@ FVector2D FNovaTrajectory::GetCartesianLocation(FNovaTime CurrentTime) const
 			}
 
 			const double Alpha = (CurrentTime - CurrentManeuver->Time) / CurrentManeuver->Duration;
-			return FMath::InterpEaseOut(StartLocation, EndLocation, Alpha, ENeutronUIConstants::EaseStandard);
+			return FMath::Lerp(StartLocation, EndLocation, Alpha);
 		}
 		else
 		{
