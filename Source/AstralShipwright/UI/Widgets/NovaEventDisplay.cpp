@@ -75,6 +75,7 @@ void SNovaEventDisplay::Construct(const FArguments& InArgs)
 							.TextStyle(&Theme.HeadingFont)
 							.Text(this, &SNovaEventDisplay::GetMainText)
 							.WrapTextAt(Theme.GenericMenuWidth)
+							.Justification(ETextJustify::Center)
 						]
 
 						+ SVerticalBox::Slot()
@@ -100,6 +101,7 @@ void SNovaEventDisplay::Construct(const FArguments& InArgs)
 								.TextStyle(&Theme.MainFont)
 								.Text(FNeutronTextGetter::CreateSP(this, &SNovaEventDisplay::GetDetailsText))
 								.WrapTextAt(Theme.GenericMenuWidth)
+								.Justification(ETextJustify::Center)
 								.Visibility(this, &SNovaEventDisplay::GetDetailsVisibility)
 							]
 						]
