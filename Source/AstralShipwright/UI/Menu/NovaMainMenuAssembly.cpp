@@ -1932,6 +1932,10 @@ bool SNovaMainMenuAssembly::IsAddCompartmentEnabled() const
 	{
 		return true;
 	}
+	else if (SelectedCompartmentIndex == INDEX_NONE || SelectedCompartmentIndex >= SpacecraftPawn->GetCompartmentCount())
+	{
+		return false;
+	}
 	else if (IsValid(SpacecraftPawn->GetCompartment(SelectedCompartmentIndex).Description) &&
 			 SpacecraftPawn->GetCompartment(SelectedCompartmentIndex).Description->IsForwardCompartment)
 	{
@@ -1944,7 +1948,7 @@ bool SNovaMainMenuAssembly::IsAddCompartmentEnabled() const
 	}
 	else
 	{
-		return SelectedCompartmentIndex != INDEX_NONE;
+		return true;
 	}
 }
 
