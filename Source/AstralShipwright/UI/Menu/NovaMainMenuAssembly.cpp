@@ -344,7 +344,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 									.Panel(this)
 									.Action(FNeutronPlayerInput::MenuSecondary)
 									.TitleText(LOCTEXT("BuildCompartment", "Insert compartment"))
-									.HelpText(LOCTEXT("BuildCompartmentHelp", "Insert a new compartment forward of the selected one"))
+									.HelpText(LOCTEXT("BuildCompartmentHelp", "Insert a new compartment"))
 									.OnSelfRefresh(SNovaCompartmentList::FNeutronOnSelfRefresh::CreateLambda([this]()
 										{
 											IsCurrentCompartmentForward = IsNextCompartmentForward;
