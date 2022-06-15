@@ -347,31 +347,35 @@ FNovaCredits ANovaGameState::GetCurrentPrice(
 	NCHECK(IsValid(Asset));
 	float Multiplier = 1.0f;
 
-	// Define price modifiers
-	auto GetPriceModifierValue = [](ENovaPriceModifier Modifier) -> double
+	// Resources have a price rotation
+	if (Asset->IsA<UNovaResource>())
 	{
-		switch (Modifier)
+		// Define price modifiers
+		auto GetPriceModifierValue = [](ENovaPriceModifier Modifier) -> double
 		{
-			case ENovaPriceModifier::Cheap:
-				return 0.75f;
-			case ENovaPriceModifier::BelowAverage:
-				return 0.9f;
-			case ENovaPriceModifier::Average:
-				return 1.0f;
-			case ENovaPriceModifier::AboveAverage:
-				return 1.1f;
-			case ENovaPriceModifier::Expensive:
-				return 1.25f;
-		}
+			switch (Modifier)
+			{
+				case ENovaPriceModifier::Cheap:
+					return 0.75f;
+				case ENovaPriceModifier::BelowAverage:
+					return 0.9f;
+				case ENovaPriceModifier::Average:
+					return 1.0f;
+				case ENovaPriceModifier::AboveAverage:
+					return 1.1f;
+				case ENovaPriceModifier::Expensive:
+					return 1.25f;
+			}
 
-		return 0.0f;
-	};
+			return 0.0f;
+		};
 
-	// Find out the current modifier for this transaction
-	Multiplier *= GetPriceModifierValue(GetCurrentPriceModifier(Asset, Area));
+		// Find out the current modifier for this transaction
+		Multiplier *= GetPriceModifierValue(GetCurrentPriceModifier(Asset, Area));
+	}
 
 	// Non-resource assets have a large depreciation value when re-sold
-	if (!Asset->IsA<UNovaResource>() && SpacecraftPartForSale)
+	else if (SpacecraftPartForSale)
 	{
 		Multiplier *= ENovaConstants::ResaleDepreciation;
 	}
