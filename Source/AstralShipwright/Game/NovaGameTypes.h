@@ -16,7 +16,7 @@ constexpr int32 MaxContractsCount   = 5;
 constexpr int32 MaxPlayerCount      = 3;
 constexpr int32 MaxCompartmentCount = 10;
 constexpr int32 MaxModuleCount      = 5;
-constexpr int32 MaxEquipmentCount   = 8;
+constexpr int32 MaxEquipmentCount   = 7;
 
 constexpr double ResaleDepreciation        = 0.5;
 constexpr float  SkirtCapacityMultiplier   = 1.1f;
