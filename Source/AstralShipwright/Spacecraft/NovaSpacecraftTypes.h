@@ -639,6 +639,10 @@ class UNovaPropellantEquipmentDescription : public UNovaEquipmentDescription
 
 public:
 
+	TArray<FText> GetDescription() const override;
+
+public:
+
 	// Module propellant mass in T
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float PropellantMass = 50;

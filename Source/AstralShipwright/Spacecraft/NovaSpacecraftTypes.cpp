@@ -365,4 +365,15 @@ TArray<FText> UNovaEngineDescription::GetDescription() const
 	return Result;
 }
 
+TArray<FText> UNovaPropellantEquipmentDescription::GetDescription() const
+{
+	TArray<FText> Result = Super::GetDescription();
+
+	Result.Add(
+		FText::FormatNamed(LOCTEXT("PropellantEquipmentDescriptionFormat", "<img src=\"/Text/Propellant\"/> {propellant} T propellant"),
+			TEXT("propellant"), FText::AsNumber(PropellantMass)));
+
+	return Result;
+}
+
 #undef LOCTEXT_NAMESPACE
