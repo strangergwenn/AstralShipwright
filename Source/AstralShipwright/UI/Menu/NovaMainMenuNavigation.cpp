@@ -63,7 +63,7 @@ public:
 					SNew(SImage)
 					.Image_Lambda([=]()
 					{
-						return FNeutronStyleSet::GetBrush("Icon/SB_ListOn");
+						return FNeutronStyleSet::GetBrush("Icon/SB_Thumb");
 					})
 					.ColorAndOpacity_Lambda([=]()
 					{
