@@ -66,7 +66,7 @@ void UNovaAsteroidSimulationComponent::TickComponent(float DeltaTime, ELevelTick
 	// Iterate over all asteroids
 	if (PlayerLocation)
 	{
-		for (const TPair<FGuid, FNovaOrbitalLocation>& IdentifierAndLocation : OrbitalSimulation->GetAllAsteroidsLocations())
+		for (const TPair<FGuid, FNovaOrbitalLocation>& IdentifierAndLocation : OrbitalSimulation->GetAsteroidsLocations())
 		{
 			FGuid  Identifier         = IdentifierAndLocation.Key;
 			double DistanceFromPlayer = IdentifierAndLocation.Value.GetDistanceTo(*PlayerLocation);

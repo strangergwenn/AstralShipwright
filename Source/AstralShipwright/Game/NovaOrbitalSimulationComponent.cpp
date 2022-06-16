@@ -155,15 +155,15 @@ void UNovaOrbitalSimulationComponent::UpdateSimulation()
 
 	// Run processes
 	ProcessOrbitCleanup();
-	ProcessAreas();
-	ProcessAsteroids();
-	ProcessSpacecraftOrbits();
+	ProcessAreas(false);
+	ProcessAsteroids(false);
+	ProcessSpacecraftOrbits(false);
 	ProcessSpacecraftTrajectories();
 }
 
 FNovaTime UNovaOrbitalSimulationComponent::GetCurrentTime() const
 {
-	return GetOwner<ANovaGameState>()->GetCurrentTime();
+	return GetOwner<ANovaGameState>()->GetCurrentTime() + PreviewTimeOffset;
 }
 
 /*----------------------------------------------------
@@ -507,7 +507,7 @@ void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& Sp
 	}
 
 	// Be safe
-	ProcessSpacecraftOrbits();
+	ProcessSpacecraftOrbits(false);
 	FVector2D EndLocation = GetPlayerLocation()->GetCartesianLocation();
 	NLOG("UNovaOrbitalSimulationComponent::CompleteTrajectory : %f/%f -> %f/%f", StartLocation.X, StartLocation.Y, EndLocation.X,
 		EndLocation.Y);
@@ -565,7 +565,7 @@ void UNovaOrbitalSimulationComponent::AbortTrajectory(const TArray<FGuid>& Space
 	SetOrbit(SpacecraftIdentifiers, CommonAbortOrbit);
 
 	// Log the distance, don't assert as some inaccuracy is by design (Cartesian location is modified during trajectories)
-	ProcessSpacecraftOrbits();
+	ProcessSpacecraftOrbits(false);
 	FVector2D EndLocation = GetPlayerLocation()->GetCartesianLocation();
 	NLOG("UNovaOrbitalSimulationComponent::SetOrbit : %f/%f -> %f/%f (%f)", StartLocation.X, StartLocation.Y, EndLocation.X, EndLocation.Y,
 		FVector2D::Distance(EndLocation, StartLocation));
@@ -784,8 +784,10 @@ void UNovaOrbitalSimulationComponent::ProcessOrbitCleanup()
 	}
 }
 
-void UNovaOrbitalSimulationComponent::ProcessAreas()
+void UNovaOrbitalSimulationComponent::ProcessAreas(bool ForPreview)
 {
+	auto& UpdatedLocationMap = ForPreview ? PreviewAreaOrbitalLocations : AreaOrbitalLocations;
+
 	for (const UNovaArea* Area : Areas)
 	{
 		// Update the position
@@ -796,20 +798,22 @@ void UNovaOrbitalSimulationComponent::ProcessAreas()
 #endif
 
 		// Add or update the current orbit and position
-		FNovaOrbitalLocation* Entry = AreaOrbitalLocations.Find(Area);
+		FNovaOrbitalLocation* Entry = UpdatedLocationMap.Find(Area);
 		if (Entry)
 		{
 			Entry->Phase = CurrentPhase;
 		}
 		else
 		{
-			AreaOrbitalLocations.Add(Area, FNovaOrbitalLocation(GetAreaOrbit(Area).Geometry, CurrentPhase));
+			UpdatedLocationMap.Add(Area, FNovaOrbitalLocation(GetAreaOrbit(Area).Geometry, CurrentPhase));
 		}
 	}
 }
 
-void UNovaOrbitalSimulationComponent::ProcessAsteroids()
+void UNovaOrbitalSimulationComponent::ProcessAsteroids(bool ForPreview)
 {
+	auto& UpdatedLocationMap = ForPreview ? PreviewAsteroidOrbitalLocations : AsteroidOrbitalLocations;
+
 	const ANovaGameState* GameState = GetOwner<ANovaGameState>();
 
 	for (const TPair<FGuid, FNovaAsteroid>& IdentifierAndAsteroid : GameState->GetAsteroidSimulation()->GetAsteroids())
@@ -818,21 +822,23 @@ void UNovaOrbitalSimulationComponent::ProcessAsteroids()
 		double CurrentPhase = GetAsteroidOrbit(IdentifierAndAsteroid.Value).Geometry.GetPhase<true>(GetCurrentTime());
 
 		// Add or update the current orbit and position
-		FNovaOrbitalLocation* Entry = AsteroidOrbitalLocations.Find(IdentifierAndAsteroid.Key);
+		FNovaOrbitalLocation* Entry = UpdatedLocationMap.Find(IdentifierAndAsteroid.Key);
 		if (Entry)
 		{
 			Entry->Phase = CurrentPhase;
 		}
 		else
 		{
-			AsteroidOrbitalLocations.Add(
+			UpdatedLocationMap.Add(
 				IdentifierAndAsteroid.Key, FNovaOrbitalLocation(GetAsteroidOrbit(IdentifierAndAsteroid.Value).Geometry, CurrentPhase));
 		}
 	}
 }
 
-void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
+void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits(bool ForPreview)
 {
+	auto& UpdatedLocationMap = ForPreview ? PreviewSpacecraftOrbitalLocations : SpacecraftOrbitalLocations;
+
 	for (const FNovaOrbitDatabaseEntry& DatabaseEntry : SpacecraftOrbitDatabase.Get())
 	{
 		// Update the position
@@ -849,24 +855,63 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 		// Add or update the current orbit and position
 		for (const FGuid& Identifier : DatabaseEntry.Identifiers)
 		{
-			FNovaOrbitalLocation* Entry = SpacecraftOrbitalLocations.Find(Identifier);
+			FNovaOrbitalLocation* Entry = UpdatedLocationMap.Find(Identifier);
 			if (Entry)
 			{
 				*Entry = NewLocation;
 			}
 			else
 			{
-				SpacecraftOrbitalLocations.Add(Identifier, NewLocation);
+				UpdatedLocationMap.Add(Identifier, NewLocation);
 			}
 
-			FNovaCartesianLocation* CartesianEntry = SpacecraftCartesianLocations.Find(Identifier);
-			if (CartesianEntry)
+			if (!ForPreview)
 			{
-				*CartesianEntry = NewCartesianLocation;
+				FNovaCartesianLocation* CartesianEntry = SpacecraftCartesianLocations.Find(Identifier);
+				if (CartesianEntry)
+				{
+					*CartesianEntry = NewCartesianLocation;
+				}
+				else
+				{
+					SpacecraftCartesianLocations.Add(Identifier, NewCartesianLocation);
+				}
 			}
-			else
+		}
+	}
+}
+
+void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectoriesForPreview()
+{
+	for (const FNovaTrajectoryDatabaseEntry& DatabaseEntry : SpacecraftTrajectoryDatabase.Get())
+	{
+		if (GetCurrentTime() >= DatabaseEntry.Trajectory.GetFirstManeuverStartTime())
+		{
+			// Compute the new location
+			FNovaOrbitalLocation NewLocation = DatabaseEntry.Trajectory.GetLocation(GetCurrentTime());
+			if (!NewLocation.IsValid())
 			{
-				SpacecraftCartesianLocations.Add(Identifier, NewCartesianLocation);
+				NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectoriesForPreview : missing trajectory data");
+			}
+
+#if 0
+			NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories : %s has phase %f, with sphase %f, ephase %f",
+				*DatabaseEntry.Identifiers[0].ToString(), NewLocation.Phase, NewLocation.Geometry.StartPhase,
+				NewLocation.Geometry.EndPhase);
+#endif
+
+			// Add or update the current orbit and location
+			for (const FGuid& Identifier : DatabaseEntry.Identifiers)
+			{
+				FNovaOrbitalLocation* Entry = PreviewSpacecraftOrbitalLocations.Find(Identifier);
+				if (Entry)
+				{
+					*Entry = NewLocation;
+				}
+				else
+				{
+					PreviewSpacecraftOrbitalLocations.Add(Identifier, NewLocation);
+				}
 			}
 		}
 	}

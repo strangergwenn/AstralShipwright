@@ -237,7 +237,7 @@ void UNovaAISimulationComponent::ProcessSpawning()
 	// Iterate over all spacecraft locations
 	if (PlayerLocation)
 	{
-		for (const TPair<FGuid, FNovaOrbitalLocation>& IdentifierAndLocation : OrbitalSimulation->GetAllSpacecraftLocations())
+		for (const TPair<FGuid, FNovaOrbitalLocation>& IdentifierAndLocation : OrbitalSimulation->GetSpacecraftLocations())
 		{
 			FGuid                         Identifier         = IdentifierAndLocation.Key;
 			double                        DistanceFromPlayer = IdentifierAndLocation.Value.GetDistanceTo(*PlayerLocation);

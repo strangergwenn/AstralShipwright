@@ -98,7 +98,7 @@ void SNovaOrbitalMap::Construct(const FArguments& InArgs)
 }
 
 /*----------------------------------------------------
-    Interface3
+    Interface
 ----------------------------------------------------*/
 
 void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
@@ -122,13 +122,17 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	CurrentPosition.Y = FMath::Clamp(CurrentPosition.Y, PositionFreedom * -HalfLocalSize.Y, PositionFreedom * HalfLocalSize.Y);
 	CurrentOrigin     = HalfLocalSize + CurrentPosition;
 
-#if 1
+	// Step the preview simulation
+	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
+	const FNovaTime                  CurrentTrajectoryDuration =
+        CurrentPreviewTrajectory.IsValid() ? CurrentPreviewTrajectory.TotalTravelDuration : FNovaTime();
+	OrbitalSimulation->UpdateSimulationForPreview(CurrentPreviewProgress * CurrentTrajectoryDuration);
 
 	// Run orbital map processes
 	AddPlanet(Origin, DefaultPlanet);
 	ProcessAreas(Origin);
 	ProcessAsteroids(Origin);
-	ProcessPlayerOrbit(Origin);
+	ProcessSpacecraftLocations(Origin);
 	ProcessPlayerTrajectory(Origin);
 	ProcessTrajectoryPreview(Origin, DeltaTime);
 
@@ -143,40 +147,6 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 		Point.Brush = FNeutronStyleSet::GetBrush("Map/SB_Crosshair");
 		BatchedPoints.AddUnique(Point);
 	}
-
-#else
-
-	auto AddCircularOrbit = [&](const FVector2D& Position, float Radius, const FNovaSplineStyle& Style)
-	{
-		AddOrbitInternal(FNovaSplineOrbit(Position, Radius), Style);
-	};
-
-	auto AddPartialCircularOrbit =
-		[&](const FVector2D& Position, float Radius, float Phase, float InitialAngle, float AngularLength, const FNovaSplineStyle& Style)
-	{
-		AddOrbitInternal(FNovaSplineOrbit(Position, Radius, Radius, Phase, InitialAngle, AngularLength, 0.0f), Style);
-	};
-
-	auto AddTransferOrbit =
-		[&](const FVector2D& Position, float RadiusA, float RadiusB, float Phase, float InitialAngle, const FNovaSplineStyle& Style)
-	{
-		float MajorAxis = 0.5f * (RadiusA + RadiusB);
-		float MinorAxis = FMath::Sqrt(RadiusA * RadiusB);
-
-		TPair<FVector2D, FVector2D> InitialAndFinalPosition =
-			AddOrbitInternal(FNovaSplineOrbit(Position, MajorAxis, MinorAxis, Phase, InitialAngle, 180, 0.5f * (RadiusB - RadiusA)), Style);
-	};
-
-	AddCircularOrbit(Origin, 300, FNovaSplineStyle(FLinearColor::White));
-	AddCircularOrbit(Origin, 450, FNovaSplineStyle(FLinearColor::White));
-	AddTransferOrbit(Origin, 300, 450, 45, 0, FNovaSplineStyle(FLinearColor::Red));
-	AddTransferOrbit(Origin, 300, 500, 90, 0, FNovaSplineStyle(FLinearColor::Green));
-	AddTransferOrbit(Origin, 500, 450, 180 + 90, 0, FNovaSplineStyle(FLinearColor::Green));
-	AddTransferOrbit(Origin, 300, 250, 135, 0, FNovaSplineStyle(FLinearColor::Blue));
-	AddPartialCircularOrbit(Origin, 250, 135 + 180, 0, 45, FNovaSplineStyle(FLinearColor::Blue));
-	AddTransferOrbit(Origin, 250, 450, 135 + 180 + 45, 0, FNovaSplineStyle(FLinearColor::Blue));
-
-#endif
 }
 
 void SNovaOrbitalMap::ShowTrajectory(const FNovaTrajectory& Trajectory, bool Immediate)
@@ -249,7 +219,7 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 	{
 		FNovaSplineStyle AreaStyle(FLinearColor(1, 1, 1, 0.5f));
 
-		for (const auto AreaAndOrbitalLocation : OrbitalSimulation->GetAllAreasLocations())
+		for (const auto AreaAndOrbitalLocation : OrbitalSimulation->GetPreviewAreasLocations())
 		{
 			const FNovaOrbitalLocation& OrbitalLocation = AreaAndOrbitalLocation.Value;
 			const FNovaOrbitGeometry&   Geometry        = OrbitalLocation.Geometry;
@@ -272,7 +242,7 @@ void SNovaOrbitalMap::ProcessAsteroids(const FVector2D& Origin)
 	{
 		FNovaSplineStyle AreaStyle(FLinearColor(1, 1, 1, 0.5f));
 
-		for (const auto AsteroidAndOrbitalLocation : OrbitalSimulation->GetAllAsteroidsLocations())
+		for (const auto AsteroidAndOrbitalLocation : OrbitalSimulation->GetPreviewAsteroidsLocations())
 		{
 			const FNovaOrbitalLocation& OrbitalLocation = AsteroidAndOrbitalLocation.Value;
 			const FNovaOrbitGeometry&   Geometry        = OrbitalLocation.Geometry;
@@ -288,7 +258,7 @@ void SNovaOrbitalMap::ProcessAsteroids(const FVector2D& Origin)
 	}
 }
 
-void SNovaOrbitalMap::ProcessPlayerOrbit(const FVector2D& Origin)
+void SNovaOrbitalMap::ProcessSpacecraftLocations(const FVector2D& Origin)
 {
 	const ANovaGameState*            GameState         = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
@@ -304,7 +274,7 @@ void SNovaOrbitalMap::ProcessPlayerOrbit(const FVector2D& Origin)
 	OrbitStyle.WidthInner = 1;
 
 	// Add the current orbit
-	for (const auto SpacecraftIdentifierAndOrbitalLocation : OrbitalSimulation->GetAllSpacecraftLocations())
+	for (const auto SpacecraftIdentifierAndOrbitalLocation : OrbitalSimulation->GetPreviewSpacecraftLocations())
 	{
 		const FGuid& Identifier = SpacecraftIdentifierAndOrbitalLocation.Key;
 
@@ -316,11 +286,14 @@ void SNovaOrbitalMap::ProcessPlayerOrbit(const FVector2D& Origin)
 			FNovaOrbitalObject Object       = FNovaOrbitalObject(Identifier, Location.GetCartesianLocation(BaseAltitude), false);
 
 			// Player orbit
-			if (GameState->GetPlayerSpacecraftIdentifiers().Contains(Identifier) && !OrbitalSimulation->IsOnStartedTrajectory(Identifier))
+			if (GameState->GetPlayerSpacecraftIdentifiers().Contains(Identifier))
 			{
-				TArray<FNovaOrbitalObject> Objects;
-				Objects.Add(Object);
-				AddOrbit(Origin, nullptr, Location.Geometry, Objects, OrbitStyle);
+				if (!CurrentPreviewTrajectory.IsValid() && !OrbitalSimulation->IsOnStartedTrajectory(Identifier))
+				{
+					TArray<FNovaOrbitalObject> Objects;
+					Objects.Add(Object);
+					AddOrbit(Origin, nullptr, Location.Geometry, Objects, OrbitStyle);
+				}
 			}
 
 			// Spacecraft position
@@ -370,16 +343,20 @@ void SNovaOrbitalMap::ProcessTrajectoryPreview(const FVector2D& Origin, float De
 	ManeuverStyle.WidthInner = 4.0f;
 	ManeuverStyle.WidthOuter = 4.0f;
 
-	CurrentPreviewProgress += DeltaTime / TrajectoryPreviewDuration;
-	CurrentPreviewProgress = FMath::Min(CurrentPreviewProgress, 1.0f);
-
 	// Add the preview trajectory
 	if (CurrentPreviewTrajectory.IsValid())
 	{
+		CurrentPreviewProgress += DeltaTime / TrajectoryPreviewDuration;
+		CurrentPreviewProgress = FMath::Min(CurrentPreviewProgress, 1.0f);
+
 		AddTrajectory(Origin, CurrentPreviewTrajectory, nullptr, CurrentPreviewProgress, OrbitStyle, ManeuverStyle);
 
 		UpdateDesiredSize(CurrentPreviewTrajectory.GetHighestAltitude());
-	};
+	}
+	else
+	{
+		CurrentPreviewProgress = 0;
+	}
 }
 
 void SNovaOrbitalMap::ProcessDrawScale(float DeltaTime)
@@ -419,6 +396,7 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 {
 	NCHECK(Trajectory.IsValid());
 
+	const ANovaGameState*            GameState         = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 
 	// Prepare our work
@@ -482,7 +460,7 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 
 		// Detect the starting point
 		TSharedPtr<FVector2D> StartPosition;
-		if (OrbitalSimulation->GetCurrentTime() > Transfer.InsertionTime)
+		if (GameState->GetCurrentTime() > Transfer.InsertionTime)
 		{
 			StartPosition = AbsolutePosition;
 		}
@@ -512,7 +490,7 @@ void SNovaOrbitalMap::AddTrajectory(const FVector2D& Position, const FNovaTrajec
 	{
 		const FNovaOrbitalLocation ManeuverLocation = Trajectory.GetLocation(Maneuver.Time);
 
-		if ((Maneuver.Time + Maneuver.Duration > OrbitalSimulation->GetCurrentTime()) && ManeuverLocation.Phase < CurrentProgressPhase)
+		if ((Maneuver.Time + Maneuver.Duration > GameState->GetCurrentTime()) && ManeuverLocation.Phase < CurrentProgressPhase)
 		{
 			double BaseAltitude = GetObjectBaseAltitude(Trajectory.Transfers[0].Geometry.Body);
 			ManeuverObjects.Add(FNovaOrbitalObject(Maneuver, ManeuverLocation.GetCartesianLocation(BaseAltitude)));

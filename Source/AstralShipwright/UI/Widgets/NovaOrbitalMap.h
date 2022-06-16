@@ -219,10 +219,10 @@ protected:
 	/** Add asteroids to the map */
 	void ProcessAsteroids(const FVector2D& Origin);
 
-	/** Add player orbit to the map */
-	void ProcessPlayerOrbit(const FVector2D& Origin);
+	/** Add the orbits of all spacecraft to the map */
+	void ProcessSpacecraftLocations(const FVector2D& Origin);
 
-	/** Add player trajectory to the map */
+	/** Add the trajectories of all spacecraft to the map */
 	void ProcessPlayerTrajectory(const FVector2D& Origin);
 
 	/** Add the trajectory preview */

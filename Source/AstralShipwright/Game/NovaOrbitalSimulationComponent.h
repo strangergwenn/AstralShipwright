@@ -126,7 +126,7 @@ public:
 	}
 
 	/** Get all area's locations */
-	const TMap<const UNovaArea*, FNovaOrbitalLocation>& GetAllAreasLocations() const
+	const TMap<const UNovaArea*, FNovaOrbitalLocation>& GetAreasLocations() const
 	{
 		return AreaOrbitalLocations;
 	}
@@ -138,7 +138,7 @@ public:
 	}
 
 	/** Get all asteroid's locations */
-	const TMap<FGuid, FNovaOrbitalLocation>& GetAllAsteroidsLocations() const
+	const TMap<FGuid, FNovaOrbitalLocation>& GetAsteroidsLocations() const
 	{
 		return AsteroidOrbitalLocations;
 	}
@@ -171,9 +171,53 @@ public:
 	}
 
 	/** Get all spacecraft's locations */
-	const TMap<FGuid, FNovaOrbitalLocation>& GetAllSpacecraftLocations() const
+	const TMap<FGuid, FNovaOrbitalLocation>& GetSpacecraftLocations() const
 	{
 		return SpacecraftOrbitalLocations;
+	}
+
+	/*----------------------------------------------------
+	    Map variant
+	----------------------------------------------------*/
+
+	/** Run the orbital simulation for the preview */
+	void UpdateSimulationForPreview(FNovaTime Offset)
+	{
+		PreviewTimeOffset = Offset;
+
+		if (PreviewTimeOffset > FNovaTime())
+		{
+			ProcessAreas(true);
+			ProcessAsteroids(true);
+			ProcessSpacecraftOrbits(true);
+			ProcessSpacecraftTrajectoriesForPreview();
+		}
+		else
+		{
+			PreviewAreaOrbitalLocations       = AreaOrbitalLocations;
+			PreviewAsteroidOrbitalLocations   = AsteroidOrbitalLocations;
+			PreviewSpacecraftOrbitalLocations = SpacecraftOrbitalLocations;
+		}
+
+		PreviewTimeOffset = FNovaTime();
+	}
+
+	/** Get all area's locations under preview */
+	const TMap<const UNovaArea*, FNovaOrbitalLocation>& GetPreviewAreasLocations() const
+	{
+		return PreviewAreaOrbitalLocations;
+	}
+
+	/** Get all asteroid's locations under preview */
+	const TMap<FGuid, FNovaOrbitalLocation>& GetPreviewAsteroidsLocations() const
+	{
+		return PreviewAsteroidOrbitalLocations;
+	}
+
+	/** Get all spacecraft's locations under preview */
+	const TMap<FGuid, FNovaOrbitalLocation>& GetPreviewSpacecraftLocations() const
+	{
+		return PreviewSpacecraftOrbitalLocations;
 	}
 
 	/*----------------------------------------------------
@@ -273,15 +317,16 @@ protected:
 	void ProcessOrbitCleanup();
 
 	/** Update all area's position */
-	void ProcessAreas();
+	void ProcessAreas(bool ForPreview);
 
 	/** Update all asteroid's position */
-	void ProcessAsteroids();
+	void ProcessAsteroids(bool ForPreview);
 
 	/** Update the current orbit of spacecraft */
-	void ProcessSpacecraftOrbits();
+	void ProcessSpacecraftOrbits(bool ForPreview);
 
 	/** Update the current trajectory of spacecraft */
+	void ProcessSpacecraftTrajectoriesForPreview();
 	void ProcessSpacecraftTrajectories();
 
 	/** Compute the period of a stable circular orbit */
@@ -318,6 +363,12 @@ private:
 	TMap<FGuid, FNovaOrbitalLocation>                  AsteroidOrbitalLocations;
 	TMap<FGuid, FNovaOrbitalLocation>                  SpacecraftOrbitalLocations;
 	TMap<FGuid, FNovaCartesianLocation>                SpacecraftCartesianLocations;
+
+	// Preview simulation state
+	FNovaTime                                          PreviewTimeOffset;
+	TMap<const class UNovaArea*, FNovaOrbitalLocation> PreviewAreaOrbitalLocations;
+	TMap<FGuid, FNovaOrbitalLocation>                  PreviewAsteroidOrbitalLocations;
+	TMap<FGuid, FNovaOrbitalLocation>                  PreviewSpacecraftOrbitalLocations;
 
 	// General state
 	FNovaTime                      TimeOfNextPlayerManeuver;
