@@ -181,25 +181,25 @@ public:
 	----------------------------------------------------*/
 
 	/** Run the orbital simulation for the preview */
-	void UpdateSimulationForPreview(FNovaTime Offset)
+	void UpdateSimulationForPreview(FNovaTime CurrentAbsoluteTime)
 	{
-		PreviewTimeOffset = Offset;
+		IsSimulatingPreview = true;
+		PreviewTime         = CurrentAbsoluteTime;
 
-		if (PreviewTimeOffset > FNovaTime())
-		{
-			ProcessAreas(true);
-			ProcessAsteroids(true);
-			ProcessSpacecraftOrbits(true);
-			ProcessSpacecraftTrajectoriesForPreview();
-		}
-		else
-		{
-			PreviewAreaOrbitalLocations       = AreaOrbitalLocations;
-			PreviewAsteroidOrbitalLocations   = AsteroidOrbitalLocations;
-			PreviewSpacecraftOrbitalLocations = SpacecraftOrbitalLocations;
-		}
+		ProcessAreas();
+		ProcessAsteroids();
+		ProcessSpacecraftOrbits();
+		ProcessSpacecraftTrajectoriesForPreview();
 
-		PreviewTimeOffset = FNovaTime();
+		IsSimulatingPreview = false;
+	}
+
+	/** Copy the normal orbital simulation to the preview state */
+	void CopySimulationForPreview()
+	{
+		PreviewAreaOrbitalLocations       = AreaOrbitalLocations;
+		PreviewAsteroidOrbitalLocations   = AsteroidOrbitalLocations;
+		PreviewSpacecraftOrbitalLocations = SpacecraftOrbitalLocations;
 	}
 
 	/** Get all area's locations under preview */
@@ -317,13 +317,13 @@ protected:
 	void ProcessOrbitCleanup();
 
 	/** Update all area's position */
-	void ProcessAreas(bool ForPreview);
+	void ProcessAreas();
 
 	/** Update all asteroid's position */
-	void ProcessAsteroids(bool ForPreview);
+	void ProcessAsteroids();
 
 	/** Update the current orbit of spacecraft */
-	void ProcessSpacecraftOrbits(bool ForPreview);
+	void ProcessSpacecraftOrbits();
 
 	/** Update the current trajectory of spacecraft */
 	void ProcessSpacecraftTrajectoriesForPreview();
@@ -365,7 +365,8 @@ private:
 	TMap<FGuid, FNovaCartesianLocation>                SpacecraftCartesianLocations;
 
 	// Preview simulation state
-	FNovaTime                                          PreviewTimeOffset;
+	bool                                               IsSimulatingPreview;
+	FNovaTime                                          PreviewTime;
 	TMap<const class UNovaArea*, FNovaOrbitalLocation> PreviewAreaOrbitalLocations;
 	TMap<FGuid, FNovaOrbitalLocation>                  PreviewAsteroidOrbitalLocations;
 	TMap<FGuid, FNovaOrbitalLocation>                  PreviewSpacecraftOrbitalLocations;

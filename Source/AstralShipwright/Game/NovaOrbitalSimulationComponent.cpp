@@ -126,7 +126,7 @@ struct FNovaSpacecraftFleet
     Constructor
 ----------------------------------------------------*/
 
-UNovaOrbitalSimulationComponent::UNovaOrbitalSimulationComponent() : Super()
+UNovaOrbitalSimulationComponent::UNovaOrbitalSimulationComponent() : Super(), IsSimulatingPreview(false)
 {
 	// Settings
 	SetIsReplicatedByDefault(true);
@@ -155,15 +155,15 @@ void UNovaOrbitalSimulationComponent::UpdateSimulation()
 
 	// Run processes
 	ProcessOrbitCleanup();
-	ProcessAreas(false);
-	ProcessAsteroids(false);
-	ProcessSpacecraftOrbits(false);
+	ProcessAreas();
+	ProcessAsteroids();
+	ProcessSpacecraftOrbits();
 	ProcessSpacecraftTrajectories();
 }
 
 FNovaTime UNovaOrbitalSimulationComponent::GetCurrentTime() const
 {
-	return GetOwner<ANovaGameState>()->GetCurrentTime() + PreviewTimeOffset;
+	return IsSimulatingPreview ? PreviewTime : GetOwner<ANovaGameState>()->GetCurrentTime();
 }
 
 /*----------------------------------------------------
@@ -507,7 +507,7 @@ void UNovaOrbitalSimulationComponent::CompleteTrajectory(const TArray<FGuid>& Sp
 	}
 
 	// Be safe
-	ProcessSpacecraftOrbits(false);
+	ProcessSpacecraftOrbits();
 	FVector2D EndLocation = GetPlayerLocation()->GetCartesianLocation();
 	NLOG("UNovaOrbitalSimulationComponent::CompleteTrajectory : %f/%f -> %f/%f", StartLocation.X, StartLocation.Y, EndLocation.X,
 		EndLocation.Y);
@@ -565,7 +565,7 @@ void UNovaOrbitalSimulationComponent::AbortTrajectory(const TArray<FGuid>& Space
 	SetOrbit(SpacecraftIdentifiers, CommonAbortOrbit);
 
 	// Log the distance, don't assert as some inaccuracy is by design (Cartesian location is modified during trajectories)
-	ProcessSpacecraftOrbits(false);
+	ProcessSpacecraftOrbits();
 	FVector2D EndLocation = GetPlayerLocation()->GetCartesianLocation();
 	NLOG("UNovaOrbitalSimulationComponent::SetOrbit : %f/%f -> %f/%f (%f)", StartLocation.X, StartLocation.Y, EndLocation.X, EndLocation.Y,
 		FVector2D::Distance(EndLocation, StartLocation));
@@ -784,9 +784,9 @@ void UNovaOrbitalSimulationComponent::ProcessOrbitCleanup()
 	}
 }
 
-void UNovaOrbitalSimulationComponent::ProcessAreas(bool ForPreview)
+void UNovaOrbitalSimulationComponent::ProcessAreas()
 {
-	auto& UpdatedLocationMap = ForPreview ? PreviewAreaOrbitalLocations : AreaOrbitalLocations;
+	auto& UpdatedLocationMap = IsSimulatingPreview ? PreviewAreaOrbitalLocations : AreaOrbitalLocations;
 
 	for (const UNovaArea* Area : Areas)
 	{
@@ -810,9 +810,9 @@ void UNovaOrbitalSimulationComponent::ProcessAreas(bool ForPreview)
 	}
 }
 
-void UNovaOrbitalSimulationComponent::ProcessAsteroids(bool ForPreview)
+void UNovaOrbitalSimulationComponent::ProcessAsteroids()
 {
-	auto& UpdatedLocationMap = ForPreview ? PreviewAsteroidOrbitalLocations : AsteroidOrbitalLocations;
+	auto& UpdatedLocationMap = IsSimulatingPreview ? PreviewAsteroidOrbitalLocations : AsteroidOrbitalLocations;
 
 	const ANovaGameState* GameState = GetOwner<ANovaGameState>();
 
@@ -835,9 +835,9 @@ void UNovaOrbitalSimulationComponent::ProcessAsteroids(bool ForPreview)
 	}
 }
 
-void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits(bool ForPreview)
+void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 {
-	auto& UpdatedLocationMap = ForPreview ? PreviewSpacecraftOrbitalLocations : SpacecraftOrbitalLocations;
+	auto& UpdatedLocationMap = IsSimulatingPreview ? PreviewSpacecraftOrbitalLocations : SpacecraftOrbitalLocations;
 
 	for (const FNovaOrbitDatabaseEntry& DatabaseEntry : SpacecraftOrbitDatabase.Get())
 	{
@@ -865,7 +865,7 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits(bool ForPreview)
 				UpdatedLocationMap.Add(Identifier, NewLocation);
 			}
 
-			if (!ForPreview)
+			if (!IsSimulatingPreview)
 			{
 				FNovaCartesianLocation* CartesianEntry = SpacecraftCartesianLocations.Find(Identifier);
 				if (CartesianEntry)

@@ -124,9 +124,17 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 
 	// Step the preview simulation
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
-	const FNovaTime                  CurrentTrajectoryDuration =
-        CurrentPreviewTrajectory.IsValid() ? CurrentPreviewTrajectory.TotalTravelDuration : FNovaTime();
-	OrbitalSimulation->UpdateSimulationForPreview(CurrentPreviewProgress * CurrentTrajectoryDuration);
+	if (CurrentPreviewTrajectory.IsValid())
+	{
+		const FNovaTime CurrentTrajectoryDuration =
+			CurrentPreviewTrajectory.IsValid() ? CurrentPreviewTrajectory.TotalTravelDuration : FNovaTime();
+		const FNovaTime CurrentAbsoluteTime = CurrentPreviewTrajectory.GetStartTime() + CurrentPreviewProgress * CurrentTrajectoryDuration;
+		OrbitalSimulation->UpdateSimulationForPreview(CurrentAbsoluteTime);
+	}
+	else
+	{
+		OrbitalSimulation->CopySimulationForPreview();
+	}
 
 	// Run orbital map processes
 	AddPlanet(Origin, DefaultPlanet);
@@ -573,7 +581,7 @@ void SNovaOrbitalMap::AddOrbitalObject(FNovaOrbitalObject Object, const FLinearC
 	Object.Position *= CurrentDrawScale;
 
 	// Check for hover
-	float HoverRadius = 50;
+	float HoverRadius = 30;
 	bool  IsObjectHovered;
 	if (MenuManager->IsUsingGamepad())
 	{
