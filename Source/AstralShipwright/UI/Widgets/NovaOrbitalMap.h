@@ -221,6 +221,9 @@ protected:
 		return !CurrentPreviewTrajectory.IsValid() || CurrentPreviewObjects.Contains(Object);
 	}
 
+	/** Add planets and moons to the map */
+	void ProcessPlanets(const FVector2D& Origin);
+
 	/** Add areas to the map */
 	void ProcessAreas(const FVector2D& Origin);
 

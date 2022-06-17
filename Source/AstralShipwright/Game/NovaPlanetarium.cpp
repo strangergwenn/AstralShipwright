@@ -141,18 +141,18 @@ void ANovaPlanetarium::Tick(float DeltaTime)
 			const double RelativeBodySpinAngle = 360.0 * (RelativeBodySpinTime / Body->RotationPeriod);
 			const double AbsoluteBodySpinAngle = Body->Phase + RelativeBodySpinAngle;
 
-			double  CurrentAngle    = -AbsoluteBodySpinAngle;
-			FVector CurrentPosition = FVector::ZeroVector;
+			// Get position
+			FVector         CurrentPosition         = FVector::ZeroVector;
+			const FVector2D PlayerCartesianLocation = PlayerLocation->GetCartesianLocation();
+			const double    OrbitRotationAngle =
+				FMath::RadiansToDegrees(FVector(PlayerCartesianLocation.X, PlayerCartesianLocation.Y, 0).HeadingAngle());
+			double CurrentAngle = -AbsoluteBodySpinAngle;
 
 			// Planet
 			if (IsMainPlanet)
 			{
-				// Get position
-				const FVector2D PlayerCartesianLocation = PlayerLocation->GetCartesianLocation();
-				const double    OrbitRotationAngle =
-					FMath::RadiansToDegrees(FVector(PlayerCartesianLocation.X, PlayerCartesianLocation.Y, 0).HeadingAngle());
-				CurrentAngle -= -OrbitRotationAngle;
 				CurrentPosition = -FVector(0, 0, PlayerCartesianLocation.Size()) * 1000 * 100;
+				CurrentAngle += -OrbitRotationAngle;
 
 				// Apply sun & atmosphere
 				SunRotator->SetWorldLocation(CurrentPosition);
@@ -171,7 +171,7 @@ void ANovaPlanetarium::Tick(float DeltaTime)
 				const FNovaOrbitGeometry   OrbitGeometry     = FNovaOrbitGeometry(Body, Body->Altitude.GetValue(), 0);
 				const FNovaOrbit           Orbit             = FNovaOrbit(OrbitGeometry, FNovaTime());
 				const double               CurrentPhase      = Orbit.Geometry.GetPhase<true>(GameState->GetCurrentTime());
-				const FNovaOrbitalLocation OrbitalLocation   = FNovaOrbitalLocation(OrbitGeometry, -CurrentPhase);
+				const FNovaOrbitalLocation OrbitalLocation   = FNovaOrbitalLocation(OrbitGeometry, OrbitRotationAngle - CurrentPhase);
 				const FVector2D            CartesianLocation = OrbitalLocation.GetCartesianLocation();
 
 				CurrentPosition = FVector(0, CartesianLocation.X, CartesianLocation.Y) * 1000 * 100;

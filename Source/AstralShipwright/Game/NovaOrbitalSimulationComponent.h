@@ -220,6 +220,12 @@ public:
 		return PreviewSpacecraftOrbitalLocations;
 	}
 
+	/** Get a spacecraft's location under preview */
+	const FNovaOrbitalLocation* GetPreviewSpacecraftLocation(const FGuid& Identifier) const
+	{
+		return PreviewSpacecraftOrbitalLocations.Find(Identifier);
+	}
+
 	/*----------------------------------------------------
 	    Cartesian getters
 	----------------------------------------------------*/

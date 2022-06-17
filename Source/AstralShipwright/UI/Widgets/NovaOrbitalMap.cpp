@@ -106,8 +106,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	SCompoundWidget::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
 	// Debug data
-	FVector2D                       Origin        = FVector2D::ZeroVector;
-	const class UNovaCelestialBody* DefaultPlanet = UNeutronAssetManager::Get()->GetDefaultAsset<UNovaCelestialBody>();
+	FVector2D Origin = FVector2D::ZeroVector;
 
 	// Reset state
 	ClearBatches();
@@ -137,7 +136,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	}
 
 	// Run orbital map processes
-	AddPlanet(Origin, DefaultPlanet);
+	ProcessPlanets(Origin);
 	ProcessAreas(Origin);
 	ProcessAsteroids(Origin);
 	ProcessSpacecraftLocations(Origin);
@@ -220,6 +219,50 @@ void SNovaOrbitalMap::Reset()
 /*----------------------------------------------------
     High-level internals
 ----------------------------------------------------*/
+
+void SNovaOrbitalMap::ProcessPlanets(const FVector2D& Origin)
+{
+	// Get game pointers
+	const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(GameState);
+	const UNeutronAssetManager* AssetManager = UNeutronAssetManager::Get();
+	NCHECK(AssetManager);
+	const UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
+	NCHECK(OrbitalSimulation);
+
+	// Get assets
+	NCHECK(AssetManager);
+	TArray<const UNovaCelestialBody*> CelestialBodies = AssetManager->GetAssets<UNovaCelestialBody>();
+	const UNovaCelestialBody*         Planet          = AssetManager->GetDefaultAsset<UNovaCelestialBody>();
+
+	// Add the planet
+	AddPlanet(Origin, Planet);
+
+	// Moons require more work
+	const FNovaOrbitalLocation* PlayerLocation =
+		OrbitalSimulation->GetPreviewSpacecraftLocation(GameState->GetPlayerSpacecraftIdentifier());
+	if (PlayerLocation)
+	{
+		const FVector2D PlayerCartesianLocation = PlayerLocation->GetCartesianLocation();
+		const double    OrbitRotationAngle =
+			FMath::RadiansToDegrees(FVector(PlayerCartesianLocation.X, PlayerCartesianLocation.Y, 0).HeadingAngle());
+
+		// Iterate over moons
+		for (const UNovaCelestialBody* Moon : CelestialBodies)
+		{
+			if (Moon->Body == Planet)
+			{
+				const FNovaOrbitGeometry   OrbitGeometry     = FNovaOrbitGeometry(Moon, Moon->Altitude.GetValue(), 0);
+				const FNovaOrbit           Orbit             = FNovaOrbit(OrbitGeometry, FNovaTime());
+				const double               CurrentPhase      = Orbit.Geometry.GetPhase<true>(GameState->GetCurrentTime());
+				const FNovaOrbitalLocation OrbitalLocation   = FNovaOrbitalLocation(OrbitGeometry, 90 - CurrentPhase);
+				const FVector2D            CartesianLocation = OrbitalLocation.GetCartesianLocation();
+
+				AddPlanet(Origin + CartesianLocation / 20, Moon);
+			}
+		}
+	}
+}
 
 void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 {
