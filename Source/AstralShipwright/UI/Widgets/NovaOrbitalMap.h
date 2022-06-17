@@ -172,12 +172,14 @@ public:
 	virtual void Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime) override;
 
 	/** Preview a spacecraft trajectory */
-	void ShowTrajectory(const FNovaTrajectory& Trajectory, bool Immediate = false);
+	void ShowTrajectory(const FNovaTrajectory& Trajectory, const TArray<FNovaOrbitalObject>& ObjectsToShow, bool Immediate = false);
 
 	/** Remove the trajectory preview */
 	void ClearTrajectory()
 	{
 		CurrentPreviewTrajectory = FNovaTrajectory();
+		CurrentPreviewProgress   = 0;
+		CurrentPreviewObjects    = {};
 	}
 
 	/** Get the preview trajectory */
@@ -212,6 +214,12 @@ protected:
 	/*----------------------------------------------------
 	    High-level internals
 	----------------------------------------------------*/
+
+	/** Should we display this object */
+	bool ShouldDisplayObject(const FNovaOrbitalObject& Object) const
+	{
+		return !CurrentPreviewTrajectory.IsValid() || CurrentPreviewObjects.Contains(Object);
+	}
 
 	/** Add areas to the map */
 	void ProcessAreas(const FVector2D& Origin);
@@ -322,16 +330,21 @@ protected:
 	float MapScaleStep;
 
 	// Local state
-	FVector2D       CurrentOrigin;
-	FVector2D       TargetPosition;
-	FVector2D       CurrentPosition;
-	FVector2D       CurrentVelocity;
-	FNovaTrajectory CurrentPreviewTrajectory;
-	float           CurrentPreviewProgress;
-	float           CurrentDesiredSize;
-	float           CurrentDesiredScale;
-	float           CurrentDrawScale;
-	float           CurrentZoomSpeed;
+	FVector2D CurrentOrigin;
+	FVector2D TargetPosition;
+	FVector2D CurrentPosition;
+	FVector2D CurrentVelocity;
+
+	// Preview system
+	FNovaTrajectory            CurrentPreviewTrajectory;
+	float                      CurrentPreviewProgress;
+	TArray<FNovaOrbitalObject> CurrentPreviewObjects;
+
+	// Scaling
+	float CurrentDesiredSize;
+	float CurrentDesiredScale;
+	float CurrentDrawScale;
+	float CurrentZoomSpeed;
 
 	// Object system
 	TArray<FNovaOrbitalObject> HoveredOrbitalObjects;

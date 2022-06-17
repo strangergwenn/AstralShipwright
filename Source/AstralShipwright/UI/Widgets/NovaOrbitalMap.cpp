@@ -149,12 +149,13 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	}
 }
 
-void SNovaOrbitalMap::ShowTrajectory(const FNovaTrajectory& Trajectory, bool Immediate)
+void SNovaOrbitalMap::ShowTrajectory(const FNovaTrajectory& Trajectory, const TArray<FNovaOrbitalObject>& ObjectsToShow, bool Immediate)
 {
 	if (Trajectory.IsValid())
 	{
 		CurrentPreviewTrajectory = Trajectory;
 		CurrentPreviewProgress   = Immediate ? TrajectoryPreviewDuration : 0;
+		CurrentPreviewObjects    = ObjectsToShow;
 	}
 }
 
@@ -217,7 +218,7 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 	if (IsValid(OrbitalSimulation))
 	{
-		FNovaSplineStyle AreaStyle(FLinearColor(1, 1, 1, 0.5f));
+		FNovaSplineStyle AsteroidStyle(FLinearColor(1, 1, 1, 0.5f));
 
 		for (const auto AreaAndOrbitalLocation : OrbitalSimulation->GetPreviewAreasLocations())
 		{
@@ -227,16 +228,28 @@ void SNovaOrbitalMap::ProcessAreas(const FVector2D& Origin)
 			UpdateDesiredSize(Geometry.GetHighestAltitude());
 
 			float              BaseAltitude = GetObjectBaseAltitude(Geometry.Body);
-			FNovaOrbitalObject Area = FNovaOrbitalObject(AreaAndOrbitalLocation.Key, OrbitalLocation.GetCartesianLocation(BaseAltitude));
+			FNovaOrbitalObject AreaObject =
+				FNovaOrbitalObject(AreaAndOrbitalLocation.Key, OrbitalLocation.GetCartesianLocation(BaseAltitude));
 
-			AddOrbitalObject(Area, AreaStyle.ColorOuter);
+			if (ShouldDisplayObject(AreaObject))
+			{
+				if (CurrentPreviewTrajectory.IsValid())
+				{
+					TArray<FNovaOrbitalObject> Objects;
+					Objects.Add(AreaObject);
+					AddOrbit(Origin, nullptr, OrbitalLocation.Geometry, Objects, AsteroidStyle);
+				}
+				else
+				{
+					AddOrbitalObject(AreaObject, AsteroidStyle.ColorOuter);
+				}
+			}
 		}
 	}
 }
 
 void SNovaOrbitalMap::ProcessAsteroids(const FVector2D& Origin)
 {
-	const ANovaGameState*            GameState         = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 	if (IsValid(OrbitalSimulation))
 	{
@@ -253,14 +266,25 @@ void SNovaOrbitalMap::ProcessAsteroids(const FVector2D& Origin)
 			FNovaOrbitalObject AsteroidObject =
 				FNovaOrbitalObject(AsteroidAndOrbitalLocation.Key, OrbitalLocation.GetCartesianLocation(BaseAltitude), true);
 
-			AddOrbitalObject(AsteroidObject, AreaStyle.ColorOuter);
+			if (ShouldDisplayObject(AsteroidObject))
+			{
+				if (CurrentPreviewTrajectory.IsValid())
+				{
+					TArray<FNovaOrbitalObject> Objects;
+					Objects.Add(AsteroidObject);
+					AddOrbit(Origin, nullptr, OrbitalLocation.Geometry, Objects, AreaStyle);
+				}
+				else
+				{
+					AddOrbitalObject(AsteroidObject, AreaStyle.ColorOuter);
+				}
+			}
 		}
 	}
 }
 
 void SNovaOrbitalMap::ProcessSpacecraftLocations(const FVector2D& Origin)
 {
-	const ANovaGameState*            GameState         = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 	if (!IsValid(OrbitalSimulation))
 	{
@@ -286,18 +310,23 @@ void SNovaOrbitalMap::ProcessSpacecraftLocations(const FVector2D& Origin)
 			FNovaOrbitalObject Object       = FNovaOrbitalObject(Identifier, Location.GetCartesianLocation(BaseAltitude), false);
 
 			// Player orbit
+			const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 			if (GameState->GetPlayerSpacecraftIdentifiers().Contains(Identifier))
 			{
-				if (!CurrentPreviewTrajectory.IsValid() && !OrbitalSimulation->IsOnStartedTrajectory(Identifier))
+				if (!OrbitalSimulation->IsOnStartedTrajectory(Identifier))
 				{
 					TArray<FNovaOrbitalObject> Objects;
-					Objects.Add(Object);
+					if (!CurrentPreviewTrajectory.IsValid())
+					{
+						Objects.Add(Object);
+					}
+
 					AddOrbit(Origin, nullptr, Location.Geometry, Objects, OrbitStyle);
 				}
 			}
 
 			// Spacecraft position
-			else
+			else if (ShouldDisplayObject(Object))
 			{
 				AddOrbitalObject(Object, FLinearColor::White);
 			}
@@ -309,7 +338,6 @@ void SNovaOrbitalMap::ProcessSpacecraftLocations(const FVector2D& Origin)
 
 void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
 {
-	const ANovaGameState*            GameState         = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = UNovaOrbitalSimulationComponent::Get(MenuManager.Get());
 	if (!IsValid(OrbitalSimulation))
 	{
@@ -327,6 +355,7 @@ void SNovaOrbitalMap::ProcessPlayerTrajectory(const FVector2D& Origin)
 	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulation->GetPlayerTrajectory();
 	if (PlayerTrajectory)
 	{
+		const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 		AddTrajectory(Origin, *PlayerTrajectory, GameState->GetSpacecraft(GameState->GetPlayerSpacecraftIdentifier()), 1.0f, OrbitStyle,
 			ManeuverStyle);
 

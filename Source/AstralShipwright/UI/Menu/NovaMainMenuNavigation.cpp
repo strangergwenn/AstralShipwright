@@ -696,7 +696,7 @@ void SNovaMainMenuNavigation::OnClicked(const FVector2D& Position)
 {
 	SNeutronTabPanel::OnClicked(Position);
 
-	if (IsValid(GameState) && !SidePanel->IsHovered())
+	if (IsValid(GameState) && !SidePanel->IsHovered() && !OrbitalMap->GetPreviewTrajectory().IsValid())
 	{
 		bool HasValidObject      = false;
 		bool HasAnyHoveredObject = false;
@@ -1143,7 +1143,14 @@ void SNovaMainMenuNavigation::OnTrajectoryChanged(const FNovaTrajectory& Traject
 
 	if (Trajectory.IsValidExtended())
 	{
-		OrbitalMap->ShowTrajectory(Trajectory, false);
+		TArray<FNovaOrbitalObject> Objects;
+		Objects.Add(SelectedObject);
+		for (FGuid Identifier : GameState->GetPlayerSpacecraftIdentifiers())
+		{
+			Objects.Add(FNovaOrbitalObject(Identifier, FVector2D::ZeroVector, false));
+		}
+
+		OrbitalMap->ShowTrajectory(Trajectory, Objects, false);
 	}
 	else
 	{
