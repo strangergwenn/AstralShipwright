@@ -8,7 +8,7 @@
 #define LOCTEXT_NAMESPACE "SNovaSpacecraftDatasheet"
 
 /** Spacecraft datasheet class */
-class SNovaSpacecraftDatasheet : public SNeutronTable
+class SNovaSpacecraftDatasheet : public SNeutronTable<2>
 {
 	SLATE_BEGIN_ARGS(SNovaSpacecraftDatasheet) : _TargetSpacecraft(), _ComparisonSpacecraft(nullptr)
 	{}
@@ -41,32 +41,40 @@ public:
 
 		// Build the mass table
 		AddHeader(LOCTEXT("Overview", "<img src=\"/Text/Module\"/> Overview"));
-		AddEntry(LOCTEXT("Name", "Name"), Target.GetName(), Comparison ? Comparison->GetName() : FText());
-		AddEntry(LOCTEXT("Classification", "Classification"), Target.GetClassification(),
-			Comparison ? Comparison->GetClassification() : FText());
-		AddEntry(LOCTEXT("Compartments", "Compartments"), Target.Compartments.Num(), Comparison ? Comparison->Compartments.Num() : -1);
+		AddEntry(LOCTEXT("Name", "Name"), TNeutronTableValue(Target.GetName(), Comparison ? Comparison->GetName() : FText()));
+		AddEntry(LOCTEXT("Classification", "Classification"),
+			TNeutronTableValue(Target.GetClassification(), Comparison ? Comparison->GetClassification() : FText()));
+		AddEntry(LOCTEXT("Compartments", "Compartments"),
+			TNeutronTableValue(Target.Compartments.Num(), Comparison ? Comparison->Compartments.Num() : -1, FText()));
 
 		// Build the mass table
 		AddHeader(LOCTEXT("MassMetrics", "<img src=\"/Text/Mass\"/> Mass metrics"));
-		AddEntry(LOCTEXT("DryMass", "Dry mass"), TargetPropulsionMetrics.DryMass,
-			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->DryMass : -1, Tonnes);
-		AddEntry(LOCTEXT("PropellantMassCapacity", "Propellant capacity"), TargetPropulsionMetrics.PropellantMassCapacity,
-			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->PropellantMassCapacity : -1, Tonnes);
-		AddEntry(LOCTEXT("CargoMassCapacity", "Cargo capacity"), TargetPropulsionMetrics.CargoMassCapacity,
-			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->CargoMassCapacity : -1, Tonnes);
-		AddEntry(LOCTEXT("MaximumMass", "Full-load mass"), TargetPropulsionMetrics.MaximumMass,
-			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->MaximumMass : -1, Tonnes);
+		AddEntry(LOCTEXT("DryMass", "Dry mass"), TNeutronTableValue(TargetPropulsionMetrics.DryMass,
+													 ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->DryMass : -1, Tonnes));
+		AddEntry(LOCTEXT("PropellantMassCapacity", "Propellant capacity"),
+			TNeutronTableValue(TargetPropulsionMetrics.PropellantMassCapacity,
+				ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->PropellantMassCapacity : -1, Tonnes));
+		AddEntry(LOCTEXT("CargoMassCapacity", "Cargo capacity"),
+			TNeutronTableValue(TargetPropulsionMetrics.CargoMassCapacity,
+				ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->CargoMassCapacity : -1, Tonnes));
+		AddEntry(LOCTEXT("MaximumMass", "Full-load mass"),
+			TNeutronTableValue(
+				TargetPropulsionMetrics.MaximumMass, ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->MaximumMass : -1, Tonnes));
 
 		// Build the propulsion table
 		AddHeader(LOCTEXT("PropulsionMetrics", "<img src=\"/Text/Thrust\"/> Propulsion metrics"));
-		AddEntry(LOCTEXT("SpecificImpulse", "Specific impulse"), TargetPropulsionMetrics.SpecificImpulse,
-			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->SpecificImpulse : -1, Seconds);
-		AddEntry(LOCTEXT("Thrust", "Engine thrust"), TargetPropulsionMetrics.EngineThrust,
-			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->EngineThrust : -1, KiloNewtons);
-		AddEntry(LOCTEXT("LinearAcceleration", "Attitude control thrust"), TargetPropulsionMetrics.ThrusterThrust,
-			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->ThrusterThrust : -1, KiloNewtons);
-		AddEntry(LOCTEXT("MaximumDeltaV", "Full-load delta-v"), TargetPropulsionMetrics.MaximumDeltaV,
-			ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->MaximumDeltaV : -1, MetersPerSeconds);
+		AddEntry(LOCTEXT("SpecificImpulse", "Specific impulse"),
+			TNeutronTableValue(TargetPropulsionMetrics.SpecificImpulse,
+				ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->SpecificImpulse : -1, Seconds));
+		AddEntry(LOCTEXT("Thrust", "Engine thrust"),
+			TNeutronTableValue(TargetPropulsionMetrics.EngineThrust,
+				ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->EngineThrust : -1, KiloNewtons));
+		AddEntry(LOCTEXT("LinearAcceleration", "Attitude control thrust"),
+			TNeutronTableValue(TargetPropulsionMetrics.ThrusterThrust,
+				ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->ThrusterThrust : -1, KiloNewtons));
+		AddEntry(LOCTEXT("MaximumDeltaV", "Full-load delta-v"),
+			TNeutronTableValue(TargetPropulsionMetrics.MaximumDeltaV,
+				ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->MaximumDeltaV : -1, MetersPerSeconds));
 	}
 };
 

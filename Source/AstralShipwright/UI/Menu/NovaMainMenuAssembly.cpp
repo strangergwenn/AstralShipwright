@@ -57,13 +57,13 @@ public:
 		// Build the cost table
 		FNovaSpacecraftUpgradeCost Cost =
 			ModifiedSpacecraft.GetUpgradeCost(PC->GetWorld()->GetGameState<ANovaGameState>(), CurrentSpacecraft);
-		TSharedRef<SNeutronTable> CostTable = SNew(SNeutronTable).Title(LOCTEXT("CostAnalysis", "Cost analysis"));
+		TSharedRef<SNeutronTable<2>> CostTable = SNew(SNeutronTable<2>).Title(LOCTEXT("CostAnalysis", "Cost analysis"));
 		CostTable->AddHeader(LOCTEXT("Overview", "<img src=\"/Text/Module\"/> Overview"));
-		CostTable->AddEntry(LOCTEXT("UpgradeCostValue", "Estimated total value"), GetPriceText(Cost.TotalCost));
-		CostTable->AddEntry(LOCTEXT("UpgradeCostUpgrades", "New parts bought"), GetPriceText(Cost.UpgradeCost));
-		CostTable->AddEntry(LOCTEXT("UpgradeCostResale", "Parts resold"), GetPriceText(Cost.ResaleGain));
-		CostTable->AddEntry(LOCTEXT("UpgradeCostPaint", "Paint"), GetPriceText(Cost.PaintCost));
-		CostTable->AddEntry(LOCTEXT("UpgradeCostTotal", "Total cost of changes"), GetPriceText(Cost.TotalChangeCost));
+		CostTable->AddEntry(LOCTEXT("UpgradeCostValue", "Estimated total value"), TNeutronTableValue(GetPriceText(Cost.TotalCost)));
+		CostTable->AddEntry(LOCTEXT("UpgradeCostUpgrades", "New parts bought"), TNeutronTableValue(GetPriceText(Cost.UpgradeCost)));
+		CostTable->AddEntry(LOCTEXT("UpgradeCostResale", "Parts resold"), TNeutronTableValue(GetPriceText(Cost.ResaleGain)));
+		CostTable->AddEntry(LOCTEXT("UpgradeCostPaint", "Paint"), TNeutronTableValue(GetPriceText(Cost.PaintCost)));
+		CostTable->AddEntry(LOCTEXT("UpgradeCostTotal", "Total cost of changes"), TNeutronTableValue(GetPriceText(Cost.TotalChangeCost)));
 
 		// Validate cost
 		if (!PC->CanAffordTransaction(-Cost.TotalChangeCost))
