@@ -1660,18 +1660,21 @@ void SNovaMainMenuAssembly::SetPanelState(ENovaMainMenuAssemblyState State)
 
 bool SNovaMainMenuAssembly::IsValidCommonIndex(int32 Index, const UNovaCompartmentDescription* CompartmentDescription) const
 {
-	if (IsModuleIndex(Index))
+	if (IsValid(CompartmentDescription))
 	{
-		if (GetModuleIndex(Index) >= 0 && GetModuleIndex(Index) < CompartmentDescription->ModuleSlots.Num())
+		if (IsModuleIndex(Index))
 		{
-			return true;
+			if (GetModuleIndex(Index) >= 0 && GetModuleIndex(Index) < CompartmentDescription->ModuleSlots.Num())
+			{
+				return true;
+			}
 		}
-	}
-	else
-	{
-		if (GetEquipmentIndex(Index) >= 0 && GetEquipmentIndex(Index) < CompartmentDescription->EquipmentSlots.Num())
+		else
 		{
-			return true;
+			if (GetEquipmentIndex(Index) >= 0 && GetEquipmentIndex(Index) < CompartmentDescription->EquipmentSlots.Num())
+			{
+				return true;
+			}
 		}
 	}
 
