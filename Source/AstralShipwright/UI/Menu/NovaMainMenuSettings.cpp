@@ -775,7 +775,7 @@ void SNovaMainMenuSettings::UpdateResolutionList()
 	}
 
 	// Update list
-	ResolutionListView->Refresh(ResolutionList.Find(SelectedResolution));
+	ResolutionListView->Refresh(SelectedResolution.IsValid() ? ResolutionList.Find(SelectedResolution) : INDEX_NONE);
 }
 
 void SNovaMainMenuSettings::UpdateResolution(FIntPoint Resolution, bool Fullscreen)
