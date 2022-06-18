@@ -144,6 +144,7 @@ public:
 					// Cost table
 					+ SHorizontalBox::Slot()
 					.AutoWidth()
+					.VAlign(VAlign_Top)
 					[
 						SNew(SBox)
 						.WidthOverride(500)
