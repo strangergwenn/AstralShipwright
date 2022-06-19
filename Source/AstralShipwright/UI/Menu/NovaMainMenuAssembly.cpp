@@ -2504,7 +2504,7 @@ void SNovaMainMenuAssembly::OnOpenModuleGroups()
 	{
 		for (int32 ColIndex = 0; ColIndex < ENovaConstants::MaxCompartmentCount; ColIndex++)
 		{
-			TableContents[RowIndex].Add(LOCTEXT("NA", "-"));
+			TableContents[RowIndex].Add(INVTEXT("-\n"));
 		}
 	}
 
@@ -2514,11 +2514,22 @@ void SNovaMainMenuAssembly::OnOpenModuleGroups()
 	{
 		for (const TPair<int32, int32>& CompartmentModuleIndex : Group.ModuleDataEntries)
 		{
-			const FText Text = FText::FormatNamed(
-				LOCTEXT("GroupTableEntryFormat", "Cargo group {group}"), TEXT("group"), FText::AsNumber(CurrentGroupIndex));
+			FText GroupTypeText;
+			if (Group.Type == ENovaModuleGroupType::Hatch)
+			{
+				GroupTypeText = LOCTEXT("ModulesGroupsCargoCrew", "Cargo / crew");
+			}
+			else if (Group.Type == ENovaModuleGroupType::Propellant)
+			{
+				GroupTypeText = LOCTEXT("ModulesGroupsPropellant", "Propellant");
+			}
+
+			FText Text = FText::FormatNamed(LOCTEXT("ModulesGroupsEntryFormat", "Group {group}\n{type}"), TEXT("group"),
+				FText::AsNumber(CurrentGroupIndex), TEXT("type"), GroupTypeText);
 
 			TableContents[CompartmentModuleIndex.Value][CompartmentModuleIndex.Key] =
-				Group.HasHatch ? TNeutronTableValue(Text, INVTEXT("x"), FText()) : TNeutronTableValue(Text);
+				Group.Type != ENovaModuleGroupType::Hatch || Group.HasHatch ? TNeutronTableValue(Text, INVTEXT("x"), FText())
+																			: TNeutronTableValue(Text);
 		}
 		CurrentGroupIndex++;
 	}

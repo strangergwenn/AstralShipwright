@@ -813,12 +813,14 @@ void FNovaSpacecraft::UpdateModuleGroups()
 				const UNovaModuleDescription* Module             = Compartment.Modules[ModuleIndex].Description;
 				FNovaModuleGroup*             CurrentModuleGroup = nullptr;
 
-				if (Module && IsHatchModule(Module))
+				if (Module)
 				{
+					ENovaModuleGroupType Type = GetModuleType(Module);
+
 					// This module is part of an existing group
 					int32 FoundCompartmentIndex = INDEX_NONE;
 					int32 FoundModuleIndex      = INDEX_NONE;
-					if (IsHatchModuleInPreviousCompartment(CompartmentIndex, ModuleIndex, FoundCompartmentIndex, FoundModuleIndex))
+					if (IsSameKindModuleInPreviousCompartment(CompartmentIndex, ModuleIndex, Type, FoundCompartmentIndex, FoundModuleIndex))
 					{
 						for (FNovaModuleGroup& Group : ModuleGroups)
 						{
@@ -837,6 +839,7 @@ void FNovaSpacecraft::UpdateModuleGroups()
 					{
 						FNovaModuleGroup Group;
 						Group.ModuleDataEntries.Add(TPair<int32, int32>(CompartmentIndex, ModuleIndex));
+						Group.Type = Type;
 						ModuleGroups.Add(Group);
 						CurrentModuleGroup = &ModuleGroups.Last();
 					}
@@ -1098,8 +1101,8 @@ const UNovaModuleDescription* FNovaSpacecraft::GetModuleInNextCompartment(
 	return nullptr;
 };
 
-bool FNovaSpacecraft::IsHatchModuleInPreviousCompartment(
-	int32 CompartmentIndex, int32 ModuleIndex, int32& FoundCompartmentIndex, int32& FoundModuleIndex) const
+bool FNovaSpacecraft::IsSameKindModuleInPreviousCompartment(
+	int32 CompartmentIndex, int32 ModuleIndex, ENovaModuleGroupType Type, int32& FoundCompartmentIndex, int32& FoundModuleIndex) const
 {
 	const FNovaCompartment&       Compartment             = Compartments[CompartmentIndex];
 	const FNovaCompartmentModule& Module                  = Compartment.Modules[ModuleIndex];
@@ -1113,7 +1116,7 @@ bool FNovaSpacecraft::IsHatchModuleInPreviousCompartment(
 		{
 			int32                         OtherModuleIndex;
 			const FNovaCompartmentModule* ModuleData = PreviousCompartment.GetModuleDataBySocket(CurrentModuleSocketName, OtherModuleIndex);
-			if (ModuleData && ModuleData->Description && IsHatchModule(ModuleData->Description))
+			if (ModuleData && ModuleData->Description && GetModuleType(ModuleData->Description) == Type)
 			{
 				FoundCompartmentIndex = CompartmentIndex;
 				FoundModuleIndex      = OtherModuleIndex;
@@ -1125,9 +1128,16 @@ bool FNovaSpacecraft::IsHatchModuleInPreviousCompartment(
 	return false;
 };
 
-bool FNovaSpacecraft::IsHatchModule(const UNovaModuleDescription* Module) const
+ENovaModuleGroupType FNovaSpacecraft::GetModuleType(const UNovaModuleDescription* Module) const
 {
-	return Module->IsA<UNovaCargoModuleDescription>() /* || Module->IsA<UnovaCrewModuleDescription>()*/;
+	if (Module->IsA<UNovaCargoModuleDescription>() /* || Module->IsA<UnovaCrewModuleDescription>()*/)
+	{
+		return ENovaModuleGroupType::Hatch;
+	}
+	else
+	{
+		return ENovaModuleGroupType::Propellant;
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

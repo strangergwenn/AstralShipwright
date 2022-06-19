@@ -324,6 +324,13 @@ struct FNovaSpacecraftPropulsionMetrics
 	float ThrusterThrust;
 };
 
+/** Types of module groups */
+enum class ENovaModuleGroupType : uint8
+{
+	Hatch,
+	Propellant
+};
+
 /** Group of spacecraft modules with common bulkheads */
 struct FNovaModuleGroup
 {
@@ -331,6 +338,7 @@ struct FNovaModuleGroup
 	{}
 
 	TArray<TPair<int32, int32>> ModuleDataEntries;
+	ENovaModuleGroupType        Type;
 	bool                        HasHatch;
 };
 
@@ -554,11 +562,11 @@ protected:
 	const UNovaModuleDescription* GetModuleInNextCompartment(int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType = false) const;
 
 	/** Check whether the module at CompartmentIndex.ModuleIndex has another hatch-needing module behind it */
-	bool IsHatchModuleInPreviousCompartment(
-		int32 CompartmentIndex, int32 ModuleIndex, int32& FoundCompartmentIndex, int32& FoundModuleIndex) const;
+	bool IsSameKindModuleInPreviousCompartment(
+		int32 CompartmentIndex, int32 ModuleIndex, ENovaModuleGroupType Type, int32& FoundCompartmentIndex, int32& FoundModuleIndex) const;
 
-	/** Check if this is a hatch module */
-	bool IsHatchModule(const UNovaModuleDescription* Module) const;
+	/** Get the module group classification for this module */
+	ENovaModuleGroupType GetModuleType(const UNovaModuleDescription* Module) const;
 
 public:
 
