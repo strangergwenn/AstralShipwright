@@ -16,6 +16,7 @@ class SNovaTradingPanel : public SNeutronModalPanel
 	{}
 
 	SLATE_ARGUMENT(class SNeutronMenu*, Menu)
+	SLATE_ARGUMENT(FNeutronAsyncCondition, IsConfirmEnabled)
 
 	SLATE_END_ARGS()
 

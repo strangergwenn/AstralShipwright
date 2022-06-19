@@ -20,6 +20,15 @@ enum class ENovaEquipmentType : uint8
 	Aft             // Large equipment aft of the compartment
 };
 
+/** Equipment filter*/
+UENUM()
+enum class ENovaEquipmentCategory : uint8
+{
+	Standard,
+	Propulsion,
+	Accessory
+};
+
 /** Type of bulkhead to use */
 UENUM()
 enum class ENovaBulkheadType : uint8
@@ -576,11 +585,15 @@ public:
 
 	// Equipment requirement
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	ENovaEquipmentType EquipmentType;
+	ENovaEquipmentType EquipmentType = ENovaEquipmentType::Standard;
+
+	// Equipment category
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	ENovaEquipmentCategory EquipmentCategory = ENovaEquipmentCategory::Standard;
 
 	// Equipment pairing
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	bool RequiresPairing;
+	bool RequiresPairing = false;
 };
 
 /** Description of an engine equipment */
