@@ -84,7 +84,7 @@ struct FNovaCompartment
 	}
 
 	/** Get the module data for the module residing at a particular socket name */
-	const FNovaCompartmentModule* GetModuleDataBySocket(FName SocketName) const;
+	const FNovaCompartmentModule* GetModuleDataBySocket(FName SocketName, int32& FoundModuleIndex) const;
 
 	/** Get the description of the module residing at a particular socket name */
 	const UNovaModuleDescription* GetModuleBySocket(FName SocketName) const;
@@ -324,6 +324,16 @@ struct FNovaSpacecraftPropulsionMetrics
 	float ThrusterThrust;
 };
 
+/** Group of spacecraft modules with common bulkheads */
+struct FNovaModuleGroup
+{
+	FNovaModuleGroup() : HasHatch(false)
+	{}
+
+	TArray<TPair<int32, int32>> ModuleDataEntries;
+	bool                        HasHatch;
+};
+
 /** Spacecraft upgrade cost result */
 struct FNovaSpacecraftUpgradeCost
 {
@@ -434,11 +444,20 @@ public:
 		return PropulsionMetrics;
 	}
 
+	/** Get module groups for this spacecraft */
+	const TArray<FNovaModuleGroup>& GetCargoModuleGroups() const
+	{
+		return ModuleGroups;
+	}
+
 	/** Update bulkheads, pipes, wiring, based on the current state */
 	void UpdateProceduralElements();
 
 	/** Update the spacecraft's metrics */
 	void UpdatePropulsionMetrics();
+
+	/** Update module groups*/
+	void UpdateModuleGroups();
 
 	/** Reset the propellant amount */
 	void SetPropellantMass(float Amount)
@@ -535,7 +554,8 @@ protected:
 	const UNovaModuleDescription* GetModuleInNextCompartment(int32 CompartmentIndex, int32 ModuleIndex, bool RequireSameType = false) const;
 
 	/** Check whether the module at CompartmentIndex.ModuleIndex has another hatch-needing module behind it */
-	bool IsHatchModuleInPreviousCompartment(int32 CompartmentIndex, int32 ModuleIndex, const FNovaCompartmentModule*& FoundModule) const;
+	bool IsHatchModuleInPreviousCompartment(
+		int32 CompartmentIndex, int32 ModuleIndex, int32& FoundCompartmentIndex, int32& FoundModuleIndex) const;
 
 	/** Check if this is a hatch module */
 	bool IsHatchModule(const UNovaModuleDescription* Module) const;
@@ -568,4 +588,5 @@ public:
 
 	// Local state
 	FNovaSpacecraftPropulsionMetrics PropulsionMetrics;
+	TArray<FNovaModuleGroup>         ModuleGroups;
 };
