@@ -573,7 +573,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 								.FilterOptions({LOCTEXT("Propulsion", "Propulsion"), LOCTEXT("Accessory", "Accessory")})
 								.OnFilterItem(SNovaEquipmentList::FNeutronOnFilterItem::CreateLambda([=](const UNovaEquipmentDescription* Desc, TArray<int32> EnabledFilters)
 								{
-									return Desc == nullptr || EnabledFilters.Contains(static_cast<int32>(Desc->EquipmentCategory) - 1);
+									return Desc == nullptr || Desc->EquipmentCategory == ENovaEquipmentCategory::Standard || EnabledFilters.Contains(static_cast<int32>(Desc->EquipmentCategory) - 1);
 								}
 								))
 							]
