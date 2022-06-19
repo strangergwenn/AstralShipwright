@@ -445,7 +445,7 @@ public:
 	}
 
 	/** Get module groups for this spacecraft */
-	const TArray<FNovaModuleGroup>& GetCargoModuleGroups() const
+	const TArray<FNovaModuleGroup>& GetModuleGroups() const
 	{
 		return ModuleGroups;
 	}

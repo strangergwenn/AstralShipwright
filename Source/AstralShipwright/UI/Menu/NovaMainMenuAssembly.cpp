@@ -913,6 +913,18 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						.VAlign(VAlign_Center)
 						.AutoWidth()
 						[
+							SNeutronNew(SNeutronButton)
+							.Text(LOCTEXT("ModuleGroups", "Module groups"))
+							.HelpText(LOCTEXT("ModuleGroupsHelp", "Check how modules come together as groups"))
+							.OnClicked(this, &SNovaMainMenuAssembly::OnOpenModuleGroups)
+						]
+
+						+ SHorizontalBox::Slot()
+
+						+ SHorizontalBox::Slot()
+						.VAlign(VAlign_Center)
+						.AutoWidth()
+						[
 							SNew(STextBlock)
 							.Text(LOCTEXT("DisplayFilter", "Display filter"))
 							.TextStyle(&Theme.MainFont)
@@ -1262,6 +1274,17 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 			]
 		];
 	}
+
+	// Modal group table
+	SAssignNew(ModuleGroupsContainer, SHorizontalBox)
+		+ SHorizontalBox::Slot()
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		[
+			SAssignNew(ModuleGroupsTable, SNeutronTable<ENovaConstants::MaxCompartmentCount + 1>)
+			.Width(2 * Theme.GenericMenuWidth)
+		]
+		+ SHorizontalBox::Slot();
 
 	// clang-format on
 
@@ -2462,6 +2485,59 @@ void SNovaMainMenuAssembly::OnSelectedHullTypeChanged(const UNovaHullDescription
 		SpacecraftPawn->GetCompartment(EditedCompartmentIndex).HullType = Hull;
 		SpacecraftPawn->RequestAssemblyUpdate();
 	}
+}
+
+void SNovaMainMenuAssembly::OnOpenModuleGroups()
+{
+	NLOG("SNovaMainMenuAssembly::OnOpenModuleGroups");
+
+	NCHECK(IsValid(SpacecraftPawn));
+
+	// Prepare headers, table contents
+	TArray<FText> Headers;
+	for (int32 Index = 1; Index <= ENovaConstants::MaxCompartmentCount; Index++)
+	{
+		Headers.Add(FText::AsNumber(Index));
+	}
+	TArray<TNeutronTableValue<FText>> TableContents[ENovaConstants::MaxModuleCount];
+	for (int32 RowIndex = 0; RowIndex < ENovaConstants::MaxModuleCount; RowIndex++)
+	{
+		for (int32 ColIndex = 0; ColIndex < ENovaConstants::MaxCompartmentCount; ColIndex++)
+		{
+			TableContents[RowIndex].Add(LOCTEXT("NA", "-"));
+		}
+	}
+
+	// Process module groups
+	int32 CurrentGroupIndex = 1;
+	for (const FNovaModuleGroup& Group : SpacecraftPawn->GetModuleGroups())
+	{
+		for (const TPair<int32, int32>& CompartmentModuleIndex : Group.ModuleDataEntries)
+		{
+			const FText Text = FText::FormatNamed(
+				LOCTEXT("GroupTableEntryFormat", "Cargo group {group}"), TEXT("group"), FText::AsNumber(CurrentGroupIndex));
+
+			TableContents[CompartmentModuleIndex.Value][CompartmentModuleIndex.Key] =
+				Group.HasHatch ? TNeutronTableValue(Text, INVTEXT("x"), FText()) : TNeutronTableValue(Text);
+		}
+		CurrentGroupIndex++;
+	}
+
+	// Show the table
+	ModuleGroupsTable->Clear();
+	ModuleGroupsTable->AddHeaders(LOCTEXT("ModuleGroupsCompartment", "Compartment"), Headers);
+	for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
+	{
+		FText RowTitle = FText::FormatNamed(LOCTEXT("ModuleIndexFormat", "Module {index}"), TEXT("index"), FText::AsNumber(Index + 1));
+		ModuleGroupsTable->AddEntries(RowTitle, TableContents[Index]);
+	}
+
+	// Show the table
+	GenericModalPanel->Show(LOCTEXT("ModuleGroupsTitle", "Module groups"),
+		LOCTEXT("ModuleGroupsDetails",
+			"Modules are grouped together when they form a line of the same type, and can then share hatches or transfer cargo for "
+			"processing."),
+		FSimpleDelegate(), FSimpleDelegate(), FSimpleDelegate(), ModuleGroupsContainer);
 }
 
 /*----------------------------------------------------

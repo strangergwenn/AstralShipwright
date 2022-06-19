@@ -210,6 +210,13 @@ public:
 		return Spacecraft->GetCompatibleEquipment(CompartmentIndex, SlotIndex);
 	}
 
+	/** Get module groups for this spacecraft */
+	const TArray<FNovaModuleGroup>& GetModuleGroups() const
+	{
+		NCHECK(Spacecraft.IsValid());
+		return Spacecraft->GetModuleGroups();
+	}
+
 	/*----------------------------------------------------
 	    Assembly interface
 	----------------------------------------------------*/

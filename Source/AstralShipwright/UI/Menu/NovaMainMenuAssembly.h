@@ -6,6 +6,7 @@
 
 #include "Neutron/UI/NeutronUI.h"
 #include "Neutron/UI/Widgets/NeutronTabView.h"
+#include "Neutron/UI/Widgets/NeutronTable.h"
 #include "Neutron/UI/Widgets/NeutronModalListView.h"
 
 #include "Online.h"
@@ -275,6 +276,9 @@ protected:
 	void OnSelectedEquipmentChanged(const class UNovaEquipmentDescription* Equipment, int32 Index);
 	void OnSelectedHullTypeChanged(const class UNovaHullDescription* Hull, int32 Index);
 
+	// Tools
+	void OnOpenModuleGroups();
+
 	// Customization
 	void OnOpenCustomization();
 	void OnStructuralPaintSelected(const class UNovaPaintDescription* Paint, int32 Index);
@@ -303,21 +307,25 @@ protected:
 	class ANovaGameState*               GameState;
 
 	// Widgets
-	TSharedPtr<SHorizontalBox>                CompartmentBox;
-	TSharedPtr<SHorizontalBox>                ModuleBox;
-	TSharedPtr<SHorizontalBox>                EquipmentBox;
-	TSharedPtr<SEditableText>                 SpacecraftNameText;
-	TSharedPtr<class SNeutronSlider>          DisplayFilter;
-	TSharedPtr<class SNeutronButton>          SaveButton;
-	TSharedPtr<class SNeutronButton>          BackButton;
-	TSharedPtr<class SNeutronButton>          BackButton2;
-	TSharedPtr<class SNeutronButton>          EditButton;
-	TSharedPtr<class SNeutronButton>          PhotoModeButton;
-	TSharedPtr<class SNeutronModalPanel>      GenericModalPanel;
-	TSharedPtr<class SNovaAssemblyModalPanel> AssemblyModalPanel;
-	TSharedPtr<SVerticalBox>                  MenuBox;
-	TSharedPtr<class SNeutronSlider>          DirtyIntensity;
-	TSharedPtr<class SNeutronButton>          EnableHullPaintButton;
+	TSharedPtr<SHorizontalBox>       CompartmentBox;
+	TSharedPtr<SHorizontalBox>       ModuleBox;
+	TSharedPtr<SHorizontalBox>       EquipmentBox;
+	TSharedPtr<SEditableText>        SpacecraftNameText;
+	TSharedPtr<class SNeutronSlider> DisplayFilter;
+	TSharedPtr<class SNeutronButton> SaveButton;
+	TSharedPtr<class SNeutronButton> BackButton;
+	TSharedPtr<class SNeutronButton> BackButton2;
+	TSharedPtr<class SNeutronButton> EditButton;
+	TSharedPtr<class SNeutronButton> PhotoModeButton;
+	TSharedPtr<SVerticalBox>         MenuBox;
+	TSharedPtr<class SNeutronSlider> DirtyIntensity;
+	TSharedPtr<class SNeutronButton> EnableHullPaintButton;
+
+	// Modal panels
+	TSharedPtr<class SNeutronModalPanel>                               GenericModalPanel;
+	TSharedPtr<class SNovaAssemblyModalPanel>                          AssemblyModalPanel;
+	TSharedPtr<SHorizontalBox>                                         ModuleGroupsContainer;
+	TSharedPtr<SNeutronTable<ENovaConstants::MaxCompartmentCount + 1>> ModuleGroupsTable;
 
 	// Panel fading system
 	ENovaMainMenuAssemblyState DesiredPanelState;
