@@ -369,6 +369,7 @@ enum class ENovaPriceModifier : uint8
 UENUM()
 enum class ENovaResourceType : uint8
 {
+	None,
 	General,
 	Bulk,
 	Liquid

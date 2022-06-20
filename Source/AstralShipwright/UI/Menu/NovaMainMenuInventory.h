@@ -70,7 +70,7 @@ public:
 
 	void OnRefillPropellant();
 
-	void OnTradeWithSlot(int32 Index, ENovaResourceType Type);
+	void OnTradeWithSlot(int32 CompartmentIndex, int32 ModuleIndex);
 
 	void OnBuyResource();
 
@@ -89,6 +89,7 @@ protected:
 	const struct FNovaSpacecraft*       Spacecraft;
 	const class ANovaSpacecraftPawn*    SpacecraftPawn;
 	int32                               CurrentCompartmentIndex;
+	int32                               CurrentModuleIndexx;
 	TNeutronTimedAverage<float>         AveragedPropellantRatio;
 
 	// Resource list

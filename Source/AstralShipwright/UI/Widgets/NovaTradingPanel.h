@@ -22,7 +22,7 @@ class SNovaTradingPanel : public SNeutronModalPanel
 
 public:
 
-	SNovaTradingPanel() : Spacecraft(nullptr), Area(nullptr), Resource(nullptr), CompartmentIndex(INDEX_NONE)
+	SNovaTradingPanel() : Spacecraft(nullptr), Area(nullptr), Resource(nullptr), CompartmentIndex(INDEX_NONE), ModuleIndex(INDEX_NONE)
 	{}
 
 	void Construct(const FArguments& InArgs);
@@ -35,23 +35,23 @@ public:
 
 	/** Show contents without trading */
 	void Inspect(class ANovaPlayerController* TargetPC, const class UNovaArea* TargetArea, const class UNovaResource* TargetResource,
-		int32 TargetCompartmentIndex)
+		int32 TargetCompartmentIndex, int32 TargetModuleIndex)
 	{
-		ShowPanelInternal(TargetPC, TargetArea, TargetResource, TargetCompartmentIndex, false);
+		ShowPanelInternal(TargetPC, TargetArea, TargetResource, TargetCompartmentIndex, TargetModuleIndex, false);
 	}
 
 	/** Start trading */
 	void Trade(class ANovaPlayerController* TargetPC, const class UNovaArea* TargetArea, const class UNovaResource* TargetResource,
-		int32 TargetCompartmentIndex)
+		int32 TargetCompartmentIndex, int32 TargetModuleIndex)
 	{
-		ShowPanelInternal(TargetPC, TargetArea, TargetResource, TargetCompartmentIndex, true);
+		ShowPanelInternal(TargetPC, TargetArea, TargetResource, TargetCompartmentIndex, TargetModuleIndex, true);
 	}
 
 protected:
 
 	/** Implementation of the modal panel */
 	void ShowPanelInternal(class ANovaPlayerController* TargetPC, const class UNovaArea* TargetArea,
-		const class UNovaResource* TargetResource, int32 TargetCompartmentIndex, bool AllowTrade);
+		const class UNovaResource* TargetResource, int32 TargetCompartmentIndex, int32 TargetModuleIndex, bool AllowTrade);
 
 	/*----------------------------------------------------
 	    Content callbacks
@@ -107,5 +107,6 @@ protected:
 	float MaxAmount;
 	float Capacity;
 	int32 CompartmentIndex;
+	int32 ModuleIndex;
 	bool  IsTradeAllowed;
 };

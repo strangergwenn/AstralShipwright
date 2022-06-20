@@ -171,13 +171,14 @@ void SNovaTradingPanel::Construct(const FArguments& InArgs)
 ----------------------------------------------------*/
 
 void SNovaTradingPanel::ShowPanelInternal(ANovaPlayerController* TargetPC, const UNovaArea* TargetArea, const UNovaResource* TargetResource,
-	int32 TargetCompartmentIndex, bool AllowTrade)
+	int32 TargetCompartmentIndex, int32 TargetModuleIndex, bool AllowTrade)
 {
 	PC               = TargetPC;
 	Spacecraft       = PC->GetSpacecraft();
 	Area             = TargetArea;
 	Resource         = TargetResource;
 	CompartmentIndex = TargetCompartmentIndex;
+	ModuleIndex      = TargetModuleIndex;
 	IsTradeAllowed   = AllowTrade;
 
 	const ANovaGameState* GameState = PC->GetWorld()->GetGameState<ANovaGameState>();
@@ -197,8 +198,8 @@ void SNovaTradingPanel::ShowPanelInternal(ANovaPlayerController* TargetPC, const
 	{
 		if (CompartmentIndex != INDEX_NONE)
 		{
-			InitialAmount = Spacecraft->GetCargoMass(Resource, CompartmentIndex);
-			Capacity      = InitialAmount + Spacecraft->GetAvailableCargoMass(Resource, CompartmentIndex);
+			InitialAmount = Spacecraft->GetCargoMass(Resource, CompartmentIndex, ModuleIndex);
+			Capacity      = InitialAmount + Spacecraft->GetAvailableCargoMass(Resource, CompartmentIndex, ModuleIndex);
 
 			if (GameState->IsResourceSold(Resource))
 			{
@@ -399,7 +400,7 @@ void SNovaTradingPanel::OnConfirmTrade()
 	// Resource mode
 	if (Resource != UNovaResource::GetPropellant())
 	{
-		ModifiedSpacecraft.ModifyCargo(Resource, AmountSlider->GetCurrentValue() - InitialAmount, CompartmentIndex);
+		ModifiedSpacecraft.ModifyCargo(Resource, AmountSlider->GetCurrentValue() - InitialAmount, CompartmentIndex, ModuleIndex);
 	}
 
 	// Propellant mode

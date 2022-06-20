@@ -30,7 +30,12 @@
 ----------------------------------------------------*/
 
 SNovaMainMenuInventory::SNovaMainMenuInventory()
-	: PC(nullptr), GameState(nullptr), Spacecraft(nullptr), SpacecraftPawn(nullptr), CurrentCompartmentIndex(INDEX_NONE)
+	: PC(nullptr)
+	, GameState(nullptr)
+	, Spacecraft(nullptr)
+	, SpacecraftPawn(nullptr)
+	, CurrentCompartmentIndex(INDEX_NONE)
+	, CurrentModuleIndexx(INDEX_NONE)
 {}
 
 void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
@@ -43,17 +48,19 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 	SNeutronNavigationPanel::Construct(SNeutronNavigationPanel::FArguments().Menu(InArgs._Menu));
 
 	// Local data
-	TSharedPtr<SVerticalBox> MainLayoutBox;
+	TSharedPtr<SScrollBox> MainLayoutBox;
 
 	// clang-format off
 	ChildSlot
 	.HAlign(HAlign_Center)
 	[
-		SAssignNew(MainLayoutBox, SVerticalBox)
+		SAssignNew(MainLayoutBox, SScrollBox)
+		.Style(&Theme.ScrollBoxStyle)
+		.ScrollBarVisibility(EVisibility::Collapsed)
+		.AnimateWheelScrolling(true)
 
 		// Main box
-		+ SVerticalBox::Slot()
-		.AutoHeight()
+		+ SScrollBox::Slot()
 		.Padding(Theme.ContentPadding)
 		[
 			SNew(SHorizontalBox)
@@ -142,31 +149,25 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 		]
 	];
 
-	// Cargo line generator
-	auto BuildCargoLine = [&](FText Title, ENovaResourceType Type)
+	// Module line generator
+	auto BuildModuleLine = [&](FText Title, int32 ModuleIndex)
 	{
-		TSharedPtr<SHorizontalBox> CargoLineBox;
+		TSharedPtr<SHorizontalBox> ModuleLineBox;
 
 		MainLayoutBox->AddSlot()
-		.AutoHeight()
 		.Padding(Theme.ContentPadding)
 		[
-			SNew(SVerticalBox)
+			SAssignNew(ModuleLineBox, SHorizontalBox)
+		];
 
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(Theme.VerticalContentPadding)
-			[
-				SNew(STextBlock)
-				.TextStyle(&Theme.HeadingFont)
-				.Text(Title)
-			]
-
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			[
-				SAssignNew(CargoLineBox, SHorizontalBox)
-			]
+		ModuleLineBox->AddSlot()
+		.AutoWidth()
+		.Padding(Theme.ContentPadding)
+		.VAlign(VAlign_Center)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.HeadingFont)
+			.Text(Title)
 		];
 
 		for (int32 Index = 0; Index < ENovaConstants::MaxCompartmentCount; Index++)
@@ -175,7 +176,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 			{
 				if (Spacecraft && Index >= 0 && Index < Spacecraft->Compartments.Num())
 				{
-					return Spacecraft->Compartments[Index].GetCargoCapacity(Type) > 0;
+					return Spacecraft->Compartments[Index].GetCargoCapacity(ModuleIndex) > 0;
 				}
 				else
 				{
@@ -183,7 +184,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 				}
 			};
 
-			CargoLineBox->AddSlot()
+			ModuleLineBox->AddSlot()
 			.AutoWidth()
 			[
 				SNeutronNew(SNeutronButton)
@@ -194,12 +195,12 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 					if (IsValidCompartment())
 					{
 						const FNovaCompartment& Compartment = Spacecraft->Compartments[Index];
-						const FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(Type);
+						const FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(ModuleIndex);
 						return (SpacecraftPawn->IsDocked() || IsValid(Cargo.Resource)) && !SpacecraftPawn->HasModifications();
 					}
 					return false;
 				})))
-				.OnClicked(this, &SNovaMainMenuInventory::OnTradeWithSlot, Index, Type)
+				.OnClicked(this, &SNovaMainMenuInventory::OnTradeWithSlot, Index, ModuleIndex)
 				.Content()
 				[
 					SNew(SOverlay)
@@ -216,7 +217,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 								if (IsValidCompartment())
 								{
 									const FNovaCompartment& Compartment = Spacecraft->Compartments[Index];
-									const FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(Type);
+									const FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(ModuleIndex);
 									if (IsValid(Cargo.Resource))
 									{
 										return &Cargo.Resource->AssetRender;
@@ -247,7 +248,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 									if (IsValidCompartment())
 									{
 										const FNovaCompartment& Compartment = Spacecraft->Compartments[Index];
-										const FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(Type);
+										const FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(ModuleIndex);
 										if (IsValid(Cargo.Resource))
 										{
 											return Cargo.Resource->Name;
@@ -281,9 +282,9 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 									if (IsValidCompartment())
 									{
 										const FNovaCompartment& Compartment = Spacecraft->Compartments[Index];
-										const FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(Type);
+										const FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(ModuleIndex);
 										int32 Amount = Cargo.Amount;
-										int32 Capacity = Compartment.GetCargoCapacity(Type);
+										int32 Capacity = Compartment.GetCargoCapacity(ModuleIndex);
 
 										return FText::FormatNamed(LOCTEXT("CargoAmountFormat", "<img src=\"/Text/Cargo\"/> {amount} T / {capacity} T"),
 											TEXT("amount"), FText::AsNumber(Amount),
@@ -319,9 +320,10 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 	// clang-format on
 
 	// Build the procedural cargo lines
-	BuildCargoLine(LOCTEXT("GeneralCargoTitle", "General cargo"), ENovaResourceType::General);
-	BuildCargoLine(LOCTEXT("BulkCargoTitle", "Bulk cargo"), ENovaResourceType::Bulk);
-	BuildCargoLine(LOCTEXT("LiquidCargoTitle", "Liquid cargo"), ENovaResourceType::Liquid);
+	for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+	{
+		BuildModuleLine(FText::FormatNamed(LOCTEXT("ModuleTitleFormat", "Module {index}"), TEXT("index"), ModuleIndex + 1), ModuleIndex);
+	}
 
 	AveragedPropellantRatio.SetPeriod(1.0f);
 }
@@ -425,16 +427,16 @@ FText SNovaMainMenuInventory::GetPropellantText() const
 
 void SNovaMainMenuInventory::OnRefillPropellant()
 {
-	TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), UNovaResource::GetPropellant(), INDEX_NONE);
+	TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), UNovaResource::GetPropellant(), INDEX_NONE, INDEX_NONE);
 }
 
-void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type)
+void SNovaMainMenuInventory::OnTradeWithSlot(int32 CompartmentIndex, int32 ModuleIndex)
 {
 	NCHECK(GameState);
 	NCHECK(GameState->GetCurrentArea());
 
-	const FNovaCompartment&     Compartment = Spacecraft->Compartments[Index];
-	const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(Type);
+	const FNovaCompartment&     Compartment = Spacecraft->Compartments[CompartmentIndex];
+	const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(ModuleIndex);
 
 	// Docked mode : trade with resource
 	if (SpacecraftPawn->IsDocked())
@@ -442,21 +444,23 @@ void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type
 		// Valid resource in hold - allow trading it directly
 		if (IsValid(Cargo.Resource))
 		{
-			TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), Cargo.Resource, Index);
+			TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), Cargo.Resource, CompartmentIndex, ModuleIndex);
 		}
 
 		// Cargo hold is empty, pick a resource to buy first
 		else
 		{
-			CurrentCompartmentIndex = Index;
+			CurrentCompartmentIndex = CompartmentIndex;
+			CurrentModuleIndexx     = ModuleIndex;
 
-			auto BuyResource = [this, Index]()
+			auto BuyResource = [this, CompartmentIndex, ModuleIndex]()
 			{
-				TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), Index);
+				TradingModalPanel->Trade(
+					PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), CompartmentIndex, ModuleIndex);
 			};
 
 			//	Fill the resource list
-			ResourceList = GameState->GetResourcesSold(Type);
+			ResourceList = GameState->GetResourcesSold(Compartment.GetCargoType(ModuleIndex));
 			ResourceListView->Refresh(0);
 
 			// Proceed with the modal panel
@@ -471,17 +475,16 @@ void SNovaMainMenuInventory::OnTradeWithSlot(int32 Index, ENovaResourceType Type
 	else
 	{
 		NCHECK(IsValid(Cargo.Resource));
-		TradingModalPanel->Inspect(PC, GameState->GetCurrentArea(), Cargo.Resource, Index);
+		TradingModalPanel->Inspect(PC, GameState->GetCurrentArea(), Cargo.Resource, CompartmentIndex, ModuleIndex);
 	}
 }
 
 void SNovaMainMenuInventory::OnBuyResource()
 {
-	NCHECK(CurrentCompartmentIndex != INDEX_NONE);
-
 	GenericModalPanel->Hide();
 
-	TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), CurrentCompartmentIndex);
+	TradingModalPanel->Trade(
+		PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), CurrentCompartmentIndex, CurrentModuleIndexx);
 }
 
 #undef LOCTEXT_NAMESPACE

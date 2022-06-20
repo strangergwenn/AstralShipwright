@@ -251,40 +251,37 @@ bool ANovaGameState::IsJoinable(FText* Help) const
     Resources
 ----------------------------------------------------*/
 
-bool ANovaGameState::IsResourceSold(const UNovaResource* Asset, const class UNovaArea* Area) const
+bool ANovaGameState::IsResourceSold(const UNovaResource* Resource, const class UNovaArea* Area) const
 {
 	const UNovaArea* TargetArea = IsValid(Area) ? Area : CurrentArea;
-
 	if (IsValid(TargetArea))
 	{
-		for (const FNovaResourceTrade& Trade : TargetArea->ResourceTradeMetadata)
-		{
-			if (Trade.Resource == Asset)
-			{
-				return Trade.ForSale;
-			}
-		}
+		return TargetArea->IsResourceSold(Resource);
 	}
 
 	return false;
 }
 
-TArray<const UNovaResource*> ANovaGameState::GetResourcesSold(ENovaResourceType Type) const
+TArray<const UNovaResource*> ANovaGameState::GetResourcesBought(ENovaResourceType Type, const class UNovaArea* Area) const
 {
-	TArray<const UNovaResource*> Result;
-
-	if (IsValid(CurrentArea))
+	const UNovaArea* TargetArea = IsValid(Area) ? Area : CurrentArea;
+	if (IsValid(TargetArea))
 	{
-		for (const FNovaResourceTrade& Trade : CurrentArea->ResourceTradeMetadata)
-		{
-			if (Trade.ForSale && Trade.Resource->Type == Type)
-			{
-				Result.Add(Trade.Resource);
-			}
-		}
+		return TargetArea->GetResourcesBought(Type);
 	}
 
-	return Result;
+	return {};
+}
+
+TArray<const UNovaResource*> ANovaGameState::GetResourcesSold(ENovaResourceType Type, const class UNovaArea* Area) const
+{
+	const UNovaArea* TargetArea = IsValid(Area) ? Area : CurrentArea;
+	if (IsValid(TargetArea))
+	{
+		return TargetArea->GetResourcesSold(Type);
+	}
+
+	return {};
 }
 
 ENovaPriceModifier ANovaGameState::GetCurrentPriceModifier(const UNovaTradableAssetDescription* Asset, const UNovaArea* Area) const

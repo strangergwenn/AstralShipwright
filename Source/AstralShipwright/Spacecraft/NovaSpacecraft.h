@@ -11,6 +11,22 @@
     Spacecraft sub-structures
 ----------------------------------------------------*/
 
+/** Compartment cargo entry */
+USTRUCT()
+struct FNovaSpacecraftCargo
+{
+	GENERATED_BODY()
+
+	FNovaSpacecraftCargo() : Resource(nullptr), Amount(0)
+	{}
+
+	UPROPERTY()
+	const UNovaResource* Resource;
+
+	UPROPERTY()
+	float Amount;
+};
+
 /** Compartment module data */
 USTRUCT()
 struct FNovaCompartmentModule
@@ -32,6 +48,9 @@ struct FNovaCompartmentModule
 	UPROPERTY()
 	const class UNovaModuleDescription* Description;
 
+	UPROPERTY()
+	FNovaSpacecraftCargo Cargo;
+
 	ENovaBulkheadType ForwardBulkheadType;
 
 	ENovaBulkheadType AftBulkheadType;
@@ -42,22 +61,6 @@ struct FNovaCompartmentModule
 	bool NeedsCollectorPiping;
 	bool NeedsDome;
 	bool NeedsSkirt;
-};
-
-/** Compartment cargo entry */
-USTRUCT()
-struct FNovaSpacecraftCargo
-{
-	GENERATED_BODY()
-
-	FNovaSpacecraftCargo() : Resource(nullptr), Amount(0)
-	{}
-
-	UPROPERTY()
-	const UNovaResource* Resource;
-
-	UPROPERTY()
-	float Amount;
 };
 
 /** Compartment data */
@@ -96,59 +99,40 @@ struct FNovaCompartment
 	bool HasForwardOrAftEquipment() const;
 
 	/** Get the cargo for a particular type */
-	const FNovaSpacecraftCargo& GetCargo(ENovaResourceType Type) const
+	FNovaSpacecraftCargo& GetCargo(int32 ModuleIndex)
 	{
-		switch (Type)
-		{
-			case ENovaResourceType::General:
-				return GeneralCargo;
-			case ENovaResourceType::Bulk:
-				return BulkCargo;
-			case ENovaResourceType::Liquid:
-				return LiquidCargo;
-		}
-
-		NCHECK(false);
-		return GeneralCargo;
+		return Modules[ModuleIndex].Cargo;
 	}
 
-	/** Get the cargo for a particular type */
-	FNovaSpacecraftCargo& GetCargo(ENovaResourceType Type)
+	/** Get the cargo for a module */
+	const FNovaSpacecraftCargo& GetCargo(int32 ModuleIndex) const
 	{
-		switch (Type)
-		{
-			case ENovaResourceType::General:
-				return GeneralCargo;
-			case ENovaResourceType::Bulk:
-				return BulkCargo;
-			case ENovaResourceType::Liquid:
-				return LiquidCargo;
-		}
-
-		NCHECK(false);
-		return GeneralCargo;
+		return Modules[ModuleIndex].Cargo;
 	}
+
+	/** Get the cargo type for a module */
+	ENovaResourceType GetCargoType(int32 ModuleIndex) const;
+
+	/** Get the cargo capacity  */
+	float GetCargoCapacity(int32 ModuleIndex) const;
 
 	/** Get the cargo capacity for a particular type */
-	float GetCargoCapacity(ENovaResourceType Type) const;
-
-	/** Get the amount of cargo mass used by one resource */
-	float GetCargoMass(const class UNovaResource* Resource) const;
-
-	/** Get the amount of cargo mass available for one resource */
-	float GetAvailableCargoMass(const class UNovaResource* Resource) const;
+	float GetCargoCapacity(int32 ModuleIndex, ENovaResourceType Type) const;
 
 	/** Get the current cargo mass */
-	float GetCurrentCargoMass() const
-	{
-		return GeneralCargo.Amount + BulkCargo.Amount + LiquidCargo.Amount;
-	}
+	float GetCargoMass(int32 ModuleIndex) const;
 
-	/** Check whether it's possible to apply a delta to this spacecraft - only checks MassDelta for sign, not value */
-	bool CanModifyCargo(const class UNovaResource* Resource, float MassDelta) const;
+	/** Get the amount of cargo mass used by one resource */
+	float GetCargoMass(int32 ModuleIndex, const class UNovaResource* Resource) const;
 
-	/** Add a (possibly negative) amount of resources to the spacecraft */
-	void ModifyCargo(const class UNovaResource* Resource, float& MassDelta);
+	/** Get the amount of cargo mass available for one resource */
+	float GetAvailableCargoMass(int32 ModuleIndex, const class UNovaResource* Resource) const;
+
+	/** Check whether it's possible to apply a delta to this cargo - only checks MassDelta for sign, not value */
+	bool CanModifyCargo(int32 ModuleIndex, const class UNovaResource* Resource, float MassDelta) const;
+
+	/** Add a (possibly negative) amount of resources to the cargo */
+	void ModifyCargo(int32 ModuleIndex, const class UNovaResource* Resource, float& MassDelta);
 
 	UPROPERTY()
 	const class UNovaCompartmentDescription* Description;
@@ -161,15 +145,6 @@ struct FNovaCompartment
 
 	UPROPERTY()
 	const class UNovaEquipmentDescription* Equipment[ENovaConstants::MaxEquipmentCount];
-
-	UPROPERTY()
-	FNovaSpacecraftCargo GeneralCargo;
-
-	UPROPERTY()
-	FNovaSpacecraftCargo BulkCargo;
-
-	UPROPERTY()
-	FNovaSpacecraftCargo LiquidCargo;
 };
 
 /** Spacecraft customization data */
@@ -480,30 +455,35 @@ public:
 
 		for (const FNovaCompartment& Compartment : Compartments)
 		{
-			CargoMass += Compartment.GetCurrentCargoMass();
+			for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+			{
+				CargoMass += Compartment.GetCargoMass(ModuleIndex);
+			}
 		}
 
 		return CargoMass;
 	}
 
 	/** Get the cargo hold for a particular type */
-	FNovaSpacecraftCargo& GetCargo(ENovaResourceType Type, int32 CompartmentIndex)
+	FNovaSpacecraftCargo& GetCargo(int32 CompartmentIndex, int32 ModuleIndex)
 	{
 		NCHECK(CompartmentIndex >= 0 && CompartmentIndex < Compartments.Num());
-		return Compartments[CompartmentIndex].GetCargo(Type);
+		return Compartments[CompartmentIndex].GetCargo(ModuleIndex);
 	}
 
 	/** Get the cargo capacity for a particular type, across the ship or in a specific compartment */
-	float GetCargoCapacity(ENovaResourceType Type, int32 CompartmentIndex = INDEX_NONE) const;
+	float GetCargoCapacity(ENovaResourceType Type, int32 CompartmentIndex = INDEX_NONE, int32 ModuleIndex = INDEX_NONE) const;
 
 	/** Get the amount of cargo mass used by one resource, across the ship or in a specific compartment */
-	float GetCargoMass(const class UNovaResource* Resource, int32 CompartmentIndex = INDEX_NONE) const;
+	float GetCargoMass(const class UNovaResource* Resource, int32 CompartmentIndex = INDEX_NONE, int32 ModuleIndex = INDEX_NONE) const;
 
 	/** Get the amount of cargo mass available for one resource, across the ship or in a specific compartment */
-	float GetAvailableCargoMass(const class UNovaResource* Resource, int32 CompartmentIndex = INDEX_NONE) const;
+	float GetAvailableCargoMass(
+		const class UNovaResource* Resource, int32 CompartmentIndex = INDEX_NONE, int32 ModuleIndex = INDEX_NONE) const;
 
 	/** Add a (possibly negative) amount of resources to the spacecraft, across the ship or in a specific compartment */
-	bool ModifyCargo(const class UNovaResource* Resource, float MassDelta, int32 CompartmentIndex = INDEX_NONE);
+	bool ModifyCargo(
+		const class UNovaResource* Resource, float MassDelta, int32 CompartmentIndex = INDEX_NONE, int32 ModuleIndex = INDEX_NONE);
 
 	/*----------------------------------------------------
 	    UI helpers

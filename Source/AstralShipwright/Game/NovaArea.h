@@ -56,6 +56,19 @@ public:
 		, Temperature(0.0f)
 	{}
 
+	/*----------------------------------------------------
+	    Resources
+	----------------------------------------------------*/
+
+	/** Is a particular resource sold in this area */
+	bool IsResourceSold(const class UNovaResource* Asset) const;
+
+	/** Get resources bought in this area */
+	TArray<const class UNovaResource*> GetResourcesBought(ENovaResourceType Type) const;
+
+	/** Get resources sold in this area */
+	TArray<const class UNovaResource*> GetResourcesSold(ENovaResourceType Type) const;
+
 public:
 
 	// Body orbited
