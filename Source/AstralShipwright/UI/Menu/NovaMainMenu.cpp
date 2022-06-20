@@ -179,10 +179,10 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 			.MenuManager(MenuManager)
 		]
 
-		// Inventory menu
+		// Operations menu
 		+ SNeutronTabView::Slot()
-		.Header(LOCTEXT("InventoryMenuTitle", "Inventory"))
-		.HeaderHelp(LOCTEXT("InventoryMenuTitleHelp", "Manage your spacecraft's propellant and cargo"))
+		.Header(LOCTEXT("OperationsMenuTitle", "Operations"))
+		.HeaderHelp(LOCTEXT("OperationsMenuTitleHelp", "Manage your spacecraft's cargo and systems"))
 		.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Inventory"))
 		.Blur(true)
 		.Visible(this, &SNovaMainMenu::AreGameMenusVisible)
