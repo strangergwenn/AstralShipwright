@@ -64,6 +64,8 @@ public:
 		return DesiredState != CurrentState;
 	}
 
+	virtual bool IsHidden() const override;
+
 	virtual void OnUpdate() override
 	{
 		CurrentState = DesiredState;

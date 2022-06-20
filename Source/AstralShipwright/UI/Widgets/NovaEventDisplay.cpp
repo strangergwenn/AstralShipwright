@@ -12,6 +12,7 @@
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
 
 #include "Nova.h"
+#include "UI/Menu/NovaMainMenu.h"
 
 #include "Neutron/System/NeutronAssetManager.h"
 #include "Neutron/System/NeutronGameInstance.h"
@@ -214,6 +215,11 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 	{
 		CurrentState.Text = DesiredState.Text;
 	}
+}
+
+bool SNovaEventDisplay::IsHidden() const
+{
+	return MenuManager->GetMenu<SNovaMainMenu>()->HasVisibleOverlay();
 }
 
 /*----------------------------------------------------
