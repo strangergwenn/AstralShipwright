@@ -1,6 +1,6 @@
 // Astral Shipwright - Gwennaël Arbona
 
-#include "NovaMainMenuInventory.h"
+#include "NovaMainMenuOperations.h"
 
 #include "NovaMainMenu.h"
 
@@ -23,13 +23,13 @@
 #include "Widgets/Layout/SBackgroundBlur.h"
 #include "Widgets/Layout/SScaleBox.h"
 
-#define LOCTEXT_NAMESPACE "SNovaMainMenuInventory"
+#define LOCTEXT_NAMESPACE "SNovaMainMenuOperations"
 
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
-SNovaMainMenuInventory::SNovaMainMenuInventory()
+SNovaMainMenuOperations::SNovaMainMenuOperations()
 	: PC(nullptr)
 	, GameState(nullptr)
 	, Spacecraft(nullptr)
@@ -38,7 +38,7 @@ SNovaMainMenuInventory::SNovaMainMenuInventory()
 	, CurrentModuleIndexx(INDEX_NONE)
 {}
 
-void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
+void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 {
 	// Data
 	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
@@ -89,7 +89,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 					[
 						SNew(SNeutronRichText)
 						.TextStyle(&Theme.MainFont)
-						.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuInventory::GetPropellantText))
+						.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuOperations::GetPropellantText))
 					]
 
 					+ SVerticalBox::Slot()
@@ -97,7 +97,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 					[
 						SNew(SProgressBar)
 						.Style(&Theme.ProgressBarStyle)
-						.Percent(this, &SNovaMainMenuInventory::GetPropellantRatio)
+						.Percent(this, &SNovaMainMenuOperations::GetPropellantRatio)
 					]
 
 					+ SVerticalBox::Slot()
@@ -117,7 +117,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 				{
 					return SpacecraftPawn && SpacecraftPawn->IsDocked() && !SpacecraftPawn->HasModifications();
 				})))
-				.OnClicked(this, &SNovaMainMenuInventory::OnRefillPropellant)
+				.OnClicked(this, &SNovaMainMenuOperations::OnRefillPropellant)
 				.Content()
 				[
 					SNew(SOverlay)
@@ -189,7 +189,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 			[
 				SNeutronNew(SNeutronButton)
 				.Size("InventoryButtonSize")
-				.HelpText(this, &SNovaMainMenuInventory::GetSlotHelpText)
+				.HelpText(this, &SNovaMainMenuOperations::GetSlotHelpText)
 				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
 				{
 					if (IsValidCompartment())
@@ -200,7 +200,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 					}
 					return false;
 				})))
-				.OnClicked(this, &SNovaMainMenuInventory::OnTradeWithSlot, Index, ModuleIndex)
+				.OnClicked(this, &SNovaMainMenuOperations::OnTradeWithSlot, Index, ModuleIndex)
 				.Content()
 				[
 					SNew(SOverlay)
@@ -312,9 +312,9 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
 	SAssignNew(ResourceListView, SNeutronListView<const UNovaResource*>)
 	.Panel(GenericModalPanel.Get())
 	.ItemsSource(&ResourceList)
-	.OnGenerateItem(this, &SNovaMainMenuInventory::GenerateResourceItem)
-	.OnGenerateTooltip(this, &SNovaMainMenuInventory::GenerateResourceTooltip)
-	.OnSelectionDoubleClicked(this, &SNovaMainMenuInventory::OnBuyResource)
+	.OnGenerateItem(this, &SNovaMainMenuOperations::GenerateResourceItem)
+	.OnGenerateTooltip(this, &SNovaMainMenuOperations::GenerateResourceTooltip)
+	.OnSelectionDoubleClicked(this, &SNovaMainMenuOperations::OnBuyResource)
 	.Horizontal(true)
 	.ButtonSize("LargeListButtonSize");
 	// clang-format on
@@ -332,7 +332,7 @@ void SNovaMainMenuInventory::Construct(const FArguments& InArgs)
     Interaction
 ----------------------------------------------------*/
 
-void SNovaMainMenuInventory::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
+void SNovaMainMenuOperations::Tick(const FGeometry& AllottedGeometry, const double CurrentTime, const float DeltaTime)
 {
 	SNeutronTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
@@ -344,17 +344,17 @@ void SNovaMainMenuInventory::Tick(const FGeometry& AllottedGeometry, const doubl
 	}
 }
 
-void SNovaMainMenuInventory::Show()
+void SNovaMainMenuOperations::Show()
 {
 	SNeutronTabPanel::Show();
 }
 
-void SNovaMainMenuInventory::Hide()
+void SNovaMainMenuOperations::Hide()
 {
 	SNeutronTabPanel::Hide();
 }
 
-void SNovaMainMenuInventory::UpdateGameObjects()
+void SNovaMainMenuOperations::UpdateGameObjects()
 {
 	PC             = MenuManager.IsValid() ? MenuManager->GetPC<ANovaPlayerController>() : nullptr;
 	GameState      = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
@@ -366,12 +366,12 @@ void SNovaMainMenuInventory::UpdateGameObjects()
     Resource list
 ----------------------------------------------------*/
 
-TSharedRef<SWidget> SNovaMainMenuInventory::GenerateResourceItem(const UNovaResource* Resource)
+TSharedRef<SWidget> SNovaMainMenuOperations::GenerateResourceItem(const UNovaResource* Resource)
 {
 	return SNew(SNovaTradableAssetItem).Asset(Resource).GameState(GameState).Dark(true);
 }
 
-FText SNovaMainMenuInventory::GenerateResourceTooltip(const UNovaResource* Resource)
+FText SNovaMainMenuOperations::GenerateResourceTooltip(const UNovaResource* Resource)
 {
 	return FText::FormatNamed(LOCTEXT("ResourceHelp", "Buy {resource}"), TEXT("resource"), Resource->Name);
 }
@@ -380,7 +380,7 @@ FText SNovaMainMenuInventory::GenerateResourceTooltip(const UNovaResource* Resou
     Content callbacks
 ----------------------------------------------------*/
 
-FText SNovaMainMenuInventory::GetSlotHelpText() const
+FText SNovaMainMenuOperations::GetSlotHelpText() const
 {
 	if (SpacecraftPawn && SpacecraftPawn->IsDocked())
 	{
@@ -392,12 +392,12 @@ FText SNovaMainMenuInventory::GetSlotHelpText() const
 	}
 }
 
-TOptional<float> SNovaMainMenuInventory::GetPropellantRatio() const
+TOptional<float> SNovaMainMenuOperations::GetPropellantRatio() const
 {
 	return AveragedPropellantRatio.Get();
 }
 
-FText SNovaMainMenuInventory::GetPropellantText() const
+FText SNovaMainMenuOperations::GetPropellantText() const
 {
 	if (SpacecraftPawn && Spacecraft)
 	{
@@ -425,12 +425,12 @@ FText SNovaMainMenuInventory::GetPropellantText() const
     Callbacks
 ----------------------------------------------------*/
 
-void SNovaMainMenuInventory::OnRefillPropellant()
+void SNovaMainMenuOperations::OnRefillPropellant()
 {
 	TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), UNovaResource::GetPropellant(), INDEX_NONE, INDEX_NONE);
 }
 
-void SNovaMainMenuInventory::OnTradeWithSlot(int32 CompartmentIndex, int32 ModuleIndex)
+void SNovaMainMenuOperations::OnTradeWithSlot(int32 CompartmentIndex, int32 ModuleIndex)
 {
 	NCHECK(GameState);
 	NCHECK(GameState->GetCurrentArea());
@@ -479,7 +479,7 @@ void SNovaMainMenuInventory::OnTradeWithSlot(int32 CompartmentIndex, int32 Modul
 	}
 }
 
-void SNovaMainMenuInventory::OnBuyResource()
+void SNovaMainMenuOperations::OnBuyResource()
 {
 	GenericModalPanel->Hide();
 

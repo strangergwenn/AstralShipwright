@@ -130,7 +130,7 @@ protected:
 	TSharedPtr<class SNovaMainMenuGame>       GameMenu;
 	TSharedPtr<class SNovaMainMenuFlight>     FlightMenu;
 	TSharedPtr<class SNovaMainMenuNavigation> NavigationMenu;
-	TSharedPtr<class SNovaMainMenuInventory>  InventoryMenu;
+	TSharedPtr<class SNovaMainMenuOperations> OperationsMenu;
 	TSharedPtr<class SNovaMainMenuAssembly>   AssemblyMenu;
 	TSharedPtr<class SNovaMainMenuSettings>   SettingsMenu;
 };

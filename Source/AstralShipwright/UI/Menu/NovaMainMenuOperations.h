@@ -12,7 +12,7 @@
 enum class ENovaResourceType : uint8;
 
 /** Inventory menu */
-class SNovaMainMenuInventory
+class SNovaMainMenuOperations
 	: public SNeutronTabPanel
 	, public INeutronGameMenu
 {
@@ -20,7 +20,7 @@ class SNovaMainMenuInventory
 	    Slate arguments
 	----------------------------------------------------*/
 
-	SLATE_BEGIN_ARGS(SNovaMainMenuInventory)
+	SLATE_BEGIN_ARGS(SNovaMainMenuOperations)
 	{}
 
 	SLATE_ARGUMENT(class SNeutronMenu*, Menu)
@@ -30,7 +30,7 @@ class SNovaMainMenuInventory
 
 public:
 
-	SNovaMainMenuInventory();
+	SNovaMainMenuOperations();
 
 	void Construct(const FArguments& InArgs);
 

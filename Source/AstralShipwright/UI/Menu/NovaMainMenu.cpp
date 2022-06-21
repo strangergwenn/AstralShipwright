@@ -6,7 +6,7 @@
 #include "NovaMainMenuGame.h"
 #include "NovaMainMenuFlight.h"
 #include "NovaMainMenuNavigation.h"
-#include "NovaMainMenuInventory.h"
+#include "NovaMainMenuOperations.h"
 #include "NovaMainMenuAssembly.h"
 #include "NovaMainMenuSettings.h"
 
@@ -187,7 +187,7 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		.Blur(true)
 		.Visible(this, &SNovaMainMenu::AreGameMenusVisible)
 		[
-			SAssignNew(InventoryMenu, SNovaMainMenuInventory)
+			SAssignNew(OperationsMenu, SNovaMainMenuOperations)
 			.Menu(this)
 			.MenuManager(MenuManager)
 		]
@@ -227,7 +227,7 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 	MenuManager->RegisterGameMenu(GameMenu);
 	MenuManager->RegisterGameMenu(FlightMenu);
 	MenuManager->RegisterGameMenu(NavigationMenu);
-	MenuManager->RegisterGameMenu(InventoryMenu);
+	MenuManager->RegisterGameMenu(OperationsMenu);
 	MenuManager->RegisterGameMenu(AssemblyMenu);
 	MenuManager->RegisterGameMenu(SettingsMenu);
 
