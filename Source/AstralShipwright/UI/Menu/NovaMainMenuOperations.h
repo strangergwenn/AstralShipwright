@@ -58,25 +58,29 @@ public:
 	    Content callbacks
 	----------------------------------------------------*/
 
-	bool IsBulkTradeEnabled() const;
-
-	FText GetSlotHelpText() const;
-
+	// Batch trade
+	bool             IsBulkTradeEnabled() const;
 	TOptional<float> GetPropellantRatio() const;
+	FText            GetPropellantText() const;
 
-	FText GetPropellantText() const;
+	// Module callback
+	bool               IsValidCompartment(int32 CompartmentIndex, int32 ModuleIndex) const;
+	bool               IsModuleEnabled(int32 CompartmentIndex, int32 ModuleIndex) const;
+	FText              GetModuleHelpText(int32 CompartmentIndex, int32 ModuleIndex) const;
+	const FSlateBrush* GetModuleImage(int32 CompartmentIndex, int32 ModuleIndex) const;
+	FText              GetModuleText(int32 CompartmentIndex, int32 ModuleIndex) const;
+	FText              GetModuleDetails(int32 CompartmentIndex, int32 ModuleIndex) const;
 
 	/*----------------------------------------------------
 	    Callbacks
 	----------------------------------------------------*/
 
+	// Batch trade
 	void OnBatchBuy();
-
 	void OnBatchSell();
-
 	void OnRefillPropellant();
 
-	void OnTradeWithSlot(int32 CompartmentIndex, int32 ModuleIndex);
+	void OnInteractWithModule(int32 CompartmentIndex, int32 ModuleIndex);
 
 	void OnBuyResource();
 

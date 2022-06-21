@@ -194,44 +194,22 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 	auto BuildModuleLine = [&](int32 ModuleIndex)
 	{
 		TSharedPtr<SHorizontalBox> ModuleLineBox;
-
 		MainLayoutBox->AddSlot()
 		.Padding(Theme.VerticalContentPadding)
 		[
 			SAssignNew(ModuleLineBox, SHorizontalBox)
 		];
 
-		for (int32 Index = 0; Index < ENovaConstants::MaxCompartmentCount; Index++)
+		for (int32 CompartmentIndex = 0; CompartmentIndex < ENovaConstants::MaxCompartmentCount; CompartmentIndex++)
 		{
-			auto IsValidCompartment = [=]()
-			{
-				if (Spacecraft && Index >= 0 && Index < Spacecraft->Compartments.Num())
-				{
-					return Spacecraft->Compartments[Index].GetCargoCapacity(ModuleIndex) > 0;
-				}
-				else
-				{
-					return false;
-				}
-			};
-
 			ModuleLineBox->AddSlot()
 			.AutoWidth()
 			[
 				SNeutronNew(SNeutronButton)
 				.Size("InventoryButtonSize")
-				.HelpText(this, &SNovaMainMenuOperations::GetSlotHelpText)
-				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
-				{
-					if (IsValidCompartment())
-					{
-						const FNovaCompartment& Compartment = Spacecraft->Compartments[Index];
-						const FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(ModuleIndex);
-						return (SpacecraftPawn->IsDocked() || IsValid(Cargo.Resource)) && !SpacecraftPawn->HasModifications();
-					}
-					return false;
-				})))
-				.OnClicked(this, &SNovaMainMenuOperations::OnTradeWithSlot, Index, ModuleIndex)
+				.HelpText(this, &SNovaMainMenuOperations::GetModuleHelpText, CompartmentIndex, ModuleIndex)
+				.Enabled(this, &SNovaMainMenuOperations::IsModuleEnabled, CompartmentIndex, ModuleIndex)
+				.OnClicked(this, &SNovaMainMenuOperations::OnInteractWithModule, CompartmentIndex, ModuleIndex)
 				.Content()
 				[
 					SNew(SOverlay)
@@ -243,20 +221,7 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 						.Stretch(EStretch::ScaleToFill)
 						[
 							SNew(SNeutronImage)
-							.Image(FNeutronImageGetter::CreateLambda([=]() -> const FSlateBrush*
-							{
-								if (IsValidCompartment())
-								{
-									const FNovaCompartment& Compartment = Spacecraft->Compartments[Index];
-									const FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(ModuleIndex);
-									if (IsValid(Cargo.Resource))
-									{
-										return &Cargo.Resource->AssetRender;
-									}
-								}
-
-								return &UNovaResource::GetEmpty()->AssetRender;
-							}))
+							.Image(FNeutronImageGetter::CreateSP(this, &SNovaMainMenuOperations::GetModuleImage, CompartmentIndex, ModuleIndex))
 						]
 					]
 
@@ -274,24 +239,7 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 							.Padding(Theme.ContentPadding)
 							[
 								SNew(SNeutronText)
-								.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
-								{
-									if (IsValidCompartment())
-									{
-										const FNovaCompartment& Compartment = Spacecraft->Compartments[Index];
-										const FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(ModuleIndex);
-										if (IsValid(Cargo.Resource))
-										{
-											return Cargo.Resource->Name;
-										}
-										else
-										{
-											return LOCTEXT("EmptyCargo", "Empty");
-										}
-									}
-
-									return FText();
-								}))
+								.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuOperations::GetModuleText, CompartmentIndex, ModuleIndex))
 								.TextStyle(&Theme.MainFont)
 								.AutoWrapText(true)
 							]
@@ -308,23 +256,9 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 							.Padding(Theme.ContentPadding)
 							[
 								SNew(SNeutronRichText)
-								.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
-								{
-									if (IsValidCompartment())
-									{
-										const FNovaCompartment& Compartment = Spacecraft->Compartments[Index];
-										const FNovaSpacecraftCargo& Cargo = Compartment.GetCargo(ModuleIndex);
-										int32 Amount = Cargo.Amount;
-										int32 Capacity = Compartment.GetCargoCapacity(ModuleIndex);
-
-										return FText::FormatNamed(LOCTEXT("CargoAmountFormat", "<img src=\"/Text/Cargo\"/> {amount} T / {capacity} T"),
-											TEXT("amount"), FText::AsNumber(Amount),
-											TEXT("capacity"), FText::AsNumber(Capacity));
-									}
-
-									return FText();
-								}))
+								.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuOperations::GetModuleDetails, CompartmentIndex, ModuleIndex))
 								.TextStyle(&Theme.MainFont)
+								.AutoWrapText(true)
 							]
 						]
 					]
@@ -416,18 +350,6 @@ bool SNovaMainMenuOperations::IsBulkTradeEnabled() const
 	return SpacecraftPawn->IsDocked() && !SpacecraftPawn->HasModifications();
 }
 
-FText SNovaMainMenuOperations::GetSlotHelpText() const
-{
-	if (SpacecraftPawn && SpacecraftPawn->IsDocked())
-	{
-		return LOCTEXT("TradeSlotHelp", "Trade with this cargo slot");
-	}
-	else
-	{
-		return LOCTEXT("InspectSlotHelp", "Inspect this cargo slot");
-	}
-}
-
 TOptional<float> SNovaMainMenuOperations::GetPropellantRatio() const
 {
 	return AveragedPropellantRatio.Get();
@@ -452,6 +374,92 @@ FText SNovaMainMenuOperations::GetPropellantText() const
 			TEXT("remaining"), FText::AsNumber(PropellantSystem->GetCurrentPropellantMass(), &Options), TEXT("total"),
 			FText::AsNumber(PropellantSystem->GetPropellantCapacity(), &Options), TEXT("deltav"),
 			FText::AsNumber(RemainingDeltaV, &Options));
+	}
+
+	return FText();
+}
+
+bool SNovaMainMenuOperations::IsValidCompartment(int32 CompartmentIndex, int32 ModuleIndex) const
+{
+	if (Spacecraft && CompartmentIndex >= 0 && CompartmentIndex < Spacecraft->Compartments.Num())
+	{
+		return Spacecraft->Compartments[CompartmentIndex].GetCargoCapacity(ModuleIndex) > 0;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool SNovaMainMenuOperations::IsModuleEnabled(int32 CompartmentIndex, int32 ModuleIndex) const
+{
+	if (IsValidCompartment(CompartmentIndex, ModuleIndex))
+	{
+		const FNovaCompartment&     Compartment = Spacecraft->Compartments[CompartmentIndex];
+		const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(ModuleIndex);
+		return (SpacecraftPawn->IsDocked() || IsValid(Cargo.Resource)) && !SpacecraftPawn->HasModifications();
+	}
+
+	return false;
+}
+
+FText SNovaMainMenuOperations::GetModuleHelpText(int32 CompartmentIndex, int32 ModuleIndex) const
+{
+	if (SpacecraftPawn && SpacecraftPawn->IsDocked())
+	{
+		return LOCTEXT("TradeSlotHelp", "Trade with this cargo slot");
+	}
+	else
+	{
+		return LOCTEXT("InspectSlotHelp", "Inspect this cargo slot");
+	}
+}
+
+const FSlateBrush* SNovaMainMenuOperations::GetModuleImage(int32 CompartmentIndex, int32 ModuleIndex) const
+{
+	if (IsValidCompartment(CompartmentIndex, ModuleIndex))
+	{
+		const FNovaCompartment&     Compartment = Spacecraft->Compartments[CompartmentIndex];
+		const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(ModuleIndex);
+		if (IsValid(Cargo.Resource))
+		{
+			return &Cargo.Resource->AssetRender;
+		}
+	}
+
+	return &UNovaResource::GetEmpty()->AssetRender;
+}
+
+FText SNovaMainMenuOperations::GetModuleText(int32 CompartmentIndex, int32 ModuleIndex) const
+{
+	if (IsValidCompartment(CompartmentIndex, ModuleIndex))
+	{
+		const FNovaCompartment&     Compartment = Spacecraft->Compartments[CompartmentIndex];
+		const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(ModuleIndex);
+		if (IsValid(Cargo.Resource))
+		{
+			return Cargo.Resource->Name;
+		}
+		else
+		{
+			return LOCTEXT("EmptyCargo", "Empty");
+		}
+	}
+
+	return FText();
+}
+
+FText SNovaMainMenuOperations::GetModuleDetails(int32 CompartmentIndex, int32 ModuleIndex) const
+{
+	if (IsValidCompartment(CompartmentIndex, ModuleIndex))
+	{
+		const FNovaCompartment&     Compartment = Spacecraft->Compartments[CompartmentIndex];
+		const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(ModuleIndex);
+		int32                       Amount      = Cargo.Amount;
+		int32                       Capacity    = Compartment.GetCargoCapacity(ModuleIndex);
+
+		return FText::FormatNamed(LOCTEXT("CargoAmountFormat", "<img src=\"/Text/Cargo\"/> {amount} T / {capacity} T"), TEXT("amount"),
+			FText::AsNumber(Amount), TEXT("capacity"), FText::AsNumber(Capacity));
 	}
 
 	return FText();
@@ -522,7 +530,7 @@ void SNovaMainMenuOperations::OnBatchSell()
 		FSimpleDelegate::CreateLambda(TradeResource), FSimpleDelegate(), FSimpleDelegate(), ResourceListView);
 }
 
-void SNovaMainMenuOperations::OnTradeWithSlot(int32 CompartmentIndex, int32 ModuleIndex)
+void SNovaMainMenuOperations::OnInteractWithModule(int32 CompartmentIndex, int32 ModuleIndex)
 {
 	NCHECK(GameState);
 	NCHECK(GameState->GetCurrentArea());
