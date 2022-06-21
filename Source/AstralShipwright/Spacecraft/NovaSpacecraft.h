@@ -494,6 +494,9 @@ public:
 	float GetAvailableCargoMass(
 		const class UNovaResource* Resource, int32 CompartmentIndex = INDEX_NONE, int32 ModuleIndex = INDEX_NONE) const;
 
+	/** Get all resources in cargo */
+	TArray<const class UNovaResource*> GetOwnedResources() const;
+
 	/** Add a (possibly negative) amount of resources to the spacecraft, across the ship or in a specific compartment */
 	bool ModifyCargo(
 		const class UNovaResource* Resource, float MassDelta, int32 CompartmentIndex = INDEX_NONE, int32 ModuleIndex = INDEX_NONE);

@@ -58,6 +58,8 @@ public:
 	    Content callbacks
 	----------------------------------------------------*/
 
+	bool IsBulkTradeEnabled() const;
+
 	FText GetSlotHelpText() const;
 
 	TOptional<float> GetPropellantRatio() const;
@@ -67,6 +69,10 @@ public:
 	/*----------------------------------------------------
 	    Callbacks
 	----------------------------------------------------*/
+
+	void OnBatchBuy();
+
+	void OnBatchSell();
 
 	void OnRefillPropellant();
 

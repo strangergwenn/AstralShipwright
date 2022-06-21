@@ -971,6 +971,25 @@ float FNovaSpacecraft::GetAvailableCargoMass(const UNovaResource* Resource, int3
 	return CargoMass;
 }
 
+TArray<const UNovaResource*> FNovaSpacecraft::GetOwnedResources() const
+{
+	TArray<const UNovaResource*> Result;
+
+	for (int32 CI = 0; CI < Compartments.Num(); CI++)
+	{
+		for (int32 MI = 0; MI < ENovaConstants::MaxModuleCount; MI++)
+		{
+			const FNovaSpacecraftCargo& Cargo = Compartments[CI].GetCargo(MI);
+			if (Cargo.Amount > 0)
+			{
+				Result.AddUnique(Cargo.Resource);
+			}
+		}
+	}
+
+	return Result;
+}
+
 bool FNovaSpacecraft::ModifyCargo(const class UNovaResource* Resource, float MassDelta, int32 CompartmentIndex, int32 ModuleIndex)
 {
 	for (int32 CI = 0; CI < Compartments.Num(); CI++)

@@ -196,21 +196,18 @@ void SNovaTradingPanel::ShowPanelInternal(ANovaPlayerController* TargetPC, const
 	// Resource mode
 	if (Resource != UNovaResource::GetPropellant())
 	{
-		if (CompartmentIndex != INDEX_NONE)
-		{
-			InitialAmount = Spacecraft->GetCargoMass(Resource, CompartmentIndex, ModuleIndex);
-			Capacity      = InitialAmount + Spacecraft->GetAvailableCargoMass(Resource, CompartmentIndex, ModuleIndex);
+		InitialAmount = Spacecraft->GetCargoMass(Resource, CompartmentIndex, ModuleIndex);
+		Capacity      = InitialAmount + Spacecraft->GetAvailableCargoMass(Resource, CompartmentIndex, ModuleIndex);
 
-			if (GameState->IsResourceSold(Resource))
-			{
-				MinAmount = InitialAmount;
-				MaxAmount = Capacity;
-			}
-			else
-			{
-				MinAmount = 0.0f;
-				MaxAmount = InitialAmount;
-			}
+		if (GameState->IsResourceSold(Resource))
+		{
+			MinAmount = InitialAmount;
+			MaxAmount = Capacity;
+		}
+		else
+		{
+			MinAmount = 0.0f;
+			MaxAmount = InitialAmount;
 		}
 	}
 

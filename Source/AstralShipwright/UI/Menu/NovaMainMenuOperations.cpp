@@ -58,12 +58,44 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 		.Style(&Theme.ScrollBoxStyle)
 		.ScrollBarVisibility(EVisibility::Collapsed)
 		.AnimateWheelScrolling(true)
-
-		// Main box
+		
+		// Bulk trading title
 		+ SScrollBox::Slot()
-		.Padding(Theme.ContentPadding)
+		.Padding(Theme.VerticalContentPadding)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.HeadingFont)
+			.Text(LOCTEXT("BatchTrade", "Batch trading"))
+		]
+
+		// Bulk trading box
+		+ SScrollBox::Slot()
 		[
 			SNew(SHorizontalBox)
+
+			// Batch buying
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNeutronNew(SNeutronButton)
+				.Text(LOCTEXT("BulkBuy", "Bulk buy"))
+				.HelpText(LOCTEXT("BulkBuyHelp", "Bulk buy resources across all compartments"))
+				.Enabled(this, &SNovaMainMenuOperations::IsBulkTradeEnabled)
+				.OnClicked(this, &SNovaMainMenuOperations::OnBatchBuy)
+				.Size("HighButtonSize")
+			]
+
+			// Batch selling
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNeutronNew(SNeutronButton)
+				.Text(LOCTEXT("BulkSell", "Bulk sell"))
+				.HelpText(LOCTEXT("BulkSellHelp", "Bulk sell resources across all compartments"))
+				.Enabled(this, &SNovaMainMenuOperations::IsBulkTradeEnabled)
+				.OnClicked(this, &SNovaMainMenuOperations::OnBatchSell)
+				.Size("HighButtonSize")
+			]
 
 			// Propellant data
 			+ SHorizontalBox::Slot()
@@ -147,27 +179,26 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 				]
 			]
 		]
+
+		// Compartments title
+		+ SScrollBox::Slot()
+		.Padding(Theme.VerticalContentPadding)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.HeadingFont)
+			.Text(LOCTEXT("CompartmentsTitle", "Compartments"))
+		]
 	];
 
 	// Module line generator
-	auto BuildModuleLine = [&](FText Title, int32 ModuleIndex)
+	auto BuildModuleLine = [&](int32 ModuleIndex)
 	{
 		TSharedPtr<SHorizontalBox> ModuleLineBox;
 
 		MainLayoutBox->AddSlot()
-		.Padding(Theme.ContentPadding)
+		.Padding(Theme.VerticalContentPadding)
 		[
 			SAssignNew(ModuleLineBox, SHorizontalBox)
-		];
-
-		ModuleLineBox->AddSlot()
-		.AutoWidth()
-		.Padding(Theme.ContentPadding)
-		.VAlign(VAlign_Center)
-		[
-			SNew(STextBlock)
-			.TextStyle(&Theme.HeadingFont)
-			.Text(Title)
 		];
 
 		for (int32 Index = 0; Index < ENovaConstants::MaxCompartmentCount; Index++)
@@ -322,7 +353,7 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 	// Build the procedural cargo lines
 	for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
 	{
-		BuildModuleLine(FText::FormatNamed(LOCTEXT("ModuleTitleFormat", "Module {index}"), TEXT("index"), ModuleIndex + 1), ModuleIndex);
+		BuildModuleLine(ModuleIndex);
 	}
 
 	AveragedPropellantRatio.SetPeriod(1.0f);
@@ -380,6 +411,11 @@ FText SNovaMainMenuOperations::GenerateResourceTooltip(const UNovaResource* Reso
     Content callbacks
 ----------------------------------------------------*/
 
+bool SNovaMainMenuOperations::IsBulkTradeEnabled() const
+{
+	return SpacecraftPawn->IsDocked() && !SpacecraftPawn->HasModifications();
+}
+
 FText SNovaMainMenuOperations::GetSlotHelpText() const
 {
 	if (SpacecraftPawn && SpacecraftPawn->IsDocked())
@@ -428,6 +464,62 @@ FText SNovaMainMenuOperations::GetPropellantText() const
 void SNovaMainMenuOperations::OnRefillPropellant()
 {
 	TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), UNovaResource::GetPropellant(), INDEX_NONE, INDEX_NONE);
+}
+
+void SNovaMainMenuOperations::OnBatchBuy()
+{
+	CurrentCompartmentIndex = INDEX_NONE;
+	CurrentModuleIndexx     = INDEX_NONE;
+
+	auto TradeResource = [this]()
+	{
+		TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), INDEX_NONE, INDEX_NONE);
+	};
+
+	// Fill the resource list
+	ResourceList.Empty();
+	for (const UNovaResource* Resource : Spacecraft->GetOwnedResources())
+	{
+		if (GameState->IsResourceSold(Resource))
+		{
+			ResourceList.Add(Resource);
+		}
+	}
+	ResourceListView->Refresh(0);
+
+	// Proceed with the modal panel
+	GenericModalPanel->Show(
+		FText::FormatNamed(LOCTEXT("SelectBulkBuyFormat", "Bulk buy from {station}"), TEXT("station"), GameState->GetCurrentArea()->Name),
+		ResourceList.Num() == 0 ? LOCTEXT("NoBulkBuyResource", "No resources are available for sale at this station") : FText(),
+		FSimpleDelegate::CreateLambda(TradeResource), FSimpleDelegate(), FSimpleDelegate(), ResourceListView);
+}
+
+void SNovaMainMenuOperations::OnBatchSell()
+{
+	CurrentCompartmentIndex = INDEX_NONE;
+	CurrentModuleIndexx     = INDEX_NONE;
+
+	auto TradeResource = [this]()
+	{
+		TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), INDEX_NONE, INDEX_NONE);
+	};
+
+	// Fill the resource list
+	ResourceList.Empty();
+	for (const UNovaResource* Resource : Spacecraft->GetOwnedResources())
+	{
+		if (!GameState->IsResourceSold(Resource))
+		{
+			ResourceList.Add(Resource);
+		}
+	}
+	ResourceListView->Refresh(0);
+
+	// Proceed with the modal panel
+	GenericModalPanel->Show(
+		FText::FormatNamed(LOCTEXT("SelectBulkSellFormat", "Bulk sell to {station}"), TEXT("station"), GameState->GetCurrentArea()->Name),
+		ResourceList.Num() == 0 ? LOCTEXT("NoBulkSellResource", "No resources are available to buy at this station") : FText(),
+		FSimpleDelegate::CreateLambda(TradeResource), FSimpleDelegate(), FSimpleDelegate(), ResourceListView);
 }
 
 void SNovaMainMenuOperations::OnTradeWithSlot(int32 CompartmentIndex, int32 ModuleIndex)
