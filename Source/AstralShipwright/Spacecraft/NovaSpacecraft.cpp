@@ -489,7 +489,7 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 	int32         CurrentIndex = 1;
 	for (const FNovaModuleGroup& Group : ModuleGroups)
 	{
-		if (!Group.HasHatch)
+		if (Group.Type == ENovaModuleGroupType::Hatch && !Group.HasHatch)
 		{
 			ModuleGroupsWithoutHatch.Add(CurrentIndex);
 		}
