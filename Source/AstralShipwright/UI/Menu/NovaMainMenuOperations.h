@@ -63,8 +63,11 @@ public:
 	TOptional<float> GetPropellantRatio() const;
 	FText            GetPropellantText() const;
 
-	// Module callback
-	bool               IsValidCompartment(int32 CompartmentIndex, int32 ModuleIndex) const;
+	// Module utility
+	bool                                 IsValidCompartment(int32 CompartmentIndex, int32 ModuleIndex) const;
+	const struct FNovaCompartmentModule& GetModule(int32 CompartmentIndex, int32 ModuleIndex) const;
+
+	// Module callbacks
 	bool               IsModuleEnabled(int32 CompartmentIndex, int32 ModuleIndex) const;
 	FText              GetModuleHelpText(int32 CompartmentIndex, int32 ModuleIndex) const;
 	const FSlateBrush* GetModuleImage(int32 CompartmentIndex, int32 ModuleIndex) const;
