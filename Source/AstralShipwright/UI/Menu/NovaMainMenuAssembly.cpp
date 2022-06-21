@@ -2513,32 +2513,34 @@ void SNovaMainMenuAssembly::OnOpenModuleGroups()
 	int32 CurrentGroupIndex = 1;
 	for (const FNovaModuleGroup& Group : SpacecraftPawn->GetModuleGroups())
 	{
-		for (const TPair<int32, int32>& CompartmentModuleIndex : Group.ModuleDataEntries)
+		for (const FNovaModuleGroupCompartment& GroupCompartment : Group.Compartments)
 		{
-			// Build the group name
-			FText GroupTypeText;
-			if (Group.Type == ENovaModuleGroupType::Hatch)
+			for (int32 ModuleIndex : GroupCompartment.ModuleIndices)
 			{
-				GroupTypeText = LOCTEXT("ModulesGroupsCargoCrew", "Cargo / crew");
+				// Build the group name
+				FText GroupTypeText;
+				if (Group.Type == ENovaModuleGroupType::Hatch)
+				{
+					GroupTypeText = LOCTEXT("ModulesGroupsCargoCrew", "Cargo / crew");
+				}
+				else if (Group.Type == ENovaModuleGroupType::Propellant)
+				{
+					GroupTypeText = LOCTEXT("ModulesGroupsPropellant", "Propellant");
+				}
+
+				// Get module
+				const FNovaCompartmentModule& Module     = Spacecraft.Compartments[GroupCompartment.CompartmentIndex].Modules[ModuleIndex];
+				const UNovaModuleDescription* ModuleDesc = Module.Description;
+
+				// Format text
+				FText Text = FText::FormatNamed(LOCTEXT("ModulesGroupsEntryFormat", "{module}\nGroup {group}\n{type}"), TEXT("module"),
+					IsValid(ModuleDesc) ? ModuleDesc->Name : FText(), TEXT("group"), FText::AsNumber(CurrentGroupIndex), TEXT("type"),
+					GroupTypeText);
+
+				TableContents[ModuleIndex][GroupCompartment.CompartmentIndex] = Group.Type != ENovaModuleGroupType::Hatch || Group.HasHatch
+				                                                                  ? TNeutronTableValue(Text, INVTEXT("x"), FText())
+				                                                                  : TNeutronTableValue(Text);
 			}
-			else if (Group.Type == ENovaModuleGroupType::Propellant)
-			{
-				GroupTypeText = LOCTEXT("ModulesGroupsPropellant", "Propellant");
-			}
-
-			// Get module
-			const FNovaCompartmentModule& Module =
-				Spacecraft.Compartments[CompartmentModuleIndex.Key].Modules[CompartmentModuleIndex.Value];
-			const UNovaModuleDescription* ModuleDesc = Module.Description;
-
-			// Format text
-			FText Text = FText::FormatNamed(LOCTEXT("ModulesGroupsEntryFormat", "{module}\nGroup {group}\n{type}"), TEXT("module"),
-				IsValid(ModuleDesc) ? ModuleDesc->Name : FText(), TEXT("group"), FText::AsNumber(CurrentGroupIndex), TEXT("type"),
-				GroupTypeText);
-
-			TableContents[CompartmentModuleIndex.Value][CompartmentModuleIndex.Key] =
-				Group.Type != ENovaModuleGroupType::Hatch || Group.HasHatch ? TNeutronTableValue(Text, INVTEXT("x"), FText())
-																			: TNeutronTableValue(Text);
 		}
 		CurrentGroupIndex++;
 	}

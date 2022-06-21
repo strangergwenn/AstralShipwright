@@ -803,6 +803,7 @@ void FNovaSpacecraft::UpdateModuleGroups()
 {
 	ModuleGroups.Empty();
 
+	// Build basic groups first as simple lines
 	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
 	{
 		const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
@@ -811,54 +812,90 @@ void FNovaSpacecraft::UpdateModuleGroups()
 			// Check modules for groups
 			for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
 			{
-				const FNovaModuleSlot&        ModuleSlot         = Compartment.Description->GetModuleSlot(ModuleIndex);
-				const UNovaModuleDescription* Module             = Compartment.Modules[ModuleIndex].Description;
-				FNovaModuleGroup*             CurrentModuleGroup = nullptr;
+				const FNovaModuleSlot&        ModuleSlot = Compartment.Description->GetModuleSlot(ModuleIndex);
+				const UNovaModuleDescription* Module     = Compartment.Modules[ModuleIndex].Description;
 
 				if (Module)
 				{
-					ENovaModuleGroupType Type = GetModuleType(Module);
+					ENovaModuleGroupType Type                  = GetModuleType(Module);
+					FNovaModuleGroup*    CurrentModuleGroup    = nullptr;
+					int32                FoundCompartmentIndex = INDEX_NONE;
+					int32                FoundModuleIndex      = INDEX_NONE;
 
-					// This module is part of an existing group
-					int32 FoundCompartmentIndex = INDEX_NONE;
-					int32 FoundModuleIndex      = INDEX_NONE;
+					// This module is part of an existing group, append it to the last compartment
 					if (IsSameKindModuleInPreviousCompartment(CompartmentIndex, ModuleIndex, Type, FoundCompartmentIndex, FoundModuleIndex))
 					{
-						for (FNovaModuleGroup& Group : ModuleGroups)
+						for (FNovaModuleGroup& OtherGroup : ModuleGroups)
 						{
-							if (Group.ModuleDataEntries.Last() == TPair<int32, int32>(FoundCompartmentIndex, FoundModuleIndex))
+							for (const FNovaModuleGroupCompartment& OtherGroupCompartment : OtherGroup.Compartments)
 							{
-								CurrentModuleGroup = &Group;
-								Group.ModuleDataEntries.Add(TPair<int32, int32>(CompartmentIndex, ModuleIndex));
-								break;
+								if (OtherGroupCompartment.CompartmentIndex == FoundCompartmentIndex &&
+									OtherGroupCompartment.ModuleIndices.Contains(FoundModuleIndex))
+								{
+									// NLOG("FOUND PRE for %d %d (%d %d), slot is %s", CompartmentIndex, ModuleIndex, FoundCompartmentIndex,
+									//	FoundModuleIndex, *ModuleSlot.SocketName.ToString());
+
+									CurrentModuleGroup = &OtherGroup;
+									OtherGroup.Compartments.Add(FNovaModuleGroupCompartment(CompartmentIndex, ModuleIndex));
+									break;
+								}
 							}
 						}
 						NCHECK(CurrentModuleGroup);
 					}
 
-					// This module is the start of a new group
+					// Work sideways to find linked equipments
 					else
 					{
+						for (FNovaModuleGroup& OtherGroup : ModuleGroups)
+						{
+							FNovaModuleGroupCompartment& OtherGroupCompartment = OtherGroup.Compartments.Last();
+							if (OtherGroup.Type == Type && OtherGroupCompartment.CompartmentIndex == CompartmentIndex)
+							{
+								for (const FName EquipmentSlot : ModuleSlot.LinkedEquipments)
+								{
+									if (OtherGroupCompartment.LinkedEquipments.Contains(EquipmentSlot))
+									{
+										// NLOG("FOUND LINK %d %d because %s (%d), slot is %s", CompartmentIndex, ModuleIndex,
+										//	*EquipmentSlot.ToString(), OtherGroupCompartment.CompartmentIndex,
+										//	*ModuleSlot.SocketName.ToString());
+										// for (int32 DebugOtherModuleIndex : OtherGroupCompartment.ModuleIndices)
+										//{
+										//	NLOG("> Other module there was %d", DebugOtherModuleIndex);
+										// }
+
+										OtherGroupCompartment.ModuleIndices.Add(ModuleIndex);
+										CurrentModuleGroup = &OtherGroup;
+										break;
+									}
+								}
+							}
+						}
+					}
+
+					// This module is the start of a new group
+					if (CurrentModuleGroup == nullptr)
+					{
+						// NLOG("ADD %d %d, slot is %s", CompartmentIndex, ModuleIndex, *ModuleSlot.SocketName.ToString());
+
 						FNovaModuleGroup Group;
-						Group.ModuleDataEntries.Add(TPair<int32, int32>(CompartmentIndex, ModuleIndex));
+						Group.Compartments.Add(FNovaModuleGroupCompartment(CompartmentIndex, ModuleIndex));
 						Group.Type = Type;
 						ModuleGroups.Add(Group);
 						CurrentModuleGroup = &ModuleGroups.Last();
 					}
-
 					NCHECK(CurrentModuleGroup);
 
-					// Check for hatches
-					if (!CurrentModuleGroup->HasHatch)
+					// Process linked equipment
+					FNovaModuleGroupCompartment& GroupCompartment = CurrentModuleGroup->Compartments.Last();
+					GroupCompartment.LinkedEquipments.Append(ModuleSlot.LinkedEquipments);
+					for (const FName EquipmentSlot : ModuleSlot.LinkedEquipments)
 					{
-						for (const FName EquipmentSlot : ModuleSlot.LinkedEquipments)
+						const UNovaEquipmentDescription* Equipment = Compartment.GetEquipmentySocket(EquipmentSlot);
+						if (Equipment && Equipment->IsA<UNovaHatchDescription>())
 						{
-							const UNovaEquipmentDescription* Equipment = Compartment.GetEquipmentySocket(EquipmentSlot);
-							if (Equipment && Equipment->IsA<UNovaHatchDescription>())
-							{
-								CurrentModuleGroup->HasHatch = true;
-								break;
-							}
+							CurrentModuleGroup->HasHatch = true;
+							break;
 						}
 					}
 				}

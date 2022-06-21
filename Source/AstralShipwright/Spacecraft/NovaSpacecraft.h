@@ -306,15 +306,28 @@ enum class ENovaModuleGroupType : uint8
 	Propellant
 };
 
+/** Module group data for a single compartment */
+struct FNovaModuleGroupCompartment
+{
+	FNovaModuleGroupCompartment(int32 CI, int32 MI) : CompartmentIndex(CI)
+	{
+		ModuleIndices.Add(MI);
+	}
+
+	int32         CompartmentIndex;
+	TArray<int32> ModuleIndices;
+	TArray<FName> LinkedEquipments;
+};
+
 /** Group of spacecraft modules with common bulkheads */
 struct FNovaModuleGroup
 {
 	FNovaModuleGroup() : HasHatch(false)
 	{}
 
-	TArray<TPair<int32, int32>> ModuleDataEntries;
-	ENovaModuleGroupType        Type;
-	bool                        HasHatch;
+	TArray<FNovaModuleGroupCompartment> Compartments;
+	ENovaModuleGroupType                Type;
+	bool                                HasHatch;
 };
 
 /** Spacecraft upgrade cost result */
