@@ -650,7 +650,7 @@ FText FNovaSpacecraft::GetClassification() const
 }
 
 /*----------------------------------------------------
-    Propulsion metrics
+    Automated spacecraft details
 ----------------------------------------------------*/
 
 void FNovaSpacecraft::UpdateProceduralElements()
@@ -685,7 +685,24 @@ void FNovaSpacecraft::UpdateProceduralElements()
 					// Define bulkheads
 					if (IsFirstCompartment(CompartmentIndex))
 					{
-						Module.ForwardBulkheadType = ENovaBulkheadType::Outer;
+						bool HasMiningEquipment = false;
+						for (const UNovaEquipmentDescription* Equipment : Compartment.Equipment)
+						{
+							if (::IsValid(Equipment) && Equipment->IsA<UNovaMiningEquipmentDescription>())
+							{
+								HasMiningEquipment = true;
+								break;
+							}
+						}
+
+						if (ModuleIndex == 0 && HasMiningEquipment)
+						{
+							Module.ForwardBulkheadType = ENovaBulkheadType::None;
+						}
+						else
+						{
+							Module.ForwardBulkheadType = ENovaBulkheadType::Outer;
+						}
 					}
 					else if (IsSameModuleInPreviousCompartment(CompartmentIndex, ModuleIndex))
 					{

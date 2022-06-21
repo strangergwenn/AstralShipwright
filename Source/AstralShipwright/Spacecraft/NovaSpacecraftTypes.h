@@ -631,6 +631,15 @@ public:
 	float Thrust = 500;
 };
 
+/** Description of a mining equipment */
+UCLASS(ClassGroup = (Nova))
+class UNovaMiningEquipmentDescription : public UNovaEquipmentDescription
+{
+	GENERATED_BODY()
+
+public:
+};
+
 /** Description of a hatch equipment */
 UCLASS(ClassGroup = (Nova))
 class UNovaHatchDescription : public UNovaEquipmentDescription
