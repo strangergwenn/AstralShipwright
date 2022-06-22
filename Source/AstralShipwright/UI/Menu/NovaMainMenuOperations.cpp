@@ -616,7 +616,7 @@ void SNovaMainMenuOperations::OnBatchSell()
 	// Proceed with the modal panel
 	GenericModalPanel->Show(
 		FText::FormatNamed(LOCTEXT("SelectBulkSellFormat", "Bulk sell to {station}"), TEXT("station"), GameState->GetCurrentArea()->Name),
-		ResourceList.Num() == 0 ? LOCTEXT("NoBulkSellResource", "No resources are available to buy at this station") : FText(),
+		ResourceList.Num() == 0 ? LOCTEXT("NoBulkSellResource", "No resources in cargo can be sold at this station") : FText(),
 		FSimpleDelegate::CreateLambda(TradeResource), FSimpleDelegate(), FSimpleDelegate(), ResourceListView);
 }
 
