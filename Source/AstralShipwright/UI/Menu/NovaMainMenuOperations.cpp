@@ -538,6 +538,17 @@ FText SNovaMainMenuOperations::GetModuleDetails(int32 CompartmentIndex, int32 Mo
 		// Propellant
 		else if (Desc->IsA<UNovaPropellantModuleDescription>())
 		{
+			UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
+			NCHECK(PropellantSystem);
+
+			FNumberFormattingOptions Options;
+			Options.MaximumFractionalDigits = 0;
+
+			float RemainingDeltaV = Spacecraft->GetPropulsionMetrics().GetRemainingDeltaV(
+				Spacecraft->GetCurrentCargoMass(), PropellantSystem->GetCurrentPropellantMass());
+
+			return FText::FormatNamed(LOCTEXT("PropellantPercentFormat", "<img src=\"/Text/Propellant\"/> {percent}%"), TEXT("percent"),
+				FText::AsNumber(100 * PropellantSystem->GetCurrentPropellantMass() / PropellantSystem->GetPropellantCapacity(), &Options));
 		}
 	}
 
