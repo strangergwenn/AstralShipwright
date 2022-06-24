@@ -268,7 +268,7 @@ protected:
 	/** Get the max acceleration allowed in the current state */
 	double GetMaximumAcceleration() const
 	{
-		return (IsDockingUndocking() || IsAnchoring()) ? MaxSlowLinearAcceleration : LinearAcceleration;
+		return (IsDockingUndocking() || IsAnchoring()) ? SlowLinearAcceleration : LinearAcceleration;
 	}
 
 	/*----------------------------------------------------
@@ -284,6 +284,14 @@ public:
 	// Maximum moving velocity in m/s
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	double MaxLinearVelocity;
+
+	// Maximum moving acceleration in m/s&
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	double MinLinearAcceleration;
+
+	// Maximum moving acceleration in m/s&
+	UPROPERTY(Category = Nova, EditDefaultsOnly)
+	double MaxLinearAcceleration;
 
 	// Maximum delta-V in m/s for which thrusters shall be enabled
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
@@ -350,7 +358,7 @@ protected:
 
 	// Acceleration data
 	double LinearAcceleration;
-	double MaxSlowLinearAcceleration;
+	double SlowLinearAcceleration;
 	double AngularAcceleration;
 
 	// Movement state
