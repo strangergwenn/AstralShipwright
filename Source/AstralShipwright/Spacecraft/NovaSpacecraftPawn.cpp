@@ -64,9 +64,6 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 void ANovaSpacecraftPawn::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// Defaults
-	EmptyCompartmentDescription = UNeutronAssetManager::Get()->GetDefaultAsset<UNovaCompartmentDescription>();
 }
 
 void ANovaSpacecraftPawn::Tick(float DeltaTime)

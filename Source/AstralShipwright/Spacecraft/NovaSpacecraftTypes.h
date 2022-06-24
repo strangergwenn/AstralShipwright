@@ -638,6 +638,8 @@ class UNovaMiningEquipmentDescription : public UNovaEquipmentDescription
 	GENERATED_BODY()
 
 public:
+
+	virtual FNeutronAssetPreviewSettings GetPreviewSettings() const override;
 };
 
 /** Description of a hatch equipment */

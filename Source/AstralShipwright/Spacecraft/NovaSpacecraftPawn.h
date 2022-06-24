@@ -382,16 +382,6 @@ protected:
 	void BuildCompartments();
 
 	/*----------------------------------------------------
-	    Properties
-	----------------------------------------------------*/
-
-public:
-
-	/** Empty compartment kit */
-	UPROPERTY(Category = Nova, EditDefaultsOnly)
-	const class UNovaCompartmentDescription* EmptyCompartmentDescription;
-
-	/*----------------------------------------------------
 	    Components
 	----------------------------------------------------*/
 

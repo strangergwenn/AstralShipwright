@@ -241,7 +241,7 @@ void UNovaModuleDescription::ConfigurePreviewActor(AActor* Actor) const
 	ANovaSpacecraftPawn* SpacecraftPawn = Cast<ANovaSpacecraftPawn>(Actor);
 
 	TSharedPtr<FNovaSpacecraft> Spacecraft = MakeShared<FNovaSpacecraft>();
-	FNovaCompartment            Compartment(SpacecraftPawn->EmptyCompartmentDescription);
+	FNovaCompartment            Compartment(UNeutronAssetManager::Get()->GetDefaultAsset<UNovaCompartmentDescription>());
 	Compartment.Modules[0].Description = this;
 	Spacecraft->Compartments.Add(Compartment);
 
@@ -319,7 +319,7 @@ void UNovaEquipmentDescription::ConfigurePreviewActor(AActor* Actor) const
 	ANovaSpacecraftPawn* SpacecraftPawn = Cast<ANovaSpacecraftPawn>(Actor);
 
 	TSharedPtr<FNovaSpacecraft> Spacecraft = MakeShared<FNovaSpacecraft>();
-	FNovaCompartment            Compartment(SpacecraftPawn->EmptyCompartmentDescription);
+	FNovaCompartment            Compartment(UNeutronAssetManager::Get()->GetDefaultAsset<UNovaCompartmentDescription>());
 	Compartment.Equipment[0] = this;
 	Spacecraft->Compartments.Add(Compartment);
 
@@ -363,6 +363,17 @@ TArray<FText> UNovaEngineDescription::GetDescription() const
 		FText::AsNumber(FMath::RoundToInt(Thrust))));
 
 	return Result;
+}
+
+FNeutronAssetPreviewSettings UNovaMiningEquipmentDescription::GetPreviewSettings() const
+{
+	FNeutronAssetPreviewSettings Settings = Super::GetPreviewSettings();
+
+	Settings.Rotation        = FRotator(0, 180, 0);
+	Settings.RelativeXOffset = 0.5;
+	Settings.Scale           = 0.85f;
+
+	return Settings;
 }
 
 TArray<FText> UNovaPropellantEquipmentDescription::GetDescription() const
