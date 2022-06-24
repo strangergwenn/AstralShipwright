@@ -497,10 +497,10 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 
 					// Compute orientation
 					const FQuat   HitPointOrientation = (HitResult.Location - AsteroidLocation).GetSafeNormal().ToOrientationQuat();
-					const FVector DockComponentDirection =
-						GetOwner()->GetTransform().InverseTransformVector(AnchorComponent->GetUpVector());
-					const FQuat AnchorComponentOrientation = DockComponentDirection.ToOrientationQuat();
-					AttitudeCommand.Orientation            = HitPointOrientation * AnchorComponentOrientation;
+					const FVector RelativeDockDirection =
+						GetOwner()->GetTransform().InverseTransformVector(-AnchorComponent->GetForwardVector());
+					const FQuat RelativeAnchorOrientation = RelativeDockDirection.ToOrientationQuat();
+					AttitudeCommand.Orientation           = HitPointOrientation * RelativeAnchorOrientation;
 
 					// Compute location
 					const FVector RelativeDockLocation =
