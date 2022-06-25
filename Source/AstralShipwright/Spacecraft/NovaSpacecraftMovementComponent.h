@@ -266,9 +266,9 @@ protected:
 	FTransform GetInitialTransform() const;
 
 	/** Get the max acceleration allowed in the current state */
-	double GetMaximumAcceleration() const
+	double GetMaximumVelocity() const
 	{
-		return (IsDockingUndocking() || IsAnchoring()) ? SlowLinearAcceleration : LinearAcceleration;
+		return (IsDockingUndocking() || IsAnchoring()) ? 0.5 * MaxLinearVelocity : MaxLinearVelocity;
 	}
 
 	/*----------------------------------------------------
@@ -277,7 +277,7 @@ protected:
 
 public:
 
-	// Distance under which we consider stopped
+	// Distance under which we consider stopped in m
 	UPROPERTY(Category = Nova, EditDefaultsOnly)
 	double LinearDeadDistance;
 
@@ -358,7 +358,6 @@ protected:
 
 	// Acceleration data
 	double LinearAcceleration;
-	double SlowLinearAcceleration;
 	double AngularAcceleration;
 
 	// Movement state

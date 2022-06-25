@@ -45,9 +45,9 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 	, MeasuredAngularAcceleration(FVector::ZeroVector)
 {
 	// Angular defaults
-	LinearDeadDistance    = 1;
-	MaxLinearVelocity     = 20;
-	MinLinearAcceleration = 20;
+	LinearDeadDistance    = 0.5;
+	MaxLinearVelocity     = 25;
+	MinLinearAcceleration = 10;
 	MaxLinearAcceleration = 50;
 	MaxDeltaVForThrusters = 5;
 	AngularDeadDistance   = 0.5f;
@@ -81,11 +81,10 @@ void UNovaSpacecraftMovementComponent::TickComponent(float DeltaTime, ELevelTick
 	if (SpacecraftPawn->IsSpacecraftValid())
 	{
 		LinearAcceleration = SpacecraftPawn->GetPropulsionMetrics().ThrusterThrust / SpacecraftPawn->GetCurrentMass();
+		NCHECK(LinearAcceleration > 0 && FMath::IsFinite(LinearAcceleration));
 		LinearAcceleration = FMath::Clamp(LinearAcceleration, MinLinearAcceleration, MaxLinearAcceleration);
 
-		AngularAcceleration    = 4 * LinearAcceleration;
-		SlowLinearAcceleration = 0.5 * LinearAcceleration;
-		NCHECK(FMath::IsFinite(LinearAcceleration));
+		AngularAcceleration = 4 * LinearAcceleration;
 	}
 
 	// Initialize the movement component on server when it doesn't have a start actor
@@ -681,8 +680,8 @@ void UNovaSpacecraftMovementComponent::ProcessMeasurementsAfterAttitude(float De
 void UNovaSpacecraftMovementComponent::ProcessLinearAttitude(float DeltaTime)
 {
 	LinearAttitudeDistance = UNeutronActorTools::SolveVelocity(CurrentLinearVelocity, AttitudeCommand.Velocity,
-		(UpdatedComponent->GetComponentLocation() - CurrentOrbitalLocation) / 100.0, AttitudeCommand.Location / 100.0,
-		GetMaximumAcceleration(), MaxLinearVelocity, LinearDeadDistance, DeltaTime);
+		(UpdatedComponent->GetComponentLocation() - CurrentOrbitalLocation) / 100.0, AttitudeCommand.Location / 100.0, LinearAcceleration,
+		GetMaximumVelocity(), LinearDeadDistance, DeltaTime);
 }
 
 void UNovaSpacecraftMovementComponent::ProcessAngularAttitude(float DeltaTime)
