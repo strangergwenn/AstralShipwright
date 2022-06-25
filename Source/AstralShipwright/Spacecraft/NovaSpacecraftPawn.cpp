@@ -242,7 +242,7 @@ bool ANovaSpacecraftPawn::IsDocking() const
 
 const UPrimitiveComponent* ANovaSpacecraftPawn::GetAnchorComponent() const
 {
-	UPrimitiveComponent* AnchorComponent = FindComponentByClass<UNovaSpacecraftHatchComponent>();
+	UNovaSpacecraftMiningRigComponent* AnchorComponent = FindComponentByClass<UNovaSpacecraftMiningRigComponent>();
 
 	return IsValid(AnchorComponent) ? Cast<UPrimitiveComponent>(AnchorComponent->GetAttachParent()) : nullptr;
 }

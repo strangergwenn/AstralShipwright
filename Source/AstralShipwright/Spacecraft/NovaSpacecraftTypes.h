@@ -134,7 +134,7 @@ class INovaAdditionalComponentInterface
 public:
 
 	/** Configure the additional component */
-	virtual void SetAdditionalAsset(TSoftObjectPtr<class UObject> AdditionalAsset) = 0;
+	virtual void SetAdditionalAsset(TSoftObjectPtr<class UObject> AdditionalAsset){};
 };
 
 /*----------------------------------------------------
@@ -640,6 +640,15 @@ class UNovaMiningEquipmentDescription : public UNovaEquipmentDescription
 public:
 
 	virtual FNeutronAssetPreviewSettings GetPreviewSettings() const override;
+};
+
+/** Mining rig attach point */
+UCLASS(ClassGroup = (Nova))
+class UNovaSpacecraftMiningRigComponent
+	: public USceneComponent
+	, public INovaAdditionalComponentInterface
+{
+	GENERATED_BODY()
 };
 
 /** Description of a hatch equipment */
