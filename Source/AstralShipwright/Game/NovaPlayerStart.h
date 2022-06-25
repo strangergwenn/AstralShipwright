@@ -40,15 +40,9 @@ public:
 	}
 
 	/** Get the world direction of the area interface point */
-	FVector GetInterfacePointDirection(float DeltaV) const
+	static FVector GetInterfacePointDirection(float DeltaV)
 	{
-		return (DeltaV > 0 ? 1 : -1) * GetOrbitalAxis();
-	}
-
-	/** Get the world direction of orbital axis */
-	FVector GetOrbitalAxis() const
-	{
-		return FVector(0, 1, 0);
+		return (DeltaV > 0 ? 1 : -1) * FVector(0, 1, 0);
 	}
 
 	/*----------------------------------------------------
