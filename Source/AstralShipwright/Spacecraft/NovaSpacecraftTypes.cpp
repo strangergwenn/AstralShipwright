@@ -307,6 +307,7 @@ FNeutronAssetPreviewSettings UNovaEquipmentDescription::GetPreviewSettings() con
 {
 	FNeutronAssetPreviewSettings Settings;
 
+	Settings.Rotation                = FRotator(0, 180, 0);
 	Settings.Class                   = ANovaSpacecraftPawn::StaticClass();
 	Settings.RequireCustomPrimitives = true;
 
@@ -369,7 +370,6 @@ FNeutronAssetPreviewSettings UNovaMiningEquipmentDescription::GetPreviewSettings
 {
 	FNeutronAssetPreviewSettings Settings = Super::GetPreviewSettings();
 
-	Settings.Rotation        = FRotator(0, 180, 0);
 	Settings.RelativeXOffset = 0.5;
 	Settings.Scale           = 0.85f;
 
