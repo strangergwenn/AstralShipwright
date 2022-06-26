@@ -70,6 +70,7 @@ void UNovaSpacecraftPropellantSystem::GetLifetimeReplicatedProps(TArray<FLifetim
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(UNovaSpacecraftPropellantSystem, InitialPropellantMass);
 	DOREPLIFETIME(UNovaSpacecraftPropellantSystem, PropellantRate);
 	DOREPLIFETIME(UNovaSpacecraftPropellantSystem, PropellantMass);
 }
