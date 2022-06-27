@@ -237,6 +237,9 @@ protected:
 	// Module + equipment
 	FText GetModuleOrEquipmentText();
 
+	// Tools
+	bool CanSwap(bool WithNext) const;
+
 	// Key bindings
 	FKey GetPreviousItemKey() const;
 	FKey GetNextItemKey() const;
@@ -278,6 +281,7 @@ protected:
 
 	// Tools
 	void OnOpenModuleGroups();
+	void OnSwap(bool WithNext);
 
 	// Customization
 	void OnOpenCustomization();

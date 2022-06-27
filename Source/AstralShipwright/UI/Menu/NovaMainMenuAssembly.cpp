@@ -920,6 +920,30 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						]
 
 						+ SHorizontalBox::Slot()
+						
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNeutronNew(SNeutronButton)
+							.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Left"))
+							.HelpText(LOCTEXT("MovePrevious", "Move the current selection to the previous slot"))
+							.Size("SmallButtonSize")
+							.OnClicked(this, &SNovaMainMenuAssembly::OnSwap, false)
+							.Enabled(this, &SNovaMainMenuAssembly::CanSwap, false)
+						]
+						
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNeutronNew(SNeutronButton)
+							.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Right"))
+							.HelpText(LOCTEXT("MoveNext", "Move the current selection to the next slot"))
+							.Size("SmallButtonSize")
+							.OnClicked(this, &SNovaMainMenuAssembly::OnSwap, true)
+							.Enabled(this, &SNovaMainMenuAssembly::CanSwap, true)
+						]
+
+						+ SHorizontalBox::Slot()
 
 						+ SHorizontalBox::Slot()
 						.VAlign(VAlign_Center)
@@ -2152,6 +2176,116 @@ FText SNovaMainMenuAssembly::GetModuleOrEquipmentText()
 	return FText();
 }
 
+bool SNovaMainMenuAssembly::CanSwap(bool WithNext) const
+{
+	if (SpacecraftPawn)
+	{
+		// Compartment
+		if (EditedCompartmentIndex == INDEX_NONE)
+		{
+			const int32 SwapCompartmentIndex = WithNext ? SelectedCompartmentIndex + 1 : SelectedCompartmentIndex - 1;
+			if (SelectedCompartmentIndex >= 0 && SelectedCompartmentIndex < SpacecraftPawn->GetCompartmentCount() &&
+				SwapCompartmentIndex >= 0 && SwapCompartmentIndex < SpacecraftPawn->GetCompartmentCount())
+			{
+				const FNovaCompartment& SelectedCompartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
+				const FNovaCompartment& SwapCompartment     = SpacecraftPawn->GetCompartment(SwapCompartmentIndex);
+
+				if (SelectedCompartment.HasForwardOrAftEquipment() || SwapCompartment.HasForwardOrAftEquipment())
+				{
+					return false;
+				}
+				else if (SelectedCompartment.Description->IsForwardCompartment || SwapCompartment.Description->IsForwardCompartment)
+				{
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+			}
+		}
+
+		// Module / Equipment
+		else
+		{
+			const FNovaCompartment& EditedCompartment = SpacecraftPawn->GetCompartment(EditedCompartmentIndex);
+			NCHECK(EditedCompartment.Description);
+
+			const int32 EditedCommonIndex = SelectedModuleOrEquipmentIndex;
+			const int32 SwapCommonIndex   = WithNext ? EditedCommonIndex + 1 : EditedCommonIndex - 1;
+			const bool  IsSelectedModule  = IsModuleIndex(EditedCommonIndex);
+			const bool  IsSwapModule      = IsModuleIndex(SwapCommonIndex);
+
+			// General checks
+			if (EditedCommonIndex <= 0 || EditedCommonIndex > GetMaxCommonIndex() || SwapCommonIndex <= 0 ||
+				SwapCommonIndex > GetMaxCommonIndex())
+			{
+				return false;
+			}
+			else if (IsSelectedModule != IsSwapModule)
+			{
+				return false;
+			}
+
+			// Module specific checks
+			else if (IsSelectedModule)
+			{
+				const int32                   EditedModuleIndex = GetModuleIndex(EditedCommonIndex);
+				const int32                   SwapModuleIndex   = GetModuleIndex(SwapCommonIndex);
+				const FNovaCompartmentModule& SelectedModule    = EditedCompartment.Modules[EditedModuleIndex];
+				const FNovaCompartmentModule& SwapModule        = EditedCompartment.Modules[SwapModuleIndex];
+
+				if (EditedModuleIndex >= EditedCompartment.Description->ModuleSlots.Num() ||
+					SwapModuleIndex >= EditedCompartment.Description->ModuleSlots.Num())
+				{
+					return false;
+				}
+				else if (SelectedModule.Cargo.Amount > 0 || SwapModule.Cargo.Amount > 0)
+				{
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+			}
+
+			// Equipment specific checks
+			else
+			{
+				const int32 EditedEquipmentIndex = GetEquipmentIndex(EditedCommonIndex);
+				const int32 SwapEquipmentIndex   = GetEquipmentIndex(SwapCommonIndex);
+
+				if (EditedEquipmentIndex >= EditedCompartment.Description->EquipmentSlots.Num() ||
+					SwapEquipmentIndex >= EditedCompartment.Description->EquipmentSlots.Num())
+				{
+					return false;
+				}
+
+				const UNovaEquipmentDescription* SelectedModule     = EditedCompartment.Equipment[EditedEquipmentIndex];
+				const UNovaEquipmentDescription* SwapModule         = EditedCompartment.Equipment[SwapEquipmentIndex];
+				const FNovaEquipmentSlot&        SelectedModuleSlot = EditedCompartment.Description->EquipmentSlots[EditedEquipmentIndex];
+				const FNovaEquipmentSlot&        SwapModuleSlot     = EditedCompartment.Description->EquipmentSlots[SwapEquipmentIndex];
+
+				if (SelectedModule && !SwapModuleSlot.SupportedTypes.Contains(SelectedModule->EquipmentType))
+				{
+					return false;
+				}
+				else if (SwapModule && !SelectedModuleSlot.SupportedTypes.Contains(SwapModule->EquipmentType))
+				{
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
 FKey SNovaMainMenuAssembly::GetPreviousItemKey() const
 {
 	return MenuManager->GetFirstActionKey(FNeutronPlayerInput::MenuPrevious);
@@ -2560,6 +2694,48 @@ void SNovaMainMenuAssembly::OnOpenModuleGroups()
 			"Modules are grouped together when they form a line of the same type, and can then share hatches or transfer cargo for "
 			"processing."),
 		FSimpleDelegate(), FSimpleDelegate(), FSimpleDelegate(), ModuleGroupsContainer);
+}
+
+void SNovaMainMenuAssembly::OnSwap(bool WithNext)
+{
+	NLOG("SNovaMainMenuAssembly::OnSwap %d", WithNext);
+
+	// Compartment
+	if (EditedCompartmentIndex == INDEX_NONE)
+	{
+		const int32 NewCompartmentIndex = WithNext ? SelectedCompartmentIndex + 1 : SelectedCompartmentIndex - 1;
+		if (SpacecraftPawn->SwapCompartments(SelectedCompartmentIndex, NewCompartmentIndex))
+		{
+			SpacecraftPawn->RequestAssemblyUpdate();
+		}
+	}
+
+	// Module / Equipment
+	else
+	{
+		const FNovaCompartment& EditedCompartment = SpacecraftPawn->GetCompartment(EditedCompartmentIndex);
+		const int32             SwapCommonIndex   = WithNext ? SelectedModuleOrEquipmentIndex + 1 : SelectedModuleOrEquipmentIndex - 1;
+
+		// Module
+		if (IsModuleIndex(SelectedModuleOrEquipmentIndex))
+		{
+			if (SpacecraftPawn->SwapModules(
+					EditedCompartmentIndex, GetModuleIndex(SelectedModuleOrEquipmentIndex), GetModuleIndex(SwapCommonIndex)))
+			{
+				SpacecraftPawn->RequestAssemblyUpdate();
+			}
+		}
+
+		// Equipment
+		else
+		{
+			if (SpacecraftPawn->SwapEquipment(
+					EditedCompartmentIndex, GetEquipmentIndex(SelectedModuleOrEquipmentIndex), GetEquipmentIndex(SwapCommonIndex)))
+			{
+				SpacecraftPawn->RequestAssemblyUpdate();
+			}
+		}
+	}
 }
 
 /*----------------------------------------------------

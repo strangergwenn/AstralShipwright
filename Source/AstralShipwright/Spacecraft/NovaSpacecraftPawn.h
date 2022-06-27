@@ -255,6 +255,15 @@ public:
 	/** Remove a compartment from the assembly */
 	bool RemoveCompartment(int32 Index);
 
+	/** Swap compartments */
+	bool SwapCompartments(int32 IndexA, int32 IndexB);
+
+	/** Swap modules */
+	bool SwapModules(int32 CompartmentIndex, int32 IndexA, int32 IndexB);
+
+	/** Swap equipment */
+	bool SwapEquipment(int32 CompartmentIndex, int32 IndexA, int32 IndexB);
+
 	/** Request updating of the assembly */
 	void RequestAssemblyUpdate()
 	{

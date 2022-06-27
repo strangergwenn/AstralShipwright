@@ -364,6 +364,64 @@ bool ANovaSpacecraftPawn::RemoveCompartment(int32 Index)
 	return false;
 }
 
+bool ANovaSpacecraftPawn::SwapCompartments(int32 IndexA, int32 IndexB)
+{
+	NLOG("ANovaAssembly::SwapCompartments %d <-> %d", IndexA, IndexB);
+
+	if (AssemblyState == ENovaAssemblyState::Idle)
+	{
+		NCHECK(Spacecraft.IsValid());
+		NCHECK(IndexA >= 0 && IndexA < Spacecraft->Compartments.Num());
+		NCHECK(IndexB >= 0 && IndexB < Spacecraft->Compartments.Num());
+
+		Swap(Spacecraft->Compartments[IndexA], Spacecraft->Compartments[IndexB]);
+
+		return true;
+	}
+
+	return false;
+}
+
+bool ANovaSpacecraftPawn::SwapModules(int32 CompartmentIndex, int32 IndexA, int32 IndexB)
+{
+	NLOG("ANovaAssembly::SwapModules %d: %d <-> %d", CompartmentIndex, IndexA, IndexB);
+
+	if (AssemblyState == ENovaAssemblyState::Idle)
+	{
+		NCHECK(Spacecraft.IsValid());
+		NCHECK(IndexA >= 0 && IndexA < ENovaConstants::MaxModuleCount);
+		NCHECK(IndexB >= 0 && IndexB < ENovaConstants::MaxModuleCount);
+		NCHECK(CompartmentIndex >= 0 && CompartmentIndex < Spacecraft->Compartments.Num());
+
+		FNovaCompartment& EditedCompartment = Spacecraft->Compartments[CompartmentIndex];
+		Swap(EditedCompartment.Modules[IndexA], EditedCompartment.Modules[IndexB]);
+
+		return true;
+	}
+
+	return false;
+}
+
+bool ANovaSpacecraftPawn::SwapEquipment(int32 CompartmentIndex, int32 IndexA, int32 IndexB)
+{
+	NLOG("ANovaAssembly::SwapEquipment %d: %d <-> %d", CompartmentIndex, IndexA, IndexB);
+
+	if (AssemblyState == ENovaAssemblyState::Idle)
+	{
+		NCHECK(Spacecraft.IsValid());
+		NCHECK(IndexA >= 0 && IndexA < ENovaConstants::MaxEquipmentCount);
+		NCHECK(IndexB >= 0 && IndexB < ENovaConstants::MaxEquipmentCount);
+		NCHECK(CompartmentIndex >= 0 && CompartmentIndex < Spacecraft->Compartments.Num());
+
+		FNovaCompartment& EditedCompartment = Spacecraft->Compartments[CompartmentIndex];
+		Swap(EditedCompartment.Equipment[IndexA], EditedCompartment.Equipment[IndexB]);
+
+		return true;
+	}
+
+	return false;
+}
+
 FNovaCompartment& ANovaSpacecraftPawn::GetCompartment(int32 Index)
 {
 	NCHECK(Spacecraft.IsValid());
