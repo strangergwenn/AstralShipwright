@@ -201,19 +201,13 @@ void ANovaPlayerController::BeginPlay()
 					const TSharedPtr<FNeutronPostProcessSettingBase>& Current, const TSharedPtr<FNeutronPostProcessSettingBase>& Target,
 					float Alpha)
 				{
-					NCHECK(Materials.Num() == 2);
-
 					UNovaGameUserSettings*            GameUserSettings = Cast<UNovaGameUserSettings>(GEngine->GetGameUserSettings());
 					const FNeutronPostProcessSetting* MyCurrent        = static_cast<const FNeutronPostProcessSetting*>(Current.Get());
 					const FNeutronPostProcessSetting* MyTarget         = static_cast<const FNeutronPostProcessSetting*>(Target.Get());
 
 					// Custom settings
 					ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
-					Materials[0]->SetScalarParameterValue(
-						"HighlightAlpha", IsValid(SpacecraftPawn) ? SpacecraftPawn->GetHighlightAlpha() : 0);
-					Materials[0]->SetScalarParameterValue("OutlineAlpha", IsValid(SpacecraftPawn) ? SpacecraftPawn->GetOutlineAlpha() : 0);
-					Materials[0]->SetVectorParameterValue("HighlightColor", UNeutronMenuManager::Get()->GetHighlightColor());
-					Materials[1]->SetScalarParameterValue("NoiseEnabled", GameUserSettings->EnableCameraDegradation ? 1.0f : 0.0f);
+					Materials[0]->SetScalarParameterValue("NoiseEnabled", GameUserSettings->EnableCameraDegradation ? 1.0f : 0.0f);
 					// Material->SetScalarParameterValue("ChromaIntensity", FMath::Lerp(Current.ChromaIntensity, Target.ChromaIntensity,
 			        // Alpha));
 

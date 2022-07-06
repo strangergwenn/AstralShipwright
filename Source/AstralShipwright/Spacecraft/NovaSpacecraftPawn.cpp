@@ -14,6 +14,7 @@
 #include "Nova.h"
 
 #include "Neutron/Actor/NeutronActorTools.h"
+#include "Neutron/System/NeutronMenuManager.h"
 #include "Neutron/System/NeutronGameInstance.h"
 #include "Neutron/System/NeutronAssetManager.h"
 
@@ -125,33 +126,36 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 				FNovaAssemblyCallback::CreateLambda(
 					[&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 					{
-						UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Element.Mesh);
-						if (PrimitiveComponent)
+						if (Element.Mesh)
 						{
-							int32 StencilValue = 0;
+							int32 HighlightValue = 0;
+							int32 OutlineValue   = 0;
 
 							// Outline only, no highlight
 							if (CompartmentIndex == OutlinedCompartment.GetCurrent() &&
 								CompartmentIndex != HighlightedCompartment.GetCurrent())
 							{
-								StencilValue = 1;
+								OutlineValue = 1;
 							}
 
 							// Outline and highlight
 							else if (CompartmentIndex == OutlinedCompartment.GetCurrent() &&
 									 CompartmentIndex == HighlightedCompartment.GetCurrent())
 							{
-								StencilValue = 2;
+								HighlightValue = 1;
+								OutlineValue   = 1;
 							}
 
 							// Highlight only
 							if (CompartmentIndex != OutlinedCompartment.GetCurrent() &&
 								CompartmentIndex == HighlightedCompartment.GetCurrent())
 							{
-								StencilValue = 3;
+								HighlightValue = 1;
 							}
 
-							PrimitiveComponent->SetCustomDepthStencilValue(StencilValue);
+							Element.Mesh->RequestParameter("HighlightAlpha", HighlightValue * GetHighlightAlpha());
+							Element.Mesh->RequestParameter("OutlineAlpha", OutlineValue * GetOutlineAlpha());
+							Element.Mesh->RequestParameter("HighlightColor", UNeutronMenuManager::Get()->GetHighlightColor());
 						}
 					}));
 		}
