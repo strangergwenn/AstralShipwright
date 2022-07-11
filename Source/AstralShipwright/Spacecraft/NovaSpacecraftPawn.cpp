@@ -153,8 +153,9 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 								HighlightValue = 1;
 							}
 
-							Element.Mesh->RequestParameter("HighlightAlpha", HighlightValue * GetHighlightAlpha());
-							Element.Mesh->RequestParameter("OutlineAlpha", OutlineValue * GetOutlineAlpha());
+							// Outline and alpha were reversed here after loss of stencil made outlines a lot worse
+							Element.Mesh->RequestParameter("OutlineAlpha", HighlightValue * GetHighlightAlpha());
+							Element.Mesh->RequestParameter("HighlightAlpha", OutlineValue * GetOutlineAlpha());
 							Element.Mesh->RequestParameter("HighlightColor", UNeutronMenuManager::Get()->GetHighlightColor());
 						}
 					}));
