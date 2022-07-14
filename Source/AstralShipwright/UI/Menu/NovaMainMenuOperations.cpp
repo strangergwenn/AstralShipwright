@@ -8,6 +8,7 @@
 #include "Player/NovaPlayerController.h"
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/System/NovaSpacecraftPropellantSystem.h"
+#include "Spacecraft/System/NovaSpacecraftProcessingSystem.h"
 
 #include "UI/Widgets/NovaTradingPanel.h"
 #include "UI/Widgets/NovaTradableAssetItem.h"
@@ -302,8 +303,6 @@ void SNovaMainMenuOperations::Tick(const FGeometry& AllottedGeometry, const doub
 
 	if (Spacecraft && GameState)
 	{
-		UNovaSpacecraftPropellantSystem* PropellantSystem = GameState->GetSpacecraftSystem<UNovaSpacecraftPropellantSystem>(Spacecraft);
-		NCHECK(PropellantSystem);
 		AveragedPropellantRatio.Set(PropellantSystem->GetCurrentPropellantMass() / PropellantSystem->GetPropellantCapacity(), DeltaTime);
 	}
 }
@@ -320,10 +319,12 @@ void SNovaMainMenuOperations::Hide()
 
 void SNovaMainMenuOperations::UpdateGameObjects()
 {
-	PC             = MenuManager.IsValid() ? MenuManager->GetPC<ANovaPlayerController>() : nullptr;
-	GameState      = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
-	Spacecraft     = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
-	SpacecraftPawn = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
+	PC               = MenuManager.IsValid() ? MenuManager->GetPC<ANovaPlayerController>() : nullptr;
+	GameState        = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
+	Spacecraft       = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
+	SpacecraftPawn   = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
+	PropellantSystem = IsValid(GameState) ? GameState->GetSpacecraftSystem<UNovaSpacecraftPropellantSystem>(Spacecraft) : nullptr;
+	ProcessingSystem = IsValid(GameState) ? GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(Spacecraft) : nullptr;
 }
 
 /*----------------------------------------------------
@@ -358,9 +359,6 @@ FText SNovaMainMenuOperations::GetPropellantText() const
 {
 	if (SpacecraftPawn && Spacecraft)
 	{
-		UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
-		NCHECK(PropellantSystem);
-
 		FNumberFormattingOptions Options;
 		Options.MaximumFractionalDigits = 0;
 
@@ -415,8 +413,7 @@ bool SNovaMainMenuOperations::IsModuleEnabled(int32 CompartmentIndex, int32 Modu
 		// Cargo
 		if (Desc->IsA<UNovaCargoModuleDescription>())
 		{
-			const FNovaCompartment&     Compartment = Spacecraft->Compartments[CompartmentIndex];
-			const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(ModuleIndex);
+			const FNovaSpacecraftCargo& Cargo = ProcessingSystem->GetCargo(CompartmentIndex, ModuleIndex);
 			return (SpacecraftPawn->IsDocked() || IsValid(Cargo.Resource)) && !SpacecraftPawn->HasModifications();
 		}
 
@@ -468,8 +465,7 @@ const FSlateBrush* SNovaMainMenuOperations::GetModuleImage(int32 CompartmentInde
 		// Cargo
 		if (Desc->IsA<UNovaCargoModuleDescription>())
 		{
-			const FNovaCompartment&     Compartment = Spacecraft->Compartments[CompartmentIndex];
-			const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(ModuleIndex);
+			const FNovaSpacecraftCargo& Cargo = ProcessingSystem->GetCargo(CompartmentIndex, ModuleIndex);
 			if (IsValid(Cargo.Resource))
 			{
 				return &Cargo.Resource->AssetRender;
@@ -495,8 +491,7 @@ FText SNovaMainMenuOperations::GetModuleText(int32 CompartmentIndex, int32 Modul
 		// Cargo
 		if (Desc->IsA<UNovaCargoModuleDescription>())
 		{
-			const FNovaCompartment&     Compartment = Spacecraft->Compartments[CompartmentIndex];
-			const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(ModuleIndex);
+			const FNovaSpacecraftCargo& Cargo = ProcessingSystem->GetCargo(CompartmentIndex, ModuleIndex);
 			if (IsValid(Cargo.Resource))
 			{
 				return Cargo.Resource->Name;
@@ -527,9 +522,10 @@ FText SNovaMainMenuOperations::GetModuleDetails(int32 CompartmentIndex, int32 Mo
 		if (Desc->IsA<UNovaCargoModuleDescription>())
 		{
 			const FNovaCompartment&     Compartment = Spacecraft->Compartments[CompartmentIndex];
-			const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(ModuleIndex);
-			int32                       Amount      = Cargo.Amount;
-			int32                       Capacity    = Compartment.GetCargoCapacity(ModuleIndex);
+			const FNovaSpacecraftCargo& Cargo       = ProcessingSystem->GetCargo(CompartmentIndex, ModuleIndex);
+
+			int32 Amount   = Cargo.Amount;
+			int32 Capacity = Compartment.GetCargoCapacity(ModuleIndex);
 
 			return FText::FormatNamed(LOCTEXT("CargoAmountFormat", "<img src=\"/Text/Cargo\"/> {amount} T / {capacity} T"), TEXT("amount"),
 				FText::AsNumber(Amount), TEXT("capacity"), FText::AsNumber(Capacity));
@@ -538,9 +534,6 @@ FText SNovaMainMenuOperations::GetModuleDetails(int32 CompartmentIndex, int32 Mo
 		// Propellant
 		else if (Desc->IsA<UNovaPropellantModuleDescription>())
 		{
-			UNovaSpacecraftPropellantSystem* PropellantSystem = SpacecraftPawn->FindComponentByClass<UNovaSpacecraftPropellantSystem>();
-			NCHECK(PropellantSystem);
-
 			FNumberFormattingOptions Options;
 			Options.MaximumFractionalDigits = 0;
 
@@ -630,8 +623,7 @@ void SNovaMainMenuOperations::OnInteractWithModule(int32 CompartmentIndex, int32
 	// Cargo
 	if (Desc->IsA<UNovaCargoModuleDescription>())
 	{
-		const FNovaCompartment&     Compartment = Spacecraft->Compartments[CompartmentIndex];
-		const FNovaSpacecraftCargo& Cargo       = Compartment.GetCargo(ModuleIndex);
+		const FNovaSpacecraftCargo& Cargo = ProcessingSystem->GetCargo(CompartmentIndex, ModuleIndex);
 
 		// Docked mode : trade with resource
 		if (SpacecraftPawn->IsDocked())
@@ -655,7 +647,7 @@ void SNovaMainMenuOperations::OnInteractWithModule(int32 CompartmentIndex, int32
 				};
 
 				//	Fill the resource list
-				ResourceList = GameState->GetResourcesSold(Compartment.GetCargoType(ModuleIndex));
+				ResourceList = GameState->GetResourcesSold(ProcessingSystem->GetCargoType(CompartmentIndex, ModuleIndex));
 				ResourceListView->Refresh(0);
 
 				// Proceed with the modal panel
