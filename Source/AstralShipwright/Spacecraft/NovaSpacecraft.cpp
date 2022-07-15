@@ -925,6 +925,27 @@ void FNovaSpacecraft::UpdateModuleGroups()
     Cargo
 ----------------------------------------------------*/
 
+float FNovaSpacecraft::GetCargoCapacity(int32 CompartmentIndex, int32 ModuleIndex) const
+{
+	float CargoMass = 0;
+
+	for (int32 CI = 0; CI < Compartments.Num(); CI++)
+	{
+		if (CI == CompartmentIndex || CompartmentIndex == INDEX_NONE)
+		{
+			for (int32 MI = 0; MI < ENovaConstants::MaxModuleCount; MI++)
+			{
+				if (MI == ModuleIndex || ModuleIndex == INDEX_NONE)
+				{
+					CargoMass += Compartments[CI].GetCargoCapacity(MI);
+				}
+			}
+		}
+	}
+
+	return CargoMass;
+}
+
 float FNovaSpacecraft::GetCargoCapacity(ENovaResourceType Type, int32 CompartmentIndex, int32 ModuleIndex) const
 {
 	float CargoMass = 0;
@@ -1209,7 +1230,8 @@ bool FNovaSpacecraft::IsSameKindModuleInPreviousCompartment(
 
 ENovaModuleGroupType FNovaSpacecraft::GetModuleType(const UNovaModuleDescription* Module) const
 {
-	if (Module->IsA<UNovaCargoModuleDescription>() /* || Module->IsA<UnovaCrewModuleDescription>()*/)
+	if (Module->IsA<UNovaCargoModuleDescription>() ||
+		Module->IsA<UNovaProcessingModuleDescription>() /* || Module->IsA<UnovaCrewModuleDescription>()*/)
 	{
 		return ENovaModuleGroupType::Hatch;
 	}

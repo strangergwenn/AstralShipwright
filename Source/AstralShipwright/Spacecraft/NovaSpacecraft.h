@@ -446,6 +446,45 @@ public:
 		return ModuleGroups;
 	}
 
+	/** Find a specific module group for this spacecraft */
+	const FNovaModuleGroup* FindModuleGroup(int32 CompartmentIndex, int32 ModuleIndex) const
+	{
+		for (const FNovaModuleGroup& Group : ModuleGroups)
+		{
+			for (const FNovaModuleGroupCompartment& GroupCompartment : Group.Compartments)
+			{
+				if (GroupCompartment.CompartmentIndex == CompartmentIndex && GroupCompartment.ModuleIndices.Contains(ModuleIndex))
+				{
+					return &Group;
+				}
+			}
+		}
+
+		NCHECK(false);
+		return nullptr;
+	}
+
+	/** Get coordinates for every module in a group */
+	template <typename T>
+	TArray<TPair<int32, int32>> GetAllModules(const FNovaModuleGroup& Group) const
+	{
+		TArray<TPair<int32, int32>> Result;
+
+		for (const FNovaModuleGroupCompartment& GroupCompartment : Group.Compartments)
+		{
+			for (int32 ModuleIndex : GroupCompartment.ModuleIndices)
+			{
+				const UNovaModuleDescription* Module = Compartments[GroupCompartment.CompartmentIndex].Modules[ModuleIndex].Description;
+				if (Module && Module->IsA<T>())
+				{
+					Result.Add(TPair<int32, int32>(GroupCompartment.CompartmentIndex, ModuleIndex));
+				}
+			}
+		}
+
+		return Result;
+	}
+
 	/** Update bulkheads, pipes, wiring, based on the current state */
 	void UpdateProceduralElements();
 
@@ -483,6 +522,9 @@ public:
 		NCHECK(CompartmentIndex >= 0 && CompartmentIndex < Compartments.Num());
 		return Compartments[CompartmentIndex].GetCargo(ModuleIndex);
 	}
+
+	/** Get the cargo capacity across the ship or in a specific compartment */
+	float GetCargoCapacity(int32 CompartmentIndex = INDEX_NONE, int32 ModuleIndex = INDEX_NONE) const;
 
 	/** Get the cargo capacity for a particular type, across the ship or in a specific compartment */
 	float GetCargoCapacity(ENovaResourceType Type, int32 CompartmentIndex = INDEX_NONE, int32 ModuleIndex = INDEX_NONE) const;

@@ -9,6 +9,26 @@
 
 #include "NovaSpacecraftProcessingSystem.generated.h"
 
+/** Module state */
+enum class ENovaSpacecraftProcessingSystemStatus : uint8
+{
+	Stopped,
+	Processing,
+	Blocked,
+	Error
+};
+
+/** Full module state */
+struct FNovaSpacecraftProcessingSystemModuleState
+{
+	FNovaSpacecraftProcessingSystemModuleState(const UNovaProcessingModuleDescription* M)
+		: Status(ENovaSpacecraftProcessingSystemStatus::Stopped), Module(M)
+	{}
+
+	ENovaSpacecraftProcessingSystemStatus   Status;
+	const UNovaProcessingModuleDescription* Module;
+};
+
 /** Resource processing system that transforms resources */
 UCLASS(ClassGroup = (Nova), meta = (BlueprintSpawnableComponent))
 class UNovaSpacecraftProcessingSystem
@@ -45,6 +65,12 @@ public:
 		}
 	}
 
+	/** Get the current processing status for a module */
+	ENovaSpacecraftProcessingSystemStatus GetModuleStatus(int32 CompartmentIndex, int32 ModuleIndex) const;
+
+	/** Set the active state for a module */
+	void SetModuleActive(int32 CompartmentIndex, int32 ModuleIndex, bool Active);
+
 	/** Get the cargo type for a module */
 	ENovaResourceType GetCargoType(int32 CompartmentIndex, int32 ModuleIndex) const
 	{
@@ -53,10 +79,16 @@ public:
 	}
 
 	/*----------------------------------------------------
+	    Internal
+	----------------------------------------------------*/
+protected:
+
+	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
 
 protected:
 
 	TArray<TStaticArray<FNovaSpacecraftCargo, ENovaConstants::MaxModuleCount>> RealtimeCargo;
+	TMap<TPair<int32, int32>, FNovaSpacecraftProcessingSystemModuleState>      ModuleStates;
 };

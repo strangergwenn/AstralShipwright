@@ -533,6 +533,31 @@ public:
 	float CargoMass = 100;
 };
 
+/** Description of a processing module */
+UCLASS(ClassGroup = (Nova))
+class UNovaProcessingModuleDescription : public UNovaModuleDescription
+{
+	GENERATED_BODY()
+
+public:
+
+	TArray<FText> GetDescription() const override;
+
+public:
+
+	// Resource inputs
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	TArray<const class UNovaResource*> Inputs;
+
+	// Resource outputs
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	TArray<const class UNovaResource*> Outputs;
+
+	// Resource processing rate in seconds, applied to all input & outputs
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	float ProcessingRate = 1;
+};
+
 /*----------------------------------------------------
     Equipment data assets
 ----------------------------------------------------*/
@@ -639,7 +664,15 @@ class UNovaMiningEquipmentDescription : public UNovaEquipmentDescription
 
 public:
 
+	TArray<FText> GetDescription() const override;
+
 	virtual FNeutronAssetPreviewSettings GetPreviewSettings() const override;
+
+public:
+
+	// Resource extraction rate in seconds
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	float ExtractionRate = 1;
 };
 
 /** Mining rig attach point */

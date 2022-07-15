@@ -283,6 +283,16 @@ TArray<FText> UNovaCargoModuleDescription::GetDescription() const
 	return Result;
 }
 
+TArray<FText> UNovaProcessingModuleDescription::GetDescription() const
+{
+	TArray<FText> Result = Super::GetDescription();
+
+	Result.Add(FText::FormatNamed(LOCTEXT("ProcessingModuleDescriptionFormat", "<img src=\"/Text/Cargo\"/> {rate} T/s"), TEXT("rate"),
+		FText::AsNumber(ProcessingRate)));
+
+	return Result;
+}
+
 /*----------------------------------------------------
     Equipment data asset
 ----------------------------------------------------*/
@@ -362,6 +372,16 @@ TArray<FText> UNovaEngineDescription::GetDescription() const
 
 	Result.Add(FText::FormatNamed(LOCTEXT("EngineDescriptionFormat", "<img src=\"/Text/Thrust\"/> {thrust} kN max thrust"), TEXT("thrust"),
 		FText::AsNumber(FMath::RoundToInt(Thrust))));
+
+	return Result;
+}
+
+TArray<FText> UNovaMiningEquipmentDescription::GetDescription() const
+{
+	TArray<FText> Result = Super::GetDescription();
+
+	Result.Add(FText::FormatNamed(LOCTEXT("MiningEquipmentDescriptionFormat", "<img src=\"/Text/Cargo\"/> {rate} T/s"), TEXT("rate"),
+		FText::AsNumber(ExtractionRate)));
 
 	return Result;
 }

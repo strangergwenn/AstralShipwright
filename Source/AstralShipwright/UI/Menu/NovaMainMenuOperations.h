@@ -102,7 +102,7 @@ protected:
 	const struct FNovaSpacecraft*                Spacecraft;
 	const class ANovaSpacecraftPawn*             SpacecraftPawn;
 	const class UNovaSpacecraftPropellantSystem* PropellantSystem;
-	const class UNovaSpacecraftProcessingSystem* ProcessingSystem;
+	class UNovaSpacecraftProcessingSystem*       ProcessingSystem;
 
 	// Current state
 	int32                       CurrentCompartmentIndex;

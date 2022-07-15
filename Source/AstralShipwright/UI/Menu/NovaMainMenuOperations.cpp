@@ -394,6 +394,12 @@ bool SNovaMainMenuOperations::IsValidCompartment(int32 CompartmentIndex, int32 M
 		{
 			return true;
 		}
+
+		// Processing
+		else if (Desc->IsA<UNovaProcessingModuleDescription>())
+		{
+			return true;
+		}
 	}
 
 	return false;
@@ -421,6 +427,12 @@ bool SNovaMainMenuOperations::IsModuleEnabled(int32 CompartmentIndex, int32 Modu
 		else if (Desc->IsA<UNovaPropellantModuleDescription>())
 		{
 			return SpacecraftPawn->IsDocked() && !SpacecraftPawn->HasModifications();
+		}
+
+		// Processing
+		else if (Desc->IsA<UNovaProcessingModuleDescription>())
+		{
+			return true;
 		}
 	}
 
@@ -451,6 +463,12 @@ FText SNovaMainMenuOperations::GetModuleHelpText(int32 CompartmentIndex, int32 M
 		{
 			return LOCTEXT("TradePropellantHelp", "Trade propellant");
 		}
+
+		// Processing
+		else if (Desc->IsA<UNovaProcessingModuleDescription>())
+		{
+			return LOCTEXT("ProcessingHelp", "Control resource processing");
+		}
 	}
 
 	return FText();
@@ -476,6 +494,12 @@ const FSlateBrush* SNovaMainMenuOperations::GetModuleImage(int32 CompartmentInde
 		else if (Desc->IsA<UNovaPropellantModuleDescription>())
 		{
 			return &UNovaResource::GetPropellant()->AssetRender;
+		}
+
+		// Processing
+		else if (Desc->IsA<UNovaProcessingModuleDescription>())
+		{
+			return &Desc->AssetRender;
 		}
 	}
 
@@ -506,6 +530,12 @@ FText SNovaMainMenuOperations::GetModuleText(int32 CompartmentIndex, int32 Modul
 		else if (Desc->IsA<UNovaPropellantModuleDescription>())
 		{
 			return LOCTEXT("PropellantModule", "Propellant");
+		}
+
+		// Processing
+		else if (Desc->IsA<UNovaProcessingModuleDescription>())
+		{
+			return Desc->Name;
 		}
 	}
 
@@ -542,6 +572,26 @@ FText SNovaMainMenuOperations::GetModuleDetails(int32 CompartmentIndex, int32 Mo
 
 			return FText::FormatNamed(LOCTEXT("PropellantPercentFormat", "<img src=\"/Text/Propellant\"/> {percent}%"), TEXT("percent"),
 				FText::AsNumber(100 * PropellantSystem->GetCurrentPropellantMass() / PropellantSystem->GetPropellantCapacity(), &Options));
+		}
+
+		// Processing
+		else if (Desc->IsA<UNovaProcessingModuleDescription>())
+		{
+			switch (ProcessingSystem->GetModuleStatus(CompartmentIndex, ModuleIndex))
+			{
+				case ENovaSpacecraftProcessingSystemStatus::Stopped:
+					return LOCTEXT("ProcessingStopped", "Stopped");
+					break;
+				case ENovaSpacecraftProcessingSystemStatus::Processing:
+					return LOCTEXT("ProcessingProcessing", "Processing");
+					break;
+				case ENovaSpacecraftProcessingSystemStatus::Blocked:
+					return LOCTEXT("ProcessingBlocked", "Blocked");
+					break;
+				case ENovaSpacecraftProcessingSystemStatus::Error:
+					return LOCTEXT("ProcessingError", "Error");
+					break;
+			}
 		}
 	}
 
@@ -670,6 +720,14 @@ void SNovaMainMenuOperations::OnInteractWithModule(int32 CompartmentIndex, int32
 	else if (Desc->IsA<UNovaPropellantModuleDescription>())
 	{
 		OnRefillPropellant();
+	}
+
+	// Processing
+	else if (Desc->IsA<UNovaProcessingModuleDescription>())
+	{
+		bool IsRunning =
+			ProcessingSystem->GetModuleStatus(CompartmentIndex, ModuleIndex) == ENovaSpacecraftProcessingSystemStatus::Processing;
+		ProcessingSystem->SetModuleActive(CompartmentIndex, ModuleIndex, !IsRunning);
 	}
 }
 
