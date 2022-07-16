@@ -515,7 +515,7 @@ FText SNovaMainMenuOperations::GetModuleHelpText(int32 CompartmentIndex, int32 M
 		// Propellant
 		else if (Desc->IsA<UNovaPropellantModuleDescription>())
 		{
-			return LOCTEXT("TradePropellantHelp", "Trade propellant");
+			return LOCTEXT("PropellantHelp", "Trade propellant");
 		}
 
 		// Processing
