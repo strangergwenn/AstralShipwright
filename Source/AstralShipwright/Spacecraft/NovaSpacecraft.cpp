@@ -820,6 +820,8 @@ void FNovaSpacecraft::UpdateModuleGroups()
 {
 	ModuleGroups.Empty();
 
+	int32 CurrentModuleIndex = 0;
+
 	// Build basic groups first as simple lines
 	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
 	{
@@ -897,9 +899,12 @@ void FNovaSpacecraft::UpdateModuleGroups()
 
 						FNovaModuleGroup Group;
 						Group.Compartments.Add(FNovaModuleGroupCompartment(CompartmentIndex, ModuleIndex));
-						Group.Type = Type;
+						Group.Type  = Type;
+						Group.Index = CurrentModuleIndex;
 						ModuleGroups.Add(Group);
+
 						CurrentModuleGroup = &ModuleGroups.Last();
+						CurrentModuleIndex++;
 					}
 					NCHECK(CurrentModuleGroup);
 
@@ -918,6 +923,16 @@ void FNovaSpacecraft::UpdateModuleGroups()
 				}
 			}
 		}
+	}
+
+	// Set colors
+	for (FNovaModuleGroup& Group : ModuleGroups)
+	{
+		const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
+
+		FLinearColor HSV = Theme.PositiveColor.LinearRGBToHSV();
+		HSV.R            = FMath::Fmod(HSV.R + 60 * (1 + Group.Index), 360.0f);
+		Group.Color      = HSV.HSVToLinearRGB();
 	}
 }
 
@@ -1228,7 +1243,7 @@ bool FNovaSpacecraft::IsSameKindModuleInPreviousCompartment(
 	return false;
 };
 
-ENovaModuleGroupType FNovaSpacecraft::GetModuleType(const UNovaModuleDescription* Module) const
+ENovaModuleGroupType FNovaSpacecraft::GetModuleType(const UNovaModuleDescription* Module)
 {
 	if (Module->IsA<UNovaCargoModuleDescription>() ||
 		Module->IsA<UNovaProcessingModuleDescription>() /* || Module->IsA<UnovaCrewModuleDescription>()*/)
@@ -1239,6 +1254,27 @@ ENovaModuleGroupType FNovaSpacecraft::GetModuleType(const UNovaModuleDescription
 	{
 		return ENovaModuleGroupType::Propellant;
 	}
+}
+
+FText FNovaSpacecraft::GetModuleGroupDescription(ENovaModuleGroupType Type)
+{
+	if (Type == ENovaModuleGroupType::Hatch)
+	{
+		return LOCTEXT("ModulesGroupsCargoCrew", "Cargo / crew");
+	}
+	else if (Type == ENovaModuleGroupType::Propellant)
+	{
+		return LOCTEXT("ModulesGroupsPropellant", "Propellant");
+	}
+	else
+	{
+		return FText();
+	}
+}
+
+FText FNovaSpacecraft::GetModuleGroupIcon(ENovaModuleGroupType Type)
+{
+	return INVTEXT("/Text/Module");
 }
 
 #undef LOCTEXT_NAMESPACE

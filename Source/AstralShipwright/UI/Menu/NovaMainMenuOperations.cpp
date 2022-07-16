@@ -230,7 +230,7 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 					[
 						SNew(SVerticalBox)
 
-						// Name
+						// Name & details
 						+ SVerticalBox::Slot()
 						.AutoHeight()
 						[
@@ -238,27 +238,79 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 							.BorderImage(&Theme.MainMenuDarkBackground)
 							.Padding(Theme.ContentPadding)
 							[
-								SNew(SNeutronText)
-								.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuOperations::GetModuleText, CompartmentIndex, ModuleIndex))
-								.TextStyle(&Theme.MainFont)
-								.AutoWrapText(true)
+								SNew(SVerticalBox)
+
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								[
+									SNew(SNeutronText)
+									.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuOperations::GetModuleText, CompartmentIndex, ModuleIndex))
+									.TextStyle(&Theme.MainFont)
+									.AutoWrapText(true)
+								]
+
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								[
+									SNew(SNeutronRichText)
+									.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuOperations::GetModuleDetails, CompartmentIndex, ModuleIndex))
+									.TextStyle(&Theme.MainFont)
+									.AutoWrapText(true)
+								]
 							]
 						]
 					
 						+ SVerticalBox::Slot()
 
-						// Amount / capacity
+						// Module group
 						+ SVerticalBox::Slot()
 						.AutoHeight()
 						[
 							SNew(SBorder)
-							.BorderImage(&Theme.MainMenuDarkBackground)
+							.ColorAndOpacity(TAttribute<FLinearColor>::Create(TAttribute<FLinearColor>::FGetter::CreateLambda([=]()
+							{
+								if (IsValidModule(CompartmentIndex, ModuleIndex))
+								{
+									const FNovaModuleGroup* ModuleGroup = SpacecraftPawn->FindModuleGroup(CompartmentIndex, ModuleIndex);
+									if (ModuleGroup)
+									{
+										return ModuleGroup->Color;
+									}
+								}
+
+								return FLinearColor::White;
+							})))
+							.BorderImage(&Theme.MainMenuGenericBackground)
 							.Padding(Theme.ContentPadding)
+							.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([=]()
+							{
+								if (IsValidModule(CompartmentIndex, ModuleIndex))
+								{
+									return EVisibility::Visible;
+								}
+
+								return EVisibility::Collapsed;
+							})))
 							[
 								SNew(SNeutronRichText)
-								.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuOperations::GetModuleDetails, CompartmentIndex, ModuleIndex))
+								.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
+								{
+									if (IsValidModule(CompartmentIndex, ModuleIndex))
+									{
+										const FNovaModuleGroup* ModuleGroup = SpacecraftPawn->FindModuleGroup(CompartmentIndex, ModuleIndex);
+										if (ModuleGroup)
+										{
+											return FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/> {index}"),
+												TEXT("icon"), FNovaSpacecraft::GetModuleGroupIcon(ModuleGroup->Type),
+												TEXT("index"), FText::AsNumber(ModuleGroup->Index + 1));
+										}
+									}
+							
+									return FText();
+								}))
 								.TextStyle(&Theme.MainFont)
-								.AutoWrapText(true)
+								.WrapTextAt(1.9f * FNeutronStyleSet::GetButtonSize("CompartmentButtonSize").Width)
+								.AutoWrapText(false)
 							]
 						]
 					]
@@ -319,12 +371,14 @@ void SNovaMainMenuOperations::Hide()
 
 void SNovaMainMenuOperations::UpdateGameObjects()
 {
-	PC               = MenuManager.IsValid() ? MenuManager->GetPC<ANovaPlayerController>() : nullptr;
-	GameState        = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
-	Spacecraft       = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
-	SpacecraftPawn   = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
-	PropellantSystem = IsValid(GameState) ? GameState->GetSpacecraftSystem<UNovaSpacecraftPropellantSystem>(Spacecraft) : nullptr;
-	ProcessingSystem = IsValid(GameState) ? GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(Spacecraft) : nullptr;
+	PC             = MenuManager.IsValid() ? MenuManager->GetPC<ANovaPlayerController>() : nullptr;
+	GameState      = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
+	Spacecraft     = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
+	SpacecraftPawn = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
+	PropellantSystem =
+		IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftPropellantSystem>(Spacecraft) : nullptr;
+	ProcessingSystem =
+		IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(Spacecraft) : nullptr;
 }
 
 /*----------------------------------------------------
@@ -376,7 +430,7 @@ FText SNovaMainMenuOperations::GetPropellantText() const
 	return FText();
 }
 
-bool SNovaMainMenuOperations::IsValidCompartment(int32 CompartmentIndex, int32 ModuleIndex) const
+bool SNovaMainMenuOperations::IsValidModule(int32 CompartmentIndex, int32 ModuleIndex) const
 {
 	if (Spacecraft && IsValid(SpacecraftPawn) && CompartmentIndex >= 0 && CompartmentIndex < Spacecraft->Compartments.Num() &&
 		IsValid(GetModule(CompartmentIndex, ModuleIndex).Description))
@@ -412,7 +466,7 @@ const FNovaCompartmentModule& SNovaMainMenuOperations::GetModule(int32 Compartme
 
 bool SNovaMainMenuOperations::IsModuleEnabled(int32 CompartmentIndex, int32 ModuleIndex) const
 {
-	if (IsValidCompartment(CompartmentIndex, ModuleIndex))
+	if (IsValidModule(CompartmentIndex, ModuleIndex))
 	{
 		const UNovaModuleDescription* Desc = GetModule(CompartmentIndex, ModuleIndex).Description;
 
@@ -441,7 +495,7 @@ bool SNovaMainMenuOperations::IsModuleEnabled(int32 CompartmentIndex, int32 Modu
 
 FText SNovaMainMenuOperations::GetModuleHelpText(int32 CompartmentIndex, int32 ModuleIndex) const
 {
-	if (IsValidCompartment(CompartmentIndex, ModuleIndex))
+	if (IsValidModule(CompartmentIndex, ModuleIndex))
 	{
 		const UNovaModuleDescription* Desc = GetModule(CompartmentIndex, ModuleIndex).Description;
 
@@ -476,7 +530,7 @@ FText SNovaMainMenuOperations::GetModuleHelpText(int32 CompartmentIndex, int32 M
 
 const FSlateBrush* SNovaMainMenuOperations::GetModuleImage(int32 CompartmentIndex, int32 ModuleIndex) const
 {
-	if (IsValidCompartment(CompartmentIndex, ModuleIndex))
+	if (IsValidModule(CompartmentIndex, ModuleIndex))
 	{
 		const UNovaModuleDescription* Desc = GetModule(CompartmentIndex, ModuleIndex).Description;
 
@@ -508,7 +562,7 @@ const FSlateBrush* SNovaMainMenuOperations::GetModuleImage(int32 CompartmentInde
 
 FText SNovaMainMenuOperations::GetModuleText(int32 CompartmentIndex, int32 ModuleIndex) const
 {
-	if (IsValidCompartment(CompartmentIndex, ModuleIndex))
+	if (IsValidModule(CompartmentIndex, ModuleIndex))
 	{
 		const UNovaModuleDescription* Desc = GetModule(CompartmentIndex, ModuleIndex).Description;
 
@@ -544,7 +598,7 @@ FText SNovaMainMenuOperations::GetModuleText(int32 CompartmentIndex, int32 Modul
 
 FText SNovaMainMenuOperations::GetModuleDetails(int32 CompartmentIndex, int32 ModuleIndex) const
 {
-	if (IsValidCompartment(CompartmentIndex, ModuleIndex))
+	if (IsValidModule(CompartmentIndex, ModuleIndex))
 	{
 		const UNovaModuleDescription* Desc = GetModule(CompartmentIndex, ModuleIndex).Description;
 

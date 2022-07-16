@@ -256,6 +256,10 @@ TArray<FText> UNovaModuleDescription::GetDescription() const
 	Result.Add(
 		FText::FormatNamed(LOCTEXT("ModuleDescriptionFormat", "<img src=\"/Text/Mass\"/> {mass} T"), TEXT("mass"), FText::AsNumber(Mass)));
 
+	Result.Add(FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/> {name}"), TEXT("icon"),
+		FNovaSpacecraft::GetModuleGroupIcon(FNovaSpacecraft::GetModuleType(this)), TEXT("name"),
+		FNovaSpacecraft::GetModuleGroupDescription(FNovaSpacecraft::GetModuleType(this))));
+
 	return Result;
 }
 

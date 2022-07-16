@@ -327,7 +327,10 @@ struct FNovaModuleGroup
 
 	TArray<FNovaModuleGroupCompartment> Compartments;
 	ENovaModuleGroupType                Type;
-	bool                                HasHatch;
+	int32                               Index;
+	FLinearColor                        Color;
+
+	bool HasHatch;
 };
 
 /** Spacecraft upgrade cost result */
@@ -556,6 +559,15 @@ public:
 	/** Get a list of compatible equipment that can be added at a compartment index, and an equipment slot index */
 	TArray<const class UNovaEquipmentDescription*> GetCompatibleEquipment(int32 InCompartmentIndexdex, int32 SlotIndex) const;
 
+	/** Get the module group classification for this module */
+	static ENovaModuleGroupType GetModuleType(const UNovaModuleDescription* Module);
+
+	/** Get the module group type name */
+	static FText GetModuleGroupDescription(ENovaModuleGroupType Type);
+
+	/** Get the module group type icon */
+	static FText GetModuleGroupIcon(ENovaModuleGroupType Type);
+
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
@@ -602,9 +614,6 @@ protected:
 	/** Check whether the module at CompartmentIndex.ModuleIndex has another hatch-needing module behind it */
 	bool IsSameKindModuleInPreviousCompartment(
 		int32 CompartmentIndex, int32 ModuleIndex, ENovaModuleGroupType Type, int32& FoundCompartmentIndex, int32& FoundModuleIndex) const;
-
-	/** Get the module group classification for this module */
-	ENovaModuleGroupType GetModuleType(const UNovaModuleDescription* Module) const;
 
 public:
 

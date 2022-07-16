@@ -210,6 +210,13 @@ public:
 		return Spacecraft->GetCompatibleEquipment(CompartmentIndex, SlotIndex);
 	}
 
+	/** Find a specific module group for this spacecraft */
+	const FNovaModuleGroup* FindModuleGroup(int32 CompartmentIndex, int32 ModuleIndex) const
+	{
+		NCHECK(Spacecraft.IsValid());
+		return Spacecraft->FindModuleGroup(CompartmentIndex, ModuleIndex);
+	}
+
 	/** Get module groups for this spacecraft */
 	const TArray<FNovaModuleGroup>& GetModuleGroups() const
 	{

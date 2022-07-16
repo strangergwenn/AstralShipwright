@@ -64,7 +64,7 @@ public:
 	FText            GetPropellantText() const;
 
 	// Module utility
-	bool                                 IsValidCompartment(int32 CompartmentIndex, int32 ModuleIndex) const;
+	bool                                 IsValidModule(int32 CompartmentIndex, int32 ModuleIndex) const;
 	const struct FNovaCompartmentModule& GetModule(int32 CompartmentIndex, int32 ModuleIndex) const;
 
 	// Module callbacks

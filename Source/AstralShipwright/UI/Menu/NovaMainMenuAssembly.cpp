@@ -1133,28 +1133,91 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 					]
 				]
 
-				// Module slot name
+				// Module details
 				+ SOverlay::Slot()
-				.VAlign(VAlign_Top)
 				[
-					SNew(SBorder)
-					.BorderImage(&Theme.MainMenuGenericBackground)
-					.Padding(Theme.ContentPadding)
+					SNew(SVerticalBox)
+
+					// Module slot name
+					+ SVerticalBox::Slot()
+					.AutoHeight()
 					[
-						SNew(SNeutronText)
-						.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
+						SNew(SBorder)
+						.BorderImage(&Theme.MainMenuGenericBackground)
+						.Padding(Theme.ContentPadding)
+						[
+							SNew(SNeutronText)
+							.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
+							{
+								const FNovaCompartment* Compartment = GetEditedCompartment();
+								if (Compartment && IsValid(Compartment->Description) && ModuleIndex < Compartment->Description->ModuleSlots.Num())
+								{
+									const FNovaModuleSlot& Slot = Compartment->Description->ModuleSlots[ModuleIndex];
+									return Slot.DisplayName;
+								}
+						
+								return FText();
+							}))
+							.TextStyle(&Theme.MainFont)
+							.AutoWrapText(true)
+						]
+					]
+				
+					+ SVerticalBox::Slot()
+
+					// Module group
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(SBorder)
+						.ColorAndOpacity(TAttribute<FLinearColor>::Create(TAttribute<FLinearColor>::FGetter::CreateLambda([=]()
 						{
 							const FNovaCompartment* Compartment = GetEditedCompartment();
-							if (Compartment && IsValid(Compartment->Description) && ModuleIndex < Compartment->Description->ModuleSlots.Num())
+							if (Compartment && IsValid(Compartment->Description) && ModuleIndex < Compartment->Description->ModuleSlots.Num() && IsValid(Compartment->Modules[ModuleIndex].Description))
 							{
-								const FNovaModuleSlot& Slot = Compartment->Description->ModuleSlots[ModuleIndex];
-								return Slot.DisplayName;
+								const FNovaModuleGroup* ModuleGroup = SpacecraftPawn->FindModuleGroup(EditedCompartmentIndex, ModuleIndex);
+								if (ModuleGroup)
+								{
+									return ModuleGroup->Color;
+								}
 							}
-						
-							return FText();
-						}))
-						.TextStyle(&Theme.MainFont)
-						.AutoWrapText(true)
+
+							return FLinearColor::White;
+						})))
+						.BorderImage(&Theme.MainMenuGenericBackground)
+						.Padding(Theme.ContentPadding)
+						.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([=]()
+						{
+							const FNovaCompartment* Compartment = GetEditedCompartment();
+							if (Compartment && IsValid(Compartment->Description) && ModuleIndex < Compartment->Description->ModuleSlots.Num() && IsValid(Compartment->Modules[ModuleIndex].Description))
+							{
+								return EVisibility::Visible;
+							}
+
+							return EVisibility::Collapsed;
+						})))
+						[
+							SNew(SNeutronRichText)
+							.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
+							{
+								const FNovaCompartment* Compartment = GetEditedCompartment();
+								if (Compartment && IsValid(Compartment->Description) && ModuleIndex < Compartment->Description->ModuleSlots.Num() && IsValid(Compartment->Modules[ModuleIndex].Description))
+								{
+									const FNovaModuleGroup* ModuleGroup = SpacecraftPawn->FindModuleGroup(EditedCompartmentIndex, ModuleIndex);
+									if (ModuleGroup)
+									{
+										return FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/> {index}"),
+											TEXT("icon"), FNovaSpacecraft::GetModuleGroupIcon(ModuleGroup->Type),
+											TEXT("index"), FText::AsNumber(ModuleGroup->Index + 1));
+									}
+								}
+							
+								return FText();
+							}))
+							.TextStyle(&Theme.MainFont)
+							.WrapTextAt(1.9f * FNeutronStyleSet::GetButtonSize("CompartmentButtonSize").Width)
+							.AutoWrapText(false)
+						]
 					]
 				]
 			]
@@ -2190,7 +2253,11 @@ bool SNovaMainMenuAssembly::CanSwap(bool WithNext) const
 				const FNovaCompartment& SelectedCompartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
 				const FNovaCompartment& SwapCompartment     = SpacecraftPawn->GetCompartment(SwapCompartmentIndex);
 
-				if (SelectedCompartment.HasForwardOrAftEquipment() || SwapCompartment.HasForwardOrAftEquipment())
+				if (!IsValid(SelectedCompartment.Description) || !IsValid(SwapCompartment.Description))
+				{
+					return false;
+				}
+				else if (SelectedCompartment.HasForwardOrAftEquipment() || SwapCompartment.HasForwardOrAftEquipment())
 				{
 					return false;
 				}
@@ -2644,7 +2711,6 @@ void SNovaMainMenuAssembly::OnOpenModuleGroups()
 	}
 
 	// Process module groups
-	int32 CurrentGroupIndex = 1;
 	for (const FNovaModuleGroup& Group : SpacecraftPawn->GetModuleGroups())
 	{
 		for (const FNovaModuleGroupCompartment& GroupCompartment : Group.Compartments)
@@ -2652,15 +2718,7 @@ void SNovaMainMenuAssembly::OnOpenModuleGroups()
 			for (int32 ModuleIndex : GroupCompartment.ModuleIndices)
 			{
 				// Build the group name
-				FText GroupTypeText;
-				if (Group.Type == ENovaModuleGroupType::Hatch)
-				{
-					GroupTypeText = LOCTEXT("ModulesGroupsCargoCrew", "Cargo / crew");
-				}
-				else if (Group.Type == ENovaModuleGroupType::Propellant)
-				{
-					GroupTypeText = LOCTEXT("ModulesGroupsPropellant", "Propellant");
-				}
+				FText GroupTypeText = FNovaSpacecraft::GetModuleGroupDescription(Group.Type);
 
 				// Get module
 				const FNovaCompartmentModule& Module     = Spacecraft.Compartments[GroupCompartment.CompartmentIndex].Modules[ModuleIndex];
@@ -2668,15 +2726,12 @@ void SNovaMainMenuAssembly::OnOpenModuleGroups()
 
 				// Format text
 				FText Text = FText::FormatNamed(LOCTEXT("ModulesGroupsEntryFormat", "{module}\nGroup {group}\n{type}"), TEXT("module"),
-					IsValid(ModuleDesc) ? ModuleDesc->Name : FText(), TEXT("group"), FText::AsNumber(CurrentGroupIndex), TEXT("type"),
+					IsValid(ModuleDesc) ? ModuleDesc->Name : FText(), TEXT("group"), FText::AsNumber(Group.Index + 1), TEXT("type"),
 					GroupTypeText);
 
-				TableContents[ModuleIndex][GroupCompartment.CompartmentIndex] = Group.Type != ENovaModuleGroupType::Hatch || Group.HasHatch
-				                                                                  ? TNeutronTableValue(Text, INVTEXT("x"), FText())
-				                                                                  : TNeutronTableValue(Text);
+				TableContents[ModuleIndex][GroupCompartment.CompartmentIndex] = TNeutronTableValue(Text, Group.Color);
 			}
 		}
-		CurrentGroupIndex++;
 	}
 
 	// Show the table
