@@ -148,13 +148,6 @@ public:
 		}
 	}
 
-	/** Get the cargo type for a module */
-	ENovaResourceType GetCargoType(int32 CompartmentIndex, int32 ModuleIndex) const
-	{
-		const FNovaCompartment& Compartment = GetSpacecraft()->Compartments[CompartmentIndex];
-		return Compartment.GetCargoType(ModuleIndex);
-	}
-
 	/*----------------------------------------------------
 	    Internal
 	----------------------------------------------------*/

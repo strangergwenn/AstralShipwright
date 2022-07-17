@@ -804,7 +804,7 @@ void SNovaMainMenuOperations::OnInteractWithModule(int32 CompartmentIndex, int32
 				};
 
 				//	Fill the resource list
-				ResourceList = GameState->GetResourcesSold(ProcessingSystem->GetCargoType(CompartmentIndex, ModuleIndex));
+				ResourceList = GameState->GetResourcesSold();
 				ResourceListView->Refresh(0);
 
 				// Proceed with the modal panel

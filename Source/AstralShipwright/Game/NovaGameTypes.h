@@ -365,16 +365,6 @@ enum class ENovaPriceModifier : uint8
     Resources
 ----------------------------------------------------*/
 
-/** Possible cargo types */
-UENUM()
-enum class ENovaResourceType : uint8
-{
-	None,
-	General,
-	Bulk,
-	Liquid
-};
-
 /** Description of a resource */
 UCLASS(ClassGroup = (Nova))
 class UNovaResource : public UNovaPreviableTradableAssetDescription
@@ -390,10 +380,6 @@ public:
 	static const UNovaResource* GetPropellant();
 
 public:
-
-	// Type of cargo hold that will be required for this resource
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	ENovaResourceType Type = ENovaResourceType::Bulk;
 
 	// Resource description
 	UPROPERTY(Category = Properties, EditDefaultsOnly)

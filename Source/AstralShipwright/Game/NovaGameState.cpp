@@ -262,23 +262,23 @@ bool ANovaGameState::IsResourceSold(const UNovaResource* Resource, const class U
 	return false;
 }
 
-TArray<const UNovaResource*> ANovaGameState::GetResourcesBought(ENovaResourceType Type, const class UNovaArea* Area) const
+TArray<const UNovaResource*> ANovaGameState::GetResourcesBought(const class UNovaArea* Area) const
 {
 	const UNovaArea* TargetArea = IsValid(Area) ? Area : CurrentArea;
 	if (IsValid(TargetArea))
 	{
-		return TargetArea->GetResourcesBought(Type);
+		return TargetArea->GetResourcesBought();
 	}
 
 	return {};
 }
 
-TArray<const UNovaResource*> ANovaGameState::GetResourcesSold(ENovaResourceType Type, const class UNovaArea* Area) const
+TArray<const UNovaResource*> ANovaGameState::GetResourcesSold(const class UNovaArea* Area) const
 {
 	const UNovaArea* TargetArea = IsValid(Area) ? Area : CurrentArea;
 	if (IsValid(TargetArea))
 	{
-		return TargetArea->GetResourcesSold(Type);
+		return TargetArea->GetResourcesSold();
 	}
 
 	return {};

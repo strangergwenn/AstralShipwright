@@ -524,10 +524,6 @@ public:
 
 public:
 
-	// Cargo type that describes which kind of stuff it can carry
-	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	ENovaResourceType CargoType = ENovaResourceType::Bulk;
-
 	// Cargo mass in T
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float CargoMass = 100;

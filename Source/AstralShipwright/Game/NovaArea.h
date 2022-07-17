@@ -64,10 +64,10 @@ public:
 	bool IsResourceSold(const class UNovaResource* Asset) const;
 
 	/** Get resources bought in this area */
-	TArray<const class UNovaResource*> GetResourcesBought(ENovaResourceType Type) const;
+	TArray<const class UNovaResource*> GetResourcesBought() const;
 
 	/** Get resources sold in this area */
-	TArray<const class UNovaResource*> GetResourcesSold(ENovaResourceType Type) const;
+	TArray<const class UNovaResource*> GetResourcesSold() const;
 
 public:
 

@@ -110,14 +110,8 @@ struct FNovaCompartment
 		return Modules[ModuleIndex].Cargo;
 	}
 
-	/** Get the cargo type for a module */
-	ENovaResourceType GetCargoType(int32 ModuleIndex) const;
-
 	/** Get the cargo capacity  */
 	float GetCargoCapacity(int32 ModuleIndex) const;
-
-	/** Get the cargo capacity for a particular type */
-	float GetCargoCapacity(int32 ModuleIndex, ENovaResourceType Type) const;
 
 	/** Get the current cargo mass */
 	float GetCargoMass(int32 ModuleIndex) const;
@@ -528,9 +522,6 @@ public:
 
 	/** Get the cargo capacity across the ship or in a specific compartment */
 	float GetCargoCapacity(int32 CompartmentIndex = INDEX_NONE, int32 ModuleIndex = INDEX_NONE) const;
-
-	/** Get the cargo capacity for a particular type, across the ship or in a specific compartment */
-	float GetCargoCapacity(ENovaResourceType Type, int32 CompartmentIndex = INDEX_NONE, int32 ModuleIndex = INDEX_NONE) const;
 
 	/** Get the amount of cargo mass used by one resource, across the ship or in a specific compartment */
 	float GetCargoMass(const class UNovaResource* Resource, int32 CompartmentIndex = INDEX_NONE, int32 ModuleIndex = INDEX_NONE) const;

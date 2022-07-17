@@ -128,35 +128,11 @@ bool FNovaCompartment::HasForwardOrAftEquipment() const
 	return false;
 }
 
-ENovaResourceType FNovaCompartment::GetCargoType(int32 ModuleIndex) const
-{
-	const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Modules[ModuleIndex].Description);
-
-	if (::IsValid(CargoModule))
-	{
-		return CargoModule->CargoType;
-	}
-
-	return ENovaResourceType::None;
-}
-
 float FNovaCompartment::GetCargoCapacity(int32 ModuleIndex) const
 {
 	const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Modules[ModuleIndex].Description);
 
 	if (::IsValid(CargoModule))
-	{
-		return CargoModule->CargoMass;
-	}
-
-	return 0.0f;
-}
-
-float FNovaCompartment::GetCargoCapacity(int32 ModuleIndex, ENovaResourceType Type) const
-{
-	const UNovaCargoModuleDescription* CargoModule = Cast<UNovaCargoModuleDescription>(Modules[ModuleIndex].Description);
-
-	if (::IsValid(CargoModule) && CargoModule->CargoType == Type)
 	{
 		return CargoModule->CargoMass;
 	}
@@ -191,7 +167,7 @@ float FNovaCompartment::GetAvailableCargoMass(int32 ModuleIndex, const UNovaReso
 		const FNovaSpacecraftCargo& Cargo = GetCargo(ModuleIndex);
 		if (!::IsValid(Cargo.Resource) || Cargo.Resource == Resource)
 		{
-			return FMath::Max(GetCargoCapacity(ModuleIndex, Resource->Type) - Cargo.Amount, 0.0f);
+			return FMath::Max(GetCargoCapacity(ModuleIndex) - Cargo.Amount, 0.0f);
 		}
 	}
 
@@ -234,7 +210,7 @@ void FNovaCompartment::ModifyCargo(int32 ModuleIndex, const class UNovaResource*
 
 	// Actually update the amount and null the resource if necessary
 	const float PreviousAmount = Cargo.Amount;
-	Cargo.Amount               = FMath::Clamp(Cargo.Amount + MassDelta, 0.0f, GetCargoCapacity(ModuleIndex, Resource->Type));
+	Cargo.Amount               = FMath::Clamp(Cargo.Amount + MassDelta, 0.0f, GetCargoCapacity(ModuleIndex));
 	if (Cargo.Amount == 0)
 	{
 		Cargo.Resource = nullptr;
@@ -953,27 +929,6 @@ float FNovaSpacecraft::GetCargoCapacity(int32 CompartmentIndex, int32 ModuleInde
 				if (MI == ModuleIndex || ModuleIndex == INDEX_NONE)
 				{
 					CargoMass += Compartments[CI].GetCargoCapacity(MI);
-				}
-			}
-		}
-	}
-
-	return CargoMass;
-}
-
-float FNovaSpacecraft::GetCargoCapacity(ENovaResourceType Type, int32 CompartmentIndex, int32 ModuleIndex) const
-{
-	float CargoMass = 0;
-
-	for (int32 CI = 0; CI < Compartments.Num(); CI++)
-	{
-		if (CI == CompartmentIndex || CompartmentIndex == INDEX_NONE)
-		{
-			for (int32 MI = 0; MI < ENovaConstants::MaxModuleCount; MI++)
-			{
-				if (MI == ModuleIndex || ModuleIndex == INDEX_NONE)
-				{
-					CargoMass += Compartments[CI].GetCargoCapacity(MI, Type);
 				}
 			}
 		}

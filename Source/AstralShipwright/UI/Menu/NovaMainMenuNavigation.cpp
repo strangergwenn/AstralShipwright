@@ -884,27 +884,19 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 			];
 		// clang-format on
 
-		// Prepare to find all deals
+		// Create a list of best deals for selling resources
 		int32                                                   RemainingDealCount = 3;
 		TArray<TPair<const UNovaResource*, ENovaPriceModifier>> BestDeals;
-		auto AddDeal = [this, &BestDeals, &Area, &RemainingDealCount](ENovaResourceType Type)
+		for (const UNovaResource* Resource : Area->GetResourcesBought())
 		{
-			for (const UNovaResource* Resource : Area->GetResourcesBought(Type))
+			float CargoMass = Spacecraft->GetCargoMass(Resource);
+			if (CargoMass > 0 && RemainingDealCount > 0)
 			{
-				float CargoMass = Spacecraft->GetCargoMass(Resource);
-				if (CargoMass > 0 && RemainingDealCount > 0)
-				{
-					BestDeals.Add(
-						TPair<const UNovaResource*, ENovaPriceModifier>(Resource, GameState->GetCurrentPriceModifier(Resource, Area)));
-					RemainingDealCount--;
-				}
+				BestDeals.Add(
+					TPair<const UNovaResource*, ENovaPriceModifier>(Resource, GameState->GetCurrentPriceModifier(Resource, Area)));
+				RemainingDealCount--;
 			}
-		};
-
-		// Create a list of best deals for selling resources
-		AddDeal(ENovaResourceType::General);
-		AddDeal(ENovaResourceType::Bulk);
-		AddDeal(ENovaResourceType::Liquid);
+		}
 		BestDeals.Sort(
 			[&](const TPair<const UNovaResource*, ENovaPriceModifier>& A, const TPair<const UNovaResource*, ENovaPriceModifier>& B)
 			{

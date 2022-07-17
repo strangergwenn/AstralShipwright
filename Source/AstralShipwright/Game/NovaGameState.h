@@ -109,10 +109,10 @@ public:
 	bool IsResourceSold(const class UNovaResource* Asset, const class UNovaArea* Area = nullptr) const;
 
 	/** Get resources bought in this area */
-	TArray<const class UNovaResource*> GetResourcesBought(ENovaResourceType Type, const class UNovaArea* Area = nullptr) const;
+	TArray<const class UNovaResource*> GetResourcesBought(const class UNovaArea* Area = nullptr) const;
 
 	/** Get resources sold in this area */
-	TArray<const class UNovaResource*> GetResourcesSold(ENovaResourceType Type, const class UNovaArea* Area = nullptr) const;
+	TArray<const class UNovaResource*> GetResourcesSold(const class UNovaArea* Area = nullptr) const;
 
 	/** Get the current price modifier of an asset */
 	ENovaPriceModifier GetCurrentPriceModifier(const class UNovaTradableAssetDescription* Asset, const class UNovaArea* Area) const;

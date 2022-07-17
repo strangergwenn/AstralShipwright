@@ -16,13 +16,13 @@ bool UNovaArea::IsResourceSold(const UNovaResource* Asset) const
 	return false;
 }
 
-TArray<const UNovaResource*> UNovaArea::GetResourcesBought(ENovaResourceType Type) const
+TArray<const UNovaResource*> UNovaArea::GetResourcesBought() const
 {
 	TArray<const UNovaResource*> Result;
 
 	for (const UNovaResource* Resource : UNeutronAssetManager::Get()->GetAssets<UNovaResource>())
 	{
-		if (!IsResourceSold(Resource) && Resource->Type == Type)
+		if (!IsResourceSold(Resource))
 		{
 			Result.Add(Resource);
 		}
@@ -31,13 +31,13 @@ TArray<const UNovaResource*> UNovaArea::GetResourcesBought(ENovaResourceType Typ
 	return Result;
 }
 
-TArray<const UNovaResource*> UNovaArea::GetResourcesSold(ENovaResourceType Type) const
+TArray<const UNovaResource*> UNovaArea::GetResourcesSold() const
 {
 	TArray<const UNovaResource*> Result;
 
 	for (const FNovaResourceTrade& Trade : ResourceTradeMetadata)
 	{
-		if (Trade.ForSale && Trade.Resource->Type == Type)
+		if (Trade.ForSale)
 		{
 			Result.Add(Trade.Resource);
 		}
