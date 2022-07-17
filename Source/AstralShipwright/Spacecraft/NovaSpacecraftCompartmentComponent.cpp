@@ -367,8 +367,6 @@ void UNovaSpacecraftCompartmentComponent::BuildElement(
 			MeshComponent->AttachToComponent(this, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
 			MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 			MeshComponent->SetCollisionProfileName("Pawn");
-			MeshComponent->SetRenderCustomDepth(true);
-			MeshComponent->bCastShadowAsTwoSided = true;
 			MeshComponent->RegisterComponent();
 		}
 
