@@ -726,12 +726,9 @@ void SNovaMainMenuOperations::OnBatchBuy()
 
 	// Fill the resource list
 	ResourceList.Empty();
-	for (const UNovaResource* Resource : Spacecraft->GetOwnedResources())
+	for (const UNovaResource* Resource : GameState->GetResourcesSold())
 	{
-		if (GameState->IsResourceSold(Resource))
-		{
-			ResourceList.Add(Resource);
-		}
+		ResourceList.Add(Resource);
 	}
 	ResourceListView->Refresh(0);
 
