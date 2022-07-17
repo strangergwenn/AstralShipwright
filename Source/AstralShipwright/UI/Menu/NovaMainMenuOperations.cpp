@@ -180,6 +180,21 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 				]
 			]
 		]
+		
+		// Module group controls
+		+ SScrollBox::Slot()
+		.Padding(Theme.VerticalContentPadding)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.HeadingFont)
+			.Text(LOCTEXT("ModuleGroupsTitle", "Module groups"))
+		]
+
+		// module groups
+		+ SScrollBox::Slot()
+		[
+			SAssignNew(ModuleGroupsBox, SVerticalBox)
+		]
 
 		// Compartments title
 		+ SScrollBox::Slot()
@@ -362,11 +377,47 @@ void SNovaMainMenuOperations::Tick(const FGeometry& AllottedGeometry, const doub
 void SNovaMainMenuOperations::Show()
 {
 	SNeutronTabPanel::Show();
+
+	NCHECK(Spacecraft);
+	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
+
+	for (const FNovaModuleGroup& Group : Spacecraft->GetModuleGroups())
+	{
+		// TODO get resources, if output...
+
+		// clang-format off
+		ModuleGroupsBox->AddSlot()
+		.AutoHeight()
+		[
+			SNew(SHorizontalBox)
+
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNeutronNew(SNeutronButton)
+			]
+
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNew(SRichTextBlock)
+				.TextStyle(&Theme.MainFont)
+				.Text(FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/> {index}"),
+												TEXT("icon"), FNovaSpacecraft::GetModuleGroupIcon(Group.Type),
+												TEXT("index"), FText::AsNumber(Group.Index + 1)))
+				.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
+				+ SRichTextBlock::ImageDecorator()
+			]
+		];
+		// clang-format on
+	}
 }
 
 void SNovaMainMenuOperations::Hide()
 {
 	SNeutronTabPanel::Hide();
+
+	ModuleGroupsBox->ClearChildren();
 }
 
 void SNovaMainMenuOperations::UpdateGameObjects()
@@ -631,21 +682,23 @@ FText SNovaMainMenuOperations::GetModuleDetails(int32 CompartmentIndex, int32 Mo
 		// Processing
 		else if (Desc->IsA<UNovaProcessingModuleDescription>())
 		{
-			switch (ProcessingSystem->GetModuleStatus(CompartmentIndex, ModuleIndex))
+			// TODO: what goes there?
+
+			/*switch (ProcessingSystem->GetModuleStatus(CompartmentIndex, ModuleIndex))
 			{
-				case ENovaSpacecraftProcessingSystemStatus::Stopped:
-					return LOCTEXT("ProcessingStopped", "Stopped");
-					break;
-				case ENovaSpacecraftProcessingSystemStatus::Processing:
-					return LOCTEXT("ProcessingProcessing", "Processing");
-					break;
-				case ENovaSpacecraftProcessingSystemStatus::Blocked:
-					return LOCTEXT("ProcessingBlocked", "Blocked");
-					break;
-				case ENovaSpacecraftProcessingSystemStatus::Error:
-					return LOCTEXT("ProcessingError", "Error");
-					break;
-			}
+			    case ENovaSpacecraftProcessingSystemStatus::Stopped:
+			        return LOCTEXT("ProcessingStopped", "Stopped");
+			        break;
+			    case ENovaSpacecraftProcessingSystemStatus::Processing:
+			        return LOCTEXT("ProcessingProcessing", "Processing");
+			        break;
+			    case ENovaSpacecraftProcessingSystemStatus::Blocked:
+			        return LOCTEXT("ProcessingBlocked", "Blocked");
+			        break;
+			    case ENovaSpacecraftProcessingSystemStatus::Docked:
+			        return LOCTEXT("ProcessingDocked", "Docked");
+			        break;
+			}*/
 		}
 	}
 
@@ -779,9 +832,7 @@ void SNovaMainMenuOperations::OnInteractWithModule(int32 CompartmentIndex, int32
 	// Processing
 	else if (Desc->IsA<UNovaProcessingModuleDescription>())
 	{
-		bool IsRunning =
-			ProcessingSystem->GetModuleStatus(CompartmentIndex, ModuleIndex) == ENovaSpacecraftProcessingSystemStatus::Processing;
-		ProcessingSystem->SetModuleActive(CompartmentIndex, ModuleIndex, !IsRunning);
+		// TODO: inspection, resource flow window?
 	}
 }
 

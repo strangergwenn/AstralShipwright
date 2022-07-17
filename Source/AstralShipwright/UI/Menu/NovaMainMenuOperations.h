@@ -116,4 +116,5 @@ protected:
 	// Slate widgets
 	TSharedPtr<class SNeutronModalPanel> GenericModalPanel;
 	TSharedPtr<class SNovaTradingPanel>  TradingModalPanel;
+	TSharedPtr<class SVerticalBox>       ModuleGroupsBox;
 };

@@ -103,6 +103,7 @@ void ANovaPlayerController::Load(const FNovaPlayerSave& SaveData)
 	// Store the save data so that the spacecraft pawn can fetch it later when it spawns
 	FNovaSpacecraft NewSpacecraft = SaveData.Spacecraft;
 	NewSpacecraft.UpdatePropulsionMetrics();
+	NewSpacecraft.UpdateModuleGroups();
 	if (!NewSpacecraft.IsValid())
 	{
 		NewSpacecraft.Create(LOCTEXT("UnnamedSpacecraft", "Unnamed Spacecraft").ToString());
