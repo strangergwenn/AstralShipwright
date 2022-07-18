@@ -265,8 +265,18 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 }
 
 /*----------------------------------------------------
-    Internals
+    Networking
 ----------------------------------------------------*/
+
+bool UNovaSpacecraftProcessingSystem::ServerSetProcessingGroupActive_Validate(int32 GroupIndex, bool Active)
+{
+	return true;
+}
+
+void UNovaSpacecraftProcessingSystem::ServerSetProcessingGroupActive_Implementation(int32 GroupIndex, bool Active)
+{
+	ServerSetProcessingGroupActive(GroupIndex, Active);
+}
 
 void UNovaSpacecraftProcessingSystem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

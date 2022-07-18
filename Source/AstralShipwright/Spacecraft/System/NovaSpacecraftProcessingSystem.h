@@ -119,7 +119,7 @@ public:
 	}
 
 	/** Get the module group for a specific processing group */
-	const FNovaModuleGroup& GetModuleGroup(int32 GroupIndex)
+	const FNovaModuleGroup& GetModuleGroup(int32 GroupIndex) const
 	{
 		NCHECK(GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num());
 		return GetSpacecraft()->GetModuleGroups()[ProcessingGroupsStates[GroupIndex].GroupIndex];
@@ -173,15 +173,25 @@ public:
 		return Result;
 	}
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSetProcessingGroupActive(int32 GroupIndex, bool Active);
+
 	/** Set the active state for a processing group */
 	void SetProcessingGroupActive(int32 GroupIndex, bool Active)
 	{
-		NCHECK(GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num());
-		ProcessingGroupsStates[GroupIndex].Active = Active;
+		if (GetOwner()->GetLocalRole() == ROLE_Authority)
+		{
+			NCHECK(GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num());
+			ProcessingGroupsStates[GroupIndex].Active = Active;
+		}
+		else
+		{
+			ServerSetProcessingGroupActive(GroupIndex, Active);
+		}
 	}
 
 	/** Check the active state for a processing group */
-	bool IsProcessingGroupActive(int32 GroupIndex)
+	bool IsProcessingGroupActive(int32 GroupIndex) const
 	{
 		if (GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num())
 		{
