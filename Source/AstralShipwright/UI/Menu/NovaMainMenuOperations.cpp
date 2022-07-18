@@ -522,6 +522,8 @@ void SNovaMainMenuOperations::Show()
 						+ SRichTextBlock::ImageDecorator()
 					]
 
+					// TODO: status
+
 					+ SHorizontalBox::Slot()
 					.Padding(Theme.ContentPadding)
 					.VAlign(VAlign_Center)
@@ -560,7 +562,11 @@ void SNovaMainMenuOperations::Show()
 		// clang-format on
 	}
 
+	// TODO: message if no group found
+
 	// TODO: equipment
+
+	// TODO: message if no equipment found
 }
 
 void SNovaMainMenuOperations::Hide()
@@ -833,7 +839,7 @@ FText SNovaMainMenuOperations::GetModuleDetails(int32 CompartmentIndex, int32 Mo
 		// Processing
 		else if (Desc->IsA<UNovaProcessingModuleDescription>())
 		{
-			// TODO: what goes there?
+			// TODO: show state?
 
 			/*switch (ProcessingSystem->GetModuleStatus(CompartmentIndex, ModuleIndex))
 			{
