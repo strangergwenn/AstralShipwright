@@ -451,13 +451,15 @@ void SNovaMainMenuOperations::Show()
 {
 	SNeutronTabPanel::Show();
 
-	NCHECK(Spacecraft);
 	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
 
+	NCHECK(Spacecraft);
+	ProcessingSystem->Load(*Spacecraft);
+
 	// Add module groups
-	for (const FNovaModuleGroup& Group : Spacecraft->GetModuleGroups())
+	for (int32 ProcessingGroupIndex = 0; ProcessingGroupIndex < ProcessingSystem->GetProcessingGroupCount(); ProcessingGroupIndex++)
 	{
-		// TODO get resources, if output...
+		const FNovaModuleGroup& Group = ProcessingSystem->GetModuleGroup(ProcessingGroupIndex);
 
 		// clang-format off
 		ModuleGroupsBox->AddSlot()
@@ -489,60 +491,54 @@ void SNovaMainMenuOperations::Show()
 				SNew(SNeutronButtonLayout)
 				.Size("OperationsButtonSize")
 				[
-					SNew(SVerticalBox)
+					SNew(SHorizontalBox)
 
-					+ SVerticalBox::Slot()
-
-					+ SVerticalBox::Slot()
-					.AutoHeight()
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.Padding(Theme.ContentPadding)
+					.VAlign(VAlign_Center)
 					[
-						SNew(SHorizontalBox)
-
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
-						[
-							SNew(SRichTextBlock)
-							.TextStyle(&Theme.InfoFont)
-							.Text(FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/>\n{index}"),
-															TEXT("icon"), FNovaSpacecraft::GetModuleGroupIcon(Group.Type),
-															TEXT("index"), FText::AsNumber(Group.Index + 1)))
-							.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
-							+ SRichTextBlock::ImageDecorator()
-						]
-
-						+ SHorizontalBox::Slot()
-						[
-							SNew(STextBlock)
-							.TextStyle(&Theme.MainFont)
-							.Text_Lambda([=]()
-							{
-								// Resource inputs
-								FString InputList;
-								for (const UNovaResource* Input : ProcessingSystem->GetInputResources(Group.Index))
-								{
-									InputList += InputList.Len() ? TEXT(", ") : FString();
-									InputList += Input->Name.ToString();
-								}
-
-								// Resource outputs
-								FString OutputList;
-								for (const UNovaResource* Output : ProcessingSystem->GetOutputResources(Group.Index))
-								{
-									OutputList += OutputList.Len() ? TEXT(", ") : FString();
-									OutputList += Output->Name.ToString();
-								}
-
-								// Final string
-								FText InputLine = InputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingInput", "Input resources: {list}"),
-									TEXT("list"), FText::FromString(InputList)) : FText();
-								FText OutputLine = OutputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingOutput", "Output resources: {list}"),
-									TEXT("list"), FText::FromString(OutputList)) : FText();
-								return FText::FromString(InputLine.ToString() + "\n" + OutputLine.ToString());
-							})
-						]
+						SNew(SRichTextBlock)
+						.TextStyle(&Theme.InfoFont)
+						.Text(FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/>\n{index}"),
+														TEXT("icon"), FNovaSpacecraft::GetModuleGroupIcon(Group.Type),
+														TEXT("index"), FText::AsNumber(Group.Index + 1)))
+						.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
+						+ SRichTextBlock::ImageDecorator()
 					]
 
-					+ SVerticalBox::Slot()
+					+ SHorizontalBox::Slot()
+					.Padding(Theme.ContentPadding)
+					.VAlign(VAlign_Center)
+					[
+						SNew(STextBlock)
+						.TextStyle(&Theme.MainFont)
+						.Text_Lambda([=]()
+						{
+							// Resource inputs
+							FString InputList;
+							for (const UNovaResource* Input : ProcessingSystem->GetInputResources(Group.Index))
+							{
+								InputList += InputList.Len() ? TEXT(", ") : FString();
+								InputList += Input->Name.ToString();
+							}
+
+							// Resource outputs
+							FString OutputList;
+							for (const UNovaResource* Output : ProcessingSystem->GetOutputResources(Group.Index))
+							{
+								OutputList += OutputList.Len() ? TEXT(", ") : FString();
+								OutputList += Output->Name.ToString();
+							}
+
+							// Final string
+							FText InputLine = InputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingInput", "Input resources: {list}"),
+								TEXT("list"), FText::FromString(InputList)) : FText();
+							FText OutputLine = OutputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingOutput", "Output resources: {list}"),
+								TEXT("list"), FText::FromString(OutputList)) : FText();
+							return FText::FromString(InputLine.ToString() + "\n" + OutputLine.ToString());
+						})
+					]
 				]
 			]
 		];

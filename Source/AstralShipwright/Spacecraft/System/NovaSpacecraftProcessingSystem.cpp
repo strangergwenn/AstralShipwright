@@ -19,31 +19,32 @@ UNovaSpacecraftProcessingSystem::UNovaSpacecraftProcessingSystem() : Super()
     System implementation
 ----------------------------------------------------*/
 
-void UNovaSpacecraftProcessingSystem::Load(const FNovaSpacecraft& Spacecraft)
+void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacecraft)
 {
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 
-	NLOG("UNovaSpacecraftProcessingSystem::Load");
+	NLOG("UNovaSpacecraftProcessingSystem::LoadInternal");
 
 	// Initialize processing groups with all unique descriptions
+	ProcessingGroupsStates.Empty();
 	for (const FNovaModuleGroup& Group : Spacecraft.GetModuleGroups())
 	{
 		// Find all processing modules
 		TArray<const UNovaProcessingModuleDescription*> ProcessingModules;
-		for (const auto& CompartmentModuleIndex : GetSpacecraft()->GetAllModules<UNovaProcessingModuleDescription>(Group))
+		for (const auto& CompartmentModuleIndex : Spacecraft.GetAllModules<UNovaProcessingModuleDescription>(Group))
 		{
 			const FNovaCompartment& Compartment = Spacecraft.Compartments[CompartmentModuleIndex.Key];
 			ProcessingModules.Add(Cast<UNovaProcessingModuleDescription>(Compartment.Modules[CompartmentModuleIndex.Value].Description));
 		}
 
 		// Merge modules into chains
-		TArray<FNovaSpacecraftProcessingSystemChainState> MergedProcessingModules;
+		TArray<FNovaSpacecraftProcessingSystemChainState> ProcessingChains;
 		for (auto It = ProcessingModules.CreateIterator(); It; ++It)
 		{
 			const UNovaProcessingModuleDescription* Module = *It;
 
 			// Find out whether an already merged chain has valid inputs that this modules provides as output, or vice versa
-			FNovaSpacecraftProcessingSystemChainState* ChainState = MergedProcessingModules.FindByPredicate(
+			FNovaSpacecraftProcessingSystemChainState* ChainState = ProcessingChains.FindByPredicate(
 				[Module](const FNovaSpacecraftProcessingSystemChainState& Chain)
 				{
 					for (const UNovaResource* Resource : Module->Inputs)
@@ -65,6 +66,7 @@ void UNovaSpacecraftProcessingSystem::Load(const FNovaSpacecraft& Spacecraft)
 					return false;
 				});
 
+			// Update the chain with the current module
 			if (ChainState)
 			{
 				ChainState->Modules.Add(Module);
@@ -94,36 +96,51 @@ void UNovaSpacecraftProcessingSystem::Load(const FNovaSpacecraft& Spacecraft)
 						ChainState->Inputs.Add(Resource);
 					}
 				}
-
-				It.RemoveCurrent();
-				continue;
 			}
+
+			// Else, add the module as a new chain
+			else
+			{
+				FNovaSpacecraftProcessingSystemChainState NewChainState;
+
+				NewChainState.Inputs         = Module->Inputs;
+				NewChainState.Outputs        = Module->Outputs;
+				NewChainState.ProcessingRate = Module->ProcessingRate;
+				NewChainState.Modules.Add(Module);
+
+				ProcessingChains.Add(NewChainState);
+			}
+
+			It.RemoveCurrent();
 		}
 
 		// Initialize the processing group and compute the processing rate
-		FNovaSpacecraftProcessingSystemGroupState GroupState;
-		for (FNovaSpacecraftProcessingSystemChainState& ChainState : MergedProcessingModules)
+		if (ProcessingChains.Num())
 		{
-			if (ChainState.Modules.Num())
+			FNovaSpacecraftProcessingSystemGroupState GroupState(Group.Index);
+			for (FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingChains)
 			{
-				NCHECK(ChainState.Inputs.Num());
-				NCHECK(ChainState.Outputs.Num());
-
-				ChainState.ProcessingRate = ChainState.Modules[0]->ProcessingRate;
-				for (const UNovaProcessingModuleDescription* Module : ChainState.Modules)
+				if (ChainState.Modules.Num())
 				{
-					ChainState.ProcessingRate = FMath::Min(ChainState.ProcessingRate, Module->ProcessingRate);
+					NCHECK(ChainState.Inputs.Num());
+					NCHECK(ChainState.Outputs.Num());
+
+					ChainState.ProcessingRate = ChainState.Modules[0]->ProcessingRate;
+					for (const UNovaProcessingModuleDescription* Module : ChainState.Modules)
+					{
+						ChainState.ProcessingRate = FMath::Min(ChainState.ProcessingRate, Module->ProcessingRate);
+					}
+
+					GroupState.Chains.Add(ChainState);
 				}
-
-				GroupState.Chains.Add(ChainState);
 			}
-		}
 
-		ProcessingGroupsStates.Add(GroupState);
+			ProcessingGroupsStates.Add(GroupState);
+		}
 	}
 
 	// Load all cargo from the spacecraft
-	RealtimeCompartments.SetNumUninitialized(GetSpacecraft()->Compartments.Num());
+	RealtimeCompartments.SetNum(Spacecraft.Compartments.Num());
 	for (int32 CompartmentIndex = 0; CompartmentIndex < RealtimeCompartments.Num(); CompartmentIndex++)
 	{
 		const FNovaCompartment& Compartment = Spacecraft.Compartments[CompartmentIndex];
@@ -161,8 +178,6 @@ void UNovaSpacecraftProcessingSystem::Save(FNovaSpacecraft& Spacecraft)
 	{
 		GroupState.Active = false;
 	}
-
-	RealtimeCompartments.Empty();
 }
 
 void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime FinalTime)
@@ -177,8 +192,8 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 		for (auto& ChainState : GroupState.Chains)
 		{
 			// Get required constants for each processing module entry
-			const FNovaModuleGroup&            Group             = Spacecraft->GetModuleGroups()[CurrentGroupIndex];
-			const TArray<TPair<int32, int32>>& GroupCargoModules = GetSpacecraft()->GetAllModules<UNovaCargoModuleDescription>(Group);
+			const FNovaModuleGroup&            Group             = Spacecraft->GetModuleGroups()[GroupState.GroupIndex];
+			const TArray<TPair<int32, int32>>& GroupCargoModules = Spacecraft->GetAllModules<UNovaCargoModuleDescription>(Group);
 			const TArray<const UNovaProcessingModuleDescription*> GroupProcessingModules = ChainState.Modules;
 
 			// Define processing targets
@@ -190,7 +205,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 			for (const auto& Indices : GroupCargoModules)
 			{
 				FNovaSpacecraftCargo& Cargo         = RealtimeCompartments[Indices.Key].Cargo[Indices.Value];
-				const float           CargoCapacity = GetSpacecraft()->GetCargoCapacity(Indices.Key, Indices.Value);
+				const float           CargoCapacity = Spacecraft->GetCargoCapacity(Indices.Key, Indices.Value);
 
 				// Valid resource input
 				if (Cargo.Resource && ChainState.Inputs.Contains(Cargo.Resource) && Cargo.Amount > 0)
@@ -207,37 +222,40 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 				}
 			}
 
-			// Start production based on input
-			if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Stopped ||
-				ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing)
+			if (!IsSpacecraftDocked())
 			{
-				ChainState.Status =
-					GroupState.Active ? ENovaSpacecraftProcessingSystemStatus::Processing : ENovaSpacecraftProcessingSystemStatus::Stopped;
-			}
-
-			// Cancel production when blocked
-			if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing &&
-				(CurrentInputs.Num() != ChainState.Inputs.Num() || CurrentOutputs.Num() != ChainState.Outputs.Num()))
-			{
-				ChainState.Status = ENovaSpacecraftProcessingSystemStatus::Blocked;
-				NLOG("UNovaSpacecraftProcessingSystem::Update : canceled production for group %d", CurrentGroupIndex);
-			}
-
-			// Proceed with processing
-			if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing)
-			{
-				float ResourceDelta = ChainState.ProcessingRate * (FinalTime - InitialTime).AsSeconds();
-				ResourceDelta       = FMath::Min(ResourceDelta, MinimumProcessingLeft);
-				NCHECK(ResourceDelta > 0);
-
-				for (FNovaSpacecraftCargo* Input : CurrentInputs)
+				// Start production based on input
+				if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Stopped ||
+					ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing)
 				{
-					Input->Amount -= ResourceDelta;
+					ChainState.Status = GroupState.Active ? ENovaSpacecraftProcessingSystemStatus::Processing
+					                                      : ENovaSpacecraftProcessingSystemStatus::Stopped;
 				}
 
-				for (FNovaSpacecraftCargo* Output : CurrentOutputs)
+				// Cancel production when blocked
+				if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing &&
+					(CurrentInputs.Num() != ChainState.Inputs.Num() || CurrentOutputs.Num() != ChainState.Outputs.Num()))
 				{
-					Output->Amount += ResourceDelta;
+					ChainState.Status = ENovaSpacecraftProcessingSystemStatus::Blocked;
+					NLOG("UNovaSpacecraftProcessingSystem::Update : canceled production for group %d", CurrentGroupIndex);
+				}
+
+				// Proceed with processing
+				if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing)
+				{
+					float ResourceDelta = ChainState.ProcessingRate * (FinalTime - InitialTime).AsSeconds();
+					ResourceDelta       = FMath::Min(ResourceDelta, MinimumProcessingLeft);
+					NCHECK(ResourceDelta > 0);
+
+					for (FNovaSpacecraftCargo* Input : CurrentInputs)
+					{
+						Input->Amount -= ResourceDelta;
+					}
+
+					for (FNovaSpacecraftCargo* Output : CurrentOutputs)
+					{
+						Output->Amount += ResourceDelta;
+					}
 				}
 			}
 		}

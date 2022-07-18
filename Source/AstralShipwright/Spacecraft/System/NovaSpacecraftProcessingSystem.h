@@ -64,6 +64,15 @@ struct FNovaSpacecraftProcessingSystemGroupState
 {
 	GENERATED_BODY();
 
+	FNovaSpacecraftProcessingSystemGroupState() : GroupIndex(-1), Active(false)
+	{}
+
+	FNovaSpacecraftProcessingSystemGroupState(int32 Index) : GroupIndex(Index), Active(false)
+	{}
+
+	UPROPERTY()
+	int32 GroupIndex;
+
 	UPROPERTY()
 	bool Active;
 
@@ -87,16 +96,33 @@ public:
 	    System implementation
 	----------------------------------------------------*/
 
-	virtual void Load(const FNovaSpacecraft& Spacecraft) override;
+	virtual void Load(const FNovaSpacecraft& Spacecraft) override
+	{
+		NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
+		LoadInternal(Spacecraft);
+	}
 
 	virtual void Save(FNovaSpacecraft& Spacecraft) override;
 
 	virtual void Update(FNovaTime InitialTime, FNovaTime FinalTime) override;
 
+	/** Pre-load this system with data so that we can observe it while docked */
+	void PreLoad(const FNovaSpacecraft& Spacecraft)
+	{
+		LoadInternal(Spacecraft);
+	}
+
 	/** Get the number of module groups that can support resource processing */
 	int32 GetProcessingGroupCount() const
 	{
 		return ProcessingGroupsStates.Num();
+	}
+
+	/** Get the module group for a specific processing group */
+	const FNovaModuleGroup& GetModuleGroup(int32 GroupIndex)
+	{
+		NCHECK(GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num());
+		return GetSpacecraft()->GetModuleGroups()[ProcessingGroupsStates[GroupIndex].GroupIndex];
 	}
 
 	/** Get input resources for a processing group */
@@ -178,6 +204,15 @@ public:
 			return RealtimeCompartments[CompartmentIndex].Cargo[ModuleIndex];
 		}
 	}
+
+	/*----------------------------------------------------
+	    Internal
+	----------------------------------------------------*/
+
+protected:
+
+	/** Pre-load this system with data so that we can observe it while docked */
+	void LoadInternal(const FNovaSpacecraft& Spacecraft);
 
 	/*----------------------------------------------------
 	    Data
