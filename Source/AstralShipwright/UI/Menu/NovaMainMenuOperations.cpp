@@ -513,13 +513,9 @@ void SNovaMainMenuOperations::Show()
 					.Padding(Theme.ContentPadding)
 					.VAlign(VAlign_Center)
 					[
-						SNew(SRichTextBlock)
-						.TextStyle(&Theme.InfoFont)
-						.Text(FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/>\n{index}"),
-														TEXT("icon"), FNovaSpacecraft::GetModuleGroupIcon(Group.Type),
-														TEXT("index"), FText::AsNumber(Group.Index + 1)))
-						.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
-						+ SRichTextBlock::ImageDecorator()
+						SNew(STextBlock)
+						.TextStyle(&Theme.HeadingFont)
+						.Text(FText::AsNumber(Group.Index + 1))
 					]
 
 					// TODO: status
@@ -562,11 +558,35 @@ void SNovaMainMenuOperations::Show()
 		// clang-format on
 	}
 
-	// TODO: message if no group found
+	// No group found
+	if (ProcessingSystem->GetProcessingGroupCount() == 0)
+	{
+		// clang-format off
+		ModuleGroupsBox->AddSlot()
+		.AutoHeight()
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.InfoFont)
+			.Text(LOCTEXT("NoModuleGroup", "This spacecraft doesn't have active module groups"))
+		];
+		// clang-format on
+	}
 
 	// TODO: equipment
 
-	// TODO: message if no equipment found
+	// No equipment found
+	if (true)
+	{
+		// clang-format off
+		EquipmentBox->AddSlot()
+		.AutoHeight()
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.InfoFont)
+			.Text(LOCTEXT("NoEquipment", "This spacecraft doesn't have active equipment"))
+		];
+		// clang-format on
+	}
 }
 
 void SNovaMainMenuOperations::Hide()
