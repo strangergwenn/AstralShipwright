@@ -477,7 +477,22 @@ void SNovaMainMenuOperations::Show()
 				{
 					return ProcessingSystem->IsProcessingGroupActive(Group.Index) ? LOCTEXT("StopProcessing", "Stop") : LOCTEXT("StartProcessing", "Start");
 				})
-				.HelpText(LOCTEXT("ProcessingHelp", "Toggle activity for this module group"))
+				.HelpText_Lambda([=]()
+				{
+					auto Status = ProcessingSystem->GetProcessingGroupStatus(Group.Index);
+					if (Status.Num() == 0)
+					{
+						return LOCTEXT("ProcessingNoneHelp", "This module group doesn't have a valid configuration");
+					}
+					else if (Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked))
+					{
+						return LOCTEXT("ProcessingDockedHelp", "Modules cannot be activated while docked");
+					}
+					else
+					{
+						return LOCTEXT("ProcessingHelp", "Toggle activity for this module group");
+					}
+				})
 				.Enabled_Lambda([=]()
 				{
 					auto Status = ProcessingSystem->GetProcessingGroupStatus(Group.Index);

@@ -222,7 +222,11 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 				}
 			}
 
-			if (!IsSpacecraftDocked())
+			if (IsSpacecraftDocked())
+			{
+				ChainState.Status = ENovaSpacecraftProcessingSystemStatus::Docked;
+			}
+			else
 			{
 				// Start production based on input
 				if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Stopped ||
