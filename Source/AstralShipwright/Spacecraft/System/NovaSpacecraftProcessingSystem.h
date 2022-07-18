@@ -65,6 +65,9 @@ struct FNovaSpacecraftProcessingSystemGroupState
 	GENERATED_BODY();
 
 	UPROPERTY()
+	bool Active;
+
+	UPROPERTY()
 	TArray<FNovaSpacecraftProcessingSystemChainState> Chains;
 };
 
@@ -99,12 +102,14 @@ public:
 	/** Get input resources for a processing group */
 	TArray<const class UNovaResource*> GetInputResources(int32 GroupIndex) const
 	{
-		NCHECK(GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num());
-
 		TArray<const class UNovaResource*> Result;
-		for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[GroupIndex].Chains)
+
+		if (GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num())
 		{
-			Result.Append(ChainState.Inputs);
+			for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[GroupIndex].Chains)
+			{
+				Result.Append(ChainState.Inputs);
+			}
 		}
 
 		return Result;
@@ -113,26 +118,52 @@ public:
 	/** Get output resources for a processing group */
 	TArray<const class UNovaResource*> GetOutputResources(int32 GroupIndex) const
 	{
-		NCHECK(GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num());
-
 		TArray<const class UNovaResource*> Result;
-		for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[GroupIndex].Chains)
+
+		if (GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num())
 		{
-			Result.Append(ChainState.Outputs);
+			for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[GroupIndex].Chains)
+			{
+				Result.Append(ChainState.Outputs);
+			}
 		}
 
 		return Result;
 	}
 
-	/** Get the current processing status for a processing group */
-	/*ENovaSpacecraftProcessingSystemStatus GetProcessingGroupStatus(int32 GroupIndex) const
+	/** Get the current processing status for each chain of a processing group */
+	TArray<ENovaSpacecraftProcessingSystemStatus> GetProcessingGroupStatus(int32 GroupIndex) const
 	{
-	    NCHECK(GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num());
-	    return ProcessingGroupsStates[GroupIndex].Status;
-	}*/
+		TArray<ENovaSpacecraftProcessingSystemStatus> Result;
+
+		if (GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num())
+		{
+			for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[GroupIndex].Chains)
+			{
+				Result.Add(ChainState.Status);
+			}
+		}
+
+		return Result;
+	}
 
 	/** Set the active state for a processing group */
-	void SetProcessingGroupActive(int32 GroupIndex, bool Active);
+	void SetProcessingGroupActive(int32 GroupIndex, bool Active)
+	{
+		NCHECK(GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num());
+		ProcessingGroupsStates[GroupIndex].Active = Active;
+	}
+
+	/** Check the active state for a processing group */
+	bool IsProcessingGroupActive(int32 GroupIndex)
+	{
+		if (GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num())
+		{
+			return ProcessingGroupsStates[GroupIndex].Active;
+		}
+
+		return false;
+	}
 
 	/** Get the real-time cargo state for a specific module slot */
 	const FNovaSpacecraftCargo& GetCargo(int32 CompartmentIndex, int32 ModuleIndex) const
@@ -147,11 +178,6 @@ public:
 			return RealtimeCompartments[CompartmentIndex].Cargo[ModuleIndex];
 		}
 	}
-
-	/*----------------------------------------------------
-	    Internal
-	----------------------------------------------------*/
-protected:
 
 	/*----------------------------------------------------
 	    Data

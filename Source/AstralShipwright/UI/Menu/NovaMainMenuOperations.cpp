@@ -42,167 +42,240 @@ SNovaMainMenuOperations::SNovaMainMenuOperations()
 void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 {
 	// Data
-	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
-	MenuManager                    = InArgs._MenuManager;
+	const FNeutronMainTheme& Theme     = FNeutronStyleSet::GetMainTheme();
+	const int32              FullWidth = ENovaConstants::MaxCompartmentCount * FNeutronStyleSet::GetButtonSize("InventoryButtonSize").Width;
+	MenuManager                        = InArgs._MenuManager;
 
 	// Parent constructor
 	SNeutronNavigationPanel::Construct(SNeutronNavigationPanel::FArguments().Menu(InArgs._Menu));
 
 	// Local data
-	TSharedPtr<SScrollBox> MainLayoutBox;
+	TSharedPtr<SVerticalBox> CompartmentBox;
 
 	// clang-format off
 	ChildSlot
-	.HAlign(HAlign_Center)
 	[
-		SAssignNew(MainLayoutBox, SScrollBox)
+		SNew(SScrollBox)
 		.Style(&Theme.ScrollBoxStyle)
 		.ScrollBarVisibility(EVisibility::Collapsed)
 		.AnimateWheelScrolling(true)
 		
-		// Bulk trading title
+		// Bulk trading
 		+ SScrollBox::Slot()
+		.HAlign(HAlign_Center)
 		.Padding(Theme.VerticalContentPadding)
 		[
-			SNew(STextBlock)
-			.TextStyle(&Theme.HeadingFont)
-			.Text(LOCTEXT("BatchTrade", "Batch trading"))
-		]
-
-		// Bulk trading box
-		+ SScrollBox::Slot()
-		[
-			SNew(SHorizontalBox)
-
-			// Batch buying
-			+ SHorizontalBox::Slot()
-			.AutoWidth()
+			SNew(SBox)
+			.MinDesiredWidth(FullWidth)
+			.HAlign(HAlign_Fill)
 			[
-				SNeutronNew(SNeutronButton)
-				.Text(LOCTEXT("BulkBuy", "Bulk buy"))
-				.HelpText(LOCTEXT("BulkBuyHelp", "Bulk buy resources across all compartments"))
-				.Enabled(this, &SNovaMainMenuOperations::IsBulkTradeEnabled)
-				.OnClicked(this, &SNovaMainMenuOperations::OnBatchBuy)
-				.Size("HighButtonSize")
-			]
-
-			// Batch selling
-			+ SHorizontalBox::Slot()
-			.AutoWidth()
-			[
-				SNeutronNew(SNeutronButton)
-				.Text(LOCTEXT("BulkSell", "Bulk sell"))
-				.HelpText(LOCTEXT("BulkSellHelp", "Bulk sell resources across all compartments"))
-				.Enabled(this, &SNovaMainMenuOperations::IsBulkTradeEnabled)
-				.OnClicked(this, &SNovaMainMenuOperations::OnBatchSell)
-				.Size("HighButtonSize")
-			]
-
-			// Propellant data
-			+ SHorizontalBox::Slot()
-			[
-				SNew(SNeutronButtonLayout)
-				.Size("HighButtonSize")
+				SNew(SVerticalBox)
+				
+				// Bulk trading title
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.HAlign(HAlign_Left)
 				[
-					SNew(SVerticalBox)
-
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.Padding(Theme.VerticalContentPadding)
-					[
-						SNew(STextBlock)
-						.TextStyle(&Theme.HeadingFont)
-						.Text(LOCTEXT("Propellant", "Propellant"))
-					]
-
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.Padding(Theme.VerticalContentPadding)
-					.HAlign(HAlign_Left)
-					[
-						SNew(SNeutronRichText)
-						.TextStyle(&Theme.MainFont)
-						.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuOperations::GetPropellantText))
-					]
-
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					[
-						SNew(SProgressBar)
-						.Style(&Theme.ProgressBarStyle)
-						.Percent(this, &SNovaMainMenuOperations::GetPropellantRatio)
-					]
-
-					+ SVerticalBox::Slot()
+					SNew(STextBlock)
+					.TextStyle(&Theme.HeadingFont)
+					.Text(LOCTEXT("BatchTrade", "Batch trading"))
 				]
-			]
-			
-			// Propellant button
-			+ SHorizontalBox::Slot()
-			.AutoWidth()
-			[
-				SNeutronNew(SNeutronButton)
-				.HelpText(LOCTEXT("TradePropellantHelp", "Trade propellant with this station"))
-				.Action(FNeutronPlayerInput::MenuPrimary)
-				.ActionFocusable(false)
-				.Size("HighButtonSize")
-				.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
-				{
-					return SpacecraftPawn && SpacecraftPawn->IsDocked() && !SpacecraftPawn->HasModifications();
-				})))
-				.OnClicked(this, &SNovaMainMenuOperations::OnRefillPropellant)
-				.Content()
+
+				// Bulk trading box
+				+ SVerticalBox::Slot()
+				.AutoHeight()
 				[
-					SNew(SOverlay)
-						
-					+ SOverlay::Slot()
+					SNew(SHorizontalBox)
+
+					// Batch buying
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
 					[
-						SNew(SScaleBox)
-						.Stretch(EStretch::ScaleToFill)
+						SNeutronNew(SNeutronButton)
+						.Text(LOCTEXT("BulkBuy", "Bulk buy"))
+						.HelpText(LOCTEXT("BulkBuyHelp", "Bulk buy resources across all compartments"))
+						.Enabled(this, &SNovaMainMenuOperations::IsBulkTradeEnabled)
+						.OnClicked(this, &SNovaMainMenuOperations::OnBatchBuy)
+						.Size("HighButtonSize")
+					]
+
+					// Batch selling
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNeutronNew(SNeutronButton)
+						.Text(LOCTEXT("BulkSell", "Bulk sell"))
+						.HelpText(LOCTEXT("BulkSellHelp", "Bulk sell resources across all compartments"))
+						.Enabled(this, &SNovaMainMenuOperations::IsBulkTradeEnabled)
+						.OnClicked(this, &SNovaMainMenuOperations::OnBatchSell)
+						.Size("HighButtonSize")
+					]
+
+					// Propellant data
+					+ SHorizontalBox::Slot()
+					[
+						SNew(SNeutronButtonLayout)
+						.Size("HighButtonSize")
 						[
-							SNew(SImage)
-							.Image(&UNovaResource::GetPropellant()->AssetRender)
+							SNew(SVerticalBox)
+
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							.Padding(Theme.VerticalContentPadding)
+							[
+								SNew(STextBlock)
+								.TextStyle(&Theme.HeadingFont)
+								.Text(LOCTEXT("Propellant", "Propellant"))
+							]
+
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							.Padding(Theme.VerticalContentPadding)
+							.HAlign(HAlign_Left)
+							[
+								SNew(SNeutronRichText)
+								.TextStyle(&Theme.MainFont)
+								.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuOperations::GetPropellantText))
+							]
+
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNew(SProgressBar)
+								.Style(&Theme.ProgressBarStyle)
+								.Percent(this, &SNovaMainMenuOperations::GetPropellantRatio)
+							]
+
+							+ SVerticalBox::Slot()
 						]
 					]
-
-					+ SOverlay::Slot()
-					.VAlign(VAlign_Top)
+			
+					// Propellant button
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
 					[
-						SNew(SBorder)
-						.BorderImage(&Theme.MainMenuDarkBackground)
-						.Padding(Theme.ContentPadding)
+						SNeutronNew(SNeutronButton)
+						.HelpText(LOCTEXT("TradePropellantHelp", "Trade propellant with this station"))
+						.Action(FNeutronPlayerInput::MenuPrimary)
+						.ActionFocusable(false)
+						.Size("HighButtonSize")
+						.Enabled_Lambda([=]()
+						{
+							return SpacecraftPawn && SpacecraftPawn->IsDocked() && !SpacecraftPawn->HasModifications();
+						})
+						.OnClicked(this, &SNovaMainMenuOperations::OnRefillPropellant)
+						.Content()
 						[
-							SNew(STextBlock)
-							.TextStyle(&Theme.MainFont)
-							.Text(LOCTEXT("TradePropellant", "Trade propellant"))
+							SNew(SOverlay)
+						
+							+ SOverlay::Slot()
+							[
+								SNew(SScaleBox)
+								.Stretch(EStretch::ScaleToFill)
+								[
+									SNew(SImage)
+									.Image(&UNovaResource::GetPropellant()->AssetRender)
+								]
+							]
+
+							+ SOverlay::Slot()
+							.VAlign(VAlign_Top)
+							[
+								SNew(SBorder)
+								.BorderImage(&Theme.MainMenuDarkBackground)
+								.Padding(Theme.ContentPadding)
+								[
+									SNew(STextBlock)
+									.TextStyle(&Theme.MainFont)
+									.Text(LOCTEXT("TradePropellant", "Trade propellant"))
+								]
+							]
 						]
 					]
 				]
 			]
 		]
 		
-		// Module group controls
+		// Module groups & equipment
 		+ SScrollBox::Slot()
 		.Padding(Theme.VerticalContentPadding)
 		[
-			SNew(STextBlock)
-			.TextStyle(&Theme.HeadingFont)
-			.Text(LOCTEXT("ModuleGroupsTitle", "Module groups"))
-		]
+			SNew(SBorder)
+			.BorderImage(&Theme.MainMenuGenericBorder)
+			.HAlign(HAlign_Center)
+			[
+				SNew(SHorizontalBox)
 
-		// module groups
-		+ SScrollBox::Slot()
-		[
-			SAssignNew(ModuleGroupsBox, SVerticalBox)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SBox)
+					.MinDesiredWidth(FullWidth / 2)
+					[
+						SNew(SVerticalBox)
+		
+						// Module groups title
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(Theme.VerticalContentPadding)
+						[
+							SNew(STextBlock)
+							.TextStyle(&Theme.HeadingFont)
+							.Text(LOCTEXT("ModuleGroupsTitle", "Module groups"))
+						]
+
+						// Module groups controls
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SAssignNew(ModuleGroupsBox, SVerticalBox)
+						]
+					]
+				]
+
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SBox)
+					.MinDesiredWidth(FullWidth / 2)
+					[
+						SNew(SVerticalBox)
+		
+						// Equipment title
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(Theme.VerticalContentPadding)
+						[
+							SNew(STextBlock)
+							.TextStyle(&Theme.HeadingFont)
+							.Text(LOCTEXT("EquipmentTitle", "Equipment"))
+						]
+
+						// Equipment controls
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SAssignNew(EquipmentBox, SVerticalBox)
+						]
+					]
+				]
+			]
 		]
 
 		// Compartments title
 		+ SScrollBox::Slot()
 		.Padding(Theme.VerticalContentPadding)
+		.HAlign(HAlign_Center)
 		[
-			SNew(STextBlock)
-			.TextStyle(&Theme.HeadingFont)
-			.Text(LOCTEXT("CompartmentsTitle", "Compartments"))
+			SAssignNew(CompartmentBox, SVerticalBox)
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.TextStyle(&Theme.HeadingFont)
+				.Text(LOCTEXT("CompartmentsTitle", "Compartments"))
+			]
 		]
 	];
 
@@ -210,7 +283,7 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 	auto BuildModuleLine = [&](int32 ModuleIndex)
 	{
 		TSharedPtr<SHorizontalBox> ModuleLineBox;
-		MainLayoutBox->AddSlot()
+		CompartmentBox->AddSlot()
 		[
 			SAssignNew(ModuleLineBox, SHorizontalBox)
 		];
@@ -282,7 +355,7 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 						.AutoHeight()
 						[
 							SNew(SBorder)
-							.ColorAndOpacity(TAttribute<FLinearColor>::Create(TAttribute<FLinearColor>::FGetter::CreateLambda([=]()
+							.ColorAndOpacity_Lambda([=]()
 							{
 								if (IsValidModule(CompartmentIndex, ModuleIndex))
 								{
@@ -294,10 +367,10 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 								}
 
 								return FLinearColor::White;
-							})))
+							})
 							.BorderImage(&Theme.MainMenuGenericBackground)
 							.Padding(Theme.ContentPadding)
-							.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([=]()
+							.Visibility_Lambda([=]()
 							{
 								if (IsValidModule(CompartmentIndex, ModuleIndex))
 								{
@@ -305,7 +378,7 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 								}
 
 								return EVisibility::Collapsed;
-							})))
+							})
 							[
 								SNew(SNeutronRichText)
 								.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
@@ -381,6 +454,7 @@ void SNovaMainMenuOperations::Show()
 	NCHECK(Spacecraft);
 	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
 
+	// Add module groups
 	for (const FNovaModuleGroup& Group : Spacecraft->GetModuleGroups())
 	{
 		// TODO get resources, if output...
@@ -395,22 +469,87 @@ void SNovaMainMenuOperations::Show()
 			.AutoWidth()
 			[
 				SNeutronNew(SNeutronButton)
+				.Size("HalfButtonSize")
+				.Toggle(true)
+				.Text_Lambda([=]()
+				{
+					return ProcessingSystem->IsProcessingGroupActive(Group.Index) ? LOCTEXT("StopProcessing", "Stop") : LOCTEXT("StartProcessing", "Start");
+				})
+				.HelpText(LOCTEXT("ProcessingHelp", "Toggle activity for this module group"))
+				.Enabled_Lambda([=]()
+				{
+					auto Status = ProcessingSystem->GetProcessingGroupStatus(Group.Index);
+					return Status.Num() && !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked);
+				})
 			]
 
 			+ SHorizontalBox::Slot()
 			.AutoWidth()
 			[
-				SNew(SRichTextBlock)
-				.TextStyle(&Theme.MainFont)
-				.Text(FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/> {index}"),
-												TEXT("icon"), FNovaSpacecraft::GetModuleGroupIcon(Group.Type),
-												TEXT("index"), FText::AsNumber(Group.Index + 1)))
-				.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
-				+ SRichTextBlock::ImageDecorator()
+				SNew(SNeutronButtonLayout)
+				.Size("OperationsButtonSize")
+				[
+					SNew(SVerticalBox)
+
+					+ SVerticalBox::Slot()
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(SHorizontalBox)
+
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(SRichTextBlock)
+							.TextStyle(&Theme.InfoFont)
+							.Text(FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/>\n{index}"),
+															TEXT("icon"), FNovaSpacecraft::GetModuleGroupIcon(Group.Type),
+															TEXT("index"), FText::AsNumber(Group.Index + 1)))
+							.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
+							+ SRichTextBlock::ImageDecorator()
+						]
+
+						+ SHorizontalBox::Slot()
+						[
+							SNew(STextBlock)
+							.TextStyle(&Theme.MainFont)
+							.Text_Lambda([=]()
+							{
+								// Resource inputs
+								FString InputList;
+								for (const UNovaResource* Input : ProcessingSystem->GetInputResources(Group.Index))
+								{
+									InputList += InputList.Len() ? TEXT(", ") : FString();
+									InputList += Input->Name.ToString();
+								}
+
+								// Resource outputs
+								FString OutputList;
+								for (const UNovaResource* Output : ProcessingSystem->GetOutputResources(Group.Index))
+								{
+									OutputList += OutputList.Len() ? TEXT(", ") : FString();
+									OutputList += Output->Name.ToString();
+								}
+
+								// Final string
+								FText InputLine = InputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingInput", "Input resources: {list}"),
+									TEXT("list"), FText::FromString(InputList)) : FText();
+								FText OutputLine = OutputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingOutput", "Output resources: {list}"),
+									TEXT("list"), FText::FromString(OutputList)) : FText();
+								return FText::FromString(InputLine.ToString() + "\n" + OutputLine.ToString());
+							})
+						]
+					]
+
+					+ SVerticalBox::Slot()
+				]
 			]
 		];
 		// clang-format on
 	}
+
+	// TODO: equipment
 }
 
 void SNovaMainMenuOperations::Hide()
@@ -418,6 +557,7 @@ void SNovaMainMenuOperations::Hide()
 	SNeutronTabPanel::Hide();
 
 	ModuleGroupsBox->ClearChildren();
+	EquipmentBox->ClearChildren();
 }
 
 void SNovaMainMenuOperations::UpdateGameObjects()

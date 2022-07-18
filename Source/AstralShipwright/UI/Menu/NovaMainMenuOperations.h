@@ -117,4 +117,5 @@ protected:
 	TSharedPtr<class SNeutronModalPanel> GenericModalPanel;
 	TSharedPtr<class SNovaTradingPanel>  TradingModalPanel;
 	TSharedPtr<class SVerticalBox>       ModuleGroupsBox;
+	TSharedPtr<class SVerticalBox>       EquipmentBox;
 };

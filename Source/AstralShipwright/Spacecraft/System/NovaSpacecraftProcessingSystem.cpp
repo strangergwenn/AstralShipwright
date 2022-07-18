@@ -156,6 +156,12 @@ void UNovaSpacecraftProcessingSystem::Save(FNovaSpacecraft& Spacecraft)
 		}
 	}
 
+	// Shutdown production
+	for (auto& GroupState : ProcessingGroupsStates)
+	{
+		GroupState.Active = false;
+	}
+
 	RealtimeCompartments.Empty();
 }
 
@@ -201,6 +207,14 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 				}
 			}
 
+			// Start production based on input
+			if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Stopped ||
+				ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing)
+			{
+				ChainState.Status =
+					GroupState.Active ? ENovaSpacecraftProcessingSystemStatus::Processing : ENovaSpacecraftProcessingSystemStatus::Stopped;
+			}
+
 			// Cancel production when blocked
 			if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing &&
 				(CurrentInputs.Num() != ChainState.Inputs.Num() || CurrentOutputs.Num() != ChainState.Outputs.Num()))
@@ -229,20 +243,6 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 		}
 
 		CurrentGroupIndex++;
-	}
-}
-
-void UNovaSpacecraftProcessingSystem::SetProcessingGroupActive(int32 GroupIndex, bool Active)
-{
-	NCHECK(GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num());
-
-	for (FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[GroupIndex].Chains)
-	{
-		bool StateBlocked = ChainState.Status != ENovaSpacecraftProcessingSystemStatus::Blocked ||
-		                    ChainState.Status != ENovaSpacecraftProcessingSystemStatus::Docked;
-
-		ChainState.Status =
-			(Active && !StateBlocked) ? ENovaSpacecraftProcessingSystemStatus::Processing : ENovaSpacecraftProcessingSystemStatus::Stopped;
 	}
 }
 
