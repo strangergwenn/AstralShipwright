@@ -117,7 +117,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 						.BorderBackgroundColor(this, &SNovaTrajectoryCalculator::GetBorderColor)
 						[
 							SNew(SComplexGradient)
-							.GradientColors(TAttribute<TArray<FLinearColor>>::Create(TAttribute<TArray<FLinearColor>>::FGetter::CreateSP(this, &SNovaTrajectoryCalculator::GetDeltaVGradient)))
+							.GradientColors_Raw(this, &SNovaTrajectoryCalculator::GetDeltaVGradient)
 						]
 					]
 				]
@@ -134,7 +134,7 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 						.BorderBackgroundColor(this, &SNovaTrajectoryCalculator::GetBorderColor)
 						[
 							SNew(SComplexGradient)
-							.GradientColors(TAttribute<TArray<FLinearColor>>::Create(TAttribute<TArray<FLinearColor>>::FGetter::CreateSP(this, &SNovaTrajectoryCalculator::GetDurationGradient)))
+							.GradientColors_Raw(this, &SNovaTrajectoryCalculator::GetDurationGradient)
 						]
 					]
 				]

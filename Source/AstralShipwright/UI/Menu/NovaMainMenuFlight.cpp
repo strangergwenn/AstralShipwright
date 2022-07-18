@@ -128,14 +128,14 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		.HAlign(HAlign_Center)
 		[
 			SNew(SBackgroundBlur)
-			.BlurRadius(TAttribute<TOptional<int32>>::Create(TAttribute<TOptional<int32>>::FGetter::CreateLambda([=]()
+			.BlurRadius_Lambda([=]()
 			{
 				return CurrentAlpha * HUDPanel->GetBlurRadius().Get(0);
-			})))
-			.BlurStrength(TAttribute<float>::Create(TAttribute<float>::FGetter::CreateLambda([=]()
+			})
+			.BlurStrength_Lambda([=]()
 			{
 				return CurrentAlpha * HUDPanel->GetBlurStrength();
-			})))
+			})
 			.bApplyAlphaToBlur(true)
 			.Padding(0)
 			[
@@ -258,10 +258,10 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.Text(this, &SNovaMainMenuFlight::GetDockUndockText)
 			.HelpText(this, &SNovaMainMenuFlight::GetDockUndockHelp)
 			.OnClicked(this, &SNovaMainMenuFlight::OnDockUndock)
-			.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+			.Enabled_Lambda([=]()
 			{
 				return CanDockUndock();
-			})))
+			})
 		];
 
 	AttitudeHUD.DefaultFocus = DockButton;
@@ -272,10 +272,10 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 
 	SAssignNew(HomeHUD.OverviewWidget, STextBlock)
 		.TextStyle(&Theme.InfoFont)
-		.Text(TAttribute<FText>::Create(TAttribute<FText>::FGetter::CreateLambda([=]()
+		.Text_Lambda([=]()
 		{
 			return SpacecraftPawn ? SpacecraftPawn->GetSpacecraftCopy().GetName() : FText();
-		})));
+		});
 
 	SAssignNew(HomeHUD.DetailedWidget, SVerticalBox)
 
@@ -322,10 +322,10 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			{
 				OrbitalSimulation->AbortTrajectory(GameState->GetPlayerSpacecraftIdentifiers());
 			}))
-			.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+			.Enabled_Lambda([=]()
 			{
 				return OrbitalSimulation && GameState && OrbitalSimulation->IsOnTrajectory(GameState->GetPlayerSpacecraftIdentifier());
-			})))
+			})
 		]
 		
 		+ SVerticalBox::Slot()
@@ -354,7 +354,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 					}
 				}
 			}))
-			.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+			.Enabled_Lambda([=]()
 			{
 				if (IsValid(SpacecraftPawn))
 				{
@@ -365,7 +365,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 				{
 					return false;
 				}
-			})))
+			})
 		]
 		
 		/*+ SVerticalBox::Slot()
@@ -388,14 +388,14 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			SNeutronNew(SNeutronButton)
 			.Text(LOCTEXT("TimeDilation", "Disable time dilation"))
 			.HelpText(LOCTEXT("TimeDilationHelp", "Set time dilation to zero"))
-			.OnClicked(FSimpleDelegate::CreateLambda([this]()
+			.OnClicked_Lambda([this]()
 			{
 				GameState->SetTimeDilation(ENovaTimeDilation::Normal);
-			}))
-			.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+			})
+			.Enabled_Lambda([=]()
 			{
 				return GameState && GameState->CanDilateTime(ENovaTimeDilation::Normal);
-			})))
+			})
 		]
 		
 		+ SVerticalBox::Slot()
@@ -404,15 +404,15 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			SNeutronNew(SNeutronButton)
 			.Text(LOCTEXT("TimeDilation1", "Time dilation 1"))
 			.HelpText(LOCTEXT("TimeDilation1Help", "Set time dilation to 1 (1s = 1m)"))
-			.OnClicked(FSimpleDelegate::CreateLambda([this]()
+			.OnClicked_Lambda([this]()
 			{
 				GameState->SetTimeDilation(ENovaTimeDilation::Level1);
-			}))
-			.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+			})
+			.Enabled_Lambda([=]()
 			{
 				const ANovaGameState* GameState = MenuManager->GetWorld()->GetGameState<ANovaGameState>();
 				return GameState && GameState->CanDilateTime(ENovaTimeDilation::Level1);
-			})))
+			})
 		]
 		
 		+ SVerticalBox::Slot()
@@ -421,14 +421,14 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			SNeutronNew(SNeutronButton)
 			.Text(LOCTEXT("TimeDilation2", "Time dilation 2"))
 			.HelpText(LOCTEXT("TimeDilation2Help", "Set time dilation to 2 (1s = 20m)"))
-			.OnClicked(FSimpleDelegate::CreateLambda([this]()
+			.OnClicked_Lambda([this]()
 			{
 				GameState->SetTimeDilation(ENovaTimeDilation::Level2);
-			}))
-			.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([&]()
+			})
+			.Enabled_Lambda([=]()
 			{
 				return GameState && GameState->CanDilateTime(ENovaTimeDilation::Level2);
-			})))
+			})
 		]
 
 		+ SVerticalBox::Slot()
@@ -496,10 +496,10 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			{
 				return HUDAnimation.GetAlpha(HUDIndex);
 			}))
-			.Enabled(TAttribute<bool>::Create(TAttribute<bool>::FGetter::CreateLambda([=]()
+			.Enabled_Lambda([=]()
 			{
 				return HUDIndex != CurrentHUDIndex;
-			})))
+			})
 			.Content()
 			[
 				SNew(SBox)

@@ -500,10 +500,10 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 		[
 			SAssignNew(OrbitalMap, SNovaOrbitalMap)
 			.MenuManager(MenuManager)
-			.CurrentAlpha(TAttribute<float>::Create(TAttribute<float>::FGetter::CreateLambda([=]()
+			.CurrentAlpha_Lambda([this]()
 			{
 				return CurrentAlpha;
-			})))
+			})
 		]
 
 		// Main box
@@ -535,10 +535,10 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 							SNew(SBorder)
 							.BorderImage(new FSlateNoResource)
 							.Padding(Theme.VerticalContentPadding)
-							.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([=]()
+							.Visibility_Lambda([=]()
 							{
 								return DestinationTitle->GetText().IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible;
-							})))
+							})
 							[
 								SAssignNew(DestinationTitle, STextBlock)
 								.TextStyle(&Theme.HeadingFont)
@@ -562,10 +562,10 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 						SNew(SBorder)
 						.BorderImage(new FSlateNoResource)
 						.Padding(Theme.VerticalContentPadding)
-						.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([=]()
+						.Visibility_Lambda([=]()
 						{
 							return DestinationDescription->GetText().IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible;
-						})))
+						})
 						[
 							SAssignNew(DestinationDescription, SRichTextBlock)
 							.TextStyle(&Theme.MainFont)
@@ -581,10 +581,10 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 						.MenuManager(MenuManager)
 						.Panel(this)
 						.FadeTime(0.0f)
-						.CurrentAlpha(TAttribute<float>::Create(TAttribute<float>::FGetter::CreateLambda([=]()
+						.CurrentAlpha_Lambda([=]()
 						{
 							return SidePanelContainer->GetCurrentAlpha();
-						})))
+						})
 						.DeltaVActionName(FNeutronPlayerInput::MenuPrimary)
 						.DurationActionName(FNeutronPlayerInput::MenuSecondary)
 						.OnTrajectoryChanged(this, &SNovaMainMenuNavigation::OnTrajectoryChanged)

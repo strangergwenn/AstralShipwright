@@ -1170,7 +1170,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 					.AutoHeight()
 					[
 						SNew(SBorder)
-						.ColorAndOpacity(TAttribute<FLinearColor>::Create(TAttribute<FLinearColor>::FGetter::CreateLambda([=]()
+						.ColorAndOpacity_Lambda([=]()
 						{
 							const FNovaCompartment* Compartment = GetEditedCompartment();
 							if (Compartment && IsValid(Compartment->Description) && ModuleIndex < Compartment->Description->ModuleSlots.Num() && IsValid(Compartment->Modules[ModuleIndex].Description))
@@ -1183,10 +1183,10 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							}
 
 							return FLinearColor::White;
-						})))
+						})
 						.BorderImage(&Theme.MainMenuGenericBackground)
 						.Padding(Theme.ContentPadding)
-						.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([=]()
+						.Visibility_Lambda([=]()
 						{
 							const FNovaCompartment* Compartment = GetEditedCompartment();
 							if (Compartment && IsValid(Compartment->Description) && ModuleIndex < Compartment->Description->ModuleSlots.Num() && IsValid(Compartment->Modules[ModuleIndex].Description))
@@ -1195,7 +1195,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							}
 
 							return EVisibility::Collapsed;
-						})))
+						})
 						[
 							SNew(SNeutronRichText)
 							.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
@@ -1312,7 +1312,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						SNew(SBorder)
 						.BorderImage(&Theme.MainMenuGenericBackground)
 						.Padding(Theme.ContentPadding)
-						.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([=]()
+						.Visibility_Lambda([=]()
 						{
 							const FNovaCompartment* Compartment = GetEditedCompartment();
 							if (Compartment && IsValid(Compartment->Description) && EquipmentIndex < Compartment->Description->EquipmentSlots.Num())
@@ -1325,7 +1325,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							}
 
 							return EVisibility::Collapsed;
-						})))
+						})
 						[
 							SNew(SNeutronRichText)
 							.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
@@ -1844,11 +1844,11 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateModuleItem(const UNovaModuleD
 	    .DefaultAsset(UNeutronAssetManager::Get()->GetDefaultAsset<UNovaModuleDescription>())
 	    .GameState(GameState)
 	    .NoPriceHint(true)
-	    .SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
+	    .SelectionIcon_Lambda(
 			[=]()
 			{
 				return ModuleListView->GetSelectionIcon(Module);
-			})));
+			});
 }
 
 FText SNovaMainMenuAssembly::GetModuleListTitle(const UNovaModuleDescription* Module) const
@@ -1901,11 +1901,11 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateEquipmentItem(const UNovaEqui
 	    .DefaultAsset(UNeutronAssetManager::Get()->GetDefaultAsset<UNovaEquipmentDescription>())
 	    .GameState(GameState)
 	    .NoPriceHint(true)
-	    .SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
+	    .SelectionIcon_Lambda(
 			[=]()
 			{
 				return EquipmentListView->GetSelectionIcon(Equipment);
-			})));
+			});
 }
 
 FText SNovaMainMenuAssembly::GetEquipmentListTitle(const UNovaEquipmentDescription* Equipment) const
@@ -1937,11 +1937,11 @@ TSharedRef<SWidget> SNovaMainMenuAssembly::GenerateHullTypeItem(const UNovaHullD
 	    .DefaultAsset(UNeutronAssetManager::Get()->GetDefaultAsset<UNovaHullDescription>())
 	    .GameState(GameState)
 	    .NoPriceHint(true)
-	    .SelectionIcon(TAttribute<const FSlateBrush*>::Create(TAttribute<const FSlateBrush*>::FGetter::CreateLambda(
+	    .SelectionIcon_Lambda(
 			[=]()
 			{
 				return HullTypeListView->GetSelectionIcon(Hull);
-			})));
+			});
 }
 
 FText SNovaMainMenuAssembly::GetHullTypeListTitle(const UNovaHullDescription* Hull) const
