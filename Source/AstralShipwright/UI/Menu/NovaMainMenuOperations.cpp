@@ -461,6 +461,8 @@ void SNovaMainMenuOperations::Show()
 	{
 		const FNovaModuleGroup& Group = ProcessingSystem->GetModuleGroup(ProcessingGroupIndex);
 
+		TSharedPtr<SHorizontalBox> StatusBox;
+
 		// clang-format off
 		ModuleGroupsBox->AddSlot()
 		.AutoHeight()
@@ -518,7 +520,12 @@ void SNovaMainMenuOperations::Show()
 						.Text(FText::AsNumber(Group.Index + 1))
 					]
 
-					// TODO: status
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.VAlign(VAlign_Center)
+					[
+						SAssignNew(StatusBox, SHorizontalBox)
+					]
 
 					+ SHorizontalBox::Slot()
 					.Padding(Theme.ContentPadding)
@@ -556,6 +563,45 @@ void SNovaMainMenuOperations::Show()
 			]
 		];
 		// clang-format on
+
+		// Add status icons
+		for (int32 Index = 0; Index < ProcessingSystem->GetProcessingGroupStatus(Group.Index).Num(); Index++)
+		{
+			// clang-format off
+			StatusBox->AddSlot()
+			.AutoWidth()
+			[
+				SNew(SNeutronImage)
+				.Image(FNeutronImageGetter::CreateLambda([=]()
+				{
+					switch (ProcessingSystem->GetProcessingGroupStatus(Group.Index)[Index])
+					{
+						default:
+						case ENovaSpacecraftProcessingSystemStatus::Stopped:
+						case ENovaSpacecraftProcessingSystemStatus::Docked:
+						case ENovaSpacecraftProcessingSystemStatus::Blocked:
+							return FNeutronStyleSet::GetBrush("Icon/SB_Warning");
+						case ENovaSpacecraftProcessingSystemStatus::Processing:
+							return FNeutronStyleSet::GetBrush("Icon/SB_On");
+					}
+				}))
+				.ColorAndOpacity_Lambda([=]()
+				{
+					switch (ProcessingSystem->GetProcessingGroupStatus(Group.Index)[Index])
+					{
+						default:
+						case ENovaSpacecraftProcessingSystemStatus::Stopped:
+						case ENovaSpacecraftProcessingSystemStatus::Docked:
+							return FLinearColor::White;
+						case ENovaSpacecraftProcessingSystemStatus::Processing:
+							return Theme.PositiveColor;
+						case ENovaSpacecraftProcessingSystemStatus::Blocked:
+							return Theme.NegativeColor;
+					}
+				})
+			];
+			// clang-format on
+		}
 	}
 
 	// No group found
@@ -859,23 +905,21 @@ FText SNovaMainMenuOperations::GetModuleDetails(int32 CompartmentIndex, int32 Mo
 		// Processing
 		else if (Desc->IsA<UNovaProcessingModuleDescription>())
 		{
-			// TODO: show state?
-
-			/*switch (ProcessingSystem->GetModuleStatus(CompartmentIndex, ModuleIndex))
+			switch (ProcessingSystem->GetModuleStatus(CompartmentIndex, ModuleIndex))
 			{
-			    case ENovaSpacecraftProcessingSystemStatus::Stopped:
-			        return LOCTEXT("ProcessingStopped", "Stopped");
-			        break;
-			    case ENovaSpacecraftProcessingSystemStatus::Processing:
-			        return LOCTEXT("ProcessingProcessing", "Processing");
-			        break;
-			    case ENovaSpacecraftProcessingSystemStatus::Blocked:
-			        return LOCTEXT("ProcessingBlocked", "Blocked");
-			        break;
-			    case ENovaSpacecraftProcessingSystemStatus::Docked:
-			        return LOCTEXT("ProcessingDocked", "Docked");
-			        break;
-			}*/
+				case ENovaSpacecraftProcessingSystemStatus::Stopped:
+					return LOCTEXT("ProcessingStopped", "Stopped");
+					break;
+				case ENovaSpacecraftProcessingSystemStatus::Processing:
+					return LOCTEXT("ProcessingProcessing", "Active");
+					break;
+				case ENovaSpacecraftProcessingSystemStatus::Blocked:
+					return LOCTEXT("ProcessingBlocked", "Blocked");
+					break;
+				case ENovaSpacecraftProcessingSystemStatus::Docked:
+					return LOCTEXT("ProcessingDocked", "Stopped");
+					break;
+			}
 		}
 	}
 

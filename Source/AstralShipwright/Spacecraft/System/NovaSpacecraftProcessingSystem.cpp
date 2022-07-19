@@ -30,18 +30,24 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 	for (const FNovaModuleGroup& Group : Spacecraft.GetModuleGroups())
 	{
 		// Find all processing modules
-		TArray<const UNovaProcessingModuleDescription*> ProcessingModules;
+		TArray<FNovaSpacecraftProcessingSystemChainStateModule> ProcessingModules;
 		for (const auto& CompartmentModuleIndex : Spacecraft.GetAllModules<UNovaProcessingModuleDescription>(Group))
 		{
 			const FNovaCompartment& Compartment = Spacecraft.Compartments[CompartmentModuleIndex.Key];
-			ProcessingModules.Add(Cast<UNovaProcessingModuleDescription>(Compartment.Modules[CompartmentModuleIndex.Value].Description));
+
+			FNovaSpacecraftProcessingSystemChainStateModule Entry;
+			Entry.Module           = Cast<UNovaProcessingModuleDescription>(Compartment.Modules[CompartmentModuleIndex.Value].Description);
+			Entry.CompartmentIndex = CompartmentModuleIndex.Key;
+			Entry.ModuleIndex      = CompartmentModuleIndex.Value;
+
+			ProcessingModules.Add(Entry);
 		}
 
 		// Merge modules into chains
 		TArray<FNovaSpacecraftProcessingSystemChainState> ProcessingChains;
 		for (auto It = ProcessingModules.CreateIterator(); It; ++It)
 		{
-			const UNovaProcessingModuleDescription* Module = *It;
+			const UNovaProcessingModuleDescription* Module = It->Module;
 
 			// Find out whether an already merged chain has valid inputs that this modules provides as output, or vice versa
 			FNovaSpacecraftProcessingSystemChainState* ChainState = ProcessingChains.FindByPredicate(
@@ -69,7 +75,7 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 			// Update the chain with the current module
 			if (ChainState)
 			{
-				ChainState->Modules.Add(Module);
+				ChainState->Modules.Add(*It);
 
 				// For each new output, either consume an input, or add it
 				for (const UNovaResource* Resource : Module->Outputs)
@@ -106,7 +112,7 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 				NewChainState.Inputs         = Module->Inputs;
 				NewChainState.Outputs        = Module->Outputs;
 				NewChainState.ProcessingRate = Module->ProcessingRate;
-				NewChainState.Modules.Add(Module);
+				NewChainState.Modules.Add(*It);
 
 				ProcessingChains.Add(NewChainState);
 			}
@@ -125,10 +131,10 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 					NCHECK(ChainState.Inputs.Num());
 					NCHECK(ChainState.Outputs.Num());
 
-					ChainState.ProcessingRate = ChainState.Modules[0]->ProcessingRate;
-					for (const UNovaProcessingModuleDescription* Module : ChainState.Modules)
+					ChainState.ProcessingRate = ChainState.Modules[0].Module->ProcessingRate;
+					for (const FNovaSpacecraftProcessingSystemChainStateModule& ModuleEntry : ChainState.Modules)
 					{
-						ChainState.ProcessingRate = FMath::Min(ChainState.ProcessingRate, Module->ProcessingRate);
+						ChainState.ProcessingRate = FMath::Min(ChainState.ProcessingRate, ModuleEntry.Module->ProcessingRate);
 					}
 
 					GroupState.Chains.Add(ChainState);
@@ -194,7 +200,6 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 			// Get required constants for each processing module entry
 			const FNovaModuleGroup&            Group             = Spacecraft->GetModuleGroups()[GroupState.GroupIndex];
 			const TArray<TPair<int32, int32>>& GroupCargoModules = Spacecraft->GetAllModules<UNovaCargoModuleDescription>(Group);
-			const TArray<const UNovaProcessingModuleDescription*> GroupProcessingModules = ChainState.Modules;
 
 			// Define processing targets
 			float                         MinimumProcessingLeft = FLT_MAX;
@@ -266,6 +271,40 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 
 		CurrentGroupIndex++;
 	}
+}
+
+TArray<ENovaSpacecraftProcessingSystemStatus> UNovaSpacecraftProcessingSystem::GetProcessingGroupStatus(int32 GroupIndex) const
+{
+	TArray<ENovaSpacecraftProcessingSystemStatus> Result;
+
+	if (GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num())
+	{
+		for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[GroupIndex].Chains)
+		{
+			Result.Add(ChainState.Status);
+		}
+	}
+
+	return Result;
+}
+
+ENovaSpacecraftProcessingSystemStatus UNovaSpacecraftProcessingSystem::GetModuleStatus(int32 CompartmentIndex, int32 ModuleIndex) const
+{
+	for (const auto& GroupState : ProcessingGroupsStates)
+	{
+		for (const FNovaSpacecraftProcessingSystemChainState& ChainState : GroupState.Chains)
+		{
+			for (const FNovaSpacecraftProcessingSystemChainStateModule& ModuleEntry : ChainState.Modules)
+			{
+				if (ModuleEntry.CompartmentIndex == CompartmentIndex && ModuleEntry.ModuleIndex == ModuleIndex)
+				{
+					return ChainState.Status;
+				}
+			}
+		}
+	}
+
+	return ENovaSpacecraftProcessingSystemStatus::Docked;
 }
 
 /*----------------------------------------------------

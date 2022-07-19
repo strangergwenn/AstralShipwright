@@ -29,6 +29,22 @@ struct FNovaSpacecraftProcessingSystemCompartmentCargo
 	TArray<FNovaSpacecraftCargo> Cargo;
 };
 
+/** Module entry for a chain state */
+USTRUCT()
+struct FNovaSpacecraftProcessingSystemChainStateModule
+{
+	GENERATED_BODY();
+
+	UPROPERTY()
+	const class UNovaProcessingModuleDescription* Module;
+
+	UPROPERTY()
+	int32 CompartmentIndex;
+
+	UPROPERTY()
+	int32 ModuleIndex;
+};
+
 /** Processing state for a chain */
 USTRUCT()
 struct FNovaSpacecraftProcessingSystemChainState
@@ -55,7 +71,7 @@ struct FNovaSpacecraftProcessingSystemChainState
 	float ProcessingRate;
 
 	// Local data
-	TArray<const class UNovaProcessingModuleDescription*> Modules;
+	TArray<FNovaSpacecraftProcessingSystemChainStateModule> Modules;
 };
 
 /** Processing state for a full module group */
@@ -158,20 +174,10 @@ public:
 	}
 
 	/** Get the current processing status for each chain of a processing group */
-	TArray<ENovaSpacecraftProcessingSystemStatus> GetProcessingGroupStatus(int32 GroupIndex) const
-	{
-		TArray<ENovaSpacecraftProcessingSystemStatus> Result;
+	TArray<ENovaSpacecraftProcessingSystemStatus> GetProcessingGroupStatus(int32 GroupIndex) const;
 
-		if (GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num())
-		{
-			for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[GroupIndex].Chains)
-			{
-				Result.Add(ChainState.Status);
-			}
-		}
-
-		return Result;
-	}
+	/** Get the processing status for a given module */
+	ENovaSpacecraftProcessingSystemStatus GetModuleStatus(int32 CompartmentIndex, int32 ModuleIndex) const;
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSetProcessingGroupActive(int32 GroupIndex, bool Active);
