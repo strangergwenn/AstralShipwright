@@ -11,6 +11,7 @@
 #include "Spacecraft/System/NovaSpacecraftProcessingSystem.h"
 
 #include "UI/Widgets/NovaTradingPanel.h"
+#include "UI/Widgets/NovaModuleGroupsPanel.h"
 #include "UI/Widgets/NovaTradableAssetItem.h"
 
 #include "Nova.h"
@@ -36,7 +37,7 @@ SNovaMainMenuOperations::SNovaMainMenuOperations()
 	, Spacecraft(nullptr)
 	, SpacecraftPawn(nullptr)
 	, CurrentCompartmentIndex(INDEX_NONE)
-	, CurrentModuleIndexx(INDEX_NONE)
+	, CurrentModuleIndex(INDEX_NONE)
 {}
 
 void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
@@ -410,6 +411,7 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 
 	// Build the trading panels
 	GenericModalPanel = Menu->CreateModalPanel();
+	ModuleGroupsPanel = Menu->CreateModalPanel<SNovaModuleGroupsPanel>();
 	TradingModalPanel = Menu->CreateModalPanel<SNovaTradingPanel>();
 
 	// Build the resource list panel
@@ -938,7 +940,7 @@ void SNovaMainMenuOperations::OnRefillPropellant()
 void SNovaMainMenuOperations::OnBatchBuy()
 {
 	CurrentCompartmentIndex = INDEX_NONE;
-	CurrentModuleIndexx     = INDEX_NONE;
+	CurrentModuleIndex      = INDEX_NONE;
 
 	auto TradeResource = [this]()
 	{
@@ -963,7 +965,7 @@ void SNovaMainMenuOperations::OnBatchBuy()
 void SNovaMainMenuOperations::OnBatchSell()
 {
 	CurrentCompartmentIndex = INDEX_NONE;
-	CurrentModuleIndexx     = INDEX_NONE;
+	CurrentModuleIndex      = INDEX_NONE;
 
 	auto TradeResource = [this]()
 	{
@@ -1013,7 +1015,7 @@ void SNovaMainMenuOperations::OnInteractWithModule(int32 CompartmentIndex, int32
 			else
 			{
 				CurrentCompartmentIndex = CompartmentIndex;
-				CurrentModuleIndexx     = ModuleIndex;
+				CurrentModuleIndex      = ModuleIndex;
 
 				auto BuyResource = [this, CompartmentIndex, ModuleIndex]()
 				{
@@ -1050,7 +1052,8 @@ void SNovaMainMenuOperations::OnInteractWithModule(int32 CompartmentIndex, int32
 	// Processing
 	else if (Desc->IsA<UNovaProcessingModuleDescription>())
 	{
-		// TODO: inspection, resource flow window?
+		NCHECK(Spacecraft);
+		ModuleGroupsPanel->OpenModuleGroup(*Spacecraft, CompartmentIndex, ModuleIndex);
 	}
 }
 
@@ -1059,7 +1062,7 @@ void SNovaMainMenuOperations::OnBuyResource()
 	GenericModalPanel->Hide();
 
 	TradingModalPanel->Trade(
-		PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), CurrentCompartmentIndex, CurrentModuleIndexx);
+		PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), CurrentCompartmentIndex, CurrentModuleIndex);
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -326,10 +326,9 @@ protected:
 	TSharedPtr<class SNeutronButton> EnableHullPaintButton;
 
 	// Modal panels
-	TSharedPtr<class SNeutronModalPanel>                               GenericModalPanel;
-	TSharedPtr<class SNovaAssemblyModalPanel>                          AssemblyModalPanel;
-	TSharedPtr<SHorizontalBox>                                         ModuleGroupsContainer;
-	TSharedPtr<SNeutronTable<ENovaConstants::MaxCompartmentCount + 1>> ModuleGroupsTable;
+	TSharedPtr<class SNeutronModalPanel>      GenericModalPanel;
+	TSharedPtr<class SNovaModuleGroupsPanel>  ModuleGroupsPanel;
+	TSharedPtr<class SNovaAssemblyModalPanel> AssemblyModalPanel;
 
 	// Panel fading system
 	ENovaMainMenuAssemblyState DesiredPanelState;

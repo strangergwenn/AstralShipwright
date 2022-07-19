@@ -106,7 +106,7 @@ protected:
 
 	// Current state
 	int32                       CurrentCompartmentIndex;
-	int32                       CurrentModuleIndexx;
+	int32                       CurrentModuleIndex;
 	TNeutronTimedAverage<float> AveragedPropellantRatio;
 
 	// Resource list
@@ -114,8 +114,9 @@ protected:
 	TSharedPtr<SNeutronListView<const class UNovaResource*>> ResourceListView;
 
 	// Slate widgets
-	TSharedPtr<class SNeutronModalPanel> GenericModalPanel;
-	TSharedPtr<class SNovaTradingPanel>  TradingModalPanel;
-	TSharedPtr<class SVerticalBox>       ModuleGroupsBox;
-	TSharedPtr<class SVerticalBox>       EquipmentBox;
+	TSharedPtr<class SNeutronModalPanel>     GenericModalPanel;
+	TSharedPtr<class SNovaModuleGroupsPanel> ModuleGroupsPanel;
+	TSharedPtr<class SNovaTradingPanel>      TradingModalPanel;
+	TSharedPtr<class SVerticalBox>           ModuleGroupsBox;
+	TSharedPtr<class SVerticalBox>           EquipmentBox;
 };

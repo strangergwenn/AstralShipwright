@@ -10,6 +10,7 @@
 #include "Spacecraft/NovaSpacecraftPawn.h"
 
 #include "UI/Widgets/NovaSpacecraftDatasheet.h"
+#include "UI/Widgets/NovaModuleGroupsPanel.h"
 #include "UI/Widgets/NovaTradableAssetItem.h"
 
 #include "Nova.h"
@@ -989,6 +990,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 
 	// Build the modal panels
 	GenericModalPanel = Menu->CreateModalPanel();
+	ModuleGroupsPanel = Menu->CreateModalPanel<SNovaModuleGroupsPanel>();
 	AssemblyModalPanel = Menu->CreateModalPanel<SNovaAssemblyModalPanel>();
 
 	// Build compartment buttons
@@ -1361,17 +1363,6 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 			]
 		];
 	}
-
-	// Modal group table
-	SAssignNew(ModuleGroupsContainer, SHorizontalBox)
-		+ SHorizontalBox::Slot()
-		+ SHorizontalBox::Slot()
-		.AutoWidth()
-		[
-			SAssignNew(ModuleGroupsTable, SNeutronTable<ENovaConstants::MaxCompartmentCount + 1>)
-			.Width(2 * Theme.GenericMenuWidth)
-		]
-		+ SHorizontalBox::Slot();
 
 	// clang-format on
 
@@ -2693,62 +2684,8 @@ void SNovaMainMenuAssembly::OnOpenModuleGroups()
 	NLOG("SNovaMainMenuAssembly::OnOpenModuleGroups");
 
 	NCHECK(IsValid(SpacecraftPawn));
-	const FNovaSpacecraft& Spacecraft = SpacecraftPawn->GetSpacecraftCopy();
 
-	// Prepare headers, table contents
-	TArray<FText> Headers;
-	for (int32 Index = 1; Index <= ENovaConstants::MaxCompartmentCount; Index++)
-	{
-		Headers.Add(FText::AsNumber(Index));
-	}
-	TArray<TNeutronTableValue<FText>> TableContents[ENovaConstants::MaxModuleCount];
-	for (int32 RowIndex = 0; RowIndex < ENovaConstants::MaxModuleCount; RowIndex++)
-	{
-		for (int32 ColIndex = 0; ColIndex < ENovaConstants::MaxCompartmentCount; ColIndex++)
-		{
-			TableContents[RowIndex].Add(INVTEXT("-\n\n"));
-		}
-	}
-
-	// Process module groups
-	for (const FNovaModuleGroup& Group : SpacecraftPawn->GetModuleGroups())
-	{
-		for (const FNovaModuleGroupCompartment& GroupCompartment : Group.Compartments)
-		{
-			for (int32 ModuleIndex : GroupCompartment.ModuleIndices)
-			{
-				// Build the group name
-				FText GroupTypeText = FNovaSpacecraft::GetModuleGroupDescription(Group.Type);
-
-				// Get module
-				const FNovaCompartmentModule& Module     = Spacecraft.Compartments[GroupCompartment.CompartmentIndex].Modules[ModuleIndex];
-				const UNovaModuleDescription* ModuleDesc = Module.Description;
-
-				// Format text
-				FText Text = FText::FormatNamed(LOCTEXT("ModulesGroupsEntryFormat", "{module}\nGroup {group}\n{type}"), TEXT("module"),
-					IsValid(ModuleDesc) ? ModuleDesc->Name : FText(), TEXT("group"), FText::AsNumber(Group.Index + 1), TEXT("type"),
-					GroupTypeText);
-
-				TableContents[ModuleIndex][GroupCompartment.CompartmentIndex] = TNeutronTableValue(Text, Group.Color);
-			}
-		}
-	}
-
-	// Show the table
-	ModuleGroupsTable->Clear();
-	ModuleGroupsTable->AddHeaders(LOCTEXT("ModuleGroupsCompartment", "Compartment"), Headers);
-	for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
-	{
-		FText RowTitle = FText::FormatNamed(LOCTEXT("ModuleIndexFormat", "Module {index}"), TEXT("index"), FText::AsNumber(Index + 1));
-		ModuleGroupsTable->AddEntries(RowTitle, TableContents[Index]);
-	}
-
-	// Show the table
-	GenericModalPanel->Show(LOCTEXT("ModuleGroupsTitle", "Module groups"),
-		LOCTEXT("ModuleGroupsDetails",
-			"Modules are grouped together when they form a line of the same type, and can then share hatches or transfer cargo for "
-			"processing."),
-		FSimpleDelegate(), FSimpleDelegate(), FSimpleDelegate(), ModuleGroupsContainer);
+	ModuleGroupsPanel->OpenModuleGroupsTable(SpacecraftPawn->GetSpacecraftCopy());
 }
 
 void SNovaMainMenuAssembly::OnSwap(bool WithNext)
