@@ -517,9 +517,19 @@ void SNovaMainMenuOperations::Show()
 					.Padding(Theme.ContentPadding)
 					.VAlign(VAlign_Center)
 					[
-						SNew(STextBlock)
-						.TextStyle(&Theme.HeadingFont)
-						.Text(FText::AsNumber(Group.Index + 1))
+						SNew(SBorder)
+						.Padding(0)
+						.BorderImage(new FSlateNoResource)
+						.ColorAndOpacity(Group.Color)
+						[
+							SNew(SRichTextBlock)
+							.TextStyle(&Theme.HeadingFont)
+							.Text(FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/>\n{index}"),
+															TEXT("icon"), FNovaSpacecraft::GetModuleGroupIcon(Group.Type),
+															TEXT("index"), FText::AsNumber(Group.Index + 1)))
+							.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
+							+ SRichTextBlock::ImageDecorator()
+						]
 					]
 
 					+ SHorizontalBox::Slot()
