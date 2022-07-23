@@ -105,14 +105,27 @@ void SNovaModuleGroupsPanel::OpenModuleGroupsTable(const FNovaSpacecraft& Spacec
 		FSimpleDelegate());
 }
 
-void SNovaModuleGroupsPanel::OpenModuleGroup(const FNovaSpacecraft& Spacecraft, int32 CompartmentIndex, int32 ModuleIndex)
+void SNovaModuleGroupsPanel::OpenModuleGroup(const struct FNovaSpacecraft& Spacecraft, int32 GroupIndex)
 {
 	Show(FText(), FText(), FSimpleDelegate());
 }
 
-/*----------------------------------------------------
-    Callbacks
-----------------------------------------------------*/
+void SNovaModuleGroupsPanel::OpenModuleGroup(const FNovaSpacecraft& Spacecraft, int32 CompartmentIndex, int32 ModuleIndex)
+{
+	for (const FNovaModuleGroup& Group : Spacecraft.GetModuleGroups())
+	{
+		for (const FNovaModuleGroupCompartment& GroupCompartment : Group.Compartments)
+		{
+			if (GroupCompartment.CompartmentIndex == CompartmentIndex)
+			{
+				if (GroupCompartment.ModuleIndices.Contains(ModuleIndex))
+				{
+					OpenModuleGroup(Spacecraft, Group.Index);
+				}
+			}
+		}
+	}
+}
 
 /*----------------------------------------------------
     Callbacks

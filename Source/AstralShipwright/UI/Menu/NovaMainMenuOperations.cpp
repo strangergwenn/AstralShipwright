@@ -468,109 +468,134 @@ void SNovaMainMenuOperations::Show()
 		// clang-format off
 		ModuleGroupsBox->AddSlot()
 		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
 		[
-			SNew(SHorizontalBox)
-
-			+ SHorizontalBox::Slot()
-			.AutoWidth()
+			SNew(SBorder)
+			.BorderImage(&Theme.MainMenuGenericBackground)
+			.Padding(0)
 			[
-				SNeutronNew(SNeutronButton)
-				.Size("HalfButtonSize")
-				.Toggle(true)
-				.Text_Lambda([=]()
-				{
-					return ProcessingSystem->IsProcessingGroupActive(Group.Index) ? LOCTEXT("StopProcessing", "Stop") : LOCTEXT("StartProcessing", "Start");
-				})
-				.HelpText_Lambda([=]()
-				{
-					auto Status = ProcessingSystem->GetProcessingGroupStatus(Group.Index);
-					if (Status.Num() == 0)
-					{
-						return LOCTEXT("ProcessingNoneHelp", "This module group doesn't have a valid configuration");
-					}
-					else if (Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked))
-					{
-						return LOCTEXT("ProcessingDockedHelp", "Modules cannot be activated while docked");
-					}
-					else
-					{
-						return LOCTEXT("ProcessingHelp", "Toggle activity for this module group");
-					}
-				})
-				.Enabled_Lambda([=]()
-				{
-					auto Status = ProcessingSystem->GetProcessingGroupStatus(Group.Index);
-					return Status.Num() && !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked);
-				})
-			]
-
-			+ SHorizontalBox::Slot()
-			.AutoWidth()
-			[
-				SNew(SNeutronButtonLayout)
-				.Size("OperationsButtonSize")
+				SNew(SHorizontalBox)
+			
+				// Text-based information
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
 				[
-					SNew(SHorizontalBox)
-
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.Padding(Theme.ContentPadding)
-					.VAlign(VAlign_Center)
+					SNew(SNeutronButtonLayout)
+					.Size("OperationsButtonSize")
 					[
-						SNew(SBorder)
-						.Padding(0)
-						.BorderImage(new FSlateNoResource)
-						.ColorAndOpacity(Group.Color)
+						SNew(SHorizontalBox)
+
+						// Group icon & index
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						.Padding(Theme.ContentPadding)
+						.VAlign(VAlign_Center)
 						[
-							SNew(SRichTextBlock)
-							.TextStyle(&Theme.HeadingFont)
-							.Text(FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/>\n{index}"),
-															TEXT("icon"), FNovaSpacecraft::GetModuleGroupIcon(Group.Type),
-															TEXT("index"), FText::AsNumber(Group.Index + 1)))
-							.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
-							+ SRichTextBlock::ImageDecorator()
+							SNew(SBorder)
+							.Padding(0)
+							.BorderImage(new FSlateNoResource)
+							.ColorAndOpacity(Group.Color)
+							[
+								SNew(SRichTextBlock)
+								.TextStyle(&Theme.HeadingFont)
+								.Text(FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/>\n{index}"),
+																TEXT("icon"), FNovaSpacecraft::GetModuleGroupIcon(Group.Type),
+																TEXT("index"), FText::AsNumber(Group.Index + 1)))
+								.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
+								+ SRichTextBlock::ImageDecorator()
+							]
+						]
+		
+						// Production status
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						.VAlign(VAlign_Center)
+						[
+							SAssignNew(StatusBox, SHorizontalBox)
+						]
+					
+						// Resources breakdown
+						+ SHorizontalBox::Slot()
+						.Padding(Theme.ContentPadding)
+						.VAlign(VAlign_Center)
+						[
+							SNew(STextBlock)
+							.TextStyle(&Theme.MainFont)
+							.Text_Lambda([=]()
+							{
+								// Resource inputs
+								FString InputList;
+								for (const UNovaResource* Input : ProcessingSystem->GetInputResources(Group.Index))
+								{
+									InputList += InputList.Len() ? TEXT(", ") : FString();
+									InputList += Input->Name.ToString();
+								}
+
+								// Resource outputs
+								FString OutputList;
+								for (const UNovaResource* Output : ProcessingSystem->GetOutputResources(Group.Index))
+								{
+									OutputList += OutputList.Len() ? TEXT(", ") : FString();
+									OutputList += Output->Name.ToString();
+								}
+
+								// Final string
+								FText InputLine = InputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingInput", "Input resources: {list}"),
+									TEXT("list"), FText::FromString(InputList)) : FText();
+								FText OutputLine = OutputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingOutput", "Output resources: {list}"),
+									TEXT("list"), FText::FromString(OutputList)) : FText();
+								return FText::FromString(InputLine.ToString() + "\n" + OutputLine.ToString());
+							})
 						]
 					]
+				]
 
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.VAlign(VAlign_Center)
-					[
-						SAssignNew(StatusBox, SHorizontalBox)
-					]
-
-					+ SHorizontalBox::Slot()
-					.Padding(Theme.ContentPadding)
-					.VAlign(VAlign_Center)
-					[
-						SNew(STextBlock)
-						.TextStyle(&Theme.MainFont)
-						.Text_Lambda([=]()
+				// Processing group activity toggle
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNeutronNew(SNeutronButton)
+					.Size("HalfButtonSize")
+					.Toggle(true)
+					.Text_Lambda([=]()
+					{
+						return ProcessingSystem->IsProcessingGroupActive(Group.Index) ? LOCTEXT("StopProcessing", "Stop") : LOCTEXT("StartProcessing", "Start");
+					})
+					.HelpText_Lambda([=]()
+					{
+						auto Status = ProcessingSystem->GetProcessingGroupStatus(Group.Index);
+						if (Status.Num() == 0)
 						{
-							// Resource inputs
-							FString InputList;
-							for (const UNovaResource* Input : ProcessingSystem->GetInputResources(Group.Index))
-							{
-								InputList += InputList.Len() ? TEXT(", ") : FString();
-								InputList += Input->Name.ToString();
-							}
-
-							// Resource outputs
-							FString OutputList;
-							for (const UNovaResource* Output : ProcessingSystem->GetOutputResources(Group.Index))
-							{
-								OutputList += OutputList.Len() ? TEXT(", ") : FString();
-								OutputList += Output->Name.ToString();
-							}
-
-							// Final string
-							FText InputLine = InputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingInput", "Input resources: {list}"),
-								TEXT("list"), FText::FromString(InputList)) : FText();
-							FText OutputLine = OutputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingOutput", "Output resources: {list}"),
-								TEXT("list"), FText::FromString(OutputList)) : FText();
-							return FText::FromString(InputLine.ToString() + "\n" + OutputLine.ToString());
-						})
-					]
+							return LOCTEXT("ProcessingNoneHelp", "This module group doesn't have a valid configuration");
+						}
+						else if (Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked))
+						{
+							return LOCTEXT("ProcessingDockedHelp", "Modules cannot be activated while docked");
+						}
+						else
+						{
+							return LOCTEXT("ProcessingHelp", "Toggle activity for this module group");
+						}
+					})
+					.Enabled_Lambda([=]()
+					{
+						auto Status = ProcessingSystem->GetProcessingGroupStatus(Group.Index);
+						return Status.Num() && !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked);
+					})
+				]
+			
+				// Processing group inspection
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNeutronNew(SNeutronButton)
+					.Size("HalfButtonSize")
+					.Text(LOCTEXT("ProcessingGroupDetails", "Details"))
+					.HelpText(LOCTEXT("ProcessingGroupDetailsHelp", "Inspect the production for this module group"))
+					.OnClicked(FSimpleDelegate::CreateLambda([=]()
+					{
+						ModuleGroupsPanel->OpenModuleGroup(*Spacecraft, Group.Index);
+					}))
 				]
 			]
 		];
@@ -622,6 +647,7 @@ void SNovaMainMenuOperations::Show()
 		// clang-format off
 		ModuleGroupsBox->AddSlot()
 		.AutoHeight()
+		.Padding(Theme.ContentPadding)
 		[
 			SNew(STextBlock)
 			.TextStyle(&Theme.InfoFont)
@@ -638,6 +664,7 @@ void SNovaMainMenuOperations::Show()
 		// clang-format off
 		EquipmentBox->AddSlot()
 		.AutoHeight()
+		.Padding(Theme.ContentPadding)
 		[
 			SNew(STextBlock)
 			.TextStyle(&Theme.InfoFont)
