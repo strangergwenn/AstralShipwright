@@ -46,6 +46,8 @@ public:
 
 	virtual void UpdateGameObjects() override;
 
+	virtual void OnKeyPressed(const FKey& Key) override;
+
 	/*----------------------------------------------------
 	    Resource list
 	----------------------------------------------------*/
@@ -119,4 +121,5 @@ protected:
 	TSharedPtr<class SNovaTradingPanel>      TradingModalPanel;
 	TSharedPtr<class SVerticalBox>           ModuleGroupsBox;
 	TSharedPtr<class SVerticalBox>           EquipmentBox;
+	TSharedPtr<class SNeutronButton>         DefaultModuleButton;
 };

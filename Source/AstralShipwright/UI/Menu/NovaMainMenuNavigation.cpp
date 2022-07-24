@@ -149,7 +149,7 @@ public:
 						.Padding(Theme.ContentPadding)
 						[
 							SNew(SNeutronKeyLabel)
-							.Key(this, &SNovaHoverStack::GetPreviousItemKey)
+							.Action(FNeutronPlayerInput::MenuPrevious)
 						]
 
 						+ SHorizontalBox::Slot()
@@ -167,7 +167,7 @@ public:
 						.Padding(Theme.ContentPadding)
 						[
 							SNew(SNeutronKeyLabel)
-							.Key(this, &SNovaHoverStack::GetNextItemKey)
+							.Action(FNeutronPlayerInput::MenuNext)
 						]
 					]
 				]
@@ -296,18 +296,6 @@ public:
 		}
 
 		PreviousObjects = ObjectList;
-	}
-
-protected:
-
-	FKey GetPreviousItemKey() const
-	{
-		return UNeutronMenuManager::Get()->GetFirstActionKey(FNeutronPlayerInput::MenuPrevious);
-	}
-
-	FKey GetNextItemKey() const
-	{
-		return UNeutronMenuManager::Get()->GetFirstActionKey(FNeutronPlayerInput::MenuNext);
 	}
 
 protected:
@@ -740,11 +728,9 @@ void SNovaMainMenuNavigation::OnClicked(const FVector2D& Position)
 	}
 }
 
-FReply SNovaMainMenuNavigation::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)
+void SNovaMainMenuNavigation::OnKeyPressed(const FKey& Key)
 {
-	FReply Result = SNeutronTabPanel::OnKeyDown(MyGeometry, InKeyEvent);
-
-	if (MenuManager->IsUsingGamepad() && MenuManager->GetMenu()->IsActionKey(FNeutronPlayerInput::MenuConfirm, InKeyEvent.GetKey()))
+	if (MenuManager->IsUsingGamepad() && MenuManager->GetMenu()->IsActionKey(FNeutronPlayerInput::MenuConfirm, Key))
 	{
 		if (IsValid(GameState))
 		{
@@ -770,18 +756,14 @@ FReply SNovaMainMenuNavigation::OnKeyDown(const FGeometry& MyGeometry, const FKe
 				NCHECK(CurrentHoveredObjectIndex < HoveredObjects.Num());
 				OnShowSidePanel(HoveredObjects[CurrentHoveredObjectIndex]);
 
-				return FReply::Handled();
+				return;
 			}
 		}
 	}
-	else if (MenuManager->IsUsingGamepad() && MenuManager->GetMenu()->IsActionKey(FNeutronPlayerInput::MenuCancel, InKeyEvent.GetKey()))
+	else if (MenuManager->IsUsingGamepad() && MenuManager->GetMenu()->IsActionKey(FNeutronPlayerInput::MenuCancel, Key))
 	{
 		OnHideSidePanel();
-
-		return FReply::Handled();
 	}
-
-	return Result;
 }
 
 void SNovaMainMenuNavigation::HorizontalAnalogInput(float Value)

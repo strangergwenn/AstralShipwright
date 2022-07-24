@@ -91,12 +91,6 @@ protected:
 	/** Get the manipulator color */
 	FSlateColor GetManipulatorColor() const;
 
-	/** Get the key binding for the previous tab */
-	FKey GetPreviousTabKey() const;
-
-	/** Get the key binding for the next tab */
-	FKey GetNextTabKey() const;
-
 	/*----------------------------------------------------
 	    Action callbacks
 	----------------------------------------------------*/

@@ -44,7 +44,7 @@ public:
 				.Padding(Theme.IconPadding)
 				[
 					SNew(SNeutronKeyLabel)
-					.Key(this, &SNovaLargeButton::GetActionKey)
+					.Action(this, &SNeutronButton::GetActionName)
 				]
 
 				// Text
@@ -71,13 +71,5 @@ public:
 			]
 		);
 		// clang-format on
-	}
-
-	FKey GetActionKey() const
-	{
-		UNeutronMenuManager* MenuManager = UNeutronMenuManager::Get();
-		NCHECK(MenuManager);
-
-		return MenuManager->GetFirstActionKey(Action.Get());
 	}
 };

@@ -268,7 +268,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							.AutoWidth()
 							[
 								SNew(SNeutronKeyLabel)
-								.Key(this, &SNovaMainMenuAssembly::GetPreviousItemKey)
+								.Action(FNeutronPlayerInput::MenuPrevious)
 							]
 
 							// Compartment list
@@ -306,7 +306,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							.AutoWidth()
 							[
 								SNew(SNeutronKeyLabel)
-								.Key(this, &SNovaMainMenuAssembly::GetNextItemKey)
+								.Action(FNeutronPlayerInput::MenuNext)
 							]
 						]
 
@@ -433,7 +433,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							.AutoWidth()
 							[
 								SNew(SNeutronKeyLabel)
-								.Key(this, &SNovaMainMenuAssembly::GetPreviousItemKey)
+								.Action(FNeutronPlayerInput::MenuPrevious)
 							]
 				
 							// Compartment selection
@@ -505,7 +505,7 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 							.AutoWidth()
 							[
 								SNew(SNeutronKeyLabel)
-								.Key(this, &SNovaMainMenuAssembly::GetNextItemKey)
+								.Action(FNeutronPlayerInput::MenuNext)
 							]
 						]
 						
@@ -2342,16 +2342,6 @@ bool SNovaMainMenuAssembly::CanSwap(bool WithNext) const
 	}
 
 	return false;
-}
-
-FKey SNovaMainMenuAssembly::GetPreviousItemKey() const
-{
-	return MenuManager->GetFirstActionKey(FNeutronPlayerInput::MenuPrevious);
-}
-
-FKey SNovaMainMenuAssembly::GetNextItemKey() const
-{
-	return MenuManager->GetFirstActionKey(FNeutronPlayerInput::MenuNext);
 }
 
 /*----------------------------------------------------

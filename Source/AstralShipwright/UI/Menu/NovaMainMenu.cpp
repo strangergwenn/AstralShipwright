@@ -50,14 +50,14 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 		.LeftNavigation()
 		[
 			SNew(SNeutronKeyLabel)
-			.Key(this, &SNovaMainMenu::GetPreviousTabKey)
+			.Action(FNeutronPlayerInput::MenuPreviousTab)
 		]
 
 		// Navigate right
 		.RightNavigation()
 		[
 			SNew(SNeutronKeyLabel)
-			.Key(this, &SNovaMainMenu::GetNextTabKey)
+			.Action(FNeutronPlayerInput::MenuNextTab)
 		]
 
 		// Close button
@@ -421,16 +421,6 @@ FText SNovaMainMenu::GetInfoText() const
 FSlateColor SNovaMainMenu::GetManipulatorColor() const
 {
 	return MenuManager->GetInterfaceColor();
-}
-
-FKey SNovaMainMenu::GetPreviousTabKey() const
-{
-	return MenuManager->GetFirstActionKey(FNeutronPlayerInput::MenuPreviousTab);
-}
-
-FKey SNovaMainMenu::GetNextTabKey() const
-{
-	return MenuManager->GetFirstActionKey(FNeutronPlayerInput::MenuNextTab);
 }
 
 /*----------------------------------------------------

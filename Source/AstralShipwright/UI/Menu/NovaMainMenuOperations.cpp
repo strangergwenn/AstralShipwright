@@ -20,6 +20,7 @@
 #include "Neutron/System/NeutronGameInstance.h"
 #include "Neutron/System/NeutronMenuManager.h"
 #include "Neutron/UI/Widgets/NeutronFadingWidget.h"
+#include "Neutron/UI/Widgets/NeutronKeyLabel.h"
 #include "Neutron/UI/Widgets/NeutronModalPanel.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
@@ -220,9 +221,22 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 						.AutoHeight()
 						.Padding(Theme.VerticalContentPadding)
 						[
-							SNew(STextBlock)
-							.TextStyle(&Theme.HeadingFont)
-							.Text(LOCTEXT("ModuleGroupsTitle", "Module groups"))
+							SNew(SHorizontalBox)
+
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
+							[
+								SNew(STextBlock)
+								.TextStyle(&Theme.HeadingFont)
+								.Text(LOCTEXT("ModuleGroupsTitle", "Module groups"))
+							]
+
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
+							[
+								SNew(SNeutronKeyLabel)
+								.Action(FNeutronPlayerInput::MenuAltPrimary)
+							]
 						]
 
 						// Module groups controls
@@ -464,6 +478,7 @@ void SNovaMainMenuOperations::Show()
 		const FNovaModuleGroup& Group = ProcessingSystem->GetModuleGroup(ProcessingGroupIndex);
 
 		TSharedPtr<SHorizontalBox> StatusBox;
+		TSharedPtr<SNeutronButton> EnableButton;
 
 		// clang-format off
 		ModuleGroupsBox->AddSlot()
@@ -554,7 +569,7 @@ void SNovaMainMenuOperations::Show()
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					SNeutronNew(SNeutronButton)
+					SNeutronAssignNew(EnableButton, SNeutronButton)
 					.Size("HalfButtonSize")
 					.Toggle(true)
 					.Text_Lambda([=]()
@@ -591,7 +606,7 @@ void SNovaMainMenuOperations::Show()
 					SNeutronNew(SNeutronButton)
 					.Size("HalfButtonSize")
 					.Text(LOCTEXT("ProcessingGroupDetails", "Details"))
-					.HelpText(LOCTEXT("ProcessingGroupDetailsHelp", "Inspect the production for this module group"))
+					.HelpText(LOCTEXT("ProcessingGroupDetailsHelp", "Inspect resource processing for this module group"))
 					.OnClicked(FSimpleDelegate::CreateLambda([=]()
 					{
 						ModuleGroupsPanel->OpenModuleGroup(ProcessingSystem, Group.Index);
@@ -600,6 +615,11 @@ void SNovaMainMenuOperations::Show()
 			]
 		];
 		// clang-format on
+
+		if (ProcessingGroupIndex == 0)
+		{
+			DefaultModuleButton = EnableButton;
+		}
 
 		// Add status icons
 		for (int32 Index = 0; Index < ProcessingSystem->GetProcessingGroupStatus(Group.Index).Num(); Index++)
@@ -672,6 +692,8 @@ void SNovaMainMenuOperations::Show()
 		];
 		// clang-format on
 	}
+
+	GetMenu()->RefreshNavigationPanel();
 }
 
 void SNovaMainMenuOperations::Hide()
@@ -680,6 +702,7 @@ void SNovaMainMenuOperations::Hide()
 
 	ModuleGroupsBox->ClearChildren();
 	EquipmentBox->ClearChildren();
+	DefaultModuleButton.Reset();
 }
 
 void SNovaMainMenuOperations::UpdateGameObjects()
@@ -692,6 +715,17 @@ void SNovaMainMenuOperations::UpdateGameObjects()
 		IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftPropellantSystem>(Spacecraft) : nullptr;
 	ProcessingSystem =
 		IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(Spacecraft) : nullptr;
+}
+
+void SNovaMainMenuOperations::OnKeyPressed(const FKey& Key)
+{
+	if (MenuManager->GetMenu()->IsActionKey(FNeutronPlayerInput::MenuAltPrimary, Key))
+	{
+		if (DefaultModuleButton.IsValid())
+		{
+			GetMenu()->SetFocusedButton(DefaultModuleButton, true);
+		}
+	}
 }
 
 /*----------------------------------------------------

@@ -477,7 +477,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 	.AutoWidth()
 	[
 		SNew(SNeutronKeyLabel)
-		.Key(this, &SNovaMainMenuFlight::GetPreviousItemKey)
+		.Action(FNeutronPlayerInput::MenuPrevious)
 	];
 
 	// Build HUD selection entries
@@ -517,7 +517,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 	.AutoWidth()
 	[
 		SNew(SNeutronKeyLabel)
-		.Key(this, &SNovaMainMenuFlight::GetNextItemKey)
+		.Action(FNeutronPlayerInput::MenuNext)
 	];
 
 	// clang-format on
@@ -892,16 +892,6 @@ void SNovaMainMenuFlight::OnDockUndock()
 /*----------------------------------------------------
     Helpers
 ----------------------------------------------------*/
-
-FKey SNovaMainMenuFlight::GetPreviousItemKey() const
-{
-	return MenuManager->GetFirstActionKey(FNeutronPlayerInput::MenuPrevious);
-}
-
-FKey SNovaMainMenuFlight::GetNextItemKey() const
-{
-	return MenuManager->GetFirstActionKey(FNeutronPlayerInput::MenuNext);
-}
 
 bool SNovaMainMenuFlight::IsInSpace() const
 {

@@ -28,6 +28,8 @@ void SNovaModuleGroupsPanel::Construct(const FArguments& InArgs)
 
 	SNeutronModalPanel::Construct(SNeutronModalPanel::FArguments().Menu(InArgs._Menu));
 
+	const int32 FullWidth = ENovaConstants::MaxCompartmentCount * FNeutronStyleSet::GetButtonSize("InventoryButtonSize").Width;
+
 	// clang-format off
 	SAssignNew(InternalWidget, SVerticalBox)
 
@@ -36,7 +38,22 @@ void SNovaModuleGroupsPanel::Construct(const FArguments& InArgs)
 	+ SVerticalBox::Slot()
 	.AutoHeight()
 	[
-		SAssignNew(ProcessingChainsBox, SVerticalBox)
+		SNew(SHorizontalBox)
+
+		+ SHorizontalBox::Slot()
+
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		[
+			SNew(SBox)
+			.MinDesiredWidth(FullWidth)
+			.Padding(0)
+			[
+				SAssignNew(ProcessingChainsBox, SVerticalBox)
+			]
+		]
+
+		+ SHorizontalBox::Slot()
 	]
 
 	+ SVerticalBox::Slot()
@@ -129,91 +146,86 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(UNovaSpacecraftProcessingSystem* Pr
 		.AutoHeight()
 		.Padding(Theme.VerticalContentPadding)
 		[
-			SNew(SBorder)
-			.BorderImage(&Theme.MainMenuGenericBackground)
-			.Padding(0)
-			[
-				SNew(SHorizontalBox)
+			SNew(SHorizontalBox)
 			
-				// Text-based information
-				+ SHorizontalBox::Slot()
-				.AutoWidth()
+			// Text-based information
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNew(SNeutronButtonLayout)
+				.Size("OperationsButtonSize")
 				[
-					SNew(SNeutronButtonLayout)
-					.Size("OperationsButtonSize")
-					[
-						SNew(SHorizontalBox)
+					SNew(SHorizontalBox)
 		
-						// Production status
-						+ SHorizontalBox::Slot()
-						.AutoWidth()
-						.VAlign(VAlign_Center)
-						[
-							SNew(SNeutronImage)
-							.Image(FNeutronImageGetter::CreateLambda([=]()
+					// Production status
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.VAlign(VAlign_Center)
+					[
+						SNew(SNeutronImage)
+						.Image(FNeutronImageGetter::CreateLambda([=]()
+						{
+							switch (Chain.Status)
 							{
-								switch (Chain.Status)
-								{
-									default:
-									case ENovaSpacecraftProcessingSystemStatus::Stopped:
-									case ENovaSpacecraftProcessingSystemStatus::Docked:
-									case ENovaSpacecraftProcessingSystemStatus::Blocked:
-										return FNeutronStyleSet::GetBrush("Icon/SB_Warning");
-									case ENovaSpacecraftProcessingSystemStatus::Processing:
-										return FNeutronStyleSet::GetBrush("Icon/SB_On");
-								}
-							}))
-							.ColorAndOpacity_Lambda([=]()
+								default:
+								case ENovaSpacecraftProcessingSystemStatus::Stopped:
+								case ENovaSpacecraftProcessingSystemStatus::Docked:
+								case ENovaSpacecraftProcessingSystemStatus::Blocked:
+									return FNeutronStyleSet::GetBrush("Icon/SB_Warning");
+								case ENovaSpacecraftProcessingSystemStatus::Processing:
+									return FNeutronStyleSet::GetBrush("Icon/SB_On");
+							}
+						}))
+						.ColorAndOpacity_Lambda([=]()
+						{
+							switch (Chain.Status)
 							{
-								switch (Chain.Status)
-								{
-									default:
-									case ENovaSpacecraftProcessingSystemStatus::Stopped:
-									case ENovaSpacecraftProcessingSystemStatus::Docked:
-										return FLinearColor::White;
-									case ENovaSpacecraftProcessingSystemStatus::Processing:
-										return Theme.PositiveColor;
-									case ENovaSpacecraftProcessingSystemStatus::Blocked:
-										return Theme.NegativeColor;
-								}
-							})
-						]
+								default:
+								case ENovaSpacecraftProcessingSystemStatus::Stopped:
+								case ENovaSpacecraftProcessingSystemStatus::Docked:
+									return FLinearColor::White;
+								case ENovaSpacecraftProcessingSystemStatus::Processing:
+									return Theme.PositiveColor;
+								case ENovaSpacecraftProcessingSystemStatus::Blocked:
+									return Theme.NegativeColor;
+							}
+						})
+					]
 					
-						// Resources breakdown
-						+ SHorizontalBox::Slot()
-						.Padding(Theme.ContentPadding)
-						.VAlign(VAlign_Center)
-						[
-							SNew(STextBlock)
-							.TextStyle(&Theme.MainFont)
-							.Text_Lambda([=]()
+					// Resources breakdown
+					+ SHorizontalBox::Slot()
+					.Padding(Theme.ContentPadding)
+					.VAlign(VAlign_Center)
+					[
+						SNew(STextBlock)
+						.TextStyle(&Theme.MainFont)
+						.Text_Lambda([=]()
+						{
+							// Resource inputs
+							FString InputList;
+							for (const UNovaResource* Input : Chain.Inputs)
 							{
-								// Resource inputs
-								FString InputList;
-								for (const UNovaResource* Input : Chain.Inputs)
-								{
-									InputList += InputList.Len() ? TEXT(", ") : FString();
-									InputList += Input->Name.ToString();
-								}
+								InputList += InputList.Len() ? TEXT(", ") : FString();
+								InputList += Input->Name.ToString();
+							}
 
-								// Resource outputs
-								FString OutputList;
-								for (const UNovaResource* Output : Chain.Outputs)
-								{
-									OutputList += OutputList.Len() ? TEXT(", ") : FString();
-									OutputList += Output->Name.ToString();
-								}
+							// Resource outputs
+							FString OutputList;
+							for (const UNovaResource* Output : Chain.Outputs)
+							{
+								OutputList += OutputList.Len() ? TEXT(", ") : FString();
+								OutputList += Output->Name.ToString();
+							}
 
-								// Final string
-								FText InputLine  = InputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingInput", "Input resources: {list}"), TEXT("list"),
-																			FText::FromString(InputList))
-																	: FText();
-								FText OutputLine = OutputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingOutput", "Output resources: {list}"), TEXT("list"),
-																			FText::FromString(OutputList))
-																	: FText();
-								return FText::FromString(InputLine.ToString() + "\n" + OutputLine.ToString());
-							})
-						]
+							// Final string
+							FText InputLine  = InputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingInput", "Input resources: {list}"), TEXT("list"),
+																		FText::FromString(InputList))
+																: FText();
+							FText OutputLine = OutputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingOutput", "Output resources: {list}"), TEXT("list"),
+																		FText::FromString(OutputList))
+																: FText();
+							return FText::FromString(InputLine.ToString() + "\n" + OutputLine.ToString());
+						})
 					]
 				]
 			]

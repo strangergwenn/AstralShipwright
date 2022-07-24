@@ -110,8 +110,6 @@ protected:
 
 protected:
 
-	FKey GetPreviousItemKey() const;
-	FKey GetNextItemKey() const;
 	bool IsInSpace() const;
 
 	/*----------------------------------------------------

@@ -240,10 +240,6 @@ protected:
 	// Tools
 	bool CanSwap(bool WithNext) const;
 
-	// Key bindings
-	FKey GetPreviousItemKey() const;
-	FKey GetNextItemKey() const;
-
 	// Paint lists
 	TSharedRef<SWidget> GeneratePaintListButton(ENovaMainMenuAssemblyPaintType Type) const;
 	TSharedRef<SWidget> GenerateStructuralPaintItem(const class UNovaPaintDescription* Paint) const;
