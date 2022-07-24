@@ -6,6 +6,8 @@
 
 #include "Net/UnrealNetwork.h"
 
+#define LOCTEXT_NAMESPACE "UNovaSpacecraftProcessingSystem"
+
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
@@ -317,6 +319,22 @@ TArray<FNovaSpacecraftProcessingSystemChainState> UNovaSpacecraftProcessingSyste
 	return TArray<FNovaSpacecraftProcessingSystemChainState>();
 }
 
+FText UNovaSpacecraftProcessingSystem::GetStatusText(ENovaSpacecraftProcessingSystemStatus Type)
+{
+	switch (Type)
+	{
+		default:
+		case ENovaSpacecraftProcessingSystemStatus::Stopped:
+			return LOCTEXT("ProcessingStopped", "Stopped");
+		case ENovaSpacecraftProcessingSystemStatus::Processing:
+			return LOCTEXT("ProcessingProcessing", "Active");
+		case ENovaSpacecraftProcessingSystemStatus::Blocked:
+			return LOCTEXT("ProcessingBlocked", "Blocked");
+		case ENovaSpacecraftProcessingSystemStatus::Docked:
+			return LOCTEXT("ProcessingDocked", "Stopped");
+	}
+}
+
 /*----------------------------------------------------
     Networking
 ----------------------------------------------------*/
@@ -338,3 +356,5 @@ void UNovaSpacecraftProcessingSystem::GetLifetimeReplicatedProps(TArray<FLifetim
 	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, RealtimeCompartments);
 	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, ProcessingGroupsStates);
 }
+
+#undef LOCTEXT_NAMESPACE

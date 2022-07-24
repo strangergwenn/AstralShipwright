@@ -246,6 +246,9 @@ public:
 		}
 	}
 
+	/** Processing statuts text getter */
+	static FText GetStatusText(ENovaSpacecraftProcessingSystemStatus Type);
+
 	/*----------------------------------------------------
 	    Internal
 	----------------------------------------------------*/

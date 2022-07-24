@@ -176,7 +176,7 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 				[
 					SNew(SHorizontalBox)
 		
-					// Production status
+					// Production status icon
 					+ SHorizontalBox::Slot()
 					.AutoWidth()
 					.VAlign(VAlign_Center)
@@ -209,6 +209,19 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 									return Theme.NegativeColor;
 							}
 						})
+					]
+		
+					// Production status text
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.VAlign(VAlign_Center)
+					[
+						SNew(SNeutronText)
+						.TextStyle(&Theme.InfoFont)
+						.Text(FNeutronTextGetter::CreateLambda([=]()
+						{
+							return UNovaSpacecraftProcessingSystem::GetStatusText(Chain.Status);
+						}))
 					]
 					
 					// Resources breakdown

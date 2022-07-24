@@ -979,21 +979,7 @@ FText SNovaMainMenuOperations::GetModuleDetails(int32 CompartmentIndex, int32 Mo
 		// Processing
 		else if (Desc->IsA<UNovaProcessingModuleDescription>())
 		{
-			switch (ProcessingSystem->GetModuleStatus(CompartmentIndex, ModuleIndex))
-			{
-				case ENovaSpacecraftProcessingSystemStatus::Stopped:
-					return LOCTEXT("ProcessingStopped", "Stopped");
-					break;
-				case ENovaSpacecraftProcessingSystemStatus::Processing:
-					return LOCTEXT("ProcessingProcessing", "Active");
-					break;
-				case ENovaSpacecraftProcessingSystemStatus::Blocked:
-					return LOCTEXT("ProcessingBlocked", "Blocked");
-					break;
-				case ENovaSpacecraftProcessingSystemStatus::Docked:
-					return LOCTEXT("ProcessingDocked", "Stopped");
-					break;
-			}
+			return UNovaSpacecraftProcessingSystem::GetStatusText(ProcessingSystem->GetModuleStatus(CompartmentIndex, ModuleIndex));
 		}
 	}
 
