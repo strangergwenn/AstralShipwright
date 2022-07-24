@@ -134,21 +134,43 @@ public:
 		return ProcessingGroupsStates.Num();
 	}
 
-	/** Get the module group for a specific processing group */
-	const FNovaModuleGroup& GetModuleGroup(int32 GroupIndex) const
+	/** Get the processing group index for a given module */
+	int32 GetProcessingGroupIndex(int32 CompartmentIndex, int32 ModuleIndex) const
 	{
-		NCHECK(GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num());
-		return GetSpacecraft()->GetModuleGroups()[ProcessingGroupsStates[GroupIndex].GroupIndex];
+		int32 CurrentProcessingGroupIndex = 0;
+		for (const auto& GroupState : ProcessingGroupsStates)
+		{
+			for (const FNovaSpacecraftProcessingSystemChainState& ChainState : GroupState.Chains)
+			{
+				for (const FNovaSpacecraftProcessingSystemChainStateModule& ModuleEntry : ChainState.Modules)
+				{
+					if (ModuleEntry.CompartmentIndex == CompartmentIndex && ModuleEntry.ModuleIndex == ModuleIndex)
+					{
+						return CurrentProcessingGroupIndex;
+					}
+				}
+			}
+			CurrentProcessingGroupIndex++;
+		}
+
+		return INDEX_NONE;
+	}
+
+	/** Get the module group for a specific processing group */
+	const FNovaModuleGroup& GetModuleGroup(int32 ProcessingGroupIndex) const
+	{
+		NCHECK(ProcessingGroupIndex >= 0 && ProcessingGroupIndex < ProcessingGroupsStates.Num());
+		return GetSpacecraft()->GetModuleGroups()[ProcessingGroupsStates[ProcessingGroupIndex].GroupIndex];
 	}
 
 	/** Get input resources for a processing group */
-	TArray<const class UNovaResource*> GetInputResources(int32 GroupIndex) const
+	TArray<const class UNovaResource*> GetInputResources(int32 ProcessingGroupIndex) const
 	{
 		TArray<const class UNovaResource*> Result;
 
-		if (GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num())
+		if (ProcessingGroupIndex >= 0 && ProcessingGroupIndex < ProcessingGroupsStates.Num())
 		{
-			for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[GroupIndex].Chains)
+			for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[ProcessingGroupIndex].Chains)
 			{
 				Result.Append(ChainState.Inputs);
 			}
@@ -158,13 +180,13 @@ public:
 	}
 
 	/** Get output resources for a processing group */
-	TArray<const class UNovaResource*> GetOutputResources(int32 GroupIndex) const
+	TArray<const class UNovaResource*> GetOutputResources(int32 ProcessingGroupIndex) const
 	{
 		TArray<const class UNovaResource*> Result;
 
-		if (GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num())
+		if (ProcessingGroupIndex >= 0 && ProcessingGroupIndex < ProcessingGroupsStates.Num())
 		{
-			for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[GroupIndex].Chains)
+			for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[ProcessingGroupIndex].Chains)
 			{
 				Result.Append(ChainState.Outputs);
 			}
@@ -174,13 +196,16 @@ public:
 	}
 
 	/** Get the current processing status for each chain of a processing group */
-	TArray<ENovaSpacecraftProcessingSystemStatus> GetProcessingGroupStatus(int32 GroupIndex) const;
+	TArray<ENovaSpacecraftProcessingSystemStatus> GetProcessingGroupStatus(int32 ProcessingGroupIndex) const;
 
 	/** Get the processing status for a given module */
 	ENovaSpacecraftProcessingSystemStatus GetModuleStatus(int32 CompartmentIndex, int32 ModuleIndex) const;
 
+	/** Get all processing chain states for a group */
+	TArray<FNovaSpacecraftProcessingSystemChainState> GetChainStates(int32 ProcessingGroupIndex);
+
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerSetProcessingGroupActive(int32 GroupIndex, bool Active);
+	void ServerSetProcessingGroupActive(int32 ProcessingGroupIndex, bool Active);
 
 	/** Set the active state for a processing group */
 	void SetProcessingGroupActive(int32 GroupIndex, bool Active)
@@ -197,11 +222,11 @@ public:
 	}
 
 	/** Check the active state for a processing group */
-	bool IsProcessingGroupActive(int32 GroupIndex) const
+	bool IsProcessingGroupActive(int32 ProcessingGroupIndex) const
 	{
-		if (GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num())
+		if (ProcessingGroupIndex >= 0 && ProcessingGroupIndex < ProcessingGroupsStates.Num())
 		{
-			return ProcessingGroupsStates[GroupIndex].Active;
+			return ProcessingGroupsStates[ProcessingGroupIndex].Active;
 		}
 
 		return false;

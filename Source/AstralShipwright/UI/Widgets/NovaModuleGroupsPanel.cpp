@@ -12,6 +12,8 @@
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/System/NovaSpacecraftProcessingSystem.h"
 
+#include "Neutron/UI/Widgets/NeutronFadingWidget.h"
+
 #include "Widgets/Layout/SScaleBox.h"
 
 #define LOCTEXT_NAMESPACE "SNovaModuleGroupsPanel"
@@ -27,18 +29,24 @@ void SNovaModuleGroupsPanel::Construct(const FArguments& InArgs)
 	SNeutronModalPanel::Construct(SNeutronModalPanel::FArguments().Menu(InArgs._Menu));
 
 	// clang-format off
-	SAssignNew(InternalWidget, SHorizontalBox)
+	SAssignNew(InternalWidget, SVerticalBox)
 
-	+ SHorizontalBox::Slot()
+	+ SVerticalBox::Slot()
 
-	+ SHorizontalBox::Slot()
-	.AutoWidth()
+	+ SVerticalBox::Slot()
+	.AutoHeight()
+	[
+		SAssignNew(ProcessingChainsBox, SVerticalBox)
+	]
+
+	+ SVerticalBox::Slot()
+	.AutoHeight()
 	[
 		SAssignNew(ModuleGroupsTable, SNeutronTable<ENovaConstants::MaxCompartmentCount + 1>)
 		.Width(2 * Theme.GenericMenuWidth)
 	]
 	
-	+ SHorizontalBox::Slot();
+	+ SVerticalBox::Slot();
 
 	// clang-format on
 }
@@ -49,6 +57,9 @@ void SNovaModuleGroupsPanel::Construct(const FArguments& InArgs)
 
 void SNovaModuleGroupsPanel::OpenModuleGroupsTable(const FNovaSpacecraft& Spacecraft)
 {
+	ProcessingChainsBox->ClearChildren();
+	ModuleGroupsTable->Clear();
+
 	// Prepare headers, table contents
 	TArray<FText> Headers;
 	for (int32 Index = 1; Index <= ENovaConstants::MaxCompartmentCount; Index++)
@@ -89,7 +100,6 @@ void SNovaModuleGroupsPanel::OpenModuleGroupsTable(const FNovaSpacecraft& Spacec
 	}
 
 	// Show the table
-	ModuleGroupsTable->Clear();
 	ModuleGroupsTable->AddHeaders(LOCTEXT("ModuleGroupsCompartment", "Compartment"), Headers);
 	for (int32 Index = 0; Index < ENovaConstants::MaxModuleCount; Index++)
 	{
@@ -105,25 +115,122 @@ void SNovaModuleGroupsPanel::OpenModuleGroupsTable(const FNovaSpacecraft& Spacec
 		FSimpleDelegate());
 }
 
-void SNovaModuleGroupsPanel::OpenModuleGroup(const struct FNovaSpacecraft& Spacecraft, int32 GroupIndex)
+void SNovaModuleGroupsPanel::OpenModuleGroup(UNovaSpacecraftProcessingSystem* ProcessingSystem, int32 GroupIndex)
 {
+	ProcessingChainsBox->ClearChildren();
+	ModuleGroupsTable->Clear();
+
+	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
+
+	for (const FNovaSpacecraftProcessingSystemChainState& Chain : ProcessingSystem->GetChainStates(GroupIndex))
+	{
+		// clang-format off
+		ProcessingChainsBox->AddSlot()
+		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
+		[
+			SNew(SBorder)
+			.BorderImage(&Theme.MainMenuGenericBackground)
+			.Padding(0)
+			[
+				SNew(SHorizontalBox)
+			
+				// Text-based information
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SNeutronButtonLayout)
+					.Size("OperationsButtonSize")
+					[
+						SNew(SHorizontalBox)
+		
+						// Production status
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						.VAlign(VAlign_Center)
+						[
+							SNew(SNeutronImage)
+							.Image(FNeutronImageGetter::CreateLambda([=]()
+							{
+								switch (Chain.Status)
+								{
+									default:
+									case ENovaSpacecraftProcessingSystemStatus::Stopped:
+									case ENovaSpacecraftProcessingSystemStatus::Docked:
+									case ENovaSpacecraftProcessingSystemStatus::Blocked:
+										return FNeutronStyleSet::GetBrush("Icon/SB_Warning");
+									case ENovaSpacecraftProcessingSystemStatus::Processing:
+										return FNeutronStyleSet::GetBrush("Icon/SB_On");
+								}
+							}))
+							.ColorAndOpacity_Lambda([=]()
+							{
+								switch (Chain.Status)
+								{
+									default:
+									case ENovaSpacecraftProcessingSystemStatus::Stopped:
+									case ENovaSpacecraftProcessingSystemStatus::Docked:
+										return FLinearColor::White;
+									case ENovaSpacecraftProcessingSystemStatus::Processing:
+										return Theme.PositiveColor;
+									case ENovaSpacecraftProcessingSystemStatus::Blocked:
+										return Theme.NegativeColor;
+								}
+							})
+						]
+					
+						// Resources breakdown
+						+ SHorizontalBox::Slot()
+						.Padding(Theme.ContentPadding)
+						.VAlign(VAlign_Center)
+						[
+							SNew(STextBlock)
+							.TextStyle(&Theme.MainFont)
+							.Text_Lambda([=]()
+							{
+								// Resource inputs
+								FString InputList;
+								for (const UNovaResource* Input : Chain.Inputs)
+								{
+									InputList += InputList.Len() ? TEXT(", ") : FString();
+									InputList += Input->Name.ToString();
+								}
+
+								// Resource outputs
+								FString OutputList;
+								for (const UNovaResource* Output : Chain.Outputs)
+								{
+									OutputList += OutputList.Len() ? TEXT(", ") : FString();
+									OutputList += Output->Name.ToString();
+								}
+
+								// Final string
+								FText InputLine  = InputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingInput", "Input resources: {list}"), TEXT("list"),
+																			FText::FromString(InputList))
+																	: FText();
+								FText OutputLine = OutputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingOutput", "Output resources: {list}"), TEXT("list"),
+																			FText::FromString(OutputList))
+																	: FText();
+								return FText::FromString(InputLine.ToString() + "\n" + OutputLine.ToString());
+							})
+						]
+					]
+				]
+			]
+		];
+	}
+
+	// clang-format on
+
 	Show(FText(), FText(), FSimpleDelegate());
 }
 
-void SNovaModuleGroupsPanel::OpenModuleGroup(const FNovaSpacecraft& Spacecraft, int32 CompartmentIndex, int32 ModuleIndex)
+void SNovaModuleGroupsPanel::OpenModuleGroup(UNovaSpacecraftProcessingSystem* ProcessingSystem, int32 CompartmentIndex, int32 ModuleIndex)
 {
-	for (const FNovaModuleGroup& Group : Spacecraft.GetModuleGroups())
+	int32 ProcessingGroupIndex = ProcessingSystem->GetProcessingGroupIndex(CompartmentIndex, ModuleIndex);
+	if (ProcessingGroupIndex != INDEX_NONE)
 	{
-		for (const FNovaModuleGroupCompartment& GroupCompartment : Group.Compartments)
-		{
-			if (GroupCompartment.CompartmentIndex == CompartmentIndex)
-			{
-				if (GroupCompartment.ModuleIndices.Contains(ModuleIndex))
-				{
-					OpenModuleGroup(Spacecraft, Group.Index);
-				}
-			}
-		}
+		OpenModuleGroup(ProcessingSystem, ProcessingGroupIndex);
 	}
 }
 

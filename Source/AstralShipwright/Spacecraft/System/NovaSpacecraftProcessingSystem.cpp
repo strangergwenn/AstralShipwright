@@ -273,13 +273,13 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 	}
 }
 
-TArray<ENovaSpacecraftProcessingSystemStatus> UNovaSpacecraftProcessingSystem::GetProcessingGroupStatus(int32 GroupIndex) const
+TArray<ENovaSpacecraftProcessingSystemStatus> UNovaSpacecraftProcessingSystem::GetProcessingGroupStatus(int32 ProcessingGroupIndex) const
 {
 	TArray<ENovaSpacecraftProcessingSystemStatus> Result;
 
-	if (GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num())
+	if (ProcessingGroupIndex >= 0 && ProcessingGroupIndex < ProcessingGroupsStates.Num())
 	{
-		for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[GroupIndex].Chains)
+		for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[ProcessingGroupIndex].Chains)
 		{
 			Result.Add(ChainState.Status);
 		}
@@ -307,18 +307,28 @@ ENovaSpacecraftProcessingSystemStatus UNovaSpacecraftProcessingSystem::GetModule
 	return ENovaSpacecraftProcessingSystemStatus::Docked;
 }
 
+TArray<FNovaSpacecraftProcessingSystemChainState> UNovaSpacecraftProcessingSystem::GetChainStates(int32 ProcessingGroupIndex)
+{
+	if (ProcessingGroupIndex >= 0 && ProcessingGroupIndex < ProcessingGroupsStates.Num())
+	{
+		return ProcessingGroupsStates[ProcessingGroupIndex].Chains;
+	}
+
+	return TArray<FNovaSpacecraftProcessingSystemChainState>();
+}
+
 /*----------------------------------------------------
     Networking
 ----------------------------------------------------*/
 
-bool UNovaSpacecraftProcessingSystem::ServerSetProcessingGroupActive_Validate(int32 GroupIndex, bool Active)
+bool UNovaSpacecraftProcessingSystem::ServerSetProcessingGroupActive_Validate(int32 ProcessingGroupIndex, bool Active)
 {
 	return true;
 }
 
-void UNovaSpacecraftProcessingSystem::ServerSetProcessingGroupActive_Implementation(int32 GroupIndex, bool Active)
+void UNovaSpacecraftProcessingSystem::ServerSetProcessingGroupActive_Implementation(int32 ProcessingGroupIndex, bool Active)
 {
-	ServerSetProcessingGroupActive(GroupIndex, Active);
+	ServerSetProcessingGroupActive(ProcessingGroupIndex, Active);
 }
 
 void UNovaSpacecraftProcessingSystem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
