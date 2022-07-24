@@ -132,16 +132,35 @@ void SNovaModuleGroupsPanel::OpenModuleGroupsTable(const FNovaSpacecraft& Spacec
 		FSimpleDelegate());
 }
 
-void SNovaModuleGroupsPanel::OpenModuleGroup(UNovaSpacecraftProcessingSystem* ProcessingSystem, int32 GroupIndex)
+void SNovaModuleGroupsPanel::OpenModuleGroup(
+	UNovaSpacecraftProcessingSystem* ProcessingSystem, const FNovaSpacecraft& Spacecraft, int32 GroupIndex)
 {
 	ProcessingChainsBox->ClearChildren();
 	ModuleGroupsTable->Clear();
 
 	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
+	const FNovaModuleGroup&  Group = Spacecraft.GetModuleGroups()[GroupIndex];
 
+	int32 CurrentChainIndex = 0;
 	for (const FNovaSpacecraftProcessingSystemChainState& Chain : ProcessingSystem->GetChainStates(GroupIndex))
 	{
 		// clang-format off
+
+		ProcessingChainsBox->AddSlot()
+		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
+		[
+			SNew(SNeutronRichText)
+			.Text(FNeutronTextGetter::CreateLambda([=]() -> FText
+			{
+				return FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/> Processing chain {index}"),
+					TEXT("icon"), FNovaSpacecraft::GetModuleGroupIcon(Group.Type),
+					TEXT("index"), FText::AsNumber(CurrentChainIndex + 1));
+			}))
+			.TextStyle(&Theme.HeadingFont)
+			.AutoWrapText(false)
+		];
+
 		ProcessingChainsBox->AddSlot()
 		.AutoHeight()
 		.Padding(Theme.VerticalContentPadding)
@@ -230,19 +249,22 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(UNovaSpacecraftProcessingSystem* Pr
 				]
 			]
 		];
+
+		CurrentChainIndex++;
 	}
 
 	// clang-format on
 
-	Show(FText(), FText(), FSimpleDelegate());
+	Show(FText::FormatNamed(INVTEXT("Module group {index}"), TEXT("index"), FText::AsNumber(Group.Index + 1)), FText(), FSimpleDelegate());
 }
 
-void SNovaModuleGroupsPanel::OpenModuleGroup(UNovaSpacecraftProcessingSystem* ProcessingSystem, int32 CompartmentIndex, int32 ModuleIndex)
+void SNovaModuleGroupsPanel::OpenModuleGroup(
+	UNovaSpacecraftProcessingSystem* ProcessingSystem, const FNovaSpacecraft& Spacecraft, int32 CompartmentIndex, int32 ModuleIndex)
 {
 	int32 ProcessingGroupIndex = ProcessingSystem->GetProcessingGroupIndex(CompartmentIndex, ModuleIndex);
 	if (ProcessingGroupIndex != INDEX_NONE)
 	{
-		OpenModuleGroup(ProcessingSystem, ProcessingGroupIndex);
+		OpenModuleGroup(ProcessingSystem, Spacecraft, ProcessingGroupIndex);
 	}
 }
 

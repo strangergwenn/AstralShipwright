@@ -609,7 +609,8 @@ void SNovaMainMenuOperations::Show()
 					.HelpText(LOCTEXT("ProcessingGroupDetailsHelp", "Inspect resource processing for this module group"))
 					.OnClicked(FSimpleDelegate::CreateLambda([=]()
 					{
-						ModuleGroupsPanel->OpenModuleGroup(ProcessingSystem, Group.Index);
+						NCHECK(Spacecraft);
+						ModuleGroupsPanel->OpenModuleGroup(ProcessingSystem, *Spacecraft, Group.Index);
 					}))
 				]
 			]
@@ -1124,7 +1125,7 @@ void SNovaMainMenuOperations::OnInteractWithModule(int32 CompartmentIndex, int32
 	else if (Desc->IsA<UNovaProcessingModuleDescription>())
 	{
 		NCHECK(Spacecraft);
-		ModuleGroupsPanel->OpenModuleGroup(ProcessingSystem, CompartmentIndex, ModuleIndex);
+		ModuleGroupsPanel->OpenModuleGroup(ProcessingSystem, *Spacecraft, CompartmentIndex, ModuleIndex);
 	}
 }
 
