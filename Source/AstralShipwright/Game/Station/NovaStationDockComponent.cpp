@@ -27,6 +27,7 @@ UNovaStationDockComponent::UNovaStationDockComponent() : Super(), CurrentLinearV
 	CameraBoxExtent    = 500;
 
 	// Settings
+	bAffectDynamicIndirectLighting    = false;
 	PrimaryComponentTick.bCanEverTick = true;
 	SetCollisionProfileName("NoCollision");
 }
