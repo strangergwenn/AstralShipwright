@@ -51,7 +51,7 @@ struct FNovaSpacecraftProcessingSystemChainState
 {
 	GENERATED_BODY();
 
-	FNovaSpacecraftProcessingSystemChainState() : Status(ENovaSpacecraftProcessingSystemStatus::Stopped)
+	FNovaSpacecraftProcessingSystemChainState() : Status(ENovaSpacecraftProcessingSystemStatus::Stopped), MiningRig(nullptr)
 	{}
 
 	// Replicated status
@@ -72,6 +72,7 @@ struct FNovaSpacecraftProcessingSystemChainState
 
 	// Local data
 	TArray<FNovaSpacecraftProcessingSystemChainStateModule> Modules;
+	const UNovaMiningEquipmentDescription*                  MiningRig;
 };
 
 /** Processing state for a full module group */

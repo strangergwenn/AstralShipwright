@@ -45,8 +45,39 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 			ProcessingModules.Add(Entry);
 		}
 
-		// Merge modules into chains
+		// Setup chain merging
 		TArray<FNovaSpacecraftProcessingSystemChainState> ProcessingChains;
+		auto MergeChains = [](FNovaSpacecraftProcessingSystemChainState* ChainState, const TArray<const UNovaResource*>& Inputs,
+							   const TArray<const UNovaResource*>& Outputs)
+		{
+			// For each new output, either consume an input, or add it
+			for (const UNovaResource* Resource : Outputs)
+			{
+				if (ChainState->Inputs.Contains(Resource))
+				{
+					ChainState->Inputs.RemoveSingle(Resource);
+				}
+				else
+				{
+					ChainState->Outputs.Add(Resource);
+				}
+			}
+
+			// For each new input, either consume an output, or add it
+			for (const UNovaResource* Resource : Inputs)
+			{
+				if (ChainState->Outputs.Contains(Resource))
+				{
+					ChainState->Outputs.RemoveSingle(Resource);
+				}
+				else
+				{
+					ChainState->Inputs.Add(Resource);
+				}
+			}
+		};
+
+		// Merge modules into chains
 		for (auto It = ProcessingModules.CreateIterator(); It; ++It)
 		{
 			const UNovaProcessingModuleDescription* Module = It->Module;
@@ -78,32 +109,7 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 			if (ChainState)
 			{
 				ChainState->Modules.Add(*It);
-
-				// For each new output, either consume an input, or add it
-				for (const UNovaResource* Resource : Module->Outputs)
-				{
-					if (ChainState->Inputs.Contains(Resource))
-					{
-						ChainState->Inputs.RemoveSingle(Resource);
-					}
-					else
-					{
-						ChainState->Outputs.Add(Resource);
-					}
-				}
-
-				// For each new input, either consume an output, or add it
-				for (const UNovaResource* Resource : Module->Inputs)
-				{
-					if (ChainState->Outputs.Contains(Resource))
-					{
-						ChainState->Outputs.RemoveSingle(Resource);
-					}
-					else
-					{
-						ChainState->Inputs.Add(Resource);
-					}
-				}
+				MergeChains(ChainState, Module->Inputs, Module->Outputs);
 			}
 
 			// Else, add the module as a new chain
@@ -137,6 +143,32 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 					for (const FNovaSpacecraftProcessingSystemChainStateModule& ModuleEntry : ChainState.Modules)
 					{
 						ChainState.ProcessingRate = FMath::Min(ChainState.ProcessingRate, ModuleEntry.Module->ProcessingRate);
+					}
+
+					// Find out potential mining rig
+					for (const FNovaCompartment& Compartment : Spacecraft.Compartments)
+					{
+						for (const FNovaModuleSlot& Slot : Compartment.Description->ModuleSlots)
+						{
+							for (const FNovaModuleGroupCompartment& GroupCompartment : Group.Compartments)
+							{
+								for (FName EquipmentSlotName : GroupCompartment.LinkedEquipments)
+								{
+									if (EquipmentSlotName == Slot.SocketName)
+									{
+										const UNovaMiningEquipmentDescription* MiningRigCandidate =
+											Cast<UNovaMiningEquipmentDescription>(Compartment.GetEquipmentySocket(EquipmentSlotName));
+										if (MiningRigCandidate)
+										{
+											ChainState.MiningRig = MiningRigCandidate;
+
+											// TODO: implement mining resource
+											MergeChains(&ChainState, {}, {});
+										}
+									}
+								}
+							}
+						}
 					}
 
 					GroupState.Chains.Add(ChainState);
