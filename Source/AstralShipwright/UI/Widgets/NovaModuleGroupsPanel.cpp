@@ -138,13 +138,28 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 	ProcessingChainsBox->ClearChildren();
 	ModuleGroupsTable->Clear();
 
-	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
-	const FNovaModuleGroup&  Group = Spacecraft.GetModuleGroups()[GroupIndex];
+	const FNeutronMainTheme& Theme     = FNeutronStyleSet::GetMainTheme();
+	const FNovaModuleGroup&  Group     = Spacecraft.GetModuleGroups()[GroupIndex];
+	const int32              FullWidth = ENovaConstants::MaxCompartmentCount * FNeutronStyleSet::GetButtonSize("InventoryButtonSize").Width;
 
+	// Add title
+	// clang-format off
+	ProcessingChainsBox->AddSlot()
+	.AutoHeight()
+	.Padding(Theme.VerticalContentPadding)
+	[
+		SNew(STextBlock)
+		.Text(LOCTEXT("ModuleGroupsChains", "Module groups organize their processing modules into processing chains, where a module's output is plugged into a module's input. "
+			"Module groups can be powered on or off and all processing chains inside will follow. "
+			"Individual chains can be blocked if they don't have enough input material or space for their outputs."))
+		.TextStyle(&Theme.InfoFont)
+		.WrapTextAt(FullWidth)
+	];
+
+	// Add chains
 	int32 CurrentChainIndex = 0;
 	for (const FNovaSpacecraftProcessingSystemChainState& Chain : ProcessingSystem->GetChainStates(GroupIndex))
 	{
-		// clang-format off
 
 		ProcessingChainsBox->AddSlot()
 		.AutoHeight()
