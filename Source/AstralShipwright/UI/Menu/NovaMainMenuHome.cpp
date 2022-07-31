@@ -222,7 +222,7 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 				[
 					SNew(STextBlock)
 					.TextStyle(&Theme.HeadingFont)
-					.Text(INVTEXT("A game by Gwennaël 'Stranger' Arbona"))
+					.Text(INVTEXT("A game by Gwennaël Arbona"))
 				]
 
 				+ SVerticalBox::Slot()

@@ -749,7 +749,7 @@ FText SNovaMainMenuOperations::GenerateResourceTooltip(const UNovaResource* Reso
 
 bool SNovaMainMenuOperations::IsBulkTradeEnabled() const
 {
-	return SpacecraftPawn->IsDocked() && !SpacecraftPawn->HasModifications();
+	return SpacecraftPawn && SpacecraftPawn->IsDocked() && !SpacecraftPawn->HasModifications();
 }
 
 TOptional<float> SNovaMainMenuOperations::GetPropellantRatio() const

@@ -1590,7 +1590,12 @@ void SNovaMainMenuAssembly::VerticalAnalogInput(float Value)
 
 TSharedPtr<SNeutronButton> SNovaMainMenuAssembly::GetDefaultFocusButton() const
 {
-	if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly && SaveButton->IsButtonEnabled())
+	if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly && SpacecraftPawn && SpacecraftPawn->GetCompartmentCount() == 0 &&
+		CompartmentList->IsButtonEnabled())
+	{
+		return CompartmentList;
+	}
+	else if (CurrentPanelState == ENovaMainMenuAssemblyState::Assembly && SaveButton->IsButtonEnabled())
 	{
 		return SaveButton;
 	}
