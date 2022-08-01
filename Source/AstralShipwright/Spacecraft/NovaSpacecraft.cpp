@@ -101,7 +101,8 @@ const UNovaEquipmentDescription* FNovaCompartment::GetEquipmentySocket(FName Soc
 	{
 		for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
 		{
-			if (Description->GetEquipmentSlot(EquipmentIndex).SocketName == SocketName)
+			if (Description->GetEquipmentSlot(EquipmentIndex).SocketName == SocketName ||
+				Description->GetEquipmentSlot(EquipmentIndex).ForwardSocketName == SocketName)
 			{
 				return Equipment[EquipmentIndex];
 			}

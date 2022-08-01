@@ -261,9 +261,22 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 						.AutoHeight()
 						.Padding(Theme.VerticalContentPadding)
 						[
-							SNew(STextBlock)
-							.TextStyle(&Theme.HeadingFont)
-							.Text(LOCTEXT("EquipmentTitle", "Equipment"))
+							SNew(SHorizontalBox)
+
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
+							[
+								SNew(STextBlock)
+								.TextStyle(&Theme.HeadingFont)
+								.Text(LOCTEXT("EquipmentTitle", "Equipment"))
+							]
+
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
+							[
+								SNew(SNeutronKeyLabel)
+								.Action(FNeutronPlayerInput::MenuAltSecondary)
+							]
 						]
 
 						// Equipment controls
@@ -677,10 +690,114 @@ void SNovaMainMenuOperations::Show()
 		// clang-format on
 	}
 
-	// TODO: equipment
+	// Add mining rig if found
+	bool  HasEquipment        = false;
+	int32 MiningRigGroupIndex = ProcessingSystem->GetMiningRigIndex();
+	if (MiningRigGroupIndex != INDEX_NONE)
+	{
+		HasEquipment                     = true;
+		const FNovaModuleGroup&    Group = Spacecraft->GetModuleGroups()[MiningRigGroupIndex];
+		TSharedPtr<SNeutronButton> EnableButton;
+
+		// clang-format off
+		EquipmentBox->AddSlot()
+		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
+		[
+			SNew(SBorder)
+			.BorderImage(&Theme.MainMenuGenericBackground)
+			.Padding(0)
+			[
+				SNew(SHorizontalBox)
+			
+				// Text-based information
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SNeutronButtonLayout)
+					.Size("OperationsAltButtonSize")
+					[
+						SNew(SHorizontalBox)
+
+						// Group icon & index
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						.Padding(Theme.ContentPadding)
+						.VAlign(VAlign_Center)
+						[
+							SNew(SBorder)
+							.Padding(0)
+							.BorderImage(new FSlateNoResource)
+							.ColorAndOpacity(Group.Color)
+							[
+								SNew(SRichTextBlock)
+								.TextStyle(&Theme.HeadingFont)
+								.Text(FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/>\n{index}"),
+																TEXT("icon"), FNovaSpacecraft::GetModuleGroupIcon(Group.Type),
+																TEXT("index"), FText::AsNumber(Group.Index + 1)))
+								.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
+								+ SRichTextBlock::ImageDecorator()
+							]
+						]
+					
+						// Resources breakdown
+						+ SHorizontalBox::Slot()
+						.Padding(Theme.ContentPadding)
+						.VAlign(VAlign_Center)
+						[
+							SNew(STextBlock)
+							.TextStyle(&Theme.MainFont)
+							.Text_Lambda([=]()
+							{
+								// TODO 
+								return FText();
+							})
+						]
+					]
+				]
+
+				// Processing group activity toggle
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNeutronAssignNew(EnableButton, SNeutronButton)
+					.Size("HalfButtonSize")
+					.Toggle(true)
+					/*.Text_Lambda([=]()
+					{
+						return ProcessingSystem->IsProcessingGroupActive(Group.Index) ? LOCTEXT("StopProcessing", "Stop") : LOCTEXT("StartProcessing", "Start");
+					})
+					.HelpText_Lambda([=]()
+					{
+						auto Status = ProcessingSystem->GetProcessingGroupStatus(Group.Index);
+						if (Status.Num() == 0)
+						{
+							return LOCTEXT("ProcessingNoneHelp", "This module group doesn't have a valid configuration");
+						}
+						else if (Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked))
+						{
+							return LOCTEXT("ProcessingDockedHelp", "Modules cannot be activated while docked");
+						}
+						else
+						{
+							return LOCTEXT("ProcessingHelp", "Toggle activity for this module group");
+						}
+					})
+					.Enabled_Lambda([=]()
+					{
+						auto Status = ProcessingSystem->GetProcessingGroupStatus(Group.Index);
+						return Status.Num() && !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked);
+					})*/
+				]
+			]
+		];
+		// clang-format on
+
+		DefaultEquipmentButton = EnableButton;
+	}
 
 	// No equipment found
-	if (true)
+	if (!HasEquipment)
 	{
 		// clang-format off
 		EquipmentBox->AddSlot()
@@ -704,6 +821,7 @@ void SNovaMainMenuOperations::Hide()
 	ModuleGroupsBox->ClearChildren();
 	EquipmentBox->ClearChildren();
 	DefaultModuleButton.Reset();
+	DefaultEquipmentButton.Reset();
 }
 
 void SNovaMainMenuOperations::UpdateGameObjects()
@@ -725,6 +843,13 @@ void SNovaMainMenuOperations::OnKeyPressed(const FKey& Key)
 		if (DefaultModuleButton.IsValid())
 		{
 			GetMenu()->SetFocusedButton(DefaultModuleButton, true);
+		}
+	}
+	else if (MenuManager->GetMenu()->IsActionKey(FNeutronPlayerInput::MenuAltSecondary, Key))
+	{
+		if (DefaultEquipmentButton.IsValid())
+		{
+			GetMenu()->SetFocusedButton(DefaultEquipmentButton, true);
 		}
 	}
 }

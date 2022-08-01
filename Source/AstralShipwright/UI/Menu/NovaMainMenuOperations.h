@@ -122,4 +122,5 @@ protected:
 	TSharedPtr<class SVerticalBox>           ModuleGroupsBox;
 	TSharedPtr<class SVerticalBox>           EquipmentBox;
 	TSharedPtr<class SNeutronButton>         DefaultModuleButton;
+	TSharedPtr<class SNeutronButton>         DefaultEquipmentButton;
 };

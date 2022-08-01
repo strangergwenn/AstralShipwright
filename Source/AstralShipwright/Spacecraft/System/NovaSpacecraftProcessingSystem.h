@@ -51,7 +51,7 @@ struct FNovaSpacecraftProcessingSystemChainState
 {
 	GENERATED_BODY();
 
-	FNovaSpacecraftProcessingSystemChainState() : Status(ENovaSpacecraftProcessingSystemStatus::Stopped), MiningRig(nullptr)
+	FNovaSpacecraftProcessingSystemChainState() : Status(ENovaSpacecraftProcessingSystemStatus::Stopped)
 	{}
 
 	// Replicated status
@@ -70,9 +70,9 @@ struct FNovaSpacecraftProcessingSystemChainState
 	UPROPERTY()
 	float ProcessingRate;
 
-	// Local data
+	// Replicated module list
+	UPROPERTY()
 	TArray<FNovaSpacecraftProcessingSystemChainStateModule> Modules;
-	const UNovaMiningEquipmentDescription*                  MiningRig;
 };
 
 /** Processing state for a full module group */
@@ -81,20 +81,27 @@ struct FNovaSpacecraftProcessingSystemGroupState
 {
 	GENERATED_BODY();
 
-	FNovaSpacecraftProcessingSystemGroupState() : GroupIndex(-1), Active(false)
+	FNovaSpacecraftProcessingSystemGroupState() : GroupIndex(-1), Active(false), MiningRig(nullptr)
 	{}
 
-	FNovaSpacecraftProcessingSystemGroupState(int32 Index) : GroupIndex(Index), Active(false)
+	FNovaSpacecraftProcessingSystemGroupState(int32 Index) : GroupIndex(Index), Active(false), MiningRig(nullptr)
 	{}
 
+	// Module group index
 	UPROPERTY()
 	int32 GroupIndex;
 
+	// Processing group activity
 	UPROPERTY()
 	bool Active;
 
+	// Processing chains
 	UPROPERTY()
 	TArray<FNovaSpacecraftProcessingSystemChainState> Chains;
+
+	// Mining rig
+	UPROPERTY()
+	const class UNovaMiningEquipmentDescription* MiningRig;
 };
 
 /** Resource processing system that transforms resources */
@@ -233,6 +240,20 @@ public:
 		return false;
 	}
 
+	/** Get the module group that matches a mining rig */
+	int32 GetMiningRigIndex() const
+	{
+		for (const auto& GroupState : ProcessingGroupsStates)
+		{
+			if (GroupState.MiningRig)
+			{
+				return GroupState.GroupIndex;
+			}
+		}
+
+		return INDEX_NONE;
+	}
+
 	/** Get the real-time cargo state for a specific module slot */
 	const FNovaSpacecraftCargo& GetCargo(int32 CompartmentIndex, int32 ModuleIndex) const
 	{
@@ -247,7 +268,7 @@ public:
 		}
 	}
 
-	/** Processing statuts text getter */
+	/** Processing status text getter */
 	static FText GetStatusText(ENovaSpacecraftProcessingSystemStatus Type);
 
 	/*----------------------------------------------------
