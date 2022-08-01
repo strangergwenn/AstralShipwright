@@ -353,8 +353,8 @@ void ANovaPlayerController::PlayerTick(float DeltaTime)
 		ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
 		if (IsValid(SpacecraftPawn) && IsInPhotoMode())
 		{
-			SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
-			SpacecraftPawn->SetHighlightedCompartment(INDEX_NONE);
+			SpacecraftPawn->SetSelectedCompartmentIndex(INDEX_NONE);
+			SpacecraftPawn->SetHoveredCompartmentIndex(INDEX_NONE);
 		}
 	}
 }

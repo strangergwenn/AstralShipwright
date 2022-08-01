@@ -1444,8 +1444,8 @@ void SNovaMainMenuAssembly::Tick(const FGeometry& AllottedGeometry, const double
 			OutlinedCompartment = SelectedCompartmentIndex;
 		}
 
-		SpacecraftPawn->SetHighlightedCompartment(HighlightedCompartment);
-		SpacecraftPawn->SetOutlinedCompartment(OutlinedCompartment);
+		SpacecraftPawn->SetHoveredCompartmentIndex(HighlightedCompartment);
+		SpacecraftPawn->SetSelectedCompartmentIndex(OutlinedCompartment);
 	}
 
 	CompartmentAnimation.Update(SelectedCompartmentIndex, DeltaTime);
@@ -1470,7 +1470,7 @@ void SNovaMainMenuAssembly::Show()
 			EditedCompartmentIndex = INDEX_NONE;
 
 			SpacecraftPawn->SetDisplayFilter(SpacecraftPawn->GetDisplayFilter(), INDEX_NONE);
-			SpacecraftPawn->SetOutlinedCompartment(SelectedCompartmentIndex);
+			SpacecraftPawn->SetSelectedCompartmentIndex(SelectedCompartmentIndex);
 		}
 
 		// Reset compartment data
@@ -1487,8 +1487,8 @@ void SNovaMainMenuAssembly::Hide()
 	if (IsValid(SpacecraftPawn))
 	{
 		SpacecraftPawn->SetDisplayFilter(ENovaAssemblyDisplayFilter::All, INDEX_NONE);
-		SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
-		SpacecraftPawn->SetHighlightedCompartment(INDEX_NONE);
+		SpacecraftPawn->SetSelectedCompartmentIndex(INDEX_NONE);
+		SpacecraftPawn->SetHoveredCompartmentIndex(INDEX_NONE);
 	}
 
 	DisplayFilter->SetCurrentValue(static_cast<float>(ENovaAssemblyDisplayFilter::All));
@@ -2550,7 +2550,7 @@ void SNovaMainMenuAssembly::OnEditCompartment()
 	{
 		// Update spacecraft filtering
 		SpacecraftPawn->SetDisplayFilter(SpacecraftPawn->GetDisplayFilter(), EditedCompartmentIndex);
-		SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
+		SpacecraftPawn->SetSelectedCompartmentIndex(INDEX_NONE);
 
 		// Find the first module or equipment that we can equip
 		for (int32 CommonIndex = 0; CommonIndex <= GetMaxCommonIndex(); CommonIndex++)
@@ -2733,7 +2733,7 @@ void SNovaMainMenuAssembly::OnOpenCustomization()
 {
 	NLOG("SNovaMainMenuAssembly::OnOpenCustomization");
 
-	SpacecraftPawn->SetOutlinedCompartment(INDEX_NONE);
+	SpacecraftPawn->SetSelectedCompartmentIndex(INDEX_NONE);
 
 	DesiredPanelState = ENovaMainMenuAssemblyState::Customization;
 }
@@ -2843,7 +2843,7 @@ void SNovaMainMenuAssembly::OnBackToAssembly()
 		DesiredPanelState      = ENovaMainMenuAssemblyState::Assembly;
 
 		SpacecraftPawn->SetDisplayFilter(SpacecraftPawn->GetDisplayFilter(), INDEX_NONE);
-		SpacecraftPawn->SetOutlinedCompartment(SelectedCompartmentIndex);
+		SpacecraftPawn->SetSelectedCompartmentIndex(SelectedCompartmentIndex);
 	}
 }
 

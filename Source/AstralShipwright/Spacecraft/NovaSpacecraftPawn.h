@@ -336,27 +336,15 @@ public:
 	}
 
 	/** Set the compartment to highlight, none if INDEX_NONE */
-	void SetHighlightedCompartment(int32 Index)
+	void SetHoveredCompartmentIndex(int32 Index)
 	{
-		HighlightedCompartment.SetDesired(Index);
+		HoveredCompartment.SetDesired(Index);
 	}
 
 	/** Set the compartment to outline, none if INDEX_NONE */
-	void SetOutlinedCompartment(int32 Index)
+	void SetSelectedCompartmentIndex(int32 Index)
 	{
-		OutlinedCompartment.SetDesired(Index);
-	}
-
-	/** Get the compartment highlight alpha */
-	float GetHighlightAlpha() const
-	{
-		return HighlightedCompartment.GetAlpha();
-	}
-
-	/** Get the compartment outline alpha */
-	float GetOutlineAlpha() const
-	{
-		return OutlinedCompartment.GetAlpha();
+		SelectedCompartment.SetDesired(Index);
 	}
 
 	/*----------------------------------------------------
@@ -438,8 +426,8 @@ protected:
 	TArray<FSoftObjectPath> RequestedAssets;
 
 	// Outlining
-	FNovaSpacecraftPawnCompartmentIndex HighlightedCompartment;
-	FNovaSpacecraftPawnCompartmentIndex OutlinedCompartment;
+	FNovaSpacecraftPawnCompartmentIndex HoveredCompartment;
+	FNovaSpacecraftPawnCompartmentIndex SelectedCompartment;
 
 	// Display state
 	ENovaAssemblyDisplayFilter DisplayFilterType;

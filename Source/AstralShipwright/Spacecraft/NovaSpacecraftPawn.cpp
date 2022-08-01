@@ -34,8 +34,8 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 
 	, WaitingAssetLoading(false)
 
-	, HighlightedCompartment(ENeutronUIConstants::FadeDurationMinimal)
-	, OutlinedCompartment(ENeutronUIConstants::FadeDurationMinimal)
+	, HoveredCompartment(ENeutronUIConstants::FadeDurationMinimal)
+	, SelectedCompartment(ENeutronUIConstants::FadeDurationMinimal)
 
 	, DisplayFilterType(ENovaAssemblyDisplayFilter::All)
 	, DisplayFilterIndex(INDEX_NONE)
@@ -73,6 +73,10 @@ void ANovaSpacecraftPawn::BeginPlay()
 void ANovaSpacecraftPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// Update visual effects
+	HoveredCompartment.Update(DeltaTime);
+	SelectedCompartment.Update(DeltaTime);
 
 	// Assembly sequence
 	if (AssemblyState != ENovaAssemblyState::Idle)
@@ -128,45 +132,18 @@ void ANovaSpacecraftPawn::Tick(float DeltaTime)
 					{
 						if (Element.Mesh)
 						{
-							int32 HighlightValue = 0;
-							int32 OutlineValue   = 0;
+							int32 HoveredValue  = CompartmentIndex == HoveredCompartment.GetCurrent() ? 1 : 0;
+							int32 SelectedValue = CompartmentIndex == SelectedCompartment.GetCurrent() ? 1 : 0;
 
-							// Outline only, no highlight
-							if (CompartmentIndex == OutlinedCompartment.GetCurrent() &&
-								CompartmentIndex != HighlightedCompartment.GetCurrent())
-							{
-								OutlineValue = 1;
-							}
-
-							// Outline and highlight
-							else if (CompartmentIndex == OutlinedCompartment.GetCurrent() &&
-									 CompartmentIndex == HighlightedCompartment.GetCurrent())
-							{
-								HighlightValue = 1;
-								OutlineValue   = 1;
-							}
-
-							// Highlight only
-							if (CompartmentIndex != OutlinedCompartment.GetCurrent() &&
-								CompartmentIndex == HighlightedCompartment.GetCurrent())
-							{
-								HighlightValue = 1;
-							}
-
-							// Outline and alpha were reversed here after loss of stencil made outlines a lot worse
-							Element.Mesh->RequestParameter("OutlineAlpha", HighlightValue * GetHighlightAlpha());
-							Element.Mesh->RequestParameter("HighlightAlpha", OutlineValue * GetOutlineAlpha());
-							Element.Mesh->RequestParameter("HighlightColor", UNeutronMenuManager::Get()->GetHighlightColor());
+							Element.Mesh->RequestParameter("OutlineAlpha", HoveredValue * HoveredCompartment.GetAlpha(), true);
+							Element.Mesh->RequestParameter("HighlightAlpha", SelectedValue * SelectedCompartment.GetAlpha(), true);
+							Element.Mesh->RequestParameter("HighlightColor", UNeutronMenuManager::Get()->GetHighlightColor(), true);
 						}
 					}));
 		}
 
 		UpdateBounds();
 	}
-
-	// Update visual effects
-	HighlightedCompartment.Update(DeltaTime);
-	OutlinedCompartment.Update(DeltaTime);
 }
 
 void ANovaSpacecraftPawn::PossessedBy(AController* NewController)
