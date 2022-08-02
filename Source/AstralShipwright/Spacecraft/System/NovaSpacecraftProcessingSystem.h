@@ -136,6 +136,10 @@ public:
 		LoadInternal(Spacecraft);
 	}
 
+	/*----------------------------------------------------
+	    Processing groups
+	----------------------------------------------------*/
+
 	/** Get the number of module groups that can support resource processing */
 	int32 GetProcessingGroupCount() const
 	{
@@ -171,6 +175,22 @@ public:
 		return GetSpacecraft()->GetModuleGroups()[ProcessingGroupsStates[ProcessingGroupIndex].GroupIndex];
 	}
 
+	/** Get the current processing status for each chain of a processing group */
+	TArray<ENovaSpacecraftProcessingSystemStatus> GetProcessingGroupStatus(int32 ProcessingGroupIndex) const;
+
+	/** Get the processing status for a given module */
+	ENovaSpacecraftProcessingSystemStatus GetModuleStatus(int32 CompartmentIndex, int32 ModuleIndex) const;
+
+	/** Get the processing status for the mining rig */
+	ENovaSpacecraftProcessingSystemStatus GetMiningRigStatus() const
+	{
+		return MiningRigStatus;
+	}
+
+	/*----------------------------------------------------
+	    Resources
+	----------------------------------------------------*/
+
 	/** Get input resources for a processing group */
 	TArray<const class UNovaResource*> GetInputResources(int32 ProcessingGroupIndex) const
 	{
@@ -203,42 +223,8 @@ public:
 		return Result;
 	}
 
-	/** Get the current processing status for each chain of a processing group */
-	TArray<ENovaSpacecraftProcessingSystemStatus> GetProcessingGroupStatus(int32 ProcessingGroupIndex) const;
-
-	/** Get the processing status for a given module */
-	ENovaSpacecraftProcessingSystemStatus GetModuleStatus(int32 CompartmentIndex, int32 ModuleIndex) const;
-
 	/** Get all processing chain states for a group */
 	TArray<FNovaSpacecraftProcessingSystemChainState> GetChainStates(int32 ProcessingGroupIndex);
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerSetProcessingGroupActive(int32 ProcessingGroupIndex, bool Active);
-
-	/** Set the active state for a processing group */
-	void SetProcessingGroupActive(int32 GroupIndex, bool Active)
-	{
-		if (GetOwner()->GetLocalRole() == ROLE_Authority)
-		{
-			NCHECK(GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num());
-			ProcessingGroupsStates[GroupIndex].Active = Active;
-		}
-		else
-		{
-			ServerSetProcessingGroupActive(GroupIndex, Active);
-		}
-	}
-
-	/** Check the active state for a processing group */
-	bool IsProcessingGroupActive(int32 ProcessingGroupIndex) const
-	{
-		if (ProcessingGroupIndex >= 0 && ProcessingGroupIndex < ProcessingGroupsStates.Num())
-		{
-			return ProcessingGroupsStates[ProcessingGroupIndex].Active;
-		}
-
-		return false;
-	}
 
 	/** Get the module group that matches a mining rig */
 	int32 GetMiningRigIndex() const
@@ -268,6 +254,60 @@ public:
 		}
 	}
 
+	/*----------------------------------------------------
+	    Activity control
+	----------------------------------------------------*/
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSetProcessingGroupActive(int32 ProcessingGroupIndex, bool Active);
+
+	/** Set the active state for a processing group */
+	void SetProcessingGroupActive(int32 GroupIndex, bool Active)
+	{
+		if (GetOwner()->GetLocalRole() == ROLE_Authority)
+		{
+			NCHECK(GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num());
+			ProcessingGroupsStates[GroupIndex].Active = Active;
+		}
+		else
+		{
+			ServerSetProcessingGroupActive(GroupIndex, Active);
+		}
+	}
+
+	/** Check the active state for a processing group */
+	bool IsProcessingGroupActive(int32 ProcessingGroupIndex) const
+	{
+		if (ProcessingGroupIndex >= 0 && ProcessingGroupIndex < ProcessingGroupsStates.Num())
+		{
+			return ProcessingGroupsStates[ProcessingGroupIndex].Active;
+		}
+
+		return false;
+	}
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSetMiningRigActive(bool Active);
+
+	/** Set the active state for the mining rig */
+	void SetMiningRigActive(bool Active)
+	{
+		if (GetOwner()->GetLocalRole() == ROLE_Authority)
+		{
+			MiningRigActive = Active;
+		}
+		else
+		{
+			ServerSetMiningRigActive(Active);
+		}
+	}
+
+	/** Check the active state for the mining rig */
+	bool IsMiningRigActive() const
+	{
+		return MiningRigActive;
+	}
+
 	/** Processing status text getter */
 	static FText GetStatusText(ENovaSpacecraftProcessingSystemStatus Type);
 
@@ -293,4 +333,12 @@ protected:
 	// Processing state
 	UPROPERTY(Replicated)
 	TArray<FNovaSpacecraftProcessingSystemGroupState> ProcessingGroupsStates;
+
+	// Mining state
+	UPROPERTY(Replicated)
+	bool MiningRigActive;
+
+	// Mining status
+	UPROPERTY(Replicated)
+	ENovaSpacecraftProcessingSystemStatus MiningRigStatus;
 };

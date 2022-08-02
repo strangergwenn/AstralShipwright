@@ -630,6 +630,7 @@ void SNovaMainMenuOperations::Show()
 		];
 		// clang-format on
 
+		ModuleEquipmentButtons.Add(EnableButton);
 		if (ProcessingGroupIndex == 0)
 		{
 			DefaultModuleButton = EnableButton;
@@ -740,7 +741,7 @@ void SNovaMainMenuOperations::Show()
 							]
 						]
 					
-						// Resources breakdown
+						// Mining rig state breakdown
 						+ SHorizontalBox::Slot()
 						.Padding(Theme.ContentPadding)
 						.VAlign(VAlign_Center)
@@ -749,50 +750,57 @@ void SNovaMainMenuOperations::Show()
 							.TextStyle(&Theme.MainFont)
 							.Text_Lambda([=]()
 							{
-								// TODO 
+								// TODO get resource currently produced
 								return FText();
 							})
 						]
 					]
 				]
 
-				// Processing group activity toggle
+				// Processing rig activity toggle
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
 					SNeutronAssignNew(EnableButton, SNeutronButton)
 					.Size("HalfButtonSize")
 					.Toggle(true)
-					/*.Text_Lambda([=]()
+					.Text_Lambda([=]()
 					{
-						return ProcessingSystem->IsProcessingGroupActive(Group.Index) ? LOCTEXT("StopProcessing", "Stop") : LOCTEXT("StartProcessing", "Start");
+						return ProcessingSystem->IsMiningRigActive() ? LOCTEXT("StopMining", "Stop") : LOCTEXT("StartMining", "Start");
 					})
 					.HelpText_Lambda([=]()
 					{
-						auto Status = ProcessingSystem->GetProcessingGroupStatus(Group.Index);
-						if (Status.Num() == 0)
+						if (ProcessingSystem->GetMiningRigIndex() != INDEX_NONE)
 						{
-							return LOCTEXT("ProcessingNoneHelp", "This module group doesn't have a valid configuration");
+							auto Status = ProcessingSystem->GetMiningRigStatus();
+
+							if (Status == ENovaSpacecraftProcessingSystemStatus::Docked)
+							{
+								return LOCTEXT("MiningDockedHelp", "Mining rigs cannot be activated while docked");
+							}
+							else
+							{
+								return LOCTEXT("MiningHelp", "Toggle activity for this mining rig");
+							}
 						}
-						else if (Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked))
-						{
-							return LOCTEXT("ProcessingDockedHelp", "Modules cannot be activated while docked");
-						}
-						else
-						{
-							return LOCTEXT("ProcessingHelp", "Toggle activity for this module group");
-						}
+						
+						return FText();
 					})
 					.Enabled_Lambda([=]()
 					{
-						auto Status = ProcessingSystem->GetProcessingGroupStatus(Group.Index);
-						return Status.Num() && !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked);
-					})*/
+						if (ProcessingSystem->GetMiningRigIndex() != INDEX_NONE)
+						{
+							auto Status = ProcessingSystem->GetMiningRigStatus();
+							return Status != ENovaSpacecraftProcessingSystemStatus::Docked;
+						}
+						return false;
+					})
 				]
 			]
 		];
 		// clang-format on
 
+		ModuleEquipmentButtons.Add(EnableButton);
 		DefaultEquipmentButton = EnableButton;
 	}
 
@@ -822,6 +830,7 @@ void SNovaMainMenuOperations::Hide()
 	EquipmentBox->ClearChildren();
 	DefaultModuleButton.Reset();
 	DefaultEquipmentButton.Reset();
+	ModuleEquipmentButtons.Empty();
 }
 
 void SNovaMainMenuOperations::UpdateGameObjects()
@@ -834,6 +843,14 @@ void SNovaMainMenuOperations::UpdateGameObjects()
 		IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftPropellantSystem>(Spacecraft) : nullptr;
 	ProcessingSystem =
 		IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(Spacecraft) : nullptr;
+
+	if (SpacecraftPawn && SpacecraftPawn->IsDocked())
+	{
+		for (const TSharedPtr<SNeutronButton>& Button : ModuleEquipmentButtons)
+		{
+			Button->SetActive(false);
+		}
+	}
 }
 
 void SNovaMainMenuOperations::OnKeyPressed(const FKey& Key)

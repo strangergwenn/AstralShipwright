@@ -123,4 +123,5 @@ protected:
 	TSharedPtr<class SVerticalBox>           EquipmentBox;
 	TSharedPtr<class SNeutronButton>         DefaultModuleButton;
 	TSharedPtr<class SNeutronButton>         DefaultEquipmentButton;
+	TArray<TSharedPtr<class SNeutronButton>> ModuleEquipmentButtons;
 };

@@ -27,6 +27,8 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 
 	NLOG("UNovaSpacecraftProcessingSystem::LoadInternal");
 
+	MiningRigActive = false;
+
 	// Initialize processing groups with all unique descriptions
 	ProcessingGroupsStates.Empty();
 	for (const FNovaModuleGroup& Group : Spacecraft.GetModuleGroups())
@@ -205,15 +207,17 @@ void UNovaSpacecraftProcessingSystem::Save(FNovaSpacecraft& Spacecraft)
 	{
 		GroupState.Active = false;
 	}
+	MiningRigActive = false;
 }
 
 void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime FinalTime)
 {
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 
-	const FNovaSpacecraft* Spacecraft        = GetSpacecraft();
-	int32                  CurrentGroupIndex = 0;
+	const FNovaSpacecraft* Spacecraft = GetSpacecraft();
 
+	// Update processing groups
+	int32 CurrentGroupIndex = 0;
 	for (auto& GroupState : ProcessingGroupsStates)
 	{
 		for (auto& ChainState : GroupState.Chains)
@@ -292,6 +296,18 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 
 		CurrentGroupIndex++;
 	}
+
+	// Process the mining rig
+	if (IsSpacecraftDocked())
+	{
+		MiningRigStatus = ENovaSpacecraftProcessingSystemStatus::Docked;
+	}
+	else
+	{
+		// TODO
+		MiningRigStatus =
+			MiningRigActive ? ENovaSpacecraftProcessingSystemStatus::Processing : ENovaSpacecraftProcessingSystemStatus::Stopped;
+	}
 }
 
 TArray<ENovaSpacecraftProcessingSystemStatus> UNovaSpacecraftProcessingSystem::GetProcessingGroupStatus(int32 ProcessingGroupIndex) const
@@ -365,7 +381,17 @@ bool UNovaSpacecraftProcessingSystem::ServerSetProcessingGroupActive_Validate(in
 
 void UNovaSpacecraftProcessingSystem::ServerSetProcessingGroupActive_Implementation(int32 ProcessingGroupIndex, bool Active)
 {
-	ServerSetProcessingGroupActive(ProcessingGroupIndex, Active);
+	SetProcessingGroupActive(ProcessingGroupIndex, Active);
+}
+
+bool UNovaSpacecraftProcessingSystem::ServerSetMiningRigActive_Validate(bool Active)
+{
+	return true;
+}
+
+void UNovaSpacecraftProcessingSystem::ServerSetMiningRigActive_Implementation(bool Active)
+{
+	SetMiningRigActive(Active);
 }
 
 void UNovaSpacecraftProcessingSystem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -374,6 +400,8 @@ void UNovaSpacecraftProcessingSystem::GetLifetimeReplicatedProps(TArray<FLifetim
 
 	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, RealtimeCompartments);
 	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, ProcessingGroupsStates);
+	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, MiningRigActive);
+	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, MiningRigStatus);
 }
 
 #undef LOCTEXT_NAMESPACE
