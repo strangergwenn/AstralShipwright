@@ -608,7 +608,8 @@ void SNovaMainMenuOperations::Show()
 					.Enabled_Lambda([=]()
 					{
 						auto Status = ProcessingSystem->GetProcessingGroupStatus(Group.Index);
-						return Status.Num() && !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked);
+						return Status.Num() && !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked)
+							&& !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Blocked);
 					})
 				]
 			
@@ -743,6 +744,17 @@ void SNovaMainMenuOperations::Show()
 					
 						// Mining rig state breakdown
 						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						.Padding(Theme.ContentPadding)
+						.VAlign(VAlign_Center)
+						[
+							SNew(STextBlock)
+							.TextStyle(&Theme.HeadingFont)
+							.Text(LOCTEXT("MiningRigTitle", "Mining rig"))
+						]
+					
+						// Mining rig state breakdown
+						+ SHorizontalBox::Slot()
 						.Padding(Theme.ContentPadding)
 						.VAlign(VAlign_Center)
 						[
@@ -750,7 +762,25 @@ void SNovaMainMenuOperations::Show()
 							.TextStyle(&Theme.MainFont)
 							.Text_Lambda([=]()
 							{
-								// TODO get resource currently produced
+								if (ProcessingSystem->GetMiningRigIndex() != INDEX_NONE)
+								{
+									const UNovaResource* Resource = ProcessingSystem->GetCurrentMiningResource();
+
+									if (ProcessingSystem->IsMiningRigActive() && Resource)
+									{
+										FNumberFormattingOptions Options;
+										Options.MaximumFractionalDigits = 2;
+										return FText::FormatNamed(LOCTEXT("MiningRigActiveFormat", "Currently extracting {resource} at a rate of {rate}T/s"),
+											TEXT("resource"), Resource->Name,
+											TEXT("rate"), FText::AsNumber(ProcessingSystem->GetCurrentMiningRate(), &Options));
+									}
+									else
+									{
+										return LOCTEXT("MiningRigInactive", "Mining rig is currently inactive");
+									}
+
+								}
+
 								return FText();
 							})
 						]
@@ -770,28 +800,23 @@ void SNovaMainMenuOperations::Show()
 					})
 					.HelpText_Lambda([=]()
 					{
-						if (ProcessingSystem->GetMiningRigIndex() != INDEX_NONE)
+						FText Help;
+						if (ProcessingSystem->CanMiningRigBeActive(&Help))
 						{
-							auto Status = ProcessingSystem->GetMiningRigStatus();
-
-							if (Status == ENovaSpacecraftProcessingSystemStatus::Docked)
-							{
-								return LOCTEXT("MiningDockedHelp", "Mining rigs cannot be activated while docked");
-							}
-							else
-							{
-								return LOCTEXT("MiningHelp", "Toggle activity for this mining rig");
-							}
+							return LOCTEXT("MiningHelp", "Toggle activity for this mining rig");
 						}
-						
-						return FText();
+						else
+						{
+							return Help;
+						}
 					})
 					.Enabled_Lambda([=]()
 					{
 						if (ProcessingSystem->GetMiningRigIndex() != INDEX_NONE)
 						{
 							auto Status = ProcessingSystem->GetMiningRigStatus();
-							return Status != ENovaSpacecraftProcessingSystemStatus::Docked;
+							return Status == ENovaSpacecraftProcessingSystemStatus::Processing
+								|| Status == ENovaSpacecraftProcessingSystemStatus::Stopped;
 						}
 						return false;
 					})

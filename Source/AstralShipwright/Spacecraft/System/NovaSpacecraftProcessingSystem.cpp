@@ -2,7 +2,13 @@
 
 #include "NovaSpacecraftProcessingSystem.h"
 
+#include "Spacecraft/NovaSpacecraftPawn.h"
+#include "Spacecraft/NovaSpacecraftMovementComponent.h"
 #include "Spacecraft/NovaSpacecraftTypes.h"
+
+#include "Game/NovaAsteroid.h"
+
+#include "Neutron/System/NeutronAssetManager.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -27,7 +33,8 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 
 	NLOG("UNovaSpacecraftProcessingSystem::LoadInternal");
 
-	MiningRigActive = false;
+	MiningRigActive   = false;
+	MiningRigResource = nullptr;
 
 	// Initialize processing groups with all unique descriptions
 	ProcessingGroupsStates.Empty();
@@ -207,7 +214,9 @@ void UNovaSpacecraftProcessingSystem::Save(FNovaSpacecraft& Spacecraft)
 	{
 		GroupState.Active = false;
 	}
-	MiningRigActive = false;
+
+	MiningRigActive   = false;
+	MiningRigResource = nullptr;
 }
 
 void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime FinalTime)
@@ -245,7 +254,8 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 				}
 
 				// Valid resource output
-				else if (Cargo.Resource && ChainState.Outputs.Contains(Cargo.Resource) && Cargo.Amount < CargoCapacity)
+				else if (Cargo.Resource && (ChainState.Outputs.Contains(Cargo.Resource) || Cargo.Resource == nullptr) &&
+						 Cargo.Amount < CargoCapacity)
 				{
 					MinimumProcessingLeft = FMath::Min(MinimumProcessingLeft, CargoCapacity - Cargo.Amount);
 					CurrentOutputs.AddUnique(&Cargo);
@@ -298,15 +308,73 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 	}
 
 	// Process the mining rig
+	MiningRigResource = nullptr;
 	if (IsSpacecraftDocked())
 	{
 		MiningRigStatus = ENovaSpacecraftProcessingSystemStatus::Docked;
 	}
 	else
 	{
-		// TODO
-		MiningRigStatus =
-			MiningRigActive ? ENovaSpacecraftProcessingSystemStatus::Processing : ENovaSpacecraftProcessingSystemStatus::Stopped;
+		// Find spacecraft, asteroid
+		ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
+		NCHECK(SpacecraftPawn);
+		const ANovaAsteroid* AsteroidActor =
+			UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
+
+		// Process activity
+		if (MiningRigActive && IsValid(AsteroidActor) && CanMiningRigBeActive())
+		{
+			// Get data
+			const FNovaAsteroid&               Asteroid          = Cast<ANovaAsteroid>(AsteroidActor)->GetAsteroidData();
+			const int32                        GroupIndex        = GetMiningRigIndex();
+			const FNovaModuleGroup&            Group             = Spacecraft->GetModuleGroups()[GroupIndex];
+			const TArray<TPair<int32, int32>>& GroupCargoModules = Spacecraft->GetAllModules<UNovaCargoModuleDescription>(Group);
+
+			// Define processing targets
+			MiningRigResource                                   = Asteroid.MineralResource;
+			float                         MinimumProcessingLeft = FLT_MAX;
+			TArray<FNovaSpacecraftCargo*> CurrentOutputs;
+
+			// Process cargo for targets
+			for (const auto& Indices : GroupCargoModules)
+			{
+				FNovaSpacecraftCargo& Cargo         = RealtimeCompartments[Indices.Key].Cargo[Indices.Value];
+				const float           CargoCapacity = Spacecraft->GetCargoCapacity(Indices.Key, Indices.Value);
+
+				// Valid resource output
+				if (Cargo.Resource && (MiningRigResource == Cargo.Resource || Cargo.Resource == nullptr) && Cargo.Amount < CargoCapacity)
+				{
+					MinimumProcessingLeft = FMath::Min(MinimumProcessingLeft, CargoCapacity - Cargo.Amount);
+					CurrentOutputs.AddUnique(&Cargo);
+				}
+			}
+
+			// Cancel production when blocked
+			if (CurrentOutputs.Num() == 0)
+			{
+				MiningRigStatus = ENovaSpacecraftProcessingSystemStatus::Blocked;
+				NLOG("UNovaSpacecraftProcessingSystem::Update : canceled production for mining rig");
+			}
+
+			// Proceed with processing
+			else
+			{
+				MiningRigStatus = ENovaSpacecraftProcessingSystemStatus::Processing;
+
+				float ResourceDelta = GetCurrentMiningRate() * (FinalTime - InitialTime).AsSeconds();
+				ResourceDelta       = FMath::Min(ResourceDelta, MinimumProcessingLeft);
+				NCHECK(ResourceDelta > 0);
+
+				for (FNovaSpacecraftCargo* Output : CurrentOutputs)
+				{
+					Output->Amount += ResourceDelta;
+				}
+			}
+		}
+		else
+		{
+			MiningRigStatus = ENovaSpacecraftProcessingSystemStatus::Stopped;
+		}
 	}
 }
 
@@ -352,6 +420,70 @@ TArray<FNovaSpacecraftProcessingSystemChainState> UNovaSpacecraftProcessingSyste
 	}
 
 	return TArray<FNovaSpacecraftProcessingSystemChainState>();
+}
+
+float UNovaSpacecraftProcessingSystem::GetCurrentMiningRate() const
+{
+	ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
+	NCHECK(SpacecraftPawn);
+	const ANovaAsteroid* AsteroidActor =
+		UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
+
+	if (IsValid(AsteroidActor))
+	{
+		for (const auto& GroupState : ProcessingGroupsStates)
+		{
+			if (GroupState.MiningRig)
+			{
+				const FVector SpacecraftRelativeLocation =
+					AsteroidActor->GetTransform().InverseTransformPosition(SpacecraftPawn->GetActorLocation());
+
+				return GroupState.MiningRig->ExtractionRate * AsteroidActor->GetMineralDensity(SpacecraftRelativeLocation);
+			}
+		}
+	}
+	else
+	{
+		return 0.0f;
+	}
+}
+
+bool UNovaSpacecraftProcessingSystem::CanMiningRigBeActive(FText* Help) const
+{
+	if (GetMiningRigIndex() == INDEX_NONE)
+	{
+		if (Help)
+		{
+			*Help = LOCTEXT("NotRig", "This spacecraft doesn't have a mining rig");
+		}
+		return false;
+	}
+	if (GetMiningRigStatus() == ENovaSpacecraftProcessingSystemStatus::Blocked)
+	{
+		if (Help)
+		{
+			*Help = LOCTEXT("Blocked", "The mining rig cannot store extracted resources");
+		}
+		return false;
+	}
+	else
+	{
+		ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
+		NCHECK(SpacecraftPawn);
+
+		if (!IsValid(SpacecraftPawn) || !SpacecraftPawn->GetSpacecraftMovement()->IsAnchored())
+		{
+			if (Help)
+			{
+				*Help = LOCTEXT("NotAnchored", "The mining rig can only be engaged while anchored to an asteroid");
+			}
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
 }
 
 FText UNovaSpacecraftProcessingSystem::GetStatusText(ENovaSpacecraftProcessingSystemStatus Type)
@@ -402,6 +534,7 @@ void UNovaSpacecraftProcessingSystem::GetLifetimeReplicatedProps(TArray<FLifetim
 	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, ProcessingGroupsStates);
 	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, MiningRigActive);
 	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, MiningRigStatus);
+	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, MiningRigResource);
 }
 
 #undef LOCTEXT_NAMESPACE

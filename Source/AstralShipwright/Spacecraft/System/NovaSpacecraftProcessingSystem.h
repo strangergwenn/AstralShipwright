@@ -240,6 +240,15 @@ public:
 		return INDEX_NONE;
 	}
 
+	/** Get the currently mined resource */
+	const class UNovaResource* GetCurrentMiningResource() const
+	{
+		return MiningRigResource;
+	}
+
+	/** GEt the current mining rate in T/S */
+	float GetCurrentMiningRate() const;
+
 	/** Get the real-time cargo state for a specific module slot */
 	const FNovaSpacecraftCargo& GetCargo(int32 CompartmentIndex, int32 ModuleIndex) const
 	{
@@ -302,6 +311,9 @@ public:
 		}
 	}
 
+	/** Check whether he mining rig can become active */
+	bool CanMiningRigBeActive(FText* Help = nullptr) const;
+
 	/** Check the active state for the mining rig */
 	bool IsMiningRigActive() const
 	{
@@ -341,4 +353,8 @@ protected:
 	// Mining status
 	UPROPERTY(Replicated)
 	ENovaSpacecraftProcessingSystemStatus MiningRigStatus;
+
+	// Mining status
+	UPROPERTY(Replicated)
+	const class UNovaResource* MiningRigResource;
 };
