@@ -254,6 +254,7 @@ struct FNovaOrbitalLocation
 
 		// Return the transformed coordinates
 		const FVector2D BasePosition = FVector2D(StartFast ? -X : X, Y).GetRotated(-Geometry.StartPhase);
+		NCHECK(FMath::IsFinite(BasePosition.X) && FMath::IsFinite(BasePosition.Y));
 		if (AbsolutePosition)
 		{
 			const double OriginOffsetSize = SemiMajorAxis - Geometry.OppositeAltitude - BaseAltitude;

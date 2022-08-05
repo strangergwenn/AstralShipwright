@@ -819,6 +819,7 @@ void UNovaSpacecraftMovementComponent::ProcessOrbitalMovement(float DeltaTime)
 	{
 		LocationInKilometers = SpacecraftLocation - PlayerLocation;
 	}
+	NCHECK(FMath::IsFinite(LocationInKilometers.X) && FMath::IsFinite(LocationInKilometers.Y));
 
 	// Transform the location accounting for angle and scale
 	const FVector2D PlayerDirection       = PlayerLocation.GetSafeNormal();
@@ -827,6 +828,10 @@ void UNovaSpacecraftMovementComponent::ProcessOrbitalMovement(float DeltaTime)
 	const FVector RelativeOrbitalLocation = FVector(0, -LocationInKilometers.X, LocationInKilometers.Y) * 1000 * 100;
 
 	// Derive the required translation from the previous state
+	NCHECK(FMath::IsFinite(RelativeOrbitalLocation.X) && FMath::IsFinite(RelativeOrbitalLocation.Y) &&
+		   FMath::IsFinite(RelativeOrbitalLocation.Z));
+	NCHECK(
+		!FMath::IsNaN(RelativeOrbitalLocation.X) && !FMath::IsNaN(RelativeOrbitalLocation.Y) && !FMath::IsNaN(RelativeOrbitalLocation.Z));
 	PreviousOrbitalLocation = CurrentOrbitalLocation;
 	CurrentOrbitalLocation  = RelativeOrbitalLocation;
 }

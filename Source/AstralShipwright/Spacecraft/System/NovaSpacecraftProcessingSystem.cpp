@@ -254,8 +254,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 				}
 
 				// Valid resource output
-				else if (Cargo.Resource && (ChainState.Outputs.Contains(Cargo.Resource) || Cargo.Resource == nullptr) &&
-						 Cargo.Amount < CargoCapacity)
+				else if ((ChainState.Outputs.Contains(Cargo.Resource) || Cargo.Resource == nullptr) && Cargo.Amount < CargoCapacity)
 				{
 					MinimumProcessingLeft = FMath::Min(MinimumProcessingLeft, CargoCapacity - Cargo.Amount);
 					CurrentOutputs.AddUnique(&Cargo);
@@ -296,9 +295,13 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 						Input->Amount -= ResourceDelta;
 					}
 
+					int32 CurrentOutputIndex = 0;
 					for (FNovaSpacecraftCargo* Output : CurrentOutputs)
 					{
+						Output->Resource = ChainState.Outputs[CurrentOutputIndex];
 						Output->Amount += ResourceDelta;
+
+						CurrentOutputIndex++;
 					}
 				}
 			}
@@ -342,7 +345,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 				const float           CargoCapacity = Spacecraft->GetCargoCapacity(Indices.Key, Indices.Value);
 
 				// Valid resource output
-				if (Cargo.Resource && (MiningRigResource == Cargo.Resource || Cargo.Resource == nullptr) && Cargo.Amount < CargoCapacity)
+				if ((MiningRigResource == Cargo.Resource || Cargo.Resource == nullptr) && Cargo.Amount < CargoCapacity)
 				{
 					MinimumProcessingLeft = FMath::Min(MinimumProcessingLeft, CargoCapacity - Cargo.Amount);
 					CurrentOutputs.AddUnique(&Cargo);
@@ -367,6 +370,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 
 				for (FNovaSpacecraftCargo* Output : CurrentOutputs)
 				{
+					Output->Resource = MiningRigResource;
 					Output->Amount += ResourceDelta;
 				}
 			}
@@ -442,10 +446,8 @@ float UNovaSpacecraftProcessingSystem::GetCurrentMiningRate() const
 			}
 		}
 	}
-	else
-	{
-		return 0.0f;
-	}
+
+	return 0.0f;
 }
 
 bool UNovaSpacecraftProcessingSystem::CanMiningRigBeActive(FText* Help) const

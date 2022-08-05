@@ -123,5 +123,6 @@ protected:
 	TSharedPtr<class SVerticalBox>           EquipmentBox;
 	TSharedPtr<class SNeutronButton>         DefaultModuleButton;
 	TSharedPtr<class SNeutronButton>         DefaultEquipmentButton;
+	TSharedPtr<class SNeutronButton>         MiningRigButton;
 	TArray<TSharedPtr<class SNeutronButton>> ModuleEquipmentButtons;
 };

@@ -695,11 +695,11 @@ void SNovaMainMenuOperations::Show()
 	// Add mining rig if found
 	bool  HasEquipment        = false;
 	int32 MiningRigGroupIndex = ProcessingSystem->GetMiningRigIndex();
+	MiningRigButton.Reset();
 	if (MiningRigGroupIndex != INDEX_NONE)
 	{
-		HasEquipment                     = true;
-		const FNovaModuleGroup&    Group = Spacecraft->GetModuleGroups()[MiningRigGroupIndex];
-		TSharedPtr<SNeutronButton> EnableButton;
+		HasEquipment                  = true;
+		const FNovaModuleGroup& Group = Spacecraft->GetModuleGroups()[MiningRigGroupIndex];
 
 		// clang-format off
 		EquipmentBox->AddSlot()
@@ -791,7 +791,7 @@ void SNovaMainMenuOperations::Show()
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					SNeutronAssignNew(EnableButton, SNeutronButton)
+					SNeutronAssignNew(MiningRigButton, SNeutronButton)
 					.Size("HalfButtonSize")
 					.Toggle(true)
 					.Text_Lambda([=]()
@@ -820,13 +820,17 @@ void SNovaMainMenuOperations::Show()
 						}
 						return false;
 					})
+					.OnClicked(FSimpleDelegate::CreateLambda([=]()
+					{
+						ProcessingSystem->SetMiningRigActive(MiningRigButton->IsActive());
+					}))
 				]
 			]
 		];
 		// clang-format on
 
-		ModuleEquipmentButtons.Add(EnableButton);
-		DefaultEquipmentButton = EnableButton;
+		ModuleEquipmentButtons.Add(MiningRigButton);
+		DefaultEquipmentButton = MiningRigButton;
 	}
 
 	// No equipment found

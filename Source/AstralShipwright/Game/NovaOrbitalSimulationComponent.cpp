@@ -846,6 +846,7 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits()
 		FNovaCartesianLocation     NewCartesianLocation;
 		NewCartesianLocation.Location = NewLocation.GetCartesianLocation();
 		NewCartesianLocation.Velocity = NewLocation.GetOrbitalVelocity();
+		NCHECK(FMath::IsFinite(NewCartesianLocation.Location.X) && FMath::IsFinite(NewCartesianLocation.Location.Y));
 
 #if 0
 		NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftOrbits : %s has phase %f, sphase %f, ephase %f",
@@ -936,6 +937,7 @@ void UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories()
 			FNovaCartesianLocation NewCartesianLocation;
 			NewCartesianLocation.Location = DatabaseEntry.Trajectory.GetCartesianLocation(GetCurrentTime());
 			NewCartesianLocation.Velocity = NewLocation.GetOrbitalVelocity();
+			NCHECK(FMath::IsFinite(NewCartesianLocation.Location.X) && FMath::IsFinite(NewCartesianLocation.Location.Y));
 
 #if 0
 			NLOG("UNovaOrbitalSimulationComponent::ProcessSpacecraftTrajectories : %s has phase %f, with sphase %f, ephase %f",

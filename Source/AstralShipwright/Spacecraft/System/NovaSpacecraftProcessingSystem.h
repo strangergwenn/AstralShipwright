@@ -273,6 +273,8 @@ public:
 	/** Set the active state for a processing group */
 	void SetProcessingGroupActive(int32 GroupIndex, bool Active)
 	{
+		NLOG("UNovaSpacecraftProcessingSystem::SetProcessingGroupActive : %d=%d (%s)", GroupIndex, Active, *GetRoleString(this));
+
 		if (GetOwner()->GetLocalRole() == ROLE_Authority)
 		{
 			NCHECK(GroupIndex >= 0 && GroupIndex < ProcessingGroupsStates.Num());
@@ -301,6 +303,8 @@ public:
 	/** Set the active state for the mining rig */
 	void SetMiningRigActive(bool Active)
 	{
+		NLOG("UNovaSpacecraftProcessingSystem::SetMiningRigActive : %d (%s)", Active, *GetRoleString(this));
+
 		if (GetOwner()->GetLocalRole() == ROLE_Authority)
 		{
 			MiningRigActive = Active;
