@@ -903,9 +903,10 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 						.AutoWidth()
 						[
 							SNeutronAssignNew(PhotoModeButton, SNeutronButton)
+							.Action(FNeutronPlayerInput::MenuAltPrimary)
 							.Text(LOCTEXT("PhotoMode", "Toggle photo mode"))
 							.HelpText(LOCTEXT("PhotoModeHelp", "Hide the interface to show off your spacecraft"))
-							.OnClicked(this, &SNovaMainMenuAssembly::OnEnterPhotoMode, FNeutronPlayerInput::MenuConfirm)
+							.OnClicked(this, &SNovaMainMenuAssembly::OnEnterPhotoMode, FNeutronPlayerInput::MenuAltPrimary)
 						]
 
 						+ SHorizontalBox::Slot()
