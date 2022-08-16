@@ -1857,7 +1857,7 @@ FText SNovaMainMenuAssembly::GenerateModuleTooltip(const UNovaModuleDescription*
 {
 	if (Module)
 	{
-		return FText::FormatNamed(LOCTEXT("ModuleHelp", "Add {module} to this compartment"), TEXT("module"), Module->Name);
+		return Module->Description;
 	}
 	else
 	{
@@ -1915,7 +1915,7 @@ FText SNovaMainMenuAssembly::GenerateEquipmentTooltip(const UNovaEquipmentDescri
 {
 	if (Equipment)
 	{
-		return FText::FormatNamed(LOCTEXT("EquipmentHelp", "Add {equipment} to this compartment"), TEXT("equipment"), Equipment->Name);
+		return Equipment->Description;
 	}
 	else
 	{

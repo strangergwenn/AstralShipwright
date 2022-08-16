@@ -486,6 +486,10 @@ public:
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> OuterAftBulkhead = nullptr;
 
+	// Display details
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	FText Description;
+
 	// Module mass in T
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Mass = 30;
@@ -599,6 +603,10 @@ public:
 	// Additional component
 	UPROPERTY(Category = Elements, EditDefaultsOnly)
 	FNovaAdditionalComponent AdditionalComponent;
+
+	// Display details
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	FText Description;
 
 	// Equipment mass in T
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
