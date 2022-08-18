@@ -16,6 +16,7 @@
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
 #include "Spacecraft/System/NovaSpacecraftSystemInterface.h"
+#include "Spacecraft/System/NovaSpacecraftProcessingSystem.h"
 
 #include "Neutron/Actor/NeutronActorTools.h"
 #include "Neutron/System/NeutronAssetManager.h"
@@ -514,6 +515,26 @@ bool ANovaGameState::CanFastForward(FText* AbortReason) const
 			return false;
 		}
 
+		// Blocked production
+		for (const ANovaSpacecraftPawn* Pawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+		{
+			if (Pawn->GetPlayerState())
+			{
+				const UNovaSpacecraftProcessingSystem* ProcessingSystem = Pawn->FindComponentByClass<UNovaSpacecraftProcessingSystem>();
+				for (int32 GroupIndex = 0; GroupIndex < ProcessingSystem->GetProcessingGroupCount(); GroupIndex++)
+				{
+					if (ProcessingSystem->GetProcessingGroupStatus(GroupIndex).Contains(ENovaSpacecraftProcessingSystemStatus::Blocked))
+					{
+						if (AbortReason)
+						{
+							*AbortReason = LOCTEXT("BlockedProduction", "At least one module group has blocked resource processing");
+						}
+						return false;
+					}
+				}
+			}
+		}
+
 		// Maneuvering
 		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
 		if (PlayerTrajectory && PlayerTrajectory->GetManeuver(GetCurrentTime()))
@@ -540,6 +561,7 @@ FNovaTime ANovaGameState::GetAllowedFastFowardTime() const
 	const ANovaGameMode* GameMode = GetWorld()->GetAuthGameMode<ANovaGameMode>();
 	NCHECK(IsValid(GameMode));
 
+	// Handle trajectories
 	FNovaTime MaxAllowedDeltaTime           = OrbitalSimulationComponent->GetTimeLeftUntilPlayerManeuver(GameMode->GetManeuverWarnTime());
 	const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
 	if (PlayerTrajectory)
@@ -547,6 +569,18 @@ FNovaTime ANovaGameState::GetAllowedFastFowardTime() const
 		const FNovaTime TimeBeforeArrival = PlayerTrajectory->GetArrivalTime() - GetCurrentTime() - GameMode->GetArrivalWarningTime();
 
 		MaxAllowedDeltaTime = FMath::Min(MaxAllowedDeltaTime, TimeBeforeArrival);
+	}
+
+	// Handle production remaining time
+	for (const ANovaSpacecraftPawn* Pawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+	{
+		if (Pawn->GetPlayerState())
+		{
+			const UNovaSpacecraftProcessingSystem* ProcessingSystem = Pawn->FindComponentByClass<UNovaSpacecraftProcessingSystem>();
+
+			FNovaTime RemainingProductionTime = ProcessingSystem->GetRemainingProductionTime();
+			MaxAllowedDeltaTime               = FMath::Min(MaxAllowedDeltaTime, RemainingProductionTime);
+		}
 	}
 
 	return MaxAllowedDeltaTime;

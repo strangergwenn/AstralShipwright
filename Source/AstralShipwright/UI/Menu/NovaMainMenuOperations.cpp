@@ -483,7 +483,10 @@ void SNovaMainMenuOperations::Show()
 	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
 
 	NCHECK(Spacecraft);
-	ProcessingSystem->Load(*Spacecraft);
+	if (SpacecraftPawn->IsDocked())
+	{
+		ProcessingSystem->Load(*Spacecraft);
+	}
 
 	// Add module groups
 	for (int32 ProcessingGroupIndex = 0; ProcessingGroupIndex < ProcessingSystem->GetProcessingGroupCount(); ProcessingGroupIndex++)
@@ -587,18 +590,24 @@ void SNovaMainMenuOperations::Show()
 					.Toggle(true)
 					.Text_Lambda([=]()
 					{
-						return ProcessingSystem->IsProcessingGroupActive(Group.Index) ? LOCTEXT("StopProcessing", "Stop") : LOCTEXT("StartProcessing", "Start");
+						return ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex) ? LOCTEXT("StopProcessing", "Stop") : LOCTEXT("StartProcessing", "Start");
 					})
 					.HelpText_Lambda([=]()
 					{
-						auto Status = ProcessingSystem->GetProcessingGroupStatus(Group.Index);
+						auto Status = ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex);
+						bool IsActive = ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex);
+
 						if (Status.Num() == 0)
 						{
 							return LOCTEXT("ProcessingNoneHelp", "This module group doesn't have a valid configuration");
 						}
-						else if (Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked))
+						else if (!IsActive && Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked))
 						{
 							return LOCTEXT("ProcessingDockedHelp", "Modules cannot be activated while docked");
+						}
+						else if (!IsActive && Status.Contains(ENovaSpacecraftProcessingSystemStatus::Blocked))
+						{
+							return LOCTEXT("ProcessingBlockedHelp", "This module group is blocked");
 						}
 						else
 						{
@@ -607,10 +616,16 @@ void SNovaMainMenuOperations::Show()
 					})
 					.Enabled_Lambda([=]()
 					{
-						auto Status = ProcessingSystem->GetProcessingGroupStatus(Group.Index);
-						return Status.Num() && !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked)
-							&& !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Blocked);
+						auto Status = ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex);
+						bool IsActive = ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex);
+
+						return Status.Num() && (IsActive || (!Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked)
+							&& !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Blocked)));
 					})
+					.OnClicked(FSimpleDelegate::CreateLambda([=]()
+					{
+						ProcessingSystem->SetProcessingGroupActive(ProcessingGroupIndex, !ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex));
+					}))
 				]
 			
 				// Processing group inspection

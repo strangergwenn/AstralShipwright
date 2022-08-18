@@ -225,6 +225,8 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 
 	const FNovaSpacecraft* Spacecraft = GetSpacecraft();
 
+	RemainingProductionTime = FNovaTime::FromMinutes(DBL_MAX);
+
 	// Update processing groups
 	int32 CurrentGroupIndex = 0;
 	for (auto& GroupState : ProcessingGroupsStates)
@@ -268,11 +270,13 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 			else
 			{
 				// Start production based on input
-				if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Stopped ||
-					ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing)
+				if (!GroupState.Active)
 				{
-					ChainState.Status = GroupState.Active ? ENovaSpacecraftProcessingSystemStatus::Processing
-					                                      : ENovaSpacecraftProcessingSystemStatus::Stopped;
+					ChainState.Status = ENovaSpacecraftProcessingSystemStatus::Stopped;
+				}
+				else if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Stopped)
+				{
+					ChainState.Status = ENovaSpacecraftProcessingSystemStatus::Processing;
 				}
 
 				// Cancel production when blocked
@@ -286,6 +290,9 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 				// Proceed with processing
 				if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing)
 				{
+					const FNovaTime TotalChainTimeRemaining = FNovaTime::FromSeconds(MinimumProcessingLeft / ChainState.ProcessingRate);
+					RemainingProductionTime                 = FMath::Min(TotalChainTimeRemaining, RemainingProductionTime);
+
 					float ResourceDelta = ChainState.ProcessingRate * (FinalTime - InitialTime).AsSeconds();
 					ResourceDelta       = FMath::Min(ResourceDelta, MinimumProcessingLeft);
 					NCHECK(ResourceDelta > 0);
@@ -415,6 +422,10 @@ ENovaSpacecraftProcessingSystemStatus UNovaSpacecraftProcessingSystem::GetModule
 
 	return ENovaSpacecraftProcessingSystemStatus::Docked;
 }
+
+/*----------------------------------------------------
+    Resources
+----------------------------------------------------*/
 
 TArray<FNovaSpacecraftProcessingSystemChainState> UNovaSpacecraftProcessingSystem::GetChainStates(int32 ProcessingGroupIndex)
 {

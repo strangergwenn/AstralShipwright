@@ -456,6 +456,18 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 					{
 						HasAnyHabitat = true;
 					}
+					else if (Equipment->IsA<UNovaMiningEquipmentDescription>())
+					{
+						for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+						{
+							const FNovaModuleGroup* ModuleGroup = FindModuleGroup(CompartmentIndex, ModuleIndex);
+							if (ModuleGroup && ModuleGroup->Type != ENovaModuleGroupType::Hatch)
+							{
+								Issues.Add(LOCTEXT("InvalidMiningRig", "Mining rigs require attachment to a cargo/crew module group"));
+								break;
+							}
+						}
+					}
 				}
 			}
 		}

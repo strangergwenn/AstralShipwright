@@ -187,6 +187,13 @@ public:
 		return MiningRigStatus;
 	}
 
+	/** Get the remaining time this system can remain active */
+	FNovaTime GetRemainingProductionTime() const
+	{
+		NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
+		return RemainingProductionTime;
+	}
+
 	/*----------------------------------------------------
 	    Resources
 	----------------------------------------------------*/
@@ -361,4 +368,7 @@ protected:
 	// Mining status
 	UPROPERTY(Replicated)
 	const class UNovaResource* MiningRigResource;
+
+	// Server-side status
+	FNovaTime RemainingProductionTime;
 };
