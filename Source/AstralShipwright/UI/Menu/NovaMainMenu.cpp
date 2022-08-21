@@ -8,6 +8,7 @@
 #include "NovaMainMenuNavigation.h"
 #include "NovaMainMenuOperations.h"
 #include "NovaMainMenuAssembly.h"
+#include "NovaMainMenuCareer.h"
 #include "NovaMainMenuSettings.h"
 
 #include "Game/NovaGameState.h"
@@ -205,6 +206,19 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 			.MenuManager(MenuManager)
 		]
 
+		// Assembly menu
+		+ SNeutronTabView::Slot()
+		.Header(LOCTEXT("CareerMenuTitle", "Career"))
+		.HeaderHelp(LOCTEXT("CareerMenuTitleHelp", "Unlock new spacecraft parts"))
+		.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Career"))
+		.Visible(this, &SNovaMainMenu::AreGameMenusVisible)
+		.Blur(true)
+		[
+			SAssignNew(CareerMenu, SNovaMainMenuCareer)
+			.Menu(this)
+			.MenuManager(MenuManager)
+		]
+
 		// Settings
 		+ SNeutronTabView::Slot()
 		.Header(LOCTEXT("SettingsMenuTitle", "Settings"))
@@ -229,6 +243,7 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 	MenuManager->RegisterGameMenu(NavigationMenu);
 	MenuManager->RegisterGameMenu(OperationsMenu);
 	MenuManager->RegisterGameMenu(AssemblyMenu);
+	MenuManager->RegisterGameMenu(CareerMenu);
 	MenuManager->RegisterGameMenu(SettingsMenu);
 
 	// Set the default menu

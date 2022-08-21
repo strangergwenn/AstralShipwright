@@ -306,6 +306,10 @@ public:
 
 public:
 
+	// Progression level that allows unlocking this asset
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	uint8 UnlockLevel = 0;
+
 	// Base price modulated by the economy
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float BasePrice = 10;

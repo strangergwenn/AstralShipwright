@@ -14,6 +14,7 @@ enum class ENovaMainMenuType : uint8
 	Navigation,
 	Inventory,
 	Assembly,
+	Career,
 	Settings
 };
 
@@ -126,5 +127,6 @@ protected:
 	TSharedPtr<class SNovaMainMenuNavigation> NavigationMenu;
 	TSharedPtr<class SNovaMainMenuOperations> OperationsMenu;
 	TSharedPtr<class SNovaMainMenuAssembly>   AssemblyMenu;
+	TSharedPtr<class SNovaMainMenuCareer>     CareerMenu;
 	TSharedPtr<class SNovaMainMenuSettings>   SettingsMenu;
 };
