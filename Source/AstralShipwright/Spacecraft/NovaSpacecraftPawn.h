@@ -190,25 +190,16 @@ public:
 	----------------------------------------------------*/
 
 	/** Get a list of compartment kits that can be added at a (new) index */
-	TArray<const class UNovaCompartmentDescription*> GetCompatibleCompartments(int32 CompartmentIndex) const
-	{
-		NCHECK(Spacecraft.IsValid());
-		return Spacecraft->GetCompatibleCompartments(CompartmentIndex);
-	}
+	TArray<const class UNovaCompartmentDescription*> GetCompatibleCompartments(
+		const class ANovaPlayerController* PC, int32 CompartmentIndex) const;
 
 	/** Get a list of compatible modules that can be added at a compartment index, and a module slot index */
-	TArray<const class UNovaModuleDescription*> GetCompatibleModules(int32 CompartmentIndex, int32 SlotIndex) const
-	{
-		NCHECK(Spacecraft.IsValid());
-		return Spacecraft->GetCompatibleModules(CompartmentIndex, SlotIndex);
-	}
+	TArray<const class UNovaModuleDescription*> GetCompatibleModules(
+		const class ANovaPlayerController* PC, int32 CompartmentIndex, int32 SlotIndex) const;
 
 	/** Get a list of compatible equipments that can be added at a compartment index, and an equipment slot index */
-	TArray<const class UNovaEquipmentDescription*> GetCompatibleEquipment(int32 CompartmentIndex, int32 SlotIndex) const
-	{
-		NCHECK(Spacecraft.IsValid());
-		return Spacecraft->GetCompatibleEquipment(CompartmentIndex, SlotIndex);
-	}
+	TArray<const class UNovaEquipmentDescription*> GetCompatibleEquipment(
+		const class ANovaPlayerController* PC, int32 CompartmentIndex, int32 SlotIndex) const;
 
 	/** Find a specific module group for this spacecraft */
 	const FNovaModuleGroup* FindModuleGroup(int32 CompartmentIndex, int32 ModuleIndex) const

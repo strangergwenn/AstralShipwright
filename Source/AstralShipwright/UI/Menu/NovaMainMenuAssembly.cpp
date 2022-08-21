@@ -352,15 +352,15 @@ void SNovaMainMenuAssembly::Construct(const FArguments& InArgs)
 									.TitleText(LOCTEXT("BuildCompartment", "Insert compartment"))
 									.HelpText(LOCTEXT("BuildCompartmentHelp", "Insert a new compartment"))
 									.OnSelfRefresh(SNovaCompartmentList::FNeutronOnSelfRefresh::CreateLambda([this]()
-										{
-											IsCurrentCompartmentForward = IsNextCompartmentForward;
-											IsNextCompartmentForward = true;
+									{
+										IsCurrentCompartmentForward = IsNextCompartmentForward;
+										IsNextCompartmentForward = true;
 
-											NLOG("IsCurrentCompartmentForward %d", IsCurrentCompartmentForward);
+										NLOG("IsCurrentCompartmentForward %d", IsCurrentCompartmentForward);
 
-											int32 NewIndex = GetNewBuildIndex(IsCurrentCompartmentForward);
-											return SNovaCompartmentList::SelfRefreshType(0, SpacecraftPawn->GetCompatibleCompartments(NewIndex));
-										}))
+										int32 NewIndex = GetNewBuildIndex(IsCurrentCompartmentForward);
+										return SNovaCompartmentList::SelfRefreshType(0, SpacecraftPawn->GetCompatibleCompartments(PC, NewIndex));
+									}))
 									.OnGenerateItem(this, &SNovaMainMenuAssembly::GenerateCompartmentItem)
 									.OnGenerateTooltip(this, &SNovaMainMenuAssembly::GenerateCompartmentTooltip)
 									.OnSelectionChanged(this, &SNovaMainMenuAssembly::OnAddCompartment)
@@ -1701,7 +1701,7 @@ void SNovaMainMenuAssembly::SetSelectedModuleOrEquipment(int32 Index)
 		if (IsModuleSelected())
 		{
 			int32 ModuleIndex = GetSelectedModuleIndex();
-			ModuleList        = SpacecraftPawn->GetCompatibleModules(EditedCompartmentIndex, ModuleIndex);
+			ModuleList        = SpacecraftPawn->GetCompatibleModules(PC, EditedCompartmentIndex, ModuleIndex);
 			ModuleListView->Refresh(ModuleList.Find(Compartment.Modules[ModuleIndex].Description));
 		}
 
@@ -1709,7 +1709,7 @@ void SNovaMainMenuAssembly::SetSelectedModuleOrEquipment(int32 Index)
 		else
 		{
 			int32 EquipmentIndex = GetSelectedEquipmentIndex();
-			EquipmentList        = SpacecraftPawn->GetCompatibleEquipment(EditedCompartmentIndex, EquipmentIndex);
+			EquipmentList        = SpacecraftPawn->GetCompatibleEquipment(PC, EditedCompartmentIndex, EquipmentIndex);
 			EquipmentListView->Refresh(EquipmentList.Find(Compartment.Equipment[EquipmentIndex]));
 		}
 	}
@@ -2125,7 +2125,7 @@ bool SNovaMainMenuAssembly::IsModuleEnabled(int32 ModuleIndex, FText* Help) cons
 			}
 			return false;
 		}
-		else if (SpacecraftPawn->GetCompatibleModules(SelectedCompartmentIndex, ModuleIndex).Num() == 1)
+		else if (SpacecraftPawn->GetCompatibleModules(PC, SelectedCompartmentIndex, ModuleIndex).Num() == 1)
 		{
 			if (Help)
 			{
@@ -2165,7 +2165,7 @@ bool SNovaMainMenuAssembly::IsEquipmentEnabled(int32 EquipmentIndex, FText* Help
 		{
 			return false;
 		}
-		else if (SpacecraftPawn->GetCompatibleEquipment(SelectedCompartmentIndex, EquipmentIndex).Num() == 1)
+		else if (SpacecraftPawn->GetCompatibleEquipment(PC, SelectedCompartmentIndex, EquipmentIndex).Num() == 1)
 		{
 			if (Help)
 			{

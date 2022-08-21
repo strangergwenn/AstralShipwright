@@ -296,6 +296,49 @@ void ANovaSpacecraftPawn::ServerSaveSystems_Implementation()
 }
 
 /*----------------------------------------------------
+    Asset getters
+----------------------------------------------------*/
+
+TArray<const class UNovaCompartmentDescription*> ANovaSpacecraftPawn::GetCompatibleCompartments(
+	const ANovaPlayerController* PC, int32 CompartmentIndex) const
+{
+	NCHECK(Spacecraft.IsValid());
+	TArray<const class UNovaCompartmentDescription*> Compartments = Spacecraft->GetCompatibleCompartments(CompartmentIndex);
+	Compartments.FilterByPredicate(
+		[PC](const UNovaCompartmentDescription* Module)
+		{
+			return PC->IsComponentUnlocked(Module);
+		});
+	return Compartments;
+}
+
+TArray<const class UNovaModuleDescription*> ANovaSpacecraftPawn::GetCompatibleModules(
+	const ANovaPlayerController* PC, int32 CompartmentIndex, int32 SlotIndex) const
+{
+	NCHECK(Spacecraft.IsValid());
+	TArray<const class UNovaModuleDescription*> Modules = Spacecraft->GetCompatibleModules(CompartmentIndex, SlotIndex);
+	Modules.FilterByPredicate(
+		[PC](const UNovaModuleDescription* Module)
+		{
+			return PC->IsComponentUnlocked(Module);
+		});
+	return Modules;
+}
+
+TArray<const class UNovaEquipmentDescription*> ANovaSpacecraftPawn::GetCompatibleEquipment(
+	const ANovaPlayerController* PC, int32 CompartmentIndex, int32 SlotIndex) const
+{
+	NCHECK(Spacecraft.IsValid());
+	TArray<const class UNovaEquipmentDescription*> Equipment = Spacecraft->GetCompatibleEquipment(CompartmentIndex, SlotIndex);
+	Equipment.FilterByPredicate(
+		[PC](const UNovaEquipmentDescription* Module)
+		{
+			return PC->IsComponentUnlocked(Module);
+		});
+	return Equipment;
+}
+
+/*----------------------------------------------------
     Assembly interface
 ----------------------------------------------------*/
 
@@ -626,8 +669,7 @@ void ANovaSpacecraftPawn::UpdateAssembly()
 					[&](FNovaAssemblyElement& Element, TSoftObjectPtr<UObject> Asset, FNovaAdditionalComponent AdditionalComponent)
 					{
 						if (Element.Mesh == nullptr)
-						{
-						}
+						{}
 						else if (Element.Mesh->IsDematerialized())
 						{
 							UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Element.Mesh);

@@ -706,6 +706,30 @@ void ANovaPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 }
 
 /*----------------------------------------------------
+    Progression
+----------------------------------------------------*/
+
+bool ANovaPlayerController::IsComponentUnlockable(const UNovaTradableAssetDescription* Asset) const
+{
+	return Asset->UnlockLevel < 2;    // TODO
+}
+
+bool ANovaPlayerController::IsComponentUnlocked(const UNovaTradableAssetDescription* Asset) const
+{
+	return Asset->UnlockLevel < 1;    // TODO
+}
+
+float ANovaPlayerController::GetComponentUnlockCost(const UNovaTradableAssetDescription* Asset) const
+{
+	return 0;    // TODO
+}
+
+void ANovaPlayerController::UnlockComponent(const UNovaTradableAssetDescription* Asset)
+{
+	// TODO
+}
+
+/*----------------------------------------------------
     Menus
 ----------------------------------------------------*/
 
