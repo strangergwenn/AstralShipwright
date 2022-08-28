@@ -197,13 +197,13 @@ public:
 public:
 
 	/** Check if a particular part is available for unlock */
-	bool IsComponentUnlockable(const class UNovaTradableAssetDescription* Asset) const;
+	bool IsComponentUnlockable(const class UNovaTradableAssetDescription* Asset, FText* Help = nullptr) const;
 
 	/** Check if a particular part is unlocked */
 	bool IsComponentUnlocked(const class UNovaTradableAssetDescription* Asset) const;
 
 	/** Get the unlock cost for a part */
-	float GetComponentUnlockCost(const class UNovaTradableAssetDescription* Asset) const;
+	FNovaCredits GetComponentUnlockCost(const class UNovaTradableAssetDescription* Asset) const;
 
 	/** Unlock a part */
 	void UnlockComponent(const class UNovaTradableAssetDescription* Asset);
@@ -241,6 +241,9 @@ private:
 
 	// Gameplay state
 	TMap<ENovaPostProcessPreset, TSharedPtr<FNeutronPostProcessSetting>> PostProcessSettings;
+
+	// List of component IDs for career unlocks
+	TArray<FGuid> UnlockedComponents;
 
 	/*----------------------------------------------------
 	    Getters

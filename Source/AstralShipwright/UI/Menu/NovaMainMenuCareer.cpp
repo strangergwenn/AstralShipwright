@@ -201,7 +201,7 @@ TSharedPtr<SNeutronButton> SNovaMainMenuCareer::GetDefaultFocusButton() const
 		}
 	}
 
-	return SNeutronTabPanel::GetDefaultFocusButton();    // TODO
+	return SNeutronTabPanel::GetDefaultFocusButton();
 }
 
 /*----------------------------------------------------

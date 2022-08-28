@@ -709,24 +709,53 @@ void ANovaPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
     Progression
 ----------------------------------------------------*/
 
-bool ANovaPlayerController::IsComponentUnlockable(const UNovaTradableAssetDescription* Asset) const
+bool ANovaPlayerController::IsComponentUnlockable(const UNovaTradableAssetDescription* Asset, FText* Help) const
 {
-	return Asset->UnlockLevel < 2;    // TODO
+	if (!GetSpacecraftPawn()->IsDocked())
+	{
+		if (Help)
+		{
+			*Help = LOCTEXT("CantUnlockNotDocked", "Components can only be unlocked while docked");
+		}
+		return false;
+	}
+	else if (!CanAffordTransaction(GetComponentUnlockCost(Asset)))
+	{
+		if (Help)
+		{
+			*Help = LOCTEXT("CantUnlockExpensive", "This component is too expensive to unlock");
+		}
+		return false;
+	}
+	else if (Asset->UnlockLevel > 1 && UnlockedComponents.Num() < 2 * (Asset->UnlockLevel - 1))
+	{
+		if (Help)
+		{
+			*Help = LOCTEXT("CantUnlockUnavailable", "Unlock more components to make this one available");
+		}
+		return false;
+	}
+	else
+	{
+		return true;
+	}
 }
 
 bool ANovaPlayerController::IsComponentUnlocked(const UNovaTradableAssetDescription* Asset) const
 {
-	return Asset->UnlockLevel < 1;    // TODO
+	return Asset->UnlockLevel == 0 || UnlockedComponents.Contains(Asset->Identifier);
 }
 
-float ANovaPlayerController::GetComponentUnlockCost(const UNovaTradableAssetDescription* Asset) const
+FNovaCredits ANovaPlayerController::GetComponentUnlockCost(const UNovaTradableAssetDescription* Asset) const
 {
-	return 0;    // TODO
+	return 2500 * Asset->UnlockLevel;
 }
 
 void ANovaPlayerController::UnlockComponent(const UNovaTradableAssetDescription* Asset)
 {
-	// TODO
+	ProcessTransaction(GetComponentUnlockCost(Asset));
+	UnlockedComponents.Add(Asset->Identifier);
+	SaveGame();
 }
 
 /*----------------------------------------------------
