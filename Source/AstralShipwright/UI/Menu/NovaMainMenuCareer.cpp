@@ -12,6 +12,7 @@
 
 #include "Neutron/System/NeutronAssetManager.h"
 #include "Neutron/System/NeutronMenuManager.h"
+#include "Neutron/UI/Widgets/NeutronModalPanel.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
 #include "Widgets/Layout/SScaleBox.h"
@@ -53,7 +54,27 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 		.ScrollBarVisibility(EVisibility::Collapsed)
 		.AnimateWheelScrolling(true)
 		
-		// Bulk trading
+		// Info bar
+		+ SScrollBox::Slot()
+		.HAlign(HAlign_Center)
+		.Padding(Theme.VerticalContentPadding)
+		[
+			SNew(SHorizontalBox)
+
+			+ SHorizontalBox::Slot()
+
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNew(STextBlock)
+				.Text(this, &SNovaMainMenuCareer::GetCareerInfo)
+				.TextStyle(&Theme.InfoFont)
+			]
+
+			+ SHorizontalBox::Slot()
+		]
+		
+		// Main unlock layout
 		+ SScrollBox::Slot()
 		.HAlign(HAlign_Center)
 		.Padding(Theme.VerticalContentPadding)
@@ -105,6 +126,15 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 					SNew(STextBlock)
 					.Text(Level > 0 ? FText::AsNumber(Level) : FText())
 					.TextStyle(&Theme.NotificationFont)
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.HAlign(HAlign_Center)
+				[
+					SNew(STextBlock)
+					.Text(Level > 0 ? GetPriceText(PC->GetComponentUnlockCost(Level)) : FText())
+					.TextStyle(&Theme.InfoFont)
 				]
 			]
 		];
@@ -161,7 +191,7 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 
 						+ SVerticalBox::Slot()
 						.AutoHeight()
-						.HAlign(HAlign_Left)
+						.HAlign(HAlign_Right)
 						[
 							SNew(SImage)
 							.Image(this, &SNovaMainMenuCareer::GetComponentIcon, Asset)
@@ -175,6 +205,9 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 			// clang-format on
 		}
 	}
+
+	// Create ourselves a modal panel
+	ModalPanel = Menu->CreateModalPanel();
 }
 
 /*----------------------------------------------------
@@ -189,6 +222,11 @@ void SNovaMainMenuCareer::Show()
 void SNovaMainMenuCareer::Hide()
 {
 	SNeutronTabPanel::Hide();
+}
+
+void SNovaMainMenuCareer::UpdateGameObjects()
+{
+	PC = MenuManager.IsValid() ? MenuManager->GetPC<ANovaPlayerController>() : nullptr;
 }
 
 TSharedPtr<SNeutronButton> SNovaMainMenuCareer::GetDefaultFocusButton() const
@@ -208,14 +246,22 @@ TSharedPtr<SNeutronButton> SNovaMainMenuCareer::GetDefaultFocusButton() const
     Content callbacks
 ----------------------------------------------------*/
 
+FText SNovaMainMenuCareer::GetCareerInfo() const
+{
+	return FText::FormatNamed(
+		LOCTEXT("CareerInfo",
+			"Spacecraft components can currently be unlocked up to level {level}. Unlock new components to increase the available level!"),
+		TEXT("level"), FText::AsNumber(PC->GetComponentUnlockLevel()));
+}
+
 bool SNovaMainMenuCareer::IsComponentUnlockable(const UNovaTradableAssetDescription* Asset) const
 {
-	return Cast<ANovaPlayerController>(MenuManager->GetPC())->IsComponentUnlockable(Asset);
+	return PC->IsComponentUnlockable(Asset);
 }
 
 bool SNovaMainMenuCareer::IsComponentUnlocked(const UNovaTradableAssetDescription* Asset) const
 {
-	return Cast<ANovaPlayerController>(MenuManager->GetPC())->IsComponentUnlocked(Asset);
+	return PC->IsComponentUnlocked(Asset);
 }
 
 FText SNovaMainMenuCareer::GetComponentHelpText(const UNovaTradableAssetDescription* Asset) const
@@ -224,20 +270,26 @@ FText SNovaMainMenuCareer::GetComponentHelpText(const UNovaTradableAssetDescript
 	const UNovaEquipmentDescription* Equipment = Cast<UNovaEquipmentDescription>(Asset);
 	FText                            Details;
 
-	if (Module)
+	if (PC->IsComponentUnlockable(Asset, &Details))
 	{
-		Details = Module->Description;
-	}
-	else if (Equipment)
-	{
-		Details = Equipment->Description;
-	}
-	else
-	{
-		Details = Asset->GetInlineDescription();
+		if (Module)
+		{
+			Details =
+				FText::FormatNamed(LOCTEXT("UnlockFormatModule", "Unlock this module. {details}"), TEXT("details"), Module->Description);
+		}
+		else if (Equipment)
+		{
+			Details = FText::FormatNamed(
+				LOCTEXT("UnlockFormatEquipment", "Unlock this equipment. {details}"), TEXT("details"), Equipment->Description);
+		}
+		else
+		{
+			Details = FText::FormatNamed(
+				LOCTEXT("UnlockFormatCompartment", "Unlock this compartment. {details}"), TEXT("details"), Asset->GetInlineDescription());
+		}
 	}
 
-	return FText::FormatNamed(LOCTEXT("UnlockFormat", "Unlock this part. {details}"), TEXT("details"), Details);
+	return Details;
 }
 
 const FSlateBrush* SNovaMainMenuCareer::GetComponentIcon(const UNovaTradableAssetDescription* Asset) const
@@ -251,7 +303,17 @@ const FSlateBrush* SNovaMainMenuCareer::GetComponentIcon(const UNovaTradableAsse
 
 void SNovaMainMenuCareer::OnComponentUnlocked(const UNovaTradableAssetDescription* Asset)
 {
-	Cast<ANovaPlayerController>(MenuManager->GetPC())->UnlockComponent(Asset);
+	FText UnlockDetails =
+		FText::FormatNamed(LOCTEXT("UnlockComponentDetails", "Confirm the unlocking of {component} for {credits} credits"),
+			TEXT("component"), Asset->Name, TEXT("credits"), GetPriceText(PC->GetComponentUnlockCost(Asset)));
+
+	ModalPanel->Show(LOCTEXT("UnlockComponentTitle", "Unlock component"),
+		UnlockDetails,    //
+		FSimpleDelegate::CreateLambda(
+			[=]()
+			{
+				PC->UnlockComponent(Asset);
+			}));
 }
 
 #undef LOCTEXT_NAMESPACE

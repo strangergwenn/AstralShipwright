@@ -90,7 +90,8 @@ FNovaPlayerSave ANovaPlayerController::Save() const
 	}
 
 	// Save credits
-	SaveData.Credits = Credits;
+	SaveData.Credits            = Credits;
+	SaveData.UnlockedComponents = UnlockedComponents;
 
 	return SaveData;
 }
@@ -120,6 +121,9 @@ void ANovaPlayerController::Load(const FNovaPlayerSave& SaveData)
 		Credits = 2000;
 #endif    // WITH_EDITOR
 	}
+
+	// Load parts
+	UnlockedComponents = SaveData.UnlockedComponents;
 }
 
 void ANovaPlayerController::SaveGame()
@@ -709,6 +713,11 @@ void ANovaPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
     Progression
 ----------------------------------------------------*/
 
+int32 ANovaPlayerController::GetComponentUnlockLevel() const
+{
+	return (UnlockedComponents.Num() / 2) + 1;
+}
+
 bool ANovaPlayerController::IsComponentUnlockable(const UNovaTradableAssetDescription* Asset, FText* Help) const
 {
 	if (!GetSpacecraftPawn()->IsDocked())
@@ -716,6 +725,14 @@ bool ANovaPlayerController::IsComponentUnlockable(const UNovaTradableAssetDescri
 		if (Help)
 		{
 			*Help = LOCTEXT("CantUnlockNotDocked", "Components can only be unlocked while docked");
+		}
+		return false;
+	}
+	else if (IsComponentUnlocked(Asset))
+	{
+		if (Help)
+		{
+			*Help = LOCTEXT("CantUnlockAgain", "This component is already unlocked");
 		}
 		return false;
 	}
@@ -727,11 +744,11 @@ bool ANovaPlayerController::IsComponentUnlockable(const UNovaTradableAssetDescri
 		}
 		return false;
 	}
-	else if (Asset->UnlockLevel > 1 && UnlockedComponents.Num() < 2 * (Asset->UnlockLevel - 1))
+	else if (Asset->UnlockLevel > GetComponentUnlockLevel())
 	{
 		if (Help)
 		{
-			*Help = LOCTEXT("CantUnlockUnavailable", "Unlock more components to make this one available");
+			*Help = LOCTEXT("CantUnlockUnavailable", "This component isn't available to unlock yet");
 		}
 		return false;
 	}
@@ -746,9 +763,14 @@ bool ANovaPlayerController::IsComponentUnlocked(const UNovaTradableAssetDescript
 	return Asset->UnlockLevel == 0 || UnlockedComponents.Contains(Asset->Identifier);
 }
 
+FNovaCredits ANovaPlayerController::GetComponentUnlockCost(int32 Level) const
+{
+	return 2500 * Level;
+}
+
 FNovaCredits ANovaPlayerController::GetComponentUnlockCost(const UNovaTradableAssetDescription* Asset) const
 {
-	return 2500 * Asset->UnlockLevel;
+	return GetComponentUnlockCost(Asset->UnlockLevel);
 }
 
 void ANovaPlayerController::UnlockComponent(const UNovaTradableAssetDescription* Asset)

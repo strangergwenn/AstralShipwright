@@ -36,11 +36,15 @@ public:
 
 	virtual void Hide() override;
 
+	virtual void UpdateGameObjects() override;
+
 	virtual TSharedPtr<SNeutronButton> GetDefaultFocusButton() const override;
 
 	/*----------------------------------------------------
 	    Content callbacks
 	----------------------------------------------------*/
+
+	FText GetCareerInfo() const;
 
 	bool IsComponentUnlockable(const class UNovaTradableAssetDescription* Asset) const;
 	bool IsComponentUnlocked(const class UNovaTradableAssetDescription* Asset) const;
@@ -66,10 +70,12 @@ protected:
 
 protected:
 
-	// Menu manager
+	// Game objects
 	TWeakObjectPtr<class UNeutronMenuManager> MenuManager;
+	class ANovaPlayerController*              PC;
 
 	// Widgets
 	TArray<TSharedPtr<class SVerticalBox>>   UnlockBoxes;
 	TArray<TSharedPtr<class SNeutronButton>> UnlockButtons;
+	TSharedPtr<class SNeutronModalPanel>     ModalPanel;
 };

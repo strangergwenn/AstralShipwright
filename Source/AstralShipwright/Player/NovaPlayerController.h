@@ -62,6 +62,9 @@ struct FNovaPlayerSave
 
 	UPROPERTY()
 	FNovaCredits Credits;
+
+	UPROPERTY()
+	TArray<FGuid> UnlockedComponents;
 };
 
 /** Camera viewpoint component */
@@ -196,11 +199,17 @@ public:
 
 public:
 
+	/** Get which component level is currently available */
+	int32 GetComponentUnlockLevel() const;
+
 	/** Check if a particular part is available for unlock */
 	bool IsComponentUnlockable(const class UNovaTradableAssetDescription* Asset, FText* Help = nullptr) const;
 
 	/** Check if a particular part is unlocked */
 	bool IsComponentUnlocked(const class UNovaTradableAssetDescription* Asset) const;
+
+	/** Get the unlock cost for a level */
+	FNovaCredits GetComponentUnlockCost(int32 Level) const;
 
 	/** Get the unlock cost for a part */
 	FNovaCredits GetComponentUnlockCost(const class UNovaTradableAssetDescription* Asset) const;
