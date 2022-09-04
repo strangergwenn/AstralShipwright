@@ -121,17 +121,23 @@ protected:
 	// Game objects
 	TWeakObjectPtr<UNeutronMenuManager>     MenuManager;
 	class ANovaPlayerController*            PC;
+	const struct FNovaSpacecraft*           Spacecraft;
 	class ANovaSpacecraftPawn*              SpacecraftPawn;
 	class UNovaSpacecraftMovementComponent* SpacecraftMovement;
 	class ANovaGameState*                   GameState;
 	class UNovaOrbitalSimulationComponent*  OrbitalSimulation;
+	class UNovaSpacecraftProcessingSystem*  ProcessingSystem;
 
 	// Slate widgets
 	TSharedPtr<class SHorizontalBox> HUDSwitcher;
 	TSharedPtr<class SNovaHUDPanel>  HUDPanel;
 	TSharedPtr<class SBox>           HUDBox;
+
+	// Content widgets
+	TSharedPtr<class SVerticalBox>   ModuleGroupsBox;
 	TSharedPtr<class SNeutronButton> DockButton;
 	TSharedPtr<class SNeutronButton> TerminateButton;
+	TSharedPtr<class SNeutronButton> MineButton;
 	TSharedPtr<class SNeutronButton> AlignManeuverButton;
 	TSharedPtr<class SNeutronButton> FastForwardButton;
 	TSharedPtr<class SBox>           InvisibleWidget;

@@ -12,6 +12,7 @@
 
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
+#include "Spacecraft/System/NovaSpacecraftProcessingSystem.h"
 
 #include "Player/NovaPlayerController.h"
 
@@ -228,6 +229,22 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.TextStyle(&Theme.HeadingFont)
 			.Text(LOCTEXT("Propulsion", "Propulsion"))
 		]
+
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNeutronAssignNew(TerminateButton, SNeutronButton)
+			.Text(LOCTEXT("AbortFlightPlan", "Terminate flight plan"))
+			.HelpText(LOCTEXT("AbortTrajectoryHelp", "Terminate the current flight plan and stay on the current orbit"))
+			.OnClicked(FSimpleDelegate::CreateLambda([this]()
+			{
+				OrbitalSimulation->AbortTrajectory(GameState->GetPlayerSpacecraftIdentifiers());
+			}))
+			.Enabled_Lambda([=]()
+			{
+				return OrbitalSimulation && GameState && OrbitalSimulation->IsOnTrajectory(GameState->GetPlayerSpacecraftIdentifier());
+			})
+		]
 		
 		+ SVerticalBox::Slot()
 		.AutoHeight()
@@ -289,97 +306,8 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.HelpText(this, &SNovaMainMenuFlight::GetFastFowardHelp)
 			.OnClicked(this, &SNovaMainMenuFlight::OnFastForward)
 			.Enabled(this, &SNovaMainMenuFlight::CanFastForward)
-		];
-
-	HomeHUD.DefaultFocus = FastForwardButton;
-
-	/*----------------------------------------------------
-	    Operations
-	----------------------------------------------------*/
-
-	SAssignNew(OperationsHUD.OverviewWidget, STextBlock)
-		.TextStyle(&Theme.MainFont)
-		.Text(LOCTEXT("Operations", "Operations"));
-
-	SAssignNew(OperationsHUD.DetailedWidget, SVerticalBox)
-
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(Theme.VerticalContentPadding)
-		[
-			SNew(STextBlock)
-			.TextStyle(&Theme.HeadingFont)
-			.Text(LOCTEXT("Operations", "Operations"))
 		]
-
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		[
-			SNeutronAssignNew(TerminateButton, SNeutronButton)
-			.Text(LOCTEXT("AbortFlightPlan", "Terminate flight plan"))
-			.HelpText(LOCTEXT("AbortTrajectoryHelp", "Terminate the current flight plan and stay on the current orbit"))
-			.OnClicked(FSimpleDelegate::CreateLambda([this]()
-			{
-				OrbitalSimulation->AbortTrajectory(GameState->GetPlayerSpacecraftIdentifiers());
-			}))
-			.Enabled_Lambda([=]()
-			{
-				return OrbitalSimulation && GameState && OrbitalSimulation->IsOnTrajectory(GameState->GetPlayerSpacecraftIdentifier());
-			})
-		]
-		
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		[
-			SNeutronNew(SNeutronButton)
-			.Text(LOCTEXT("MineResource", "Mine resource"))
-			.HelpText(LOCTEXT("MineResourceHelp", "Mine the current asteroid for resources"))
-			.OnClicked(FSimpleDelegate::CreateLambda([this]()
-			{
-				if (IsValid(SpacecraftPawn) && IsValid(PC))
-				{
-					const ANovaAsteroid* AsteroidActor = UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
-					if (IsValid(AsteroidActor))
-					{
-						const FNovaAsteroid& Asteroid = Cast<ANovaAsteroid>(AsteroidActor)->GetAsteroidData();
-
-						// Add cargo to the spacecraft
-						FNovaSpacecraft ModifiedSpacecraft = SpacecraftPawn->GetSpacecraftCopy();
-						const float CargoMassToMine =  ModifiedSpacecraft.GetAvailableCargoMass(Asteroid.MineralResource);
-						if (CargoMassToMine > 0 && ModifiedSpacecraft.ModifyCargo(Asteroid.MineralResource, CargoMassToMine))
-						{
-							PC->UpdateSpacecraft(ModifiedSpacecraft);
-							PC->Notify(LOCTEXT("ResourceMined", "Resource mined"), Asteroid.MineralResource->Name, ENeutronNotificationType::Info);
-						}
-					}
-				}
-			}))
-			.Enabled_Lambda([=]()
-			{
-				if (IsValid(SpacecraftPawn))
-				{
-					const ANovaAsteroid* AsteroidActor = UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
-					return IsValid(AsteroidActor) && IsValid(SpacecraftMovement) && SpacecraftMovement->IsAnchored();
-				}
-				else
-				{
-					return false;
-				}
-			})
-		]
-		
-		/*+ SVerticalBox::Slot()
-		.AutoHeight()
-		[
-			SNeutronNew(SNeutronButton)
-			.Action(FNovaPlayerInput::MenuSecondary)
-			.Text(LOCTEXT("TestSilentRunning", "Silent running"))
-			.OnClicked(FSimpleDelegate::CreateLambda([&]()
-			{
-				MenuManager->SetInterfaceColor(Theme.NegativeColor, FLinearColor(1.0f, 0.0f, 0.1f));
-			}))
-		]*/
-		
+	
 #if WITH_EDITOR && 1
 
 		+ SVerticalBox::Slot()
@@ -443,9 +371,76 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			}))
 		]
 #endif // WITH_EDITOR
-		;
+	;
 
-	OperationsHUD.DefaultFocus = TerminateButton;
+	HomeHUD.DefaultFocus = FastForwardButton;
+
+	/*----------------------------------------------------
+	    Operations
+	----------------------------------------------------*/
+
+	SAssignNew(OperationsHUD.OverviewWidget, STextBlock)
+		.TextStyle(&Theme.MainFont)
+		.Text(LOCTEXT("Operations", "Operations"));
+
+	SAssignNew(OperationsHUD.DetailedWidget, SVerticalBox)
+
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.HeadingFont)
+			.Text(LOCTEXT("Operations", "Operations"))
+		]
+		
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNeutronAssignNew(MineButton, SNeutronButton)
+			.Text(LOCTEXT("MineResource", "Mine resource"))
+			.HelpText(LOCTEXT("MineResourceHelp", "Mine the current asteroid for resources"))
+			.OnClicked(FSimpleDelegate::CreateLambda([this]()
+			{
+				if (IsValid(SpacecraftPawn) && IsValid(PC))
+				{
+					const ANovaAsteroid* AsteroidActor = UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
+					if (IsValid(AsteroidActor))
+					{
+						const FNovaAsteroid& Asteroid = Cast<ANovaAsteroid>(AsteroidActor)->GetAsteroidData();
+
+						// Add cargo to the spacecraft
+						FNovaSpacecraft ModifiedSpacecraft = SpacecraftPawn->GetSpacecraftCopy();
+						const float CargoMassToMine =  ModifiedSpacecraft.GetAvailableCargoMass(Asteroid.MineralResource);
+						if (CargoMassToMine > 0 && ModifiedSpacecraft.ModifyCargo(Asteroid.MineralResource, CargoMassToMine))
+						{
+							PC->UpdateSpacecraft(ModifiedSpacecraft);
+							PC->Notify(LOCTEXT("ResourceMined", "Resource mined"), Asteroid.MineralResource->Name, ENeutronNotificationType::Info);
+						}
+					}
+				}
+			}))
+			.Enabled_Lambda([=]()
+			{
+				if (IsValid(SpacecraftPawn))
+				{
+					const ANovaAsteroid* AsteroidActor = UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
+					return IsValid(AsteroidActor) && IsValid(SpacecraftMovement) && SpacecraftMovement->IsAnchored();
+				}
+				else
+				{
+					return false;
+				}
+			})
+		]
+
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SAssignNew(ModuleGroupsBox, SVerticalBox)
+		];
+
+	OperationsHUD.DefaultFocus = MineButton;
 
 	/*----------------------------------------------------
 	    Weapons
@@ -464,6 +459,27 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			SNew(STextBlock)
 			.TextStyle(&Theme.HeadingFont)
 			.Text(LOCTEXT("Weapons", "Weapons"))
+		]
+		
+		/*+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNeutronNew(SNeutronButton)
+			.Action(FNovaPlayerInput::MenuSecondary)
+			.Text(LOCTEXT("TestSilentRunning", "Silent running"))
+			.OnClicked(FSimpleDelegate::CreateLambda([&]()
+			{
+				MenuManager->SetInterfaceColor(Theme.NegativeColor, FLinearColor(1.0f, 0.0f, 0.1f));
+			}))
+		]*/
+
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(Theme.ContentPadding)
+		[
+			SNew(STextBlock)
+			.TextStyle(&Theme.MainFont)
+			.Text(LOCTEXT("ComingSoon", "Coming soon..."))
 		];
 
 	WeaponsHUD.DefaultFocus = nullptr;
@@ -561,10 +577,13 @@ void SNovaMainMenuFlight::Hide()
 void SNovaMainMenuFlight::UpdateGameObjects()
 {
 	PC                 = MenuManager.IsValid() ? MenuManager->GetPC<ANovaPlayerController>() : nullptr;
+	Spacecraft         = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
 	SpacecraftPawn     = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
 	SpacecraftMovement = IsValid(SpacecraftPawn) ? SpacecraftPawn->GetSpacecraftMovement() : nullptr;
 	GameState          = IsValid(PC) ? PC->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
 	OrbitalSimulation  = IsValid(GameState) ? GameState->GetOrbitalSimulation() : nullptr;
+	ProcessingSystem =
+		IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(Spacecraft) : nullptr;
 }
 
 void SNovaMainMenuFlight::Next()
@@ -693,7 +712,14 @@ bool SNovaMainMenuFlight::CanDockUndock(FText* Help) const
 			// Leaving anchor
 			if (SpacecraftMovement->GetState() == ENovaMovementState::Anchored)
 			{
-				// TODO
+				if (ProcessingSystem->GetMiningRigStatus() == ENovaSpacecraftProcessingSystemStatus::Processing)
+				{
+					if (Help)
+					{
+						*Help = LOCTEXT("Mining", "Mining rig is currently engaged");
+					}
+					return false;
+				}
 			}
 
 			// Anchoring
@@ -837,6 +863,152 @@ void SNovaMainMenuFlight::SetHUDIndex(int32 Index)
 void SNovaMainMenuFlight::SetHUDIndexCallback(int32 Index)
 {
 	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
+
+	NCHECK(Spacecraft);
+	if (SpacecraftPawn->IsDocked())
+	{
+		ProcessingSystem->Load(*Spacecraft);
+	}
+
+	// Add module groups
+	ModuleGroupsBox->ClearChildren();
+	for (int32 ProcessingGroupIndex = 0; ProcessingGroupIndex < ProcessingSystem->GetProcessingGroupCount(); ProcessingGroupIndex++)
+	{
+		const FNovaModuleGroup& Group = ProcessingSystem->GetModuleGroup(ProcessingGroupIndex);
+
+		TSharedPtr<SHorizontalBox> StatusBox;
+
+		// clang-format off
+		ModuleGroupsBox->AddSlot()
+		.AutoHeight()
+		.Padding(Theme.VerticalContentPadding)
+		[
+			SNew(SBorder)
+			.BorderImage(&Theme.MainMenuGenericBackground)
+			.Padding(0)
+			[
+				SNew(SHorizontalBox)
+
+				// Group icon & index
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.Padding(Theme.ContentPadding)
+				.VAlign(VAlign_Center)
+				[
+					SNew(SBorder)
+					.Padding(0)
+					.BorderImage(new FSlateNoResource)
+					.ColorAndOpacity(Group.Color)
+					[
+						SNew(SRichTextBlock)
+						.TextStyle(&Theme.HeadingFont)
+						.Text(FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/>\n{index}"),
+														TEXT("icon"), FNovaSpacecraft::GetModuleGroupIcon(Group.Type),
+														TEXT("index"), FText::AsNumber(Group.Index + 1)))
+						.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
+						+ SRichTextBlock::ImageDecorator()
+					]
+				]
+		
+				// Production status
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.VAlign(VAlign_Center)
+				[
+					SAssignNew(StatusBox, SHorizontalBox)
+				]
+
+				+ SHorizontalBox::Slot()
+
+				// Processing group activity toggle
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNeutronNew(SNeutronButton)
+					.Size("HalfButtonSize")
+					.Toggle(true)
+					.Text_Lambda([=]()
+					{
+						return ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex) ? LOCTEXT("StopProcessing", "Stop") : LOCTEXT("StartProcessing", "Start");
+					})
+					.HelpText_Lambda([=]()
+					{
+						auto Status = ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex);
+						bool IsActive = ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex);
+
+						if (Status.Num() == 0)
+						{
+							return LOCTEXT("ProcessingNoneHelp", "This module group doesn't have a valid configuration");
+						}
+						else if (!IsActive && Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked))
+						{
+							return LOCTEXT("ProcessingDockedHelp", "Modules cannot be activated while docked");
+						}
+						else if (!IsActive && Status.Contains(ENovaSpacecraftProcessingSystemStatus::Blocked))
+						{
+							return LOCTEXT("ProcessingBlockedHelp", "This module group is blocked");
+						}
+						else
+						{
+							return LOCTEXT("ProcessingHelp", "Toggle activity for this module group");
+						}
+					})
+					.Enabled_Lambda([=]()
+					{
+						auto Status = ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex);
+						bool IsActive = ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex);
+
+						return Status.Num() && (IsActive || (!Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked)
+							&& !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Blocked)));
+					})
+					.OnClicked(FSimpleDelegate::CreateLambda([=]()
+					{
+						ProcessingSystem->SetProcessingGroupActive(ProcessingGroupIndex, !ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex));
+					}))
+				]
+			]
+		];
+		// clang-format on
+
+		// Add status icons
+		for (int32 GroupIndex = 0; GroupIndex < ProcessingSystem->GetProcessingGroupStatus(Group.Index).Num(); GroupIndex++)
+		{
+			// clang-format off
+			StatusBox->AddSlot()
+			.AutoWidth()
+			[
+				SNew(SNeutronImage)
+				.Image(FNeutronImageGetter::CreateLambda([=]()
+				{
+					switch (ProcessingSystem->GetProcessingGroupStatus(Group.Index)[GroupIndex])
+					{
+						default:
+						case ENovaSpacecraftProcessingSystemStatus::Stopped:
+						case ENovaSpacecraftProcessingSystemStatus::Docked:
+						case ENovaSpacecraftProcessingSystemStatus::Blocked:
+							return FNeutronStyleSet::GetBrush("Icon/SB_Warning");
+						case ENovaSpacecraftProcessingSystemStatus::Processing:
+							return FNeutronStyleSet::GetBrush("Icon/SB_On");
+					}
+				}))
+				.ColorAndOpacity_Lambda([=]()
+				{
+					switch (ProcessingSystem->GetProcessingGroupStatus(Group.Index)[GroupIndex])
+					{
+						default:
+						case ENovaSpacecraftProcessingSystemStatus::Stopped:
+						case ENovaSpacecraftProcessingSystemStatus::Docked:
+							return FLinearColor::White;
+						case ENovaSpacecraftProcessingSystemStatus::Processing:
+							return Theme.PositiveColor;
+						case ENovaSpacecraftProcessingSystemStatus::Blocked:
+							return Theme.NegativeColor;
+					}
+				})
+			];
+			// clang-format on
+		}
+	}
 
 	// Apply the new widget
 	TSharedPtr<SWidget>& NewWidget = HUDData[Index].DetailedWidget;
