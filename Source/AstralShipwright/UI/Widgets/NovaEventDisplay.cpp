@@ -151,14 +151,19 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 				// Trajectory
 				if (Trajectory && Trajectory->GetArrivalTime() > CurrentGameTime)
 				{
+					const int32 CurrentManeuverIndex = Trajectory->GetCurrentOrNextManeuverIndex(CurrentGameTime) + 1;
+					const int32 TotalManeuverCount   = Trajectory->Maneuvers.Num();
+
 					// Ongoing maneuver
 					const FNovaManeuver* CurrentManeuver = Trajectory->GetManeuver(CurrentGameTime);
 					if (CurrentManeuver)
 					{
 						FNovaTime TimeLeftInManeuver = (CurrentManeuver->Time + CurrentManeuver->Duration - CurrentGameTime);
 
-						DesiredState.Text = FText::FormatNamed(LOCTEXT("CurrentManeuverFormat", "Maneuver ends in {duration}"),
-							TEXT("duration"), GetDurationText(TimeLeftInManeuver));
+						DesiredState.Text =
+							FText::FormatNamed(LOCTEXT("CurrentManeuverFormat", "Maneuver ends in {duration} ({current}/{total})"),
+								TEXT("duration"), GetDurationText(TimeLeftInManeuver), TEXT("current"),
+								FText::AsNumber(CurrentManeuverIndex), TEXT("total"), TotalManeuverCount);
 						DesiredState.Type = ENovaEventDisplayType::DynamicText;
 					}
 
@@ -167,8 +172,10 @@ void SNovaEventDisplay::Tick(const FGeometry& AllottedGeometry, const double Cur
 					{
 						FNovaTime TimeBeforeNextManeuver = Trajectory->GetNextManeuverStartTime(CurrentGameTime) - CurrentGameTime;
 
-						DesiredState.Text = FText::FormatNamed(LOCTEXT("NextManeuverFormat", "Next maneuver in {duration}"),
-							TEXT("duration"), GetDurationText(TimeBeforeNextManeuver));
+						DesiredState.Text =
+							FText::FormatNamed(LOCTEXT("NextManeuverFormat", "Next maneuver in {duration} ({current}/{total})"),
+								TEXT("duration"), GetDurationText(TimeBeforeNextManeuver), TEXT("current"),
+								FText::AsNumber(CurrentManeuverIndex), TEXT("total"), TotalManeuverCount);
 
 						DesiredState.Type = ENovaEventDisplayType::DynamicText;
 

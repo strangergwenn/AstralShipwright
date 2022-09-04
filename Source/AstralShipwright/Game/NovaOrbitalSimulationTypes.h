@@ -536,6 +536,28 @@ struct FNovaTrajectory
 		return nullptr;
 	}
 
+	/** Get the index of the current or upcoming maneuver */
+	int32 GetCurrentOrNextManeuverIndex(FNovaTime CurrentTime) const
+	{
+		int32 CurrentIndex = 0;
+
+		for (const FNovaManeuver& Maneuver : Maneuvers)
+		{
+			if (Maneuver.Time <= CurrentTime && CurrentTime <= Maneuver.Time + Maneuver.Duration)
+			{
+				break;
+			}
+			else if (Maneuver.Time > CurrentTime)
+			{
+				break;
+			}
+
+			CurrentIndex++;
+		}
+
+		return CurrentIndex;
+	}
+
 	/** Get the orbits that a maneuver is going from and to */
 	TArray<FNovaOrbit> GetRelevantOrbitsForManeuver(const FNovaManeuver& Maneuver) const;
 
