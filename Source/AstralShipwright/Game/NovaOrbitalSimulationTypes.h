@@ -234,9 +234,13 @@ struct FNovaOrbitalLocation
 		}
 
 		// Extract orbital parameters
-		const double SemiMajorAxis     = 0.5 * (2.0 * BaseAltitude + Geometry.StartAltitude + Geometry.OppositeAltitude);
-		const double SemiMinorAxis     = FMath::Sqrt((BaseAltitude + Geometry.StartAltitude) * (BaseAltitude + Geometry.OppositeAltitude));
-		const double Eccentricity      = FMath::Sqrt(1.0 - FMath::Square(SemiMinorAxis) / FMath::Square(SemiMajorAxis));
+		const double SemiMajorAxis = 0.5 * (2.0 * BaseAltitude + Geometry.StartAltitude + Geometry.OppositeAltitude);
+		const double SemiMinorAxis = FMath::Sqrt((BaseAltitude + Geometry.StartAltitude) * (BaseAltitude + Geometry.OppositeAltitude));
+		const double SquaredEccentricity = 1.0 - FMath::Square(SemiMinorAxis) / FMath::Square(SemiMajorAxis);
+		const double Eccentricity =
+			(FMath::IsNearlyZero(SquaredEccentricity) || !FMath::IsFinite(SquaredEccentricity) || FMath::IsNaN(SquaredEccentricity))
+				? 0.0
+				: FMath::Sqrt(SquaredEccentricity);
 		const double HalfFocalDistance = SemiMajorAxis * Eccentricity;
 
 		// Process the phase

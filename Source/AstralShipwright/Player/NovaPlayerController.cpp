@@ -760,7 +760,7 @@ bool ANovaPlayerController::IsComponentUnlockable(const UNovaTradableAssetDescri
 
 bool ANovaPlayerController::IsComponentUnlocked(const UNovaTradableAssetDescription* Asset) const
 {
-	return Asset->UnlockLevel == 0 || UnlockedComponents.Contains(Asset->Identifier);
+	return IsValid(Asset) && (Asset->UnlockLevel == 0 || UnlockedComponents.Contains(Asset->Identifier));
 }
 
 FNovaCredits ANovaPlayerController::GetComponentUnlockCost(int32 Level) const
