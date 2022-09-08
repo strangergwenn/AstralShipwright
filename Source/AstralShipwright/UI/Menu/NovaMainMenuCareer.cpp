@@ -195,6 +195,7 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 						[
 							SNew(SImage)
 							.Image(this, &SNovaMainMenuCareer::GetComponentIcon, Asset)
+							.ColorAndOpacity(FLinearColor(1, 1, 1, 5)) // ensure final alpha will be >=1
 						]
 					]
 				]
