@@ -121,66 +121,132 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 	.HAlign(HAlign_Center)
 	.VAlign(VAlign_Bottom)
 	[
-		SNew(SVerticalBox)
-
-		// HUD content
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.HAlign(HAlign_Center)
+		SNew(SHorizontalBox)
+		
+		+ SHorizontalBox::Slot()
+	
+		// Status text
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.VAlign(VAlign_Bottom)
+		.Padding(FMargin(20, 0))
 		[
-			SNew(SBackgroundBlur)
-			.BlurRadius_Lambda([=]()
-			{
-				return CurrentAlpha * HUDPanel->GetBlurRadius().Get(0);
-			})
-			.BlurStrength_Lambda([=]()
-			{
-				return CurrentAlpha * HUDPanel->GetBlurStrength();
-			})
-			.bApplyAlphaToBlur(true)
-			.Padding(0)
+			SNew(SNeutronButtonLayout)
+			.Size("DefaultButtonSize")
 			[
-				SAssignNew(HUDPanel, SNovaHUDPanel)
-				.OnUpdate(FNovaHUDUpdate::CreateSP(this, &SNovaMainMenuFlight::SetHUDIndexCallback))
+				SNew(SBackgroundBlur)
+				.BlurRadius(this, &SNeutronTabPanel::GetBlurRadius)
+				.BlurStrength(this, &SNeutronTabPanel::GetBlurStrength)
+				.bApplyAlphaToBlur(true)
+				.Padding(0)
 				[
 					SNew(SBorder)
 					.BorderImage(&Theme.MainMenuBackground)
 					.Padding(0)
 					[
 						SNew(SBorder)
-						.BorderImage(&Theme.MainMenuGenericBackground)
-						.Padding(0)
+						.BorderImage(&Theme.MainMenuGenericBorder)
+						.Padding(Theme.ContentPadding)
+						.VAlign(VAlign_Center)
 						[
-							SAssignNew(HUDBox, SBox)
+							SNew(SHorizontalBox)
+
+							+ SHorizontalBox::Slot()
+							[
+								SNew(SNeutronRichText)
+								.Text(FNeutronTextGetter::CreateRaw(this, &SNovaMainMenuFlight::GetStatusText))
+								.TextStyle(&Theme.MainFont)
+							]
+
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
+							[
+								SNew(STextBlock)
+								.Text(this, &SNovaMainMenuFlight::GetStatusValue)
+								.TextStyle(&Theme.MainFont)
+							]
 						]
 					]
 				]
 			]
 		]
 
-		// HUD switcher
-		+ SVerticalBox::Slot()
-		.AutoHeight()
+		// Central HUD
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
 		[
-			SNew(SBackgroundBlur)
-			.BlurRadius(this, &SNeutronTabPanel::GetBlurRadius)
-			.BlurStrength(this, &SNeutronTabPanel::GetBlurStrength)
-			.bApplyAlphaToBlur(true)
-			.Padding(0)
+			SNew(SVerticalBox)
+
+			// HUD content
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.HAlign(HAlign_Center)
 			[
-				SNew(SBorder)
-				.BorderImage(&Theme.MainMenuBackground)
+				SNew(SBackgroundBlur)
+				.BlurRadius_Lambda([=]()
+				{
+					return CurrentAlpha * HUDPanel->GetBlurRadius().Get(0);
+				})
+				.BlurStrength_Lambda([=]()
+				{
+					return CurrentAlpha * HUDPanel->GetBlurStrength();
+				})
+				.bApplyAlphaToBlur(true)
+				.Padding(0)
+				[
+					SAssignNew(HUDPanel, SNovaHUDPanel)
+					.OnUpdate(FNovaHUDUpdate::CreateSP(this, &SNovaMainMenuFlight::SetHUDIndexCallback))
+					[
+						SNew(SBorder)
+						.BorderImage(&Theme.MainMenuBackground)
+						.Padding(0)
+						[
+							SNew(SBorder)
+							.BorderImage(&Theme.MainMenuGenericBackground)
+							.Padding(0)
+							[
+								SAssignNew(HUDBox, SBox)
+							]
+						]
+					]
+				]
+			]
+
+			// HUD switcher
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SBackgroundBlur)
+				.BlurRadius(this, &SNeutronTabPanel::GetBlurRadius)
+				.BlurStrength(this, &SNeutronTabPanel::GetBlurStrength)
+				.bApplyAlphaToBlur(true)
 				.Padding(0)
 				[
 					SNew(SBorder)
-					.BorderImage(&Theme.MainMenuGenericBorder)
-					.Padding(FMargin(Theme.ContentPadding.Left, 0, Theme.ContentPadding.Right, 0))
+					.BorderImage(&Theme.MainMenuBackground)
+					.Padding(0)
 					[
-						SAssignNew(HUDSwitcher, SHorizontalBox)
+						SNew(SBorder)
+						.BorderImage(&Theme.MainMenuGenericBorder)
+						.Padding(FMargin(Theme.ContentPadding.Left, 0, Theme.ContentPadding.Right, 0))
+						[
+							SAssignNew(HUDSwitcher, SHorizontalBox)
+						]
 					]
 				]
 			]
 		]
+		
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.VAlign(VAlign_Bottom)
+		.Padding(FMargin(20, 0))
+		[
+			SNew(SNeutronButtonLayout)
+			.Size("DefaultButtonSize")
+		]
+
+		+ SHorizontalBox::Slot()
 	];
 
 	// Layout our data
@@ -641,6 +707,47 @@ TSharedPtr<SNeutronButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 /*----------------------------------------------------
     Content callbacks
 ----------------------------------------------------*/
+
+FText SNovaMainMenuFlight::GetStatusText() const
+{
+	if (IsInSpace() && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() >= ENovaMovementState::Orbiting)
+	{
+		const ANovaAsteroid* AsteroidActor =
+			UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
+		NCHECK(AsteroidActor);
+
+		const FVector SpacecraftRelativeLocation =
+			AsteroidActor->GetTransform().InverseTransformPosition(SpacecraftPawn->GetActorLocation());
+		int32 Density = FMath::RoundToInt(100 * AsteroidActor->GetMineralDensity(SpacecraftRelativeLocation));
+
+		return FText::FormatNamed(LOCTEXT("StatusTextFormatAsteroid", "<img src=\"/Text/Sensor\"/> Detecting {mineral}"), TEXT("mineral"),
+			AsteroidActor->GetAsteroidData().MineralResource->Name);
+	}
+	else
+	{
+		return LOCTEXT("NoData", "<img src=\"/Text/Sensor\"/> No sensor activity");
+	}
+}
+
+FText SNovaMainMenuFlight::GetStatusValue() const
+{
+	if (IsInSpace() && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() >= ENovaMovementState::Orbiting)
+	{
+		const ANovaAsteroid* AsteroidActor =
+			UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
+		NCHECK(AsteroidActor);
+
+		const FVector SpacecraftRelativeLocation =
+			AsteroidActor->GetTransform().InverseTransformPosition(SpacecraftPawn->GetActorLocation());
+		int32 Density = FMath::RoundToInt(100 * AsteroidActor->GetMineralDensity(SpacecraftRelativeLocation));
+
+		return FText::FormatNamed(LOCTEXT("StatusValueFormatAsteroid", "{density}%"), TEXT("density"), FText::AsNumber(Density));
+	}
+	else
+	{
+		return FText();
+	}
+}
 
 FText SNovaMainMenuFlight::GetDockUndockText() const
 {

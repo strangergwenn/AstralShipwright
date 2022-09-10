@@ -82,6 +82,9 @@ public:
 
 protected:
 
+	FText GetStatusText() const;
+	FText GetStatusValue() const;
+
 	FText GetDockUndockText() const;
 	FText GetDockUndockHelp() const;
 	bool  CanDockUndock(FText* Help = nullptr) const;
