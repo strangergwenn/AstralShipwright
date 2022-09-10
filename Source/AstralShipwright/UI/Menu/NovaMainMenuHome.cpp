@@ -127,7 +127,7 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 								.WidthOverride(700)
 								[
 									SNew(SRichTextBlock)
-									.Text(LOCTEXT("Alpha", "<img src=\"/Text/Warning\"/> Astral Shipwright is currently in early Alpha and may present bugs"))
+									.Text(LOCTEXT("Alpha", "<img src=\"/Text/Warning\"/> Astral Shipwright is currently in Early Access and may present bugs!"))
 									.TextStyle(&Theme.MainFont)
 									.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
 									+ SRichTextBlock::ImageDecorator()
@@ -143,7 +143,7 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 								SNeutronNew(SNeutronButton)
 								.Action(FNeutronPlayerInput::MenuSecondary)
 								.Text(LOCTEXT("ReportBug", "Report a bug"))
-								.HelpText(LOCTEXT("ReportBugHelp", "Report a bug on the project's tracker"))
+								.HelpText(LOCTEXT("ReportBugHelp", "Report a bug to the project's tracker"))
 								.OnClicked(FSimpleDelegate::CreateLambda([this]()
 								{
 									FPlatformProcess::LaunchURL(TEXT("https://github.com/arbonagw/AstralShipwright/issues"), NULL, NULL);
