@@ -494,6 +494,10 @@ public:
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Mass = 30;
 
+	// Crew effect - positive for crew, negative for crew attendance
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	int32 CrewEffect;
+
 	// Whether the module needs tank piping
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	bool NeedsPiping = false;

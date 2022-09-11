@@ -256,9 +256,21 @@ TArray<FText> UNovaModuleDescription::GetDescription() const
 	Result.Add(
 		FText::FormatNamed(LOCTEXT("ModuleDescriptionFormat", "<img src=\"/Text/Mass\"/> {mass} T"), TEXT("mass"), FText::AsNumber(Mass)));
 
-	Result.Add(FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/> {name}"), TEXT("icon"),
-		FNovaSpacecraft::GetModuleGroupIcon(FNovaSpacecraft::GetModuleType(this)), TEXT("name"),
-		FNovaSpacecraft::GetModuleGroupDescription(FNovaSpacecraft::GetModuleType(this))));
+	// This doesn't fit anymore, unfortunately.
+	// Result.Add(FText::FormatNamed(INVTEXT("<img src=\"{icon}\"/> {name}"), TEXT("icon"),
+	//	FNovaSpacecraft::GetModuleGroupIcon(FNovaSpacecraft::GetModuleType(this)), TEXT("name"),
+	//	FNovaSpacecraft::GetModuleGroupDescription(FNovaSpacecraft::GetModuleType(this))));
+
+	if (CrewEffect > 0)
+	{
+		Result.Add(FText::FormatNamed(
+			LOCTEXT("CrewProviderFormat", "<img src=\"/Text/Crew\"/> Provides {crew} crew"), TEXT("crew"), FText::AsNumber(CrewEffect)));
+	}
+	else if (CrewEffect < 0)
+	{
+		Result.Add(FText::FormatNamed(LOCTEXT("CrewRequirementFormat", "<img src=\"/Text/Crew\"/> Requires {crew} crew"), TEXT("crew"),
+			FText::AsNumber(-CrewEffect)));
+	}
 
 	return Result;
 }
@@ -291,8 +303,8 @@ TArray<FText> UNovaProcessingModuleDescription::GetDescription() const
 {
 	TArray<FText> Result = Super::GetDescription();
 
-	Result.Add(FText::FormatNamed(LOCTEXT("ProcessingModuleDescriptionFormat", "<img src=\"/Text/Cargo\"/> {rate} T/s"), TEXT("rate"),
-		FText::AsNumber(ProcessingRate)));
+	Result.Add(FText::FormatNamed(LOCTEXT("ProcessingModuleDescriptionFormat", "<img src=\"/Text/Cargo\"/> Produces {rate} T/s"),
+		TEXT("rate"), FText::AsNumber(ProcessingRate)));
 
 	return Result;
 }
@@ -384,8 +396,8 @@ TArray<FText> UNovaMiningEquipmentDescription::GetDescription() const
 {
 	TArray<FText> Result = Super::GetDescription();
 
-	Result.Add(FText::FormatNamed(LOCTEXT("MiningEquipmentDescriptionFormat", "<img src=\"/Text/Cargo\"/> {rate} T/s"), TEXT("rate"),
-		FText::AsNumber(ExtractionRate)));
+	Result.Add(FText::FormatNamed(LOCTEXT("MiningEquipmentDescriptionFormat", "<img src=\"/Text/Cargo\"/> Produces {rate} T/s"),
+		TEXT("rate"), FText::AsNumber(ExtractionRate)));
 
 	return Result;
 }
