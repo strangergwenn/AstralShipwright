@@ -60,9 +60,11 @@ public:
 	    Content callbacks
 	----------------------------------------------------*/
 
-	// Batch trade
+	// Header details
 	bool             IsBulkTradeEnabled() const;
 	TOptional<float> GetPropellantRatio() const;
+	FText            GetCrewText() const;
+	TOptional<float> GetCrewRatio() const;
 	FText            GetPropellantText() const;
 
 	// Module utility
@@ -110,6 +112,7 @@ protected:
 	int32                       CurrentCompartmentIndex;
 	int32                       CurrentModuleIndex;
 	TNeutronTimedAverage<float> AveragedPropellantRatio;
+	TNeutronTimedAverage<float> AveragedCrewRatio;
 
 	// Resource list
 	TArray<const class UNovaResource*>                       ResourceList;

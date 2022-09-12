@@ -62,7 +62,7 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 		.ScrollBarVisibility(EVisibility::Collapsed)
 		.AnimateWheelScrolling(true)
 		
-		// Bulk trading
+		// Operations header
 		+ SScrollBox::Slot()
 		.HAlign(HAlign_Center)
 		.Padding(Theme.VerticalContentPadding)
@@ -71,126 +71,200 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 			.MinDesiredWidth(FullWidth)
 			.HAlign(HAlign_Fill)
 			[
-				SNew(SVerticalBox)
-				
-				// Bulk trading title
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				.HAlign(HAlign_Left)
+				SNew(SHorizontalBox)
+
+				// Crew
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
 				[
-					SNew(STextBlock)
-					.TextStyle(&Theme.HeadingFont)
-					.Text(LOCTEXT("BatchTrade", "Batch trading"))
+					SNew(SNeutronButtonLayout)
+					.Size("HighButtonSize")
+					[
+						SNew(SVerticalBox)
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(Theme.VerticalContentPadding)
+						[
+							SNew(STextBlock)
+							.TextStyle(&Theme.HeadingFont)
+							.Text(LOCTEXT("CrewTitle", "Crew"))
+						]
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(Theme.VerticalContentPadding)
+						[
+							SNew(SNeutronRichText)
+							.TextStyle(&Theme.MainFont)
+							.Text(FNeutronTextGetter::CreateRaw(this, &SNovaMainMenuOperations::GetCrewText))
+						]
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SNew(SProgressBar)
+							.Style(&Theme.ProgressBarStyle)
+							.Percent(this, &SNovaMainMenuOperations::GetCrewRatio)
+						]
+
+						+ SVerticalBox::Slot()
+					]
 				]
 
-				// Bulk trading box
-				+ SVerticalBox::Slot()
-				.AutoHeight()
+				// Propellant data
+				+ SHorizontalBox::Slot()
 				[
-					SNew(SHorizontalBox)
-
-					// Batch buying
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
+					SNew(SNeutronButtonLayout)
+					.Size("HighButtonSize")
 					[
-						SNeutronNew(SNeutronButton)
-						.Text(LOCTEXT("BulkBuy", "Bulk buy"))
-						.HelpText(LOCTEXT("BulkBuyHelp", "Bulk buy resources across all compartments"))
-						.Enabled(this, &SNovaMainMenuOperations::IsBulkTradeEnabled)
-						.OnClicked(this, &SNovaMainMenuOperations::OnBatchBuy)
-						.Size("HighButtonSize")
-					]
+						SNew(SVerticalBox)
 
-					// Batch selling
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					[
-						SNeutronNew(SNeutronButton)
-						.Text(LOCTEXT("BulkSell", "Bulk sell"))
-						.HelpText(LOCTEXT("BulkSellHelp", "Bulk sell resources across all compartments"))
-						.Enabled(this, &SNovaMainMenuOperations::IsBulkTradeEnabled)
-						.OnClicked(this, &SNovaMainMenuOperations::OnBatchSell)
-						.Size("HighButtonSize")
-					]
-
-					// Propellant data
-					+ SHorizontalBox::Slot()
-					[
-						SNew(SNeutronButtonLayout)
-						.Size("HighButtonSize")
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(Theme.VerticalContentPadding)
 						[
-							SNew(SVerticalBox)
+							SNew(STextBlock)
+							.TextStyle(&Theme.HeadingFont)
+							.Text(LOCTEXT("Propellant", "Propellant"))
+						]
 
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							.Padding(Theme.VerticalContentPadding)
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(Theme.VerticalContentPadding)
+						.HAlign(HAlign_Left)
+						[
+							SNew(SNeutronRichText)
+							.TextStyle(&Theme.MainFont)
+							.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuOperations::GetPropellantText))
+						]
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SNew(SProgressBar)
+							.Style(&Theme.ProgressBarStyle)
+							.Percent(this, &SNovaMainMenuOperations::GetPropellantRatio)
+						]
+
+						+ SVerticalBox::Slot()
+					]
+				]
+			
+				// Propellant button
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNeutronNew(SNeutronButton)
+					.HelpText(LOCTEXT("TradePropellantHelp", "Trade propellant with this station"))
+					.Action(FNeutronPlayerInput::MenuPrimary)
+					.ActionFocusable(false)
+					.Size("HighButtonSize")
+					.Enabled_Lambda([=]()
+					{
+						return SpacecraftPawn && SpacecraftPawn->IsDocked() && !SpacecraftPawn->HasModifications();
+					})
+					.OnClicked(this, &SNovaMainMenuOperations::OnRefillPropellant)
+					.Content()
+					[
+						SNew(SOverlay)
+						
+						+ SOverlay::Slot()
+						[
+							SNew(SScaleBox)
+							.Stretch(EStretch::ScaleToFill)
+							[
+								SNew(SImage)
+								.Image(&UNovaResource::GetPropellant()->AssetRender)
+							]
+						]
+
+						+ SOverlay::Slot()
+						.VAlign(VAlign_Top)
+						[
+							SNew(SBorder)
+							.BorderImage(&Theme.MainMenuDarkBackground)
+							.Padding(Theme.ContentPadding)
 							[
 								SNew(STextBlock)
-								.TextStyle(&Theme.HeadingFont)
-								.Text(LOCTEXT("Propellant", "Propellant"))
-							]
-
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							.Padding(Theme.VerticalContentPadding)
-							.HAlign(HAlign_Left)
-							[
-								SNew(SNeutronRichText)
 								.TextStyle(&Theme.MainFont)
-								.Text(FNeutronTextGetter::CreateSP(this, &SNovaMainMenuOperations::GetPropellantText))
+								.Text(LOCTEXT("TradePropellant", "Trade propellant"))
 							]
-
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							[
-								SNew(SProgressBar)
-								.Style(&Theme.ProgressBarStyle)
-								.Percent(this, &SNovaMainMenuOperations::GetPropellantRatio)
-							]
-
-							+ SVerticalBox::Slot()
 						]
 					]
-			
-					// Propellant button
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
+				]
+	
+				// Batch buying
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNeutronNew(SNeutronButton)
+					.HelpText(LOCTEXT("BulkBuyHelp", "Bulk buy resources across all compartments"))
+					.Enabled(this, &SNovaMainMenuOperations::IsBulkTradeEnabled)
+					.OnClicked(this, &SNovaMainMenuOperations::OnBatchBuy)
+					.Size("HighButtonSize")
+					.Content()
 					[
-						SNeutronNew(SNeutronButton)
-						.HelpText(LOCTEXT("TradePropellantHelp", "Trade propellant with this station"))
-						.Action(FNeutronPlayerInput::MenuPrimary)
-						.ActionFocusable(false)
-						.Size("HighButtonSize")
-						.Enabled_Lambda([=]()
-						{
-							return SpacecraftPawn && SpacecraftPawn->IsDocked() && !SpacecraftPawn->HasModifications();
-						})
-						.OnClicked(this, &SNovaMainMenuOperations::OnRefillPropellant)
-						.Content()
-						[
-							SNew(SOverlay)
+						SNew(SOverlay)
 						
-							+ SOverlay::Slot()
+						+ SOverlay::Slot()
+						[
+							SNew(SScaleBox)
+							.Stretch(EStretch::ScaleToFill)
 							[
-								SNew(SScaleBox)
-								.Stretch(EStretch::ScaleToFill)
-								[
-									SNew(SImage)
-									.Image(&UNovaResource::GetPropellant()->AssetRender)
-								]
+								SNew(SImage)
+								.Image(&UNovaResource::GetGeneric()->AssetRender)
 							]
+						]
 
-							+ SOverlay::Slot()
-							.VAlign(VAlign_Top)
+						+ SOverlay::Slot()
+						.VAlign(VAlign_Top)
+						[
+							SNew(SBorder)
+							.BorderImage(&Theme.MainMenuDarkBackground)
+							.Padding(Theme.ContentPadding)
 							[
-								SNew(SBorder)
-								.BorderImage(&Theme.MainMenuDarkBackground)
-								.Padding(Theme.ContentPadding)
-								[
-									SNew(STextBlock)
-									.TextStyle(&Theme.MainFont)
-									.Text(LOCTEXT("TradePropellant", "Trade propellant"))
-								]
+								SNew(STextBlock)
+								.TextStyle(&Theme.MainFont)
+								.Text(LOCTEXT("BulkBuy", "Bulk buy"))
+							]
+						]
+					]
+				]
+
+				// Batch selling
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNeutronNew(SNeutronButton)
+					.HelpText(LOCTEXT("BulkSellHelp", "Bulk sell resources across all compartments"))
+					.Enabled(this, &SNovaMainMenuOperations::IsBulkTradeEnabled)
+					.OnClicked(this, &SNovaMainMenuOperations::OnBatchSell)
+					.Size("HighButtonSize")
+					.Content()
+					[
+						SNew(SOverlay)
+						
+						+ SOverlay::Slot()
+						[
+							SNew(SScaleBox)
+							.Stretch(EStretch::ScaleToFill)
+							[
+								SNew(SImage)
+								.Image(&UNovaResource::GetGeneric()->AssetRender)
+							]
+						]
+
+						+ SOverlay::Slot()
+						.VAlign(VAlign_Top)
+						[
+							SNew(SBorder)
+							.BorderImage(&Theme.MainMenuDarkBackground)
+							.Padding(Theme.ContentPadding)
+							[
+								SNew(STextBlock)
+								.TextStyle(&Theme.MainFont)
+								.Text(LOCTEXT("BulkSell", "Bulk sell"))
 							]
 						]
 					]
@@ -460,6 +534,7 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 	}
 
 	AveragedPropellantRatio.SetPeriod(1.0f);
+	AveragedCrewRatio.SetPeriod(1.0f);
 }
 
 /*----------------------------------------------------
@@ -473,6 +548,7 @@ void SNovaMainMenuOperations::Tick(const FGeometry& AllottedGeometry, const doub
 	if (Spacecraft && GameState)
 	{
 		AveragedPropellantRatio.Set(PropellantSystem->GetCurrentPropellantMass() / PropellantSystem->GetPropellantCapacity(), DeltaTime);
+		AveragedCrewRatio.Set(0.5f, DeltaTime);    // TODO
 	}
 }
 
@@ -941,6 +1017,17 @@ bool SNovaMainMenuOperations::IsBulkTradeEnabled() const
 TOptional<float> SNovaMainMenuOperations::GetPropellantRatio() const
 {
 	return AveragedPropellantRatio.Get();
+}
+
+FText SNovaMainMenuOperations::GetCrewText() const
+{
+	return FText::FormatNamed(LOCTEXT("CrewDetailsFormat", "<img src=\"/Text/Crew\"/> {busy} out of {total} crew busy"), TEXT("busy"),
+		FText::AsNumber(5), TEXT("total"), FText::AsNumber(7));    // TODO
+}
+
+TOptional<float> SNovaMainMenuOperations::GetCrewRatio() const
+{
+	return AveragedCrewRatio.Get();
 }
 
 FText SNovaMainMenuOperations::GetPropellantText() const

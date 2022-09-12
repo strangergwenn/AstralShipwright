@@ -383,6 +383,9 @@ public:
 	/** Get a special propellant resource */
 	static const UNovaResource* GetPropellant();
 
+	/** Get a generic resource */
+	static const UNovaResource* GetGeneric();
+
 public:
 
 	// Resource description

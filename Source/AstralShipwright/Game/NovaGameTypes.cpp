@@ -62,3 +62,8 @@ const UNovaResource* UNovaResource::GetPropellant()
 {
 	return UNeutronAssetManager::Get()->GetAsset<UNovaResource>(FGuid("{78816A80-4E59-9D15-DC6D-DFB769D0B188}"));
 }
+
+const UNovaResource* UNovaResource::GetGeneric()
+{
+	return UNeutronAssetManager::Get()->GetAsset<UNovaResource>(FGuid("{42C31723-4E30-F22F-1932-EAB2E0E0A3C7}"));
+}
