@@ -175,7 +175,8 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 		}
 	}
 
-	// Load all cargo from the spacecraft
+	// Load all cargo from the spacecraft, update crew count
+	TotalCrewCount = 0;
 	RealtimeCompartments.SetNum(Spacecraft.Compartments.Num());
 	for (int32 CompartmentIndex = 0; CompartmentIndex < RealtimeCompartments.Num(); CompartmentIndex++)
 	{
@@ -186,6 +187,21 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 		{
 			const FNovaSpacecraftCargo& Cargo                         = Compartment.GetCargo(ModuleIndex);
 			RealtimeCompartments[CompartmentIndex].Cargo[ModuleIndex] = Cargo;
+
+			const UNovaModuleDescription* Module = Compartment.Modules[ModuleIndex].Description;
+			if (Module && Module->CrewEffect > 0)
+			{
+				TotalCrewCount += Module->CrewEffect;
+			}
+		}
+
+		for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
+		{
+			const UNovaEquipmentDescription* Equipment = Compartment.Equipment[EquipmentIndex];
+			if (Equipment && Equipment->CrewEffect > 0)
+			{
+				TotalCrewCount += Equipment->CrewEffect;
+			}
 		}
 	}
 }
@@ -515,6 +531,30 @@ FText UNovaSpacecraftProcessingSystem::GetStatusText(ENovaSpacecraftProcessingSy
 	}
 }
 
+int32 UNovaSpacecraftProcessingSystem::GetBusyCrew() const
+{
+	int32 Count = 0;
+
+	for (const auto& GroupState : ProcessingGroupsStates)
+	{
+		for (const auto& ChainState : GroupState.Chains)
+		{
+			if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing)
+			{
+				for (const auto& ModuleState : ChainState.Modules)
+				{
+					if (ModuleState.Module->CrewEffect < 0)
+					{
+						Count += FMath::Abs(ModuleState.Module->CrewEffect);
+					}
+				}
+			}
+		}
+	}
+
+	return Count;
+}
+
 /*----------------------------------------------------
     Networking
 ----------------------------------------------------*/
@@ -548,6 +588,7 @@ void UNovaSpacecraftProcessingSystem::GetLifetimeReplicatedProps(TArray<FLifetim
 	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, MiningRigActive);
 	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, MiningRigStatus);
 	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, MiningRigResource);
+	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, TotalCrewCount);
 }
 
 #undef LOCTEXT_NAMESPACE

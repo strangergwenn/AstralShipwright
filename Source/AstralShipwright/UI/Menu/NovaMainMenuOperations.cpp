@@ -548,7 +548,10 @@ void SNovaMainMenuOperations::Tick(const FGeometry& AllottedGeometry, const doub
 	if (Spacecraft && GameState)
 	{
 		AveragedPropellantRatio.Set(PropellantSystem->GetCurrentPropellantMass() / PropellantSystem->GetPropellantCapacity(), DeltaTime);
-		AveragedCrewRatio.Set(0.5f, DeltaTime);    // TODO
+		AveragedCrewRatio.Set(ProcessingSystem->GetTotalCrew() > 0
+								  ? static_cast<float>(ProcessingSystem->GetBusyCrew()) / ProcessingSystem->GetTotalCrew()
+								  : 0.0f,
+			DeltaTime);
 	}
 }
 
@@ -1022,7 +1025,7 @@ TOptional<float> SNovaMainMenuOperations::GetPropellantRatio() const
 FText SNovaMainMenuOperations::GetCrewText() const
 {
 	return FText::FormatNamed(LOCTEXT("CrewDetailsFormat", "<img src=\"/Text/Crew\"/> {busy} out of {total} crew busy"), TEXT("busy"),
-		FText::AsNumber(5), TEXT("total"), FText::AsNumber(7));    // TODO
+		FText::AsNumber(ProcessingSystem->GetBusyCrew()), TEXT("total"), FText::AsNumber(ProcessingSystem->GetTotalCrew()));
 }
 
 TOptional<float> SNovaMainMenuOperations::GetCrewRatio() const

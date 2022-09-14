@@ -627,6 +627,10 @@ public:
 	// Equipment pairing
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	bool RequiresPairing = false;
+
+	// Crew effect - positive for crew, negative for crew attendance
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	int32 CrewEffect;
 };
 
 /** Description of an engine equipment */

@@ -334,6 +334,15 @@ public:
 	/** Processing status text getter */
 	static FText GetStatusText(ENovaSpacecraftProcessingSystemStatus Type);
 
+	/** Get the current busy crew count */
+	int32 GetBusyCrew() const;
+
+	/** Get the total crew count */
+	int32 GetTotalCrew() const
+	{
+		return TotalCrewCount;
+	}
+
 	/*----------------------------------------------------
 	    Internal
 	----------------------------------------------------*/
@@ -368,6 +377,10 @@ protected:
 	// Mining status
 	UPROPERTY(Replicated)
 	const class UNovaResource* MiningRigResource;
+
+	// Crew count
+	UPROPERTY(Replicated)
+	int32 TotalCrewCount;
 
 	// Server-side status
 	FNovaTime RemainingProductionTime;
