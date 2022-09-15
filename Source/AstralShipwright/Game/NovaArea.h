@@ -48,6 +48,7 @@ public:
 		, AIQuota(3)
 
 		, Sign(nullptr)
+		, DecalTexture(nullptr)
 
 		, PaintColor(FLinearColor::White)
 		, LightColor(FLinearColor::White)
@@ -106,6 +107,10 @@ public:
 	// Signage to use for this station
 	UPROPERTY(Category = Style, EditDefaultsOnly, BlueprintReadOnly)
 	const class UStaticMesh* Sign;
+
+	// Decal to use for this station
+	UPROPERTY(Category = Style, EditDefaultsOnly, BlueprintReadOnly)
+	class UTexture2D* DecalTexture;
 
 	// Paint color to apply on all meshes
 	UPROPERTY(Category = Style, EditDefaultsOnly, BlueprintReadOnly)
