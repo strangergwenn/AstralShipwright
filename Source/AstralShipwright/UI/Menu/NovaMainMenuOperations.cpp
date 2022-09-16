@@ -549,7 +549,7 @@ void SNovaMainMenuOperations::Tick(const FGeometry& AllottedGeometry, const doub
 	{
 		AveragedPropellantRatio.Set(PropellantSystem->GetCurrentPropellantMass() / PropellantSystem->GetPropellantCapacity(), DeltaTime);
 		AveragedCrewRatio.Set(ProcessingSystem->GetTotalCrew() > 0
-								  ? static_cast<float>(ProcessingSystem->GetBusyCrew()) / ProcessingSystem->GetTotalCrew()
+								  ? static_cast<float>(ProcessingSystem->GetTotalBusyCrew()) / ProcessingSystem->GetTotalCrew()
 								  : 0.0f,
 			DeltaTime);
 	}
@@ -613,6 +613,38 @@ void SNovaMainMenuOperations::Show()
 																TEXT("index"), FText::AsNumber(Group.Index + 1)))
 								.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
 								+ SRichTextBlock::ImageDecorator()
+							]
+						]
+		
+						// Crew status
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						.VAlign(VAlign_Center)
+						[
+							SNew(SVerticalBox)
+
+							+ SVerticalBox::Slot()
+							.HAlign(HAlign_Center)
+							.AutoHeight()
+							[
+								SNew(SRichTextBlock)
+								.TextStyle(&Theme.HeadingFont)
+								.Text(INVTEXT("<img src=\"/Text/Crew\"/>"))
+								.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
+								+ SRichTextBlock::ImageDecorator()
+							]
+
+							+ SVerticalBox::Slot()
+							.HAlign(HAlign_Center)
+							.AutoHeight()
+							[
+								SNew(SNeutronText)
+								.TextStyle(&Theme.HeadingFont)
+								.Text(FNeutronTextGetter::CreateLambda([=]() {
+									return FText::FormatNamed(INVTEXT("{busy} / {total}"),
+										TEXT("busy"), FText::AsNumber(ProcessingSystem->GetBusyCrew(Group.Index)),
+										TEXT("total"), FText::AsNumber(ProcessingSystem->GetRequiredCrew(Group.Index)));
+								}))
 							]
 						]
 		
@@ -697,8 +729,9 @@ void SNovaMainMenuOperations::Show()
 					{
 						auto Status = ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex);
 						bool IsActive = ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex);
+						bool HasEnoughCrew = ProcessingSystem->GetRequiredCrew(ProcessingGroupIndex) <= ProcessingSystem->GetTotalAvailableCrew();
 
-						return Status.Num() && (IsActive || (!Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked)
+						return Status.Num() && HasEnoughCrew && (IsActive || (!Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked)
 							&& !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Blocked)));
 					})
 					.OnClicked(FSimpleDelegate::CreateLambda([=]()
@@ -1025,7 +1058,7 @@ TOptional<float> SNovaMainMenuOperations::GetPropellantRatio() const
 FText SNovaMainMenuOperations::GetCrewText() const
 {
 	return FText::FormatNamed(LOCTEXT("CrewDetailsFormat", "<img src=\"/Text/Crew\"/> {busy} out of {total} crew busy"), TEXT("busy"),
-		FText::AsNumber(ProcessingSystem->GetBusyCrew()), TEXT("total"), FText::AsNumber(ProcessingSystem->GetTotalCrew()));
+		FText::AsNumber(ProcessingSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(ProcessingSystem->GetTotalCrew()));
 }
 
 TOptional<float> SNovaMainMenuOperations::GetCrewRatio() const

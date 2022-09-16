@@ -531,22 +531,33 @@ FText UNovaSpacecraftProcessingSystem::GetStatusText(ENovaSpacecraftProcessingSy
 	}
 }
 
-int32 UNovaSpacecraftProcessingSystem::GetBusyCrew() const
+int32 UNovaSpacecraftProcessingSystem::GetTotalBusyCrew() const
 {
 	int32 Count = 0;
 
-	for (const auto& GroupState : ProcessingGroupsStates)
+	for (int32 ProcessingGroupIndex = 0; ProcessingGroupIndex < ProcessingGroupsStates.Num(); ProcessingGroupIndex++)
 	{
-		for (const auto& ChainState : GroupState.Chains)
+		Count += GetBusyCrew(ProcessingGroupIndex);
+	}
+
+	return Count;
+}
+
+int32 UNovaSpacecraftProcessingSystem::GetProcessingGroupCrew(int32 ProcessingGroupIndex, bool FilterByActive) const
+{
+	NCHECK(ProcessingGroupIndex >= 0 && ProcessingGroupIndex < ProcessingGroupsStates.Num());
+
+	int32 Count = 0;
+
+	for (const auto& ChainState : ProcessingGroupsStates[ProcessingGroupIndex].Chains)
+	{
+		if (FilterByActive == false || ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing)
 		{
-			if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing)
+			for (const auto& ModuleState : ChainState.Modules)
 			{
-				for (const auto& ModuleState : ChainState.Modules)
+				if (ModuleState.Module->CrewEffect < 0)
 				{
-					if (ModuleState.Module->CrewEffect < 0)
-					{
-						Count += FMath::Abs(ModuleState.Module->CrewEffect);
-					}
+					Count += FMath::Abs(ModuleState.Module->CrewEffect);
 				}
 			}
 		}

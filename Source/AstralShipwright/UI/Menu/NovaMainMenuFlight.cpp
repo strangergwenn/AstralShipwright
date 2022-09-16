@@ -1017,6 +1017,38 @@ void SNovaMainMenuFlight::SetHUDIndexCallback(int32 Index)
 					]
 				]
 		
+				// Crew status
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.VAlign(VAlign_Center)
+				[
+					SNew(SVerticalBox)
+
+					+ SVerticalBox::Slot()
+					.HAlign(HAlign_Center)
+					.AutoHeight()
+					[
+						SNew(SRichTextBlock)
+						.TextStyle(&Theme.HeadingFont)
+						.Text(INVTEXT("<img src=\"/Text/Crew\"/>"))
+						.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
+						+ SRichTextBlock::ImageDecorator()
+					]
+
+					+ SVerticalBox::Slot()
+					.HAlign(HAlign_Center)
+					.AutoHeight()
+					[
+						SNew(SNeutronText)
+						.TextStyle(&Theme.HeadingFont)
+						.Text(FNeutronTextGetter::CreateLambda([=]() {
+							return FText::FormatNamed(INVTEXT("{busy} / {total}"),
+								TEXT("busy"), FText::AsNumber(ProcessingSystem->GetBusyCrew(Group.Index)),
+								TEXT("total"), FText::AsNumber(ProcessingSystem->GetRequiredCrew(Group.Index)));
+						}))
+					]
+				]
+		
 				// Production status
 				+ SHorizontalBox::Slot()
 				.AutoWidth()

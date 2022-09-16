@@ -337,14 +337,41 @@ public:
 	/** Processing status text getter */
 	static FText GetStatusText(ENovaSpacecraftProcessingSystemStatus Type);
 
-	/** Get the current busy crew count */
-	int32 GetBusyCrew() const;
+	/*----------------------------------------------------
+	    Crew
+	----------------------------------------------------*/
+
+	/** Get the current busy crew count for a group */
+	int32 GetBusyCrew(int32 ProcessingGroupIndex) const
+	{
+		return GetProcessingGroupCrew(ProcessingGroupIndex, true);
+	}
+
+	/** Get the required crew count for a group to be active */
+	int32 GetRequiredCrew(int32 ProcessingGroupIndex) const
+	{
+		return GetProcessingGroupCrew(ProcessingGroupIndex, false);
+	}
+
+	/** Get the total current busy crew count */
+	int32 GetTotalBusyCrew() const;
+
+	/** Get the total current available crew count */
+	int32 GetTotalAvailableCrew() const
+	{
+		return FMath::Max(GetTotalCrew() - GetTotalBusyCrew(), 0);
+	}
 
 	/** Get the total crew count */
 	int32 GetTotalCrew() const
 	{
 		return TotalCrewCount;
 	}
+
+protected:
+
+	/** Get the crew count for a processing group, either total or active */
+	int32 GetProcessingGroupCrew(int32 ProcessingGroupIndex, bool FilterByActive) const;
 
 	/*----------------------------------------------------
 	    Internal
