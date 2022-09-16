@@ -155,7 +155,7 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					SNeutronNew(SNeutronButton)
+					SNeutronDefaultNew(SNeutronButton)
 					.HelpText(LOCTEXT("TradePropellantHelp", "Trade propellant with this station"))
 					.Action(FNeutronPlayerInput::MenuPrimary)
 					.ActionFocusable(false)
@@ -186,9 +186,23 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 							.BorderImage(&Theme.MainMenuDarkBackground)
 							.Padding(Theme.ContentPadding)
 							[
-								SNew(STextBlock)
-								.TextStyle(&Theme.MainFont)
-								.Text(LOCTEXT("TradePropellant", "Trade propellant"))
+								SNew(SHorizontalBox)
+
+								+ SHorizontalBox::Slot()
+								.AutoWidth()
+								[
+									SNew(SNeutronKeyLabel)
+									.Action(FNeutronPlayerInput::MenuPrimary)
+								]
+						
+								+ SHorizontalBox::Slot()
+								.AutoWidth()
+								.VAlign(VAlign_Center)
+								[
+									SNew(STextBlock)
+									.TextStyle(&Theme.MainFont)
+									.Text(LOCTEXT("TradePropellant", "Trade propellant"))
+								]
 							]
 						]
 					]
@@ -200,6 +214,8 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 				[
 					SNeutronNew(SNeutronButton)
 					.HelpText(LOCTEXT("BulkBuyHelp", "Bulk buy resources across all compartments"))
+					.Action(FNeutronPlayerInput::MenuSecondary)
+					.ActionFocusable(false)
 					.Enabled(this, &SNovaMainMenuOperations::IsBulkTradeEnabled)
 					.OnClicked(this, &SNovaMainMenuOperations::OnBatchBuy)
 					.Size("HighButtonSize")
@@ -224,9 +240,23 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 							.BorderImage(&Theme.MainMenuDarkBackground)
 							.Padding(Theme.ContentPadding)
 							[
-								SNew(STextBlock)
-								.TextStyle(&Theme.MainFont)
-								.Text(LOCTEXT("BulkBuy", "Bulk buy"))
+								SNew(SHorizontalBox)
+
+								+ SHorizontalBox::Slot()
+								.AutoWidth()
+								[
+									SNew(SNeutronKeyLabel)
+									.Action(FNeutronPlayerInput::MenuSecondary)
+								]
+						
+								+ SHorizontalBox::Slot()
+								.AutoWidth()
+								.VAlign(VAlign_Center)
+								[
+									SNew(STextBlock)
+									.TextStyle(&Theme.MainFont)
+									.Text(LOCTEXT("BulkBuy", "Bulk buy"))
+								]
 							]
 						]
 					]
@@ -238,6 +268,8 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 				[
 					SNeutronNew(SNeutronButton)
 					.HelpText(LOCTEXT("BulkSellHelp", "Bulk sell resources across all compartments"))
+					.Action(FNeutronPlayerInput::MenuAltSecondary)
+					.ActionFocusable(false)
 					.Enabled(this, &SNovaMainMenuOperations::IsBulkTradeEnabled)
 					.OnClicked(this, &SNovaMainMenuOperations::OnBatchSell)
 					.Size("HighButtonSize")
@@ -262,9 +294,23 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 							.BorderImage(&Theme.MainMenuDarkBackground)
 							.Padding(Theme.ContentPadding)
 							[
-								SNew(STextBlock)
-								.TextStyle(&Theme.MainFont)
-								.Text(LOCTEXT("BulkSell", "Bulk sell"))
+								SNew(SHorizontalBox)
+
+								+ SHorizontalBox::Slot()
+								.AutoWidth()
+								[
+									SNew(SNeutronKeyLabel)
+									.Action(FNeutronPlayerInput::MenuAltSecondary)
+								]
+						
+								+ SHorizontalBox::Slot()
+								.AutoWidth()
+								.VAlign(VAlign_Center)
+								[
+									SNew(STextBlock)
+									.TextStyle(&Theme.MainFont)
+									.Text(LOCTEXT("BulkSell", "Bulk sell"))
+								]
 							]
 						]
 					]
@@ -342,14 +388,14 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 							[
 								SNew(STextBlock)
 								.TextStyle(&Theme.HeadingFont)
-								.Text(LOCTEXT("EquipmentTitle", "Equipment"))
+							.Text(LOCTEXT("EquipmentTitle", "Equipment"))
 							]
 
 							+ SHorizontalBox::Slot()
 							.AutoWidth()
 							[
 								SNew(SNeutronKeyLabel)
-								.Action(FNeutronPlayerInput::MenuAltSecondary)
+								.Action(FNeutronPlayerInput::MenuAltPrimary)
 							]
 						]
 
@@ -1017,10 +1063,7 @@ void SNovaMainMenuOperations::OnKeyPressed(const FKey& Key)
 		{
 			GetMenu()->SetFocusedButton(DefaultModuleButton, true);
 		}
-	}
-	else if (MenuManager->GetMenu()->IsActionKey(FNeutronPlayerInput::MenuAltSecondary, Key))
-	{
-		if (DefaultEquipmentButton.IsValid())
+		else if (DefaultEquipmentButton.IsValid())
 		{
 			GetMenu()->SetFocusedButton(DefaultEquipmentButton, true);
 		}
