@@ -125,7 +125,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		
 		+ SHorizontalBox::Slot()
 	
-		// Status text
+		// Power & crew
 		+ SHorizontalBox::Slot()
 		.AutoWidth()
 		.VAlign(VAlign_Bottom)
@@ -154,15 +154,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 							+ SHorizontalBox::Slot()
 							[
 								SNew(SNeutronRichText)
-								.Text(FNeutronTextGetter::CreateRaw(this, &SNovaMainMenuFlight::GetStatusText))
-								.TextStyle(&Theme.MainFont)
-							]
-
-							+ SHorizontalBox::Slot()
-							.AutoWidth()
-							[
-								SNew(STextBlock)
-								.Text(this, &SNovaMainMenuFlight::GetStatusValue)
+								.Text(FNeutronTextGetter::CreateRaw(this, &SNovaMainMenuFlight::GetCrewText))
 								.TextStyle(&Theme.MainFont)
 							]
 						]
@@ -236,7 +228,8 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 				]
 			]
 		]
-		
+	
+		// Status text
 		+ SHorizontalBox::Slot()
 		.AutoWidth()
 		.VAlign(VAlign_Bottom)
@@ -244,6 +237,42 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		[
 			SNew(SNeutronButtonLayout)
 			.Size("DefaultButtonSize")
+			[
+				SNew(SBackgroundBlur)
+				.BlurRadius(this, &SNeutronTabPanel::GetBlurRadius)
+				.BlurStrength(this, &SNeutronTabPanel::GetBlurStrength)
+				.bApplyAlphaToBlur(true)
+				.Padding(0)
+				[
+					SNew(SBorder)
+					.BorderImage(&Theme.MainMenuBackground)
+					.Padding(0)
+					[
+						SNew(SBorder)
+						.BorderImage(&Theme.MainMenuGenericBorder)
+						.Padding(Theme.ContentPadding)
+						.VAlign(VAlign_Center)
+						[
+							SNew(SHorizontalBox)
+
+							+ SHorizontalBox::Slot()
+							[
+								SNew(SNeutronRichText)
+								.Text(FNeutronTextGetter::CreateRaw(this, &SNovaMainMenuFlight::GetStatusText))
+								.TextStyle(&Theme.MainFont)
+							]
+
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
+							[
+								SNew(STextBlock)
+								.Text(this, &SNovaMainMenuFlight::GetStatusValue)
+								.TextStyle(&Theme.MainFont)
+							]
+						]
+					]
+				]
+			]
 		]
 
 		+ SHorizontalBox::Slot()
@@ -374,7 +403,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.Enabled(this, &SNovaMainMenuFlight::CanFastForward)
 		]
 	
-#if WITH_EDITOR && 1
+#if WITH_EDITOR && 0
 
 		+ SVerticalBox::Slot()
 		.AutoHeight()
@@ -707,6 +736,12 @@ TSharedPtr<SNeutronButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 /*----------------------------------------------------
     Content callbacks
 ----------------------------------------------------*/
+
+FText SNovaMainMenuFlight::GetCrewText() const
+{
+	return FText::FormatNamed(INVTEXT("<img src=\"/Text/Crew\"/> {busy} / {total}"), TEXT("busy"),
+		FText::AsNumber(ProcessingSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(ProcessingSystem->GetTotalCrew()));
+}
 
 FText SNovaMainMenuFlight::GetStatusText() const
 {

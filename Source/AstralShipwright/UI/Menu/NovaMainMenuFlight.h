@@ -82,6 +82,8 @@ public:
 
 protected:
 
+	FText GetCrewText() const;
+
 	FText GetStatusText() const;
 	FText GetStatusValue() const;
 
