@@ -176,7 +176,6 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 	}
 
 	// Load all cargo from the spacecraft, update crew count
-	TotalCrewCount = 0;
 	RealtimeCompartments.SetNum(Spacecraft.Compartments.Num());
 	for (int32 CompartmentIndex = 0; CompartmentIndex < RealtimeCompartments.Num(); CompartmentIndex++)
 	{
@@ -187,21 +186,6 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 		{
 			const FNovaSpacecraftCargo& Cargo                         = Compartment.GetCargo(ModuleIndex);
 			RealtimeCompartments[CompartmentIndex].Cargo[ModuleIndex] = Cargo;
-
-			const UNovaModuleDescription* Module = Compartment.Modules[ModuleIndex].Description;
-			if (Module && Module->CrewEffect > 0)
-			{
-				TotalCrewCount += Module->CrewEffect;
-			}
-		}
-
-		for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
-		{
-			const UNovaEquipmentDescription* Equipment = Compartment.Equipment[EquipmentIndex];
-			if (Equipment && Equipment->CrewEffect > 0)
-			{
-				TotalCrewCount += Equipment->CrewEffect;
-			}
 		}
 	}
 }
@@ -543,6 +527,41 @@ int32 UNovaSpacecraftProcessingSystem::GetTotalBusyCrew() const
 	return Count;
 }
 
+int32 UNovaSpacecraftProcessingSystem::GetTotalCrew() const
+{
+	int32 TotalCrewCount = 0;
+
+	const FNovaSpacecraft* Spacecraft = GetSpacecraft();
+
+	if (Spacecraft)
+	{
+		for (int32 CompartmentIndex = 0; CompartmentIndex < Spacecraft->Compartments.Num(); CompartmentIndex++)
+		{
+			const FNovaCompartment& Compartment = Spacecraft->Compartments[CompartmentIndex];
+
+			for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+			{
+				const UNovaModuleDescription* Module = Compartment.Modules[ModuleIndex].Description;
+				if (Module && Module->CrewEffect > 0)
+				{
+					TotalCrewCount += Module->CrewEffect;
+				}
+			}
+
+			for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
+			{
+				const UNovaEquipmentDescription* Equipment = Compartment.Equipment[EquipmentIndex];
+				if (Equipment && Equipment->CrewEffect > 0)
+				{
+					TotalCrewCount += Equipment->CrewEffect;
+				}
+			}
+		}
+	}
+
+	return TotalCrewCount;
+}
+
 int32 UNovaSpacecraftProcessingSystem::GetProcessingGroupCrew(int32 ProcessingGroupIndex, bool FilterByActive) const
 {
 	NCHECK(ProcessingGroupIndex >= 0 && ProcessingGroupIndex < ProcessingGroupsStates.Num());
@@ -599,7 +618,6 @@ void UNovaSpacecraftProcessingSystem::GetLifetimeReplicatedProps(TArray<FLifetim
 	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, MiningRigActive);
 	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, MiningRigStatus);
 	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, MiningRigResource);
-	DOREPLIFETIME(UNovaSpacecraftProcessingSystem, TotalCrewCount);
 }
 
 #undef LOCTEXT_NAMESPACE

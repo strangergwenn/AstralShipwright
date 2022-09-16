@@ -363,10 +363,7 @@ public:
 	}
 
 	/** Get the total crew count */
-	int32 GetTotalCrew() const
-	{
-		return TotalCrewCount;
-	}
+	int32 GetTotalCrew() const;
 
 protected:
 
@@ -407,10 +404,6 @@ protected:
 	// Mining status
 	UPROPERTY(Replicated)
 	const class UNovaResource* MiningRigResource;
-
-	// Crew count
-	UPROPERTY(Replicated)
-	int32 TotalCrewCount;
 
 	// Server-side status
 	FNovaTime RemainingProductionTime;
