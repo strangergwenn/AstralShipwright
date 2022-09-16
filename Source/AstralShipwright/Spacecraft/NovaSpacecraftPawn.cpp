@@ -304,7 +304,8 @@ TArray<const class UNovaCompartmentDescription*> ANovaSpacecraftPawn::GetCompati
 {
 	NCHECK(Spacecraft.IsValid());
 	TArray<const class UNovaCompartmentDescription*> Compartments = Spacecraft->GetCompatibleCompartments(CompartmentIndex);
-	Compartments.FilterByPredicate(
+
+	Compartments = Compartments.FilterByPredicate(
 		[PC](const UNovaCompartmentDescription* Module)
 		{
 			return PC->IsComponentUnlocked(Module);
@@ -317,7 +318,8 @@ TArray<const class UNovaModuleDescription*> ANovaSpacecraftPawn::GetCompatibleMo
 {
 	NCHECK(Spacecraft.IsValid());
 	TArray<const class UNovaModuleDescription*> Modules = Spacecraft->GetCompatibleModules(CompartmentIndex, SlotIndex);
-	Modules.FilterByPredicate(
+
+	Modules = Modules.FilterByPredicate(
 		[PC](const UNovaModuleDescription* Module)
 		{
 			return PC->IsComponentUnlocked(Module);
@@ -330,7 +332,8 @@ TArray<const class UNovaEquipmentDescription*> ANovaSpacecraftPawn::GetCompatibl
 {
 	NCHECK(Spacecraft.IsValid());
 	TArray<const class UNovaEquipmentDescription*> Equipment = Spacecraft->GetCompatibleEquipment(CompartmentIndex, SlotIndex);
-	Equipment.FilterByPredicate(
+
+	Equipment = Equipment.FilterByPredicate(
 		[PC](const UNovaEquipmentDescription* Module)
 		{
 			return PC->IsComponentUnlocked(Module);
