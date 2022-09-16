@@ -772,22 +772,25 @@ void UNovaSpacecraftMovementComponent::ProcessMovement(float DeltaTime)
 		// Move safely and ensure de-penetration if required
 		FHitResult Hit;
 		FVector    ActorTranslation = (CurrentOrbitalLocation - PreviousOrbitalLocation) + CurrentLinearVelocity * 100 * DeltaTime;
-		SafeMoveUpdatedComponent(ActorTranslation, ActorRotation, true, Hit);
-
-		// Process invalid location
-		if (Hit.bStartPenetrating)
+		if (!ActorTranslation.IsNearlyZero(KINDA_SMALL_NUMBER) || EffectiveRotationDelta.Size() > KINDA_SMALL_NUMBER)
 		{
-			CurrentLinearVelocity = -CurrentLinearVelocity;
-		}
+			SafeMoveUpdatedComponent(ActorTranslation, ActorRotation, true, Hit);
 
-		// Process impacts
-		if (Hit.IsValidBlockingHit())
-		{
-			OnHit(Hit, CurrentLinearVelocity);
+			// Process invalid location
+			if (Hit.bStartPenetrating)
+			{
+				CurrentLinearVelocity = -CurrentLinearVelocity;
+			}
 
-			CurrentLinearVelocity = -RestitutionCoefficient * CurrentLinearVelocity;
-			ActorTranslation      = CurrentLinearVelocity * 100 * DeltaTime;
-			SlideAlongSurface(ActorTranslation, 1 - Hit.Time, Hit.Normal, Hit);
+			// Process impacts
+			if (Hit.IsValidBlockingHit())
+			{
+				OnHit(Hit, CurrentLinearVelocity);
+
+				CurrentLinearVelocity = -RestitutionCoefficient * CurrentLinearVelocity;
+				ActorTranslation      = CurrentLinearVelocity * 100 * DeltaTime;
+				SlideAlongSurface(ActorTranslation, 1 - Hit.Time, Hit.Normal, Hit);
+			}
 		}
 	}
 }

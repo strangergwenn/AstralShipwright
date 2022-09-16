@@ -51,7 +51,7 @@ public:
 	----------------------------------------------------*/
 
 	TSharedPtr<class SNeutronSlider> AddSettingSlider(TSharedPtr<class SVerticalBox> Container, FText Text, FText HelpText,
-		FOnFloatValueChanged Callback, float MinValue = 0, float MaxValue = 4, float ValueStep = 1, TAttribute<bool> Enabled = true);
+		FOnFloatValueChanged Callback, float MinValue = 0, float MaxValue = 3, float ValueStep = 1, TAttribute<bool> Enabled = true);
 
 	void UpdateResolutionList();
 

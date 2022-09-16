@@ -102,6 +102,9 @@ void UNovaStationDockComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 
 		// Integrate velocity to derive position
 		CurrentLocation.Z += CurrentLinearVelocity * DeltaTime;
-		SetRelativeLocation(CurrentLocation);
+		if ((CurrentLocation - GetRelativeLocation()).Size() > KINDA_SMALL_NUMBER)
+		{
+			SetRelativeLocation(CurrentLocation);
+		}
 	}
 };

@@ -165,8 +165,14 @@ void UNovaStationRingComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		// Integrate velocity to derive position
 		CurrentLocation.X += CurrentLinearVelocity * DeltaTime;
 		CurrentRotation.Roll += CurrentRollVelocity * DeltaTime;
-		SetWorldLocation(CurrentLocation);
-		SetWorldRotation(CurrentRotation);
+		if ((CurrentLocation - GetComponentLocation()).Size() > KINDA_SMALL_NUMBER)
+		{
+			SetWorldLocation(CurrentLocation);
+		}
+		if (CurrentRotation != GetComponentRotation())
+		{
+			SetWorldRotation(CurrentRotation);
+		}
 	}
 }
 
