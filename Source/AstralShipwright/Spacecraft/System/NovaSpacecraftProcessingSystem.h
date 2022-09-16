@@ -35,6 +35,9 @@ struct FNovaSpacecraftProcessingSystemChainStateModule
 {
 	GENERATED_BODY();
 
+	FNovaSpacecraftProcessingSystemChainStateModule() : Module(nullptr), CompartmentIndex(INDEX_NONE), ModuleIndex(INDEX_NONE)
+	{}
+
 	UPROPERTY()
 	const class UNovaProcessingModuleDescription* Module;
 
@@ -51,7 +54,7 @@ struct FNovaSpacecraftProcessingSystemChainState
 {
 	GENERATED_BODY();
 
-	FNovaSpacecraftProcessingSystemChainState() : Status(ENovaSpacecraftProcessingSystemStatus::Stopped)
+	FNovaSpacecraftProcessingSystemChainState() : Status(ENovaSpacecraftProcessingSystemStatus::Stopped), ProcessingRate(0)
 	{}
 
 	// Replicated status
