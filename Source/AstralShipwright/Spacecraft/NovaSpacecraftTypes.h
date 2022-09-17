@@ -687,6 +687,13 @@ public:
 	float ExtractionRate = 1;
 };
 
+/** Description of a radio mast */
+UCLASS(ClassGroup = (Nova))
+class UNovaRadioMastDescription : public UNovaEquipmentDescription
+{
+	GENERATED_BODY()
+};
+
 /** Mining rig attach point */
 UCLASS(ClassGroup = (Nova))
 class UNovaSpacecraftMiningRigComponent

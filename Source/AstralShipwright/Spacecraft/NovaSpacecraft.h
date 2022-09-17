@@ -427,6 +427,12 @@ public:
 		return Customization;
 	}
 
+	/** Check if the ship has such equipment */
+	bool HasEquipment(const TSubclassOf<UNovaEquipmentDescription> Class) const;
+
+	/** Check if the ship has such module */
+	bool HasModule(const TSubclassOf<UNovaModuleDescription> Class) const;
+
 	/*----------------------------------------------------
 	    Propulsion metrics & cargo hold
 	----------------------------------------------------*/

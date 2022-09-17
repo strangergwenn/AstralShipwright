@@ -638,6 +638,43 @@ FText FNovaSpacecraft::GetClassification() const
 	}
 }
 
+bool FNovaSpacecraft::HasEquipment(const TSubclassOf<UNovaEquipmentDescription> Class) const
+{
+	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
+	{
+		const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
+
+		for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
+		{
+			if (::IsValid(Compartment.Equipment[EquipmentIndex]) && Compartment.Equipment[EquipmentIndex]->IsA(Class))
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+bool FNovaSpacecraft::HasModule(const TSubclassOf<UNovaModuleDescription> Class) const
+{
+	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
+	{
+		const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
+
+		for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+		{
+			const UNovaModuleDescription* Desc = Compartment.Modules[ModuleIndex].Description;
+			if (::IsValid(Desc) && Desc->IsA(Class))
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 /*----------------------------------------------------
     Automated spacecraft details
 ----------------------------------------------------*/

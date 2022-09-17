@@ -745,7 +745,11 @@ FText SNovaMainMenuFlight::GetCrewText() const
 
 FText SNovaMainMenuFlight::GetStatusText() const
 {
-	if (IsInSpace() && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() >= ENovaMovementState::Orbiting)
+	if (Spacecraft == nullptr || !Spacecraft->HasEquipment(UNovaRadioMastDescription::StaticClass()))
+	{
+		return LOCTEXT("NoSensors", "<img src=\"/Text/Sensor\"/> No sensor");
+	}
+	else if (IsInSpace() && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() >= ENovaMovementState::Orbiting)
 	{
 		const ANovaAsteroid* AsteroidActor =
 			UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
