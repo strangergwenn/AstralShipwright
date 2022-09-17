@@ -66,7 +66,7 @@ void UNovaSpacecraftFloodlightComponent::BeginPlay()
 			Light->SetOuterConeAngle(90.0f);
 			Light->SetInnerConeAngle(10.0f);
 			Light->SetMobility(EComponentMobility::Movable);
-			Light->SetCastShadows(true);
+			Light->SetCastShadows(false);
 			Light->SetActive(true);
 
 			// Move on

@@ -55,6 +55,7 @@ ANovaPlanetarium::ANovaPlanetarium() : Super(), CurrentSunSkyAngle(0)
 
 	// Settings
 	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.TickInterval = 1.0f / 60.0f;
 	bRelevantForLevelBounds       = false;
 	SetActorEnableCollision(false);
 }
