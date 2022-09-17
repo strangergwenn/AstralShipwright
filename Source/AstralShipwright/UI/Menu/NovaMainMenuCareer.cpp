@@ -304,9 +304,8 @@ const FSlateBrush* SNovaMainMenuCareer::GetComponentIcon(const UNovaTradableAsse
 
 void SNovaMainMenuCareer::OnComponentUnlocked(const UNovaTradableAssetDescription* Asset)
 {
-	FText UnlockDetails =
-		FText::FormatNamed(LOCTEXT("UnlockComponentDetails", "Confirm the unlocking of {component} for {credits} credits"),
-			TEXT("component"), Asset->Name, TEXT("credits"), GetPriceText(PC->GetComponentUnlockCost(Asset)));
+	FText UnlockDetails = FText::FormatNamed(LOCTEXT("UnlockComponentDetails", "Confirm the unlocking of {component} for {credits}"),
+		TEXT("component"), Asset->Name, TEXT("credits"), GetPriceText(PC->GetComponentUnlockCost(Asset)));
 
 	ModalPanel->Show(LOCTEXT("UnlockComponentTitle", "Unlock component"),
 		UnlockDetails,    //

@@ -768,7 +768,7 @@ void SNovaMainMenuOperations::Show()
 						}
 						else
 						{
-							return LOCTEXT("ProcessingHelp", "Toggle activity for this module group");
+							return LOCTEXT("ProcessingToggleHelp", "Toggle activity for this module group");
 						}
 					})
 					.Enabled_Lambda([=]()
