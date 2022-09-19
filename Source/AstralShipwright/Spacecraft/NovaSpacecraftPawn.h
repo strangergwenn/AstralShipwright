@@ -386,7 +386,11 @@ protected:
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	class UNovaSpacecraftMovementComponent* MovementComponent;
 
-	// ProcessingSystem system
+	// Power system
+	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
+	class UNovaSpacecraftPowerSystem* PowerSystem;
+
+	// Processing system
 	UPROPERTY(Category = Nova, VisibleDefaultsOnly, BlueprintReadOnly)
 	class UNovaSpacecraftProcessingSystem* ProcessingSystem;
 

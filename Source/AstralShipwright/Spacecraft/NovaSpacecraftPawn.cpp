@@ -5,6 +5,7 @@
 #include "NovaSpacecraftCompartmentComponent.h"
 #include "NovaSpacecraftHatchComponent.h"
 
+#include "System/NovaSpacecraftPowerSystem.h"
 #include "System/NovaSpacecraftProcessingSystem.h"
 #include "System/NovaSpacecraftPropellantSystem.h"
 
@@ -46,6 +47,8 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 	MovementComponent->SetUpdatedComponent(RootComponent);
 
 	// Setup systems
+	PowerSystem = CreateDefaultSubobject<UNovaSpacecraftPowerSystem>("PowerSystem");
+	PowerSystem->SetupAttachment(RootComponent);
 	ProcessingSystem = CreateDefaultSubobject<UNovaSpacecraftProcessingSystem>("ProcessingSystem");
 	ProcessingSystem->SetupAttachment(RootComponent);
 	PropellantSystem = CreateDefaultSubobject<UNovaSpacecraftPropellantSystem>("PropellantSystem");
