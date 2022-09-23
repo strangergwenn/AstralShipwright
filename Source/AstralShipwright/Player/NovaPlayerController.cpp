@@ -720,7 +720,7 @@ int32 ANovaPlayerController::GetComponentUnlockLevel() const
 
 bool ANovaPlayerController::IsComponentUnlockable(const UNovaTradableAssetDescription* Asset, FText* Help) const
 {
-	if (!GetSpacecraftPawn()->IsDocked())
+	if (GetSpacecraftPawn() == nullptr || !GetSpacecraftPawn()->IsDocked())
 	{
 		if (Help)
 		{
