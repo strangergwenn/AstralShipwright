@@ -560,6 +560,10 @@ public:
 	// Resource processing rate in seconds, applied to all input & outputs
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float ProcessingRate = 1;
+
+	// Power drain in kW
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	int32 Power;
 };
 
 /*----------------------------------------------------
@@ -685,6 +689,10 @@ public:
 	// Resource extraction rate in seconds
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float ExtractionRate = 1;
+
+	// Power drain in kW
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	int32 Power;
 };
 
 /** Description of a radio mast */
@@ -692,6 +700,29 @@ UCLASS(ClassGroup = (Nova))
 class UNovaRadioMastDescription : public UNovaEquipmentDescription
 {
 	GENERATED_BODY()
+
+public:
+
+	// Power drain in kW
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	int32 Power;
+};
+
+/** Description of an electrical component */
+UCLASS(ClassGroup = (Nova))
+class UNovaPowerEquipmentDescription : public UNovaEquipmentDescription
+{
+	GENERATED_BODY()
+
+public:
+
+	// Power generation in kW
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	int32 Power;
+
+	// Energy capacity in kWh
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	int32 Capacity;
 };
 
 /** Mining rig attach point */
