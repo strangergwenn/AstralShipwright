@@ -377,6 +377,7 @@ FNeutronAssetPreviewSettings UNovaEngineDescription::GetPreviewSettings() const
 {
 	FNeutronAssetPreviewSettings Settings = Super::GetPreviewSettings();
 
+	Settings.RelativeXOffset = 0.5;
 	Settings.Scale *= 1.25f;
 
 	return Settings;

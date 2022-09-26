@@ -337,9 +337,9 @@ TArray<const class UNovaEquipmentDescription*> ANovaSpacecraftPawn::GetCompatibl
 	TArray<const class UNovaEquipmentDescription*> Equipment = Spacecraft->GetCompatibleEquipment(CompartmentIndex, SlotIndex);
 
 	Equipment = Equipment.FilterByPredicate(
-		[PC](const UNovaEquipmentDescription* Module)
+		[PC](const UNovaEquipmentDescription* Equipment)
 		{
-			return PC->IsComponentUnlocked(Module);
+			return PC->IsComponentUnlocked(Equipment);
 		});
 	return Equipment;
 }
