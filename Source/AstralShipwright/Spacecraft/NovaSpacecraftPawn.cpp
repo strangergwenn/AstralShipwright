@@ -325,7 +325,7 @@ TArray<const class UNovaModuleDescription*> ANovaSpacecraftPawn::GetCompatibleMo
 	Modules = Modules.FilterByPredicate(
 		[PC](const UNovaModuleDescription* Module)
 		{
-			return PC->IsComponentUnlocked(Module);
+			return Module == nullptr || PC->IsComponentUnlocked(Module);
 		});
 	return Modules;
 }
@@ -339,7 +339,7 @@ TArray<const class UNovaEquipmentDescription*> ANovaSpacecraftPawn::GetCompatibl
 	Equipment = Equipment.FilterByPredicate(
 		[PC](const UNovaEquipmentDescription* Equipment)
 		{
-			return PC->IsComponentUnlocked(Equipment);
+			return Equipment == nullptr || PC->IsComponentUnlocked(Equipment);
 		});
 	return Equipment;
 }
