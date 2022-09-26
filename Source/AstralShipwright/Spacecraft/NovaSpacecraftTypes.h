@@ -26,6 +26,7 @@ enum class ENovaEquipmentCategory : uint8
 {
 	Standard,
 	Propulsion,
+	Power,
 	Accessory
 };
 
