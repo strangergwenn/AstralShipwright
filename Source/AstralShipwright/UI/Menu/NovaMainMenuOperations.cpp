@@ -9,6 +9,7 @@
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/System/NovaSpacecraftPropellantSystem.h"
 #include "Spacecraft/System/NovaSpacecraftProcessingSystem.h"
+#include "Spacecraft/System/NovaSpacecraftPowerSystem.h"
 
 #include "UI/Widgets/NovaTradingPanel.h"
 #include "UI/Widgets/NovaModuleGroupsPanel.h"
@@ -78,7 +79,7 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 				.AutoWidth()
 				[
 					SNew(SNeutronButtonLayout)
-					.Size("HighButtonSize")
+					.Size("HighButtonSizeAlt")
 					[
 						SNew(SVerticalBox)
 
@@ -106,6 +107,84 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 							SNew(SProgressBar)
 							.Style(&Theme.ProgressBarStyle)
 							.Percent(this, &SNovaMainMenuOperations::GetCrewRatio)
+						]
+
+						+ SVerticalBox::Slot()
+					]
+				]
+
+				// Power
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SNeutronButtonLayout)
+					.Size("HighButtonSizeAlt")
+					[
+						SNew(SVerticalBox)
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(Theme.VerticalContentPadding)
+						[
+							SNew(STextBlock)
+							.TextStyle(&Theme.HeadingFont)
+							.Text(LOCTEXT("PowerTitle", "Power"))
+						]
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(Theme.VerticalContentPadding)
+						[
+							SNew(SNeutronRichText)
+							.TextStyle(&Theme.MainFont)
+							.Text(FNeutronTextGetter::CreateRaw(this, &SNovaMainMenuOperations::GetPowerText))
+						]
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SNew(SProgressBar)
+							.Style(&Theme.ProgressBarStyle)
+							.Percent(this, &SNovaMainMenuOperations::GetPowerRatio)
+						]
+
+						+ SVerticalBox::Slot()
+					]
+				]
+
+				// Energy
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SNew(SNeutronButtonLayout)
+					.Size("HighButtonSizeAlt")
+					[
+						SNew(SVerticalBox)
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(Theme.VerticalContentPadding)
+						[
+							SNew(STextBlock)
+							.TextStyle(&Theme.HeadingFont)
+							.Text(LOCTEXT("EnergyTitle", "Batteries"))
+						]
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						.Padding(Theme.VerticalContentPadding)
+						[
+							SNew(SNeutronRichText)
+							.TextStyle(&Theme.MainFont)
+							.Text(FNeutronTextGetter::CreateRaw(this, &SNovaMainMenuOperations::GetEnergyText))
+						]
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SNew(SProgressBar)
+							.Style(&Theme.ProgressBarStyle)
+							.Percent(this, &SNovaMainMenuOperations::GetEnergyRatio)
 						]
 
 						+ SVerticalBox::Slot()
@@ -581,6 +660,8 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 
 	AveragedPropellantRatio.SetPeriod(1.0f);
 	AveragedCrewRatio.SetPeriod(1.0f);
+	AveragedEnergyRatio.SetPeriod(1.0f);
+	AveragedPowerRatio.SetPeriod(1.0f);
 }
 
 /*----------------------------------------------------
@@ -597,6 +678,15 @@ void SNovaMainMenuOperations::Tick(const FGeometry& AllottedGeometry, const doub
 		AveragedCrewRatio.Set(ProcessingSystem->GetTotalCrew() > 0
 								  ? static_cast<float>(ProcessingSystem->GetTotalBusyCrew()) / ProcessingSystem->GetTotalCrew()
 								  : 0.0f,
+			DeltaTime);
+		AveragedEnergyRatio.Set(PowerSystem->GetEnergyCapacity() > 0
+									? static_cast<float>(PowerSystem->GetRemainingEnergy()) / PowerSystem->GetEnergyCapacity()
+									: 0.0f,
+			DeltaTime);
+		AveragedPowerRatio.Set(
+			PowerSystem->GetPowerRange() > 0
+				? static_cast<float>(PowerSystem->GetCurrentPower() - PowerSystem->GetMinimumPower()) / PowerSystem->GetPowerRange()
+				: 0.0f,
 			DeltaTime);
 	}
 }
@@ -1045,6 +1135,7 @@ void SNovaMainMenuOperations::UpdateGameObjects()
 		IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftPropellantSystem>(Spacecraft) : nullptr;
 	ProcessingSystem =
 		IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(Spacecraft) : nullptr;
+	PowerSystem = IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftPowerSystem>(Spacecraft) : nullptr;
 
 	if (SpacecraftPawn && SpacecraftPawn->IsDocked())
 	{
@@ -1107,6 +1198,28 @@ FText SNovaMainMenuOperations::GetCrewText() const
 TOptional<float> SNovaMainMenuOperations::GetCrewRatio() const
 {
 	return AveragedCrewRatio.Get();
+}
+
+FText SNovaMainMenuOperations::GetEnergyText() const
+{
+	return FText::FormatNamed(INVTEXT("<img src=\"/Text/Power\"/> {used} kWh / {total} kWh"), TEXT("used"),
+		FText::AsNumber(PowerSystem->GetRemainingEnergy()), TEXT("total"), FText::AsNumber(PowerSystem->GetEnergyCapacity()));
+}
+
+TOptional<float> SNovaMainMenuOperations::GetEnergyRatio() const
+{
+	return AveragedEnergyRatio.Get();
+}
+
+FText SNovaMainMenuOperations::GetPowerText() const
+{
+	return FText::FormatNamed(
+		INVTEXT("<img src=\"/Text/Power\"/>{current} kW"), TEXT("current"), FText::AsNumber(PowerSystem->GetCurrentPower()));
+}
+
+TOptional<float> SNovaMainMenuOperations::GetPowerRatio() const
+{
+	return AveragedPowerRatio.Get();
 }
 
 FText SNovaMainMenuOperations::GetPropellantText() const

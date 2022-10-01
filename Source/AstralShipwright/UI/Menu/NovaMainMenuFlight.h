@@ -8,8 +8,8 @@
 #include "Online.h"
 
 // Definitions
-constexpr int32 HUDCount        = 5;
-constexpr int32 DefaultHUDIndex = 2;
+constexpr int32 HUDCount        = 3;
+constexpr int32 DefaultHUDIndex = 1;
 
 /** HUD data structure */
 struct FNovaHUDData
@@ -83,6 +83,7 @@ public:
 protected:
 
 	FText GetCrewText() const;
+	FText GetPowerText() const;
 
 	FText GetStatusText() const;
 	FText GetStatusValue() const;
@@ -132,6 +133,7 @@ protected:
 	class ANovaGameState*                   GameState;
 	class UNovaOrbitalSimulationComponent*  OrbitalSimulation;
 	class UNovaSpacecraftProcessingSystem*  ProcessingSystem;
+	class UNovaSpacecraftPowerSystem*       PowerSystem;
 
 	// Slate widgets
 	TSharedPtr<class SHorizontalBox> HUDSwitcher;

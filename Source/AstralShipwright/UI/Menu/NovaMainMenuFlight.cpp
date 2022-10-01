@@ -13,6 +13,7 @@
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
 #include "Spacecraft/System/NovaSpacecraftProcessingSystem.h"
+#include "Spacecraft/System/NovaSpacecraftPowerSystem.h"
 
 #include "Player/NovaPlayerController.h"
 
@@ -132,7 +133,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		.Padding(FMargin(20, 0))
 		[
 			SNew(SNeutronButtonLayout)
-			.Size("DefaultButtonSize")
+			.Size("InfoButtonSize")
 			[
 				SNew(SBackgroundBlur)
 				.BlurRadius(this, &SNeutronTabPanel::GetBlurRadius)
@@ -152,10 +153,21 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 							SNew(SHorizontalBox)
 
 							+ SHorizontalBox::Slot()
+							.AutoWidth()
 							[
 								SNew(SNeutronRichText)
 								.Text(FNeutronTextGetter::CreateRaw(this, &SNovaMainMenuFlight::GetCrewText))
 								.TextStyle(&Theme.MainFont)
+							]
+
+							+ SHorizontalBox::Slot()
+							.AutoWidth()
+							[
+								SNew(SRichTextBlock)
+								.Text(this, &SNovaMainMenuFlight::GetPowerText)
+								.TextStyle(&Theme.MainFont)
+								.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
+								+ SRichTextBlock::ImageDecorator()
 							]
 						]
 					]
@@ -236,7 +248,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		.Padding(FMargin(20, 0))
 		[
 			SNew(SNeutronButtonLayout)
-			.Size("DefaultButtonSize")
+			.Size("InfoButtonSize")
 			[
 				SNew(SBackgroundBlur)
 				.BlurRadius(this, &SNeutronTabPanel::GetBlurRadius)
@@ -279,32 +291,9 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 	];
 
 	// Layout our data
-	FNovaHUDData& PowerHUD = HUDData[0];
-	FNovaHUDData& AttitudeHUD = HUDData[1];
-	FNovaHUDData& HomeHUD = HUDData[2];
-	FNovaHUDData& OperationsHUD = HUDData[3];
-	FNovaHUDData& WeaponsHUD = HUDData[4];
-	
-	/*----------------------------------------------------
-	    Power
-	----------------------------------------------------*/
-
-	SAssignNew(PowerHUD.OverviewWidget, STextBlock)
-		.TextStyle(&Theme.MainFont)
-		.Text(LOCTEXT("Power", "Power"));
-
-	SAssignNew(PowerHUD.DetailedWidget, SVerticalBox)
-
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(Theme.VerticalContentPadding)
-		[
-			SNew(STextBlock)
-			.TextStyle(&Theme.HeadingFont)
-			.Text(LOCTEXT("Power", "Power"))
-		];
-
-	PowerHUD.DefaultFocus = nullptr;
+	FNovaHUDData& AttitudeHUD = HUDData[0];
+	FNovaHUDData& HomeHUD = HUDData[1];
+	FNovaHUDData& OperationsHUD = HUDData[2];
 	
 	/*----------------------------------------------------
 	    Attitude
@@ -536,48 +525,6 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		];
 
 	OperationsHUD.DefaultFocus = MineButton;
-
-	/*----------------------------------------------------
-	    Weapons
-	----------------------------------------------------*/
-
-	SAssignNew(WeaponsHUD.OverviewWidget, STextBlock)
-		.TextStyle(&Theme.MainFont)
-		.Text(LOCTEXT("Weapons", "Weapons"));
-
-	SAssignNew(WeaponsHUD.DetailedWidget, SVerticalBox)
-
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(Theme.VerticalContentPadding)
-		[
-			SNew(STextBlock)
-			.TextStyle(&Theme.HeadingFont)
-			.Text(LOCTEXT("Weapons", "Weapons"))
-		]
-		
-		/*+ SVerticalBox::Slot()
-		.AutoHeight()
-		[
-			SNeutronNew(SNeutronButton)
-			.Action(FNovaPlayerInput::MenuSecondary)
-			.Text(LOCTEXT("TestSilentRunning", "Silent running"))
-			.OnClicked(FSimpleDelegate::CreateLambda([&]()
-			{
-				MenuManager->SetInterfaceColor(Theme.NegativeColor, FLinearColor(1.0f, 0.0f, 0.1f));
-			}))
-		]*/
-
-		+ SVerticalBox::Slot()
-		.AutoHeight()
-		.Padding(Theme.ContentPadding)
-		[
-			SNew(STextBlock)
-			.TextStyle(&Theme.MainFont)
-			.Text(LOCTEXT("ComingSoon", "Coming soon..."))
-		];
-
-	WeaponsHUD.DefaultFocus = nullptr;
 	
 	/*----------------------------------------------------
 	    HUD panel construction
@@ -679,6 +626,7 @@ void SNovaMainMenuFlight::UpdateGameObjects()
 	OrbitalSimulation  = IsValid(GameState) ? GameState->GetOrbitalSimulation() : nullptr;
 	ProcessingSystem =
 		IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(Spacecraft) : nullptr;
+	PowerSystem = IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftPowerSystem>(Spacecraft) : nullptr;
 }
 
 void SNovaMainMenuFlight::Next()
@@ -741,6 +689,12 @@ FText SNovaMainMenuFlight::GetCrewText() const
 {
 	return FText::FormatNamed(INVTEXT("<img src=\"/Text/Crew\"/> {busy} / {total}"), TEXT("busy"),
 		FText::AsNumber(ProcessingSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(ProcessingSystem->GetTotalCrew()));
+}
+
+FText SNovaMainMenuFlight::GetPowerText() const
+{
+	return FText::FormatNamed(INVTEXT("<img src=\"/Text/Power\"/> {used} kWh / {total} kWh"), TEXT("used"),
+		FText::AsNumber(PowerSystem->GetRemainingEnergy()), TEXT("total"), FText::AsNumber(PowerSystem->GetEnergyCapacity()));
 }
 
 FText SNovaMainMenuFlight::GetStatusText() const

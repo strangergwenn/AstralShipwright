@@ -65,6 +65,10 @@ public:
 	TOptional<float> GetPropellantRatio() const;
 	FText            GetCrewText() const;
 	TOptional<float> GetCrewRatio() const;
+	FText            GetEnergyText() const;
+	TOptional<float> GetEnergyRatio() const;
+	FText            GetPowerText() const;
+	TOptional<float> GetPowerRatio() const;
 	FText            GetPropellantText() const;
 
 	// Module utility
@@ -107,12 +111,15 @@ protected:
 	const class ANovaSpacecraftPawn*             SpacecraftPawn;
 	const class UNovaSpacecraftPropellantSystem* PropellantSystem;
 	class UNovaSpacecraftProcessingSystem*       ProcessingSystem;
+	class UNovaSpacecraftPowerSystem*            PowerSystem;
 
 	// Current state
 	int32                       CurrentCompartmentIndex;
 	int32                       CurrentModuleIndex;
 	TNeutronTimedAverage<float> AveragedPropellantRatio;
 	TNeutronTimedAverage<float> AveragedCrewRatio;
+	TNeutronTimedAverage<float> AveragedEnergyRatio;
+	TNeutronTimedAverage<float> AveragedPowerRatio;
 
 	// Resource list
 	TArray<const class UNovaResource*>                       ResourceList;
