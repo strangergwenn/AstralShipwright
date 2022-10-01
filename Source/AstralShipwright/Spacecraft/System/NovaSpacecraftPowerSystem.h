@@ -27,6 +27,9 @@ public:
 	virtual void Load(const FNovaSpacecraft& Spacecraft) override
 	{
 		NLOG("UNovaSpacecraftPowerSystem::Load");
+
+		CurrentEnergy = Spacecraft.GetPowerMetrics().EnergyCapacity;
+		CurrentPower  = 0;
 	}
 
 	virtual void Save(FNovaSpacecraft& Spacecraft) override
@@ -39,34 +42,34 @@ public:
 	/** Get the current remaining energy */
 	double GetRemainingEnergy() const
 	{
-		return 2;
+		return CurrentEnergy;
 	}
 
-	/** Get the total storable energy */
+	/** Get the total energy capacity in batteries */
 	double GetEnergyCapacity() const
 	{
-		return 8;
+		return GetSpacecraft()->GetPowerMetrics().EnergyCapacity;
 	}
 
 	/** Get the current power delta */
 	double GetCurrentPower() const
 	{
-		return -1;
+		return CurrentPower;
 	}
 
-	/** Get the maximum power delta */
+	/** Get the minimum (in relative terms) total power delta */
 	double GetMinimumPower() const
 	{
-		return -5;
+		return -GetSpacecraft()->GetPowerMetrics().TotalPowerUsage;
 	}
 
 	/** Get the maximum power delta */
 	double GetMaximumPower() const
 	{
-		return 2;
+		return GetSpacecraft()->GetPowerMetrics().TotalPowerProduction;
 	}
 
-	/** Get the total pwoer delta range */
+	/** Get the total power delta range */
 	double GetPowerRange() const
 	{
 		return GetMaximumPower() - GetMinimumPower();
@@ -77,4 +80,12 @@ public:
 	----------------------------------------------------*/
 
 protected:
+
+	// Current power state
+	UPROPERTY(Replicated)
+	double CurrentPower;
+
+	// Current battery state
+	UPROPERTY(Replicated)
+	double CurrentEnergy;
 };

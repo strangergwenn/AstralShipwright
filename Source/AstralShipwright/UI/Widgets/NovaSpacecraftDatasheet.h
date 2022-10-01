@@ -28,6 +28,8 @@ public:
 		const FNovaSpacecraft*                  Comparison                  = InArgs._ComparisonSpacecraft;
 		const FNovaSpacecraftPropulsionMetrics& TargetPropulsionMetrics     = Target.GetPropulsionMetrics();
 		const FNovaSpacecraftPropulsionMetrics* ComparisonPropulsionMetrics = Comparison ? &Comparison->GetPropulsionMetrics() : nullptr;
+		const FNovaSpacecraftPowerMetrics&      TargetPowerMetrics          = Target.GetPowerMetrics();
+		const FNovaSpacecraftPowerMetrics*      ComparisonPowerMetrics      = Comparison ? &Comparison->GetPowerMetrics() : nullptr;
 
 		SNeutronTable::Construct(SNeutronTable::FArguments().Title(InArgs._Title).Width(500));
 
@@ -38,6 +40,8 @@ public:
 		FText TonnesPerSecond   = FText::FromString("T/s");
 		FText Seconds           = FText::FromString("s");
 		FText KiloNewtons       = FText::FromString("kN");
+		FText KiloWatts         = FText::FromString("kW");
+		FText KiloWattHours     = FText::FromString("kWh");
 
 		// Build the mass table
 		AddHeader(LOCTEXT("Overview", "<img src=\"/Text/Module\"/> Overview"));
@@ -75,6 +79,22 @@ public:
 		AddEntry(LOCTEXT("MaximumDeltaV", "Full-load delta-v"),
 			TNeutronTableValue(TargetPropulsionMetrics.MaximumDeltaV,
 				ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->MaximumDeltaV : -1, MetersPerSeconds));
+
+		AddEntry(LOCTEXT("MaximumDeltaV", "Full-load delta-v"),
+			TNeutronTableValue(TargetPropulsionMetrics.MaximumDeltaV,
+				ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->MaximumDeltaV : -1, MetersPerSeconds));
+
+		// Build the power table
+		AddHeader(LOCTEXT("PropulsionMetrics", "<img src=\"/Text/Power\"/> Power metrics"));
+		AddEntry(
+			LOCTEXT("PowerUsage", "Power usage"), TNeutronTableValue(TargetPowerMetrics.TotalPowerUsage,
+													  ComparisonPowerMetrics ? ComparisonPowerMetrics->TotalPowerUsage : -1.0f, KiloWatts));
+		AddEntry(LOCTEXT("PowerProduction", "Power production"),
+			TNeutronTableValue(TargetPowerMetrics.TotalPowerProduction,
+				ComparisonPowerMetrics ? ComparisonPowerMetrics->TotalPowerProduction : -1.0f, KiloWatts));
+		AddEntry(LOCTEXT("EnergyStorage", "Battery capacity"),
+			TNeutronTableValue(
+				TargetPowerMetrics.EnergyCapacity, ComparisonPowerMetrics ? ComparisonPowerMetrics->EnergyCapacity : -1.0f, KiloWattHours));
 	}
 };
 

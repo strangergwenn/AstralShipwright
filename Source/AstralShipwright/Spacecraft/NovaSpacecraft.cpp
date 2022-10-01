@@ -842,6 +842,48 @@ void FNovaSpacecraft::UpdatePropulsionMetrics()
 #endif
 }
 
+void FNovaSpacecraft::UpdatePowerMetrics()
+{
+	PowerMetrics = FNovaSpacecraftPowerMetrics();
+
+	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
+	{
+		// Iterate over modules
+		for (const FNovaCompartmentModule& CompartmentModule : Compartments[CompartmentIndex].Modules)
+		{
+			const UNovaProcessingModuleDescription* Module = Cast<UNovaProcessingModuleDescription>(CompartmentModule.Description);
+			if (::IsValid(Module))
+			{
+				PowerMetrics.EnergyCapacity += Module->Capacity;
+				PowerMetrics.TotalPowerUsage += FMath::Max(Module->Power, 0);
+				PowerMetrics.TotalPowerProduction += FMath::Max(-Module->Power, 0);
+			}
+		}
+
+		// Iterate over equipment
+		for (const UNovaEquipmentDescription* Equipment : Compartments[CompartmentIndex].Equipment)
+		{
+			const UNovaPowerEquipmentDescription* PowerEquipment = Cast<UNovaPowerEquipmentDescription>(Equipment);
+			if (PowerEquipment)
+			{
+				PowerMetrics.EnergyCapacity += PowerEquipment->Capacity;
+				PowerMetrics.TotalPowerProduction += PowerEquipment->Power;
+			}
+
+			const UNovaMiningEquipmentDescription* MiningEquipment = Cast<UNovaMiningEquipmentDescription>(Equipment);
+			if (MiningEquipment)
+			{
+				PowerMetrics.TotalPowerUsage += MiningEquipment->Power;
+			}
+			const UNovaRadioMastDescription* MastEquipment = Cast<UNovaRadioMastDescription>(Equipment);
+			if (MastEquipment)
+			{
+				PowerMetrics.TotalPowerUsage += MastEquipment->Power;
+			}
+		}
+	}
+}
+
 void FNovaSpacecraft::UpdateModuleGroups()
 {
 	ModuleGroups.Empty();

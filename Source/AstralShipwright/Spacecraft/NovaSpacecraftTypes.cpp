@@ -306,6 +306,17 @@ TArray<FText> UNovaProcessingModuleDescription::GetDescription() const
 	Result.Add(FText::FormatNamed(LOCTEXT("ProcessingModuleDescriptionFormat", "<img src=\"/Text/Cargo\"/> Produces {rate} T/s"),
 		TEXT("rate"), FText::AsNumber(ProcessingRate)));
 
+	if (Power > 0)
+	{
+		Result.Add(FText::FormatNamed(
+			LOCTEXT("PowerProviderFormat", "<img src=\"/Text/Power\"/> Produces {power} kW"), TEXT("power"), FText::AsNumber(Power)));
+	}
+	else if (Power < 0)
+	{
+		Result.Add(FText::FormatNamed(
+			LOCTEXT("PowerRequirementFormat", "<img src=\"/Text/Power\"/> Requires {power} kW"), TEXT("power"), FText::AsNumber(-Power)));
+	}
+
 	return Result;
 }
 
@@ -399,6 +410,41 @@ TArray<FText> UNovaMiningEquipmentDescription::GetDescription() const
 
 	Result.Add(FText::FormatNamed(LOCTEXT("MiningEquipmentDescriptionFormat", "<img src=\"/Text/Cargo\"/> Produces {rate} T/s"),
 		TEXT("rate"), FText::AsNumber(ExtractionRate)));
+
+	if (Power > 0)
+	{
+		Result.Add(FText::FormatNamed(
+			LOCTEXT("MiningPowerFormat", "<img src=\"/Text/Power\"/> Requires {power} kW"), TEXT("power"), FText::AsNumber(Power)));
+	}
+
+	return Result;
+}
+
+TArray<FText> UNovaRadioMastDescription::GetDescription() const
+{
+	TArray<FText> Result = Super::GetDescription();
+
+	if (Power > 0)
+	{
+		Result.Add(FText::FormatNamed(
+			LOCTEXT("RadioMastPowerFormat", "<img src=\"/Text/Power\"/> Requires {power} kW"), TEXT("power"), FText::AsNumber(Power)));
+	}
+
+	return Result;
+}
+
+TArray<FText> UNovaPowerEquipmentDescription::GetDescription() const
+{
+	TArray<FText> Result = Super::GetDescription();
+
+	Result.Add(FText::FormatNamed(
+		LOCTEXT("PowerEquipmentPowerFormat", "<img src=\"/Text/Power\"/> Produces {power} kW"), TEXT("power"), FText::AsNumber(Power)));
+
+	if (Capacity > 0)
+	{
+		Result.Add(FText::FormatNamed(LOCTEXT("PowerEquipmentEnergyFormat", "<img src=\"/Text/Power\"/> {capacity} kWH battery"),
+			TEXT("capacity"), FText::AsNumber(Capacity)));
+	}
 
 	return Result;
 }

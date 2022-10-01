@@ -693,7 +693,7 @@ FText SNovaMainMenuFlight::GetCrewText() const
 
 FText SNovaMainMenuFlight::GetPowerText() const
 {
-	return FText::FormatNamed(INVTEXT("<img src=\"/Text/Power\"/> {used} kWh / {total} kWh"), TEXT("used"),
+	return FText::FormatNamed(INVTEXT("<img src=\"/Text/Power\"/> {used} / {total} kWh"), TEXT("used"),
 		FText::AsNumber(PowerSystem->GetRemainingEnergy()), TEXT("total"), FText::AsNumber(PowerSystem->GetEnergyCapacity()));
 }
 

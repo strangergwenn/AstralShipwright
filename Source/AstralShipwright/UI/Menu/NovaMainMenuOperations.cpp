@@ -135,9 +135,11 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 						.AutoHeight()
 						.Padding(Theme.VerticalContentPadding)
 						[
-							SNew(SNeutronRichText)
+							SNew(SRichTextBlock)
 							.TextStyle(&Theme.MainFont)
-							.Text(FNeutronTextGetter::CreateRaw(this, &SNovaMainMenuOperations::GetPowerText))
+							.Text(this, &SNovaMainMenuOperations::GetPowerText)
+							.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
+							+ SRichTextBlock::ImageDecorator()
 						]
 
 						+ SVerticalBox::Slot()
@@ -174,9 +176,11 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 						.AutoHeight()
 						.Padding(Theme.VerticalContentPadding)
 						[
-							SNew(SNeutronRichText)
+							SNew(SRichTextBlock)
 							.TextStyle(&Theme.MainFont)
-							.Text(FNeutronTextGetter::CreateRaw(this, &SNovaMainMenuOperations::GetEnergyText))
+							.Text(this, &SNovaMainMenuOperations::GetEnergyText)
+							.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
+							+ SRichTextBlock::ImageDecorator()
 						]
 
 						+ SVerticalBox::Slot()
@@ -756,6 +760,7 @@ void SNovaMainMenuOperations::Show()
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						.VAlign(VAlign_Center)
+						.Padding(FMargin(20, 0))
 						[
 							SNew(SVerticalBox)
 
@@ -775,7 +780,7 @@ void SNovaMainMenuOperations::Show()
 							.AutoHeight()
 							[
 								SNew(SNeutronText)
-								.TextStyle(&Theme.HeadingFont)
+								.TextStyle(&Theme.MainFont)
 								.Text(FNeutronTextGetter::CreateLambda([=]() {
 									return FText::FormatNamed(INVTEXT("{busy} / {total}"),
 										TEXT("busy"), FText::AsNumber(ProcessingSystem->GetBusyCrew(Group.Index)),
@@ -784,10 +789,43 @@ void SNovaMainMenuOperations::Show()
 							]
 						]
 		
+						// Power status
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						.VAlign(VAlign_Center)
+						[
+							SNew(SVerticalBox)
+
+							+ SVerticalBox::Slot()
+							.HAlign(HAlign_Center)
+							.AutoHeight()
+							[
+								SNew(SRichTextBlock)
+								.TextStyle(&Theme.HeadingFont)
+								.Text(INVTEXT("<img src=\"/Text/Power\"/>"))
+								.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
+								+ SRichTextBlock::ImageDecorator()
+							]
+
+							+ SVerticalBox::Slot()
+							.HAlign(HAlign_Center)
+							.AutoHeight()
+							[
+								SNew(SNeutronText)
+								.TextStyle(&Theme.MainFont)
+								.Text(FNeutronTextGetter::CreateLambda([=]() {
+									return FText::FormatNamed(INVTEXT("{busy} / {total} kW"),
+										TEXT("busy"), FText::AsNumber(ProcessingSystem->GetPowerUsage(Group.Index)),
+										TEXT("total"), FText::AsNumber(ProcessingSystem->GetRequiredPowerUsage(Group.Index)));
+								}))
+							]
+						]
+		
 						// Production status
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						.VAlign(VAlign_Center)
+						.Padding(FMargin(20, 0))
 						[
 							SAssignNew(StatusBox, SHorizontalBox)
 						]
@@ -1191,7 +1229,7 @@ TOptional<float> SNovaMainMenuOperations::GetPropellantRatio() const
 
 FText SNovaMainMenuOperations::GetCrewText() const
 {
-	return FText::FormatNamed(LOCTEXT("CrewDetailsFormat", "<img src=\"/Text/Crew\"/> {busy} out of {total} crew busy"), TEXT("busy"),
+	return FText::FormatNamed(LOCTEXT("CrewDetailsFormat", "<img src=\"/Text/Crew\"/> {busy} / {total} crew busy"), TEXT("busy"),
 		FText::AsNumber(ProcessingSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(ProcessingSystem->GetTotalCrew()));
 }
 
@@ -1202,7 +1240,7 @@ TOptional<float> SNovaMainMenuOperations::GetCrewRatio() const
 
 FText SNovaMainMenuOperations::GetEnergyText() const
 {
-	return FText::FormatNamed(INVTEXT("<img src=\"/Text/Power\"/> {used} kWh / {total} kWh"), TEXT("used"),
+	return FText::FormatNamed(INVTEXT("<img src=\"/Text/Power\"/> {used} / {total} kWh"), TEXT("used"),
 		FText::AsNumber(PowerSystem->GetRemainingEnergy()), TEXT("total"), FText::AsNumber(PowerSystem->GetEnergyCapacity()));
 }
 

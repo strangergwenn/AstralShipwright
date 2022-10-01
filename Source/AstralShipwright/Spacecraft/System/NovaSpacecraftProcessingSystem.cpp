@@ -585,6 +585,26 @@ int32 UNovaSpacecraftProcessingSystem::GetProcessingGroupCrew(int32 ProcessingGr
 	return Count;
 }
 
+int32 UNovaSpacecraftProcessingSystem::GetProcessingGroupPowerUsage(int32 ProcessingGroupIndex, bool FilterByActive) const
+{
+	NCHECK(ProcessingGroupIndex >= 0 && ProcessingGroupIndex < ProcessingGroupsStates.Num());
+
+	int32 Power = 0;
+
+	for (const auto& ChainState : ProcessingGroupsStates[ProcessingGroupIndex].Chains)
+	{
+		if (FilterByActive == false || ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing)
+		{
+			for (const auto& ModuleState : ChainState.Modules)
+			{
+				Power += ModuleState.Module->Power;
+			}
+		}
+	}
+
+	return Power;
+}
+
 /*----------------------------------------------------
     Networking
 ----------------------------------------------------*/

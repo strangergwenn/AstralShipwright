@@ -293,6 +293,19 @@ struct FNovaSpacecraftPropulsionMetrics
 	float ThrusterThrust;
 };
 
+/** Power usage guidelines */
+struct FNovaSpacecraftPowerMetrics
+{
+	FNovaSpacecraftPowerMetrics() : TotalPowerUsage(0), TotalPowerProduction(0), EnergyCapacity(0)
+	{}
+
+	float TotalPowerUsage;
+
+	float TotalPowerProduction;
+
+	float EnergyCapacity;
+};
+
 /** Types of module groups */
 enum class ENovaModuleGroupType : uint8
 {
@@ -443,6 +456,12 @@ public:
 		return PropulsionMetrics;
 	}
 
+	/** Get power characteristics for this spacecraft */
+	const FNovaSpacecraftPowerMetrics& GetPowerMetrics() const
+	{
+		return PowerMetrics;
+	}
+
 	/** Get module groups for this spacecraft */
 	const TArray<FNovaModuleGroup>& GetModuleGroups() const
 	{
@@ -490,8 +509,11 @@ public:
 	/** Update bulkheads, pipes, wiring, based on the current state */
 	void UpdateProceduralElements();
 
-	/** Update the spacecraft's metrics */
+	/** Update the spacecraft's propulsion metrics */
 	void UpdatePropulsionMetrics();
+
+	/** Update the spacecraft's power metrics */
+	void UpdatePowerMetrics();
 
 	/** Update module groups*/
 	void UpdateModuleGroups();
@@ -639,5 +661,6 @@ public:
 
 	// Local state
 	FNovaSpacecraftPropulsionMetrics PropulsionMetrics;
+	FNovaSpacecraftPowerMetrics      PowerMetrics;
 	TArray<FNovaModuleGroup>         ModuleGroups;
 };

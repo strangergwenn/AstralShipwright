@@ -610,6 +610,7 @@ bool ANovaGameState::ProcessGameSimulation(FNovaTime DeltaTime)
 	for (FNovaSpacecraft& Spacecraft : SpacecraftDatabase.Get())
 	{
 		Spacecraft.UpdatePropulsionMetrics();
+		Spacecraft.UpdatePowerMetrics();
 	}
 
 	// Update the time with the base delta time that will be affected by time dilation

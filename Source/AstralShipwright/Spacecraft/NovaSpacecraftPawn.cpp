@@ -577,6 +577,7 @@ void ANovaSpacecraftPawn::StartAssemblyUpdate()
 
 	// Update the spacecraft
 	Spacecraft->UpdatePropulsionMetrics();
+	Spacecraft->UpdatePowerMetrics();
 	Spacecraft->UpdateProceduralElements();
 	Spacecraft->UpdateModuleGroups();
 

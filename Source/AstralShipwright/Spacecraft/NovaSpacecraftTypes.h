@@ -564,7 +564,11 @@ public:
 
 	// Power drain in kW
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	int32 Power;
+	int32 Power = 0;
+
+	// Energy capacity in kWH
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	int32 Capacity = 0;
 };
 
 /*----------------------------------------------------
@@ -693,7 +697,7 @@ public:
 
 	// Power drain in kW
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	int32 Power;
+	int32 Power = 0;
 };
 
 /** Description of a radio mast */
@@ -704,9 +708,13 @@ class UNovaRadioMastDescription : public UNovaEquipmentDescription
 
 public:
 
+	TArray<FText> GetDescription() const override;
+
+public:
+
 	// Power drain in kW
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	int32 Power;
+	int32 Power = 0;
 };
 
 /** Description of an electrical component */
@@ -717,13 +725,17 @@ class UNovaPowerEquipmentDescription : public UNovaEquipmentDescription
 
 public:
 
+	TArray<FText> GetDescription() const override;
+
+public:
+
 	// Power generation in kW
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	int32 Power;
+	int32 Power = 0;
 
 	// Energy capacity in kWh
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
-	int32 Capacity;
+	int32 Capacity = 0;
 };
 
 /** Mining rig attach point */

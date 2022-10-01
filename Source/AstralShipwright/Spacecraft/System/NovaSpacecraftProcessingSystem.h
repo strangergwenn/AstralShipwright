@@ -371,6 +371,29 @@ protected:
 	int32 GetProcessingGroupCrew(int32 ProcessingGroupIndex, bool FilterByActive) const;
 
 	/*----------------------------------------------------
+	    Power
+	----------------------------------------------------*/
+
+public:
+
+	/** Get the current power usage for a group */
+	int32 GetPowerUsage(int32 ProcessingGroupIndex) const
+	{
+		return GetProcessingGroupCrew(ProcessingGroupIndex, true);
+	}
+
+	/** Get the required power usage for a group to be active */
+	int32 GetRequiredPowerUsage(int32 ProcessingGroupIndex) const
+	{
+		return GetProcessingGroupCrew(ProcessingGroupIndex, false);
+	}
+
+protected:
+
+	/** Get the power usage for a processing group, either total or active */
+	int32 GetProcessingGroupPowerUsage(int32 ProcessingGroupIndex, bool FilterByActive) const;
+
+	/*----------------------------------------------------
 	    Internal
 	----------------------------------------------------*/
 

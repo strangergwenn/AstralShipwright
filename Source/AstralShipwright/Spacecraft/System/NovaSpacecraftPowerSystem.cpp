@@ -10,8 +10,11 @@
     Constructor
 ----------------------------------------------------*/
 
-UNovaSpacecraftPowerSystem::UNovaSpacecraftPowerSystem() : Super()
+UNovaSpacecraftPowerSystem::UNovaSpacecraftPowerSystem()
+	: Super()
 
+	, CurrentPower(0)
+	, CurrentEnergy(0)
 {
 	SetIsReplicatedByDefault(true);
 }
@@ -25,7 +28,10 @@ void UNovaSpacecraftPowerSystem::Update(FNovaTime InitialTime, FNovaTime FinalTi
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 }
 
-// void UNovaSpacecraftPowerSystem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-//{
-//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-// }
+void UNovaSpacecraftPowerSystem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UNovaSpacecraftPowerSystem, CurrentPower);
+	DOREPLIFETIME(UNovaSpacecraftPowerSystem, CurrentEnergy);
+}
