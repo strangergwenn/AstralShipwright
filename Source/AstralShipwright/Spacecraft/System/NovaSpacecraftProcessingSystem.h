@@ -379,13 +379,13 @@ public:
 	/** Get the current power usage for a group */
 	int32 GetPowerUsage(int32 ProcessingGroupIndex) const
 	{
-		return GetProcessingGroupCrew(ProcessingGroupIndex, true);
+		return GetProcessingGroupPowerUsage(ProcessingGroupIndex, true);
 	}
 
 	/** Get the required power usage for a group to be active */
 	int32 GetRequiredPowerUsage(int32 ProcessingGroupIndex) const
 	{
-		return GetProcessingGroupCrew(ProcessingGroupIndex, false);
+		return GetProcessingGroupPowerUsage(ProcessingGroupIndex, false);
 	}
 
 protected:

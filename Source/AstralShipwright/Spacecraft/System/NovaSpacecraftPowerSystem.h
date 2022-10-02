@@ -28,8 +28,9 @@ public:
 	{
 		NLOG("UNovaSpacecraftPowerSystem::Load");
 
-		CurrentEnergy = Spacecraft.GetPowerMetrics().EnergyCapacity;
-		CurrentPower  = 0;
+		CurrentEnergy  = Spacecraft.GetPowerMetrics().EnergyCapacity;
+		EnergyCapacity = Spacecraft.GetPowerMetrics().EnergyCapacity;
+		CurrentPower   = 0;
 	}
 
 	virtual void Save(FNovaSpacecraft& Spacecraft) override
@@ -88,4 +89,8 @@ protected:
 	// Current battery state
 	UPROPERTY(Replicated)
 	double CurrentEnergy;
+
+	// Current battery capacity
+	UPROPERTY(Replicated)
+	double EnergyCapacity;
 };
