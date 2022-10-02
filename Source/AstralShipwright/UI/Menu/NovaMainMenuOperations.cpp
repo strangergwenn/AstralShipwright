@@ -1088,7 +1088,7 @@ void SNovaMainMenuOperations::Show()
 					]
 				]
 
-				// Processing rig activity toggle
+				// Mining rig activity toggle
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[

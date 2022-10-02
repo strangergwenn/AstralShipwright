@@ -481,41 +481,38 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SNeutronAssignNew(MineButton, SNeutronButton)
-			.Text(LOCTEXT("MineResource", "Mine resource"))
-			.HelpText(LOCTEXT("MineResourceHelp", "Mine the current asteroid for resources"))
-			.OnClicked(FSimpleDelegate::CreateLambda([this]()
+			SNeutronAssignNew(MiningRigButton, SNeutronButton)
+			.Toggle(true)
+			.Text_Lambda([=]()
 			{
-				if (IsValid(SpacecraftPawn) && IsValid(PC))
-				{
-					const ANovaAsteroid* AsteroidActor = UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
-					if (IsValid(AsteroidActor))
-					{
-						const FNovaAsteroid& Asteroid = Cast<ANovaAsteroid>(AsteroidActor)->GetAsteroidData();
-
-						// Add cargo to the spacecraft
-						FNovaSpacecraft ModifiedSpacecraft = SpacecraftPawn->GetSpacecraftCopy();
-						const float CargoMassToMine =  ModifiedSpacecraft.GetAvailableCargoMass(Asteroid.MineralResource);
-						if (CargoMassToMine > 0 && ModifiedSpacecraft.ModifyCargo(Asteroid.MineralResource, CargoMassToMine))
-						{
-							PC->UpdateSpacecraft(ModifiedSpacecraft);
-							PC->Notify(LOCTEXT("ResourceMined", "Resource mined"), Asteroid.MineralResource->Name, ENeutronNotificationType::Info);
-						}
-					}
-				}
-			}))
-			.Enabled_Lambda([=]()
+				return ProcessingSystem->IsMiningRigActive() ? LOCTEXT("StopMining", "Stop mining") : LOCTEXT("StartMining", "Start mining");
+			})
+			.HelpText_Lambda([=]()
 			{
-				if (IsValid(SpacecraftPawn))
+				FText Help;
+				if (ProcessingSystem->CanMiningRigBeActive(&Help))
 				{
-					const ANovaAsteroid* AsteroidActor = UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
-					return IsValid(AsteroidActor) && IsValid(SpacecraftMovement) && SpacecraftMovement->IsAnchored();
+					return LOCTEXT("MiningHelp", "Toggle activity for this mining rig");
 				}
 				else
 				{
-					return false;
+					return Help;
 				}
 			})
+			.Enabled_Lambda([=]()
+			{
+				if (ProcessingSystem->GetMiningRigIndex() != INDEX_NONE)
+				{
+					auto Status = ProcessingSystem->GetMiningRigStatus();
+					return Status == ENovaSpacecraftProcessingSystemStatus::Processing
+						|| Status == ENovaSpacecraftProcessingSystemStatus::Stopped;
+				}
+				return false;
+			})
+			.OnClicked(FSimpleDelegate::CreateLambda([=]()
+			{
+				ProcessingSystem->SetMiningRigActive(MiningRigButton->IsActive());
+			}))
 		]
 
 		+ SVerticalBox::Slot()
@@ -524,7 +521,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			SAssignNew(ModuleGroupsBox, SVerticalBox)
 		];
 
-	OperationsHUD.DefaultFocus = MineButton;
+	OperationsHUD.DefaultFocus = MiningRigButton;
 	
 	/*----------------------------------------------------
 	    HUD panel construction

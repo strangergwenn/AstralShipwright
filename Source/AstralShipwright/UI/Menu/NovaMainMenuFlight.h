@@ -144,7 +144,7 @@ protected:
 	TSharedPtr<class SVerticalBox>   ModuleGroupsBox;
 	TSharedPtr<class SNeutronButton> DockButton;
 	TSharedPtr<class SNeutronButton> TerminateButton;
-	TSharedPtr<class SNeutronButton> MineButton;
+	TSharedPtr<class SNeutronButton> MiningRigButton;
 	TSharedPtr<class SNeutronButton> AlignManeuverButton;
 	TSharedPtr<class SNeutronButton> FastForwardButton;
 	TSharedPtr<class SBox>           InvisibleWidget;
