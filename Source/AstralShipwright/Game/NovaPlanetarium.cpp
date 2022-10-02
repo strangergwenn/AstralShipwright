@@ -163,7 +163,11 @@ void ANovaPlanetarium::Tick(float DeltaTime)
 
 				// Feed light direction
 				const double LightOffsetRatio = (CurrentSunSkyAngle - CurrentPosition.Rotation().Yaw) / 360.0f;
-				Cast<UMaterialInstanceDynamic>(Component->GetMaterial(0))->SetScalarParameterValue("LightOffsetRatio", LightOffsetRatio);
+				if (IsValid(Component->GetMaterial(0)))
+				{
+					Cast<UMaterialInstanceDynamic>(Component->GetMaterial(0))
+						->SetScalarParameterValue("LightOffsetRatio", LightOffsetRatio);
+				}
 			}
 
 			// Moon
