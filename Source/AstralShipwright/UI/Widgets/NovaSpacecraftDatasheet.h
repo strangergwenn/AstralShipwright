@@ -85,7 +85,7 @@ public:
 				ComparisonPropulsionMetrics ? ComparisonPropulsionMetrics->MaximumDeltaV : -1, MetersPerSeconds));
 
 		// Build the power table
-		AddHeader(LOCTEXT("PropulsionMetrics", "<img src=\"/Text/Power\"/> Power metrics"));
+		AddHeader(LOCTEXT("PowerMetrics", "<img src=\"/Text/Power\"/> Power metrics"));
 		AddEntry(
 			LOCTEXT("PowerUsage", "Power usage"), TNeutronTableValue(TargetPowerMetrics.TotalPowerUsage,
 													  ComparisonPowerMetrics ? ComparisonPowerMetrics->TotalPowerUsage : -1.0f, KiloWatts));
