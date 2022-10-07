@@ -17,6 +17,7 @@ UNovaSpacecraftPowerSystem::UNovaSpacecraftPowerSystem()
 	: Super()
 
 	, CurrentPower(0)
+	, CurrentPowerProduction(0)
 	, CurrentEnergy(0)
 	, EnergyCapacity(0)
 {
@@ -36,7 +37,8 @@ void UNovaSpacecraftPowerSystem::Update(FNovaTime InitialTime, FNovaTime FinalTi
 		GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(GetSpacecraft());
 	class UNovaSpacecraftMovementComponent* SpacecraftMovement = Cast<ANovaSpacecraftPawn>(GetOwner())->GetSpacecraftMovement();
 
-	CurrentPower = 0;
+	CurrentPower           = 0;
+	CurrentPowerProduction = 0;
 
 	// Handle power usage from groups
 	for (int32 GroupIndex = 0; GroupIndex < ProcessingSystem->GetProcessingGroupCount(); GroupIndex++)
@@ -60,11 +62,12 @@ void UNovaSpacecraftPowerSystem::Update(FNovaTime InitialTime, FNovaTime FinalTi
 		// Iterate over equipment
 		for (const UNovaEquipmentDescription* Equipment : Compartments[CompartmentIndex].Equipment)
 		{
-			// Solar panel
+			// Solar panels
 			const UNovaPowerEquipmentDescription* PowerEquipment = Cast<UNovaPowerEquipmentDescription>(Equipment);
 			if (PowerEquipment)
 			{
 				CurrentPower += PowerEquipment->Power;
+				CurrentPowerProduction += PowerEquipment->Power;
 			}
 
 			// Mining rig
@@ -94,5 +97,6 @@ void UNovaSpacecraftPowerSystem::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UNovaSpacecraftPowerSystem, CurrentPower);
+	DOREPLIFETIME(UNovaSpacecraftPowerSystem, CurrentPowerProduction);
 	DOREPLIFETIME(UNovaSpacecraftPowerSystem, CurrentEnergy);
 }

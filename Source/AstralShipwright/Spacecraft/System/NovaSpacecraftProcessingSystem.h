@@ -16,6 +16,7 @@ enum class ENovaSpacecraftProcessingSystemStatus : uint8
 	Stopped,
 	Processing,
 	Blocked,
+	PowerLoss,
 	Docked
 };
 

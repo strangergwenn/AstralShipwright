@@ -58,6 +58,12 @@ public:
 		return CurrentPower;
 	}
 
+	/** Get the total current power production */
+	double GetCurrentProduction() const
+	{
+		return CurrentPower;
+	}
+
 	/** Get the minimum (in relative terms) total power delta */
 	double GetMinimumPower() const
 	{
@@ -82,9 +88,13 @@ public:
 
 protected:
 
-	// Current power state
+	// Current power delta
 	UPROPERTY(Replicated)
 	double CurrentPower;
+
+	// Current power production
+	UPROPERTY(Replicated)
+	double CurrentPowerProduction;
 
 	// Current battery state
 	UPROPERTY(Replicated)

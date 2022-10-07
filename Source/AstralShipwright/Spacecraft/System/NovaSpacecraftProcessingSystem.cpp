@@ -1,6 +1,7 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaSpacecraftProcessingSystem.h"
+#include "NovaSpacecraftPowerSystem.h"
 
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
@@ -223,7 +224,9 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 {
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 
-	const FNovaSpacecraft* Spacecraft = GetSpacecraft();
+	const FNovaSpacecraft*            Spacecraft  = GetSpacecraft();
+	const ANovaGameState*             GameState   = GetWorld()->GetGameState<ANovaGameState>();
+	const UNovaSpacecraftPowerSystem* PowerSystem = GameState->GetSpacecraftSystem<UNovaSpacecraftPowerSystem>(GetSpacecraft());
 
 	RemainingProductionTime = FNovaTime::FromMinutes(DBL_MAX);
 
@@ -284,7 +287,14 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 					(CurrentInputs.Num() != ChainState.Inputs.Num() || CurrentOutputs.Num() != ChainState.Outputs.Num()))
 				{
 					ChainState.Status = ENovaSpacecraftProcessingSystemStatus::Blocked;
-					NLOG("UNovaSpacecraftProcessingSystem::Update : canceled production for group %d", CurrentGroupIndex);
+					NLOG("UNovaSpacecraftProcessingSystem::Update : blocked production for group %d", CurrentGroupIndex);
+				}
+
+				// Cancel production when out of power
+				if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing && PowerSystem->GetRemainingEnergy() <= 0)
+				{
+					ChainState.Status = ENovaSpacecraftProcessingSystemStatus::PowerLoss;
+					NLOG("UNovaSpacecraftProcessingSystem::Update : power loss for group %d", CurrentGroupIndex);
 				}
 
 				// Proceed with processing
@@ -364,6 +374,13 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 			{
 				MiningRigStatus = ENovaSpacecraftProcessingSystemStatus::Blocked;
 				NLOG("UNovaSpacecraftProcessingSystem::Update : canceled production for mining rig");
+			}
+
+			// Cancel production when out of power
+			else if (PowerSystem->GetRemainingEnergy() <= 0)
+			{
+				MiningRigStatus = ENovaSpacecraftProcessingSystemStatus::PowerLoss;
+				NLOG("UNovaSpacecraftProcessingSystem::Update : power loss for mining rig");
 			}
 
 			// Proceed with processing
@@ -471,11 +488,19 @@ bool UNovaSpacecraftProcessingSystem::CanMiningRigBeActive(FText* Help) const
 		}
 		return false;
 	}
-	if (GetMiningRigStatus() == ENovaSpacecraftProcessingSystemStatus::Blocked)
+	else if (GetMiningRigStatus() == ENovaSpacecraftProcessingSystemStatus::Blocked)
 	{
 		if (Help)
 		{
 			*Help = LOCTEXT("Blocked", "The mining rig cannot store extracted resources");
+		}
+		return false;
+	}
+	else if (GetMiningRigStatus() == ENovaSpacecraftProcessingSystemStatus::PowerLoss)
+	{
+		if (Help)
+		{
+			*Help = LOCTEXT("PowerLoss", "The mining rig is out of power");
 		}
 		return false;
 	}
@@ -510,6 +535,8 @@ FText UNovaSpacecraftProcessingSystem::GetStatusText(ENovaSpacecraftProcessingSy
 			return LOCTEXT("ProcessingProcessing", "Active");
 		case ENovaSpacecraftProcessingSystemStatus::Blocked:
 			return LOCTEXT("ProcessingBlocked", "Blocked");
+		case ENovaSpacecraftProcessingSystemStatus::PowerLoss:
+			return LOCTEXT("ProcessingPowerLoss", "No power");
 		case ENovaSpacecraftProcessingSystemStatus::Docked:
 			return LOCTEXT("ProcessingDocked", "Stopped");
 	}
