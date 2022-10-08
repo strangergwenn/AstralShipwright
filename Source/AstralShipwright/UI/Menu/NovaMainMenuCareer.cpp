@@ -184,6 +184,7 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 								SNew(STextBlock)
 								.TextStyle(&Theme.MainFont)
 								.Text(Asset->Name)
+								.AutoWrapText(true)
 							]
 						]
 
