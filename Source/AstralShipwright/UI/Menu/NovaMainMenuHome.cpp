@@ -125,13 +125,6 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 							[
 								SNew(SBox)
 								.WidthOverride(700)
-								[
-									SNew(SRichTextBlock)
-									.Text(LOCTEXT("Alpha", "<img src=\"/Text/Warning\"/> Astral Shipwright is currently in Early Access and may present bugs!"))
-									.TextStyle(&Theme.MainFont)
-									.DecoratorStyleSet(&FNeutronStyleSet::GetStyle())
-									+ SRichTextBlock::ImageDecorator()
-								]
 							]
 
 							+ SHorizontalBox::Slot()
