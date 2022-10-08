@@ -1,6 +1,7 @@
 
 #include "NovaSpacecraftSolarPanelComponent.h"
 
+#include "Game/NovaGameState.h"
 #include "Game/NovaPlanetarium.h"
 #include "Nova.h"
 
@@ -23,7 +24,7 @@ void UNovaSpacecraftSolarPanelComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	RequiresInitialOrientation = true;
+	LastUpdateGameTime = 0;
 }
 
 void UNovaSpacecraftSolarPanelComponent::TickComponent(
@@ -53,6 +54,15 @@ void UNovaSpacecraftSolarPanelComponent::TickComponent(
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ANovaPlanetarium::StaticClass(), PlanetariumCandidates);
 	NCHECK(PlanetariumCandidates.Num() > 0);
 	const ANovaPlanetarium* Planetarium = Cast<ANovaPlanetarium>(PlanetariumCandidates[0]);
+
+	// Determine if the time has changed a lot since last tick
+	bool            RequiresInitialOrientation = false;
+	const FNovaTime CurrentGameTime            = Cast<ANovaGameState>(GetWorld()->GetGameState())->GetCurrentTime();
+	if ((CurrentGameTime - LastUpdateGameTime).AsMinutes() > 1)
+	{
+		RequiresInitialOrientation = true;
+	}
+	LastUpdateGameTime = CurrentGameTime;
 
 	// Update
 	if (ParentMesh && Planetarium)
