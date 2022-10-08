@@ -6,6 +6,11 @@
 
 #include "Game/NovaGameState.h"
 #include "Game/NovaOrbitalSimulationComponent.h"
+#include "Game/NovaOrbitalSimulationTypes.h"
+
+#include "Nova.h"
+
+#include "Neutron/System/NeutronAssetManager.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -18,6 +23,7 @@ UNovaSpacecraftPowerSystem::UNovaSpacecraftPowerSystem()
 
 	, CurrentPower(0)
 	, CurrentPowerProduction(0)
+	, CurrentExposureRatio(0)
 	, CurrentEnergy(0)
 	, EnergyCapacity(0)
 {
@@ -32,13 +38,59 @@ void UNovaSpacecraftPowerSystem::Update(FNovaTime InitialTime, FNovaTime FinalTi
 {
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 
-	const ANovaGameState*                  GameState = GetWorld()->GetGameState<ANovaGameState>();
+	// Get game pointers
+	const FNovaSpacecraft*                 Spacecraft        = GetSpacecraft();
+	const ANovaGameState*                  GameState         = GetWorld()->GetGameState<ANovaGameState>();
+	const UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
 	const UNovaSpacecraftProcessingSystem* ProcessingSystem =
 		GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(GetSpacecraft());
 	class UNovaSpacecraftMovementComponent* SpacecraftMovement = Cast<ANovaSpacecraftPawn>(GetOwner())->GetSpacecraftMovement();
 
+	// Reset stats
 	CurrentPower           = 0;
 	CurrentPowerProduction = 0;
+	CurrentExposureRatio   = 0;
+
+	// Compute solar exposure
+	double CurrentExposure = 0;
+	if (Spacecraft)
+	{
+		// Get the relevant planetary bodies
+		const UNovaCelestialBody* SunBody    = nullptr;
+		const UNovaCelestialBody* PlanetBody = UNeutronAssetManager::Get()->GetDefaultAsset<UNovaCelestialBody>();
+		for (const UNovaCelestialBody* Body : UNeutronAssetManager::Get()->GetAssets<UNovaCelestialBody>())
+		{
+			if (Body->Body == nullptr)
+			{
+				SunBody = Body;
+				break;
+			}
+		}
+		NCHECK(SunBody);
+		NCHECK(PlanetBody);
+
+		// Compute the planet's occlusion
+		const FNovaOrbitalLocation* PlayerLocation = OrbitalSimulation->GetSpacecraftLocation(Spacecraft->Identifier);
+		if (PlayerLocation)
+		{
+			FVector2D SpacecraftCartesianLocation = PlayerLocation->GetCartesianLocation();
+
+			// Fetch basic data
+			const double SunDistanceFromPlanetKm = PlanetBody->Altitude.GetValue();
+			const double PlanetOcclusionHalfAngle =
+				FMath::RadiansToDegrees(FMath::Asin(PlanetBody->Radius / SpacecraftCartesianLocation.Size()));
+			const double PlayerRotationAngle =
+				FMath::RadiansToDegrees(FVector(SpacecraftCartesianLocation.X, SpacecraftCartesianLocation.Y, 0).HeadingAngle());
+
+			// Process angles into an exposure value using an arbitrary smoothing value
+			const double AngularDistance     = FMath::Abs(PlayerRotationAngle + 90);
+			const double ExposureCurveLength = 0.15 * PlanetOcclusionHalfAngle;
+			CurrentExposureRatio = FMath::Clamp(FMath::Abs(AngularDistance - PlanetOcclusionHalfAngle) / ExposureCurveLength, 0.0, 1.0);
+
+			// NLOG("%f - %f (%f) = %f -> %f", AngularDistance, PlanetOcclusionHalfAngle, ExposureCurveLength,
+			//	FMath::Abs(AngularDistance - PlanetOcclusionHalfAngle), CurrentExposureRatio);
+		}
+	}
 
 	// Handle power usage from groups
 	for (int32 GroupIndex = 0; GroupIndex < ProcessingSystem->GetProcessingGroupCount(); GroupIndex++)
@@ -66,8 +118,8 @@ void UNovaSpacecraftPowerSystem::Update(FNovaTime InitialTime, FNovaTime FinalTi
 			const UNovaPowerEquipmentDescription* PowerEquipment = Cast<UNovaPowerEquipmentDescription>(Equipment);
 			if (PowerEquipment)
 			{
-				CurrentPower += PowerEquipment->Power;
-				CurrentPowerProduction += PowerEquipment->Power;
+				CurrentPower += CurrentExposureRatio * PowerEquipment->Power;
+				CurrentPowerProduction += CurrentExposureRatio * PowerEquipment->Power;
 			}
 
 			// Mining rig
@@ -98,5 +150,7 @@ void UNovaSpacecraftPowerSystem::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 
 	DOREPLIFETIME(UNovaSpacecraftPowerSystem, CurrentPower);
 	DOREPLIFETIME(UNovaSpacecraftPowerSystem, CurrentPowerProduction);
+	DOREPLIFETIME(UNovaSpacecraftPowerSystem, CurrentExposureRatio);
 	DOREPLIFETIME(UNovaSpacecraftPowerSystem, CurrentEnergy);
+	DOREPLIFETIME(UNovaSpacecraftPowerSystem, EnergyCapacity);
 }

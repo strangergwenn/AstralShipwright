@@ -82,6 +82,12 @@ public:
 		return GetMaximumPower() - GetMinimumPower();
 	}
 
+	/** Get the current solar exposure ratio */
+	double GetSolarExposure() const
+	{
+		return CurrentExposureRatio;
+	}
+
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
@@ -95,6 +101,10 @@ protected:
 	// Current power production
 	UPROPERTY(Replicated)
 	double CurrentPowerProduction;
+
+	// Current solar exposure
+	UPROPERTY(Replicated)
+	double CurrentExposureRatio;
 
 	// Current battery state
 	UPROPERTY(Replicated)
