@@ -152,7 +152,7 @@ protected:
 
 	/** Compute a trajectory between two orbits */
 	void StartTrajectory(const struct FNovaOrbit& SourceOrbit, const struct FNovaOrbit& DestinationOrbit, FNovaTime DeltaTime,
-		const TArray<FGuid>& Spacecraft);
+		const TArray<FGuid>& Spacecraft, double ExplicitAltitude = 0);
 
 	/** Find an area to travel to */
 	const class UNovaArea* FindArea(const struct FNovaOrbitalLocation* SourceLocation) const;

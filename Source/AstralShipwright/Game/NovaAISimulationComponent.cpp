@@ -336,7 +336,8 @@ void UNovaAISimulationComponent::ProcessNavigation()
 				// Start the travel
 				FNovaOrbit DestinationOrbit;
 				FindPatrolOrbit(DestinationOrbit);
-				StartTrajectory(*SourceOrbit, DestinationOrbit, FNovaTime::FromSeconds(30), {Identifier});
+				StartTrajectory(*SourceOrbit, DestinationOrbit, FNovaTime::FromSeconds(30), {Identifier},
+					1.25 * DestinationOrbit.Geometry.StartAltitude);
 				SetSpacecraftState(SpacecraftState, ENovaAISpacecraftState::Trajectory);
 			}
 
@@ -491,8 +492,8 @@ void UNovaAISimulationComponent::SetSpacecraftState(FNovaAISpacecraftState& Stat
 	// GameState->SetTimeDilation(ENovaTimeDilation::Normal);
 }
 
-void UNovaAISimulationComponent::StartTrajectory(
-	const FNovaOrbit& SourceOrbit, const FNovaOrbit& DestinationOrbit, FNovaTime DeltaTime, const TArray<FGuid>& Spacecraft)
+void UNovaAISimulationComponent::StartTrajectory(const FNovaOrbit& SourceOrbit, const FNovaOrbit& DestinationOrbit, FNovaTime DeltaTime,
+	const TArray<FGuid>& Spacecraft, double ExplicitAltitude)
 {
 	// Get game state pointers
 	ANovaGameState* GameState = Cast<ANovaGameState>(GetOwner());
@@ -500,33 +501,46 @@ void UNovaAISimulationComponent::StartTrajectory(
 	UNovaOrbitalSimulationComponent* OrbitalSimulation = GameState->GetOrbitalSimulation();
 	NCHECK(OrbitalSimulation);
 
-	// Compute trajectory candidates
-	TArray<FNovaTrajectory>   Candidates;
-	FNovaTrajectoryParameters Parameters = OrbitalSimulation->PrepareTrajectory(SourceOrbit, DestinationOrbit, DeltaTime, Spacecraft);
-	for (double Altitude = 300; Altitude <= 1500; Altitude += 200)
+	// Compute the best staging altitude
+	if (ExplicitAltitude == 0)
 	{
-		if (Altitude != Parameters.DestinationAltitude && Altitude != Parameters.Source.Geometry.StartAltitude &&
-			Altitude != Parameters.Source.Geometry.OppositeAltitude)
+		// Compute trajectory candidates
+		TArray<FNovaTrajectory>   Candidates;
+		FNovaTrajectoryParameters Parameters = OrbitalSimulation->PrepareTrajectory(SourceOrbit, DestinationOrbit, DeltaTime, Spacecraft);
+		for (double Altitude = 300; Altitude <= 1500; Altitude += 200)
 		{
-			FNovaTrajectory NewTrajectory = OrbitalSimulation->ComputeTrajectory(Parameters, Altitude);
-			if (NewTrajectory.IsValid() && NewTrajectory.TotalTravelDuration.AsDays() < 20)
+			if (Altitude != Parameters.DestinationAltitude && Altitude != Parameters.Source.Geometry.StartAltitude &&
+				Altitude != Parameters.Source.Geometry.OppositeAltitude)
 			{
-				Candidates.Add(NewTrajectory);
+				FNovaTrajectory NewTrajectory = OrbitalSimulation->ComputeTrajectory(Parameters, Altitude);
+				if (NewTrajectory.IsValid() && NewTrajectory.TotalTravelDuration.AsDays() < 20)
+				{
+					Candidates.Add(NewTrajectory);
+				}
 			}
 		}
+
+		NCHECK(Candidates.Num() > 0);
+
+		// Sort trajectories
+		Candidates.Sort(
+			[](const FNovaTrajectory& A, const FNovaTrajectory& B)
+			{
+				return A.TotalTravelDuration < B.TotalTravelDuration && A.TotalDeltaV < B.TotalDeltaV;
+			});
+
+		// Start trajectory
+		OrbitalSimulation->CommitTrajectory(Spacecraft, Candidates[0]);
 	}
 
-	NCHECK(Candidates.Num() > 0);
-
-	// Sort trajectories
-	Candidates.Sort(
-		[](const FNovaTrajectory& A, const FNovaTrajectory& B)
-		{
-			return A.TotalTravelDuration < B.TotalTravelDuration && A.TotalDeltaV < B.TotalDeltaV;
-		});
-
-	// Start trajectory
-	OrbitalSimulation->CommitTrajectory(Spacecraft, Candidates[0]);
+	// Use the provided altitude
+	else
+	{
+		FNovaTrajectoryParameters Parameters = OrbitalSimulation->PrepareTrajectory(SourceOrbit, DestinationOrbit, DeltaTime, Spacecraft);
+		FNovaTrajectory           NewTrajectory = OrbitalSimulation->ComputeTrajectory(Parameters, ExplicitAltitude);
+		NCHECK(NewTrajectory.IsValid() && NewTrajectory.TotalTravelDuration.AsDays() < 20);
+		OrbitalSimulation->CommitTrajectory(Spacecraft, NewTrajectory);
+	}
 }
 
 const UNovaArea* UNovaAISimulationComponent::FindArea(const FNovaOrbitalLocation* SourceLocation) const
