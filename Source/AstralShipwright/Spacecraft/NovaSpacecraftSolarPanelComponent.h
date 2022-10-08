@@ -1,5 +1,3 @@
-// Astral Shipwright - Gwennaël Arbona
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -8,22 +6,23 @@
 
 #include "Neutron/Actor/NeutronActorTools.h"
 
-#include "NovaSpacecraftFloodlightComponent.generated.h"
+#include "NovaSpacecraftSolarPanelComponent.generated.h"
 
-/** Floodlight component */
+/** Solar panel component */
 UCLASS(ClassGroup = (Nova), meta = (BlueprintSpawnableComponent))
-class UNovaSpacecraftFloodlightComponent
+class UNovaSpacecraftSolarPanelComponent
 	: public USceneComponent
 	, public INovaAdditionalComponentInterface
 {
-	GENERATED_BODY()
 
 public:
 
-	UNovaSpacecraftFloodlightComponent();
+	GENERATED_BODY()
+
+	UNovaSpacecraftSolarPanelComponent();
 
 	/*----------------------------------------------------
-	    Inherited
+	    Public methods
 	----------------------------------------------------*/
 
 	virtual void SetAdditionalAsset(TSoftObjectPtr<class UObject> AdditionalAsset) override
@@ -31,13 +30,13 @@ public:
 
 	virtual void BeginPlay() override;
 
-protected:
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
 
-	// Lights
-	UPROPERTY()
-	TArray<class USpotLightComponent*> Lights;
+private:
+
+	bool RequiresInitialOrientation;
 };

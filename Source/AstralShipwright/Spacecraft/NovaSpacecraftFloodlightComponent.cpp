@@ -8,18 +8,12 @@
 #include "DrawDebugHelpers.h"
 #include "Components/SpotLightComponent.h"
 
-#define SHOW_TRACES 0
-
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
 
 UNovaSpacecraftFloodlightComponent::UNovaSpacecraftFloodlightComponent() : Super()
-{
-	// Settings
-	SetAbsolute(false, false, true);
-	PrimaryComponentTick.bCanEverTick = true;
-}
+{}
 
 /*----------------------------------------------------
     Inherited
@@ -80,18 +74,4 @@ void UNovaSpacecraftFloodlightComponent::BeginPlay()
 	// Configure the main light too
 	ParentMesh->RequestParameter("LightColor", LightColor);
 	ParentMesh->RequestParameter("LightIntensity", 20.0f);
-}
-
-void UNovaSpacecraftFloodlightComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	if (IsValid(GetAttachParent()))
-	{
-		// Update all exhaust effects
-		for (USpotLightComponent* Light : Lights)
-		{
-			// Light->SetActive(true);
-		}
-	}
 }
