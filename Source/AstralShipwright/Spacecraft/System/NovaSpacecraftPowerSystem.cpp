@@ -47,9 +47,10 @@ void UNovaSpacecraftPowerSystem::Update(FNovaTime InitialTime, FNovaTime FinalTi
 	class UNovaSpacecraftMovementComponent* SpacecraftMovement = Cast<ANovaSpacecraftPawn>(GetOwner())->GetSpacecraftMovement();
 
 	// Reset stats
-	CurrentPower           = 0;
-	CurrentPowerProduction = 0;
-	CurrentExposureRatio   = 0;
+	CurrentPower            = 0;
+	CurrentPowerProduction  = 0;
+	CurrentPowerConsumption = 0;
+	CurrentExposureRatio    = 0;
 
 	// Compute solar exposure
 	double CurrentExposure = 0;
@@ -97,7 +98,7 @@ void UNovaSpacecraftPowerSystem::Update(FNovaTime InitialTime, FNovaTime FinalTi
 		// Handle power usage from groups
 		for (int32 GroupIndex = 0; GroupIndex < ProcessingSystem->GetProcessingGroupCount(); GroupIndex++)
 		{
-			CurrentPower -= ProcessingSystem->GetPowerUsage(GroupIndex);
+			CurrentPowerConsumption += ProcessingSystem->GetPowerUsage(GroupIndex);
 		}
 
 		const auto& Compartments = GetSpacecraft()->Compartments;
@@ -109,7 +110,7 @@ void UNovaSpacecraftPowerSystem::Update(FNovaTime InitialTime, FNovaTime FinalTi
 				const UNovaProcessingModuleDescription* Module = Cast<UNovaProcessingModuleDescription>(CompartmentModule.Description);
 				if (::IsValid(Module))
 				{
-					CurrentPower += FMath::Max(-Module->Power, 0);
+					CurrentPowerProduction += FMath::Max(-Module->Power, 0);
 				}
 			}
 
@@ -120,7 +121,6 @@ void UNovaSpacecraftPowerSystem::Update(FNovaTime InitialTime, FNovaTime FinalTi
 				const UNovaPowerEquipmentDescription* PowerEquipment = Cast<UNovaPowerEquipmentDescription>(Equipment);
 				if (PowerEquipment)
 				{
-					CurrentPower += CurrentExposureRatio * PowerEquipment->Power;
 					CurrentPowerProduction += CurrentExposureRatio * PowerEquipment->Power;
 				}
 
@@ -128,7 +128,7 @@ void UNovaSpacecraftPowerSystem::Update(FNovaTime InitialTime, FNovaTime FinalTi
 				const UNovaMiningEquipmentDescription* MiningEquipment = Cast<UNovaMiningEquipmentDescription>(Equipment);
 				if (MiningEquipment && ProcessingSystem->IsMiningRigActive())
 				{
-					CurrentPower -= MiningEquipment->Power;
+					CurrentPowerConsumption += MiningEquipment->Power;
 				}
 
 				// Mast
@@ -136,18 +136,15 @@ void UNovaSpacecraftPowerSystem::Update(FNovaTime InitialTime, FNovaTime FinalTi
 				if (MastEquipment && IsValid(GameState) && IsValid(GameState->GetCurrentArea()) && GameState->GetCurrentArea()->IsInSpace &&
 					IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() >= ENovaMovementState::Orbiting)
 				{
-					CurrentPower -= MastEquipment->Power;
+					CurrentPowerConsumption += MastEquipment->Power;
 				}
 			}
 		}
 
 		// Handle batteries
+		CurrentPower = CurrentPowerProduction - CurrentPowerConsumption;
 		CurrentEnergy += CurrentPower * (FinalTime - InitialTime).AsHours();
 		CurrentEnergy = FMath::Clamp(CurrentEnergy, 0.0, EnergyCapacity);
-		if (CurrentPower > 0 && CurrentEnergy >= EnergyCapacity)
-		{
-			CurrentPower = 0;
-		}
 	}
 }
 
@@ -157,6 +154,7 @@ void UNovaSpacecraftPowerSystem::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 
 	DOREPLIFETIME(UNovaSpacecraftPowerSystem, CurrentPower);
 	DOREPLIFETIME(UNovaSpacecraftPowerSystem, CurrentPowerProduction);
+	DOREPLIFETIME(UNovaSpacecraftPowerSystem, CurrentPowerConsumption);
 	DOREPLIFETIME(UNovaSpacecraftPowerSystem, CurrentExposureRatio);
 	DOREPLIFETIME(UNovaSpacecraftPowerSystem, CurrentEnergy);
 	DOREPLIFETIME(UNovaSpacecraftPowerSystem, EnergyCapacity);

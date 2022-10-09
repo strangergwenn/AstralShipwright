@@ -61,7 +61,13 @@ public:
 	/** Get the total current power production */
 	double GetCurrentProduction() const
 	{
-		return CurrentPower;
+		return CurrentPowerProduction;
+	}
+
+	/** Get the total current power consumption */
+	double GetCurrentConsumption() const
+	{
+		return CurrentPowerConsumption;
 	}
 
 	/** Get the minimum (in relative terms) total power delta */
@@ -101,6 +107,10 @@ protected:
 	// Current power production
 	UPROPERTY(Replicated)
 	double CurrentPowerProduction;
+
+	// Current power consumption
+	UPROPERTY(Replicated)
+	double CurrentPowerConsumption;
 
 	// Current solar exposure
 	UPROPERTY(Replicated)

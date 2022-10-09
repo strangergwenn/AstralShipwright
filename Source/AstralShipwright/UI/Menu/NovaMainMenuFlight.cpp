@@ -706,8 +706,13 @@ FText SNovaMainMenuFlight::GetCrewText() const
 
 FText SNovaMainMenuFlight::GetPowerText() const
 {
+	FNumberFormattingOptions Options;
+	Options.MinimumFractionalDigits = 1;
+	Options.MaximumFractionalDigits = 1;
+
 	return FText::FormatNamed(INVTEXT("<img src=\"/Text/Power\"/> {used} / {total} kWh"), TEXT("used"),
-		FText::AsNumber(PowerSystem->GetRemainingEnergy()), TEXT("total"), FText::AsNumber(PowerSystem->GetEnergyCapacity()));
+		FText::AsNumber(PowerSystem->GetRemainingEnergy(), &Options), TEXT("total"),
+		FText::AsNumber(PowerSystem->GetEnergyCapacity(), &Options));
 }
 
 FText SNovaMainMenuFlight::GetStatusText() const

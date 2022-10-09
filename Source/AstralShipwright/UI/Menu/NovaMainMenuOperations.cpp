@@ -1241,8 +1241,13 @@ TOptional<float> SNovaMainMenuOperations::GetCrewRatio() const
 
 FText SNovaMainMenuOperations::GetEnergyText() const
 {
+	FNumberFormattingOptions Options;
+	Options.MinimumFractionalDigits = 1;
+	Options.MaximumFractionalDigits = 1;
+
 	return FText::FormatNamed(INVTEXT("<img src=\"/Text/Power\"/> {used} / {total} kWh"), TEXT("used"),
-		FText::AsNumber(PowerSystem->GetRemainingEnergy()), TEXT("total"), FText::AsNumber(PowerSystem->GetEnergyCapacity()));
+		FText::AsNumber(PowerSystem->GetRemainingEnergy(), &Options), TEXT("total"),
+		FText::AsNumber(PowerSystem->GetEnergyCapacity(), &Options));
 }
 
 TOptional<float> SNovaMainMenuOperations::GetEnergyRatio() const
@@ -1252,8 +1257,13 @@ TOptional<float> SNovaMainMenuOperations::GetEnergyRatio() const
 
 FText SNovaMainMenuOperations::GetPowerText() const
 {
-	return FText::FormatNamed(
-		INVTEXT("<img src=\"/Text/Power\"/>{current} kW"), TEXT("current"), FText::AsNumber(PowerSystem->GetCurrentPower()));
+	FNumberFormattingOptions Options;
+	Options.MinimumFractionalDigits = 1;
+	Options.MaximumFractionalDigits = 1;
+
+	return FText::FormatNamed(INVTEXT("<img src=\"/Text/PowerProducer\"/>{production} kW <img src=\"/Text/PowerConsumer\"/>{usage} kW"),
+		TEXT("production"), FText::AsNumber(PowerSystem->GetCurrentProduction(), &Options), TEXT("usage"),
+		FText::AsNumber(PowerSystem->GetCurrentConsumption(), &Options));
 }
 
 TOptional<float> SNovaMainMenuOperations::GetPowerRatio() const
