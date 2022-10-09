@@ -224,6 +224,16 @@ void FNovaCompartment::ModifyCargo(int32 ModuleIndex, const class UNovaResource*
 	MassDelta -= (Cargo.Amount - PreviousAmount);
 }
 
+void FNovaCompartment::ClearCargo()
+{
+	for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+	{
+		FNovaSpacecraftCargo& Cargo = GetCargo(ModuleIndex);
+		Cargo.Resource              = nullptr;
+		Cargo.Amount                = 0;
+	}
+}
+
 void FNovaSpacecraftCustomization::Create()
 {
 	StructuralPaint = UNeutronAssetManager::Get()->GetDefaultAsset<UNovaPaintDescription>();
@@ -1114,6 +1124,14 @@ bool FNovaSpacecraft::ModifyCargo(const class UNovaResource* Resource, float Mas
 	}
 
 	return MassDelta == 0;
+}
+
+void FNovaSpacecraft::ClearCargo()
+{
+	for (FNovaCompartment& Compartment : Compartments)
+	{
+		Compartment.ClearCargo();
+	}
 }
 
 /*----------------------------------------------------

@@ -128,6 +128,9 @@ struct FNovaCompartment
 	/** Add a (possibly negative) amount of resources to the cargo */
 	void ModifyCargo(int32 ModuleIndex, const class UNovaResource* Resource, float& MassDelta);
 
+	/** Remove all cargo */
+	void ClearCargo();
+
 	UPROPERTY()
 	const class UNovaCompartmentDescription* Description;
 
@@ -563,6 +566,9 @@ public:
 	/** Add a (possibly negative) amount of resources to the spacecraft, across the ship or in a specific compartment */
 	bool ModifyCargo(
 		const class UNovaResource* Resource, float MassDelta, int32 CompartmentIndex = INDEX_NONE, int32 ModuleIndex = INDEX_NONE);
+
+	/** Remove all cargo */
+	void ClearCargo();
 
 	/*----------------------------------------------------
 	    UI helpers

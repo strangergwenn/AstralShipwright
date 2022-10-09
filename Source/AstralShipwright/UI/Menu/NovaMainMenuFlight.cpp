@@ -24,6 +24,7 @@
 #include "Neutron/UI/Widgets/NeutronButton.h"
 #include "Neutron/UI/Widgets/NeutronFadingWidget.h"
 #include "Neutron/UI/Widgets/NeutronKeyLabel.h"
+#include "Neutron/UI/Widgets/NeutronModalPanel.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
 
@@ -317,6 +318,19 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
+			SNeutronNew(SNeutronButton)
+			.Text(LOCTEXT("RequestSalvageButton", "Request salvage"))
+			.HelpText(LOCTEXT("RequestSalvageButtonHelp", "Request salvage operations to refill propellant"))
+			.OnClicked(this, & SNovaMainMenuFlight::OnRequestSalvage)
+			.Enabled_Lambda([=]()
+			{
+				return IsValid(SpacecraftMovement) && !SpacecraftMovement->IsDocked();
+			})
+		]
+
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
 			SNeutronAssignNew(TerminateButton, SNeutronButton)
 			.Text(LOCTEXT("AbortFlightPlan", "Terminate flight plan"))
 			.HelpText(LOCTEXT("AbortTrajectoryHelp", "Terminate the current flight plan and stay on the current orbit"))
@@ -576,6 +590,8 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 	];
 
 	// clang-format on
+
+	GenericModalPanel = Menu->CreateModalPanel();
 
 	// Initialize
 	HUDAnimation.Initialize(FNeutronStyleSet::GetButtonTheme().AnimationDuration);
@@ -1188,6 +1204,19 @@ void SNovaMainMenuFlight::OnDockUndock()
 			}
 		}
 	}
+}
+
+void SNovaMainMenuFlight::OnRequestSalvage()
+{
+	GenericModalPanel->Show(LOCTEXT("RequestSalvage", "Request salvage operation"),
+		LOCTEXT("RequestSalvageHelp",
+			"Do you need immediate assistance? A salvage tug will be dispatched to your location to fill your propellant tanks. A fee will "
+			"be applied, and all cargo will be forfeit."),
+		FSimpleDelegate::CreateLambda(
+			[=]()
+			{
+				PC->SalvagePlayer();
+			}));
 }
 
 /*----------------------------------------------------

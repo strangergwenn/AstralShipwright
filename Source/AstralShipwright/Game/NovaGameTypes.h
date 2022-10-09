@@ -12,21 +12,31 @@
 
 /** Gameplay constants */
 namespace ENovaConstants {
+
 constexpr int32 MaxContractsCount   = 5;
 constexpr int32 MaxPlayerCount      = 3;
 constexpr int32 MaxCompartmentCount = 10;
 constexpr int32 MaxModuleCount      = 5;
 constexpr int32 MaxEquipmentCount   = 7;
 
-constexpr double ResaleDepreciation        = 0.5;
-constexpr float  SkirtCapacityMultiplier   = 1.1f;
-constexpr int32  MaxTrajectoryDurationDays = 45;
-
-const FDateTime ZeroTime     = FDateTime(2340, 2, 10, 8);
+const FDateTime DefaultTime  = FDateTime(2340, 2, 10, 8);
 const FString   DefaultLevel = TEXT("Space");
 
-constexpr float  StandardGravity         = 9.807f;
-constexpr double TrajectoryDistanceError = 0.5;
+#if WITH_EDITOR
+constexpr int32 DefaultCredits = 25000;
+#else
+constexpr int32 DefaultCredits = 2500;
+#endif    // WITH_EDITOR
+
+constexpr int32 SalvageFee     = 2000;
+constexpr int32 SalvageCredits = 1000;
+
+constexpr double ResaleDepreciation      = 0.5;
+constexpr float  SkirtCapacityMultiplier = 1.1f;
+
+constexpr float  StandardGravity           = 9.807f;
+constexpr double TrajectoryDistanceError   = 0.5;
+constexpr int32  MaxTrajectoryDurationDays = 45;
 
 };    // namespace ENovaConstants
 

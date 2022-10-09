@@ -15,7 +15,7 @@ IMPLEMENT_PRIMARY_GAME_MODULE(FNovaModule, AstralShipwright, "AstralShipwright")
 
 FText GetDateText(struct FNovaTime Time)
 {
-	FDateTime DateTime = FDateTime(ENovaConstants::ZeroTime) + FTimespan(Time.AsMinutes() * ETimespan::TicksPerMinute);
+	FDateTime DateTime = FDateTime(ENovaConstants::DefaultTime) + FTimespan(Time.AsMinutes() * ETimespan::TicksPerMinute);
 
 	return FText::AsDateTime(DateTime);
 }

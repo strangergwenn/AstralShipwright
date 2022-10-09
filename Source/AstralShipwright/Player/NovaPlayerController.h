@@ -158,6 +158,11 @@ public:
 		return Credits;
 	}
 
+	/** Reset cargo hold, fill propellant tanks, and ensure minimum starting credits */
+	UFUNCTION(Server, Reliable)
+	void ServerSalvagePlayer();
+	void SalvagePlayer();
+
 	/** Dock the player to a dock with a cutscene */
 	void Dock();
 

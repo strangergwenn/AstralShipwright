@@ -114,13 +114,9 @@ void ANovaPlayerController::Load(const FNovaPlayerSave& SaveData)
 
 	// Load credits
 	Credits = SaveData.Credits;
-	if (Credits == 0)
+	if (Credits <= 0)
 	{
-#if WITH_EDITOR
-		Credits = 20000;
-#else
-		Credits = 2000;
-#endif    // WITH_EDITOR
+		Credits = ENovaConstants::DefaultCredits;
 	}
 
 	// Load parts
@@ -508,6 +504,36 @@ void ANovaPlayerController::ServerProcessTransaction_Implementation(FNovaCredits
 bool ANovaPlayerController::CanAffordTransaction(FNovaCredits CreditsDelta) const
 {
 	return Credits + CreditsDelta >= 0;
+}
+
+void ANovaPlayerController::ServerSalvagePlayer_Implementation()
+{
+	SalvagePlayer();
+}
+
+void ANovaPlayerController::SalvagePlayer()
+{
+	// Authority
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		NLOG("ANovaPlayerController::SalvagePlayer");
+
+		FNovaSpacecraft                         ModifiedSpacecraft = GetSpacecraft()->GetSafeCopy();
+		const FNovaSpacecraftPropulsionMetrics& PropulsionMetrics  = GetSpacecraft()->GetPropulsionMetrics();
+
+		Credits = FMath::Max(Credits - ENovaConstants::SalvageFee, FNovaCredits(ENovaConstants::SalvageCredits));
+		ModifiedSpacecraft.ClearCargo();
+		ModifiedSpacecraft.SetPropellantMass(PropulsionMetrics.PropellantMassCapacity);
+
+		UpdateSpacecraft(ModifiedSpacecraft);
+		SaveGame();
+	}
+
+	// Remote client
+	else if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		ServerSalvagePlayer();
+	}
 }
 
 void ANovaPlayerController::Dock()

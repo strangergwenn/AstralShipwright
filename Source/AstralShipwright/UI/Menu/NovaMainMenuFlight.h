@@ -110,6 +110,8 @@ protected:
 
 	void OnDockUndock();
 
+	void OnRequestSalvage();
+
 	/*----------------------------------------------------
 	    Helpers
 	----------------------------------------------------*/
@@ -139,6 +141,9 @@ protected:
 	TSharedPtr<class SHorizontalBox> HUDSwitcher;
 	TSharedPtr<class SNovaHUDPanel>  HUDPanel;
 	TSharedPtr<class SBox>           HUDBox;
+
+	// Modal panels
+	TSharedPtr<class SNeutronModalPanel> GenericModalPanel;
 
 	// Content widgets
 	TSharedPtr<class SVerticalBox>   ModuleGroupsBox;
