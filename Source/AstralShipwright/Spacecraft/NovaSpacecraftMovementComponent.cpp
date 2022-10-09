@@ -46,12 +46,12 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 {
 	// Angular defaults
 	LinearDeadDistance    = 0.5;
-	MaxLinearVelocity     = 50;
+	MaxLinearVelocity     = 40;
 	MinLinearAcceleration = 10;
 	MaxLinearAcceleration = 50;
 	MaxDeltaVForThrusters = 5;
 	AngularDeadDistance   = 0.5f;
-	MaxAngularVelocity    = 60;
+	MaxAngularVelocity    = 40;
 	AngularOvershootRatio = 1.1f;
 
 	// Physics defaults
