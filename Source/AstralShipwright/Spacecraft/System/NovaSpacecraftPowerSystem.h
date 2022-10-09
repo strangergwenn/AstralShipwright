@@ -49,7 +49,8 @@ public:
 	/** Get the total energy capacity in batteries */
 	double GetEnergyCapacity() const
 	{
-		return GetSpacecraft()->GetPowerMetrics().EnergyCapacity;
+		const FNovaSpacecraft* Spacecraft = GetSpacecraft();
+		return Spacecraft ? Spacecraft->GetPowerMetrics().EnergyCapacity : 0.0;
 	}
 
 	/** Get the current power delta */
@@ -73,13 +74,15 @@ public:
 	/** Get the minimum (in relative terms) total power delta */
 	double GetMinimumPower() const
 	{
-		return -GetSpacecraft()->GetPowerMetrics().TotalPowerUsage;
+		const FNovaSpacecraft* Spacecraft = GetSpacecraft();
+		return Spacecraft ? -Spacecraft->GetPowerMetrics().TotalPowerUsage : 0.0;
 	}
 
 	/** Get the maximum power delta */
 	double GetMaximumPower() const
 	{
-		return GetSpacecraft()->GetPowerMetrics().TotalPowerProduction;
+		const FNovaSpacecraft* Spacecraft = GetSpacecraft();
+		return Spacecraft ? Spacecraft->GetPowerMetrics().TotalPowerProduction : 0.0;
 	}
 
 	/** Get the total power delta range */

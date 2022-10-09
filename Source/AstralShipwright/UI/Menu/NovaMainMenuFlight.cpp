@@ -500,12 +500,12 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.Toggle(true)
 			.Text_Lambda([=]()
 			{
-				return ProcessingSystem->IsMiningRigActive() ? LOCTEXT("StopMining", "Stop mining") : LOCTEXT("StartMining", "Start mining");
+				return ProcessingSystem && ProcessingSystem->IsMiningRigActive() ? LOCTEXT("StopMining", "Stop mining") : LOCTEXT("StartMining", "Start mining");
 			})
 			.HelpText_Lambda([=]()
 			{
 				FText Help;
-				if (ProcessingSystem->CanMiningRigBeActive(&Help))
+				if (ProcessingSystem && ProcessingSystem->CanMiningRigBeActive(&Help))
 				{
 					return LOCTEXT("MiningHelp", "Toggle activity for this mining rig");
 				}
@@ -516,7 +516,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			})
 			.Enabled_Lambda([=]()
 			{
-				if (ProcessingSystem->GetMiningRigIndex() != INDEX_NONE)
+				if (ProcessingSystem && ProcessingSystem->GetMiningRigIndex() != INDEX_NONE)
 				{
 					auto Status = ProcessingSystem->GetMiningRigStatus();
 					return Status == ENovaSpacecraftProcessingSystemStatus::Processing
@@ -701,8 +701,10 @@ TSharedPtr<SNeutronButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 
 FText SNovaMainMenuFlight::GetCrewText() const
 {
-	return FText::FormatNamed(INVTEXT("<img src=\"/Text/Crew\"/> {busy} / {total}"), TEXT("busy"),
-		FText::AsNumber(ProcessingSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(ProcessingSystem->GetTotalCrew()));
+	return ProcessingSystem
+	         ? FText::FormatNamed(INVTEXT("<img src=\"/Text/Crew\"/> {busy} / {total}"), TEXT("busy"),
+				   FText::AsNumber(ProcessingSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(ProcessingSystem->GetTotalCrew()))
+	         : FText();
 }
 
 FText SNovaMainMenuFlight::GetPowerText() const
@@ -711,9 +713,10 @@ FText SNovaMainMenuFlight::GetPowerText() const
 	Options.MinimumFractionalDigits = 1;
 	Options.MaximumFractionalDigits = 1;
 
-	return FText::FormatNamed(INVTEXT("<img src=\"/Text/Power\"/> {used} / {total} kWh"), TEXT("used"),
-		FText::AsNumber(PowerSystem->GetRemainingEnergy(), &Options), TEXT("total"),
-		FText::AsNumber(PowerSystem->GetEnergyCapacity(), &Options));
+	return PowerSystem ? FText::FormatNamed(INVTEXT("<img src=\"/Text/Power\"/> {used} / {total} kWh"), TEXT("used"),
+							 FText::AsNumber(PowerSystem->GetRemainingEnergy(), &Options), TEXT("total"),
+							 FText::AsNumber(PowerSystem->GetEnergyCapacity(), &Options))
+	                   : FText();
 }
 
 FText SNovaMainMenuFlight::GetStatusText() const
