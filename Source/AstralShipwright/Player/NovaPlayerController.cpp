@@ -231,6 +231,10 @@ void ANovaPlayerController::BeginPlay()
 					{
 						return "Menu";
 					}
+					else if (GetSpacecraftPawn() && GetSpacecraftPawn()->IsDocked())
+					{
+						return "Docked";
+					}
 					else
 					{
 						return "Ambient";
