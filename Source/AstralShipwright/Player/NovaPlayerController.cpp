@@ -531,6 +531,8 @@ void ANovaPlayerController::SalvagePlayer()
 
 		UpdateSpacecraft(ModifiedSpacecraft);
 		SaveGame();
+
+		GetSpacecraftPawn()->LoadSystems();
 	}
 
 	// Remote client

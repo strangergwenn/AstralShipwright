@@ -112,7 +112,7 @@ void ANovaGameState::Load(const FNovaGameStateSave& SaveData)
 	NCHECK(SaveData.Time >= 0);
 
 	// Default area
-	if (IsValid(SaveData.CurrentArea))
+	if (IsValid(SaveData.CurrentArea) && IsValid(SaveData.CurrentArea->Body))
 	{
 		SetCurrentArea(SaveData.CurrentArea);
 	}
@@ -415,6 +415,7 @@ void ANovaGameState::UpdatePlayerSpacecraft(const FNovaSpacecraft& Spacecraft, b
 		if (!WasMergedWithPlayer)
 		{
 			NCHECK(IsValid(CurrentArea));
+
 			OrbitalSimulationComponent->SetOrbit({Spacecraft.Identifier}, OrbitalSimulationComponent->GetAreaOrbit(GetCurrentArea()));
 		}
 	}

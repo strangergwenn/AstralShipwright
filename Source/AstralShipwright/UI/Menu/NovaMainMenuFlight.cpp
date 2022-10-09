@@ -324,7 +324,8 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.OnClicked(this, & SNovaMainMenuFlight::OnRequestSalvage)
 			.Enabled_Lambda([=]()
 			{
-				return IsValid(SpacecraftMovement) && !SpacecraftMovement->IsDocked();
+				return IsValid(SpacecraftMovement) && !SpacecraftMovement->IsDocked()
+					&& OrbitalSimulation && GameState && !OrbitalSimulation->IsOnTrajectory(GameState->GetPlayerSpacecraftIdentifier());
 			})
 		]
 
