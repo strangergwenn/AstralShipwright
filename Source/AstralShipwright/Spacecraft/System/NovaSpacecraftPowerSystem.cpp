@@ -92,56 +92,63 @@ void UNovaSpacecraftPowerSystem::Update(FNovaTime InitialTime, FNovaTime FinalTi
 		}
 	}
 
-	// Handle power usage from groups
-	for (int32 GroupIndex = 0; GroupIndex < ProcessingSystem->GetProcessingGroupCount(); GroupIndex++)
+	if (!IsSpacecraftDocked())
 	{
-		CurrentPower -= ProcessingSystem->GetPowerUsage(GroupIndex);
-	}
-
-	const auto& Compartments = GetSpacecraft()->Compartments;
-	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
-	{
-		// Iterate over modules for *production* only, never consumption that we already handled per group
-		for (const FNovaCompartmentModule& CompartmentModule : Compartments[CompartmentIndex].Modules)
+		// Handle power usage from groups
+		for (int32 GroupIndex = 0; GroupIndex < ProcessingSystem->GetProcessingGroupCount(); GroupIndex++)
 		{
-			const UNovaProcessingModuleDescription* Module = Cast<UNovaProcessingModuleDescription>(CompartmentModule.Description);
-			if (::IsValid(Module))
+			CurrentPower -= ProcessingSystem->GetPowerUsage(GroupIndex);
+		}
+
+		const auto& Compartments = GetSpacecraft()->Compartments;
+		for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
+		{
+			// Iterate over modules for *production* only, never consumption that we already handled per group
+			for (const FNovaCompartmentModule& CompartmentModule : Compartments[CompartmentIndex].Modules)
 			{
-				CurrentPower += FMath::Max(-Module->Power, 0);
+				const UNovaProcessingModuleDescription* Module = Cast<UNovaProcessingModuleDescription>(CompartmentModule.Description);
+				if (::IsValid(Module))
+				{
+					CurrentPower += FMath::Max(-Module->Power, 0);
+				}
+			}
+
+			// Iterate over equipment
+			for (const UNovaEquipmentDescription* Equipment : Compartments[CompartmentIndex].Equipment)
+			{
+				// Solar panels
+				const UNovaPowerEquipmentDescription* PowerEquipment = Cast<UNovaPowerEquipmentDescription>(Equipment);
+				if (PowerEquipment)
+				{
+					CurrentPower += CurrentExposureRatio * PowerEquipment->Power;
+					CurrentPowerProduction += CurrentExposureRatio * PowerEquipment->Power;
+				}
+
+				// Mining rig
+				const UNovaMiningEquipmentDescription* MiningEquipment = Cast<UNovaMiningEquipmentDescription>(Equipment);
+				if (MiningEquipment && ProcessingSystem->IsMiningRigActive())
+				{
+					CurrentPower -= MiningEquipment->Power;
+				}
+
+				// Mast
+				const UNovaRadioMastDescription* MastEquipment = Cast<UNovaRadioMastDescription>(Equipment);
+				if (MastEquipment && IsValid(GameState) && IsValid(GameState->GetCurrentArea()) && GameState->GetCurrentArea()->IsInSpace &&
+					IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() >= ENovaMovementState::Orbiting)
+				{
+					CurrentPower -= MastEquipment->Power;
+				}
 			}
 		}
 
-		// Iterate over equipment
-		for (const UNovaEquipmentDescription* Equipment : Compartments[CompartmentIndex].Equipment)
+		// Handle batteries
+		CurrentEnergy += CurrentPower * (FinalTime - InitialTime).AsHours();
+		CurrentEnergy = FMath::Clamp(CurrentEnergy, 0.0, EnergyCapacity);
+		if (CurrentPower > 0 && CurrentEnergy >= EnergyCapacity)
 		{
-			// Solar panels
-			const UNovaPowerEquipmentDescription* PowerEquipment = Cast<UNovaPowerEquipmentDescription>(Equipment);
-			if (PowerEquipment)
-			{
-				CurrentPower += CurrentExposureRatio * PowerEquipment->Power;
-				CurrentPowerProduction += CurrentExposureRatio * PowerEquipment->Power;
-			}
-
-			// Mining rig
-			const UNovaMiningEquipmentDescription* MiningEquipment = Cast<UNovaMiningEquipmentDescription>(Equipment);
-			if (MiningEquipment && ProcessingSystem->IsMiningRigActive())
-			{
-				CurrentPower -= MiningEquipment->Power;
-			}
-
-			// Mast
-			const UNovaRadioMastDescription* MastEquipment = Cast<UNovaRadioMastDescription>(Equipment);
-			if (MastEquipment && IsValid(GameState) && IsValid(GameState->GetCurrentArea()) && GameState->GetCurrentArea()->IsInSpace &&
-				IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() >= ENovaMovementState::Orbiting)
-			{
-				CurrentPower -= MastEquipment->Power;
-			}
+			CurrentPower = 0;
 		}
 	}
-
-	// Handle batteries
-	EnergyCapacity += CurrentPower * (FinalTime - InitialTime).AsHours();
-	EnergyCapacity = FMath::Clamp(EnergyCapacity, 0.0, EnergyCapacity);
 }
 
 void UNovaSpacecraftPowerSystem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

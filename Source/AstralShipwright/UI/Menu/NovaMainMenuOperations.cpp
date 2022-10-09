@@ -705,6 +705,7 @@ void SNovaMainMenuOperations::Show()
 	if (SpacecraftPawn->IsDocked())
 	{
 		ProcessingSystem->Load(*Spacecraft);
+		PowerSystem->Load(*Spacecraft);
 	}
 
 	// Add module groups

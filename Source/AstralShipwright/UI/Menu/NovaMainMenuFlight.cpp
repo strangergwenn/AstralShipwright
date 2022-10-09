@@ -981,6 +981,7 @@ void SNovaMainMenuFlight::SetHUDIndexCallback(int32 Index)
 	if (SpacecraftPawn->IsDocked())
 	{
 		ProcessingSystem->Load(*Spacecraft);
+		PowerSystem->Load(*Spacecraft);
 	}
 
 	// Add module groups
