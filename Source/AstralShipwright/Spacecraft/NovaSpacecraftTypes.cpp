@@ -306,12 +306,12 @@ TArray<FText> UNovaProcessingModuleDescription::GetDescription() const
 	Result.Add(FText::FormatNamed(LOCTEXT("ProcessingModuleDescriptionFormat", "<img src=\"/Text/Cargo\"/> Produces {rate} T/s"),
 		TEXT("rate"), FText::AsNumber(ProcessingRate)));
 
-	if (Power > 0)
+	if (Power < 0)
 	{
 		Result.Add(FText::FormatNamed(
 			LOCTEXT("PowerProviderFormat", "<img src=\"/Text/Power\"/> Produces {power} kW"), TEXT("power"), FText::AsNumber(Power)));
 	}
-	else if (Power < 0)
+	else if (Power > 0)
 	{
 		Result.Add(FText::FormatNamed(
 			LOCTEXT("PowerRequirementFormat", "<img src=\"/Text/Power\"/> Requires {power} kW"), TEXT("power"), FText::AsNumber(-Power)));
