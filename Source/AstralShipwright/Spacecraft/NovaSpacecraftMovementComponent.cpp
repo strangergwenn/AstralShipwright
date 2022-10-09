@@ -59,8 +59,8 @@ UNovaSpacecraftMovementComponent::UNovaSpacecraftMovementComponent()
 
 	// High level defaults
 	OrbitingAccelerationTime   = 2.0;
-	OrbitingMaxAngularVelocity = 3;
-	OrbitingDistance           = 20000;
+	OrbitingMaxAngularVelocity = 1;
+	OrbitingDistance           = 30000;
 
 	// Settings
 	PrimaryComponentTick.bCanEverTick = true;
