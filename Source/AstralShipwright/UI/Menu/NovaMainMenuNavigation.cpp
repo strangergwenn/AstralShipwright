@@ -990,7 +990,7 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 
 bool SNovaMainMenuNavigation::ComputeTrajectoryTo(const FNovaOrbit& Orbit)
 {
-	if (HasValidSpacecraft())
+	if (HasValidSpacecraft() && !OrbitalSimulation->IsOnTrajectory(GameState->GetPlayerSpacecraftIdentifier()))
 	{
 		DestinationOrbit = Orbit;
 
