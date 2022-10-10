@@ -131,7 +131,7 @@ protected:
 	TSharedPtr<class SRichTextBlock>            DestinationDescription;
 	TSharedPtr<class SNovaTrajectoryCalculator> TrajectoryCalculator;
 	TSharedPtr<class SNeutronButton>            CommitButton;
-	TSharedPtr<class SVerticalBox>              StationTrades;
+	TSharedPtr<class SVerticalBox>              DestinationDetails;
 
 	// Local state
 	bool                       HasHoveredObjects;

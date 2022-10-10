@@ -591,10 +591,11 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 						.Enabled(this, &SNovaMainMenuNavigation::CanCommitTrajectory)
 					]
 			
+					// Details
 					+ SScrollBox::Slot()
 					.HAlign(HAlign_Center)
 					[
-						SAssignNew(StationTrades, SVerticalBox)
+						SAssignNew(DestinationDetails, SVerticalBox)
 					]
 				]
 			]
@@ -807,13 +808,19 @@ TSharedPtr<SNeutronButton> SNovaMainMenuNavigation::GetDefaultFocusButton() cons
 
 void SNovaMainMenuNavigation::UpdateSidePanel()
 {
-	StationTrades->ClearChildren();
+	DestinationDetails->ClearChildren();
 
 	const FNeutronMainTheme& Theme               = FNeutronStyleSet::GetMainTheme();
 	const UNovaArea*         Area                = SelectedObject.Area.Get();
 	const FNovaAsteroid*     Asteroid            = AsteroidSimulation->GetAsteroid(SelectedObject.AsteroidIdentifier);
 	const FNovaSpacecraft*   TargetSpacecraft    = GameState->GetSpacecraft(SelectedObject.SpacecraftIdentifier);
 	bool                     HasValidDestination = false;
+
+	// Defaults
+	TrajectoryCalculator->SetVisibility(EVisibility::Visible);
+	CommitButton->SetVisibility(EVisibility::Visible);
+	DestinationTitle->SetText(FText());
+	DestinationDescription->SetText(FText());
 
 	// Valid area found
 	if (Area && ComputeTrajectoryTo(OrbitalSimulation->GetAreaOrbit(Area)))
@@ -825,14 +832,14 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 		DestinationDescription->SetText(Area->Description);
 
 		// clang-format off
-			StationTrades->AddSlot()
-			.Padding(Theme.VerticalContentPadding)
-			.AutoHeight()
-			[
-				SNew(STextBlock)
-				.Text(LOCTEXT("SoldTitle", "Resources for sale here"))
-				.TextStyle(&Theme.HeadingFont)
-			];
+		DestinationDetails->AddSlot()
+		.Padding(Theme.VerticalContentPadding)
+		.AutoHeight()
+		[
+			SNew(STextBlock)
+			.Text(LOCTEXT("SoldTitle", "Resources for sale here"))
+			.TextStyle(&Theme.HeadingFont)
+		];
 		// clang-format on
 
 		// Add sold resources
@@ -841,29 +848,29 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 			if (Trade.ForSale)
 			{
 				// clang-format off
-					StationTrades->AddSlot()
-					.Padding(Theme.ContentPadding)
-					.AutoHeight()
-					[
-						SNew(SNovaTradableAssetItem)
-						.Area(Area)
-						.Asset(Trade.Resource)
-						.GameState(GameState)
-						.Dark(true)
-					];
+				DestinationDetails->AddSlot()
+				.Padding(Theme.ContentPadding)
+				.AutoHeight()
+				[
+					SNew(SNovaTradableAssetItem)
+					.Area(Area)
+					.Asset(Trade.Resource)
+					.GameState(GameState)
+					.Dark(true)
+				];
 				// clang-format on
 			}
 		}
 
 		// clang-format off
-			StationTrades->AddSlot()
-			.Padding(Theme.VerticalContentPadding)
-			.AutoHeight()
-			[
-				SNew(STextBlock)
-				.Text(LOCTEXT("DealsTitle", "Best deals for your resources"))
-				.TextStyle(&Theme.HeadingFont)
-			];
+		DestinationDetails->AddSlot()
+		.Padding(Theme.VerticalContentPadding)
+		.AutoHeight()
+		[
+			SNew(STextBlock)
+			.Text(LOCTEXT("DealsTitle", "Best deals for your resources"))
+			.TextStyle(&Theme.HeadingFont)
+		];
 		// clang-format on
 
 		// Create a list of best deals for selling resources
@@ -892,16 +899,16 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 			for (TPair<const UNovaResource*, ENovaPriceModifier>& Deal : BestDeals)
 			{
 				// clang-format off
-					StationTrades->AddSlot()
-					.Padding(Theme.ContentPadding)
-					.AutoHeight()
-					[
-						SNew(SNovaTradableAssetItem)
-						.Area(Area)
-						.Asset(Deal.Key)
-						.GameState(GameState)
-						.Dark(true)
-					];
+				DestinationDetails->AddSlot()
+				.Padding(Theme.ContentPadding)
+				.AutoHeight()
+				[
+					SNew(SNovaTradableAssetItem)
+					.Area(Area)
+					.Asset(Deal.Key)
+					.GameState(GameState)
+					.Dark(true)
+				];
 				// clang-format on
 
 				DealsToShow--;
@@ -914,14 +921,14 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 		else
 		{
 			// clang-format off
-				StationTrades->AddSlot()
-				.Padding(Theme.VerticalContentPadding)
-				.AutoHeight()
-				[
-					SNew(STextBlock)
-					.TextStyle(&Theme.MainFont)
-					.Text(LOCTEXT("NoDealAvailable", "You have no resource to sell at this station"))
-				];
+			DestinationDetails->AddSlot()
+			.Padding(Theme.VerticalContentPadding)
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.TextStyle(&Theme.MainFont)
+				.Text(LOCTEXT("NoDealAvailable", "You have no resource to sell at this station"))
+			];
 			// clang-format on
 		}
 	}
@@ -933,18 +940,18 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 
 		HasValidDestination = true;
 		DestinationTitle->SetText(FText::FromString(Asteroid->Identifier.ToString(EGuidFormats::Short).ToUpper()));
-		DestinationDescription->SetText(FText());
+		DestinationDescription->SetText(LOCTEXT("Asteroid", "Asteroid"));
 	}
 
 	// Spacecraft found
-	const FNovaOrbit* TargetSpacecraftOrbit =
-		TargetSpacecraft ? OrbitalSimulation->GetSpacecraftOrbit(SelectedObject.SpacecraftIdentifier) : nullptr;
-	if (TargetSpacecraft && TargetSpacecraftOrbit && ComputeTrajectoryTo(*TargetSpacecraftOrbit))
+	if (TargetSpacecraft)
 	{
 		NLOG("SNovaMainMenuNavigation::SelectDestination : %s", *SelectedObject.SpacecraftIdentifier.ToString(EGuidFormats::Short));
 
 		HasValidDestination = true;
 		DestinationTitle->SetText(TargetSpacecraft->GetName());
+		TrajectoryCalculator->SetVisibility(EVisibility::Collapsed);
+		CommitButton->SetVisibility(EVisibility::Collapsed);
 
 		// Set the class text
 		FText TargetSpacecraftClass;
@@ -953,6 +960,19 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 			TargetSpacecraftClass =
 				FText::FormatNamed(LOCTEXT("SpacecraftClassFormat", "{class}-class {classification}"), TEXT("classification"),
 					TargetSpacecraft->GetClassification().ToLower(), TEXT("class"), TargetSpacecraft->SpacecraftClass->Name);
+
+			// clang-format off
+			DestinationDetails->AddSlot()
+			.Padding(Theme.VerticalContentPadding)
+			.AutoHeight()
+			[
+				SNew(SScaleBox)
+				[
+					SNew(SImage)
+					.Image(&TargetSpacecraft->SpacecraftClass->AssetRender)
+				]
+			];
+			// clang-format on
 		}
 		else
 		{
@@ -965,8 +985,6 @@ void SNovaMainMenuNavigation::UpdateSidePanel()
 	if (!HasValidDestination)
 	{
 		ResetTrajectory();
-		DestinationTitle->SetText(FText());
-		DestinationDescription->SetText(FText());
 	}
 }
 
