@@ -796,7 +796,13 @@ void ANovaPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 
 int32 ANovaPlayerController::GetComponentUnlockLevel() const
 {
-	return (UnlockedComponents.Num() / 2) + 1;
+	int32 MaxExistingLevel = 0;
+	for (const UNovaTradableAssetDescription* Component : UNeutronAssetManager::Get()->GetAssets<UNovaTradableAssetDescription>())
+	{
+		MaxExistingLevel = FMath::Max(MaxExistingLevel, static_cast<int32>(Component->UnlockLevel));
+	}
+
+	return FMath::Min((UnlockedComponents.Num() / 2) + 1, MaxExistingLevel);
 }
 
 bool ANovaPlayerController::IsComponentUnlockable(const UNovaTradableAssetDescription* Asset, FText* Help) const
