@@ -49,7 +49,7 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 			// Game settings panel
 			+ SHorizontalBox::Slot()
 			.HAlign(HAlign_Center)
-			.Padding(Theme.ContentPadding)
+			.Padding(Theme.ContentPadding + FMargin(0, 20, 0, 0))
 			[
 				SNew(SVerticalBox)
 

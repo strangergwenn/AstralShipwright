@@ -66,7 +66,7 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 		// Operations header
 		+ SScrollBox::Slot()
 		.HAlign(HAlign_Center)
-		.Padding(Theme.VerticalContentPadding)
+		.Padding(Theme.VerticalContentPadding + FMargin(0, 20, 0, 0))
 		[
 			SNew(SBox)
 			.MinDesiredWidth(FullWidth)
@@ -444,7 +444,6 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 
 						// Module groups controls
 						+ SVerticalBox::Slot()
-						.AutoHeight()
 						[
 							SAssignNew(ModuleGroupsBox, SVerticalBox)
 						]
@@ -484,7 +483,6 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 
 						// Equipment controls
 						+ SVerticalBox::Slot()
-						.AutoHeight()
 						[
 							SAssignNew(EquipmentBox, SVerticalBox)
 						]
@@ -984,8 +982,8 @@ void SNovaMainMenuOperations::Show()
 	{
 		// clang-format off
 		ModuleGroupsBox->AddSlot()
-		.AutoHeight()
 		.Padding(Theme.ContentPadding)
+		.VAlign(VAlign_Center)
 		[
 			SNew(STextBlock)
 			.TextStyle(&Theme.InfoFont)
@@ -1141,8 +1139,8 @@ void SNovaMainMenuOperations::Show()
 	{
 		// clang-format off
 		EquipmentBox->AddSlot()
-		.AutoHeight()
 		.Padding(Theme.ContentPadding)
+		.VAlign(VAlign_Center)
 		[
 			SNew(STextBlock)
 			.TextStyle(&Theme.InfoFont)

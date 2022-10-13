@@ -57,7 +57,7 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 		// Info bar
 		+ SScrollBox::Slot()
 		.HAlign(HAlign_Center)
-		.Padding(Theme.VerticalContentPadding)
+		.Padding(Theme.VerticalContentPadding + FMargin(0, 20, 0, 0))
 		[
 			SNew(SHorizontalBox)
 
