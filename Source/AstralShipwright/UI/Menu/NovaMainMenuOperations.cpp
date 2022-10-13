@@ -1322,6 +1322,12 @@ bool SNovaMainMenuOperations::IsValidModule(int32 CompartmentIndex, int32 Module
 		{
 			return true;
 		}
+
+		// Generic
+		else if (Desc)
+		{
+			return true;
+		}
 	}
 
 	return false;
@@ -1353,6 +1359,12 @@ bool SNovaMainMenuOperations::IsModuleEnabled(int32 CompartmentIndex, int32 Modu
 
 		// Processing
 		else if (Desc->IsA<UNovaProcessingModuleDescription>())
+		{
+			return true;
+		}
+
+		// Generic
+		else if (Desc)
 		{
 			return true;
 		}
@@ -1423,6 +1435,12 @@ const FSlateBrush* SNovaMainMenuOperations::GetModuleImage(int32 CompartmentInde
 		{
 			return &Desc->AssetRender;
 		}
+
+		// Generic
+		else if (Desc)
+		{
+			return &Desc->AssetRender;
+		}
 	}
 
 	return &UNovaResource::GetEmpty()->AssetRender;
@@ -1456,6 +1474,12 @@ FText SNovaMainMenuOperations::GetModuleText(int32 CompartmentIndex, int32 Modul
 
 		// Processing
 		else if (Desc->IsA<UNovaProcessingModuleDescription>())
+		{
+			return Desc->Name;
+		}
+
+		// Generic
+		else if (Desc)
 		{
 			return Desc->Name;
 		}
