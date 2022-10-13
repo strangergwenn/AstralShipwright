@@ -1098,7 +1098,8 @@ void SNovaMainMenuOperations::Show()
 					.Toggle(true)
 					.Text_Lambda([=]()
 					{
-						return ProcessingSystem->IsMiningRigActive() ? LOCTEXT("StopMining", "Stop") : LOCTEXT("StartMining", "Start");
+						return ProcessingSystem && ProcessingSystem->IsMiningRigActive() && ProcessingSystem->CanMiningRigBeActive() ?
+							LOCTEXT("StopMining", "Stop") : LOCTEXT("StartMining", "Start");
 					})
 					.HelpText_Lambda([=]()
 					{

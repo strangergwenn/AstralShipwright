@@ -399,7 +399,8 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 				}
 			}
 		}
-		else
+		else if (MiningRigStatus != ENovaSpacecraftProcessingSystemStatus::Blocked &&
+				 MiningRigStatus != ENovaSpacecraftProcessingSystemStatus::PowerLoss)
 		{
 			MiningRigStatus = ENovaSpacecraftProcessingSystemStatus::Stopped;
 		}

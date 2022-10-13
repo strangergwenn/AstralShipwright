@@ -500,7 +500,8 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.Toggle(true)
 			.Text_Lambda([=]()
 			{
-				return ProcessingSystem && ProcessingSystem->IsMiningRigActive() ? LOCTEXT("StopMining", "Stop mining") : LOCTEXT("StartMining", "Start mining");
+				return ProcessingSystem && ProcessingSystem->IsMiningRigActive() && ProcessingSystem->CanMiningRigBeActive() ?
+					LOCTEXT("StopMining", "Stop mining") : LOCTEXT("StartMining", "Start mining");
 			})
 			.HelpText_Lambda([=]()
 			{
