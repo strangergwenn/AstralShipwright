@@ -1062,8 +1062,8 @@ void SNovaMainMenuFlight::SetHUDIndexCallback(int32 Index)
 						.TextStyle(&Theme.HeadingFont)
 						.Text(FNeutronTextGetter::CreateLambda([=]() {
 							return FText::FormatNamed(INVTEXT("{busy} / {total}"),
-								TEXT("busy"), FText::AsNumber(ProcessingSystem->GetBusyCrew(Group.Index)),
-								TEXT("total"), FText::AsNumber(ProcessingSystem->GetRequiredCrew(Group.Index)));
+								TEXT("busy"), FText::AsNumber(ProcessingSystem->GetBusyCrew(ProcessingGroupIndex)),
+								TEXT("total"), FText::AsNumber(ProcessingSystem->GetRequiredCrew(ProcessingGroupIndex)));
 						}))
 					]
 				]
@@ -1129,7 +1129,7 @@ void SNovaMainMenuFlight::SetHUDIndexCallback(int32 Index)
 		// clang-format on
 
 		// Add status icons
-		for (int32 GroupIndex = 0; GroupIndex < ProcessingSystem->GetProcessingGroupStatus(Group.Index).Num(); GroupIndex++)
+		for (int32 ChainIndex = 0; ChainIndex < ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex).Num(); ChainIndex++)
 		{
 			// clang-format off
 			StatusBox->AddSlot()
@@ -1138,7 +1138,7 @@ void SNovaMainMenuFlight::SetHUDIndexCallback(int32 Index)
 				SNew(SNeutronImage)
 				.Image(FNeutronImageGetter::CreateLambda([=]()
 				{
-					switch (ProcessingSystem->GetProcessingGroupStatus(Group.Index)[GroupIndex])
+					switch (ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex)[ChainIndex])
 					{
 						default:
 						case ENovaSpacecraftProcessingSystemStatus::Stopped:
@@ -1151,7 +1151,7 @@ void SNovaMainMenuFlight::SetHUDIndexCallback(int32 Index)
 				}))
 				.ColorAndOpacity_Lambda([=]()
 				{
-					switch (ProcessingSystem->GetProcessingGroupStatus(Group.Index)[GroupIndex])
+					switch (ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex)[ChainIndex])
 					{
 						default:
 						case ENovaSpacecraftProcessingSystemStatus::Stopped:
