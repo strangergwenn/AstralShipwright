@@ -784,8 +784,8 @@ void SNovaMainMenuOperations::Show()
 								.TextStyle(&Theme.MainFont)
 								.Text(FNeutronTextGetter::CreateLambda([=]() {
 									return FText::FormatNamed(INVTEXT("{busy} / {total}"),
-										TEXT("busy"), FText::AsNumber(ProcessingSystem->GetBusyCrew(Group.Index)),
-										TEXT("total"), FText::AsNumber(ProcessingSystem->GetRequiredCrew(Group.Index)));
+										TEXT("busy"), FText::AsNumber(ProcessingSystem->GetBusyCrew(ProcessingGroupIndex)),
+										TEXT("total"), FText::AsNumber(ProcessingSystem->GetRequiredCrew(ProcessingGroupIndex)));
 								}))
 							]
 						]
@@ -816,8 +816,8 @@ void SNovaMainMenuOperations::Show()
 								.TextStyle(&Theme.MainFont)
 								.Text(FNeutronTextGetter::CreateLambda([=]() {
 									return FText::FormatNamed(INVTEXT("{busy} / {total} kW"),
-										TEXT("busy"), FText::AsNumber(ProcessingSystem->GetPowerUsage(Group.Index)),
-										TEXT("total"), FText::AsNumber(ProcessingSystem->GetRequiredPowerUsage(Group.Index)));
+										TEXT("busy"), FText::AsNumber(ProcessingSystem->GetPowerUsage(ProcessingGroupIndex)),
+										TEXT("total"), FText::AsNumber(ProcessingSystem->GetRequiredPowerUsage(ProcessingGroupIndex)));
 								}))
 							]
 						]
@@ -842,7 +842,7 @@ void SNovaMainMenuOperations::Show()
 							{
 								// Resource inputs
 								FString InputList;
-								for (const UNovaResource* Input : ProcessingSystem->GetInputResources(Group.Index))
+								for (const UNovaResource* Input : ProcessingSystem->GetInputResources(ProcessingGroupIndex))
 								{
 									InputList += InputList.Len() ? TEXT(", ") : FString();
 									InputList += Input->Name.ToString();
@@ -850,7 +850,7 @@ void SNovaMainMenuOperations::Show()
 
 								// Resource outputs
 								FString OutputList;
-								for (const UNovaResource* Output : ProcessingSystem->GetOutputResources(Group.Index))
+								for (const UNovaResource* Output : ProcessingSystem->GetOutputResources(ProcessingGroupIndex))
 								{
 									OutputList += OutputList.Len() ? TEXT(", ") : FString();
 									OutputList += Output->Name.ToString();
