@@ -47,6 +47,7 @@ protected:
 	----------------------------------------------------*/
 
 	void OnLaunchGame(uint32 Index);
+	void OnDeleteGame(uint32 Index);
 	void OnOpenCredits();
 
 	/*----------------------------------------------------
