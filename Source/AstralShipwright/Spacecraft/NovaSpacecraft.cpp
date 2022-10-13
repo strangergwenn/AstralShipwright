@@ -437,6 +437,18 @@ bool FNovaSpacecraft::IsValid(FText* Details) const
 		const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
 		if (::IsValid(Compartment.Description))
 		{
+			// Check for habitat modules
+			for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
+			{
+				const FNovaCompartmentModule& Module = Compartment.Modules[ModuleIndex];
+
+				if (Module.Description && Module.Description->CrewEffect > 0)
+				{
+					HasAnyHabitat = true;
+					break;
+				}
+			}
+
 			// Check equipment for required items, invalid pairings
 			for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
 			{
