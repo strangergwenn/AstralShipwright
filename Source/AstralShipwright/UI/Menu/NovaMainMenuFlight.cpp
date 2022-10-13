@@ -722,16 +722,16 @@ FText SNovaMainMenuFlight::GetPowerText() const
 
 FText SNovaMainMenuFlight::GetStatusText() const
 {
+	const ANovaAsteroid* AsteroidActor =
+		UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
+
 	if (Spacecraft == nullptr || !Spacecraft->HasEquipment(UNovaRadioMastDescription::StaticClass()))
 	{
 		return LOCTEXT("NoSensors", "<img src=\"/Text/Sensor\"/> No sensor");
 	}
-	else if (IsInSpace() && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() >= ENovaMovementState::Orbiting)
+	else if (IsInSpace() && IsValid(AsteroidActor) && IsValid(OrbitalSimulation) && IsValid(GameState) &&
+			 !OrbitalSimulation->IsOnTrajectory(GameState->GetPlayerSpacecraftIdentifier()))
 	{
-		const ANovaAsteroid* AsteroidActor =
-			UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
-		NCHECK(AsteroidActor);
-
 		const FVector SpacecraftRelativeLocation =
 			AsteroidActor->GetTransform().InverseTransformPosition(SpacecraftPawn->GetActorLocation());
 		int32 Density = FMath::RoundToInt(100 * AsteroidActor->GetMineralDensity(SpacecraftRelativeLocation));
@@ -747,12 +747,12 @@ FText SNovaMainMenuFlight::GetStatusText() const
 
 FText SNovaMainMenuFlight::GetStatusValue() const
 {
-	if (IsInSpace() && IsValid(SpacecraftMovement) && SpacecraftMovement->GetState() >= ENovaMovementState::Orbiting)
-	{
-		const ANovaAsteroid* AsteroidActor =
-			UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
-		NCHECK(AsteroidActor);
+	const ANovaAsteroid* AsteroidActor =
+		UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
 
+	if (IsInSpace() && IsValid(AsteroidActor) && IsValid(OrbitalSimulation) && IsValid(GameState) &&
+			 !OrbitalSimulation->IsOnTrajectory(GameState->GetPlayerSpacecraftIdentifier()))
+	{
 		const FVector SpacecraftRelativeLocation =
 			AsteroidActor->GetTransform().InverseTransformPosition(SpacecraftPawn->GetActorLocation());
 		int32 Density = FMath::RoundToInt(100 * AsteroidActor->GetMineralDensity(SpacecraftRelativeLocation));
