@@ -13,10 +13,11 @@
 #include "Game/Contract/NovaContract.h"
 #include "Game/Station/NovaStationDock.h"
 
-#include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftDriveComponent.h"
-#include "Spacecraft/NovaSpacecraftThrusterComponent.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
+#include "Spacecraft/NovaSpacecraftPawn.h"
+#include "Spacecraft/NovaSpacecraftThrusterComponent.h"
+#include "Spacecraft/System/NovaSpacecraftProcessingSystem.h"
 
 #include "UI/Menu/NovaMainMenu.h"
 #include "UI/Menu/NovaOverlay.h"
@@ -278,6 +279,53 @@ void ANovaPlayerController::BeginPlay()
 							if (Drive->IsDriveActive())
 							{
 								return true;
+							}
+						}
+					}
+
+					return false;
+				}));
+
+		// Setup mining sounds
+		UNeutronSoundManager::Get()->AddEnvironmentSound("Mining",    //
+			FNeutronSoundInstanceCallback::CreateWeakLambda(this,
+				[=]()
+				{
+					const ANovaGameState*  GameState      = GetWorld()->GetGameState<ANovaGameState>();
+					const FNovaSpacecraft* SpacecraftPawn = GetSpacecraft();
+					if (IsValid(GameState) && SpacecraftPawn)
+					{
+						const UNovaSpacecraftProcessingSystem* ProcessingSystem =
+							GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(SpacecraftPawn);
+
+						return IsValid(ProcessingSystem) && ProcessingSystem->IsMiningRigActive();
+					}
+
+					return false;
+				}));
+
+		// Setup processing sounds
+		UNeutronSoundManager::Get()->AddEnvironmentSound("Processing",    //
+			FNeutronSoundInstanceCallback::CreateWeakLambda(this,
+				[=]()
+				{
+					const ANovaGameState*  GameState      = GetWorld()->GetGameState<ANovaGameState>();
+					const FNovaSpacecraft* SpacecraftPawn = GetSpacecraft();
+					if (IsValid(GameState) && SpacecraftPawn)
+					{
+						const UNovaSpacecraftProcessingSystem* ProcessingSystem =
+							GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(SpacecraftPawn);
+
+						if (IsValid(ProcessingSystem))
+						{
+							for (int32 Index = 0; Index < ProcessingSystem->GetProcessingGroupCount(); Index++)
+							{
+								if (ProcessingSystem->IsProcessingGroupActive(Index) &&
+									ProcessingSystem->GetProcessingGroupStatus(Index).Contains(
+										ENovaSpacecraftProcessingSystemStatus::Processing))
+								{
+									return true;
+								}
 							}
 						}
 					}
