@@ -1310,8 +1310,7 @@ bool FNovaSpacecraft::IsSameKindModuleInPreviousCompartment(
 
 ENovaModuleGroupType FNovaSpacecraft::GetModuleType(const UNovaModuleDescription* Module)
 {
-	if (Module->IsA<UNovaCargoModuleDescription>() ||
-		Module->IsA<UNovaProcessingModuleDescription>() /* || Module->IsA<UnovaCrewModuleDescription>()*/)
+	if (Module->IsA<UNovaCargoModuleDescription>() || Module->IsA<UNovaProcessingModuleDescription>() || Module->CrewEffect != 0)
 	{
 		return ENovaModuleGroupType::Hatch;
 	}

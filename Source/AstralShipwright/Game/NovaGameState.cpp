@@ -465,8 +465,6 @@ UActorComponent* ANovaGameState::GetSpacecraftSystem(
 {
 	NCHECK(Spacecraft);
 
-	// TODO : not super clean, could warrant a physical spacecraft table
-
 	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 	{
 		if (::IsValid(SpacecraftPawn) && SpacecraftPawn->GetSpacecraftIdentifier() == Spacecraft->Identifier)
