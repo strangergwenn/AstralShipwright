@@ -548,7 +548,7 @@ bool ANovaGameState::CanFastForward(FText* AbortReason) const
 		}
 
 		// Check trajectory issues
-		return CheckTrajectoryAbort(AbortReason) == ENovaTrajectoryAction::Continue;
+		return PlayerTrajectory == nullptr || CheckTrajectoryAbort(AbortReason) == ENovaTrajectoryAction::Continue;
 	}
 	else
 	{

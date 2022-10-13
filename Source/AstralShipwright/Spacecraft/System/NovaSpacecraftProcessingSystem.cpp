@@ -386,7 +386,9 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 			// Proceed with processing
 			else
 			{
-				MiningRigStatus = ENovaSpacecraftProcessingSystemStatus::Processing;
+				const FNovaTime TotalMiningTimeRemaining = FNovaTime::FromSeconds(MinimumProcessingLeft /  GetCurrentMiningRate());
+				RemainingProductionTime                 = FMath::Min(TotalMiningTimeRemaining, RemainingProductionTime);
+				MiningRigStatus                         = ENovaSpacecraftProcessingSystemStatus::Processing;
 
 				float ResourceDelta = GetCurrentMiningRate() * (FinalTime - InitialTime).AsSeconds();
 				ResourceDelta       = FMath::Min(ResourceDelta, MinimumProcessingLeft);
