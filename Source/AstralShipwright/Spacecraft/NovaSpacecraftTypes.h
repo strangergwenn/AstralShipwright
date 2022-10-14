@@ -738,15 +738,6 @@ public:
 	int32 Capacity = 0;
 };
 
-/** Mining rig attach point */
-UCLASS(ClassGroup = (Nova))
-class UNovaSpacecraftMiningRigComponent
-	: public USceneComponent
-	, public INovaAdditionalComponentInterface
-{
-	GENERATED_BODY()
-};
-
 /** Description of a hatch equipment */
 UCLASS(ClassGroup = (Nova))
 class UNovaHatchDescription : public UNovaEquipmentDescription

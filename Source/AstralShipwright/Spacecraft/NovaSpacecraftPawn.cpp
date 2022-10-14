@@ -1,9 +1,11 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaSpacecraftPawn.h"
-#include "NovaSpacecraftMovementComponent.h"
+
 #include "NovaSpacecraftCompartmentComponent.h"
 #include "NovaSpacecraftHatchComponent.h"
+#include "NovaSpacecraftMiningRigComponent.h"
+#include "NovaSpacecraftMovementComponent.h"
 
 #include "System/NovaSpacecraftPowerSystem.h"
 #include "System/NovaSpacecraftProcessingSystem.h"
