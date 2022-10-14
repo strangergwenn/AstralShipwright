@@ -126,7 +126,7 @@ void UNovaSpacecraftPowerSystem::Update(FNovaTime InitialTime, FNovaTime FinalTi
 
 				// Mining rig
 				const UNovaMiningEquipmentDescription* MiningEquipment = Cast<UNovaMiningEquipmentDescription>(Equipment);
-				if (MiningEquipment && ProcessingSystem->IsMiningRigActive())
+				if (MiningEquipment && ProcessingSystem->IsMiningRigActive() && ProcessingSystem->CanMiningRigBeActive())
 				{
 					CurrentPowerConsumption += MiningEquipment->Power;
 				}

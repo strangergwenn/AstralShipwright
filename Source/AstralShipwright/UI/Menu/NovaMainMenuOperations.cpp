@@ -861,6 +861,7 @@ void SNovaMainMenuOperations::Show()
 									TEXT("list"), FText::FromString(OutputList)) : FText();
 								return FText::FromString(InputLine.ToString() + "\n" + OutputLine.ToString());
 							})
+							.AutoWrapText(true)
 						]
 					]
 				]
@@ -883,7 +884,7 @@ void SNovaMainMenuOperations::Show()
 
 						if (Status.Num() == 0)
 						{
-							return LOCTEXT("ProcessingNoneHelp", "This module group doesn't have a valid configuration");
+							return LOCTEXT("ProcessingNoneHelp", "This module group doesn't have processing modules");
 						}
 						else if (!IsActive && Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked))
 						{
@@ -924,7 +925,7 @@ void SNovaMainMenuOperations::Show()
 					.OnClicked(FSimpleDelegate::CreateLambda([=]()
 					{
 						NCHECK(Spacecraft);
-						ModuleGroupsPanel->OpenModuleGroup(ProcessingSystem, *Spacecraft, Group.Index);
+						ModuleGroupsPanel->OpenModuleGroup(ProcessingSystem, *Spacecraft, ProcessingGroupIndex);
 					}))
 				]
 			]
@@ -938,7 +939,7 @@ void SNovaMainMenuOperations::Show()
 		}
 
 		// Add status icons
-		for (int32 Index = 0; Index < ProcessingSystem->GetProcessingGroupStatus(Group.Index).Num(); Index++)
+		for (int32 Index = 0; Index < ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex).Num(); Index++)
 		{
 			// clang-format off
 			StatusBox->AddSlot()
@@ -947,7 +948,7 @@ void SNovaMainMenuOperations::Show()
 				SNew(SNeutronImage)
 				.Image(FNeutronImageGetter::CreateLambda([=]()
 				{
-					switch (ProcessingSystem->GetProcessingGroupStatus(Group.Index)[Index])
+					switch (ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex)[Index])
 					{
 						default:
 						case ENovaSpacecraftProcessingSystemStatus::Stopped:
@@ -960,7 +961,7 @@ void SNovaMainMenuOperations::Show()
 				}))
 				.ColorAndOpacity_Lambda([=]()
 				{
-					switch (ProcessingSystem->GetProcessingGroupStatus(Group.Index)[Index])
+					switch (ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex)[Index])
 					{
 						default:
 						case ENovaSpacecraftProcessingSystemStatus::Stopped:

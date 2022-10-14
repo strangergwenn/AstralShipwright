@@ -36,6 +36,7 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 
 	MiningRigActive   = false;
 	MiningRigResource = nullptr;
+	MiningRigStatus   = ENovaSpacecraftProcessingSystemStatus::Stopped;
 
 	// Initialize processing groups with all unique descriptions
 	ProcessingGroupsStates.Empty();
@@ -150,7 +151,7 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 		}
 
 		// Initialize the processing group and compute the processing rate
-		if (ProcessingChains.Num())
+		if (ProcessingChains.Num() || MiningRig)
 		{
 			FNovaSpacecraftProcessingSystemGroupState GroupState(Group.Index);
 			for (FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingChains)
@@ -394,11 +395,27 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 				ResourceDelta       = FMath::Min(ResourceDelta, MinimumProcessingLeft);
 				NCHECK(ResourceDelta > 0);
 
-				for (FNovaSpacecraftCargo* Output : CurrentOutputs)
+				// Kind of ugly, but let's iterate again because that's how we still have data capacity
+				for (const auto& Indices : GroupCargoModules)
 				{
-					Output->Resource = MiningRigResource;
-					Output->Amount += ResourceDelta;
+					FNovaSpacecraftCargo& Cargo         = RealtimeCompartments[Indices.Key].Cargo[Indices.Value];
+					const float           CargoCapacity = Spacecraft->GetCargoCapacity(Indices.Key, Indices.Value);
+
+					// Valid resource output
+					if ((MiningRigResource == Cargo.Resource || Cargo.Resource == nullptr) && Cargo.Amount < CargoCapacity)
+					{
+						float LocalResourceDelta = FMath::Min(ResourceDelta, CargoCapacity - Cargo.Amount);
+
+						if (LocalResourceDelta > 0)
+						{
+							Cargo.Resource = MiningRigResource;
+							Cargo.Amount += LocalResourceDelta;
+						}
+
+						ResourceDelta = FMath::Max(ResourceDelta - LocalResourceDelta, 0);
+					}
 				}
+
 			}
 		}
 		else if (MiningRigStatus != ENovaSpacecraftProcessingSystemStatus::Blocked &&

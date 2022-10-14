@@ -298,7 +298,8 @@ void ANovaPlayerController::BeginPlay()
 						const UNovaSpacecraftProcessingSystem* ProcessingSystem =
 							GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(SpacecraftPawn);
 
-						return IsValid(ProcessingSystem) && ProcessingSystem->IsMiningRigActive();
+						return IsValid(ProcessingSystem) && ProcessingSystem->IsMiningRigActive() &&
+				               ProcessingSystem->CanMiningRigBeActive();
 					}
 
 					return false;

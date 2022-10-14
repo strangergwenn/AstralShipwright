@@ -211,7 +211,10 @@ public:
 		{
 			for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[ProcessingGroupIndex].Chains)
 			{
-				Result.Append(ChainState.Inputs);
+				for (const class UNovaResource* Resource : ChainState.Inputs)
+				{
+					Result.AddUnique(Resource);
+				}
 			}
 		}
 
@@ -227,7 +230,10 @@ public:
 		{
 			for (const FNovaSpacecraftProcessingSystemChainState& ChainState : ProcessingGroupsStates[ProcessingGroupIndex].Chains)
 			{
-				Result.Append(ChainState.Outputs);
+				for (const class UNovaResource* Resource : ChainState.Outputs)
+				{
+					Result.AddUnique(Resource);
+				}
 			}
 		}
 

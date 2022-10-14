@@ -1096,7 +1096,7 @@ void SNovaMainMenuFlight::SetHUDIndexCallback(int32 Index)
 
 						if (Status.Num() == 0)
 						{
-							return LOCTEXT("ProcessingNoneHelp", "This module group doesn't have a valid configuration");
+							return LOCTEXT("ProcessingNoneHelp", "This module group doesn't have processing modules");
 						}
 						else if (!IsActive && Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked))
 						{
