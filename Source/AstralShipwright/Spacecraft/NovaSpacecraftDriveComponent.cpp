@@ -19,6 +19,7 @@ UNovaSpacecraftDriveComponent::UNovaSpacecraftDriveComponent() : Super(), Curren
 {
 	// Settings
 	SetAbsolute(false, false, true);
+	SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	PrimaryComponentTick.bCanEverTick = true;
 
 	// Defaults
@@ -72,8 +73,8 @@ void UNovaSpacecraftDriveComponent::TickComponent(float DeltaTime, ELevelTick Ti
 		{
 			if (IsValid(OrbitalSimulation) && IsValid(SpacecraftPawn) && !ParentMesh->IsDematerializing())
 			{
-				EngineIntensity = OrbitalSimulation->GetCurrentSpacecraftThrustFactor(
-					SpacecraftPawn->GetSpacecraftIdentifier(), FNovaTime());
+				EngineIntensity =
+					OrbitalSimulation->GetCurrentSpacecraftThrustFactor(SpacecraftPawn->GetSpacecraftIdentifier(), FNovaTime());
 			}
 			else
 			{
