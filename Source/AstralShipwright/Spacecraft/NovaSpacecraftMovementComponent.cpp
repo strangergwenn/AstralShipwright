@@ -484,8 +484,9 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 				ECollisionChannel CollisionChannel = ECollisionChannel::ECC_WorldDynamic;
 
 				// Trace
-				bool FoundHit =
-					GetWorld()->LineTraceSingleByChannel(HitResult, CurrentLocation, AsteroidLocation, CollisionChannel, TraceParams);
+				const double TraceRadius = 50 * 100;
+				bool         FoundHit    = GetWorld()->SweepSingleByChannel(HitResult, CurrentLocation, AsteroidLocation, FQuat::Identity,
+							   CollisionChannel, FCollisionShape::MakeSphere(TraceRadius), TraceParams);
 				if (FoundHit && HitResult.GetActor() == Asteroid)
 				{
 					// Get spacecraft pointers
@@ -505,7 +506,7 @@ void UNovaSpacecraftMovementComponent::ProcessState()
 					const FVector RelativeDockLocation =
 						SpacecraftPawn->GetTransform().InverseTransformPosition(AnchorComponent->GetSocketLocation("Dock"));
 					AttitudeCommand.Location =
-						HitResult.Location - AttitudeCommand.Orientation.RotateVector(RelativeDockLocation) - CurrentOrbitalLocation;
+						HitResult.ImpactPoint - AttitudeCommand.Orientation.RotateVector(RelativeDockLocation) - CurrentOrbitalLocation;
 
 					MovementCommand.State = ENovaMovementState::Anchoring;
 				}
