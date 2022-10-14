@@ -869,6 +869,14 @@ bool SNovaMainMenuFlight::CanDockUndock(FText* Help) const
 					}
 					return false;
 				}
+				else if (OrbitalSimulation->IsOnTrajectory(GameState->GetPlayerSpacecraftIdentifier()))
+				{
+					if (Help)
+					{
+						*Help = LOCTEXT("IsOnTrajectory", "Cannot anchor while a flight plan is ongoing");
+					}
+					return false;
+				}
 			}
 		}
 
@@ -947,7 +955,8 @@ bool SNovaMainMenuFlight::CanOrbit() const
 	{
 		const ANovaAsteroid* AsteroidActor =
 			UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
-		return IsInSpace() && IsValid(AsteroidActor);
+
+		return IsInSpace() && IsValid(AsteroidActor) && !OrbitalSimulation->IsOnTrajectory(GameState->GetPlayerSpacecraftIdentifier());
 	}
 	else
 	{
