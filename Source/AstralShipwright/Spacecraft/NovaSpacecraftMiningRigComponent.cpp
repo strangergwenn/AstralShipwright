@@ -4,6 +4,8 @@
 #include "Spacecraft/System/NovaSpacecraftProcessingSystem.h"
 #include "Nova.h"
 
+#include "NiagaraComponent.h"
+
 /*----------------------------------------------------
     Constructor
 ----------------------------------------------------*/
@@ -11,8 +13,8 @@
 UNovaSpacecraftMiningRigComponent::UNovaSpacecraftMiningRigComponent() : Super()
 {
 	SetAbsolute(false, false, true);
-	SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick          = true;
+	PrimaryComponentTick.bStartWithTickEnabled = true;
 }
 
 /*----------------------------------------------------
@@ -28,7 +30,22 @@ void UNovaSpacecraftMiningRigComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetAsset(DrillingEffect);
+	FAttachmentTransformRules AttachRules(EAttachmentRule::KeepWorld, false);
+
+	// Create effect
+	DrillingEffectComponent = NewObject<UNiagaraComponent>(this, UNiagaraComponent::StaticClass());
+	NCHECK(DrillingEffectComponent);
+	DrillingEffectComponent->RegisterComponent();
+	DrillingEffectComponent->SetAsset(DrillingEffect);
+	DrillingEffectComponent->SetAutoActivate(false);
+
+	// Attach effect
+	FVector  SocketLocation;
+	FRotator SocketRotation;
+	Cast<UPrimitiveComponent>(GetAttachParent())->GetSocketWorldLocationAndRotation("Dock", SocketLocation, SocketRotation);
+	DrillingEffectComponent->SetWorldLocation(SocketLocation);
+	DrillingEffectComponent->SetWorldRotation(SocketRotation);
+	DrillingEffectComponent->AttachToComponent(this, AttachRules);
 }
 
 void UNovaSpacecraftMiningRigComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -40,13 +57,13 @@ void UNovaSpacecraftMiningRigComponent::TickComponent(float DeltaTime, ELevelTic
 		const UNovaSpacecraftProcessingSystem* ProcessingSystem = GetOwner()->FindComponentByClass<UNovaSpacecraftProcessingSystem>();
 		NCHECK(ProcessingSystem);
 
-		if (ProcessingSystem->IsMiningRigActive())
+		if (ProcessingSystem->IsMiningRigActive() && ProcessingSystem->CanMiningRigBeActive())
 		{
-			Activate();
+			DrillingEffectComponent->Activate();
 		}
 		else
 		{
-			Deactivate();
+			DrillingEffectComponent->Deactivate();
 		}
 	}
 }

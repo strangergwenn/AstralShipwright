@@ -5,14 +5,14 @@
 #include "CoreMinimal.h"
 #include "NovaSpacecraftTypes.h"
 
-#include "NiagaraComponent.h"
+#include "Components/SceneComponent.h"
 
 #include "NovaSpacecraftMiningRigComponent.generated.h"
 
 /** Main drive component class that attaches to a mesh to add engine effects */
 UCLASS(ClassGroup = (Nova), meta = (BlueprintSpawnableComponent))
 class UNovaSpacecraftMiningRigComponent
-	: public UNiagaraComponent
+	: public USceneComponent
 	, public INovaAdditionalComponentInterface
 {
 	GENERATED_BODY()
@@ -40,4 +40,8 @@ protected:
 	// Drilling effect template
 	UPROPERTY()
 	class UNiagaraSystem* DrillingEffect;
+
+	// Drilling effect component
+	UPROPERTY()
+	class UNiagaraComponent* DrillingEffectComponent;
 };
