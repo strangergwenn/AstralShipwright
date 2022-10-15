@@ -1118,7 +1118,7 @@ void SNovaMainMenuOperations::Show()
 						{
 							auto Status = ProcessingSystem->GetMiningRigStatus();
 							return Status == ENovaSpacecraftProcessingSystemStatus::Processing
-								|| Status == ENovaSpacecraftProcessingSystemStatus::Stopped;
+								|| Status == ENovaSpacecraftProcessingSystemStatus::Stopped && ProcessingSystem->CanMiningRigBeActive();
 						}
 						return false;
 					})
@@ -1230,8 +1230,8 @@ TOptional<float> SNovaMainMenuOperations::GetPropellantRatio() const
 
 FText SNovaMainMenuOperations::GetCrewText() const
 {
-	return ProcessingSystem ? FText::FormatNamed(LOCTEXT("CrewDetailsFormat", "<img src=\"/Text/Crew\"/> {busy} / {total} crew busy"),
-		TEXT("busy"),
+	return ProcessingSystem
+	         ? FText::FormatNamed(LOCTEXT("CrewDetailsFormat", "<img src=\"/Text/Crew\"/> {busy} / {total} crew busy"), TEXT("busy"),
 				   FText::AsNumber(ProcessingSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(ProcessingSystem->GetTotalCrew()))
 	         : FText();
 }
@@ -1248,7 +1248,7 @@ FText SNovaMainMenuOperations::GetEnergyText() const
 	Options.MaximumFractionalDigits = 1;
 
 	return PowerSystem ? FText::FormatNamed(INVTEXT("<img src=\"/Text/Power\"/> {used} / {total} kWh"), TEXT("used"),
-		FText::AsNumber(PowerSystem->GetRemainingEnergy(), &Options), TEXT("total"),
+							 FText::AsNumber(PowerSystem->GetRemainingEnergy(), &Options), TEXT("total"),
 							 FText::AsNumber(PowerSystem->GetEnergyCapacity(), &Options))
 	                   : FText();
 }
@@ -1264,9 +1264,9 @@ FText SNovaMainMenuOperations::GetPowerText() const
 	Options.MinimumFractionalDigits = 1;
 	Options.MaximumFractionalDigits = 1;
 
-	return PowerSystem ? FText::FormatNamed(
-		INVTEXT("<img src=\"/Text/PowerProducer\"/>{production} kW <img src=\"/Text/PowerConsumer\"/>{usage} kW"),
-		TEXT("production"), FText::AsNumber(PowerSystem->GetCurrentProduction(), &Options), TEXT("usage"),
+	return PowerSystem
+	         ? FText::FormatNamed(INVTEXT("<img src=\"/Text/PowerProducer\"/>{production} kW <img src=\"/Text/PowerConsumer\"/>{usage} kW"),
+				   TEXT("production"), FText::AsNumber(PowerSystem->GetCurrentProduction(), &Options), TEXT("usage"),
 				   FText::AsNumber(PowerSystem->GetCurrentConsumption(), &Options))
 	         : FText();
 }
