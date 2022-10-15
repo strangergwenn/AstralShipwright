@@ -160,7 +160,6 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 	int32 CurrentChainIndex = 0;
 	for (const FNovaSpacecraftProcessingSystemChainState& Chain : ProcessingSystem->GetChainStates(GroupIndex))
 	{
-
 		ProcessingChainsBox->AddSlot()
 		.AutoHeight()
 		.Padding(Theme.VerticalContentPadding)
@@ -250,7 +249,7 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 						{
 							// Resource inputs
 							FString InputList;
-							for (const UNovaResource* Input : Chain.Inputs)
+							for (const UNovaResource* Input : ProcessingSystem->GetInputResources(GroupIndex))
 							{
 								InputList += InputList.Len() ? TEXT(", ") : FString();
 								InputList += Input->Name.ToString();
@@ -258,7 +257,7 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 
 							// Resource outputs
 							FString OutputList;
-							for (const UNovaResource* Output : Chain.Outputs)
+							for (const UNovaResource* Output : ProcessingSystem->GetOutputResources(GroupIndex))
 							{
 								OutputList += OutputList.Len() ? TEXT(", ") : FString();
 								OutputList += Output->Name.ToString();
