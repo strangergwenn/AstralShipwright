@@ -1503,7 +1503,7 @@ FText SNovaMainMenuOperations::GetModuleDetails(int32 CompartmentIndex, int32 Mo
 			float Capacity = Compartment.GetCargoCapacity(ModuleIndex);
 
 			FNumberFormattingOptions Options;
-			Options.MaximumFractionalDigits = 1;
+			Options.MaximumFractionalDigits = 0;
 
 			return FText::FormatNamed(LOCTEXT("CargoAmountFormat", "<img src=\"/Text/Cargo\"/> {amount} T / {capacity} T"), TEXT("amount"),
 				FText::AsNumber(Amount, &Options), TEXT("capacity"), FText::AsNumber(Capacity));
