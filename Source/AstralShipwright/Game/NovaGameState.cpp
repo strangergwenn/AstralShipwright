@@ -153,10 +153,11 @@ void ANovaGameState::Tick(float DeltaTime)
 		TimeSinceLastFastForward = 0;
 
 		// Run FastForwardUpdatesPerFrame loops of world updates
+		ENovaSimulationDecision Decision = ENovaSimulationDecision::Continue;
 		for (int32 Index = 0; Index < FastForwardUpdatesPerFrame; Index++)
 		{
-			bool ContinueProcessing = ProcessGameSimulation(FNovaTime::FromMinutes(FastForwardUpdateTime));
-			if (!ContinueProcessing)
+			Decision = ProcessGameSimulation(FNovaTime::FromMinutes(FastForwardUpdateTime), Decision);
+			if (Decision == ENovaSimulationDecision::AbortImmediately)
 			{
 				NLOG("ANovaGameState::ProcessTime : fast-forward stopping at %.2f", ServerTime);
 				IsFastForward = false;
@@ -179,7 +180,7 @@ void ANovaGameState::Tick(float DeltaTime)
 	// Process real-time simulation
 	else
 	{
-		ProcessGameSimulation(FNovaTime::FromSeconds(static_cast<double>(DeltaTime)));
+		ProcessGameSimulation(FNovaTime::FromSeconds(static_cast<double>(DeltaTime)), ENovaSimulationDecision::Continue);
 
 		TimeSinceLastFastForward += DeltaTime;
 	}
@@ -602,7 +603,7 @@ bool ANovaGameState::CanDilateTime(ENovaTimeDilation Dilation) const
     Internals
 ----------------------------------------------------*/
 
-bool ANovaGameState::ProcessGameSimulation(FNovaTime DeltaTime)
+ENovaSimulationDecision ANovaGameState::ProcessGameSimulation(FNovaTime DeltaTime, ENovaSimulationDecision PreviousDecision)
 {
 	// Update spacecraft
 	SpacecraftDatabase.UpdateCache();
@@ -613,8 +614,8 @@ bool ANovaGameState::ProcessGameSimulation(FNovaTime DeltaTime)
 	}
 
 	// Update the time with the base delta time that will be affected by time dilation
-	FNovaTime InitialTime        = GetCurrentTime();
-	bool      ContinueProcessing = ProcessGameTime(DeltaTime);
+	FNovaTime               InitialTime = GetCurrentTime();
+	ENovaSimulationDecision Decision    = ProcessGameTime(DeltaTime, PreviousDecision);
 
 	// Update the orbital simulation
 	OrbitalSimulationComponent->UpdateSimulation();
@@ -643,13 +644,19 @@ bool ANovaGameState::ProcessGameSimulation(FNovaTime DeltaTime)
 		}
 	}
 
-	return ContinueProcessing;
+	// Abort after simulation
+	if (Decision == ENovaSimulationDecision::AbortAfterSimulation)
+	{
+		Decision = ENovaSimulationDecision::AbortImmediately;
+	}
+
+	return Decision;
 }
 
-bool ANovaGameState::ProcessGameTime(FNovaTime DeltaTime)
+ENovaSimulationDecision ANovaGameState::ProcessGameTime(FNovaTime DeltaTime, ENovaSimulationDecision PreviousDecision)
 {
-	bool         ContinueProcessing = true;
-	const double TimeDilation       = GetCurrentTimeDilationValue();
+	ENovaSimulationDecision Decision     = ENovaSimulationDecision::Continue;
+	const double            TimeDilation = GetCurrentTimeDilationValue();
 
 	// Under fast forward, stop on events
 	if (IsFastForward && GetLocalRole() == ROLE_Authority)
@@ -661,17 +668,19 @@ bool ANovaGameState::ProcessGameTime(FNovaTime DeltaTime)
 		{
 			NLOG("ANovaGameState::ProcessGameTime : no delta, stopping processing");
 
-			DeltaTime          = FNovaTime();
-			ContinueProcessing = false;
+			DeltaTime = FNovaTime();
+			Decision  = ENovaSimulationDecision::AbortImmediately;
 		}
 
 		// Break simulation if we have an event soon
 		else if (DeltaTime > MaxAllowedDeltaTime)
 		{
-			NLOG("ANovaGameState::ProcessGameTime : delta too large, stopping processing");
+			NLOG("ANovaGameState::ProcessGameTime : delta too large at %.2f, cutting (%.2f to %.2f)", ServerTime, DeltaTime.AsMinutes(),
+				MaxAllowedDeltaTime.AsMinutes());
 
-			DeltaTime          = MaxAllowedDeltaTime;
-			ContinueProcessing = false;
+			DeltaTime = MaxAllowedDeltaTime;
+			Decision  = PreviousDecision == ENovaSimulationDecision::Continue ? ENovaSimulationDecision::ContinueOneStep
+			                                                                  : ENovaSimulationDecision::AbortAfterSimulation;
 		}
 	}
 
@@ -686,7 +695,7 @@ bool ANovaGameState::ProcessGameTime(FNovaTime DeltaTime)
 		ClientTime += DilatedDeltaTime * ClientAdditionalTimeDilation;
 	}
 
-	return ContinueProcessing;
+	return Decision;
 }
 
 void ANovaGameState::ProcessPlayerEvents(float DeltaTime)

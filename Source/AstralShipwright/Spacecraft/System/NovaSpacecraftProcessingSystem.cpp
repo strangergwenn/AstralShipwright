@@ -229,6 +229,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 	const ANovaGameState*             GameState   = GetWorld()->GetGameState<ANovaGameState>();
 	const UNovaSpacecraftPowerSystem* PowerSystem = GameState->GetSpacecraftSystem<UNovaSpacecraftPowerSystem>(GetSpacecraft());
 
+	bool HasRelainingProduction = false;
 	RemainingProductionTime = FNovaTime::FromMinutes(DBL_MAX);
 
 	// Update processing groups
@@ -273,6 +274,8 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 			}
 			else
 			{
+				HasRelainingProduction = true;
+
 				// Start production based on input
 				if (!GroupState.Active)
 				{
@@ -328,6 +331,12 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 		CurrentGroupIndex++;
 	}
 
+	// Account for the frame we just processed (mining rig handles this cleanly)
+	if (HasRelainingProduction)
+	{
+		RemainingProductionTime = FMath::Max(RemainingProductionTime - (FinalTime - InitialTime), FNovaTime(0));
+	}
+
 	// Process the mining rig
 	MiningRigResource = nullptr;
 	if (IsSpacecraftDocked())
@@ -352,8 +361,8 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 			const TArray<TPair<int32, int32>>& GroupCargoModules = Spacecraft->GetAllModules<UNovaCargoModuleDescription>(Group);
 
 			// Define processing targets
-			MiningRigResource                                   = Asteroid.MineralResource;
-			float                         MinimumProcessingLeft = FLT_MAX;
+			MiningRigResource                                 = Asteroid.MineralResource;
+			float                         TotalProcessingLeft = 0;
 			TArray<FNovaSpacecraftCargo*> CurrentOutputs;
 
 			// Process cargo for targets
@@ -365,7 +374,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 				// Valid resource output
 				if ((MiningRigResource == Cargo.Resource || Cargo.Resource == nullptr) && Cargo.Amount < CargoCapacity)
 				{
-					MinimumProcessingLeft = FMath::Min(MinimumProcessingLeft, CargoCapacity - Cargo.Amount);
+					TotalProcessingLeft += CargoCapacity - Cargo.Amount;
 					CurrentOutputs.AddUnique(&Cargo);
 				}
 			}
@@ -387,35 +396,39 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 			// Proceed with processing
 			else
 			{
-				const FNovaTime TotalMiningTimeRemaining = FNovaTime::FromSeconds(MinimumProcessingLeft /  GetCurrentMiningRate());
-				RemainingProductionTime                 = FMath::Min(TotalMiningTimeRemaining, RemainingProductionTime);
-				MiningRigStatus                         = ENovaSpacecraftProcessingSystemStatus::Processing;
-
+				// Compute the mining delta
+				MiningRigStatus     = ENovaSpacecraftProcessingSystemStatus::Processing;
 				float ResourceDelta = GetCurrentMiningRate() * (FinalTime - InitialTime).AsSeconds();
-				ResourceDelta       = FMath::Min(ResourceDelta, MinimumProcessingLeft);
-				NCHECK(ResourceDelta > 0);
-
-				// Kind of ugly, but let's iterate again because that's how we still have data capacity
-				for (const auto& Indices : GroupCargoModules)
+				ResourceDelta       = FMath::Min(ResourceDelta, TotalProcessingLeft);
+				if (ResourceDelta > 0)
 				{
-					FNovaSpacecraftCargo& Cargo         = RealtimeCompartments[Indices.Key].Cargo[Indices.Value];
-					const float           CargoCapacity = Spacecraft->GetCargoCapacity(Indices.Key, Indices.Value);
+					TotalProcessingLeft -= ResourceDelta;
 
-					// Valid resource output
-					if ((MiningRigResource == Cargo.Resource || Cargo.Resource == nullptr) && Cargo.Amount < CargoCapacity)
+					// Kind of ugly, but let's iterate again because that's how we still have data capacity
+					for (const auto& Indices : GroupCargoModules)
 					{
-						float LocalResourceDelta = FMath::Min(ResourceDelta, CargoCapacity - Cargo.Amount);
+						FNovaSpacecraftCargo& Cargo         = RealtimeCompartments[Indices.Key].Cargo[Indices.Value];
+						const float           CargoCapacity = Spacecraft->GetCargoCapacity(Indices.Key, Indices.Value);
 
-						if (LocalResourceDelta > 0)
+						// Valid resource output
+						if ((MiningRigResource == Cargo.Resource || Cargo.Resource == nullptr) && Cargo.Amount < CargoCapacity)
 						{
-							Cargo.Resource = MiningRigResource;
-							Cargo.Amount += LocalResourceDelta;
+							float LocalResourceDelta = FMath::Min(ResourceDelta, CargoCapacity - Cargo.Amount);
+							if (LocalResourceDelta > 0)
+							{
+								Cargo.Resource = MiningRigResource;
+								Cargo.Amount += LocalResourceDelta;
+
+								ResourceDelta = FMath::Max(ResourceDelta - LocalResourceDelta, 0);
+							}
 						}
-
-						ResourceDelta = FMath::Max(ResourceDelta - LocalResourceDelta, 0);
 					}
-				}
+					NCHECK(ResourceDelta == 0);
 
+					// Compute remaining time for simulation purposes
+					const FNovaTime TotalMiningTimeRemaining = FNovaTime::FromSeconds(TotalProcessingLeft / GetCurrentMiningRate());
+					RemainingProductionTime                  = FMath::Min(TotalMiningTimeRemaining, RemainingProductionTime);
+				}
 			}
 		}
 		else if (MiningRigStatus != ENovaSpacecraftProcessingSystemStatus::Blocked &&

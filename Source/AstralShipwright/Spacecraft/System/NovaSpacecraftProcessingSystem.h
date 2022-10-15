@@ -263,7 +263,7 @@ public:
 		return MiningRigResource;
 	}
 
-	/** GEt the current mining rate in T/S */
+	/** Get the current mining rate in T/s */
 	float GetCurrentMiningRate() const;
 
 	/** Get the real-time cargo state for a specific module slot */

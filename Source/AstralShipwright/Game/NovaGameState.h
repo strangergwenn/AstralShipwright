@@ -28,6 +28,15 @@ enum class ENovaTrajectoryAction : uint8
 	AbortImmediately
 };
 
+/** Fast-forward simulation modes */
+enum class ENovaSimulationDecision
+{
+	AbortImmediately,
+	AbortAfterSimulation,
+	ContinueOneStep,
+	Continue
+};
+
 /** Game save */
 USTRUCT()
 struct FNovaGameStateSave
@@ -231,11 +240,11 @@ public:
 
 protected:
 
-	/** Run all game processes, returns true if simulation can continue */
-	bool ProcessGameSimulation(FNovaTime DeltaTime);
+	/** Run all game processes, returns whether simulation can continue */
+	ENovaSimulationDecision ProcessGameSimulation(FNovaTime DeltaTime, ENovaSimulationDecision PreviousDecision);
 
 	/** Process time */
-	bool ProcessGameTime(FNovaTime DeltaTime);
+	ENovaSimulationDecision ProcessGameTime(FNovaTime DeltaTime, ENovaSimulationDecision PreviousDecision);
 
 	/** Notify events to the player*/
 	void ProcessPlayerEvents(float DeltaTime);
