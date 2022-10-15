@@ -877,6 +877,14 @@ bool SNovaMainMenuFlight::CanDockUndock(FText* Help) const
 					}
 					return false;
 				}
+				else if (SpacecraftMovement->GetState() != ENovaMovementState::Idle)
+				{
+					if (Help)
+					{
+						*Help = LOCTEXT("IsMovementBusy", "Cannot anchor under operations");
+					}
+					return false;
+				}
 			}
 		}
 
