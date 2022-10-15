@@ -1499,11 +1499,14 @@ FText SNovaMainMenuOperations::GetModuleDetails(int32 CompartmentIndex, int32 Mo
 			const FNovaCompartment&     Compartment = Spacecraft->Compartments[CompartmentIndex];
 			const FNovaSpacecraftCargo& Cargo       = ProcessingSystem->GetCargo(CompartmentIndex, ModuleIndex);
 
-			int32 Amount   = Cargo.Amount;
-			int32 Capacity = Compartment.GetCargoCapacity(ModuleIndex);
+			float Amount   = Cargo.Amount;
+			float Capacity = Compartment.GetCargoCapacity(ModuleIndex);
+
+			FNumberFormattingOptions Options;
+			Options.MaximumFractionalDigits = 1;
 
 			return FText::FormatNamed(LOCTEXT("CargoAmountFormat", "<img src=\"/Text/Cargo\"/> {amount} T / {capacity} T"), TEXT("amount"),
-				FText::AsNumber(Amount), TEXT("capacity"), FText::AsNumber(Capacity));
+				FText::AsNumber(Amount, &Options), TEXT("capacity"), FText::AsNumber(Capacity));
 		}
 
 		// Propellant
