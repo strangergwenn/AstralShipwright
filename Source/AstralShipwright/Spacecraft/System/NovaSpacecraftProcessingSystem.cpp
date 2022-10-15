@@ -229,8 +229,8 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 	const ANovaGameState*             GameState   = GetWorld()->GetGameState<ANovaGameState>();
 	const UNovaSpacecraftPowerSystem* PowerSystem = GameState->GetSpacecraftSystem<UNovaSpacecraftPowerSystem>(GetSpacecraft());
 
-	bool HasRelainingProduction = false;
-	RemainingProductionTime = FNovaTime::FromMinutes(DBL_MAX);
+	bool HasRemainingProduction = false;
+	RemainingProductionTime     = FNovaTime::FromMinutes(DBL_MAX);
 
 	// Update processing groups
 	int32 CurrentGroupIndex = 0;
@@ -243,6 +243,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 			const TArray<TPair<int32, int32>>& GroupCargoModules = Spacecraft->GetAllModules<UNovaCargoModuleDescription>(Group);
 
 			// Define processing targets
+			int32                         EmptyOutputSlots      = 0;
 			float                         MinimumProcessingLeft = FLT_MAX;
 			TArray<FNovaSpacecraftCargo*> CurrentInputs;
 			TArray<FNovaSpacecraftCargo*> CurrentOutputs;
@@ -265,6 +266,11 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 				{
 					MinimumProcessingLeft = FMath::Min(MinimumProcessingLeft, CargoCapacity - Cargo.Amount);
 					CurrentOutputs.AddUnique(&Cargo);
+
+					if (Cargo.Resource == nullptr)
+					{
+						EmptyOutputSlots++;
+					}
 				}
 			}
 
@@ -274,7 +280,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 			}
 			else
 			{
-				HasRelainingProduction = true;
+				HasRemainingProduction = true;
 
 				// Start production based on input
 				if (!GroupState.Active)
@@ -287,11 +293,53 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 				}
 
 				// Cancel production when blocked
-				if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing &&
-					(CurrentInputs.Num() != ChainState.Inputs.Num() || CurrentOutputs.Num() != ChainState.Outputs.Num()))
+				if (ChainState.Status == ENovaSpacecraftProcessingSystemStatus::Processing)
 				{
-					ChainState.Status = ENovaSpacecraftProcessingSystemStatus::Blocked;
-					NLOG("UNovaSpacecraftProcessingSystem::Update : blocked production for group %d", CurrentGroupIndex);
+					auto CargoHasResource = [](const TArray<FNovaSpacecraftCargo*>& Entries, const UNovaResource* Resource)
+					{
+						for (const FNovaSpacecraftCargo* Cargo : Entries)
+						{
+							if (Cargo->Resource == Resource)
+							{
+								return true;
+							}
+						}
+						return false;
+					};
+
+					bool HasMissingResource = false;
+
+					// Check inputs
+					for (const UNovaResource* Resource : ChainState.Inputs)
+					{
+						if (!CargoHasResource(CurrentInputs, Resource))
+						{
+							HasMissingResource = true;
+							break;
+						}
+					}
+
+					// Check outputs, allow empty cargo
+					for (const UNovaResource* Resource : ChainState.Outputs)
+					{
+						if (CargoHasResource(CurrentOutputs, Resource))
+						{}
+						else if (EmptyOutputSlots > 0 && CargoHasResource(CurrentOutputs, nullptr))
+						{
+							EmptyOutputSlots--;
+						}
+						else
+						{
+							HasMissingResource = true;
+							break;
+						}
+					}
+
+					if (HasMissingResource)
+					{
+						ChainState.Status = ENovaSpacecraftProcessingSystemStatus::Blocked;
+						NLOG("UNovaSpacecraftProcessingSystem::Update : blocked production for group %d", CurrentGroupIndex);
+					}
 				}
 
 				// Cancel production when out of power
@@ -309,20 +357,57 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 
 					float ResourceDelta = ChainState.ProcessingRate * (FinalTime - InitialTime).AsSeconds();
 					ResourceDelta       = FMath::Min(ResourceDelta, MinimumProcessingLeft);
-					NCHECK(ResourceDelta > 0);
 
-					for (FNovaSpacecraftCargo* Input : CurrentInputs)
+					if (ResourceDelta > 0)
 					{
-						Input->Amount -= ResourceDelta;
-					}
+						// Process outputs, prefer existing resource
+						for (const UNovaResource* Resource : ChainState.Outputs)
+						{
+							bool HadExistingOutput = false;
 
-					int32 CurrentOutputIndex = 0;
-					for (FNovaSpacecraftCargo* Output : CurrentOutputs)
-					{
-						Output->Resource = ChainState.Outputs[CurrentOutputIndex];
-						Output->Amount += ResourceDelta;
+							for (FNovaSpacecraftCargo* Output : CurrentOutputs)
+							{
+								if (Output->Resource == Resource)
+								{
+									Output->Amount += ResourceDelta;
+									CurrentOutputs.Remove(Output);
+									HadExistingOutput = true;
+									break;
+								}
+							}
 
-						CurrentOutputIndex++;
+							if (!HadExistingOutput)
+							{
+								for (FNovaSpacecraftCargo* Output : CurrentOutputs)
+								{
+									if (Output->Resource == nullptr)
+									{
+										Output->Resource = Resource;
+										Output->Amount += ResourceDelta;
+										CurrentOutputs.Remove(Output);
+										break;
+									}
+								}
+							}
+						}
+
+						// Process inputs
+						for (const UNovaResource* Resource : ChainState.Inputs)
+						{
+							for (FNovaSpacecraftCargo* Input : CurrentInputs)
+							{
+								if (Input->Resource == Resource)
+								{
+									Input->Amount -= ResourceDelta;
+									if (Input->Amount <= 0)
+									{
+										Input->Resource = nullptr;
+									}
+									CurrentInputs.Remove(Input);
+									break;
+								}
+							}
+						}
 					}
 				}
 			}
@@ -332,9 +417,9 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 	}
 
 	// Account for the frame we just processed (mining rig handles this cleanly)
-	if (HasRelainingProduction)
+	if (HasRemainingProduction)
 	{
-		RemainingProductionTime = FMath::Max(RemainingProductionTime - (FinalTime - InitialTime), FNovaTime(0));
+		//RemainingProductionTime = FMath::Max(RemainingProductionTime - (FinalTime - InitialTime), FNovaTime(0));
 	}
 
 	// Process the mining rig
@@ -404,7 +489,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 				{
 					TotalProcessingLeft -= ResourceDelta;
 
-					// Kind of ugly, but let's iterate again because that's how we still have data capacity
+					// Let's iterate again because that's how we still have data capacity
 					for (const auto& Indices : GroupCargoModules)
 					{
 						FNovaSpacecraftCargo& Cargo         = RealtimeCompartments[Indices.Key].Cargo[Indices.Value];
