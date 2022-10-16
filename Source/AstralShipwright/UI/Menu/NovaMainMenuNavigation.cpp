@@ -729,9 +729,11 @@ void SNovaMainMenuNavigation::OnClicked(const FVector2D& Position)
 	}
 }
 
-void SNovaMainMenuNavigation::OnKeyPressed(const FKey& Key)
+FReply SNovaMainMenuNavigation::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent)
 {
-	if (MenuManager->IsUsingGamepad() && MenuManager->GetMenu()->IsActionKey(FNeutronPlayerInput::MenuConfirm, Key))
+	FReply Reply = SNeutronTabPanel::OnKeyDown(MyGeometry, KeyEvent);
+
+	if (MenuManager->IsUsingGamepad() && MenuManager->GetMenu()->IsActionKey(FNeutronPlayerInput::MenuConfirm, KeyEvent.GetKey()))
 	{
 		if (IsValid(GameState))
 		{
@@ -757,14 +759,16 @@ void SNovaMainMenuNavigation::OnKeyPressed(const FKey& Key)
 				NCHECK(CurrentHoveredObjectIndex < HoveredObjects.Num());
 				OnShowSidePanel(HoveredObjects[CurrentHoveredObjectIndex]);
 
-				return;
+				return FReply::Handled();
 			}
 		}
 	}
-	else if (MenuManager->IsUsingGamepad() && MenuManager->GetMenu()->IsActionKey(FNeutronPlayerInput::MenuCancel, Key))
+	else if (MenuManager->IsUsingGamepad() && MenuManager->GetMenu()->IsActionKey(FNeutronPlayerInput::MenuCancel, KeyEvent.GetKey()))
 	{
 		OnHideSidePanel();
 	}
+
+	return Reply;
 }
 
 void SNovaMainMenuNavigation::HorizontalAnalogInput(float Value)

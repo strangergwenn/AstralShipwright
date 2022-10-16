@@ -49,7 +49,7 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 	TSharedPtr<SHorizontalBox> MainUnlockBox;
 	ChildSlot
 	[
-		SNew(SScrollBox)
+		SAssignNew(MainContainer, SScrollBox)
 		.Style(&Theme.ScrollBoxStyle)
 		.ScrollBarVisibility(EVisibility::Collapsed)
 		.AnimateWheelScrolling(true)

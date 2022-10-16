@@ -47,7 +47,7 @@ public:
 
 	virtual void OnClicked(const FVector2D& Position) override;
 
-	virtual void OnKeyPressed(const FKey& Key) override;
+	virtual FReply OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent) override;
 
 	virtual void HorizontalAnalogInput(float Value) override;
 

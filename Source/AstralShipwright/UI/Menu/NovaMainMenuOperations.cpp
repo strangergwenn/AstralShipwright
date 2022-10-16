@@ -58,7 +58,7 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 	// clang-format off
 	ChildSlot
 	[
-		SNew(SScrollBox)
+		SAssignNew(MainContainer, SScrollBox)
 		.Style(&Theme.ScrollBoxStyle)
 		.ScrollBarVisibility(EVisibility::Collapsed)
 		.AnimateWheelScrolling(true)
