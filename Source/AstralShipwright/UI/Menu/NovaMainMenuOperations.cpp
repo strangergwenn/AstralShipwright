@@ -650,7 +650,6 @@ void SNovaMainMenuOperations::Construct(const FArguments& InArgs)
 	.OnGenerateItem(this, &SNovaMainMenuOperations::GenerateResourceItem)
 	.OnGenerateTooltip(this, &SNovaMainMenuOperations::GenerateResourceTooltip)
 	.OnSelectionDoubleClicked(this, &SNovaMainMenuOperations::OnBuyResource)
-	.Horizontal(true)
 	.ButtonSize("LargeListButtonSize");
 	// clang-format on
 
