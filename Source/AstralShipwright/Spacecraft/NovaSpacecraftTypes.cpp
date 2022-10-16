@@ -309,12 +309,12 @@ TArray<FText> UNovaProcessingModuleDescription::GetDescription() const
 	if (Power < 0)
 	{
 		Result.Add(FText::FormatNamed(
-			LOCTEXT("PowerProviderFormat", "<img src=\"/Text/Power\"/> Produces {power} kW"), TEXT("power"), FText::AsNumber(Power)));
+			LOCTEXT("PowerProviderFormat", "<img src=\"/Text/Power\"/> Produces {power} kW"), TEXT("power"), FText::AsNumber(-Power)));
 	}
 	else if (Power > 0)
 	{
 		Result.Add(FText::FormatNamed(
-			LOCTEXT("PowerRequirementFormat", "<img src=\"/Text/Power\"/> Requires {power} kW"), TEXT("power"), FText::AsNumber(-Power)));
+			LOCTEXT("PowerRequirementFormat", "<img src=\"/Text/Power\"/> Requires {power} kW"), TEXT("power"), FText::AsNumber(Power)));
 	}
 
 	return Result;
@@ -437,8 +437,11 @@ TArray<FText> UNovaPowerEquipmentDescription::GetDescription() const
 {
 	TArray<FText> Result = Super::GetDescription();
 
-	Result.Add(FText::FormatNamed(
-		LOCTEXT("PowerEquipmentPowerFormat", "<img src=\"/Text/Power\"/> Produces {power} kW"), TEXT("power"), FText::AsNumber(Power)));
+	if (Power > 0)
+	{
+		Result.Add(FText::FormatNamed(
+			LOCTEXT("PowerEquipmentPowerFormat", "<img src=\"/Text/Power\"/> Produces {power} kW"), TEXT("power"), FText::AsNumber(Power)));
+	}
 
 	if (Capacity > 0)
 	{
