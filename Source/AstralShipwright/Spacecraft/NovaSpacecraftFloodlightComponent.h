@@ -31,11 +31,16 @@ public:
 
 	virtual void BeginPlay() override;
 
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 protected:
 
 	/*----------------------------------------------------
 	    Data
 	----------------------------------------------------*/
+
+	// Current power
+	TNeutronTimedAverage<float> LightIntensity;
 
 	// Lights
 	UPROPERTY()

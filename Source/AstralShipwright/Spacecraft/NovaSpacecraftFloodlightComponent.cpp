@@ -1,6 +1,7 @@
 // Astral Shipwright - Gwennaël Arbona
 
 #include "NovaSpacecraftFloodlightComponent.h"
+#include "Spacecraft/System/NovaSpacecraftPowerSystem.h"
 #include "Nova.h"
 
 #include "Neutron/Actor/NeutronMeshInterface.h"
@@ -55,10 +56,9 @@ void UNovaSpacecraftFloodlightComponent::BeginPlay()
 
 			// Configure
 			Light->SetLightColor(LightColor);
-			Light->SetIntensity(1000000.0f);
-			Light->SetAttenuationRadius(5000.0f);
+			Light->SetAttenuationRadius(10000.0f);
 			Light->SetOuterConeAngle(90.0f);
-			Light->SetInnerConeAngle(10.0f);
+			Light->SetInnerConeAngle(45.0f);
 			Light->SetMobility(EComponentMobility::Movable);
 			Light->SetCastShadows(false);
 			Light->SetActive(true);
@@ -73,5 +73,29 @@ void UNovaSpacecraftFloodlightComponent::BeginPlay()
 
 	// Configure the main light too
 	ParentMesh->RequestParameter("LightColor", LightColor);
-	ParentMesh->RequestParameter("LightIntensity", 20.0f);
+	LightIntensity.SetPeriod(0.1f);
+}
+
+void UNovaSpacecraftFloodlightComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	// Get data
+	UNovaSpacecraftPowerSystem* PowerSystem = GetOwner()->FindComponentByClass<UNovaSpacecraftPowerSystem>();
+	NCHECK(PowerSystem);
+	INeutronMeshInterface* ParentMesh = Cast<INeutronMeshInterface>(GetAttachParent());
+	NCHECK(ParentMesh);
+
+	// Update lights
+	if (PowerSystem && ParentMesh)
+	{
+		LightIntensity.Set(PowerSystem->GetRemainingEnergy() > 0 ? 1.0f : 0.0f, DeltaTime);
+
+		ParentMesh->RequestParameter("LightIntensity", 50.0f * LightIntensity.Get());
+
+		for (USpotLightComponent* Light : Lights)
+		{
+			Light->SetIntensity(10000000.0f * LightIntensity.Get());
+		}
+	}
 }
