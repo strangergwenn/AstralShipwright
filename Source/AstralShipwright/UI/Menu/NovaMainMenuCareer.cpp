@@ -13,6 +13,7 @@
 #include "Neutron/System/NeutronAssetManager.h"
 #include "Neutron/System/NeutronMenuManager.h"
 #include "Neutron/UI/Widgets/NeutronModalPanel.h"
+#include "Neutron/UI/Widgets/NeutronSlider.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
 #include "Widgets/Layout/SScaleBox.h"
@@ -38,9 +39,20 @@ void AppendAssetsSortedByLevel(const UNeutronAssetManager* AssetManager, TArray<
 
 void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 {
+	// Get all assets sorted by type and ascending unlock levels
+	uint8                                        MaxUnlockLevel = 0;
+	TArray<const UNovaTradableAssetDescription*> FullAssetList;
+	const UNeutronAssetManager*                  AssetManager = UNeutronAssetManager::Get();
+	NCHECK(AssetManager);
+	AppendAssetsSortedByLevel<UNovaCompartmentDescription>(AssetManager, FullAssetList, MaxUnlockLevel);
+	AppendAssetsSortedByLevel<UNovaModuleDescription>(AssetManager, FullAssetList, MaxUnlockLevel);
+	AppendAssetsSortedByLevel<UNovaEquipmentDescription>(AssetManager, FullAssetList, MaxUnlockLevel);
+
 	// Data
 	const FNeutronMainTheme& Theme = FNeutronStyleSet::GetMainTheme();
 	MenuManager                    = InArgs._MenuManager;
+	const int32 FullWidth          = (MaxUnlockLevel + 1) * (FNeutronStyleSet::GetButtonSize("InventoryButtonSize").Width +
+                                                       Theme.ContentPadding.Left + Theme.ContentPadding.Right);
 
 	// Parent constructor
 	SNeutronNavigationPanel::Construct(SNeutronNavigationPanel::FArguments().Menu(InArgs._Menu));
@@ -54,10 +66,116 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 		.ScrollBarVisibility(EVisibility::Collapsed)
 		.AnimateWheelScrolling(true)
 		
-		// Info bar
+		// Crew title
 		+ SScrollBox::Slot()
 		.HAlign(HAlign_Center)
 		.Padding(Theme.VerticalContentPadding + FMargin(0, 20, 0, 0))
+		[
+			SNew(SBox)
+			.WidthOverride(FullWidth)
+			[
+				SNew(STextBlock)
+				.Text(LOCTEXT("CrewTitle", "Crew"))
+				.TextStyle(&Theme.HeadingFont)
+			]
+		]
+		
+		// Crew content
+		+ SScrollBox::Slot()
+		.HAlign(HAlign_Center)
+		.Padding(Theme.VerticalContentPadding)
+		[
+			SNew(SBox)
+			.WidthOverride(FullWidth)
+			[
+				SNew(SVerticalBox)
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.HAlign(HAlign_Center)
+				.Padding(Theme.ContentPadding)
+				[
+					SNew(STextBlock)
+					.Text(LOCTEXT("CrewDetailsHint", "Crew can work across the entire spacecraft, and require a daily fee to continue working. Failing to pay any crew member will have them resign."))
+					.TextStyle(&Theme.InfoFont)
+					.AutoWrapText(true)
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.VAlign(VAlign_Bottom)
+				[
+					SNew(SHorizontalBox)
+					
+					+ SHorizontalBox::Slot()
+
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNew(SVerticalBox)
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SNew(STextBlock)
+							.Text(LOCTEXT("AdjustCrew", "Adjust crew size"))
+							.TextStyle(&Theme.MainFont)
+						]
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SNeutronAssignNew(CrewSlider, SNeutronSlider)
+							.Size("DoubleButtonSize")
+							.OnValueChanged(this, &SNovaMainMenuCareer::OnCrewChanged)
+						]
+					]
+
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.VAlign(VAlign_Bottom)
+					[
+						SNeutronNew(SNeutronButton)
+						.Icon(FNeutronStyleSet::GetBrush("Icon/SB_On"))
+						.Size("SmallButtonSize")
+						.Enabled(this, &SNovaMainMenuCareer::CanConfirmCrew)
+						.OnClicked(this, &SNovaMainMenuCareer::OnCrewConfirmed)
+					]
+
+					+ SHorizontalBox::Slot()
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.HAlign(HAlign_Center)
+				.Padding(Theme.ContentPadding)
+				[
+					SNew(STextBlock)
+					.Text(this, &SNovaMainMenuCareer::GetCrewDetails)
+					.TextStyle(&Theme.MainFont)
+					.AutoWrapText(true)
+				]
+			]
+		]
+		
+		// Unlocks title
+		+ SScrollBox::Slot()
+		.HAlign(HAlign_Center)
+		.Padding(Theme.VerticalContentPadding)
+		[
+			SNew(SBox)
+			.WidthOverride(FullWidth)
+			[
+				SNew(STextBlock)
+				.Text(LOCTEXT("ComponentsTitle", "Spacecraft components"))
+				.TextStyle(&Theme.HeadingFont)
+			]
+		]
+		
+		// Unlocks info bar
+		+ SScrollBox::Slot()
+		.HAlign(HAlign_Center)
+		.Padding(Theme.VerticalContentPadding)
 		[
 			SNew(SHorizontalBox)
 
@@ -67,7 +185,7 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 			.AutoWidth()
 			[
 				SNew(STextBlock)
-				.Text(this, &SNovaMainMenuCareer::GetCareerInfo)
+				.Text(this, &SNovaMainMenuCareer::GetUnlockInfo)
 				.TextStyle(&Theme.InfoFont)
 			]
 
@@ -93,15 +211,6 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 		]
 	];
 	// clang-format on
-
-	// Get all assets sorted by type and ascending unlock levels
-	uint8                                        MaxUnlockLevel = 0;
-	TArray<const UNovaTradableAssetDescription*> FullAssetList;
-	const UNeutronAssetManager*                  AssetManager = UNeutronAssetManager::Get();
-	NCHECK(AssetManager);
-	AppendAssetsSortedByLevel<UNovaCompartmentDescription>(AssetManager, FullAssetList, MaxUnlockLevel);
-	AppendAssetsSortedByLevel<UNovaModuleDescription>(AssetManager, FullAssetList, MaxUnlockLevel);
-	AppendAssetsSortedByLevel<UNovaEquipmentDescription>(AssetManager, FullAssetList, MaxUnlockLevel);
 
 	// Add columns filled with assets
 	for (int32 Level = 0; Level <= MaxUnlockLevel; Level++)
@@ -219,6 +328,9 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 void SNovaMainMenuCareer::Show()
 {
 	SNeutronTabPanel::Show();
+
+	CrewSlider->SetMaxValue(42); // TODO
+	CrewSlider->SetCurrentValue(10); // TODO
 }
 
 void SNovaMainMenuCareer::Hide()
@@ -248,7 +360,22 @@ TSharedPtr<SNeutronButton> SNovaMainMenuCareer::GetDefaultFocusButton() const
     Content callbacks
 ----------------------------------------------------*/
 
-FText SNovaMainMenuCareer::GetCareerInfo() const
+FText SNovaMainMenuCareer::GetCrewDetails() const
+{
+	return FText::FormatNamed(
+		LOCTEXT("CrewDetailsFormat", "Currently employing {crew} crew ({required} useful, {total} total) for {credits} per day"),
+		TEXT("crew"), FText::AsNumber(4), TEXT("required"), FText::AsNumber(6), TEXT("total"), FText::AsNumber(7), TEXT("credits"),
+		FText::AsNumber(125));
+
+	// TODO
+}
+
+bool SNovaMainMenuCareer::CanConfirmCrew() const
+{
+	return CurrentCrewValue != 42;    // TODO
+}
+
+FText SNovaMainMenuCareer::GetUnlockInfo() const
 {
 	return FText::FormatNamed(
 		LOCTEXT("CareerInfo",
@@ -302,6 +429,16 @@ const FSlateBrush* SNovaMainMenuCareer::GetComponentIcon(const UNovaTradableAsse
 /*----------------------------------------------------
     Callbacks
 ----------------------------------------------------*/
+
+void SNovaMainMenuCareer::OnCrewChanged(float Value)
+{
+	CurrentCrewValue = FMath::RoundToInt(Value * CrewSlider->GetMaxValue());
+}
+
+void SNovaMainMenuCareer::OnCrewConfirmed()
+{
+	// TODO
+}
 
 void SNovaMainMenuCareer::OnComponentUnlocked(const UNovaTradableAssetDescription* Asset)
 {

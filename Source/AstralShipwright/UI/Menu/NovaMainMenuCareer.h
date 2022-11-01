@@ -44,7 +44,10 @@ public:
 	    Content callbacks
 	----------------------------------------------------*/
 
-	FText GetCareerInfo() const;
+	FText GetCrewDetails() const;
+	bool  CanConfirmCrew() const;
+
+	FText GetUnlockInfo() const;
 
 	bool IsComponentUnlockable(const class UNovaTradableAssetDescription* Asset) const;
 	bool IsComponentUnlocked(const class UNovaTradableAssetDescription* Asset) const;
@@ -62,6 +65,10 @@ protected:
 	    Callbacks
 	----------------------------------------------------*/
 
+	void OnCrewChanged(float Value);
+
+	void OnCrewConfirmed();
+
 	void OnComponentUnlocked(const class UNovaTradableAssetDescription* Asset);
 
 	/*----------------------------------------------------
@@ -78,4 +85,9 @@ protected:
 	TArray<TSharedPtr<class SVerticalBox>>   UnlockBoxes;
 	TArray<TSharedPtr<class SNeutronButton>> UnlockButtons;
 	TSharedPtr<class SNeutronModalPanel>     ModalPanel;
+	TSharedPtr<class SNeutronSlider>         CrewSlider;
+
+	// Local data
+	int32 CurrentCrewValue;
+
 };
