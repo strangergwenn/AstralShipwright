@@ -104,14 +104,15 @@ protected:
 protected:
 
 	// Game objects
-	TWeakObjectPtr<UNeutronMenuManager>          MenuManager;
-	class ANovaPlayerController*                 PC;
-	class ANovaGameState*                        GameState;
-	const struct FNovaSpacecraft*                Spacecraft;
-	const class ANovaSpacecraftPawn*             SpacecraftPawn;
-	const class UNovaSpacecraftPropellantSystem* PropellantSystem;
-	class UNovaSpacecraftProcessingSystem*       ProcessingSystem;
-	class UNovaSpacecraftPowerSystem*            PowerSystem;
+	TWeakObjectPtr<UNeutronMenuManager>    MenuManager;
+	class ANovaPlayerController*           PC;
+	class ANovaGameState*                  GameState;
+	const struct FNovaSpacecraft*          Spacecraft;
+	const class ANovaSpacecraftPawn*       SpacecraftPawn;
+	class UNovaSpacecraftCrewSystem*       CrewSystem;
+	class UNovaSpacecraftPropellantSystem* PropellantSystem;
+	class UNovaSpacecraftProcessingSystem* ProcessingSystem;
+	class UNovaSpacecraftPowerSystem*      PowerSystem;
 
 	// Current state
 	int32                       CurrentCompartmentIndex;

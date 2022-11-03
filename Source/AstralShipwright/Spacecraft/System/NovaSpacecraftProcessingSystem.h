@@ -124,21 +124,11 @@ public:
 	    System implementation
 	----------------------------------------------------*/
 
-	virtual void Load(const FNovaSpacecraft& Spacecraft) override
-	{
-		NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
-		LoadInternal(Spacecraft);
-	}
+	virtual void Load(const FNovaSpacecraft& Spacecraft) override;
 
 	virtual void Save(FNovaSpacecraft& Spacecraft) override;
 
 	virtual void Update(FNovaTime InitialTime, FNovaTime FinalTime) override;
-
-	/** Pre-load this system with data so that we can observe it while docked */
-	void PreLoad(const FNovaSpacecraft& Spacecraft)
-	{
-		LoadInternal(Spacecraft);
-	}
 
 	/*----------------------------------------------------
 	    Processing groups
@@ -345,40 +335,7 @@ public:
 	static FText GetStatusText(ENovaSpacecraftProcessingSystemStatus Type);
 
 	/*----------------------------------------------------
-	    Crew
-	----------------------------------------------------*/
-
-	/** Get the current busy crew count for a group */
-	int32 GetBusyCrew(int32 ProcessingGroupIndex) const
-	{
-		return GetProcessingGroupCrew(ProcessingGroupIndex, true);
-	}
-
-	/** Get the required crew count for a group to be active */
-	int32 GetRequiredCrew(int32 ProcessingGroupIndex) const
-	{
-		return GetProcessingGroupCrew(ProcessingGroupIndex, false);
-	}
-
-	/** Get the total current busy crew count */
-	int32 GetTotalBusyCrew() const;
-
-	/** Get the total current available crew count */
-	int32 GetTotalAvailableCrew() const
-	{
-		return FMath::Max(GetTotalCrew() - GetTotalBusyCrew(), 0);
-	}
-
-	/** Get the total crew count */
-	int32 GetTotalCrew() const;
-
-protected:
-
-	/** Get the crew count for a processing group, either total or active */
-	int32 GetProcessingGroupCrew(int32 ProcessingGroupIndex, bool FilterByActive) const;
-
-	/*----------------------------------------------------
-	    Power
+	    Cross-system glue
 	----------------------------------------------------*/
 
 public:
@@ -395,19 +352,11 @@ public:
 		return GetProcessingGroupPowerUsage(ProcessingGroupIndex, false);
 	}
 
-protected:
-
 	/** Get the power usage for a processing group, either total or active */
 	int32 GetProcessingGroupPowerUsage(int32 ProcessingGroupIndex, bool FilterByActive) const;
 
-	/*----------------------------------------------------
-	    Internal
-	----------------------------------------------------*/
-
-protected:
-
-	/** Pre-load this system with data so that we can observe it while docked */
-	void LoadInternal(const FNovaSpacecraft& Spacecraft);
+	/** Get the crew count for a processing group, either total or active */
+	int32 GetProcessingGroupCrew(int32 ProcessingGroupIndex, bool FilterByActive) const;
 
 	/*----------------------------------------------------
 	    Data

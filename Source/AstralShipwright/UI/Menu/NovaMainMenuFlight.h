@@ -134,6 +134,7 @@ protected:
 	class UNovaSpacecraftMovementComponent* SpacecraftMovement;
 	class ANovaGameState*                   GameState;
 	class UNovaOrbitalSimulationComponent*  OrbitalSimulation;
+	class UNovaSpacecraftCrewSystem*        CrewSystem;
 	class UNovaSpacecraftProcessingSystem*  ProcessingSystem;
 	class UNovaSpacecraftPowerSystem*       PowerSystem;
 

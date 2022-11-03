@@ -12,6 +12,7 @@
 
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftMovementComponent.h"
+#include "Spacecraft/System/NovaSpacecraftCrewSystem.h"
 #include "Spacecraft/System/NovaSpacecraftProcessingSystem.h"
 #include "Spacecraft/System/NovaSpacecraftPowerSystem.h"
 
@@ -639,6 +640,7 @@ void SNovaMainMenuFlight::UpdateGameObjects()
 	SpacecraftMovement = IsValid(SpacecraftPawn) ? SpacecraftPawn->GetSpacecraftMovement() : nullptr;
 	GameState          = IsValid(PC) ? PC->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
 	OrbitalSimulation  = IsValid(GameState) ? GameState->GetOrbitalSimulation() : nullptr;
+	CrewSystem         = IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftCrewSystem>(Spacecraft) : nullptr;
 	ProcessingSystem =
 		IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(Spacecraft) : nullptr;
 	PowerSystem = IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftPowerSystem>(Spacecraft) : nullptr;
@@ -702,10 +704,9 @@ TSharedPtr<SNeutronButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 
 FText SNovaMainMenuFlight::GetCrewText() const
 {
-	return ProcessingSystem
-	         ? FText::FormatNamed(INVTEXT("<img src=\"/Text/Crew\"/> {busy} / {total}"), TEXT("busy"),
-				   FText::AsNumber(ProcessingSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(ProcessingSystem->GetTotalCrew()))
-	         : FText();
+	return CrewSystem ? FText::FormatNamed(INVTEXT("<img src=\"/Text/Crew\"/> {busy} / {total}"), TEXT("busy"),
+							FText::AsNumber(CrewSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(CrewSystem->GetTotalCrew()))
+	                  : FText();
 }
 
 FText SNovaMainMenuFlight::GetPowerText() const
@@ -1011,6 +1012,7 @@ void SNovaMainMenuFlight::SetHUDIndexCallback(int32 Index)
 	{
 		ProcessingSystem->Load(*Spacecraft);
 		PowerSystem->Load(*Spacecraft);
+		CrewSystem->Load(*Spacecraft);
 	}
 
 	// Add module groups
@@ -1079,8 +1081,8 @@ void SNovaMainMenuFlight::SetHUDIndexCallback(int32 Index)
 						.TextStyle(&Theme.HeadingFont)
 						.Text(FNeutronTextGetter::CreateLambda([=]() {
 							return FText::FormatNamed(INVTEXT("{busy} / {total}"),
-								TEXT("busy"), FText::AsNumber(ProcessingSystem->GetBusyCrew(ProcessingGroupIndex)),
-								TEXT("total"), FText::AsNumber(ProcessingSystem->GetRequiredCrew(ProcessingGroupIndex)));
+								TEXT("busy"), FText::AsNumber(CrewSystem->GetBusyCrew(ProcessingGroupIndex)),
+								TEXT("total"), FText::AsNumber(CrewSystem->GetRequiredCrew(ProcessingGroupIndex)));
 						}))
 					]
 				]

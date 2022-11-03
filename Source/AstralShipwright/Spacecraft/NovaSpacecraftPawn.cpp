@@ -7,6 +7,7 @@
 #include "NovaSpacecraftMiningRigComponent.h"
 #include "NovaSpacecraftMovementComponent.h"
 
+#include "System/NovaSpacecraftCrewSystem.h"
 #include "System/NovaSpacecraftPowerSystem.h"
 #include "System/NovaSpacecraftProcessingSystem.h"
 #include "System/NovaSpacecraftPropellantSystem.h"
@@ -49,6 +50,8 @@ ANovaSpacecraftPawn::ANovaSpacecraftPawn()
 	MovementComponent->SetUpdatedComponent(RootComponent);
 
 	// Setup systems
+	CrewSystem = CreateDefaultSubobject<UNovaSpacecraftCrewSystem>("CrewSystem");
+	CrewSystem->SetupAttachment(RootComponent);
 	PowerSystem = CreateDefaultSubobject<UNovaSpacecraftPowerSystem>("PowerSystem");
 	PowerSystem->SetupAttachment(RootComponent);
 	ProcessingSystem = CreateDefaultSubobject<UNovaSpacecraftProcessingSystem>("ProcessingSystem");

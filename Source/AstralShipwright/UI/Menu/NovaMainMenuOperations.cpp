@@ -7,6 +7,7 @@
 #include "Game/NovaGameState.h"
 #include "Player/NovaPlayerController.h"
 #include "Spacecraft/NovaSpacecraftPawn.h"
+#include "Spacecraft/System/NovaSpacecraftCrewSystem.h"
 #include "Spacecraft/System/NovaSpacecraftPropellantSystem.h"
 #include "Spacecraft/System/NovaSpacecraftProcessingSystem.h"
 #include "Spacecraft/System/NovaSpacecraftPowerSystem.h"
@@ -673,12 +674,11 @@ void SNovaMainMenuOperations::Tick(const FGeometry& AllottedGeometry, const doub
 {
 	SNeutronTabPanel::Tick(AllottedGeometry, CurrentTime, DeltaTime);
 
-	if (Spacecraft && GameState)
+	if (Spacecraft && GameState && PropellantSystem && CrewSystem)
 	{
 		AveragedPropellantRatio.Set(PropellantSystem->GetCurrentPropellantMass() / PropellantSystem->GetPropellantCapacity(), DeltaTime);
-		AveragedCrewRatio.Set(ProcessingSystem->GetTotalCrew() > 0
-								  ? static_cast<float>(ProcessingSystem->GetTotalBusyCrew()) / ProcessingSystem->GetTotalCrew()
-								  : 0.0f,
+		AveragedCrewRatio.Set(
+			CrewSystem->GetTotalCrew() > 0 ? static_cast<float>(CrewSystem->GetTotalBusyCrew()) / CrewSystem->GetTotalCrew() : 0.0f,
 			DeltaTime);
 		AveragedEnergyRatio.Set(PowerSystem->GetEnergyCapacity() > 0
 									? static_cast<float>(PowerSystem->GetRemainingEnergy()) / PowerSystem->GetEnergyCapacity()
@@ -703,6 +703,7 @@ void SNovaMainMenuOperations::Show()
 	{
 		ProcessingSystem->Load(*Spacecraft);
 		PowerSystem->Load(*Spacecraft);
+		CrewSystem->Load(*Spacecraft);
 	}
 
 	// Add module groups
@@ -781,8 +782,8 @@ void SNovaMainMenuOperations::Show()
 								.TextStyle(&Theme.MainFont)
 								.Text(FNeutronTextGetter::CreateLambda([=]() {
 									return FText::FormatNamed(INVTEXT("{busy} / {total}"),
-										TEXT("busy"), FText::AsNumber(ProcessingSystem->GetBusyCrew(ProcessingGroupIndex)),
-										TEXT("total"), FText::AsNumber(ProcessingSystem->GetRequiredCrew(ProcessingGroupIndex)));
+										TEXT("busy"), FText::AsNumber(CrewSystem->GetBusyCrew(ProcessingGroupIndex)),
+										TEXT("total"), FText::AsNumber(CrewSystem->GetRequiredCrew(ProcessingGroupIndex)));
 								}))
 							]
 						]
@@ -900,12 +901,19 @@ void SNovaMainMenuOperations::Show()
 					})
 					.Enabled_Lambda([=]()
 					{
-						auto Status = ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex);
-						bool IsActive = ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex);
-						bool HasEnoughCrew = ProcessingSystem->GetRequiredCrew(ProcessingGroupIndex) <= ProcessingSystem->GetTotalAvailableCrew();
+						if (ProcessingSystem && CrewSystem)
+						{
+							auto Status = ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex);
+							bool IsActive = ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex);
+							bool HasEnoughCrew = CrewSystem->GetRequiredCrew(ProcessingGroupIndex) <= CrewSystem->GetTotalAvailableCrew();
 
-						return Status.Num() && HasEnoughCrew && (IsActive || (!Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked)
-							&& !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Blocked)));
+							return Status.Num() && HasEnoughCrew && (IsActive || (!Status.Contains(ENovaSpacecraftProcessingSystemStatus::Docked)
+								&& !Status.Contains(ENovaSpacecraftProcessingSystemStatus::Blocked)));
+						}
+						else
+						{
+							return false;
+						}
 					})
 					.OnClicked(FSimpleDelegate::CreateLambda([=]()
 					{
@@ -1169,6 +1177,7 @@ void SNovaMainMenuOperations::UpdateGameObjects()
 	GameState      = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
 	Spacecraft     = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
 	SpacecraftPawn = IsValid(PC) ? PC->GetSpacecraftPawn() : nullptr;
+	CrewSystem     = IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftCrewSystem>(Spacecraft) : nullptr;
 	PropellantSystem =
 		IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftPropellantSystem>(Spacecraft) : nullptr;
 	ProcessingSystem =
@@ -1229,9 +1238,9 @@ TOptional<float> SNovaMainMenuOperations::GetPropellantRatio() const
 
 FText SNovaMainMenuOperations::GetCrewText() const
 {
-	return ProcessingSystem
+	return CrewSystem
 	         ? FText::FormatNamed(LOCTEXT("CrewDetailsFormat", "<img src=\"/Text/Crew\"/> {busy} / {total} crew busy"), TEXT("busy"),
-				   FText::AsNumber(ProcessingSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(ProcessingSystem->GetTotalCrew()))
+				   FText::AsNumber(CrewSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(CrewSystem->GetTotalCrew()))
 	         : FText();
 }
 

@@ -28,11 +28,11 @@ UNovaSpacecraftProcessingSystem::UNovaSpacecraftProcessingSystem() : Super()
     System implementation
 ----------------------------------------------------*/
 
-void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacecraft)
+void UNovaSpacecraftProcessingSystem::Load(const FNovaSpacecraft& Spacecraft)
 {
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 
-	NLOG("UNovaSpacecraftProcessingSystem::LoadInternal");
+	NLOG("UNovaSpacecraftProcessingSystem::Load");
 
 	MiningRigActive   = false;
 	MiningRigResource = nullptr;
@@ -177,7 +177,7 @@ void UNovaSpacecraftProcessingSystem::LoadInternal(const FNovaSpacecraft& Spacec
 		}
 	}
 
-	// Load all cargo from the spacecraft, update crew count
+	// Load all cargo from the spacecraft
 	RealtimeCompartments.SetNum(Spacecraft.Compartments.Num());
 	for (int32 CompartmentIndex = 0; CompartmentIndex < RealtimeCompartments.Num(); CompartmentIndex++)
 	{
@@ -227,7 +227,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 
 	const FNovaSpacecraft*            Spacecraft  = GetSpacecraft();
 	const ANovaGameState*             GameState   = GetWorld()->GetGameState<ANovaGameState>();
-	const UNovaSpacecraftPowerSystem* PowerSystem = GameState->GetSpacecraftSystem<UNovaSpacecraftPowerSystem>(GetSpacecraft());
+	const UNovaSpacecraftPowerSystem* PowerSystem = GameState->GetSpacecraftSystem<UNovaSpacecraftPowerSystem>(Spacecraft);
 
 	bool HasRemainingProduction = false;
 	RemainingProductionTime     = FNovaTime::FromMinutes(DBL_MAX);
@@ -419,7 +419,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 	// Account for the frame we just processed (mining rig handles this cleanly)
 	if (HasRemainingProduction)
 	{
-		//RemainingProductionTime = FMath::Max(RemainingProductionTime - (FinalTime - InitialTime), FNovaTime(0));
+		// RemainingProductionTime = FMath::Max(RemainingProductionTime - (FinalTime - InitialTime), FNovaTime(0));
 	}
 
 	// Process the mining rig
@@ -658,53 +658,6 @@ FText UNovaSpacecraftProcessingSystem::GetStatusText(ENovaSpacecraftProcessingSy
 		case ENovaSpacecraftProcessingSystemStatus::Docked:
 			return LOCTEXT("ProcessingDocked", "Stopped");
 	}
-}
-
-int32 UNovaSpacecraftProcessingSystem::GetTotalBusyCrew() const
-{
-	int32 Count = 0;
-
-	for (int32 ProcessingGroupIndex = 0; ProcessingGroupIndex < ProcessingGroupsStates.Num(); ProcessingGroupIndex++)
-	{
-		Count += GetBusyCrew(ProcessingGroupIndex);
-	}
-
-	return Count;
-}
-
-int32 UNovaSpacecraftProcessingSystem::GetTotalCrew() const
-{
-	int32 TotalCrewCount = 0;
-
-	const FNovaSpacecraft* Spacecraft = GetSpacecraft();
-
-	if (Spacecraft)
-	{
-		for (int32 CompartmentIndex = 0; CompartmentIndex < Spacecraft->Compartments.Num(); CompartmentIndex++)
-		{
-			const FNovaCompartment& Compartment = Spacecraft->Compartments[CompartmentIndex];
-
-			for (int32 ModuleIndex = 0; ModuleIndex < ENovaConstants::MaxModuleCount; ModuleIndex++)
-			{
-				const UNovaModuleDescription* Module = Compartment.Modules[ModuleIndex].Description;
-				if (Module && Module->CrewEffect > 0)
-				{
-					TotalCrewCount += Module->CrewEffect;
-				}
-			}
-
-			for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
-			{
-				const UNovaEquipmentDescription* Equipment = Compartment.Equipment[EquipmentIndex];
-				if (Equipment && Equipment->CrewEffect > 0)
-				{
-					TotalCrewCount += Equipment->CrewEffect;
-				}
-			}
-		}
-	}
-
-	return TotalCrewCount;
 }
 
 int32 UNovaSpacecraftProcessingSystem::GetProcessingGroupCrew(int32 ProcessingGroupIndex, bool FilterByActive) const
