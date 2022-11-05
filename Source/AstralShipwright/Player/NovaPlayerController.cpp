@@ -542,7 +542,7 @@ void ANovaPlayerController::SetCurrentCrew(int32 Crew)
 {
 	NLOG("ANovaPlayerController::SetCurrentCrew : %d (%s)", Crew, *GetRoleString(this));
 
-	if (GetOwner()->GetLocalRole() == ROLE_Authority)
+	if (GetLocalRole() == ROLE_Authority)
 	{
 		CurrentCrewCount = Crew;
 	}
