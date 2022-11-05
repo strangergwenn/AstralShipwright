@@ -464,7 +464,7 @@ const FSlateBrush* SNovaMainMenuCareer::GetComponentIcon(const UNovaTradableAsse
 
 void SNovaMainMenuCareer::OnCrewChanged(float Value)
 {
-	CurrentCrewValue = FMath::RoundToInt(Value * CrewSlider->GetMaxValue());
+	CurrentCrewValue = FMath::RoundToInt(Value);
 }
 
 void SNovaMainMenuCareer::OnCrewConfirmed()
@@ -477,15 +477,13 @@ void SNovaMainMenuCareer::OnCrewConfirmed()
 		FText DetailsText =
 			CurrentCrewValue > PreviousCrewCount
 				? FText::FormatNamed(
-					  LOCTEXT("CrewIncreased", "Your crew was increased from {previous} to {current}, hiring additional employees."),
+					  LOCTEXT("CrewIncreased", "Crew increased from {previous} to {current}, employees hired"),
 					  TEXT("previous"), PreviousCrewCount, TEXT("current"), FText::AsNumber(CurrentCrewValue))
 				: FText::FormatNamed(
-					  LOCTEXT("CrewDownsized", "Your crew was downsized from {previous} to {current}, dismissing excess employees."),
+					  LOCTEXT("CrewDownsized", "Crew downsized from {previous} to {current}, employees dismissed"),
 					  TEXT("previous"), PreviousCrewCount, TEXT("current"), FText::AsNumber(CurrentCrewValue));
 
-		PC->Notify(LOCTEXT("CrewAdjusted", "Crew size adjusted"), DetailsText);
-
-		PC->SaveGame();
+		PC->Notify(LOCTEXT("CrewAdjusted", "Crew adjusted"), DetailsText);
 	}
 }
 

@@ -74,10 +74,9 @@ void UNovaSpacecraftCrewSystem::Update(FNovaTime InitialTime, FNovaTime FinalTim
 		if (UpdatedCrewCount < CurrentCrewCount)
 		{
 			GetPC()->SetCurrentCrew(UpdatedCrewCount);
-			GetPC()->Notify(LOCTEXT("CrewFired", "Crew could not be paid"),
+			GetPC()->Notify(LOCTEXT("CrewFired", "Crew not paid"),
 				FText::FormatNamed(LOCTEXT("CrewFiredDetails",
-									   "You could not afford pay for your crew today. Your crew was downsized from {previous} to "
-			                           "{current}, dismissing excess employees."),
+									   "Crew downsized from {previous} to {current}, employees dismissed "),
 					TEXT("previous"), FText::AsNumber(CurrentCrewCount), TEXT("current"), FText::AsNumber(UpdatedCrewCount)));
 		}
 
