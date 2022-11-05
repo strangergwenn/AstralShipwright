@@ -120,7 +120,7 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 							[
 								SNeutronNew(SNeutronButton)
 								.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Remove"))
-								.Text(LOCTEXT("Remove1", "Delete slot 2"))
+								.Text(LOCTEXT("Remove2", "Delete slot 2"))
 								.HelpText(LOCTEXT("RemoveHelp2", "Delete save data from the second save slot"))
 								.OnClicked(FSimpleDelegate::CreateLambda([this]() { OnDeleteGame(2); } ))
 							]
