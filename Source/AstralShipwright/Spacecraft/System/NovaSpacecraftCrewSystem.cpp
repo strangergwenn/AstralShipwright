@@ -3,6 +3,8 @@
 #include "NovaSpacecraftCrewSystem.h"
 #include "NovaSpacecraftProcessingSystem.h"
 
+#include "Game/NovaGameTypes.h"
+#include "Player/NovaPlayerController.h"
 #include "Spacecraft/NovaSpacecraftPawn.h"
 #include "Spacecraft/NovaSpacecraftTypes.h"
 
@@ -30,6 +32,8 @@ void UNovaSpacecraftCrewSystem::Load(const FNovaSpacecraft& Spacecraft)
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 
 	NLOG("UNovaSpacecraftCrewSystem::Load");
+
+	CurrentTimeSincePayday = 0;
 }
 
 void UNovaSpacecraftCrewSystem::Save(FNovaSpacecraft& Spacecraft)
@@ -42,9 +46,91 @@ void UNovaSpacecraftCrewSystem::Save(FNovaSpacecraft& Spacecraft)
 void UNovaSpacecraftCrewSystem::Update(FNovaTime InitialTime, FNovaTime FinalTime)
 {
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
+
+	const FNovaTime PaydayPeriod = FNovaTime::FromDays(1);
+
+	// Handle pay
+	CurrentTimeSincePayday += (FinalTime - InitialTime);
+	if (CurrentTimeSincePayday > PaydayPeriod)
+	{
+		int32 UpdatedCrewCount;
+		int32 CurrentCrewCount = GetCurrentCrew();
+
+		// Try to pay each employee
+		for (UpdatedCrewCount = 0; UpdatedCrewCount < CurrentCrewCount; UpdatedCrewCount++)
+		{
+			FNovaCredits UnitCost = -GetDailyCostPerCrew();
+			if (GetPC()->CanAffordTransaction(UnitCost))
+			{
+				GetPC()->ProcessTransaction(UnitCost);
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		// Fire and notify
+		if (UpdatedCrewCount < CurrentCrewCount)
+		{
+			GetPC()->SetCurrentCrew(UpdatedCrewCount);
+			GetPC()->Notify(LOCTEXT("CrewFired", "Crew could not be paid"),
+				FText::FormatNamed(LOCTEXT("CrewFiredDetails",
+									   "You could not afford pay for your crew today. Your crew was downsized from {previous} to "
+			                           "{current}, dismissing excess employees."),
+					TEXT("previous"), FText::AsNumber(CurrentCrewCount), TEXT("current"), FText::AsNumber(UpdatedCrewCount)));
+		}
+
+		CurrentTimeSincePayday -= PaydayPeriod;
+	}
 }
 
-int32 UNovaSpacecraftCrewSystem::GetTotalCrew() const
+int32 UNovaSpacecraftCrewSystem::GetCurrentCrew() const
+{
+	return FMath::Clamp(GetPC()->GetCurrentCrew(), 0, GetCrewCapacity());
+}
+
+int32 UNovaSpacecraftCrewSystem::GetRequiredCrew(int32 ProcessingGroupIndex) const
+{
+	const UNovaSpacecraftProcessingSystem* ProcessingSystem = GetProcessingSystem();
+
+	return ProcessingSystem->GetProcessingGroupCrew(ProcessingGroupIndex, false);
+}
+
+int32 UNovaSpacecraftCrewSystem::GetTotalRequiredCrew() const
+{
+	const UNovaSpacecraftProcessingSystem* ProcessingSystem = GetProcessingSystem();
+
+	int32 Count = 0;
+	for (int32 ProcessingGroupIndex = 0; ProcessingGroupIndex < ProcessingSystem->GetProcessingGroupCount(); ProcessingGroupIndex++)
+	{
+		Count += GetRequiredCrew(ProcessingGroupIndex);
+	}
+
+	return Count;
+}
+
+int32 UNovaSpacecraftCrewSystem::GetBusyCrew(int32 ProcessingGroupIndex) const
+{
+	const UNovaSpacecraftProcessingSystem* ProcessingSystem = GetProcessingSystem();
+
+	return ProcessingSystem->GetProcessingGroupCrew(ProcessingGroupIndex, true);
+}
+
+int32 UNovaSpacecraftCrewSystem::GetTotalBusyCrew() const
+{
+	const UNovaSpacecraftProcessingSystem* ProcessingSystem = GetProcessingSystem();
+
+	int32 Count = 0;
+	for (int32 ProcessingGroupIndex = 0; ProcessingGroupIndex < ProcessingSystem->GetProcessingGroupCount(); ProcessingGroupIndex++)
+	{
+		Count += GetBusyCrew(ProcessingGroupIndex);
+	}
+
+	return Count;
+}
+
+int32 UNovaSpacecraftCrewSystem::GetCrewCapacity() const
 {
 	int32 TotalCrewCount = 0;
 
@@ -79,31 +165,9 @@ int32 UNovaSpacecraftCrewSystem::GetTotalCrew() const
 	return TotalCrewCount;
 }
 
-int32 UNovaSpacecraftCrewSystem::GetRequiredCrew(int32 ProcessingGroupIndex) const
+FNovaCredits UNovaSpacecraftCrewSystem::GetDailyCostPerCrew() const
 {
-	const UNovaSpacecraftProcessingSystem* ProcessingSystem = GetProcessingSystem();
-
-	return ProcessingSystem->GetProcessingGroupCrew(ProcessingGroupIndex, false);
-}
-
-int32 UNovaSpacecraftCrewSystem::GetBusyCrew(int32 ProcessingGroupIndex) const
-{
-	const UNovaSpacecraftProcessingSystem* ProcessingSystem = GetProcessingSystem();
-
-	return ProcessingSystem->GetProcessingGroupCrew(ProcessingGroupIndex, true);
-}
-
-int32 UNovaSpacecraftCrewSystem::GetTotalBusyCrew() const
-{
-	const UNovaSpacecraftProcessingSystem* ProcessingSystem = GetProcessingSystem();
-
-	int32 Count = 0;
-	for (int32 ProcessingGroupIndex = 0; ProcessingGroupIndex < ProcessingSystem->GetProcessingGroupCount(); ProcessingGroupIndex++)
-	{
-		Count += GetBusyCrew(ProcessingGroupIndex);
-	}
-
-	return Count;
+	return FNovaCredits(10);
 }
 
 /*----------------------------------------------------
@@ -114,17 +178,20 @@ const UNovaSpacecraftProcessingSystem* UNovaSpacecraftCrewSystem::GetProcessingS
 {
 	const FNovaSpacecraft* Spacecraft = GetSpacecraft();
 	const ANovaGameState*  GameState  = GetWorld()->GetGameState<ANovaGameState>();
+	NCHECK(GameState);
 
 	return GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(Spacecraft);
 }
 
-/*----------------------------------------------------
-    Networking
-----------------------------------------------------*/
+ANovaPlayerController* UNovaSpacecraftCrewSystem::GetPC() const
+{
+	ANovaSpacecraftPawn* SpacecraftPawn = Cast<ANovaSpacecraftPawn>(GetOwner());
+	NCHECK(SpacecraftPawn);
 
-// void UNovaSpacecraftCrewSystem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-//{
-//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-// }
+	ANovaPlayerController* PC = Cast<ANovaPlayerController>(SpacecraftPawn->GetController());
+	NCHECK(PC);
+
+	return PC;
+}
 
 #undef LOCTEXT_NAMESPACE

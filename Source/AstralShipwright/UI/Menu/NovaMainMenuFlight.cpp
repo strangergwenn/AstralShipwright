@@ -705,7 +705,7 @@ TSharedPtr<SNeutronButton> SNovaMainMenuFlight::GetDefaultFocusButton() const
 FText SNovaMainMenuFlight::GetCrewText() const
 {
 	return CrewSystem ? FText::FormatNamed(INVTEXT("<img src=\"/Text/Crew\"/> {busy} / {total}"), TEXT("busy"),
-							FText::AsNumber(CrewSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(CrewSystem->GetTotalCrew()))
+							FText::AsNumber(CrewSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(CrewSystem->GetCurrentCrew()))
 	                  : FText();
 }
 

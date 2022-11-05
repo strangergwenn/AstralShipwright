@@ -678,7 +678,7 @@ void SNovaMainMenuOperations::Tick(const FGeometry& AllottedGeometry, const doub
 	{
 		AveragedPropellantRatio.Set(PropellantSystem->GetCurrentPropellantMass() / PropellantSystem->GetPropellantCapacity(), DeltaTime);
 		AveragedCrewRatio.Set(
-			CrewSystem->GetTotalCrew() > 0 ? static_cast<float>(CrewSystem->GetTotalBusyCrew()) / CrewSystem->GetTotalCrew() : 0.0f,
+			CrewSystem->GetCurrentCrew() > 0 ? static_cast<float>(CrewSystem->GetTotalBusyCrew()) / CrewSystem->GetCurrentCrew() : 0.0f,
 			DeltaTime);
 		AveragedEnergyRatio.Set(PowerSystem->GetEnergyCapacity() > 0
 									? static_cast<float>(PowerSystem->GetRemainingEnergy()) / PowerSystem->GetEnergyCapacity()
@@ -1240,7 +1240,7 @@ FText SNovaMainMenuOperations::GetCrewText() const
 {
 	return CrewSystem
 	         ? FText::FormatNamed(LOCTEXT("CrewDetailsFormat", "<img src=\"/Text/Crew\"/> {busy} / {total} crew busy"), TEXT("busy"),
-				   FText::AsNumber(CrewSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(CrewSystem->GetTotalCrew()))
+				   FText::AsNumber(CrewSystem->GetTotalBusyCrew()), TEXT("total"), FText::AsNumber(CrewSystem->GetCurrentCrew()))
 	         : FText();
 }
 

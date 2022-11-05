@@ -70,7 +70,7 @@ ANovaPlayerViewpoint::ANovaPlayerViewpoint() : Super()
 	CameraTravelingAmount   = 250.0f;
 }
 
-ANovaPlayerController::ANovaPlayerController() : Super(), PhotoModeAction(NAME_None)
+ANovaPlayerController::ANovaPlayerController() : Super(), PhotoModeAction(NAME_None), Credits(0), CurrentCrewCount(0)
 {}
 
 /*----------------------------------------------------
@@ -89,6 +89,9 @@ FNovaPlayerSave ANovaPlayerController::Save() const
 	{
 		SaveData.Spacecraft = *Spacecraft;
 	}
+
+	// Save crew
+	SaveData.CurrentCrewCount = CurrentCrewCount;
 
 	// Save credits
 	SaveData.Credits            = Credits;
@@ -119,6 +122,9 @@ void ANovaPlayerController::Load(const FNovaPlayerSave& SaveData)
 	{
 		Credits = ENovaConstants::DefaultCredits;
 	}
+
+	// Load crew
+	CurrentCrewCount = SaveData.CurrentCrewCount;
 
 	// Load parts
 	UnlockedComponents = SaveData.UnlockedComponents;
@@ -163,9 +169,6 @@ void ANovaPlayerController::LoadGame(const FString SaveName)
 	SaveManager->LoadGame<FNovaGameSave>(SaveName);
 	NCHECK(SaveManager->HasLoadedSaveData());
 	TSharedPtr<FNovaGameSave> SaveData = SaveManager->GetCurrentSaveData<FNovaGameSave>();
-
-	// Load contracts
-	// UNeutronContractManager::Get()->Load(SaveData->ContractManagerData);
 }
 
 /*----------------------------------------------------
@@ -211,8 +214,6 @@ void ANovaPlayerController::BeginPlay()
 					// Custom settings
 					ANovaSpacecraftPawn* SpacecraftPawn = GetSpacecraftPawn();
 					Materials[0]->SetScalarParameterValue("NoiseEnabled", GameUserSettings->EnableCameraDegradation ? 1.0f : 0.0f);
-					// Material->SetScalarParameterValue("ChromaIntensity", FMath::Lerp(Current.ChromaIntensity, Target.ChromaIntensity,
-			        // Alpha));
 
 					// Built-in settings (overrides)
 					Volume->Settings.bOverride_FilmGrainIntensity = true;
@@ -333,28 +334,6 @@ void ANovaPlayerController::BeginPlay()
 
 					return false;
 				}));
-
-		// Setup contracts
-		// UNeutronContractManager::Get()->BeginPlay(this,    //
-		//	FNeutronContractCreationCallback::CreateWeakLambda(this,
-		//		[=](ENeutronContractType Type, UNeutronGameInstance* CurrentGameInstance)
-		//		{
-		//			// Create the contract
-		//			TSharedPtr<FNeutronContract> Contract;
-		//			if (Type == ENeutronContractType::Tutorial)
-		//			{
-		//				Contract = MakeShared<FNovaTutorialContract>();
-		//			}
-		//			else
-		//			{
-		//				NCHECK(false);
-		//			}
-
-		//			// Create the contract
-		//			Contract->Initialize(CurrentGameInstance);
-
-		//			return Contract;
-		//		}));
 
 		// Load save data, process local game startup
 		if (!IsOnMainMenu())
@@ -557,6 +536,30 @@ void ANovaPlayerController::ServerProcessTransaction_Implementation(FNovaCredits
 bool ANovaPlayerController::CanAffordTransaction(FNovaCredits CreditsDelta) const
 {
 	return Credits + CreditsDelta >= 0;
+}
+
+void ANovaPlayerController::SetCurrentCrew(int32 Crew)
+{
+	NLOG("ANovaPlayerController::SetCurrentCrew : %d (%s)", Crew, *GetRoleString(this));
+
+	if (GetOwner()->GetLocalRole() == ROLE_Authority)
+	{
+		CurrentCrewCount = Crew;
+	}
+	else
+	{
+		ServerSetCurrentCrew(Crew);
+	}
+}
+
+bool ANovaPlayerController::ServerSetCurrentCrew_Validate(int32 Crew)
+{
+	return true;
+}
+
+void ANovaPlayerController::ServerSetCurrentCrew_Implementation(int32 Crew)
+{
+	SetCurrentCrew(Crew);
 }
 
 void ANovaPlayerController::ServerSalvagePlayer_Implementation()
@@ -789,6 +792,7 @@ void ANovaPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ANovaPlayerController, Credits);
+	DOREPLIFETIME(ANovaPlayerController, CurrentCrewCount);
 }
 
 /*----------------------------------------------------

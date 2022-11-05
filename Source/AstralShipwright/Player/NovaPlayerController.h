@@ -35,16 +35,10 @@ struct FNeutronPostProcessSetting : public FNeutronPostProcessSettingBase
 	FNeutronPostProcessSetting()
 		: FNeutronPostProcessSettingBase()
 
-		// Custom
-	    //, ChromaIntensity(1)
-
 		// Built-in
 		, GrainIntensity(0.1f)
 		, SceneColorTint(FLinearColor::White)
 	{}
-
-	// Custom effects
-	// float ChromaIntensity;
 
 	// Built-in effects
 	float        GrainIntensity;
@@ -62,6 +56,9 @@ struct FNovaPlayerSave
 
 	UPROPERTY()
 	FNovaCredits Credits;
+
+	UPROPERTY()
+	int32 CurrentCrewCount;
 
 	UPROPERTY()
 	TArray<FGuid> UnlockedComponents;
@@ -158,6 +155,18 @@ public:
 		return Credits;
 	}
 
+	/** Get the current active crew count */
+	int32 GetCurrentCrew() const
+	{
+		return CurrentCrewCount;
+	}
+
+	/** Set the current crew count */
+	void SetCurrentCrew(int32 Crew);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSetCurrentCrew(int32 Crew);
+
 	/** Reset cargo hold, fill propellant tanks, and ensure minimum starting credits */
 	UFUNCTION(Server, Reliable)
 	void ServerSalvagePlayer();
@@ -252,6 +261,10 @@ private:
 	// Replicated credits value
 	UPROPERTY(Replicated)
 	FNovaCredits Credits;
+
+	// Replicated crew count
+	UPROPERTY(Replicated)
+	int32 CurrentCrewCount;
 
 	// Gameplay state
 	TMap<ENovaPostProcessPreset, TSharedPtr<FNeutronPostProcessSetting>> PostProcessSettings;

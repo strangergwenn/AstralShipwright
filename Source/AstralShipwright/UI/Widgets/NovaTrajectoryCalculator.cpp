@@ -8,6 +8,7 @@
 
 #include "Spacecraft/NovaSpacecraft.h"
 #include "Spacecraft/System/NovaSpacecraftPropellantSystem.h"
+#include "Spacecraft/System/NovaSpacecraftCrewSystem.h"
 
 #include "Neutron/System/NeutronMenuManager.h"
 #include "Neutron/UI/Widgets/NeutronNavigationPanel.h"
@@ -485,6 +486,19 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 				}
 
 				CurrentSpacecraftIndex++;
+			}
+
+			// Format the crew pay
+			const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(GameState->GetPlayerSpacecraftIdentifier());
+			const UNovaSpacecraftCrewSystem* CrewSystem =
+				IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftCrewSystem>(Spacecraft) : nullptr;
+			if (CrewSystem)
+			{
+				FNovaCredits Cost = FMath::CeilToInt(Trajectory->TotalTravelDuration.AsDays()) * CrewSystem->GetDailyCost();
+				TrajectoryDetails += "\n";
+				TrajectoryDetails += FText::FormatNamed(
+					LOCTEXT("FlightPlanCrewFormat", "Your crew will require {credits} in pay"), TEXT("credits"), GetPriceText(Cost))
+				                         .ToString();
 			}
 		}
 

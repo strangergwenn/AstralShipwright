@@ -4,7 +4,9 @@
 
 #include "NovaMainMenu.h"
 
+#include "Game/NovaGameState.h"
 #include "Player/NovaPlayerController.h"
+#include "Spacecraft/System/NovaSpacecraftCrewSystem.h"
 
 #include "Nova.h"
 
@@ -36,6 +38,9 @@ void AppendAssetsSortedByLevel(const UNeutronAssetManager* AssetManager, TArray<
 	MaxUnlockLevel = FMath::Max(MaxUnlockLevel, AssetList.Last()->UnlockLevel);
 	CurrentList.Append(AssetList);
 }
+
+SNovaMainMenuCareer::SNovaMainMenuCareer() : PC(nullptr), CrewSystem(nullptr), CurrentCrewValue(0)
+{}
 
 void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 {
@@ -150,10 +155,24 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 				.HAlign(HAlign_Center)
 				.Padding(Theme.ContentPadding)
 				[
-					SNew(STextBlock)
-					.Text(this, &SNovaMainMenuCareer::GetCrewDetails)
-					.TextStyle(&Theme.MainFont)
-					.AutoWrapText(true)
+					SNew(SVerticalBox)
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(STextBlock)
+						.Text(this, &SNovaMainMenuCareer::GetCrewChanges)
+						.TextStyle(&Theme.MainFont)
+					]
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(STextBlock)
+						.Text(this, &SNovaMainMenuCareer::GetCrewDetails)
+						.TextStyle(&Theme.MainFont)
+						.AutoWrapText(true)
+					]
 				]
 			]
 		]
@@ -329,8 +348,11 @@ void SNovaMainMenuCareer::Show()
 {
 	SNeutronTabPanel::Show();
 
-	CrewSlider->SetMaxValue(42); // TODO
-	CrewSlider->SetCurrentValue(10); // TODO
+	if (CrewSystem)
+	{
+		CrewSlider->SetMaxValue(CrewSystem->GetCrewCapacity());
+		CrewSlider->SetCurrentValue(CrewSystem->GetCurrentCrew());
+	}
 }
 
 void SNovaMainMenuCareer::Hide()
@@ -340,7 +362,10 @@ void SNovaMainMenuCareer::Hide()
 
 void SNovaMainMenuCareer::UpdateGameObjects()
 {
-	PC = MenuManager.IsValid() ? MenuManager->GetPC<ANovaPlayerController>() : nullptr;
+	PC                                = MenuManager.IsValid() ? MenuManager->GetPC<ANovaPlayerController>() : nullptr;
+	const FNovaSpacecraft* Spacecraft = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
+	const ANovaGameState*  GameState  = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
+	CrewSystem = IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftCrewSystem>(Spacecraft) : nullptr;
 }
 
 TSharedPtr<SNeutronButton> SNovaMainMenuCareer::GetDefaultFocusButton() const
@@ -360,19 +385,24 @@ TSharedPtr<SNeutronButton> SNovaMainMenuCareer::GetDefaultFocusButton() const
     Content callbacks
 ----------------------------------------------------*/
 
+FText SNovaMainMenuCareer::GetCrewChanges() const
+{
+	return FText::FormatNamed(
+		LOCTEXT("NewCrewDetailsFormat", "Adjust crew size to {crew} for {credits} per day"), TEXT("crew"),
+		FText::AsNumber(CurrentCrewValue), TEXT("credits"), GetPriceText(CurrentCrewValue * CrewSystem->GetDailyCostPerCrew()));
+}
+
 FText SNovaMainMenuCareer::GetCrewDetails() const
 {
 	return FText::FormatNamed(
-		LOCTEXT("CrewDetailsFormat", "Currently employing {crew} crew ({required} useful, {total} total) for {credits} per day"),
-		TEXT("crew"), FText::AsNumber(4), TEXT("required"), FText::AsNumber(6), TEXT("total"), FText::AsNumber(7), TEXT("credits"),
-		FText::AsNumber(125));
-
-	// TODO
+		LOCTEXT("CrewDetailsFormat", "Currently employing {crew} crew ({required} are useful, capacity of {capacity}) for {credits} per day"),
+		TEXT("crew"), FText::AsNumber(CrewSystem->GetCurrentCrew()), TEXT("required"), FText::AsNumber(CrewSystem->GetTotalRequiredCrew()),
+		TEXT("capacity"), FText::AsNumber(CrewSystem->GetCrewCapacity()), TEXT("credits"), GetPriceText(CrewSystem->GetDailyCost()));
 }
 
 bool SNovaMainMenuCareer::CanConfirmCrew() const
 {
-	return CurrentCrewValue != 42;    // TODO
+	return CrewSystem && CurrentCrewValue != CrewSystem->GetCurrentCrew();
 }
 
 FText SNovaMainMenuCareer::GetUnlockInfo() const
@@ -437,7 +467,24 @@ void SNovaMainMenuCareer::OnCrewChanged(float Value)
 
 void SNovaMainMenuCareer::OnCrewConfirmed()
 {
-	// TODO
+	if (PC)
+	{
+		int32 PreviousCrewCount = CrewSystem->GetCurrentCrew();
+		PC->SetCurrentCrew(CurrentCrewValue);
+
+		FText DetailsText =
+			CurrentCrewValue > PreviousCrewCount
+				? FText::FormatNamed(
+					  LOCTEXT("CrewIncreased", "Your crew was increased from {previous} to {current}, hiring additional employees."),
+					  TEXT("previous"), PreviousCrewCount, TEXT("current"), FText::AsNumber(CurrentCrewValue))
+				: FText::FormatNamed(
+					  LOCTEXT("CrewDownsized", "Your crew was downsized from {previous} to {current}, dismissing excess employees."),
+					  TEXT("previous"), PreviousCrewCount, TEXT("current"), FText::AsNumber(CurrentCrewValue));
+
+		PC->Notify(LOCTEXT("CrewAdjusted", "Crew size adjusted"), DetailsText);
+
+		PC->SaveGame();
+	}
 }
 
 void SNovaMainMenuCareer::OnComponentUnlocked(const UNovaTradableAssetDescription* Asset)

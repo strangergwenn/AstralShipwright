@@ -26,6 +26,8 @@ class SNovaMainMenuCareer
 
 public:
 
+	SNovaMainMenuCareer();
+
 	void Construct(const FArguments& InArgs);
 
 	/*----------------------------------------------------
@@ -44,6 +46,7 @@ public:
 	    Content callbacks
 	----------------------------------------------------*/
 
+	FText GetCrewChanges() const;
 	FText GetCrewDetails() const;
 	bool  CanConfirmCrew() const;
 
@@ -80,6 +83,7 @@ protected:
 	// Game objects
 	TWeakObjectPtr<class UNeutronMenuManager> MenuManager;
 	class ANovaPlayerController*              PC;
+	class UNovaSpacecraftCrewSystem*          CrewSystem;
 
 	// Widgets
 	TArray<TSharedPtr<class SVerticalBox>>   UnlockBoxes;
@@ -89,5 +93,4 @@ protected:
 
 	// Local data
 	int32 CurrentCrewValue;
-
 };
