@@ -1,4 +1,4 @@
-// Astral Shipwright - Gwennaël Arbona
+﻿// Astral Shipwright - Gwennaël Arbona
 
 #pragma once
 

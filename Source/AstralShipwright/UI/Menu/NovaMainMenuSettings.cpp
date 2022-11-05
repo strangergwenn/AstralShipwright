@@ -292,6 +292,30 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 		->Action(FNeutronPlayerInput::MenuZoomOut)
 		->Default(EKeys::MouseScrollDown)
 	));
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("Flight", "Flight")))
+		->Action("Flight")
+		->Default(EKeys::F1)
+	));
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("Navigation", "Navigation")))
+		->Action("Navigation")
+		->Default(EKeys::F2)
+	));
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("Operations", "Operations")))
+		->Action("Operations")
+		->Default(EKeys::F3)
+	));
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("Assembly", "Assembly")))
+		->Action("Assembly")
+		->Default(EKeys::F4)
+	));
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("Career", "Career")))
+		->Action("Career")
+		->Default(EKeys::F5)
+	));
+	Bindings.Add(MakeShareable((new FNeutronKeyBinding(LOCTEXT("Settings", "Settings")))
+		->Action("Settings")
+		->Default(EKeys::F10)
+	));
 
 	// Build culture list
 	TArray<FString> CultureNames = FTextLocalizationManager::Get().GetLocalizedCultureNames(ELocalizationLoadFlags::Game);
