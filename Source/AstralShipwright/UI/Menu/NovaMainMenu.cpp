@@ -3,7 +3,6 @@
 #include "NovaMainMenu.h"
 
 #include "NovaMainMenuHome.h"
-#include "NovaMainMenuGame.h"
 #include "NovaMainMenuFlight.h"
 #include "NovaMainMenuNavigation.h"
 #include "NovaMainMenuOperations.h"
@@ -139,20 +138,6 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 			.MenuManager(MenuManager)
 		]
 
-		// Game menu
-		+ SNeutronTabView::Slot()
-		.Header(LOCTEXT("GameMenuTitle", "Game"))
-		.HeaderHelp(LOCTEXT("GameMenuTitleHelp", "Play with your friends"))
-		.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Game"))
-		//.Visible(this, &SNovaMainMenu::AreGameMenusVisible)
-		.Visible(false)
-		.Blur(true)
-		[
-			SAssignNew(GameMenu, SNovaMainMenuGame)
-			.Menu(this)
-			.MenuManager(MenuManager)
-		]
-
 		// Flight menu
 		+ SNeutronTabView::Slot()
 		.Header(LOCTEXT("FlightMenuTitle", "Flight"))
@@ -238,7 +223,6 @@ void SNovaMainMenu::Construct(const FArguments& InArgs)
 
 	// Register menus
 	MenuManager->RegisterGameMenu(HomeMenu);
-	MenuManager->RegisterGameMenu(GameMenu);
 	MenuManager->RegisterGameMenu(FlightMenu);
 	MenuManager->RegisterGameMenu(NavigationMenu);
 	MenuManager->RegisterGameMenu(OperationsMenu);

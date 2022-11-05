@@ -1,4 +1,4 @@
-﻿// Astral Shipwright - Gwennaël Arbona
+// Astral Shipwright - Gwennaël Arbona
 
 #pragma once
 
@@ -9,7 +9,6 @@
 enum class ENovaMainMenuType : uint8
 {
 	Home,
-	Game,
 	Flight,
 	Navigation,
 	Inventory,
@@ -122,7 +121,6 @@ protected:
 
 	// Menus
 	TSharedPtr<class SNovaMainMenuHome>       HomeMenu;
-	TSharedPtr<class SNovaMainMenuGame>       GameMenu;
 	TSharedPtr<class SNovaMainMenuFlight>     FlightMenu;
 	TSharedPtr<class SNovaMainMenuNavigation> NavigationMenu;
 	TSharedPtr<class SNovaMainMenuOperations> OperationsMenu;
