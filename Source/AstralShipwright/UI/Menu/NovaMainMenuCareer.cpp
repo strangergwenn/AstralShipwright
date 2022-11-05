@@ -142,9 +142,11 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 					[
 						SNeutronNew(SNeutronButton)
 						.Icon(FNeutronStyleSet::GetBrush("Icon/SB_On"))
-						.Size("SmallButtonSize")
+						.Action(FNeutronPlayerInput::MenuPrimary)
+						.Text(LOCTEXT("Confirm", "Confirm"))
 						.Enabled(this, &SNovaMainMenuCareer::CanConfirmCrew)
 						.OnClicked(this, &SNovaMainMenuCareer::OnCrewConfirmed)
+						.ActionFocusable(false)
 					]
 
 					+ SHorizontalBox::Slot()
