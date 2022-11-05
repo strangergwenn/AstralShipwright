@@ -953,8 +953,10 @@ void SNovaMainMenuOperations::Show()
 			.AutoWidth()
 			[
 				SNew(SNeutronImage)
-				.Image(FNeutronImageGetter::CreateLambda([=]()
+				.Image(FNeutronImageGetter::CreateLambda([=]() -> const FSlateBrush*
 				{
+					if (ProcessingSystem == nullptr) return nullptr;
+
 					switch (ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex)[Index])
 					{
 						default:
@@ -968,6 +970,8 @@ void SNovaMainMenuOperations::Show()
 				}))
 				.ColorAndOpacity_Lambda([=]()
 				{
+					if (ProcessingSystem == nullptr) return FLinearColor::Black;
+
 					switch (ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex)[Index])
 					{
 						default:
