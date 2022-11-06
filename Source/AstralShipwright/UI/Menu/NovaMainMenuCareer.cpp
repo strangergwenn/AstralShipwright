@@ -389,17 +389,21 @@ TSharedPtr<SNeutronButton> SNovaMainMenuCareer::GetDefaultFocusButton() const
 
 FText SNovaMainMenuCareer::GetCrewChanges() const
 {
-	return FText::FormatNamed(
-		LOCTEXT("NewCrewDetailsFormat", "Adjust crew size to {crew} for {credits} per day"), TEXT("crew"),
-		FText::AsNumber(CurrentCrewValue), TEXT("credits"), GetPriceText(CurrentCrewValue * CrewSystem->GetDailyCostPerCrew()));
+	return CrewSystem
+	         ? FText::FormatNamed(LOCTEXT("NewCrewDetailsFormat", "Adjust crew size to {crew} for {credits} per day"), TEXT("crew"),
+				   FText::AsNumber(CurrentCrewValue), TEXT("credits"), GetPriceText(CurrentCrewValue * CrewSystem->GetDailyCostPerCrew()))
+	         : FText();
 }
 
 FText SNovaMainMenuCareer::GetCrewDetails() const
 {
-	return FText::FormatNamed(
-		LOCTEXT("CrewDetailsFormat", "Currently employing {crew} crew ({required} are useful, capacity of {capacity}) for {credits} per day"),
-		TEXT("crew"), FText::AsNumber(CrewSystem->GetCurrentCrew()), TEXT("required"), FText::AsNumber(CrewSystem->GetTotalRequiredCrew()),
-		TEXT("capacity"), FText::AsNumber(CrewSystem->GetCrewCapacity()), TEXT("credits"), GetPriceText(CrewSystem->GetDailyCost()));
+	return CrewSystem ? FText::FormatNamed(
+							LOCTEXT("CrewDetailsFormat",
+								"Currently employing {crew} crew ({required} are useful, capacity of {capacity}) for {credits} per day"),
+							TEXT("crew"), FText::AsNumber(CrewSystem->GetCurrentCrew()), TEXT("required"),
+							FText::AsNumber(CrewSystem->GetTotalRequiredCrew()), TEXT("capacity"),
+							FText::AsNumber(CrewSystem->GetCrewCapacity()), TEXT("credits"), GetPriceText(CrewSystem->GetDailyCost()))
+	                  : FText();
 }
 
 bool SNovaMainMenuCareer::CanConfirmCrew() const
@@ -409,20 +413,21 @@ bool SNovaMainMenuCareer::CanConfirmCrew() const
 
 FText SNovaMainMenuCareer::GetUnlockInfo() const
 {
-	return FText::FormatNamed(
-		LOCTEXT("CareerInfo",
-			"Spacecraft components can currently be unlocked up to level {level}. Unlock new components to increase the available level!"),
-		TEXT("level"), FText::AsNumber(PC->GetComponentUnlockLevel()));
+	return PC ? FText::FormatNamed(LOCTEXT("CareerInfo",
+									   "Spacecraft components can currently be unlocked up to level {level}. Unlock new components to "
+	                                   "increase the available level!"),
+					TEXT("level"), FText::AsNumber(PC->GetComponentUnlockLevel()))
+	          : FText();
 }
 
 bool SNovaMainMenuCareer::IsComponentUnlockable(const UNovaTradableAssetDescription* Asset) const
 {
-	return PC->IsComponentUnlockable(Asset);
+	return PC && PC->IsComponentUnlockable(Asset);
 }
 
 bool SNovaMainMenuCareer::IsComponentUnlocked(const UNovaTradableAssetDescription* Asset) const
 {
-	return PC->IsComponentUnlocked(Asset);
+	return PC && PC->IsComponentUnlocked(Asset);
 }
 
 FText SNovaMainMenuCareer::GetComponentHelpText(const UNovaTradableAssetDescription* Asset) const
@@ -431,7 +436,7 @@ FText SNovaMainMenuCareer::GetComponentHelpText(const UNovaTradableAssetDescript
 	const UNovaEquipmentDescription* Equipment = Cast<UNovaEquipmentDescription>(Asset);
 	FText                            Details;
 
-	if (PC->IsComponentUnlockable(Asset, &Details))
+	if (PC && PC->IsComponentUnlockable(Asset, &Details))
 	{
 		if (Module)
 		{
@@ -476,11 +481,9 @@ void SNovaMainMenuCareer::OnCrewConfirmed()
 
 		FText DetailsText =
 			CurrentCrewValue > PreviousCrewCount
-				? FText::FormatNamed(
-					  LOCTEXT("CrewIncreased", "Crew increased from {previous} to {current}, employees hired"),
+				? FText::FormatNamed(LOCTEXT("CrewIncreased", "Crew increased from {previous} to {current}, employees hired"),
 					  TEXT("previous"), PreviousCrewCount, TEXT("current"), FText::AsNumber(CurrentCrewValue))
-				: FText::FormatNamed(
-					  LOCTEXT("CrewDownsized", "Crew downsized from {previous} to {current}, employees dismissed"),
+				: FText::FormatNamed(LOCTEXT("CrewDownsized", "Crew downsized from {previous} to {current}, employees dismissed"),
 					  TEXT("previous"), PreviousCrewCount, TEXT("current"), FText::AsNumber(CurrentCrewValue));
 
 		PC->Notify(LOCTEXT("CrewAdjusted", "Crew adjusted"), DetailsText);
