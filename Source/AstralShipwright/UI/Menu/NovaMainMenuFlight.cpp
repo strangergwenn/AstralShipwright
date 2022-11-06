@@ -522,7 +522,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 				{
 					auto Status = ProcessingSystem->GetMiningRigStatus();
 					return Status == ENovaSpacecraftProcessingSystemStatus::Processing
-						|| Status == ENovaSpacecraftProcessingSystemStatus::Stopped && ProcessingSystem->CanMiningRigBeActive();
+						|| (Status == ENovaSpacecraftProcessingSystemStatus::Stopped && ProcessingSystem->CanMiningRigBeActive());
 				}
 				return false;
 			})

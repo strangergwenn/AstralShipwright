@@ -1129,7 +1129,7 @@ void SNovaMainMenuOperations::Show()
 						{
 							auto Status = ProcessingSystem->GetMiningRigStatus();
 							return Status == ENovaSpacecraftProcessingSystemStatus::Processing
-								|| Status == ENovaSpacecraftProcessingSystemStatus::Stopped && ProcessingSystem->CanMiningRigBeActive();
+								|| (Status == ENovaSpacecraftProcessingSystemStatus::Stopped && ProcessingSystem->CanMiningRigBeActive());
 						}
 						return false;
 					})
