@@ -781,9 +781,9 @@ void SNovaMainMenuOperations::Show()
 								SNew(SNeutronText)
 								.TextStyle(&Theme.MainFont)
 								.Text(FNeutronTextGetter::CreateLambda([=]() {
-									return FText::FormatNamed(INVTEXT("{busy} / {total}"),
+									return CrewSystem ? FText::FormatNamed(INVTEXT("{busy} / {total}"),
 										TEXT("busy"), FText::AsNumber(CrewSystem->GetBusyCrew(ProcessingGroupIndex)),
-										TEXT("total"), FText::AsNumber(CrewSystem->GetRequiredCrew(ProcessingGroupIndex)));
+										TEXT("total"), FText::AsNumber(CrewSystem->GetRequiredCrew(ProcessingGroupIndex))) : FText();
 								}))
 							]
 						]
@@ -813,9 +813,9 @@ void SNovaMainMenuOperations::Show()
 								SNew(SNeutronText)
 								.TextStyle(&Theme.MainFont)
 								.Text(FNeutronTextGetter::CreateLambda([=]() {
-									return FText::FormatNamed(INVTEXT("{busy} / {total} kW"),
+									return ProcessingSystem ? FText::FormatNamed(INVTEXT("{busy} / {total} kW"),
 										TEXT("busy"), FText::AsNumber(ProcessingSystem->GetPowerUsage(ProcessingGroupIndex)),
-										TEXT("total"), FText::AsNumber(ProcessingSystem->GetRequiredPowerUsage(ProcessingGroupIndex)));
+										TEXT("total"), FText::AsNumber(ProcessingSystem->GetRequiredPowerUsage(ProcessingGroupIndex))) : FText();
 								}))
 							]
 						]
@@ -838,28 +838,33 @@ void SNovaMainMenuOperations::Show()
 							.TextStyle(&Theme.MainFont)
 							.Text_Lambda([=]()
 							{
-								// Resource inputs
-								FString InputList;
-								for (const UNovaResource* Input : ProcessingSystem->GetInputResources(ProcessingGroupIndex))
+								if (ProcessingSystem)
 								{
-									InputList += InputList.Len() ? TEXT(", ") : FString();
-									InputList += Input->Name.ToString();
+									// Resource inputs
+									FString InputList;
+									for (const UNovaResource* Input : ProcessingSystem->GetInputResources(ProcessingGroupIndex))
+									{
+										InputList += InputList.Len() ? TEXT(", ") : FString();
+										InputList += Input->Name.ToString();
+									}
+
+									// Resource outputs
+									FString OutputList;
+									for (const UNovaResource* Output : ProcessingSystem->GetOutputResources(ProcessingGroupIndex))
+									{
+										OutputList += OutputList.Len() ? TEXT(", ") : FString();
+										OutputList += Output->Name.ToString();
+									}
+
+									// Final string
+									FText InputLine = InputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingInput", "Input resources: {list}"),
+										TEXT("list"), FText::FromString(InputList)) : FText();
+									FText OutputLine = OutputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingOutput", "Output resources: {list}"),
+										TEXT("list"), FText::FromString(OutputList)) : FText();
+									return FText::FromString(InputLine.ToString() + "\n" + OutputLine.ToString());
 								}
 
-								// Resource outputs
-								FString OutputList;
-								for (const UNovaResource* Output : ProcessingSystem->GetOutputResources(ProcessingGroupIndex))
-								{
-									OutputList += OutputList.Len() ? TEXT(", ") : FString();
-									OutputList += Output->Name.ToString();
-								}
-
-								// Final string
-								FText InputLine = InputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingInput", "Input resources: {list}"),
-									TEXT("list"), FText::FromString(InputList)) : FText();
-								FText OutputLine = OutputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingOutput", "Output resources: {list}"),
-									TEXT("list"), FText::FromString(OutputList)) : FText();
-								return FText::FromString(InputLine.ToString() + "\n" + OutputLine.ToString());
+								return FText();
 							})
 							.AutoWrapText(true)
 						]
@@ -875,10 +880,12 @@ void SNovaMainMenuOperations::Show()
 					.Toggle(true)
 					.Text_Lambda([=]()
 					{
-						return ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex) ? LOCTEXT("StopProcessing", "Stop") : LOCTEXT("StartProcessing", "Start");
+						return ProcessingSystem && ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex) ? LOCTEXT("StopProcessing", "Stop") : LOCTEXT("StartProcessing", "Start");
 					})
 					.HelpText_Lambda([=]()
 					{
+						if (ProcessingSystem == nullptr) return FText();
+						
 						auto Status = ProcessingSystem->GetProcessingGroupStatus(ProcessingGroupIndex);
 						bool IsActive = ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex);
 
