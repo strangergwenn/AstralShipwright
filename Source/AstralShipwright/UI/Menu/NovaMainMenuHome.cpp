@@ -185,7 +185,7 @@ void SNovaMainMenuHome::Construct(const FArguments& InArgs)
 								.HelpText(LOCTEXT("ReportBugHelp", "Report a bug to the project's tracker"))
 								.OnClicked(FSimpleDelegate::CreateLambda([this]()
 								{
-									FPlatformProcess::LaunchURL(TEXT("https://github.com/arbonagw/AstralShipwright/issues"), NULL, NULL);
+									FPlatformProcess::LaunchURL(TEXT("https://github.com/StrangerGwenn/AstralShipwright/issues"), NULL, NULL);
 								}))
 							]
 
