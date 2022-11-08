@@ -292,6 +292,10 @@ public:
 	UPROPERTY(Category = Structure, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> MainStructure = nullptr;
 
+	// Main structural element
+	UPROPERTY(Category = Structure, EditDefaultsOnly)
+	TSoftObjectPtr<class UStaticMesh> FixedStructure = nullptr;
+
 	// Skirt structural element
 	UPROPERTY(Category = Structure, EditDefaultsOnly)
 	TSoftObjectPtr<class UStaticMesh> SkirtStructure = nullptr;
@@ -363,6 +367,10 @@ public:
 	// Compartment mass in T
 	UPROPERTY(Category = Properties, EditDefaultsOnly)
 	float Mass = 10;
+
+	// Rotation speed in degrees per second
+	UPROPERTY(Category = Properties, EditDefaultsOnly)
+	float RotationSpeed = 0;
 
 	// Metadata for module slots
 	UPROPERTY(Category = Properties, EditDefaultsOnly)

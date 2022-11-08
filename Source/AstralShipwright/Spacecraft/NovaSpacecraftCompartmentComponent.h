@@ -180,6 +180,7 @@ protected:
 
 	// Main elements
 	FNovaAssemblyElement MainStructure{ENovaAssemblyElementType::Structure};
+	FNovaAssemblyElement FixedStructure{ENovaAssemblyElementType::Structure};
 	FNovaAssemblyElement MainPiping{ENovaAssemblyElementType::Wiring};
 	FNovaAssemblyElement MainWiring{ENovaAssemblyElementType::Wiring};
 	FNovaAssemblyElement MainHull{ENovaAssemblyElementType::Hull};

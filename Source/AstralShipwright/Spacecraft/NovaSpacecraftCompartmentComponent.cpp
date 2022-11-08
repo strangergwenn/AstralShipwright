@@ -9,6 +9,7 @@
 #include "Neutron/Actor/NeutronStaticMeshComponent.h"
 #include "Neutron/Actor/NeutronSkeletalMeshComponent.h"
 #include "Neutron/Actor/NeutronDecalComponent.h"
+#include "Neutron/System/NeutronMenuManager.h"
 #include "Neutron/UI/NeutronUI.h"
 
 #include "Components/PrimitiveComponent.h"
@@ -52,6 +53,22 @@ void UNovaSpacecraftCompartmentComponent::TickComponent(float DeltaTime, ELevelT
 		FVector Location       = FMath::InterpEaseInOut(LastLocation, RequestedLocation, AnimationAlpha, ENeutronUIConstants::EaseStandard);
 		SetRelativeLocation(Location);
 	}
+
+	// Handle rotation
+	ANovaSpacecraftPawn* SpacecraftPawn = Cast<ANovaSpacecraftPawn>(GetOwner());
+	NCHECK(SpacecraftPawn);
+	if (IsValid(SpacecraftPawn)  && Description->RotationSpeed)
+	{
+		const UNeutronMenuManager* MenuManager = UNeutronMenuManager::Get();
+		if (!SpacecraftPawn->IsDocked())
+		{
+			AddRelativeRotation(FRotator(0, 0, Description->RotationSpeed * DeltaTime));
+		}
+		else if (MenuManager->IsBlack())
+		{
+			SetRelativeRotation(FRotator::ZeroRotator);
+		}
+	}
 }
 
 void UNovaSpacecraftCompartmentComponent::SetRequestedLocation(const FVector& Location)
@@ -74,7 +91,9 @@ FVector UNovaSpacecraftCompartmentComponent::GetCompartmentLength(const struct F
 {
 	if (Assembly.Description)
 	{
-		return GetElementLength(Assembly.Description->MainStructure);
+		return FVector(
+			FMath::Max(GetElementLength(Assembly.Description->MainStructure).X, GetElementLength(Assembly.Description->FixedStructure).X),
+			0, 0);
 	}
 	else
 	{
@@ -98,6 +117,7 @@ void UNovaSpacecraftCompartmentComponent::ProcessCompartment(const FNovaCompartm
 
 	// Process the structural elements
 	ProcessElement(MainStructure, CompDesc ? CompDesc->MainStructure : nullptr);
+	ProcessElement(FixedStructure, CompDesc ? CompDesc->FixedStructure : nullptr);
 	ProcessElement(MainPiping, CompDesc ? CompDesc->MainPiping : nullptr);
 	ProcessElement(MainWiring, CompDesc ? CompDesc->MainWiring : nullptr);
 	ProcessElement(MainHull, CompDesc ? CompDesc->GetMainHull(Compartment.HullType) : nullptr);
@@ -170,6 +190,7 @@ void UNovaSpacecraftCompartmentComponent::BuildCompartment(const struct FNovaCom
 	// Build structure & hull
 	FVector StructureOffset = -0.5f * GetElementLength(MainStructure);
 	SetElementOffset(MainStructure, StructureOffset);
+	SetElementOffset(FixedStructure, StructureOffset);
 	SetElementOffset(MainPiping, StructureOffset);
 	SetElementOffset(MainWiring, StructureOffset);
 	SetElementOffset(MainHull, StructureOffset);
@@ -186,11 +207,21 @@ void UNovaSpacecraftCompartmentComponent::BuildCompartment(const struct FNovaCom
 		BuildEquipment(Equipment[EquipmentIndex], Compartment.Equipment[EquipmentIndex],
 			Compartment.Description->GetEquipmentSlot(EquipmentIndex), Compartment);
 	}
+
+	// Make the fixed structure independent
+	if (FixedStructure.Mesh)
+	{
+		USceneComponent* MainStructuredMesh = Cast<USceneComponent>(MainStructure.Mesh);
+		USceneComponent* FixedStructuredMesh = Cast<USceneComponent>(FixedStructure.Mesh);
+		FixedStructuredMesh->AttachToComponent(GetAttachParent(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+		FixedStructuredMesh->SetWorldLocation(MainStructuredMesh->GetComponentLocation());
+	}
 }
 
 void UNovaSpacecraftCompartmentComponent::UpdateCustomization()
 {
 	UpdateCustomization(MainStructure);
+	UpdateCustomization(FixedStructure);
 	UpdateCustomization(MainPiping);
 	UpdateCustomization(MainWiring);
 	UpdateCustomization(MainHull);
@@ -251,7 +282,7 @@ void UNovaSpacecraftCompartmentComponent::BuildEquipment(FNovaEquipmentAssembly&
 	bool       IsForwardEquipment = EquipmentDescription && EquipmentDescription->EquipmentType == ENovaEquipmentType::Forward;
 	FTransform BaseTransform =
 		MainStructure.Mesh->GetRelativeSocketTransform(IsForwardEquipment ? Slot.ForwardSocketName : Slot.SocketName);
-	FVector StructureOffset = -0.5f * GetElementLength(MainStructure);
+	FVector StructureOffset = -0.5f * FVector(FMath::Max(GetElementLength(MainStructure).X, GetElementLength(FixedStructure).X), 0, 0);
 
 	// Offset the equipment and set the animation if any
 	SetElementOffset(Assembly.Equipment, BaseTransform.GetLocation() + StructureOffset, BaseTransform.GetRotation().Rotator());
@@ -364,7 +395,7 @@ void UNovaSpacecraftCompartmentComponent::BuildElement(
 		if (NeedConstructing)
 		{
 			UPrimitiveComponent* MeshComponent = Cast<UPrimitiveComponent>(Element.Mesh);
-			MeshComponent->AttachToComponent(this, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
+			MeshComponent->AttachToComponent(this, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 			MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 			MeshComponent->SetCollisionProfileName("Pawn");
 			MeshComponent->RegisterComponent();
@@ -506,9 +537,7 @@ FVector UNovaSpacecraftCompartmentComponent::GetElementLength(const FNovaAssembl
 
 FVector UNovaSpacecraftCompartmentComponent::GetElementLength(TSoftObjectPtr<UObject> Asset) const
 {
-	NCHECK(Asset.IsValid());
-
-	if (Asset->IsA(UStaticMesh::StaticClass()))
+	if (Asset && Asset->IsA(UStaticMesh::StaticClass()))
 	{
 		FBoxSphereBounds MeshBounds = Cast<UStaticMesh>(Asset.Get())->GetBounds();
 		FVector          Min        = MeshBounds.Origin - MeshBounds.BoxExtent;
