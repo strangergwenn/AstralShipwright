@@ -19,4 +19,5 @@ void UNovaGameUserSettings::SetToDefaults()
 	Super::SetToDefaults();
 
 	EnableCameraDegradation = true;
+	FOV                     = 100.0f;
 }
