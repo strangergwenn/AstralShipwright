@@ -98,6 +98,9 @@ protected:
 	----------------------------------------------------*/
 protected:
 
+	// Pricing
+	void ShowPriceTable();
+
 	// Side panel
 	void OnShowSidePanel(const FNovaOrbitalObject& HoveredObjects);
 	void OnHideSidePanel();
@@ -121,6 +124,7 @@ protected:
 	class UNovaAsteroidSimulationComponent* AsteroidSimulation;
 
 	// Slate widgets
+	TSharedPtr<class SNeutronModalPanel>      GenericModalPanel;
 	TSharedPtr<SNovaOrbitalMap>               OrbitalMap;
 	TSharedPtr<class SNovaSidePanel>          SidePanel;
 	TSharedPtr<class SNovaSidePanelContainer> SidePanelContainer;

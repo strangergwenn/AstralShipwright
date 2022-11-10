@@ -20,7 +20,9 @@
 #include "Neutron/System/NeutronMenuManager.h"
 #include "Neutron/UI/Widgets/NeutronFadingWidget.h"
 #include "Neutron/UI/Widgets/NeutronKeyLabel.h"
+#include "Neutron/UI/Widgets/NeutronModalPanel.h"
 #include "Neutron/UI/Widgets/NeutronSlider.h"
+#include "Neutron/UI/Widgets/NeutronTable.h"
 
 #include "Widgets/Layout/SBackgroundBlur.h"
 
@@ -478,6 +480,8 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 	// Parent constructor
 	SNeutronNavigationPanel::Construct(SNeutronNavigationPanel::FArguments().Menu(InArgs._Menu));
 
+	GenericModalPanel = Menu->CreateModalPanel();
+
 	// clang-format off
 	ChildSlot
 	[
@@ -607,6 +611,18 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 		.VAlign(VAlign_Top)
 		[
 			SAssignNew(HoverStack, SNovaHoverStack)
+		]
+
+		// Price table
+		+ SOverlay::Slot()
+		.HAlign(HAlign_Right)
+		.VAlign(VAlign_Bottom)
+		[
+			SNeutronNew(SNeutronButton)
+			.Action(FNeutronPlayerInput::MenuAltPrimary)
+			.Text(LOCTEXT("ShowPriceTable", "Show price table"))
+			.HelpText(LOCTEXT("ShowPriceTableHelp", "Vizualize the current price table for tradable resources"))
+			.OnClicked(this, &SNovaMainMenuNavigation::ShowPriceTable)
 		]
 	];
 	// clang-format on
@@ -1114,6 +1130,99 @@ FText SNovaMainMenuNavigation::GetCommitTrajectoryHelpText() const
 /*----------------------------------------------------
     Callbacks
 ----------------------------------------------------*/
+
+void SNovaMainMenuNavigation::ShowPriceTable()
+{
+	const UNeutronAssetManager* AssetManager = UNeutronAssetManager::Get();
+	NCHECK(AssetManager);
+
+	// Get formating tools
+	FNumberFormattingOptions Options;
+	Options.MaximumFractionalDigits = 1;
+	const FNeutronMainTheme& Theme  = FNeutronStyleSet::GetMainTheme();
+
+	// This is an unfortunate limitation of tables, don't forget to change here the number of areas supported
+	TArray<const UNovaArea*> Areas     = AssetManager->GetAssets<UNovaArea>();
+	static constexpr uint8   AreaCount = 3;
+	NCHECK(Areas.Num() == AreaCount);
+
+	// Create the table structure
+	// clang-format off
+	TSharedPtr<SNeutronTable<AreaCount>> PriceTable;
+	TSharedPtr<SWidget>                  TableContainer =
+		SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot()
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		[
+			SAssignNew(PriceTable, SNeutronTable<AreaCount>)
+			.Title(LOCTEXT("PriceTableTitle", "Current resource prices"))
+			.Width(2 * Theme.GenericMenuWidth)
+		]
+		+ SHorizontalBox::Slot();
+	// clang-format on
+
+	// Add the headers
+	TArray<FText> AreaNames;
+	for (const UNovaArea* Area : Areas)
+	{
+		AreaNames.Add(Area->Name);
+	}
+	PriceTable->AddHeaders(LOCTEXT("Resource", "Resource"), AreaNames);
+
+	// Iterate all resources for each area
+	for (const UNovaResource* Resource : AssetManager->GetAssets<UNovaResource>())
+	{
+		TArray<TNeutronTableValue<FText>> PriceList;
+		for (const UNovaArea* Area : Areas)
+		{
+			const FNovaCredits       Price    = GameState->GetCurrentPrice(Resource, Area, false);
+			const ENovaPriceModifier Modifier = GameState->GetCurrentPriceModifier(Resource, Area);
+
+			// Process the price modifier
+			FLinearColor ModifierColor;
+			FText        IconText;
+			FText        ModifierText;
+			switch (Modifier)
+			{
+				case ENovaPriceModifier::Cheap:
+					IconText      = INVTEXT("Cheap");
+					ModifierText  = LOCTEXT("Cheap", "Cheap");
+					ModifierColor = Theme.NegativeColor;
+					break;
+				case ENovaPriceModifier::BelowAverage:
+					IconText      = INVTEXT("BelowAverage");
+					ModifierText  = LOCTEXT("BelowAverage", "Below average");
+					ModifierColor = Theme.NegativeColor;
+					break;
+				case ENovaPriceModifier::Average:
+					IconText      = INVTEXT("Average");
+					ModifierText  = LOCTEXT("Average", "Average");
+					ModifierColor = Theme.NeutralColor;
+					break;
+				case ENovaPriceModifier::AboveAverage:
+					IconText      = INVTEXT("AboveAverage");
+					ModifierText  = LOCTEXT("AboveAverage", "Above average");
+					ModifierColor = Theme.PositiveColor;
+					break;
+				case ENovaPriceModifier::Expensive:
+					IconText      = INVTEXT("Expensive");
+					ModifierText  = LOCTEXT("Expensive", "Expensive");
+					ModifierColor = Theme.PositiveColor;
+					break;
+			}
+
+			PriceList.Add(TNeutronTableValue(FText::FormatNamed(INVTEXT("{price} (<img src=\"/Text/{icon}\"/>{modifier})"), TEXT("price"),
+												 GetPriceText(Price), TEXT("icon"), IconText, TEXT("modifier"), ModifierText),
+				INVTEXT("Ѥ"), ModifierColor));
+		}
+
+		PriceTable->AddEntries(Resource->Name, PriceList);
+	}
+
+	GenericModalPanel->Show(
+		LOCTEXT("PriceTable", "Price table"), FText(), FSimpleDelegate(), FSimpleDelegate(), FSimpleDelegate(), TableContainer);
+}
 
 void SNovaMainMenuNavigation::OnShowSidePanel(const FNovaOrbitalObject& HoveredObject)
 {
