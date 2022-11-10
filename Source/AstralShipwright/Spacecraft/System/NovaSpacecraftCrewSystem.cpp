@@ -62,10 +62,12 @@ void UNovaSpacecraftCrewSystem::Update(FNovaTime InitialTime, FNovaTime FinalTim
 			FNovaCredits UnitCost = -GetDailyCostPerCrew();
 			if (GetPC()->CanAffordTransaction(UnitCost))
 			{
+				NLOG("UNovaSpacecraftCrewSystem::Update : paying %.2f to crew", UnitCost.GetValue());
 				GetPC()->ProcessTransaction(UnitCost);
 			}
 			else
 			{
+				NLOG("UNovaSpacecraftCrewSystem::Update : aborting pay after %d crew", UpdatedCrewCount);
 				break;
 			}
 		}
