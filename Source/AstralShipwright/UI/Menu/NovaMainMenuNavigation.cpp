@@ -1212,9 +1212,21 @@ void SNovaMainMenuNavigation::ShowPriceTable()
 					break;
 			}
 
-			PriceList.Add(TNeutronTableValue(FText::FormatNamed(INVTEXT("{price} (<img src=\"/Text/{icon}\"/>{modifier})"), TEXT("price"),
-												 GetPriceText(Price), TEXT("icon"), IconText, TEXT("modifier"), ModifierText),
-				INVTEXT("Ѥ"), ModifierColor));
+			// Mark if the resource is for sale there
+			FText SoldText;
+			if (Area->GetResourcesSold().Contains(Resource))
+			{
+				SoldText = FText::FromString(TEXT("\n") + LOCTEXT("SoldThere", "Selling").ToString());
+			}
+			else
+			{
+				SoldText = FText::FromString(TEXT("\n") + LOCTEXT("BoughtThere", "Buying").ToString());
+			}
+
+			PriceList.Add(
+				TNeutronTableValue(FText::FormatNamed(INVTEXT("{price} (<img src=\"/Text/{icon}\"/>{modifier}){sold}"), TEXT("price"),
+									   GetPriceText(Price), TEXT("icon"), IconText, TEXT("modifier"), ModifierText, TEXT("sold"), SoldText),
+					INVTEXT("Ѥ"), ModifierColor));
 		}
 
 		PriceTable->AddEntries(Resource->Name, PriceList);
