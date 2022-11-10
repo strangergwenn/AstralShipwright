@@ -867,7 +867,7 @@ FNovaCredits ANovaPlayerController::GetComponentUnlockCost(const UNovaTradableAs
 
 void ANovaPlayerController::UnlockComponent(const UNovaTradableAssetDescription* Asset)
 {
-	ProcessTransaction(GetComponentUnlockCost(Asset));
+	ProcessTransaction(-GetComponentUnlockCost(Asset));
 	UnlockedComponents.Add(Asset->Identifier);
 	SaveGame();
 }
