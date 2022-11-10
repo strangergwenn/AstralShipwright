@@ -403,12 +403,12 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.Action(FNeutronPlayerInput::MenuPrimary)
 			.Icon(FNeutronStyleSet::GetBrush("Icon/SB_Time"))
 			.Text(LOCTEXT("FastForward", "Fast forward"))
-			.HelpText(this, &SNovaMainMenuFlight::GetFastFowardHelp)
+			.HelpText(LOCTEXT("FastForwardHelp", "Wait until the next event"))
 			.OnClicked(this, &SNovaMainMenuFlight::OnFastForward)
 			.Enabled(this, &SNovaMainMenuFlight::CanFastForward)
 		]
 	
-#if WITH_EDITOR && 1
+#if WITH_EDITOR && 0
 
 		+ SVerticalBox::Slot()
 		.AutoHeight()
