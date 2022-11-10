@@ -165,6 +165,9 @@ public:
 		return PlayerSpacecraftIdentifiers;
 	}
 
+	/** Check whether any spacecraft is orbiting or anchored */
+	bool IsAnySpacecraftOperating() const;
+
 	/** Check whether any spacecraft is docked */
 	bool IsAnySpacecraftDocked() const;
 

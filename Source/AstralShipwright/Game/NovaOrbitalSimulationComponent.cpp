@@ -458,6 +458,14 @@ bool UNovaOrbitalSimulationComponent::CanCommitTrajectory(const FNovaTrajectory&
 		}
 		return false;
 	}
+	else if (GameState->IsAnySpacecraftOperating())
+	{
+		if (Help)
+		{
+			*Help = LOCTEXT("CannotCommitFlightPlanOperating", "A spacecraft is still operating");
+		}
+		return false;
+	}
 
 	return true;
 }

@@ -435,6 +435,21 @@ void ANovaGameState::UpdateSpacecraft(const FNovaSpacecraft& Spacecraft, const F
 	}
 }
 
+bool ANovaGameState::IsAnySpacecraftOperating() const
+{
+	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
+	{
+		const UNovaSpacecraftMovementComponent* MovementComponent = SpacecraftPawn->GetSpacecraftMovement();
+		if (SpacecraftPawn->GetPlayerState() && IsValid(MovementComponent) &&
+			(MovementComponent->IsAnchoring() || MovementComponent->IsAnchored() || MovementComponent->IsOrbiting()))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 bool ANovaGameState::IsAnySpacecraftDocked() const
 {
 	for (const ANovaSpacecraftPawn* SpacecraftPawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
