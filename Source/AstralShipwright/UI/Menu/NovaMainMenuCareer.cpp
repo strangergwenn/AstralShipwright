@@ -144,6 +144,17 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 						.Icon(FNeutronStyleSet::GetBrush("Icon/SB_On"))
 						.Action(FNeutronPlayerInput::MenuPrimary)
 						.Text(LOCTEXT("Confirm", "Confirm"))
+						.HelpText_Lambda([=]()
+						{
+							if (CanConfirmCrew())
+							{
+								return LOCTEXT("ConfirmHelp", "Confirm the new crew size");
+							}
+							else
+							{
+								return LOCTEXT("CannotConfirmHelp", "Cannot change the crew size here");
+							}
+						})
 						.Enabled(this, &SNovaMainMenuCareer::CanConfirmCrew)
 						.OnClicked(this, &SNovaMainMenuCareer::OnCrewConfirmed)
 						.ActionFocusable(false)
@@ -366,7 +377,7 @@ void SNovaMainMenuCareer::UpdateGameObjects()
 {
 	PC                                = MenuManager.IsValid() ? MenuManager->GetPC<ANovaPlayerController>() : nullptr;
 	const FNovaSpacecraft* Spacecraft = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
-	const ANovaGameState*  GameState  = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
+	GameState                         = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
 	CrewSystem = IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftCrewSystem>(Spacecraft) : nullptr;
 }
 
@@ -395,14 +406,14 @@ FText SNovaMainMenuCareer::GetCrewDetails() const
 
 bool SNovaMainMenuCareer::CanConfirmCrew() const
 {
-	return CrewSystem && CurrentCrewValue != CrewSystem->GetCurrentCrew();
+	return CrewSystem && CurrentCrewValue != CrewSystem->GetCurrentCrew() && GameState->AreAllSpacecraftDocked();
 }
 
 FText SNovaMainMenuCareer::GetUnlockInfo() const
 {
 	return PC ? FText::FormatNamed(LOCTEXT("CareerInfo",
 									   "Spacecraft components can currently be unlocked up to level {level}. Unlock new components to "
-	                                   "increase the available level!"),
+									   "increase the available level!"),
 					TEXT("level"), FText::AsNumber(PC->GetComponentUnlockLevel()))
 	          : FText();
 }

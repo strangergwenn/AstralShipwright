@@ -81,6 +81,7 @@ protected:
 	// Game objects
 	TWeakObjectPtr<class UNeutronMenuManager> MenuManager;
 	class ANovaPlayerController*              PC;
+	class ANovaGameState*                     GameState;
 	class UNovaSpacecraftCrewSystem*          CrewSystem;
 
 	// Widgets
