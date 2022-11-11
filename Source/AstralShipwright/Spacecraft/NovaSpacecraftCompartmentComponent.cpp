@@ -57,7 +57,7 @@ void UNovaSpacecraftCompartmentComponent::TickComponent(float DeltaTime, ELevelT
 	// Handle rotation
 	ANovaSpacecraftPawn* SpacecraftPawn = Cast<ANovaSpacecraftPawn>(GetOwner());
 	NCHECK(SpacecraftPawn);
-	if (IsValid(SpacecraftPawn)  && Description->RotationSpeed)
+	if (IsValid(SpacecraftPawn) && Description->RotationSpeed)
 	{
 		const UNeutronMenuManager* MenuManager = UNeutronMenuManager::Get();
 		if (!SpacecraftPawn->IsDocked())
@@ -211,7 +211,7 @@ void UNovaSpacecraftCompartmentComponent::BuildCompartment(const struct FNovaCom
 	// Make the fixed structure independent
 	if (FixedStructure.Mesh)
 	{
-		USceneComponent* MainStructuredMesh = Cast<USceneComponent>(MainStructure.Mesh);
+		USceneComponent* MainStructuredMesh  = Cast<USceneComponent>(MainStructure.Mesh);
 		USceneComponent* FixedStructuredMesh = Cast<USceneComponent>(FixedStructure.Mesh);
 		FixedStructuredMesh->AttachToComponent(GetAttachParent(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 		FixedStructuredMesh->SetWorldLocation(MainStructuredMesh->GetComponentLocation());
@@ -250,23 +250,26 @@ void UNovaSpacecraftCompartmentComponent::BuildModule(
 {
 	NCHECK(MainStructure.Mesh != nullptr);
 
-	// Get offsets
-	const FTransform BaseTransform   = MainStructure.Mesh->GetRelativeSocketTransform(Slot.SocketName);
-	const FVector    StructureOffset = -0.5f * GetElementLength(MainStructure);
-	const FVector    BulkheadOffset  = BaseTransform.GetRotation().RotateVector(0.5f * GetElementLength(Assembly.Segment));
-	const FVector    Location        = BaseTransform.GetLocation() + StructureOffset;
-	const FRotator   Rotation        = BaseTransform.GetRotation().Rotator();
+	if (MainStructure.Mesh)
+	{
+		// Get offsets
+		const FTransform BaseTransform   = MainStructure.Mesh->GetRelativeSocketTransform(Slot.SocketName);
+		const FVector    StructureOffset = -0.5f * GetElementLength(MainStructure);
+		const FVector    BulkheadOffset  = BaseTransform.GetRotation().RotateVector(0.5f * GetElementLength(Assembly.Segment));
+		const FVector    Location        = BaseTransform.GetLocation() + StructureOffset;
+		const FRotator   Rotation        = BaseTransform.GetRotation().Rotator();
 
-	// Offset the module elements
-	SetElementOffset(Assembly.SkirtStructure, Location, Rotation);
-	SetElementOffset(Assembly.Segment, Location, Rotation);
-	SetElementOffset(Assembly.ForwardBulkhead, Location + BulkheadOffset, Rotation);
-	SetElementOffset(Assembly.AftBulkhead, Location - BulkheadOffset, Rotation);
-	SetElementOffset(Assembly.ConnectionPiping, Location, Rotation);
-	SetElementOffset(Assembly.CollectorPiping, Location, Rotation);
-	SetElementOffset(Assembly.ConnectionWiring, Location, Rotation);
-	SetElementOffset(Assembly.DomeHull, Location, Rotation);
-	SetElementOffset(Assembly.SkirtHull, Location, Rotation);
+		// Offset the module elements
+		SetElementOffset(Assembly.SkirtStructure, Location, Rotation);
+		SetElementOffset(Assembly.Segment, Location, Rotation);
+		SetElementOffset(Assembly.ForwardBulkhead, Location + BulkheadOffset, Rotation);
+		SetElementOffset(Assembly.AftBulkhead, Location - BulkheadOffset, Rotation);
+		SetElementOffset(Assembly.ConnectionPiping, Location, Rotation);
+		SetElementOffset(Assembly.CollectorPiping, Location, Rotation);
+		SetElementOffset(Assembly.ConnectionWiring, Location, Rotation);
+		SetElementOffset(Assembly.DomeHull, Location, Rotation);
+		SetElementOffset(Assembly.SkirtHull, Location, Rotation);
+	}
 }
 
 void UNovaSpacecraftCompartmentComponent::BuildEquipment(FNovaEquipmentAssembly& Assembly,
@@ -278,15 +281,18 @@ void UNovaSpacecraftCompartmentComponent::BuildEquipment(FNovaEquipmentAssembly&
 	}
 	NCHECK(MainStructure.Mesh != nullptr);
 
-	// Get offsets
-	bool       IsForwardEquipment = EquipmentDescription && EquipmentDescription->EquipmentType == ENovaEquipmentType::Forward;
-	FTransform BaseTransform =
-		MainStructure.Mesh->GetRelativeSocketTransform(IsForwardEquipment ? Slot.ForwardSocketName : Slot.SocketName);
-	FVector StructureOffset = -0.5f * FVector(FMath::Max(GetElementLength(MainStructure).X, GetElementLength(FixedStructure).X), 0, 0);
+	if (MainStructure.Mesh)
+	{
+		// Get offsets
+		bool       IsForwardEquipment = EquipmentDescription && EquipmentDescription->EquipmentType == ENovaEquipmentType::Forward;
+		FTransform BaseTransform =
+			MainStructure.Mesh->GetRelativeSocketTransform(IsForwardEquipment ? Slot.ForwardSocketName : Slot.SocketName);
+		FVector StructureOffset = -0.5f * FVector(FMath::Max(GetElementLength(MainStructure).X, GetElementLength(FixedStructure).X), 0, 0);
 
-	// Offset the equipment and set the animation if any
-	SetElementOffset(Assembly.Equipment, BaseTransform.GetLocation() + StructureOffset, BaseTransform.GetRotation().Rotator());
-	SetElementAnimation(Assembly.Equipment, EquipmentDescription ? EquipmentDescription->SkeletalAnimation : nullptr);
+		// Offset the equipment and set the animation if any
+		SetElementOffset(Assembly.Equipment, BaseTransform.GetLocation() + StructureOffset, BaseTransform.GetRotation().Rotator());
+		SetElementAnimation(Assembly.Equipment, EquipmentDescription ? EquipmentDescription->SkeletalAnimation : nullptr);
+	}
 }
 
 void UNovaSpacecraftCompartmentComponent::BuildElement(
