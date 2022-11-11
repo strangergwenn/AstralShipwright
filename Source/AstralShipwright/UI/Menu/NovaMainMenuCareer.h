@@ -40,8 +40,6 @@ public:
 
 	virtual void UpdateGameObjects() override;
 
-	virtual TSharedPtr<SNeutronButton> GetDefaultFocusButton() const override;
-
 	/*----------------------------------------------------
 	    Content callbacks
 	----------------------------------------------------*/

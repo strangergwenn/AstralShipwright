@@ -130,7 +130,7 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 						+ SVerticalBox::Slot()
 						.AutoHeight()
 						[
-							SNeutronAssignNew(CrewSlider, SNeutronSlider)
+							SNeutronDefaultAssignNew(CrewSlider, SNeutronSlider)
 							.Size("DoubleButtonSize")
 							.OnValueChanged(this, &SNovaMainMenuCareer::OnCrewChanged)
 						]
@@ -154,7 +154,6 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 
 				+ SVerticalBox::Slot()
 				.AutoHeight()
-				.HAlign(HAlign_Center)
 				.Padding(Theme.ContentPadding)
 				[
 					SNew(SVerticalBox)
@@ -165,6 +164,7 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 						SNew(STextBlock)
 						.Text(this, &SNovaMainMenuCareer::GetCrewChanges)
 						.TextStyle(&Theme.MainFont)
+						.AutoWrapText(true)
 					]
 
 					+ SVerticalBox::Slot()
@@ -368,19 +368,6 @@ void SNovaMainMenuCareer::UpdateGameObjects()
 	const FNovaSpacecraft* Spacecraft = IsValid(PC) ? PC->GetSpacecraft() : nullptr;
 	const ANovaGameState*  GameState  = IsValid(PC) ? MenuManager->GetWorld()->GetGameState<ANovaGameState>() : nullptr;
 	CrewSystem = IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftCrewSystem>(Spacecraft) : nullptr;
-}
-
-TSharedPtr<SNeutronButton> SNovaMainMenuCareer::GetDefaultFocusButton() const
-{
-	for (const TSharedPtr<SNeutronButton>& Button : UnlockButtons)
-	{
-		if (Button->IsButtonEnabled())
-		{
-			return Button;
-		}
-	}
-
-	return SNeutronTabPanel::GetDefaultFocusButton();
 }
 
 /*----------------------------------------------------
