@@ -93,8 +93,10 @@ void SNovaOrbitalMap::Construct(const FArguments& InArgs)
 	CurrentDesiredScale = MapScaleMax;
 
 	// Camera filter settings, based on the defaults
-	CameraFilter.Velocity *= 50;
+	CameraFilter.Velocity *= 30;
 	CameraFilter.Acceleration *= 15;
+	CameraFilter.Brake *= 10;
+	CameraFilter.Brake2 *= 10;
 }
 
 /*----------------------------------------------------
@@ -114,9 +116,9 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	HoveredOrbitalObjects.Empty();
 
 	// Integrate analog input
-	const float     PositionFreedom = 0.5f;
+	const double     PositionFreedom = 1.0;
 	const FVector2D HalfLocalSize   = GetTickSpaceGeometry().GetLocalSize() / 2;
-	CameraFilter.ApplyFilter(CurrentPosition, CurrentVelocity, TargetPosition, DeltaTime, MenuManager->IsUsingGamepad());
+	CameraFilter.ApplyFilterCircular(CurrentPosition, CurrentVelocity, TargetPosition, DeltaTime, MenuManager->IsUsingGamepad());
 	CurrentPosition.X = FMath::Clamp(CurrentPosition.X, PositionFreedom * -HalfLocalSize.X, PositionFreedom * HalfLocalSize.X);
 	CurrentPosition.Y = FMath::Clamp(CurrentPosition.Y, PositionFreedom * -HalfLocalSize.Y, PositionFreedom * HalfLocalSize.Y);
 	CurrentOrigin     = HalfLocalSize + CurrentPosition;

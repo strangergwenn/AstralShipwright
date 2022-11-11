@@ -623,6 +623,7 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 			.Text(LOCTEXT("ShowPriceTable", "Show price table"))
 			.HelpText(LOCTEXT("ShowPriceTableHelp", "Vizualize the current price table for tradable resources"))
 			.OnClicked(this, &SNovaMainMenuNavigation::ShowPriceTable)
+			.Focusable(false)
 		]
 	];
 	// clang-format on
@@ -755,14 +756,14 @@ FReply SNovaMainMenuNavigation::OnKeyDown(const FGeometry& MyGeometry, const FKe
 		{
 			bool                       HasValidObject      = false;
 			bool                       HasAnyHoveredObject = false;
-			TArray<FNovaOrbitalObject> HoveredObjects      = OrbitalMap->GetHoveredOrbitalObjects();
+			TArray<FNovaOrbitalObject> HoveredObjects      = CurrentHoveredObjects;
 
 			// Check whether the current selection is relevant
 			for (const FNovaOrbitalObject& Object : HoveredObjects)
 			{
 				HasAnyHoveredObject = true;
 
-				if (Object.Area.IsValid() || Object.SpacecraftIdentifier != FGuid())
+				if (Object.Area.IsValid() || Object.SpacecraftIdentifier != FGuid() || Object.AsteroidIdentifier != FGuid())
 				{
 					HasValidObject = true;
 					break;
