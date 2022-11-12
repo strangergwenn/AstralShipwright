@@ -1081,7 +1081,7 @@ void SNovaMainMenuOperations::Show()
 							.TextStyle(&Theme.MainFont)
 							.Text_Lambda([=]()
 							{
-								if (ProcessingSystem->GetMiningRigIndex() != INDEX_NONE)
+								if (ProcessingSystem && ProcessingSystem->GetMiningRigIndex() != INDEX_NONE)
 								{
 									const UNovaResource* Resource = ProcessingSystem->GetCurrentMiningResource();
 
