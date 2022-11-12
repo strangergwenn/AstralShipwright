@@ -311,42 +311,63 @@ TArray<const class UNovaCompartmentDescription*> ANovaSpacecraftPawn::GetCompati
 	const ANovaPlayerController* PC, int32 CompartmentIndex) const
 {
 	NCHECK(Spacecraft.IsValid());
-	TArray<const class UNovaCompartmentDescription*> Compartments = Spacecraft->GetCompatibleCompartments(CompartmentIndex);
+	if (Spacecraft.IsValid())
+	{
+		TArray<const class UNovaCompartmentDescription*> Compartments = Spacecraft->GetCompatibleCompartments(CompartmentIndex);
 
-	Compartments = Compartments.FilterByPredicate(
-		[PC](const UNovaCompartmentDescription* Module)
-		{
-			return PC->IsComponentUnlocked(Module);
-		});
-	return Compartments;
+		Compartments = Compartments.FilterByPredicate(
+			[PC](const UNovaCompartmentDescription* Module)
+			{
+				return PC->IsComponentUnlocked(Module);
+			});
+		return Compartments;
+	}
+	else
+	{
+		return TArray<const class UNovaCompartmentDescription*>();
+	}
 }
 
 TArray<const class UNovaModuleDescription*> ANovaSpacecraftPawn::GetCompatibleModules(
 	const ANovaPlayerController* PC, int32 CompartmentIndex, int32 SlotIndex) const
 {
 	NCHECK(Spacecraft.IsValid());
-	TArray<const class UNovaModuleDescription*> Modules = Spacecraft->GetCompatibleModules(CompartmentIndex, SlotIndex);
+	if (Spacecraft.IsValid())
+	{
+		TArray<const class UNovaModuleDescription*> Modules = Spacecraft->GetCompatibleModules(CompartmentIndex, SlotIndex);
 
-	Modules = Modules.FilterByPredicate(
-		[PC](const UNovaModuleDescription* Module)
-		{
-			return Module == nullptr || PC->IsComponentUnlocked(Module);
-		});
-	return Modules;
+		Modules = Modules.FilterByPredicate(
+			[PC](const UNovaModuleDescription* Module)
+			{
+				return Module == nullptr || PC->IsComponentUnlocked(Module);
+			});
+		return Modules;
+	}
+	else
+	{
+		return TArray<const class UNovaModuleDescription*>();
+	}
 }
 
 TArray<const class UNovaEquipmentDescription*> ANovaSpacecraftPawn::GetCompatibleEquipment(
 	const ANovaPlayerController* PC, int32 CompartmentIndex, int32 SlotIndex) const
 {
 	NCHECK(Spacecraft.IsValid());
-	TArray<const class UNovaEquipmentDescription*> Equipment = Spacecraft->GetCompatibleEquipment(CompartmentIndex, SlotIndex);
+	if (Spacecraft.IsValid())
+	{
+		TArray<const class UNovaEquipmentDescription*> Equipment = Spacecraft->GetCompatibleEquipment(CompartmentIndex, SlotIndex);
 
-	Equipment = Equipment.FilterByPredicate(
-		[PC](const UNovaEquipmentDescription* Equipment)
-		{
-			return Equipment == nullptr || PC->IsComponentUnlocked(Equipment);
-		});
-	return Equipment;
+		Equipment = Equipment.FilterByPredicate(
+			[PC](const UNovaEquipmentDescription* Equipment)
+			{
+				return Equipment == nullptr || PC->IsComponentUnlocked(Equipment);
+			});
+		return Equipment;
+	}
+	else
+	{
+		return TArray<const class UNovaEquipmentDescription*>();
+	}
 }
 
 /*----------------------------------------------------
