@@ -914,17 +914,6 @@ void ANovaSpacecraftPawn::MoveCompartments()
 
 void ANovaSpacecraftPawn::BuildCompartments()
 {
-	// Unload unneeded leftover assets
-	for (const FSoftObjectPath& Asset : CurrentAssets)
-	{
-		if (RequestedAssets.Find(Asset) == INDEX_NONE)
-		{
-			UNeutronAssetManager::Get()->UnloadAsset(Asset);
-		}
-	}
-	CurrentAssets = RequestedAssets;
-	RequestedAssets.Empty();
-
 	// Build the assembly
 	int32         ValidIndex = 0;
 	TArray<int32> CompartmentIndicesToRemove;
@@ -961,6 +950,17 @@ void ANovaSpacecraftPawn::BuildCompartments()
 	// Complete the process
 	DisplayFilterIndex = FMath::Min(DisplayFilterIndex, Spacecraft->Compartments.Num() - 1);
 	UpdateDisplayFilter();
+
+	// Unload unneeded leftover assets
+	for (const FSoftObjectPath& Asset : CurrentAssets)
+	{
+		if (!RequestedAssets.Contains(Asset))
+		{
+			UNeutronAssetManager::Get()->UnloadAsset(Asset);
+		}
+	}
+	CurrentAssets = RequestedAssets;
+	RequestedAssets.Empty();
 }
 
 void ANovaSpacecraftPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

@@ -304,6 +304,13 @@ void UNovaSpacecraftCompartmentComponent::BuildElement(
 	}
 	UPrimitiveComponent* PrimitiveMesh = Cast<UPrimitiveComponent>(Element.Mesh);
 
+	// Failsafe
+	if (!Asset.IsValid() && !Asset.IsNull())
+	{
+		Asset.LoadSynchronous();
+		NCHECK(false);
+	}
+
 	// Determine the target component class
 	TSubclassOf<UPrimitiveComponent> ComponentClass = nullptr;
 	if (Asset.IsValid())
