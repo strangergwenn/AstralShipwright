@@ -247,10 +247,6 @@ void ANovaGameMode::ChangeArea(const UNovaArea* Area)
 	{
 		// Change the area and rotate pricing if we were in orbit before
 		ANovaGameState* CurrentGameState = GetGameState<ANovaGameState>();
-		if (CurrentGameState->GetCurrentArea() == OrbitArea)
-		{
-			CurrentGameState->RotatePrices();
-		}
 		CurrentGameState->SetCurrentArea(Area);
 
 		// Change the level

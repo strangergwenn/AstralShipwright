@@ -37,6 +37,7 @@ constexpr float  SkirtCapacityMultiplier = 1.1f;
 constexpr float  StandardGravity           = 9.807f;
 constexpr double TrajectoryDistanceError   = 0.5;
 constexpr int32  MaxTrajectoryDurationDays = 45;
+constexpr int32  ResourceRotationDays      = 15;
 
 };    // namespace ENovaConstants
 

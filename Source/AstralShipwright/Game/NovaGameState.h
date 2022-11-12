@@ -53,6 +53,9 @@ struct FNovaGameStateSave
 	int32 CurrentPriceRotation = 0;
 
 	UPROPERTY()
+	FNovaTime TimeOfLastRotation;
+
+	UPROPERTY()
 	FNovaAIStateSave AIData;
 };
 
@@ -237,6 +240,12 @@ public:
 	/** Check if we can dilate time */
 	bool CanDilateTime(ENovaTimeDilation Dilation) const;
 
+	/** Get the time left until the next rotation */
+	FNovaTime GetTimeLeftUntilPriceRotation() const
+	{
+		return FNovaTime::FromDays(ENovaConstants::ResourceRotationDays) - (GetCurrentTime() - TimeOfLastRotation);
+	}
+
 	/*----------------------------------------------------
 	    Internals
 	----------------------------------------------------*/
@@ -348,8 +357,11 @@ private:
 	UPROPERTY(Replicated)
 	ENovaTimeDilation ServerTimeDilation;
 
-	// Current state
+	// Current resource rotation
+	UPROPERTY(Replicated)
 	int32 CurrentPriceRotation;
+	UPROPERTY(Replicated)
+	FNovaTime TimeOfLastRotation;
 
 	// Time processing state
 	double ClientTime;

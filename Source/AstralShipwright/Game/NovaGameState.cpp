@@ -91,6 +91,7 @@ FNovaGameStateSave ANovaGameState::Save() const
 	SaveData.CurrentArea          = GetCurrentArea();
 	SaveData.Time                 = GetCurrentTime();
 	SaveData.CurrentPriceRotation = CurrentPriceRotation;
+	SaveData.TimeOfLastRotation   = TimeOfLastRotation;
 
 	// Save AI
 	SaveData.AIData = AISimulationComponent->Save();
@@ -124,6 +125,7 @@ void ANovaGameState::Load(const FNovaGameStateSave& SaveData)
 	// Save general state
 	ServerTime           = SaveData.Time.AsMinutes();
 	CurrentPriceRotation = SaveData.CurrentPriceRotation;
+	TimeOfLastRotation   = SaveData.TimeOfLastRotation;
 
 	// Load AI
 	AISimulationComponent->Load(SaveData.AIData);
@@ -296,19 +298,16 @@ ENovaPriceModifier ANovaGameState::GetCurrentPriceModifier(const UNovaTradableAs
 		uint8 Result = static_cast<uint8>(Input);
 
 		// Handle rotation
-		int32 PriceRotation = (Area == GetCurrentArea() ? CurrentPriceRotation - 1 : CurrentPriceRotation) % 5;
+		const int32 PriceRotation = CurrentPriceRotation % 5;
 		switch (PriceRotation)
 		{
 			// Initial situation
 			case 0:
 				break;
 
-			// High selling price
+			// High selling price, high buying price
 			case 1:
-				if (IsForSale)
-				{
-					Result += 1;
-				}
+				Result += 1;
 				break;
 
 			// Very high selling price, high buying price
@@ -335,12 +334,9 @@ ENovaPriceModifier ANovaGameState::GetCurrentPriceModifier(const UNovaTradableAs
 				}
 				break;
 
-			// Low buying price
+			// Low selling price, low buying price
 			case 4:
-				if (!IsForSale)
-				{
-					Result -= 1;
-				}
+				Result -= 1;
 				break;
 		}
 
@@ -355,16 +351,16 @@ ENovaPriceModifier ANovaGameState::GetCurrentPriceModifier(const UNovaTradableAs
 		{
 			if (Trade.Resource == Asset)
 			{
-				NLOG("ANovaGameState::GetCurrentPriceModifier : '%s' was %d", *Asset->Name.ToString(),
-					static_cast<uint8>(Trade.PriceModifier));
+				//NLOG("ANovaGameState::GetCurrentPriceModifier : '%s' was %d", *Asset->Name.ToString(),
+				//	static_cast<uint8>(Trade.PriceModifier));
 				return RotatePrice(Trade.PriceModifier, Trade.ForSale);
 			}
 		}
 	}
 
 	// Default to average price and assume a sale
-	NLOG("ANovaGameState::GetCurrentPriceModifier : '%s' was %d (average)", *Asset->Name.ToString(),
-		static_cast<uint8>(ENovaPriceModifier::Average));
+	//NLOG("ANovaGameState::GetCurrentPriceModifier : '%s' was %d (average)", *Asset->Name.ToString(),
+	//	static_cast<uint8>(ENovaPriceModifier::Average));
 	return RotatePrice(ENovaPriceModifier::Average, false);
 }
 
@@ -667,15 +663,12 @@ ENovaSimulationDecision ANovaGameState::ProcessGameSimulation(FNovaTime DeltaTim
 	// Update the orbital simulation
 	OrbitalSimulationComponent->UpdateSimulation();
 
-	// Abort trajectories when a player didn't commit in time
 	if (GetLocalRole() == ROLE_Authority)
 	{
+		// Abort trajectories when a player didn't commit in time
 		ProcessTrajectoryAbort();
-	}
 
-	// Update spacecraft systems
-	if (GetLocalRole() == ROLE_Authority)
-	{
+		// Update spacecraft systems
 		for (ANovaSpacecraftPawn* Pawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
 		{
 			if (Pawn->GetPlayerState() != nullptr)
@@ -688,6 +681,13 @@ ENovaSimulationDecision ANovaGameState::ProcessGameSimulation(FNovaTime DeltaTim
 					System->Update(InitialTime, GetCurrentTime());
 				}
 			}
+		}
+
+		// Update prices if necessary
+		if (GetTimeLeftUntilPriceRotation() <= 0)
+		{
+			RotatePrices();
+			TimeOfLastRotation = GetCurrentTime();
 		}
 	}
 
@@ -908,8 +908,12 @@ void ANovaGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	DOREPLIFETIME(ANovaGameState, SpacecraftDatabase);
 	DOREPLIFETIME(ANovaGameState, PlayerSpacecraftIdentifiers);
+
 	DOREPLIFETIME(ANovaGameState, ServerTime);
 	DOREPLIFETIME(ANovaGameState, ServerTimeDilation);
+
+	DOREPLIFETIME(ANovaGameState, CurrentPriceRotation);
+	DOREPLIFETIME(ANovaGameState, TimeOfLastRotation);
 }
 
 #undef LOCTEXT_NAMESPACE

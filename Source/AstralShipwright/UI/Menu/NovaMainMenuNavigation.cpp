@@ -618,12 +618,37 @@ void SNovaMainMenuNavigation::Construct(const FArguments& InArgs)
 		.HAlign(HAlign_Right)
 		.VAlign(VAlign_Bottom)
 		[
-			SNeutronNew(SNeutronButton)
-			.Action(FNeutronPlayerInput::MenuAltPrimary)
-			.Text(LOCTEXT("ShowPriceTable", "Show price table"))
-			.HelpText(LOCTEXT("ShowPriceTableHelp", "Vizualize the current price table for tradable resources"))
-			.OnClicked(this, &SNovaMainMenuNavigation::ShowPriceTable)
-			.Focusable(false)
+			SNew(SHorizontalBox)
+
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			.VAlign(VAlign_Center)
+			[
+				SNew(STextBlock)
+				.TextStyle(&Theme.InfoFont)
+				.Text_Lambda([=]()
+				{
+					if (IsValid(GameState))
+					{
+						return FText::FormatNamed(LOCTEXT("TimeLeftRotationFormat", "Next price update in: {time}"),
+							TEXT("time"),
+							GetDurationText(GameState->GetTimeLeftUntilPriceRotation(), 2));
+					}
+
+					return FText();
+				})
+			]
+
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				SNeutronNew(SNeutronButton)
+				.Action(FNeutronPlayerInput::MenuAltPrimary)
+				.Text(LOCTEXT("ShowPriceTable", "Show price table"))
+				.HelpText(LOCTEXT("ShowPriceTableHelp", "Vizualize the current price table for tradable resources"))
+				.OnClicked(this, &SNovaMainMenuNavigation::ShowPriceTable)
+				.Focusable(false)
+			]
 		]
 	];
 	// clang-format on
@@ -1243,8 +1268,9 @@ void SNovaMainMenuNavigation::ShowPriceTable()
 		PriceTable->AddEntries(Resource->Name, PriceList);
 	}
 
-	GenericModalPanel->Show(
-		LOCTEXT("PriceTable", "Price table"), FText(), FSimpleDelegate(), FSimpleDelegate(), FSimpleDelegate(), TableContainer);
+	GenericModalPanel->Show(LOCTEXT("PriceTable", "Price table"),
+		LOCTEXT("PriceTableDetails", "Resource prices evolve regularly, make sure to take advantage of the current deals!"),
+		FSimpleDelegate(), FSimpleDelegate(), FSimpleDelegate(), TableContainer);
 }
 
 void SNovaMainMenuNavigation::OnShowSidePanel(const FNovaOrbitalObject& HoveredObject)
