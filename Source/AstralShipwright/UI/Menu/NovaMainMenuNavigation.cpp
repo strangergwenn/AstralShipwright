@@ -1186,6 +1186,11 @@ void SNovaMainMenuNavigation::ShowPriceTable()
 			FText        ModifierText;
 			switch (Modifier)
 			{
+				case ENovaPriceModifier::VeryCheap:
+					IconText      = INVTEXT("VeryCheap");
+					ModifierText  = LOCTEXT("VeryCheap", "Very cheap");
+					ModifierColor = Theme.NegativeColor;
+					break;
 				case ENovaPriceModifier::Cheap:
 					IconText      = INVTEXT("Cheap");
 					ModifierText  = LOCTEXT("Cheap", "Cheap");
@@ -1209,6 +1214,11 @@ void SNovaMainMenuNavigation::ShowPriceTable()
 				case ENovaPriceModifier::Expensive:
 					IconText      = INVTEXT("Expensive");
 					ModifierText  = LOCTEXT("Expensive", "Expensive");
+					ModifierColor = Theme.PositiveColor;
+					break;
+				case ENovaPriceModifier::VeryExpensive:
+					IconText      = INVTEXT("VeryExpensive");
+					ModifierText  = LOCTEXT("VeryExpensive", "Very expensive");
 					ModifierColor = Theme.PositiveColor;
 					break;
 			}

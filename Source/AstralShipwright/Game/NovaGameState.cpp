@@ -293,54 +293,78 @@ ENovaPriceModifier ANovaGameState::GetCurrentPriceModifier(const UNovaTradableAs
 	// Rotate pricing without affecting the current area since the player came here for a reason
 	auto RotatePrice = [Area, this](ENovaPriceModifier Input, bool IsForSale)
 	{
-		int32 PriceRotation = (Area == GetCurrentArea() ? CurrentPriceRotation - 1 : CurrentPriceRotation) % 3;
+		uint8 Result = static_cast<uint8>(Input);
 
-		ENovaPriceModifier Result = Input;
-
-		// 0: unchanged buying, high selling
-		// 1: unchanged
-		// 3: low buying, unchanged selling
-
-		// Higher price
-		if (PriceRotation == 0 && IsForSale)
+		// Handle rotation
+		int32 PriceRotation = (Area == GetCurrentArea() ? CurrentPriceRotation - 1 : CurrentPriceRotation) % 5;
+		switch (PriceRotation)
 		{
-			Result = static_cast<ENovaPriceModifier>(FMath::Clamp<uint8>(static_cast<uint8>(Result) + 1,
-				static_cast<uint8>(ENovaPriceModifier::Cheap), static_cast<uint8>(ENovaPriceModifier::Expensive)));
+			// Initial situation
+			case 0:
+				break;
 
-			// NLOG("'%s', ++ %d -> %d", *Area->Name.ToString(), Input, Result);
+			// High selling price
+			case 1:
+				if (IsForSale)
+				{
+					Result += 1;
+				}
+				break;
+
+			// Very high selling price, high buying price
+			case 2:
+				if (IsForSale)
+				{
+					Result += 2;
+				}
+				else
+				{
+					Result += 1;
+				}
+				break;
+
+			// High selling price, low buying price
+			case 3:
+				if (IsForSale)
+				{
+					Result += 1;
+				}
+				else
+				{
+					Result -= 1;
+				}
+				break;
+
+			// Low buying price
+			case 4:
+				if (!IsForSale)
+				{
+					Result -= 1;
+				}
+				break;
 		}
 
-		// Lower price
-		else if (PriceRotation == 2 && !IsForSale)
-		{
-			Result = static_cast<ENovaPriceModifier>(FMath::Clamp<uint8>(static_cast<uint8>(Result) - 1,
-				static_cast<uint8>(ENovaPriceModifier::Cheap), static_cast<uint8>(ENovaPriceModifier::Expensive)));
-
-			// NLOG("'%s', -- %d -> %d", *Area->Name.ToString(), Input, Result);
-		}
-
-		// Neutral
-		else
-		{
-			// NLOG("'%s', == %d -> %d", *Area->Name.ToString(), Input, Result);
-		}
-
-		return Result;
+		return static_cast<ENovaPriceModifier>(FMath::Clamp<uint8>(
+			Result, static_cast<uint8>(ENovaPriceModifier::VeryCheap), static_cast<uint8>(ENovaPriceModifier::VeryExpensive)));
 	};
 
 	// Find the relevant trade metadata if any, indicating a sale
-	if (IsValid(CurrentArea))
+	if (IsValid(Area))
 	{
-		for (const FNovaResourceTrade& Trade : CurrentArea->ResourceTradeMetadata)
+		for (const FNovaResourceTrade& Trade : Area->ResourceTradeMetadata)
 		{
-			if (Trade.Resource == Asset && Trade.ForSale)
+			if (Trade.Resource == Asset)
 			{
-				return RotatePrice(Trade.PriceModifier, true);
+				NLOG("ANovaGameState::GetCurrentPriceModifier : '%s' was %d", *Asset->Name.ToString(),
+					static_cast<uint8>(Trade.PriceModifier));
+				return RotatePrice(Trade.PriceModifier, Trade.ForSale);
 			}
 		}
 	}
 
-	// Default to average price when buying
+	// Default to average price and assume a sale
+	NLOG("ANovaGameState::GetCurrentPriceModifier : '%s' was %d (average)", *Asset->Name.ToString(),
+		static_cast<uint8>(ENovaPriceModifier::Average));
 	return RotatePrice(ENovaPriceModifier::Average, false);
 }
 
@@ -358,16 +382,20 @@ FNovaCredits ANovaGameState::GetCurrentPrice(
 		{
 			switch (Modifier)
 			{
+				case ENovaPriceModifier::VeryCheap:
+					return 0.5f;
 				case ENovaPriceModifier::Cheap:
-					return 0.75f;
+					return 0.7f;
 				case ENovaPriceModifier::BelowAverage:
-					return 0.9f;
+					return 0.85f;
 				case ENovaPriceModifier::Average:
 					return 1.0f;
 				case ENovaPriceModifier::AboveAverage:
-					return 1.1f;
+					return 1.15f;
 				case ENovaPriceModifier::Expensive:
-					return 1.25f;
+					return 1.3f;
+				case ENovaPriceModifier::VeryExpensive:
+					return 1.5f;
 			}
 
 			return 0.0f;

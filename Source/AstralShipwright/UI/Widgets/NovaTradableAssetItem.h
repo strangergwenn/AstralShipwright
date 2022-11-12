@@ -248,8 +248,10 @@ protected:
 		{
 			switch (GameState->GetCurrentPriceModifier(Asset.Get(), Area.Get()))
 			{
+				case ENovaPriceModifier::VeryCheap:
+					return FNeutronStyleSet::GetBrush("Icon/SB_VeryCheap");
 				case ENovaPriceModifier::Cheap:
-					return FNeutronStyleSet::GetBrush("Icon/SB_BelowAverage");
+					return FNeutronStyleSet::GetBrush("Icon/SB_Cheap");
 				case ENovaPriceModifier::BelowAverage:
 					return FNeutronStyleSet::GetBrush("Icon/SB_BelowAverage");
 				case ENovaPriceModifier::Average:
@@ -257,6 +259,8 @@ protected:
 				case ENovaPriceModifier::AboveAverage:
 					return FNeutronStyleSet::GetBrush("Icon/SB_AboveAverage");
 				case ENovaPriceModifier::Expensive:
+					return FNeutronStyleSet::GetBrush("Icon/SB_Expensive");
+				case ENovaPriceModifier::VeryExpensive:
 					return FNeutronStyleSet::GetBrush("Icon/SB_Expensive");
 			}
 		}

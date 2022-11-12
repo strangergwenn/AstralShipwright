@@ -368,11 +368,13 @@ public:
 UENUM()
 enum class ENovaPriceModifier : uint8
 {
+	VeryCheap,
 	Cheap,
 	BelowAverage,
 	Average,
 	AboveAverage,
-	Expensive
+	Expensive,
+	VeryExpensive
 };
 
 /*----------------------------------------------------
