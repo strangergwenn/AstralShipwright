@@ -101,7 +101,7 @@ void SNovaMainMenuCareer::Construct(const FArguments& InArgs)
 				.Padding(Theme.ContentPadding)
 				[
 					SNew(STextBlock)
-					.Text(LOCTEXT("CrewDetailsHint", "Crew can work across the entire spacecraft, and require a daily fee to continue working. Failing to pay any crew member will have them resign."))
+					.Text(LOCTEXT("CrewDetailsHint", "Crew is required to operate resource processing modules, can work across the entire spacecraft, and require a daily fee to continue working. Failing to pay any crew member will have them resign."))
 					.TextStyle(&Theme.InfoFont)
 					.AutoWrapText(true)
 				]

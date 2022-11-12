@@ -110,15 +110,29 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 				.AutoHeight()
 				.Padding(Theme.VerticalContentPadding)
 				[
-					SNew(SBox)
-					.HeightOverride(16)
+					SNew(SVerticalBox)
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
 					[
-						SNew(SBorder)
-						.BorderImage(&ButtonTheme.Border)
-						.BorderBackgroundColor(this, &SNovaTrajectoryCalculator::GetBorderColor)
+						SNew(STextBlock)
+						.TextStyle(&Theme.MainFont)
+						.Text(LOCTEXT("Delta-V", "Delta-V"))
+					]
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(SBox)
+						.HeightOverride(16)
 						[
-							SNew(SComplexGradient)
-							.GradientColors_Raw(this, &SNovaTrajectoryCalculator::GetDeltaVGradient)
+							SNew(SBorder)
+							.BorderImage(&ButtonTheme.Border)
+							.BorderBackgroundColor(this, &SNovaTrajectoryCalculator::GetBorderColor)
+							[
+								SNew(SComplexGradient)
+								.GradientColors_Raw(this, &SNovaTrajectoryCalculator::GetDeltaVGradient)
+							]
 						]
 					]
 				]
@@ -127,15 +141,29 @@ void SNovaTrajectoryCalculator::Construct(const FArguments& InArgs)
 				.AutoHeight()
 				.Padding(Theme.VerticalContentPadding)
 				[
-					SNew(SBox)
-					.HeightOverride(16)
+					SNew(SVerticalBox)
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
 					[
-						SNew(SBorder)
-						.BorderImage(&ButtonTheme.Border)
-						.BorderBackgroundColor(this, &SNovaTrajectoryCalculator::GetBorderColor)
+						SNew(STextBlock)
+						.TextStyle(&Theme.MainFont)
+						.Text(LOCTEXT("Time", "Time"))
+					]
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(SBox)
+						.HeightOverride(16)
 						[
-							SNew(SComplexGradient)
-							.GradientColors_Raw(this, &SNovaTrajectoryCalculator::GetDurationGradient)
+							SNew(SBorder)
+							.BorderImage(&ButtonTheme.Border)
+							.BorderBackgroundColor(this, &SNovaTrajectoryCalculator::GetBorderColor)
+							[
+								SNew(SComplexGradient)
+								.GradientColors_Raw(this, &SNovaTrajectoryCalculator::GetDurationGradient)
+							]
 						]
 					]
 				]
@@ -216,7 +244,7 @@ void SNovaTrajectoryCalculator::Tick(const FGeometry& AllottedGeometry, const do
 															(Transform(MaxDuration) - Transform(MinDuration)),
 						0.0f, 1.0f);
 
-					TrajectoryDeltaVGradientData.Add(FNeutronStyleSet::GetPlasmaColor(DeltaVAlpha));
+					TrajectoryDeltaVGradientData.Add(FNeutronStyleSet::GetViridisColor(DeltaVAlpha));
 					TrajectoryDurationGradientData.Add(FNeutronStyleSet::GetViridisColor(DurationAlpha));
 				}
 				else
@@ -495,7 +523,7 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 			if (CrewSystem)
 			{
 				FNovaCredits Cost = FMath::CeilToInt(Trajectory->TotalTravelDuration.AsDays()) * CrewSystem->GetDailyCost();
-				TrajectoryDetails += "\n";
+				TrajectoryDetails += TEXT("\n• ");
 				TrajectoryDetails += FText::FormatNamed(
 					LOCTEXT("FlightPlanCrewFormat", "Your crew will require {credits} in pay"), TEXT("credits"), GetPriceText(Cost))
 				                         .ToString();
