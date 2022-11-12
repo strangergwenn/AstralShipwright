@@ -247,6 +247,8 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 						.TextStyle(&Theme.MainFont)
 						.Text_Lambda([=]()
 						{
+							if (!IsValid(ProcessingSystem)) return FText();
+
 							// Resource inputs
 							FString InputList;
 							for (const UNovaResource* Input : ProcessingSystem->GetInputResources(GroupIndex))
