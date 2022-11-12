@@ -1121,7 +1121,7 @@ void SNovaMainMenuOperations::Show()
 					.HelpText_Lambda([=]()
 					{
 						FText Help;
-						if (ProcessingSystem->CanMiningRigBeActive(&Help))
+						if (ProcessingSystem && ProcessingSystem->CanMiningRigBeActive(&Help))
 						{
 							return LOCTEXT("MiningHelp", "Toggle activity for this mining rig");
 						}
@@ -1132,7 +1132,7 @@ void SNovaMainMenuOperations::Show()
 					})
 					.Enabled_Lambda([=]()
 					{
-						if (ProcessingSystem->GetMiningRigIndex() != INDEX_NONE)
+						if (ProcessingSystem && ProcessingSystem->GetMiningRigIndex() != INDEX_NONE)
 						{
 							auto Status = ProcessingSystem->GetMiningRigStatus();
 							return Status == ENovaSpacecraftProcessingSystemStatus::Processing
