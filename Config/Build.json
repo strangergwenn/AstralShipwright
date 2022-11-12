@@ -5,13 +5,6 @@
 	"pdb": false,
 	"outputDir": "..\\Packaged",
 	
-	"itch": 
-	{
-		"project": "astral-shipwright",
-		"branches": ["windows", "linux"],
-		"directories": ["Windows", "Linux"]
-	},
-	
 	"steam":
 	{
 		"apps": ["SteamWindows.vdf", "SteamLinux.vdf"],
