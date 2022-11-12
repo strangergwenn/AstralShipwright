@@ -102,6 +102,7 @@ for platform in projectPlatforms:
 	buildOutputDir = os.path.join(outputDir, cleanPlatformNames[platform])
 	if os.path.exists(buildOutputDir):
 		shutil.rmtree(buildOutputDir)
+	releasePlatformDir = os.path.join(releaseOutputDir, cleanPlatformNames[platform])
 
 	# Build project
 	subprocess.check_call([
@@ -156,7 +157,9 @@ for platform in projectPlatforms:
 			# Wipe generated files that aren't needed
 			if re.match('.*\.((pdb)|(debug)|(sym))', filename):
 				if 'ThirdParty' in root or not projectKeepPdbs:
-					shutil.move(absoluteFilename, releaseOutputDir)
+					shutil.move(absoluteFilename, releasePlatformDir)
+			elif re.match('.*\.exe', filename):
+				shutil.copyfile(absoluteFilename, os.path.join(releasePlatformDir, filename))
 			elif re.match('Manifest.*\.txt', filename):
 				os.remove(absoluteFilename)
 				
