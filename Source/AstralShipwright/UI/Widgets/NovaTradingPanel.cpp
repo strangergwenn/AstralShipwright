@@ -145,7 +145,7 @@ void SNovaTradingPanel::Construct(const FArguments& InArgs)
 		[
 			SNeutronDefaultAssignNew(AmountSlider, SNeutronSlider)
 			.Size("DoubleButtonSize")
-			.ValueStep(10.0f)
+			.ValueStep(5.0f)
 		]
 
 		+ SVerticalBox::Slot()
