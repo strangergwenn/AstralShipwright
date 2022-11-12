@@ -116,7 +116,7 @@ void SNovaOrbitalMap::Tick(const FGeometry& AllottedGeometry, const double Curre
 	HoveredOrbitalObjects.Empty();
 
 	// Integrate analog input
-	const double     PositionFreedom = 1.0;
+	const double    PositionFreedom = 1.0;
 	const FVector2D HalfLocalSize   = GetTickSpaceGeometry().GetLocalSize() / 2;
 	CameraFilter.ApplyFilterCircular(CurrentPosition, CurrentVelocity, TargetPosition, DeltaTime, MenuManager->IsUsingGamepad());
 	CurrentPosition.X = FMath::Clamp(CurrentPosition.X, PositionFreedom * -HalfLocalSize.X, PositionFreedom * HalfLocalSize.X);

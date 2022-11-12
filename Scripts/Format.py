@@ -2,45 +2,37 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Format the game sources using clang-format
+# Format sources using clang-format
 # Usage : Format.py
 # 
-# Gwennaël Arbona 2021
+# Gwennaël Arbona 2022
 #-------------------------------------------------------------------------------
 
-import os
 import glob
 import json
+import os
+import re
 import subprocess
 
 #-------------------------------------------------------------------------------
-# Read config files for data
+# Define run settings
 #-------------------------------------------------------------------------------
 
-projectConfigFile = open('../Config/Build.json')
-projectConfig = json.load(projectConfigFile)
-projectName =                str(projectConfig['name'])
-
-sourceDir = os.path.join('..', 'Source', projectName)
+sourceDir = os.path.join('..', 'Source')
 scriptDir = os.getcwd()
 
 #-------------------------------------------------------------------------------
 # Run formatting
 #-------------------------------------------------------------------------------
-
-directories = []
-for subDir, dirs, files in os.walk(sourceDir):
-	directories.append(os.path.abspath(subDir))
 	
-for dir in directories:
-	os.chdir(dir)
-	subprocess.check_call([
-	
-		'clang-format',
-		'-i',
-		'-style=file',
-		'*.cpp',
-		'*.h'
-	])
+for root, directories, filenames in os.walk(sourceDir):
+	for filename in filenames:		
+		if re.match('.*\.((h)|(c)|(cpp))$', filename):
+			subprocess.check_call([				
+				'clang-format',
+				'-i',
+				'-style=file',
+				str(os.path.join(root, filename))
+			])
 	
 os.chdir(scriptDir)

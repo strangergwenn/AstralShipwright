@@ -489,7 +489,7 @@ void SNovaTrajectoryCalculator::OnAltitudeSliderChanged(float Altitude)
 			}
 
 			// Format the crew pay
-			const FNovaSpacecraft* Spacecraft = GameState->GetSpacecraft(GameState->GetPlayerSpacecraftIdentifier());
+			const FNovaSpacecraft*           Spacecraft = GameState->GetSpacecraft(GameState->GetPlayerSpacecraftIdentifier());
 			const UNovaSpacecraftCrewSystem* CrewSystem =
 				IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftCrewSystem>(Spacecraft) : nullptr;
 			if (CrewSystem)

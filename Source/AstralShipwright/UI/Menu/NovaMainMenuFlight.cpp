@@ -965,7 +965,8 @@ bool SNovaMainMenuFlight::CanOrbit() const
 		const ANovaAsteroid* AsteroidActor =
 			UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
 
-		return IsInSpace() && IsValid(AsteroidActor) && !OrbitalSimulation->IsOnStartedTrajectory(GameState->GetPlayerSpacecraftIdentifier());
+		return IsInSpace() && IsValid(AsteroidActor) &&
+		       !OrbitalSimulation->IsOnStartedTrajectory(GameState->GetPlayerSpacecraftIdentifier());
 	}
 	else
 	{
