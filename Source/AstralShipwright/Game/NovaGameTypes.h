@@ -31,8 +31,9 @@ constexpr int32 DefaultCredits = 2500;
 constexpr int32 SalvageFee     = 2000;
 constexpr int32 SalvageCredits = 1000;
 
-constexpr double ResaleDepreciation      = 0.5;
-constexpr float  SkirtCapacityMultiplier = 1.1f;
+constexpr double ResaleDepreciation        = 0.5;
+constexpr double ResourceQuantityThreshold = 0.1;
+constexpr float  SkirtCapacityMultiplier   = 1.1f;
 
 constexpr float  StandardGravity           = 9.807f;
 constexpr double TrajectoryDistanceError   = 0.5;

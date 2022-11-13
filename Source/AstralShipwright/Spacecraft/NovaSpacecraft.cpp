@@ -229,7 +229,7 @@ void FNovaCompartment::ModifyCargo(int32 ModuleIndex, const class UNovaResource*
 	// Actually update the amount and null the resource if necessary
 	const float PreviousAmount = Cargo.Amount;
 	Cargo.Amount               = FMath::Clamp(Cargo.Amount + MassDelta, 0.0f, GetCargoCapacity(ModuleIndex));
-	if (Cargo.Amount == 0)
+	if (Cargo.Amount < ENovaConstants::ResourceQuantityThreshold)
 	{
 		Cargo.Resource = nullptr;
 	}
