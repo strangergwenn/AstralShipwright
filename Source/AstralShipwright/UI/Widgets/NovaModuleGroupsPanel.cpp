@@ -133,10 +133,11 @@ void SNovaModuleGroupsPanel::OpenModuleGroupsTable(const FNovaSpacecraft& Spacec
 }
 
 void SNovaModuleGroupsPanel::OpenModuleGroup(
-	UNovaSpacecraftProcessingSystem* ProcessingSystem, const FNovaSpacecraft& Spacecraft, int32 GroupIndex)
+	UNovaSpacecraftProcessingSystem* TargetProcessingSystem, const FNovaSpacecraft& Spacecraft, int32 GroupIndex)
 {
 	ProcessingChainsBox->ClearChildren();
 	ModuleGroupsTable->Clear();
+	ProcessingSystem = TargetProcessingSystem;
 
 	const FNeutronMainTheme& Theme     = FNeutronStyleSet::GetMainTheme();
 	const FNovaModuleGroup&  Group     = Spacecraft.GetModuleGroups()[GroupIndex];
@@ -157,8 +158,7 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 	];
 
 	// Add chains
-	int32 CurrentChainIndex = 0;
-	for (const FNovaSpacecraftProcessingSystemChainState& Chain : ProcessingSystem->GetChainStates(GroupIndex))
+	for (int32 CurrentChainIndex = 0; CurrentChainIndex < TargetProcessingSystem->GetChainStates(GroupIndex).Num(); CurrentChainIndex++)
 	{
 		ProcessingChainsBox->AddSlot()
 		.AutoHeight()
@@ -196,31 +196,49 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 					.VAlign(VAlign_Center)
 					[
 						SNew(SNeutronImage)
-						.Image(FNeutronImageGetter::CreateLambda([=]()
+						.Image(FNeutronImageGetter::CreateLambda([=]() -> const FSlateBrush*
 						{
-							switch (Chain.Status)
+							if (ProcessingSystem.IsValid())
 							{
-								default:
-								case ENovaSpacecraftProcessingSystemStatus::Stopped:
-								case ENovaSpacecraftProcessingSystemStatus::Docked:
-								case ENovaSpacecraftProcessingSystemStatus::Blocked:
-									return FNeutronStyleSet::GetBrush("Icon/SB_Warning");
-								case ENovaSpacecraftProcessingSystemStatus::Processing:
-									return FNeutronStyleSet::GetBrush("Icon/SB_On");
+								const FNovaSpacecraftProcessingSystemChainState& Chain = ProcessingSystem->GetChainStates(GroupIndex)[CurrentChainIndex];
+
+								switch (Chain.Status)
+								{
+									default:
+									case ENovaSpacecraftProcessingSystemStatus::Stopped:
+									case ENovaSpacecraftProcessingSystemStatus::Docked:
+									case ENovaSpacecraftProcessingSystemStatus::Blocked:
+										return FNeutronStyleSet::GetBrush("Icon/SB_Warning");
+									case ENovaSpacecraftProcessingSystemStatus::Processing:
+										return FNeutronStyleSet::GetBrush("Icon/SB_On");
+								}
+							}
+							else
+							{
+								return new FSlateNoResource;
 							}
 						}))
 						.ColorAndOpacity_Lambda([=]()
 						{
-							switch (Chain.Status)
+							if (ProcessingSystem.IsValid())
 							{
-								default:
-								case ENovaSpacecraftProcessingSystemStatus::Stopped:
-								case ENovaSpacecraftProcessingSystemStatus::Docked:
-									return FLinearColor::White;
-								case ENovaSpacecraftProcessingSystemStatus::Processing:
-									return Theme.PositiveColor;
-								case ENovaSpacecraftProcessingSystemStatus::Blocked:
-									return Theme.NegativeColor;
+								const FNovaSpacecraftProcessingSystemChainState& Chain = ProcessingSystem->GetChainStates(GroupIndex)[CurrentChainIndex];
+
+								switch (Chain.Status)
+								{
+									default:
+									case ENovaSpacecraftProcessingSystemStatus::Stopped:
+									case ENovaSpacecraftProcessingSystemStatus::Docked:
+										return FLinearColor::White;
+									case ENovaSpacecraftProcessingSystemStatus::Processing:
+										return Theme.PositiveColor;
+									case ENovaSpacecraftProcessingSystemStatus::Blocked:
+										return Theme.NegativeColor;
+								}
+							}
+							else
+							{
+								return FLinearColor::White;
 							}
 						})
 					]
@@ -234,7 +252,16 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 						.TextStyle(&Theme.InfoFont)
 						.Text(FNeutronTextGetter::CreateLambda([=]()
 						{
-							return UNovaSpacecraftProcessingSystem::GetStatusText(Chain.Status);
+							if (ProcessingSystem.IsValid())
+							{
+								const FNovaSpacecraftProcessingSystemChainState& Chain = ProcessingSystem->GetChainStates(GroupIndex)[CurrentChainIndex];
+
+								return UNovaSpacecraftProcessingSystem::GetStatusText(Chain.Status);
+							}
+							else
+							{
+								return FText();
+							}
 						}))
 					]
 					
@@ -245,34 +272,39 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 					[
 						SNew(STextBlock)
 						.TextStyle(&Theme.MainFont)
-						.Text_Lambda([=]()
+						.Text_Lambda([this, GroupIndex]()
 						{
-							if (!IsValid(ProcessingSystem)) return FText();
-
-							// Resource inputs
-							FString InputList;
-							for (const UNovaResource* Input : ProcessingSystem->GetInputResources(GroupIndex))
+							if (ProcessingSystem.IsValid())
 							{
-								InputList += InputList.Len() ? TEXT(", ") : FString();
-								InputList += Input->Name.ToString();
-							}
+								// Resource inputs
+								FString InputList;
+								for (const UNovaResource* Input : ProcessingSystem->GetInputResources(GroupIndex))
+								{
+									InputList += InputList.Len() ? TEXT(", ") : FString();
+									InputList += Input->Name.ToString();
+								}
 
-							// Resource outputs
-							FString OutputList;
-							for (const UNovaResource* Output : ProcessingSystem->GetOutputResources(GroupIndex))
+								// Resource outputs
+								FString OutputList;
+								for (const UNovaResource* Output : ProcessingSystem->GetOutputResources(GroupIndex))
+								{
+									OutputList += OutputList.Len() ? TEXT(", ") : FString();
+									OutputList += Output->Name.ToString();
+								}
+
+								// Final string
+								FText InputLine  = InputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingInput", "Input resources: {list}"), TEXT("list"),
+																			FText::FromString(InputList))
+																	: FText();
+								FText OutputLine = OutputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingOutput", "Output resources: {list}"), TEXT("list"),
+																			FText::FromString(OutputList))
+																	: FText();
+								return FText::FromString(InputLine.ToString() + "\n" + OutputLine.ToString());
+							}
+							else
 							{
-								OutputList += OutputList.Len() ? TEXT(", ") : FString();
-								OutputList += Output->Name.ToString();
+								return FText();
 							}
-
-							// Final string
-							FText InputLine  = InputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingInput", "Input resources: {list}"), TEXT("list"),
-																		FText::FromString(InputList))
-																: FText();
-							FText OutputLine = OutputList.Len() ? FText::FormatNamed(LOCTEXT("ProcessingOutput", "Output resources: {list}"), TEXT("list"),
-																		FText::FromString(OutputList))
-																: FText();
-							return FText::FromString(InputLine.ToString() + "\n" + OutputLine.ToString());
 						})
 					]
 				]
@@ -288,12 +320,12 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 }
 
 void SNovaModuleGroupsPanel::OpenModuleGroup(
-	UNovaSpacecraftProcessingSystem* ProcessingSystem, const FNovaSpacecraft& Spacecraft, int32 CompartmentIndex, int32 ModuleIndex)
+	UNovaSpacecraftProcessingSystem* TargetProcessingSystem, const FNovaSpacecraft& Spacecraft, int32 CompartmentIndex, int32 ModuleIndex)
 {
-	int32 ProcessingGroupIndex = ProcessingSystem->GetProcessingGroupIndex(CompartmentIndex, ModuleIndex);
+	int32 ProcessingGroupIndex = TargetProcessingSystem->GetProcessingGroupIndex(CompartmentIndex, ModuleIndex);
 	if (ProcessingGroupIndex != INDEX_NONE)
 	{
-		OpenModuleGroup(ProcessingSystem, Spacecraft, ProcessingGroupIndex);
+		OpenModuleGroup(TargetProcessingSystem, Spacecraft, ProcessingGroupIndex);
 	}
 }
 

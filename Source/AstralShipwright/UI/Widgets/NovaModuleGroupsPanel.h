@@ -41,23 +41,11 @@ public:
 
 	/** Open the modal panel with a view into a specific module group identified by a group index */
 	void OpenModuleGroup(
-		class UNovaSpacecraftProcessingSystem* ProcessingSystem, const struct FNovaSpacecraft& Spacecraft, int32 GroupIndex);
+		class UNovaSpacecraftProcessingSystem* TargetProcessingSystem, const struct FNovaSpacecraft& Spacecraft, int32 GroupIndex);
 
 	/** Open the modal panel with a view into a specific module group identified by one module */
-	void OpenModuleGroup(class UNovaSpacecraftProcessingSystem* ProcessingSystem, const struct FNovaSpacecraft& Spacecraft,
+	void OpenModuleGroup(class UNovaSpacecraftProcessingSystem* TargetProcessingSystem, const struct FNovaSpacecraft& Spacecraft,
 		int32 CompartmentIndex, int32 ModuleIndex);
-
-protected:
-
-	/*----------------------------------------------------
-	    Content callbacks
-	----------------------------------------------------*/
-
-protected:
-
-	/*----------------------------------------------------
-	    Callbacks
-	----------------------------------------------------*/
 
 protected:
 
@@ -70,4 +58,7 @@ protected:
 	// Widgets
 	TSharedPtr<SVerticalBox>                                           ProcessingChainsBox;
 	TSharedPtr<SNeutronTable<ENovaConstants::MaxCompartmentCount + 1>> ModuleGroupsTable;
+
+	// Data
+	TWeakObjectPtr<class UNovaSpacecraftProcessingSystem> ProcessingSystem;
 };
