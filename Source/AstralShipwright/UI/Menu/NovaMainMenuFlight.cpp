@@ -753,8 +753,8 @@ FText SNovaMainMenuFlight::GetStatusValue() const
 		IsValid(SpacecraftPawn) ? UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation())
 								: nullptr;
 
-	if (IsInSpace() && IsValid(AsteroidActor) && IsValid(OrbitalSimulation) && IsValid(GameState) &&
-		!OrbitalSimulation->IsOnTrajectory(GameState->GetPlayerSpacecraftIdentifier()))
+	if (Spacecraft && Spacecraft->HasEquipment(UNovaRadioMastDescription::StaticClass()) && IsInSpace() && IsValid(AsteroidActor) &&
+		IsValid(OrbitalSimulation) && IsValid(GameState) && !OrbitalSimulation->IsOnTrajectory(GameState->GetPlayerSpacecraftIdentifier()))
 	{
 		const FVector SpacecraftRelativeLocation =
 			AsteroidActor->GetTransform().InverseTransformPosition(SpacecraftPawn->GetActorLocation());
