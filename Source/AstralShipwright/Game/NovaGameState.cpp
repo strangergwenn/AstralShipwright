@@ -558,26 +558,6 @@ bool ANovaGameState::CanFastForward(FText* AbortReason) const
 			return false;
 		}
 
-		// Blocked production
-		for (const ANovaSpacecraftPawn* Pawn : TActorRange<ANovaSpacecraftPawn>(GetWorld()))
-		{
-			if (Pawn->GetPlayerState())
-			{
-				const UNovaSpacecraftProcessingSystem* ProcessingSystem = Pawn->FindComponentByClass<UNovaSpacecraftProcessingSystem>();
-				for (int32 GroupIndex = 0; GroupIndex < ProcessingSystem->GetProcessingGroupCount(); GroupIndex++)
-				{
-					if (ProcessingSystem->GetProcessingGroupStatus(GroupIndex).Contains(ENovaSpacecraftProcessingSystemStatus::Blocked))
-					{
-						if (AbortReason)
-						{
-							*AbortReason = LOCTEXT("BlockedProduction", "At least one module group has blocked resource processing");
-						}
-						return false;
-					}
-				}
-			}
-		}
-
 		// Maneuvering
 		const FNovaTrajectory* PlayerTrajectory = OrbitalSimulationComponent->GetPlayerTrajectory();
 		if (PlayerTrajectory && PlayerTrajectory->GetManeuver(GetCurrentTime()))
