@@ -828,7 +828,7 @@ bool ANovaPlayerController::IsComponentUnlockable(const UNovaTradableAssetDescri
 		}
 		return false;
 	}
-	else if (!CanAffordTransaction(GetComponentUnlockCost(Asset)))
+	else if (!CanAffordTransaction(-GetComponentUnlockCost(Asset)))
 	{
 		if (Help)
 		{
