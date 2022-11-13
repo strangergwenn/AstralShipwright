@@ -57,7 +57,7 @@ void UNovaSpacecraftCompartmentComponent::TickComponent(float DeltaTime, ELevelT
 	// Handle rotation
 	ANovaSpacecraftPawn* SpacecraftPawn = Cast<ANovaSpacecraftPawn>(GetOwner());
 	NCHECK(SpacecraftPawn);
-	if (IsValid(SpacecraftPawn) && Description->RotationSpeed)
+	if (IsValid(SpacecraftPawn) && IsValid(Description) && Description->RotationSpeed)
 	{
 		const UNeutronMenuManager* MenuManager = UNeutronMenuManager::Get();
 		if (!SpacecraftPawn->IsDocked())

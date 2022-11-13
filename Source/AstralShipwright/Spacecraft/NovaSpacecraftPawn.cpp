@@ -968,6 +968,11 @@ void ANovaSpacecraftPawn::BuildCompartments()
 		CompartmentComponents.RemoveAt(UpdatedIndex);
 	}
 
+	for (int32 CompartmentIndex = 0; CompartmentIndex < Spacecraft->Compartments.Num(); CompartmentIndex++)
+	{
+		CompartmentComponents[CompartmentIndex]->Description = Spacecraft->Compartments[CompartmentIndex].Description;
+	}
+
 	// Complete the process
 	DisplayFilterIndex = FMath::Min(DisplayFilterIndex, Spacecraft->Compartments.Num() - 1);
 	UpdateDisplayFilter();
