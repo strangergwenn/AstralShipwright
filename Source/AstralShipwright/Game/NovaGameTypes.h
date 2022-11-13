@@ -23,7 +23,7 @@ const FDateTime DefaultTime  = FDateTime(2340, 2, 10, 8);
 const FString   DefaultLevel = TEXT("Space");
 
 #if WITH_EDITOR
-constexpr int32 DefaultCredits = 25000;
+constexpr int32 DefaultCredits = 200000;
 #else
 constexpr int32 DefaultCredits = 2500;
 #endif    // WITH_EDITOR
