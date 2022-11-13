@@ -2112,7 +2112,7 @@ bool SNovaMainMenuAssembly::IsModuleEnabled(int32 ModuleIndex, FText* Help) cons
 	{
 		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
 
-		if (ModuleIndex >= Compartment.Description->ModuleSlots.Num())
+		if (ModuleIndex < 0 || ModuleIndex >= Compartment.Description->ModuleSlots.Num())
 		{
 			return false;
 		}
@@ -2161,7 +2161,7 @@ bool SNovaMainMenuAssembly::IsEquipmentEnabled(int32 EquipmentIndex, FText* Help
 	{
 		const FNovaCompartment& Compartment = SpacecraftPawn->GetCompartment(SelectedCompartmentIndex);
 
-		if (EquipmentIndex >= Compartment.Description->EquipmentSlots.Num())
+		if (EquipmentIndex < 0 || EquipmentIndex >= Compartment.Description->EquipmentSlots.Num())
 		{
 			return false;
 		}

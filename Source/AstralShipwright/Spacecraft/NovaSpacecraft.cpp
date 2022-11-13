@@ -1192,15 +1192,20 @@ TArray<const UNovaCompartmentDescription*> FNovaSpacecraft::GetCompatibleCompart
 TArray<const UNovaModuleDescription*> FNovaSpacecraft::GetCompatibleModules(int32 CompartmentIndex, int32 SlotIndex) const
 {
 	TArray<const UNovaModuleDescription*> ModuleDescriptions;
-	TArray<const UNovaModuleDescription*> AllModuleDescriptions = UNeutronAssetManager::Get()->GetSortedAssets<UNovaModuleDescription>();
-	const FNovaCompartment&               Compartment           = Compartments[CompartmentIndex];
 
-	ModuleDescriptions.Add(nullptr);
-	if (Compartment.IsValid() && SlotIndex < Compartment.Description->ModuleSlots.Num())
+	if (CompartmentIndex >= 0 && CompartmentIndex < Compartments.Num())
 	{
-		for (const UNovaModuleDescription* ModuleDescription : AllModuleDescriptions)
+		TArray<const UNovaModuleDescription*> AllModuleDescriptions =
+			UNeutronAssetManager::Get()->GetSortedAssets<UNovaModuleDescription>();
+		const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
+
+		ModuleDescriptions.Add(nullptr);
+		if (Compartment.IsValid() && SlotIndex < Compartment.Description->ModuleSlots.Num())
 		{
-			ModuleDescriptions.AddUnique(ModuleDescription);
+			for (const UNovaModuleDescription* ModuleDescription : AllModuleDescriptions)
+			{
+				ModuleDescriptions.AddUnique(ModuleDescription);
+			}
 		}
 	}
 
@@ -1210,30 +1215,34 @@ TArray<const UNovaModuleDescription*> FNovaSpacecraft::GetCompatibleModules(int3
 TArray<const UNovaEquipmentDescription*> FNovaSpacecraft::GetCompatibleEquipment(int32 CompartmentIndex, int32 SlotIndex) const
 {
 	TArray<const UNovaEquipmentDescription*> EquipmentDescriptions;
-	TArray<const UNovaEquipmentDescription*> AllEquipmentDescriptions =
-		UNeutronAssetManager::Get()->GetSortedAssets<UNovaEquipmentDescription>();
-	const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
 
-	EquipmentDescriptions.Add(nullptr);
-	if (Compartment.IsValid() && SlotIndex < Compartment.Description->EquipmentSlots.Num())
+	if (CompartmentIndex >= 0 && CompartmentIndex < Compartments.Num())
 	{
-		for (const UNovaEquipmentDescription* EquipmentDescription : AllEquipmentDescriptions)
+		TArray<const UNovaEquipmentDescription*> AllEquipmentDescriptions =
+			UNeutronAssetManager::Get()->GetSortedAssets<UNovaEquipmentDescription>();
+		const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
+
+		EquipmentDescriptions.Add(nullptr);
+		if (Compartment.IsValid() && SlotIndex < Compartment.Description->EquipmentSlots.Num())
 		{
-			const TArray<ENovaEquipmentType>& SupportedTypes = Compartment.Description->EquipmentSlots[SlotIndex].SupportedTypes;
-			if (SupportedTypes.Num() == 0 ||
-				(::IsValid(EquipmentDescription) && SupportedTypes.Contains(EquipmentDescription->EquipmentType)))
+			for (const UNovaEquipmentDescription* EquipmentDescription : AllEquipmentDescriptions)
 			{
-				if (EquipmentDescription->EquipmentType == ENovaEquipmentType::Forward && !IsFirstCompartment(CompartmentIndex))
+				const TArray<ENovaEquipmentType>& SupportedTypes = Compartment.Description->EquipmentSlots[SlotIndex].SupportedTypes;
+				if (SupportedTypes.Num() == 0 ||
+					(::IsValid(EquipmentDescription) && SupportedTypes.Contains(EquipmentDescription->EquipmentType)))
 				{
-					continue;
-				}
-				else if (EquipmentDescription->EquipmentType == ENovaEquipmentType::Aft && !IsLastCompartment(CompartmentIndex))
-				{
-					continue;
-				}
-				else
-				{
-					EquipmentDescriptions.AddUnique(EquipmentDescription);
+					if (EquipmentDescription->EquipmentType == ENovaEquipmentType::Forward && !IsFirstCompartment(CompartmentIndex))
+					{
+						continue;
+					}
+					else if (EquipmentDescription->EquipmentType == ENovaEquipmentType::Aft && !IsLastCompartment(CompartmentIndex))
+					{
+						continue;
+					}
+					else
+					{
+						EquipmentDescriptions.AddUnique(EquipmentDescription);
+					}
 				}
 			}
 		}
