@@ -1230,7 +1230,7 @@ TSharedRef<SWidget> SNovaMainMenuOperations::GenerateResourceItem(const UNovaRes
 
 FText SNovaMainMenuOperations::GenerateResourceTooltip(const UNovaResource* Resource)
 {
-	return FText::FormatNamed(LOCTEXT("ResourceHelp", "Buy {resource}"), TEXT("resource"), Resource->Name);
+	return IsValid(Resource) ? FText::FormatNamed(LOCTEXT("ResourceHelp", "Buy {resource}"), TEXT("resource"), Resource->Name) : FText();
 }
 
 /*----------------------------------------------------
