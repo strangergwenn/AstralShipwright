@@ -2062,8 +2062,7 @@ bool SNovaMainMenuAssembly::IsAddCompartmentEnabled() const
 	{
 		return false;
 	}
-	else if (SelectedCompartmentIndex == 0 && SpacecraftPawn->GetCompartmentCount() > 1 &&
-			 SpacecraftPawn->GetCompartment(SelectedCompartmentIndex).HasForwardOrAftEquipment())
+	else if (SpacecraftPawn->GetCompartment(SelectedCompartmentIndex).HasForwardEquipment())
 	{
 		return false;
 	}

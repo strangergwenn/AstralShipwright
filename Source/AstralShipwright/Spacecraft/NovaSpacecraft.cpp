@@ -111,6 +111,23 @@ const UNovaEquipmentDescription* FNovaCompartment::GetEquipmentySocket(FName Soc
 	return nullptr;
 }
 
+bool FNovaCompartment::HasForwardEquipment() const
+{
+	if (Description)
+	{
+		for (int32 EquipmentIndex = 0; EquipmentIndex < ENovaConstants::MaxEquipmentCount; EquipmentIndex++)
+		{
+			const FNovaEquipmentSlot& EquipmentSlot = Description->GetEquipmentSlot(EquipmentIndex);
+			if (Equipment[EquipmentIndex] && Equipment[EquipmentIndex]->EquipmentType == ENovaEquipmentType::Forward)
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 bool FNovaCompartment::HasForwardOrAftEquipment() const
 {
 	if (Description)

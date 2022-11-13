@@ -95,6 +95,9 @@ struct FNovaCompartment
 	/** Get the description of the equipment residing at a particular socket name */
 	const UNovaEquipmentDescription* GetEquipmentySocket(FName SocketName) const;
 
+	/** Check if this module has equipment on the a forward slot */
+	bool HasForwardEquipment() const;
+
 	/** Check if this module has equipment on the a forward/aft slot */
 	bool HasForwardOrAftEquipment() const;
 
