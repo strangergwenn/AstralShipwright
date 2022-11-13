@@ -927,12 +927,14 @@ void FNovaSpacecraft::UpdateModuleGroups()
 {
 	ModuleGroups.Empty();
 
+	const FNovaSpacecraft SafeThis = GetSafeCopy();
+
 	int32 CurrentModuleIndex = 0;
 
 	// Build basic groups first as simple lines
-	for (int32 CompartmentIndex = 0; CompartmentIndex < Compartments.Num(); CompartmentIndex++)
+	for (int32 CompartmentIndex = 0; CompartmentIndex < SafeThis.Compartments.Num(); CompartmentIndex++)
 	{
-		const FNovaCompartment& Compartment = Compartments[CompartmentIndex];
+		const FNovaCompartment& Compartment = SafeThis.Compartments[CompartmentIndex];
 		if (::IsValid(Compartment.Description))
 		{
 			// Check modules for groups
@@ -949,7 +951,8 @@ void FNovaSpacecraft::UpdateModuleGroups()
 					int32                FoundModuleIndex      = INDEX_NONE;
 
 					// This module is part of an existing group, append it to the last compartment
-					if (IsSameKindModuleInPreviousCompartment(CompartmentIndex, ModuleIndex, Type, FoundCompartmentIndex, FoundModuleIndex))
+					if (SafeThis.IsSameKindModuleInPreviousCompartment(
+							CompartmentIndex, ModuleIndex, Type, FoundCompartmentIndex, FoundModuleIndex))
 					{
 						for (FNovaModuleGroup& OtherGroup : ModuleGroups)
 						{

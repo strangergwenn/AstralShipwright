@@ -2681,7 +2681,10 @@ void SNovaMainMenuAssembly::OnOpenModuleGroups()
 
 	NCHECK(IsValid(SpacecraftPawn));
 
-	ModuleGroupsPanel->OpenModuleGroupsTable(SpacecraftPawn->GetSpacecraftCopy());
+	FNovaSpacecraft Spacecraft = SpacecraftPawn->GetSpacecraftCopy();
+	Spacecraft.UpdateModuleGroups();
+
+	ModuleGroupsPanel->OpenModuleGroupsTable(Spacecraft);
 }
 
 void SNovaMainMenuAssembly::OnSwap(bool WithNext)
