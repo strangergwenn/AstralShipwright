@@ -238,42 +238,6 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 	{
 		for (auto& ChainState : GroupState.Chains)
 		{
-			// Get required constants for each processing module entry
-			const FNovaModuleGroup&            Group             = Spacecraft->GetModuleGroups()[GroupState.GroupIndex];
-			const TArray<TPair<int32, int32>>& GroupCargoModules = Spacecraft->GetAllModules<UNovaCargoModuleDescription>(Group);
-
-			// Define processing targets
-			int32                         EmptyOutputSlots      = 0;
-			float                         MinimumProcessingLeft = FLT_MAX;
-			TArray<FNovaSpacecraftCargo*> CurrentInputs;
-			TArray<FNovaSpacecraftCargo*> CurrentOutputs;
-
-			// Process cargo for targets
-			for (const auto& Indices : GroupCargoModules)
-			{
-				FNovaSpacecraftCargo& Cargo         = RealtimeCompartments[Indices.Key].Cargo[Indices.Value];
-				const float           CargoCapacity = Spacecraft->GetCargoCapacity(Indices.Key, Indices.Value);
-
-				// Valid resource input
-				if (Cargo.Resource && ChainState.Inputs.Contains(Cargo.Resource) && Cargo.Amount > 0)
-				{
-					MinimumProcessingLeft = FMath::Min(MinimumProcessingLeft, Cargo.Amount);
-					CurrentInputs.AddUnique(&Cargo);
-				}
-
-				// Valid resource output
-				else if ((ChainState.Outputs.Contains(Cargo.Resource) || Cargo.Resource == nullptr) && Cargo.Amount < CargoCapacity)
-				{
-					MinimumProcessingLeft = FMath::Min(MinimumProcessingLeft, CargoCapacity - Cargo.Amount);
-					CurrentOutputs.AddUnique(&Cargo);
-
-					if (Cargo.Resource == nullptr)
-					{
-						EmptyOutputSlots++;
-					}
-				}
-			}
-
 			if (IsSpacecraftDocked())
 			{
 				ChainState.Status = ENovaSpacecraftProcessingSystemStatus::Docked;
@@ -281,6 +245,42 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 			else
 			{
 				HasRemainingProduction = true;
+
+				// Get required constants for each processing module entry
+				const FNovaModuleGroup&            Group             = Spacecraft->GetModuleGroups()[GroupState.GroupIndex];
+				const TArray<TPair<int32, int32>>& GroupCargoModules = Spacecraft->GetAllModules<UNovaCargoModuleDescription>(Group);
+
+				// Define processing targets
+				int32                         EmptyOutputSlots      = 0;
+				float                         MinimumProcessingLeft = FLT_MAX;
+				TArray<FNovaSpacecraftCargo*> CurrentInputs;
+				TArray<FNovaSpacecraftCargo*> CurrentOutputs;
+
+				// Process cargo for targets
+				for (const auto& Indices : GroupCargoModules)
+				{
+					FNovaSpacecraftCargo& Cargo         = RealtimeCompartments[Indices.Key].Cargo[Indices.Value];
+					const float           CargoCapacity = Spacecraft->GetCargoCapacity(Indices.Key, Indices.Value);
+
+					// Valid resource input
+					if (Cargo.Resource && ChainState.Inputs.Contains(Cargo.Resource) && Cargo.Amount > 0)
+					{
+						MinimumProcessingLeft = FMath::Min(MinimumProcessingLeft, Cargo.Amount);
+						CurrentInputs.AddUnique(&Cargo);
+					}
+
+					// Valid resource output
+					else if ((ChainState.Outputs.Contains(Cargo.Resource) || Cargo.Resource == nullptr) && Cargo.Amount < CargoCapacity)
+					{
+						MinimumProcessingLeft = FMath::Min(MinimumProcessingLeft, CargoCapacity - Cargo.Amount);
+						CurrentOutputs.AddUnique(&Cargo);
+
+						if (Cargo.Resource == nullptr)
+						{
+							EmptyOutputSlots++;
+						}
+					}
+				}
 
 				// Start production based on input
 				if (!GroupState.Active)
