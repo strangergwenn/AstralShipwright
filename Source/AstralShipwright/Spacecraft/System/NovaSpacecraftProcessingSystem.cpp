@@ -399,7 +399,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 								if (Input->Resource == Resource)
 								{
 									Input->Amount -= ResourceDelta;
-									if (Input->Amount <= 0)
+									if (Input->Amount <= 0.1)
 									{
 										Input->Resource = nullptr;
 									}
