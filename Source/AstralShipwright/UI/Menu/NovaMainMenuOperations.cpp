@@ -1567,7 +1567,10 @@ void SNovaMainMenuOperations::OnBatchBuy()
 
 	auto TradeResource = [this]()
 	{
-		TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), INDEX_NONE, INDEX_NONE);
+		if (IsValid(PC) && IsValid(GameState) && IsValid(GameState->GetCurrentArea()))
+		{
+			TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), INDEX_NONE, INDEX_NONE);
+		}
 	};
 
 	// Fill the resource list
@@ -1592,7 +1595,10 @@ void SNovaMainMenuOperations::OnBatchSell()
 
 	auto TradeResource = [this]()
 	{
-		TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), INDEX_NONE, INDEX_NONE);
+		if (IsValid(PC) && IsValid(GameState) && IsValid(GameState->GetCurrentArea()))
+		{
+			TradingModalPanel->Trade(PC, GameState->GetCurrentArea(), ResourceListView->GetSelectedItem(), INDEX_NONE, INDEX_NONE);
+		}
 	};
 
 	// Fill the resource list
