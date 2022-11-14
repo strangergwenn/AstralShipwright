@@ -310,8 +310,6 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 				]
 			]
 		];
-
-		CurrentChainIndex++;
 	}
 
 	// clang-format on
