@@ -99,6 +99,7 @@ protected:
 	void OnTSRToggled();
 	void OnDLSSToggled();
 	void OnSpaceFeelToggled();
+	void OnMotionBlurToggled();
 	void OnNaniteToggled();
 	void OnLumenToggled();
 	void OnLumenHWRTToggled();
@@ -176,6 +177,7 @@ protected:
 
 	// Graphics settings widgets
 	TSharedPtr<class SNeutronButton> CameraDegradationButton;
+	TSharedPtr<class SNeutronButton> MotionBlurButton;
 	TSharedPtr<class SNeutronButton> DLSSButton;
 	TSharedPtr<class SNeutronButton> TSRButton;
 	TSharedPtr<class SNeutronButton> NaniteButton;

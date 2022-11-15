@@ -404,6 +404,15 @@ void SNovaMainMenuSettings::Construct(const FArguments& InArgs)
 			.HelpText(LOCTEXT("EnableCameraDegradationHelp", "Enable the post-processing layer simulating camera bombardment"))
 			.OnClicked(this, &SNovaMainMenuSettings::OnSpaceFeelToggled)
 		];
+		GraphicsContainer->AddSlot()
+		.AutoHeight()
+		[
+			SNeutronAssignNew(MotionBlurButton, SNeutronButton)
+			.Toggle(true)
+			.Text(LOCTEXT("EnableMotionBlur", "Enable motion blur"))
+			.HelpText(LOCTEXT("EnableMotionBlurHelp", "Enable motion blur"))
+			.OnClicked(this, &SNovaMainMenuSettings::OnMotionBlurToggled)
+		];
 
 		GraphicsContainer->AddSlot()
 		.AutoHeight()
@@ -570,6 +579,7 @@ void SNovaMainMenuSettings::Show()
 		TSRButton->SetActive(GameUserSettings->EnableTSR);
 		DLSSButton->SetActive(GameUserSettings->EnableDLSS && GameUserSettings->IsDLSSSupported());
 		CameraDegradationButton->SetActive(Cast<UNovaGameUserSettings>(GameUserSettings)->EnableCameraDegradation);
+		MotionBlurButton->SetActive(Cast<UNovaGameUserSettings>(GameUserSettings)->MotionBlurAmount > 0);
 		NaniteButton->SetActive(GameUserSettings->EnableNanite && GameUserSettings->IsNaniteSupported());
 		LumenButton->SetActive(GameUserSettings->EnableLumen && GameUserSettings->IsLumenSupported());
 		LumenHWRTButton->SetActive(GameUserSettings->EnableLumenHWRT && GameUserSettings->IsLumenHWRTSupported());
@@ -1001,6 +1011,13 @@ void SNovaMainMenuSettings::OnDLSSToggled()
 void SNovaMainMenuSettings::OnSpaceFeelToggled()
 {
 	Cast<UNovaGameUserSettings>(GameUserSettings)->EnableCameraDegradation = CameraDegradationButton->IsActive();
+	GameUserSettings->ApplySettings(false);
+	GameUserSettings->SaveSettings();
+}
+
+void SNovaMainMenuSettings::OnMotionBlurToggled()
+{
+	Cast<UNovaGameUserSettings>(GameUserSettings)->MotionBlurAmount = MotionBlurButton->IsActive() ? 0.5f : 0.0f;
 	GameUserSettings->ApplySettings(false);
 	GameUserSettings->SaveSettings();
 }
