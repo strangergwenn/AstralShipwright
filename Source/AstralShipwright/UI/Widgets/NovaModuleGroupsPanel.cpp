@@ -200,46 +200,46 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 						{
 							if (ProcessingSystem.IsValid())
 							{
-								const FNovaSpacecraftProcessingSystemChainState& Chain = ProcessingSystem->GetChainStates(GroupIndex)[CurrentChainIndex];
-
-								switch (Chain.Status)
+								const auto& Chains = ProcessingSystem->GetChainStates(GroupIndex);
+								if (CurrentChainIndex < Chains.Num())
 								{
-									default:
-									case ENovaSpacecraftProcessingSystemStatus::Stopped:
-									case ENovaSpacecraftProcessingSystemStatus::Docked:
-									case ENovaSpacecraftProcessingSystemStatus::Blocked:
-										return FNeutronStyleSet::GetBrush("Icon/SB_Warning");
-									case ENovaSpacecraftProcessingSystemStatus::Processing:
-										return FNeutronStyleSet::GetBrush("Icon/SB_On");
+									switch (Chains[CurrentChainIndex].Status)
+									{
+										default:
+										case ENovaSpacecraftProcessingSystemStatus::Stopped:
+										case ENovaSpacecraftProcessingSystemStatus::Docked:
+										case ENovaSpacecraftProcessingSystemStatus::Blocked:
+											return FNeutronStyleSet::GetBrush("Icon/SB_Warning");
+										case ENovaSpacecraftProcessingSystemStatus::Processing:
+											return FNeutronStyleSet::GetBrush("Icon/SB_On");
+									}
 								}
 							}
-							else
-							{
-								return new FSlateNoResource;
-							}
+
+							return new FSlateNoResource;
 						}))
 						.ColorAndOpacity_Lambda([=]()
 						{
 							if (ProcessingSystem.IsValid())
 							{
-								const FNovaSpacecraftProcessingSystemChainState& Chain = ProcessingSystem->GetChainStates(GroupIndex)[CurrentChainIndex];
-
-								switch (Chain.Status)
+								const auto& Chains = ProcessingSystem->GetChainStates(GroupIndex);
+								if (CurrentChainIndex < Chains.Num())
 								{
-									default:
-									case ENovaSpacecraftProcessingSystemStatus::Stopped:
-									case ENovaSpacecraftProcessingSystemStatus::Docked:
-										return FLinearColor::White;
-									case ENovaSpacecraftProcessingSystemStatus::Processing:
-										return Theme.PositiveColor;
-									case ENovaSpacecraftProcessingSystemStatus::Blocked:
-										return Theme.NegativeColor;
+									switch (Chains[CurrentChainIndex].Status)
+									{
+										default:
+										case ENovaSpacecraftProcessingSystemStatus::Stopped:
+										case ENovaSpacecraftProcessingSystemStatus::Docked:
+											return FLinearColor::White;
+										case ENovaSpacecraftProcessingSystemStatus::Processing:
+											return Theme.PositiveColor;
+										case ENovaSpacecraftProcessingSystemStatus::Blocked:
+											return Theme.NegativeColor;
+									}
 								}
 							}
-							else
-							{
-								return FLinearColor::White;
-							}
+							
+							return FLinearColor::White;
 						})
 					]
 		
@@ -254,14 +254,14 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 						{
 							if (ProcessingSystem.IsValid())
 							{
-								const FNovaSpacecraftProcessingSystemChainState& Chain = ProcessingSystem->GetChainStates(GroupIndex)[CurrentChainIndex];
+								const auto& Chains = ProcessingSystem->GetChainStates(GroupIndex);
+								if (CurrentChainIndex < Chains.Num())
+								{
+									return UNovaSpacecraftProcessingSystem::GetStatusText(Chains[CurrentChainIndex].Status);
+								}
+							}
 
-								return UNovaSpacecraftProcessingSystem::GetStatusText(Chain.Status);
-							}
-							else
-							{
-								return FText();
-							}
+							return FText();
 						}))
 					]
 					
