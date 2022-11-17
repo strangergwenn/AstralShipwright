@@ -408,7 +408,7 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			.Enabled(this, &SNovaMainMenuFlight::CanFastForward)
 		]
 	
-#if WITH_EDITOR && 1
+#if WITH_EDITOR && 0
 
 		+ SVerticalBox::Slot()
 		.AutoHeight()
@@ -878,7 +878,8 @@ bool SNovaMainMenuFlight::CanDockUndock(FText* Help) const
 					}
 					return false;
 				}
-				else if (SpacecraftMovement->GetState() != ENovaMovementState::Idle)
+				else if (SpacecraftMovement->GetState() != ENovaMovementState::Idle &&
+						 SpacecraftMovement->GetState() != ENovaMovementState::Orbiting)
 				{
 					if (Help)
 					{
