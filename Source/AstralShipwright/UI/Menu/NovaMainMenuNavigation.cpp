@@ -1169,7 +1169,7 @@ void SNovaMainMenuNavigation::ShowPriceTable()
 
 	// This is an unfortunate limitation of tables, don't forget to change here the number of areas supported
 	TArray<const UNovaArea*> Areas     = AssetManager->GetAssets<UNovaArea>();
-	static constexpr uint8   AreaCount = 3;
+	static constexpr uint8   AreaCount = 4;
 	NCHECK(Areas.Num() == AreaCount);
 
 	// Create the table structure
