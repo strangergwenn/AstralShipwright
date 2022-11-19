@@ -1166,22 +1166,18 @@ void SNovaMainMenuNavigation::ShowPriceTable()
 	FNumberFormattingOptions Options;
 	Options.MaximumFractionalDigits = 1;
 	const FNeutronMainTheme& Theme  = FNeutronStyleSet::GetMainTheme();
-
-	// This is an unfortunate limitation of tables, don't forget to change here the number of areas supported
-	TArray<const UNovaArea*> Areas     = AssetManager->GetAssets<UNovaArea>();
-	static constexpr uint8   AreaCount = 4;
-	NCHECK(Areas.Num() == AreaCount);
+	TArray<const UNovaArea*> Areas  = AssetManager->GetAssets<UNovaArea>();
 
 	// Create the table structure
 	// clang-format off
-	TSharedPtr<SNeutronTable<AreaCount>> PriceTable;
+	TSharedPtr<SNeutronTable> PriceTable;
 	TSharedPtr<SWidget>                  TableContainer =
 		SNew(SHorizontalBox)
 		+ SHorizontalBox::Slot()
 		+ SHorizontalBox::Slot()
 		.AutoWidth()
 		[
-			SAssignNew(PriceTable, SNeutronTable<AreaCount>)
+			SAssignNew(PriceTable, SNeutronTable)
 			.Title(LOCTEXT("PriceTableTitle", "Current resource prices"))
 			.Width(2 * Theme.GenericMenuWidth)
 		]

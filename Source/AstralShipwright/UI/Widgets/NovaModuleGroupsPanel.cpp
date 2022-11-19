@@ -28,7 +28,7 @@ void SNovaModuleGroupsPanel::Construct(const FArguments& InArgs)
 
 	SNeutronModalPanel::Construct(SNeutronModalPanel::FArguments().Menu(InArgs._Menu));
 
-	const int32 FullWidth = ENovaConstants::MaxCompartmentCount * FNeutronStyleSet::GetButtonSize("InventoryButtonSize").Width;
+	const int32 FullWidth = 2 * Theme.GenericMenuWidth;
 
 	// clang-format off
 	SAssignNew(InternalWidget, SVerticalBox)
@@ -46,7 +46,7 @@ void SNovaModuleGroupsPanel::Construct(const FArguments& InArgs)
 		.AutoWidth()
 		[
 			SNew(SBox)
-			.MinDesiredWidth(FullWidth)
+			.MaxDesiredWidth(FullWidth)
 			.Padding(0)
 			[
 				SAssignNew(ProcessingChainsBox, SVerticalBox)
@@ -59,8 +59,18 @@ void SNovaModuleGroupsPanel::Construct(const FArguments& InArgs)
 	+ SVerticalBox::Slot()
 	.AutoHeight()
 	[
-		SAssignNew(ModuleGroupsTable, SNeutronTable<ENovaConstants::MaxCompartmentCount + 1>)
-		.Width(2 * Theme.GenericMenuWidth)
+		SNew(SHorizontalBox)
+
+		+ SHorizontalBox::Slot()
+
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		[
+			SAssignNew(ModuleGroupsTable, SNeutronTable)
+			.Width(2 * Theme.GenericMenuWidth)
+		]
+
+		+ SHorizontalBox::Slot()
 	]
 	
 	+ SVerticalBox::Slot();
@@ -76,17 +86,18 @@ void SNovaModuleGroupsPanel::OpenModuleGroupsTable(const FNovaSpacecraft& Spacec
 {
 	ProcessingChainsBox->ClearChildren();
 	ModuleGroupsTable->Clear();
+	const int32 CompartmentCount = Spacecraft.Compartments.Num();
 
 	// Prepare headers, table contents
 	TArray<FText> Headers;
-	for (int32 Index = 1; Index <= ENovaConstants::MaxCompartmentCount; Index++)
+	for (int32 Index = 1; Index <= CompartmentCount; Index++)
 	{
 		Headers.Add(FText::AsNumber(Index));
 	}
 	TArray<TNeutronTableValue<FText>> TableContents[ENovaConstants::MaxModuleCount];
 	for (int32 RowIndex = 0; RowIndex < ENovaConstants::MaxModuleCount; RowIndex++)
 	{
-		for (int32 ColIndex = 0; ColIndex < ENovaConstants::MaxCompartmentCount; ColIndex++)
+		for (int32 ColIndex = 0; ColIndex < CompartmentCount; ColIndex++)
 		{
 			TableContents[RowIndex].Add(INVTEXT("-\n\n"));
 		}
@@ -141,7 +152,7 @@ void SNovaModuleGroupsPanel::OpenModuleGroup(
 
 	const FNeutronMainTheme& Theme     = FNeutronStyleSet::GetMainTheme();
 	const FNovaModuleGroup&  Group     = Spacecraft.GetModuleGroups()[GroupIndex];
-	const int32              FullWidth = ENovaConstants::MaxCompartmentCount * FNeutronStyleSet::GetButtonSize("InventoryButtonSize").Width;
+	const int32              FullWidth = 2 * Theme.GenericMenuWidth;
 
 	// Add title
 	// clang-format off

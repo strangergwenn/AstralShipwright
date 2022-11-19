@@ -56,8 +56,8 @@ protected:
 protected:
 
 	// Widgets
-	TSharedPtr<SVerticalBox>                                           ProcessingChainsBox;
-	TSharedPtr<SNeutronTable<ENovaConstants::MaxCompartmentCount + 1>> ModuleGroupsTable;
+	TSharedPtr<SVerticalBox>  ProcessingChainsBox;
+	TSharedPtr<SNeutronTable> ModuleGroupsTable;
 
 	// Data
 	TWeakObjectPtr<class UNovaSpacecraftProcessingSystem> ProcessingSystem;

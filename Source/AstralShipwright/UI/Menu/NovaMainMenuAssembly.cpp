@@ -58,7 +58,7 @@ public:
 		// Build the cost table
 		FNovaSpacecraftUpgradeCost Cost =
 			ModifiedSpacecraft.GetUpgradeCost(PC->GetWorld()->GetGameState<ANovaGameState>(), CurrentSpacecraft);
-		TSharedRef<SNeutronTable<2>> CostTable = SNew(SNeutronTable<2>).Title(LOCTEXT("CostAnalysis", "Cost analysis"));
+		TSharedRef<SNeutronTable> CostTable = SNew(SNeutronTable).Title(LOCTEXT("CostAnalysis", "Cost analysis"));
 		CostTable->AddHeader(LOCTEXT("Overview", "<img src=\"/Text/Module\"/> Overview"));
 		CostTable->AddEntry(LOCTEXT("UpgradeCostValue", "Estimated total value"), TNeutronTableValue(GetPriceText(Cost.TotalCost)));
 		CostTable->AddEntry(LOCTEXT("UpgradeCostUpgrades", "New parts bought"), TNeutronTableValue(GetPriceText(Cost.UpgradeCost)));

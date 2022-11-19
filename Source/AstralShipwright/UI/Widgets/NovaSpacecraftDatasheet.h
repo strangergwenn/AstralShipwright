@@ -8,7 +8,7 @@
 #define LOCTEXT_NAMESPACE "SNovaSpacecraftDatasheet"
 
 /** Spacecraft datasheet class */
-class SNovaSpacecraftDatasheet : public SNeutronTable<2>
+class SNovaSpacecraftDatasheet : public SNeutronTable
 {
 	SLATE_BEGIN_ARGS(SNovaSpacecraftDatasheet) : _TargetSpacecraft(), _ComparisonSpacecraft(nullptr)
 	{}
