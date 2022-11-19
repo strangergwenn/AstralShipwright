@@ -197,27 +197,25 @@ bool FNovaCompartment::CanModifyCargo(int32 ModuleIndex, const class UNovaResour
 	NCHECK(::IsValid(Resource));
 	const FNovaSpacecraftCargo& Cargo = GetCargo(ModuleIndex);
 
-	if (MassDelta == 0)
+	if (MassDelta > 0 && Cargo.Resource == nullptr)
 	{
-		return false;
+		return true;
 	}
-	else if (MassDelta <= 0 && !::IsValid(Cargo.Resource))
+	else if (MassDelta != 0 && Cargo.Resource == Resource)
 	{
-		return false;
-	}
-	else if (MassDelta > 0 && ::IsValid(Cargo.Resource) && Cargo.Resource != Resource)
-	{
-		return false;
+		return true;
 	}
 	else
 	{
-		return true;
+		return false;
 	}
 }
 
 void FNovaCompartment::ModifyCargo(int32 ModuleIndex, const class UNovaResource* Resource, float& MassDelta)
 {
+	NCHECK(ModuleIndex >= 0 && ModuleIndex < ENovaConstants::MaxModuleCount);
 	NCHECK(::IsValid(Resource));
+
 	FNovaSpacecraftCargo& Cargo = GetCargo(ModuleIndex);
 
 	// Run sanity checks
