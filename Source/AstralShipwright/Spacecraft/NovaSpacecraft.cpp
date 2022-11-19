@@ -1020,7 +1020,10 @@ void FNovaSpacecraft::UpdateModuleGroups()
 
 					// Process linked equipment
 					FNovaModuleGroupCompartment& GroupCompartment = CurrentModuleGroup->Compartments.Last();
-					GroupCompartment.LinkedEquipments.Append(ModuleSlot.LinkedEquipments);
+					for (FName LinkedEquipment : ModuleSlot.LinkedEquipments)
+					{
+						GroupCompartment.LinkedEquipments.AddUnique(LinkedEquipment);
+					}
 					for (const FName EquipmentSlot : ModuleSlot.LinkedEquipments)
 					{
 						const UNovaEquipmentDescription* Equipment = Compartment.GetEquipmentySocket(EquipmentSlot);
