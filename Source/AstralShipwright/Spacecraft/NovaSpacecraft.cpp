@@ -232,6 +232,7 @@ void FNovaCompartment::ModifyCargo(int32 ModuleIndex, const class UNovaResource*
 	if (Cargo.Amount < ENovaConstants::ResourceQuantityThreshold)
 	{
 		Cargo.Resource = nullptr;
+		Cargo.Amount   = 0;
 	}
 	else
 	{

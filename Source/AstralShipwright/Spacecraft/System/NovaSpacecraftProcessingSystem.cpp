@@ -402,6 +402,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 									if (Input->Amount < ENovaConstants::ResourceQuantityThreshold)
 									{
 										Input->Resource = nullptr;
+										Input->Amount   = 0;
 									}
 									CurrentInputs.Remove(Input);
 									break;
