@@ -581,8 +581,8 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 					const FNovaTime TotalMiningTimeRemaining = FNovaTime::FromSeconds(TotalProcessingLeft / GetCurrentMiningRate());
 					RemainingProductionTime                  = FMath::Min(RemainingProductionTime, TotalMiningTimeRemaining);
 
-					NLOG("%.2f minutes remaining, min %.2f, processing %.2f", TotalMiningTimeRemaining.AsMinutes(), TotalProcessingLeft,
-						(FinalTime - InitialTime).AsMinutes());
+					//NLOG("%.2f minutes remaining, min %.2f, processing %.2f", TotalMiningTimeRemaining.AsMinutes(), TotalProcessingLeft,
+					//	(FinalTime - InitialTime).AsMinutes());
 				}
 			}
 		}
