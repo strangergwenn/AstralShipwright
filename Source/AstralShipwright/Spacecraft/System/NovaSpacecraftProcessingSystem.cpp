@@ -426,7 +426,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 													 FNovaSpacecraftCargo* Cargo, bool AcceptEmpty)
 							{
 								float LocalResourceDelta = FMath::Min(CurrentDelta, CargoSlotCapacities[Cargo] - Cargo->Amount);
-								if (LocalResourceDelta > 0 && (Cargo->Resource == Resource || Cargo->Resource == nullptr && AcceptEmpty))
+								if (LocalResourceDelta > 0 && (Cargo->Resource == Resource || (Cargo->Resource == nullptr && AcceptEmpty)))
 								{
 									Cargo->Resource = Resource;
 									Cargo->Amount += LocalResourceDelta;
@@ -553,7 +553,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 					auto ProcessOutput = [this, &ResourceDelta, &CargoSlotCapacities](FNovaSpacecraftCargo* Cargo, bool AcceptEmpty)
 					{
 						float LocalResourceDelta = FMath::Min(ResourceDelta, CargoSlotCapacities[Cargo] - Cargo->Amount);
-						if (LocalResourceDelta > 0 && (Cargo->Resource == MiningRigResource || Cargo->Resource == nullptr && AcceptEmpty))
+						if (LocalResourceDelta > 0 && (Cargo->Resource == MiningRigResource || (Cargo->Resource == nullptr && AcceptEmpty)))
 						{
 							Cargo->Resource = MiningRigResource;
 							Cargo->Amount += LocalResourceDelta;
