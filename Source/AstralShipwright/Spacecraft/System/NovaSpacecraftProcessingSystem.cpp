@@ -408,7 +408,14 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 					// Process the total processing time remaining
 					UpdateTotalTimeRemaining(InputResourceAmounts, ChainState.Inputs);
 					UpdateTotalTimeRemaining(OutputResourceAmounts, ChainState.Outputs);
-					RemainingProductionTime = FMath::Min(RemainingProductionTime, TotalChainTimeRemaining);
+					if (RemainingProductionTime < FLT_MAX)
+					{
+						RemainingProductionTime = FMath::Max(RemainingProductionTime, TotalChainTimeRemaining);
+					}
+					else
+					{
+						RemainingProductionTime = TotalChainTimeRemaining;
+					}
 
 					// NLOG("%.2f minutes remaining, min %.2f, processing %.2f", TotalChainTimeRemaining.AsMinutes(), MinimumProcessingLeft,
 					//	(FinalTime - InitialTime).AsMinutes());
@@ -579,7 +586,14 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 
 					// Compute remaining time for simulation purposes
 					const FNovaTime TotalMiningTimeRemaining = FNovaTime::FromSeconds(TotalProcessingLeft / GetCurrentMiningRate());
-					RemainingProductionTime                  = FMath::Min(RemainingProductionTime, TotalMiningTimeRemaining);
+					if (RemainingProductionTime < FLT_MAX)
+					{
+						RemainingProductionTime = FMath::Max(RemainingProductionTime, TotalMiningTimeRemaining);
+					}
+					else
+					{
+						RemainingProductionTime = TotalMiningTimeRemaining;
+					}
 
 					//NLOG("%.2f minutes remaining, min %.2f, processing %.2f", TotalMiningTimeRemaining.AsMinutes(), TotalProcessingLeft,
 					//	(FinalTime - InitialTime).AsMinutes());
