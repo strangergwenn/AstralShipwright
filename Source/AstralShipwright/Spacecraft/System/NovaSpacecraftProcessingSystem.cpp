@@ -225,9 +225,11 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 {
 	NCHECK(GetOwner()->GetLocalRole() == ROLE_Authority);
 
-	const FNovaSpacecraft*            Spacecraft  = GetSpacecraft();
-	const ANovaGameState*             GameState   = GetWorld()->GetGameState<ANovaGameState>();
-	const UNovaSpacecraftPowerSystem* PowerSystem = GameState->GetSpacecraftSystem<UNovaSpacecraftPowerSystem>(Spacecraft);
+	const FNovaSpacecraft*            Spacecraft     = GetSpacecraft();
+	const ANovaGameState*             GameState      = GetWorld()->GetGameState<ANovaGameState>();
+	const UNovaSpacecraftPowerSystem* PowerSystem    = GameState->GetSpacecraftSystem<UNovaSpacecraftPowerSystem>(Spacecraft);
+	ANovaSpacecraftPawn*              SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
+	NCHECK(SpacecraftPawn);
 
 	RemainingProductionTime = FNovaTime::FromMinutes(DBL_MAX);
 
@@ -494,18 +496,21 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 	MiningRigResource = nullptr;
 	if (IsSpacecraftDocked())
 	{
+		MiningRigActive = false;
 		MiningRigStatus = ENovaSpacecraftProcessingSystemStatus::Docked;
+	}
+	else if (IsValid(SpacecraftPawn) && !SpacecraftPawn->GetSpacecraftMovement()->IsAnchored())
+	{
+		MiningRigActive = false;
+		MiningRigStatus = ENovaSpacecraftProcessingSystemStatus::Stopped;
 	}
 	else
 	{
-		// Find spacecraft, asteroid
-		ANovaSpacecraftPawn* SpacecraftPawn = GetOwner<ANovaSpacecraftPawn>();
-		NCHECK(SpacecraftPawn);
 		const ANovaAsteroid* AsteroidActor =
 			UNeutronActorTools::GetClosestActor<ANovaAsteroid>(SpacecraftPawn, SpacecraftPawn->GetActorLocation());
 
 		// Process activity
-		if (MiningRigActive && IsValid(AsteroidActor) && CanMiningRigBeActive())
+		if (IsValid(AsteroidActor))
 		{
 			// Get data
 			const FNovaAsteroid&               Asteroid          = Cast<ANovaAsteroid>(AsteroidActor)->GetAsteroidData();
@@ -538,18 +543,22 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 			if (CurrentOutputs.Num() == 0)
 			{
 				MiningRigStatus = ENovaSpacecraftProcessingSystemStatus::Blocked;
-				NLOG("UNovaSpacecraftProcessingSystem::Update : canceled production for mining rig");
 			}
 
 			// Cancel production when out of power
 			else if (PowerSystem->GetRemainingEnergy() <= 0)
 			{
 				MiningRigStatus = ENovaSpacecraftProcessingSystemStatus::PowerLoss;
-				NLOG("UNovaSpacecraftProcessingSystem::Update : power loss for mining rig");
+			}
+
+			// Handle explicit stop
+			else if (!MiningRigActive)
+			{
+				MiningRigStatus = ENovaSpacecraftProcessingSystemStatus::Stopped;
 			}
 
 			// Proceed with processing
-			else
+			else if (MiningRigActive)
 			{
 				// Compute the mining delta
 				MiningRigStatus     = ENovaSpacecraftProcessingSystemStatus::Processing;
@@ -595,7 +604,7 @@ void UNovaSpacecraftProcessingSystem::Update(FNovaTime InitialTime, FNovaTime Fi
 						RemainingProductionTime = TotalMiningTimeRemaining;
 					}
 
-					//NLOG("%.2f minutes remaining, min %.2f, processing %.2f", TotalMiningTimeRemaining.AsMinutes(), TotalProcessingLeft,
+					// NLOG("%.2f minutes remaining, min %.2f, processing %.2f", TotalMiningTimeRemaining.AsMinutes(), TotalProcessingLeft,
 					//	(FinalTime - InitialTime).AsMinutes());
 				}
 			}
