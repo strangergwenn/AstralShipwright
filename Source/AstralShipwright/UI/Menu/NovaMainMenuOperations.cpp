@@ -877,7 +877,6 @@ void SNovaMainMenuOperations::Show()
 				[
 					SNeutronAssignNew(EnableButton, SNeutronButton)
 					.Size("HalfButtonSize")
-					.Toggle(true)
 					.Text_Lambda([=]()
 					{
 						return ProcessingSystem && ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex) ? LOCTEXT("StopProcessing", "Stop") : LOCTEXT("StartProcessing", "Start");
@@ -1085,7 +1084,7 @@ void SNovaMainMenuOperations::Show()
 								{
 									const UNovaResource* Resource = ProcessingSystem->GetCurrentMiningResource();
 
-									if (ProcessingSystem->IsMiningRigActive() && Resource)
+									if (ProcessingSystem->IsMiningRigActive() && Resource && ProcessingSystem->GetMiningRigStatus() == ENovaSpacecraftProcessingSystemStatus::Processing)
 									{
 										FNumberFormattingOptions Options;
 										Options.MaximumFractionalDigits = 2;
@@ -1112,10 +1111,9 @@ void SNovaMainMenuOperations::Show()
 				[
 					SNeutronAssignNew(MiningRigButton, SNeutronButton)
 					.Size("HalfButtonSize")
-					.Toggle(true)
 					.Text_Lambda([=]()
 					{
-						return ProcessingSystem && ProcessingSystem->IsMiningRigActive() && ProcessingSystem->CanMiningRigBeActive() ?
+						return ProcessingSystem && ProcessingSystem->IsMiningRigActive() ?
 							LOCTEXT("StopMining", "Stop") : LOCTEXT("StartMining", "Start");
 					})
 					.HelpText_Lambda([=]()
@@ -1134,9 +1132,8 @@ void SNovaMainMenuOperations::Show()
 					{
 						if (ProcessingSystem && ProcessingSystem->GetMiningRigIndex() != INDEX_NONE)
 						{
-							auto Status = ProcessingSystem->GetMiningRigStatus();
-							return Status == ENovaSpacecraftProcessingSystemStatus::Processing
-								|| (Status == ENovaSpacecraftProcessingSystemStatus::Stopped && ProcessingSystem->CanMiningRigBeActive());
+							return ProcessingSystem->GetMiningRigStatus() != ENovaSpacecraftProcessingSystemStatus::Docked
+								&& (ProcessingSystem->IsMiningRigActive() || ProcessingSystem->CanMiningRigBeActive());
 						}
 						return false;
 					})

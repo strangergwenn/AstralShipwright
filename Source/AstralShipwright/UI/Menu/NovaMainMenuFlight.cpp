@@ -498,10 +498,9 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 		.AutoHeight()
 		[
 			SNeutronAssignNew(MiningRigButton, SNeutronButton)
-			.Toggle(true)
 			.Text_Lambda([=]()
 			{
-				return ProcessingSystem && ProcessingSystem->IsMiningRigActive() && ProcessingSystem->CanMiningRigBeActive() ?
+				return ProcessingSystem && ProcessingSystem->IsMiningRigActive() ?
 					LOCTEXT("StopMining", "Stop mining") : LOCTEXT("StartMining", "Start mining");
 			})
 			.HelpText_Lambda([=]()
@@ -520,15 +519,14 @@ void SNovaMainMenuFlight::Construct(const FArguments& InArgs)
 			{
 				if (ProcessingSystem && ProcessingSystem->GetMiningRigIndex() != INDEX_NONE)
 				{
-					auto Status = ProcessingSystem->GetMiningRigStatus();
-					return Status == ENovaSpacecraftProcessingSystemStatus::Processing
-						|| (Status == ENovaSpacecraftProcessingSystemStatus::Stopped && ProcessingSystem->CanMiningRigBeActive());
+					return ProcessingSystem->GetMiningRigStatus() != ENovaSpacecraftProcessingSystemStatus::Docked
+						&& (ProcessingSystem->IsMiningRigActive() || ProcessingSystem->CanMiningRigBeActive());
 				}
 				return false;
 			})
 			.OnClicked(FSimpleDelegate::CreateLambda([=]()
 			{
-				ProcessingSystem->SetMiningRigActive(MiningRigButton->IsActive());
+				ProcessingSystem->SetMiningRigActive(!ProcessingSystem->IsMiningRigActive());
 			}))
 		]
 
@@ -644,6 +642,11 @@ void SNovaMainMenuFlight::UpdateGameObjects()
 	ProcessingSystem =
 		IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftProcessingSystem>(Spacecraft) : nullptr;
 	PowerSystem = IsValid(GameState) && Spacecraft ? GameState->GetSpacecraftSystem<UNovaSpacecraftPowerSystem>(Spacecraft) : nullptr;
+
+	if (ProcessingSystem)
+	{
+		MiningRigButton->SetActive(ProcessingSystem->IsMiningRigActive());
+	}
 }
 
 void SNovaMainMenuFlight::Next()
@@ -1105,7 +1108,6 @@ void SNovaMainMenuFlight::SetHUDIndexCallback(int32 Index)
 				[
 					SNeutronNew(SNeutronButton)
 					.Size("HalfButtonSize")
-					.Toggle(true)
 					.Text_Lambda([=]()
 					{
 						return ProcessingSystem->IsProcessingGroupActive(ProcessingGroupIndex) ? LOCTEXT("StopProcessing", "Stop") : LOCTEXT("StartProcessing", "Start");
