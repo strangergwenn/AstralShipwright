@@ -866,7 +866,7 @@ EVisibility SNovaMainMenuSettings::GetPCVisibility() const
 
 bool SNovaMainMenuSettings::IsScreenPercentageSupported() const
 {
-	return IsTSRSupported();
+	return true;
 }
 
 bool SNovaMainMenuSettings::IsTSRSupported() const
